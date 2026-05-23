@@ -1,0 +1,43 @@
+[package]
+name = "traderview-web"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "axum router + JWT auth + server binary for traderview"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[dependencies]
+traderview-core = { path = "../traderview-core" }
+traderview-db = { path = "../traderview-db" }
+traderview-import = { path = "../traderview-import" }
+
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+argon2 = { workspace = true }
+jsonwebtoken = { workspace = true }
+rand = { workspace = true }
+hex = { workspace = true }
+
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }

@@ -1,0 +1,30 @@
+/target
+**/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# sqlx offline cache (regenerate with `cargo sqlx prepare`)
+.sqlx/
+
+# Tauri build artifacts
+/src-tauri/gen/schemas
+/src-tauri/WixTools
+
+# Frontend vendored libs (re-fetch with scripts/vendor-uplot.sh)
+/frontend/lib/uPlot.iife.min.js
+/frontend/lib/uPlot.min.css
+
+# Postgres data (embedded mode writes here in dev)
+.tv-data/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Env / secrets
+.env
+.env.local
+*.pem

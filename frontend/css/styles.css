@@ -1,0 +1,259 @@
+/* TraderView styles — palette inherits from audio_haxor synthwave */
+
+:root {
+    --bg-0: #0a0a12;
+    --bg-1: #1a1a2e;
+    --bg-2: #232336;
+    --bg-3: #2d2d44;
+    --fg-0: #e0e0e0;
+    --fg-1: #aab;
+    --fg-2: #778;
+    --accent: #00e5ff;
+    --accent-dim: #4a8;
+    --magenta: #b86bff;
+    --green: #23d160;
+    --red: #ff3860;
+    --yellow: #ffdd57;
+    --border: #2a2a40;
+    --shadow: 0 1px 0 rgba(0, 229, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg-0);
+    color: var(--fg-0);
+    font-family: 'Hack Nerd Font', 'Hack', 'Menlo', monospace;
+    font-size: 13px;
+    overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* --- top bar -------------------------------------------------------- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 8px 16px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    height: 44px;
+}
+
+.brand {
+    color: var(--accent);
+    font-weight: bold;
+    letter-spacing: 2px;
+    font-size: 14px;
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+}
+
+.tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--fg-1);
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.tab:hover { color: var(--fg-0); }
+.tab.active {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent);
+}
+
+.user-strip {
+    color: var(--fg-2);
+    font-size: 11px;
+}
+
+/* --- main -------------------------------------------------------- */
+
+main#app {
+    height: calc(100% - 44px);
+    overflow: auto;
+    padding: 16px;
+}
+
+.boot {
+    color: var(--fg-2);
+    text-align: center;
+    padding: 60px 0;
+}
+
+/* --- dashboard cards -------------------------------------------------------- */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+}
+.card .label {
+    color: var(--fg-2);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+}
+.card .value {
+    color: var(--fg-0);
+    font-size: 22px;
+    font-weight: bold;
+}
+.card .value.pos { color: var(--green); }
+.card .value.neg { color: var(--red); }
+
+/* --- chart panel -------------------------------------------------------- */
+
+.chart-panel {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    padding: 12px;
+}
+.chart-panel h2 {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* --- table -------------------------------------------------------- */
+
+table.trades {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-1);
+}
+table.trades th, table.trades td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+table.trades th {
+    color: var(--fg-2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 10px;
+    background: var(--bg-2);
+}
+table.trades tr:hover td { background: var(--bg-2); }
+table.trades .pnl-pos { color: var(--green); }
+table.trades .pnl-neg { color: var(--red); }
+
+/* --- buttons / inputs -------------------------------------------------------- */
+
+button.primary {
+    background: var(--accent);
+    color: var(--bg-0);
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+button.primary:hover { background: #4df0ff; }
+
+input[type=text], input[type=email], input[type=password], select, textarea {
+    background: var(--bg-2);
+    color: var(--fg-0);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* --- auth screen -------------------------------------------------------- */
+
+.auth-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+.auth-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    padding: 32px;
+    width: 360px;
+    box-shadow: var(--shadow);
+}
+.auth-card h1 {
+    color: var(--accent);
+    margin: 0 0 24px;
+    text-align: center;
+    letter-spacing: 3px;
+    font-size: 18px;
+}
+.auth-tabs {
+    display: flex;
+    margin-bottom: 16px;
+}
+.auth-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg-2);
+    padding: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+#auth-form { display: flex; flex-direction: column; gap: 10px; }
+#auth-form button[type=submit] {
+    background: var(--accent);
+    color: var(--bg-0);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+.auth-error { color: var(--red); font-size: 11px; min-height: 14px; }
+
+/* --- importer dropzone -------------------------------------------------------- */
+
+.dropzone {
+    border: 2px dashed var(--border);
+    background: var(--bg-1);
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--fg-2);
+    cursor: pointer;
+}
+.dropzone.dragover { border-color: var(--accent); color: var(--accent); }

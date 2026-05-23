@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="TraderView — TraderVue-style trading journal. Rust + Postgres + Tauri." name="description">
+    <title>TraderView</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="lib/uPlot.min.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">TRADERVIEW</div>
+    <nav class="tabs">
+        <button class="tab active" data-view="dashboard">Dashboard</button>
+        <button class="tab" data-view="trades">Trades</button>
+        <button class="tab" data-view="journal">Journal</button>
+        <button class="tab" data-view="import">Import</button>
+        <button class="tab" data-view="accounts">Accounts</button>
+    </nav>
+    <div class="user-strip" id="user-strip"></div>
+</header>
+
+<main id="app">
+    <!-- views render here -->
+    <div class="boot">connecting…</div>
+</main>
+
+<div id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+        <h1>TRADERVIEW</h1>
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-auth="login">Log in</button>
+            <button class="auth-tab" data-auth="register">Register</button>
+        </div>
+        <form id="auth-form" autocomplete="off">
+            <input type="email" name="email" placeholder="email" required>
+            <input type="password" name="password" placeholder="password" required minlength="8">
+            <input type="text" name="display_name" placeholder="display name (register only)" class="register-only hidden">
+            <button type="submit">Continue</button>
+            <div class="auth-error" id="auth-error"></div>
+        </form>
+    </div>
+</div>
+
+<script src="lib/uPlot.iife.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

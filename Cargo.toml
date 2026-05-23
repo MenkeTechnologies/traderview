@@ -1,0 +1,77 @@
+[workspace]
+members = [
+    "crates/traderview-core",
+    "crates/traderview-db",
+    "crates/traderview-import",
+    "crates/traderview-web",
+    "src-tauri",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["MenkeTechnologies <MenkeTechnologies@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/MenkeTechnologies/traderview"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+# Database
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "macros",
+    "uuid",
+    "chrono",
+    "json",
+    "migrate",
+    "rust_decimal",
+] }
+postgresql_embedded = { version = "0.20", default-features = false, features = ["rustls", "theseus", "tokio"] }
+
+# IDs / time / money
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["serde", "std", "clock"] }
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+
+# Errors / logging
+anyhow = "1"
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# HTTP server
+axum = { version = "0.7", features = ["macros", "multipart"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "fs", "limit"] }
+
+# Auth
+argon2 = "0.5"
+jsonwebtoken = "9"
+rand = "0.8"
+hex = "0.4"
+sha2 = "0.10"
+
+# Parsing
+csv = "1"
+bytes = "1"
+
+# CLI / config
+clap = { version = "4", features = ["derive", "env"] }
+dirs = "5"
+
+[profile.dev]
+opt-level = 1
+debug = 0
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
