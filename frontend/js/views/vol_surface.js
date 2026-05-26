@@ -1,0 +1,168 @@
+// Implied-volatility surface — heatmap matrix + ATM term structure + skew curve.
+import { api } from '../api.js';
+import { esc } from '../util.js';
+
+export async function renderVolSurface(mount) {
+    mount.innerHTML = `
+        <h1 class="view-title">// VOL SURFACE</h1>
+        <p class="muted small">IV grid across moneyness × expiration. Color intensity shows IV
+            relative to the surface min/max — bright red = highest IV (richest options), deep
+            blue = lowest (cheapest). Use OTM puts (negative moneyness) and OTM calls (positive)
+            to read skew. Watch for <em>term-structure inversion</em> (front-month IV &gt; back-month):
+            usually signals an upcoming binary event.</p>
+
+        <form id="vsForm" class="filter-form">
+            <label>Symbol <input type="text" id="vsSym" value="SPY" required></label>
+            <label># expirations <input type="number" id="vsN" value="8" min="1" max="16"></label>
+            <button type="submit" class="btn">Build surface</button>
+        </form>
+
+        <div id="vsOut"><p class="muted small">Enter a symbol to fetch its surface.</p></div>
+    `;
+    document.getElementById('vsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const sym = document.getElementById('vsSym').value.trim().toUpperCase();
+        const n = parseInt(document.getElementById('vsN').value, 10) || 8;
+        await fetchAndRender(sym, n);
+    });
+}
+
+async function fetchAndRender(sym, n) {
+    const out = document.getElementById('vsOut');
+    out.innerHTML = `<p class="muted small">Fetching ${esc(sym)} chain across ${n} expirations (this calls Yahoo once per expiration)…</p>`;
+    try {
+        const s = await api.volSurface(sym, n);
+        renderSurface(s, out);
+    } catch (e) {
+        out.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+    }
+}
+
+function renderSurface(s, out) {
+    if (!s.expirations.length) {
+        out.innerHTML = `<p class="boot">No expirations returned for ${esc(s.symbol)}.</p>`;
+        return;
+    }
+    out.innerHTML = `
+        <div class="chart-panel">
+            <h2>${esc(s.symbol)} — spot ${s.spot.toFixed(2)}</h2>
+            <p class="muted small">${s.expirations.length} expirations · ${s.moneyness.length} moneyness buckets ·
+                fetched ${new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
+            <div id="vsHeat"></div>
+        </div>
+        <div class="chart-panel">
+            <h2>ATM term structure</h2>
+            <div id="vsTerm"></div>
+        </div>
+        <div class="chart-panel">
+            <h2>Front-month skew</h2>
+            <div id="vsSkew"></div>
+        </div>
+    `;
+    renderHeatmap(s);
+    renderTermSvg(s);
+    renderSkewSvg(s);
+}
+
+function renderHeatmap(s) {
+    const all = s.expirations.flatMap(r => r.iv_by_moneyness).filter(v => v != null);
+    const min = Math.min(...all);
+    const max = Math.max(...all);
+    const ivCol = (iv) => {
+        if (iv == null) return 'transparent';
+        const t = (iv - min) / Math.max(max - min, 1e-9);
+        // blue (low) -> green -> yellow -> red (high)
+        const r = Math.round(t * 255);
+        const b = Math.round((1 - t) * 255);
+        const g = Math.round(Math.max(0, 255 - Math.abs(t - 0.5) * 510));
+        return `rgb(${r},${g},${b})`;
+    };
+    const moneynessLabel = (m) =>
+        m === 0 ? 'ATM' : `${m > 0 ? '+' : ''}${(m * 100).toFixed(0)}%`;
+    const rowHtml = (row) => `<tr>
+        <td class="muted small">${row.expiration} <span class="muted">(${row.days_to_expiry}d)</span></td>
+        ${row.iv_by_moneyness.map(iv => {
+            const txt = iv == null ? '—' : (iv * 100).toFixed(1);
+            return `<td style="background:${ivCol(iv)};color:#000;text-align:center;font-family:'Share Tech Mono',monospace;">${txt}</td>`;
+        }).join('')}
+        <td class="small">${row.atm_iv == null ? '—' : (row.atm_iv * 100).toFixed(1) + '%'}</td>
+    </tr>`;
+    document.getElementById('vsHeat').innerHTML = `
+        <table class="trades" style="table-layout:fixed;">
+            <thead><tr>
+                <th>Expiration</th>
+                ${s.moneyness.map(m => `<th>${moneynessLabel(m)}</th>`).join('')}
+                <th>ATM IV</th>
+            </tr></thead>
+            <tbody>${s.expirations.map(rowHtml).join('')}</tbody>
+        </table>
+        <p class="muted small">Surface range: ${(min * 100).toFixed(1)}% → ${(max * 100).toFixed(1)}%
+            (IV expressed as annualized standard deviation, decimal × 100).</p>
+    `;
+}
+
+function renderTermSvg(s) {
+    const pts = s.term_structure;
+    if (!pts.length) { document.getElementById('vsTerm').innerHTML = '<p class="muted small">no ATM IV resolved</p>'; return; }
+    const w = 700, h = 220, pad = 40;
+    const xs = pts.map(p => p.days_to_expiry);
+    const ys = pts.map(p => p.atm_iv * 100);
+    const xMin = Math.min(...xs), xMax = Math.max(...xs);
+    const yMin = Math.min(...ys), yMax = Math.max(...ys);
+    const sx = (x) => pad + (x - xMin) / Math.max(xMax - xMin, 1) * (w - 2 * pad);
+    const sy = (y) => h - pad - (y - yMin) / Math.max(yMax - yMin, 1e-9) * (h - 2 * pad);
+    const path = pts.map((p, i) => (i ? 'L' : 'M') + sx(p.days_to_expiry) + ',' + sy(p.atm_iv * 100)).join(' ');
+    const dots = pts.map(p => `<circle cx="${sx(p.days_to_expiry)}" cy="${sy(p.atm_iv * 100)}" r="3" fill="#00ffaa"/>`).join('');
+    const front = ys[0], back = ys[ys.length - 1];
+    const inverted = front > back;
+    document.getElementById('vsTerm').innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
+            <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
+            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>
+            <path d="${path}" stroke="#00e5ff" stroke-width="2" fill="none"/>
+            ${dots}
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">days to expiry</text>
+            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">ATM IV (%)</text>
+        </svg>
+        <p class="small ${inverted ? 'neg' : ''}">
+            Front-month ${front.toFixed(1)}% · Back-month ${back.toFixed(1)}% ·
+            ${inverted ? 'INVERTED (front &gt; back — event premium)' : 'normal contango'}
+        </p>
+    `;
+}
+
+function renderSkewSvg(s) {
+    const pts = s.front_skew;
+    if (!pts.length) { document.getElementById('vsSkew').innerHTML = '<p class="muted small">no skew data</p>'; return; }
+    const w = 700, h = 220, pad = 40;
+    const xs = pts.map(p => p.moneyness * 100);
+    const allY = pts.flatMap(p => [p.call_iv, p.put_iv]).filter(v => v != null).map(v => v * 100);
+    if (!allY.length) { document.getElementById('vsSkew').innerHTML = '<p class="muted small">no skew IVs resolved</p>'; return; }
+    const xMin = Math.min(...xs), xMax = Math.max(...xs);
+    const yMin = Math.min(...allY), yMax = Math.max(...allY);
+    const sx = (x) => pad + (x - xMin) / Math.max(xMax - xMin, 1) * (w - 2 * pad);
+    const sy = (y) => h - pad - (y - yMin) / Math.max(yMax - yMin, 1e-9) * (h - 2 * pad);
+    const linePath = (key) => pts
+        .filter(p => p[key] != null)
+        .map((p, i) => (i ? 'L' : 'M') + sx(p.moneyness * 100) + ',' + sy(p[key] * 100))
+        .join(' ');
+    const dots = (key, col) => pts
+        .filter(p => p[key] != null)
+        .map(p => `<circle cx="${sx(p.moneyness * 100)}" cy="${sy(p[key] * 100)}" r="3" fill="${col}"/>`)
+        .join('');
+    document.getElementById('vsSkew').innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
+            <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
+            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>
+            <line x1="${sx(0)}" y1="${pad}" x2="${sx(0)}" y2="${h - pad}" stroke="#666" stroke-dasharray="3,3"/>
+            <path d="${linePath('call_iv')}" stroke="#00ffaa" stroke-width="2" fill="none"/>
+            <path d="${linePath('put_iv')}"  stroke="#ff1f7a" stroke-width="2" fill="none"/>
+            ${dots('call_iv', '#00ffaa')}
+            ${dots('put_iv', '#ff1f7a')}
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">moneyness (% from spot)</text>
+            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">IV (%)</text>
+            <text x="${w - 90}" y="${pad + 12}" fill="#00ffaa" font-size="11">calls</text>
+            <text x="${w - 90}" y="${pad + 28}" fill="#ff1f7a" font-size="11">puts</text>
+        </svg>
+    `;
+}

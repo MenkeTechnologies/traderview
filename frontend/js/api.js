@@ -349,6 +349,9 @@ export const api = {
     // Pre-market / overnight cross-asset dashboard
     premarketSnapshot: () => request('/premarket/snapshot'),
 
+    // Implied-vol surface (IV grid + term structure + skew)
+    volSurface: (sym, n = 8) => request(`/vol-surface/${encodeURIComponent(sym)}?n=${n}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

@@ -45,6 +45,7 @@ mod short_interest;
 mod tags;
 mod trades;
 mod vol;
+mod vol_surface;
 mod watchlists;
 mod webhooks;
 
@@ -93,6 +94,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth::router())
         .merge(fear_greed::router())
         .merge(premarket::router())
+        .merge(vol_surface::router())
 }
 
 mod helpers {
