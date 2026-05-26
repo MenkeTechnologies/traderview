@@ -9,6 +9,7 @@ pub mod earnings_iv;
 pub mod embedded;
 pub mod executions;
 pub mod forum;
+pub mod heatmap;
 pub mod hotkeys;
 pub mod imports;
 pub mod journal;

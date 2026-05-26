@@ -13,6 +13,7 @@ mod community;
 mod disclosures;
 mod earnings_iv;
 mod executions;
+mod heatmap;
 mod hotkeys;
 mod imports;
 mod journal;
@@ -67,6 +68,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(earnings_iv::router())
         .merge(disclosures::router())
         .merge(sentiment::router())
+        .merge(heatmap::router())
 }
 
 mod helpers {

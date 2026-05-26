@@ -293,6 +293,9 @@ export const api = {
     sentimentSeries:      (sym, hours = 168) =>
         request(`/sentiment/series/${encodeURIComponent(sym)}${qs({ hours })}`),
 
+    // Finviz-style sector heatmap
+    heatmap: () => request('/heatmap'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
