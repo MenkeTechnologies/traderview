@@ -3,6 +3,7 @@
 
 pub mod accounts;
 pub mod alerts;
+pub mod breadth;
 pub mod comments;
 pub mod crypto;
 pub mod darkpool;

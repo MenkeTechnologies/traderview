@@ -340,6 +340,9 @@ export const api = {
         request(`/webhooks/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     testWebhook:     (id) => request(`/webhooks/${id}/test`, { method: 'POST' }),
 
+    // Market breadth (TICK/TRIN/A-D/Up-Dn vol/P-C)
+    breadthSnapshot: () => request('/breadth/snapshot'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

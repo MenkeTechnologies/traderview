@@ -9,6 +9,7 @@ mod alerts;
 mod analysis;
 mod auth;
 mod backtest;
+mod breadth;
 mod charts;
 mod comments;
 mod community;
@@ -87,6 +88,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(darkpool::router())
         .merge(vol::router())
         .merge(webhooks::router())
+        .merge(breadth::router())
 }
 
 mod helpers {
