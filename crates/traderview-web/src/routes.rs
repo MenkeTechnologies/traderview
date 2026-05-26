@@ -10,6 +10,7 @@ mod auth;
 mod charts;
 mod comments;
 mod community;
+mod crypto;
 mod disclosures;
 mod earnings_iv;
 mod executions;
@@ -71,6 +72,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sentiment::router())
         .merge(heatmap::router())
         .merge(options::router())
+        .merge(crypto::router())
 }
 
 mod helpers {

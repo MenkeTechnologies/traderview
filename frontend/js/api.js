@@ -300,6 +300,11 @@ export const api = {
     options:     (sym, expiration = null) => request(`/options/${encodeURIComponent(sym)}${qs({ expiration })}`),
     greeksCalc:  (params) => request(`/greeks${qs(params)}`),
 
+    // Crypto (CoinGecko + blockchain.com)
+    cryptoMarkets:  (n = 100) => request(`/crypto/markets${qs({ n })}`),
+    cryptoGlobal:   () => request('/crypto/global'),
+    cryptoBtcChain: () => request('/crypto/btc/chain'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
