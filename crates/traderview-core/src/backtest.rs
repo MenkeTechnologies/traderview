@@ -250,6 +250,214 @@ fn macd_cross(c: &[f64]) -> Vec<Action> {
     out
 }
 
+// ===========================================================================
+// Walk-forward optimization
+// ===========================================================================
+//
+// Rolling in-sample / out-of-sample sweep over a parameter grid. For each
+// window we (a) sweep the grid on the IS slice and pick the best params by
+// the chosen metric, (b) apply those params to the OOS slice with the
+// running equity balance, (c) record IS vs OOS performance. The OOS slices
+// stitch into one continuous equity curve. Walk-forward efficiency
+// (avg_oos_return / avg_is_return) ≥ 0.5 is the conventional robustness bar;
+// large positive IS returns with near-zero or negative OOS is curve-fit
+// collapse.
+
+/// Parameter-free preset selector — used to pick which grid to sweep.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PresetKind {
+    SmaCross,
+    RsiReversion,
+    BollingerBreakout,
+    MacdCross,
+}
+
+/// Optimization objective.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OptMetric {
+    Return,
+    Sharpe,
+}
+
+pub fn default_grid(kind: PresetKind) -> Vec<Preset> {
+    match kind {
+        PresetKind::SmaCross => {
+            let mut v = Vec::new();
+            for &fast in &[5usize, 8, 10, 12, 15, 20] {
+                for &slow in &[20usize, 30, 40, 50, 100, 200] {
+                    if slow > fast { v.push(Preset::SmaCross { fast, slow }); }
+                }
+            }
+            v
+        }
+        PresetKind::RsiReversion => {
+            let mut v = Vec::new();
+            for &period in &[5usize, 7, 10, 14, 21] {
+                for &(os, ob) in &[(20.0, 80.0), (25.0, 75.0), (30.0, 70.0), (35.0, 65.0)] {
+                    v.push(Preset::RsiReversion { period, oversold: os, overbought: ob });
+                }
+            }
+            v
+        }
+        PresetKind::BollingerBreakout => {
+            let mut v = Vec::new();
+            for &period in &[10usize, 14, 20, 30, 50] {
+                for &k in &[1.5f64, 2.0, 2.5, 3.0] {
+                    v.push(Preset::BollingerBreakout { period, k });
+                }
+            }
+            v
+        }
+        PresetKind::MacdCross => vec![Preset::MacdCross],
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WfWindow {
+    pub idx: usize,
+    pub is_start: DateTime<Utc>,
+    pub is_end:   DateTime<Utc>,
+    pub oos_start: DateTime<Utc>,
+    pub oos_end:   DateTime<Utc>,
+    pub chosen: Preset,
+    pub is_return_pct: f64,
+    pub is_sharpe: f64,
+    pub oos_return_pct: f64,
+    pub oos_sharpe: f64,
+    pub oos_trades: usize,
+    pub equity_after_window: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WfPoint {
+    pub time: DateTime<Utc>,
+    pub equity: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WfResult {
+    pub kind: PresetKind,
+    pub is_bars: usize,
+    pub oos_bars: usize,
+    pub step_bars: usize,
+    pub grid_size: usize,
+    pub windows: Vec<WfWindow>,
+    pub oos_equity: Vec<WfPoint>,
+    pub final_oos_equity: f64,
+    pub total_oos_return_pct: f64,
+    pub avg_is_return_pct: f64,
+    pub avg_oos_return_pct: f64,
+    pub walk_forward_efficiency: f64,
+    pub baseline_params: Preset,
+    pub baseline_summary: BtSummary,
+}
+
+pub fn walk_forward(
+    bars: &[PriceBar],
+    kind: PresetKind,
+    is_bars: usize,
+    oos_bars: usize,
+    step: usize,
+    initial_capital: f64,
+    fee_per_trade: f64,
+    metric: OptMetric,
+) -> WfResult {
+    let grid = default_grid(kind);
+    let mut windows = Vec::new();
+    let mut oos_equity: Vec<WfPoint> = Vec::new();
+    let mut equity = initial_capital;
+    let step = step.max(1);
+
+    let mut idx = 0;
+    let mut start = 0;
+    while start + is_bars + oos_bars <= bars.len() {
+        let is_slice  = &bars[start..start + is_bars];
+        let oos_slice = &bars[start + is_bars..start + is_bars + oos_bars];
+
+        // Sweep on IS.
+        let mut best_score = f64::NEG_INFINITY;
+        let mut best_preset = grid[0];
+        let mut best_is: Option<BtResult> = None;
+        for p in &grid {
+            let r = run(is_slice, *p, initial_capital, fee_per_trade);
+            let score = match metric {
+                OptMetric::Return => r.summary.total_return_pct,
+                OptMetric::Sharpe => r.summary.sharpe_daily,
+            };
+            if score > best_score {
+                best_score = score;
+                best_preset = *p;
+                best_is = Some(r);
+            }
+        }
+        let is_r = best_is.expect("non-empty grid");
+
+        // Apply chosen params to OOS at running equity.
+        let oos_r = run(oos_slice, best_preset, equity, fee_per_trade);
+        for pt in &oos_r.equity {
+            oos_equity.push(WfPoint { time: pt.time, equity: pt.equity });
+        }
+        equity = oos_r.summary.final_equity;
+
+        windows.push(WfWindow {
+            idx,
+            is_start: is_slice[0].bar_time,
+            is_end:   is_slice.last().unwrap().bar_time,
+            oos_start: oos_slice[0].bar_time,
+            oos_end:   oos_slice.last().unwrap().bar_time,
+            chosen: best_preset,
+            is_return_pct: is_r.summary.total_return_pct,
+            is_sharpe:     is_r.summary.sharpe_daily,
+            oos_return_pct: oos_r.summary.total_return_pct,
+            oos_sharpe:     oos_r.summary.sharpe_daily,
+            oos_trades:     oos_r.summary.trades,
+            equity_after_window: equity,
+        });
+        idx += 1;
+        start += step;
+    }
+
+    let n = windows.len().max(1) as f64;
+    let avg_is  = windows.iter().map(|w| w.is_return_pct).sum::<f64>() / n;
+    let avg_oos = windows.iter().map(|w| w.oos_return_pct).sum::<f64>() / n;
+    let wfe = if avg_is.abs() > 1e-9 { avg_oos / avg_is } else { 0.0 };
+    let total_return = (equity - initial_capital) / initial_capital * 100.0;
+
+    // Baseline: best single fit on the full series.
+    let mut best_score = f64::NEG_INFINITY;
+    let mut best_baseline = grid[0];
+    let mut best_baseline_summary = run(bars, grid[0], initial_capital, fee_per_trade).summary;
+    for p in &grid {
+        let r = run(bars, *p, initial_capital, fee_per_trade);
+        let score = match metric {
+            OptMetric::Return => r.summary.total_return_pct,
+            OptMetric::Sharpe => r.summary.sharpe_daily,
+        };
+        if score > best_score {
+            best_score = score;
+            best_baseline = *p;
+            best_baseline_summary = r.summary;
+        }
+    }
+
+    WfResult {
+        kind,
+        is_bars, oos_bars, step_bars: step,
+        grid_size: grid.len(),
+        windows,
+        oos_equity,
+        final_oos_equity: equity,
+        total_oos_return_pct: total_return,
+        avg_is_return_pct: avg_is,
+        avg_oos_return_pct: avg_oos,
+        walk_forward_efficiency: wfe,
+        baseline_params: best_baseline,
+        baseline_summary: best_baseline_summary,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,5 +489,26 @@ mod tests {
         let r = run(&bars, Preset::SmaCross { fast: 5, slow: 20 }, 10_000.0, 0.0);
         assert!(r.summary.trades >= 1, "no trades fired");
         assert_eq!(r.equity.len(), bars.len());
+    }
+
+    #[test]
+    fn walk_forward_sweeps_windows() {
+        // 600 bars of sine wave with light upward drift — enough for
+        // ~4 windows at 200 IS / 60 OOS / 60 step.
+        let mut bars = Vec::new();
+        for i in 0..600 {
+            let p = 100.0 + 0.02 * i as f64 + 8.0 * (i as f64 / 10.0).sin();
+            bars.push(bar(p, i * 86_400));
+        }
+        let r = walk_forward(&bars, PresetKind::SmaCross, 200, 60, 60,
+                             10_000.0, 0.0, OptMetric::Return);
+        assert!(r.windows.len() >= 4, "expected at least 4 windows, got {}", r.windows.len());
+        assert!(r.grid_size > 1, "grid should contain multiple presets");
+        assert!(!r.oos_equity.is_empty(), "OOS equity stitched curve empty");
+        // Every window must have chosen a Preset variant that was in the grid.
+        let grid = default_grid(PresetKind::SmaCross);
+        for w in &r.windows {
+            assert!(grid.contains(&w.chosen), "chosen preset not in grid");
+        }
     }
 }

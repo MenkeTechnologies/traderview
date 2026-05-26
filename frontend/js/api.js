@@ -352,6 +352,10 @@ export const api = {
     // Implied-vol surface (IV grid + term structure + skew)
     volSurface: (sym, n = 8) => request(`/vol-surface/${encodeURIComponent(sym)}?n=${n}`),
 
+    // Walk-forward optimization (rolling IS/OOS sweep)
+    walkForward: (body) =>
+        request('/backtest/walk-forward', { method: 'POST', body: JSON.stringify(body) }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
