@@ -360,6 +360,9 @@ export const api = {
     taxLots: (accountId, year, method) =>
         request(`/tax-lots/${accountId}?year=${year}&method=${method}`),
 
+    // Stock comparison (2-4 symbols side-by-side)
+    compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

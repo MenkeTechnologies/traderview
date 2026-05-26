@@ -50,6 +50,7 @@ import { renderPremarket } from './views/premarket.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
 import { renderTaxLots } from './views/tax_lots.js';
+import { renderCompare } from './views/compare.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
@@ -171,6 +172,7 @@ export async function dispatch() {
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;
             case 'tax-lots':       await renderTaxLots(mount, state); break;
+            case 'compare':        await renderCompare(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

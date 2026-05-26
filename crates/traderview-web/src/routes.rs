@@ -13,6 +13,7 @@ mod breadth;
 mod charts;
 mod comments;
 mod community;
+mod compare;
 mod crypto;
 mod darkpool;
 mod disclosures;
@@ -97,6 +98,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(premarket::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
+        .merge(compare::router())
 }
 
 mod helpers {
