@@ -63,6 +63,20 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Background sentiment poller — every 60s, WSB + StockTwits per watchlist symbol.
+    {
+        let pool = pool.clone();
+        tokio::spawn(async move {
+            loop {
+                let (wsb, st) = traderview_db::sentiment::poll_all(&pool).await;
+                if wsb + st > 0 {
+                    tracing::info!(wsb = wsb, stocktwits = st, "sentiment polled");
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            }
+        });
+    }
+
     let state = AppState::new(pool, AppMode::Web, jwt_secret);
     let api = router(state);
 

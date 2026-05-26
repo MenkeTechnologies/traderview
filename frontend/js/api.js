@@ -284,6 +284,15 @@ export const api = {
     deleteDisclosureWatcher: (id) =>
         request(`/disclosures/watchers/${id}`, { method: 'DELETE' }),
 
+    // sentiment-as-a-feed (WSB + StockTwits, optional X)
+    sentimentFeed:        (limit = 200)            => request(`/sentiment/feed${qs({ limit })}`),
+    sentimentRanked:      (hours = 1, limit = 50)  => request(`/sentiment/ranked${qs({ hours, limit })}`),
+    sentimentPollNow:     ()                       => request('/sentiment/poll', { method: 'POST' }),
+    sentimentForSymbol:   (sym, hours = 24, limit = 100) =>
+        request(`/sentiment/symbol/${encodeURIComponent(sym)}${qs({ hours, limit })}`),
+    sentimentSeries:      (sym, hours = 168) =>
+        request(`/sentiment/series/${encodeURIComponent(sym)}${qs({ hours })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

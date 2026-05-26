@@ -13,6 +13,7 @@ pub mod pnl;
 pub mod risk;
 pub mod rollup;
 pub mod scan;
+pub mod sentiment;
 pub mod signals;
 pub mod slug;
 pub mod stats;

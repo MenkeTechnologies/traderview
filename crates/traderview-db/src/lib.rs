@@ -24,6 +24,7 @@ pub mod scans;
 pub mod screenshots;
 pub mod search;
 pub mod sectors;
+pub mod sentiment;
 pub mod settings;
 pub mod shares;
 pub mod tags;

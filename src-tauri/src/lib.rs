@@ -100,6 +100,17 @@ pub fn run() {
                         });
                     }
 
+                    // Background sentiment poller — every 60s (WSB + StockTwits).
+                    {
+                        let pool = embedded.pool.clone();
+                        tokio::spawn(async move {
+                            loop {
+                                let _ = traderview_db::sentiment::poll_all(&pool).await;
+                                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                            }
+                        });
+                    }
+
                     let bind: SocketAddr = "127.0.0.1:0".parse().unwrap();
                     let listener = tokio::net::TcpListener::bind(bind).await.expect("bind");
                     let addr = listener.local_addr().expect("local addr");

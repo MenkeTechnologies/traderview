@@ -28,6 +28,7 @@ mod screener;
 mod screenshots;
 mod search;
 mod sectors;
+mod sentiment;
 mod settings;
 mod shares;
 mod tags;
@@ -65,6 +66,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(hotkeys::router())
         .merge(earnings_iv::router())
         .merge(disclosures::router())
+        .merge(sentiment::router())
 }
 
 mod helpers {
