@@ -42,6 +42,7 @@ import { renderEconomy } from './views/economy.js';
 import { renderPairs } from './views/pairs.js';
 import { renderShortInterest } from './views/short_interest.js';
 import { renderDarkpool } from './views/darkpool.js';
+import { renderVol } from './views/vol.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
@@ -155,6 +156,7 @@ export async function dispatch() {
             case 'pairs':       await renderPairs(mount, state); break;
             case 'short-interest': await renderShortInterest(mount, state, rest[0]); break;
             case 'darkpool':       await renderDarkpool(mount, state, rest[0]); break;
+            case 'vol':            await renderVol(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

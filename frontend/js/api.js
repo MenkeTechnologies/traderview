@@ -327,6 +327,11 @@ export const api = {
     darkpoolSymbol: (sym, days = 30) => request(`/darkpool/symbol/${encodeURIComponent(sym)}${qs({ days })}`),
     darkpoolRanked: (watchlist_id = null, days = 30) => request(`/darkpool/ranked${qs({ watchlist_id, days })}`),
 
+    // Volatility / yields / DXY
+    volVix:    () => request('/vol/vix'),
+    volYields: () => request('/vol/yields'),
+    volDollar: () => request('/vol/dollar'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

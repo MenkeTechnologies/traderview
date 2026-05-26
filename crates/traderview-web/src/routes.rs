@@ -41,6 +41,7 @@ mod shares;
 mod short_interest;
 mod tags;
 mod trades;
+mod vol;
 mod watchlists;
 
 pub fn api_router() -> Router<AppState> {
@@ -83,6 +84,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(analysis::router())
         .merge(short_interest::router())
         .merge(darkpool::router())
+        .merge(vol::router())
 }
 
 mod helpers {

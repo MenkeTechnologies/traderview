@@ -31,6 +31,7 @@ pub mod sectors;
 pub mod sentiment;
 pub mod settings;
 pub mod short_interest;
+pub mod vol;
 pub mod shares;
 pub mod tags;
 pub mod trades;
