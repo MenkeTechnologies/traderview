@@ -46,6 +46,21 @@ async function request(path, opts = {}) {
     return ct.includes('application/json') ? res.json() : res.text();
 }
 
+/// Fetch a path that returns binary/text content (CSV, HTML) and return a Blob.
+/// Honors the bearer token and 401 handling identically to request().
+export async function apiFetchBlob(path) {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${baseUrl}/api${path}`, { headers });
+    if (res.status === 401) { clearToken(); throw new ApiError(401, 'unauthorized'); }
+    if (!res.ok) {
+        let msg = res.statusText;
+        try { msg = (await res.json()).error || msg; } catch (_) { /* not json */ }
+        throw new ApiError(res.status, msg);
+    }
+    return res.blob();
+}
+
 const qs = (obj) => {
     const parts = [];
     for (const [k, v] of Object.entries(obj || {})) {

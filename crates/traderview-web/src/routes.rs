@@ -20,6 +20,7 @@ mod disclosures;
 mod earnings_iv;
 mod economy;
 mod executions;
+mod export;
 mod fear_greed;
 mod heatmap;
 mod hotkeys;
@@ -99,6 +100,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(vol_surface::router())
         .merge(tax_lots::router())
         .merge(compare::router())
+        .merge(export::router())
 }
 
 mod helpers {
