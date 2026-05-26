@@ -14,6 +14,7 @@ mod community;
 mod crypto;
 mod disclosures;
 mod earnings_iv;
+mod economy;
 mod executions;
 mod heatmap;
 mod hotkeys;
@@ -75,6 +76,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(options::router())
         .merge(crypto::router())
         .merge(backtest::router())
+        .merge(economy::router())
 }
 
 mod helpers {

@@ -308,6 +308,10 @@ export const api = {
     // Strategy backtest engine
     backtestRun: (body) => request('/backtest/run', { method: 'POST', body: JSON.stringify(body) }),
 
+    // Economic calendar
+    economyCalendar: (days = 60, importance = 'medium') =>
+        request(`/economy/calendar${qs({ days, importance })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

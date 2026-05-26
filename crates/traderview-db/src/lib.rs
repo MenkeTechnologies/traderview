@@ -7,6 +7,7 @@ pub mod comments;
 pub mod crypto;
 pub mod disclosures;
 pub mod earnings_iv;
+pub mod economy;
 pub mod embedded;
 pub mod executions;
 pub mod forum;
