@@ -1,4 +1,4 @@
-/* TraderView styles — palette inherits from audio_haxor synthwave */
+/* TraderView styles — cyberpunk palette aligned with strykelang HUD. */
 
 :root {
     --bg-0: #0a0a12;
@@ -21,239 +21,325 @@
 * { box-sizing: border-box; }
 
 html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: var(--bg-0);
-    color: var(--fg-0);
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg-0); color: var(--fg-0);
     font-family: 'Hack Nerd Font', 'Hack', 'Menlo', monospace;
     font-size: 13px;
     overflow: hidden;
 }
 
 .hidden { display: none !important; }
+.muted  { color: var(--fg-2); }
+.small  { font-size: 11px; }
+.pos    { color: var(--green); }
+.neg    { color: var(--red); }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--magenta); text-shadow: 0 0 6px rgba(184, 107, 255, 0.4); }
+
+button.link {
+    background: none; border: none; color: var(--accent);
+    cursor: pointer; padding: 0 4px; font: inherit;
+}
+button.link:hover { color: var(--magenta); }
 
 /* --- top bar -------------------------------------------------------- */
-
 .topbar {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    padding: 8px 16px;
+    display: flex; align-items: center; gap: 16px;
+    padding: 6px 14px;
     background: var(--bg-1);
     border-bottom: 1px solid var(--border);
-    height: 44px;
+    height: 40px;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .brand {
-    color: var(--accent);
-    font-weight: bold;
-    letter-spacing: 2px;
-    font-size: 14px;
+    color: var(--accent); font-weight: bold;
+    letter-spacing: 2px; font-size: 14px;
+    flex: 0 0 auto;
 }
 
-.tabs {
-    display: flex;
-    gap: 4px;
-    flex: 1;
-}
+.tabs { display: flex; gap: 2px; flex: 1 1 auto; }
 
 .tab {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--fg-1);
-    padding: 4px 12px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 12px;
-    letter-spacing: 1px;
+    background: transparent; border: 1px solid transparent;
+    color: var(--fg-1); padding: 3px 9px; cursor: pointer;
+    font-family: inherit; font-size: 11px; letter-spacing: 1px;
     text-transform: uppercase;
 }
 .tab:hover { color: var(--fg-0); }
-.tab.active {
-    color: var(--accent);
-    border-bottom: 1px solid var(--accent);
-}
+.tab.active { color: var(--accent); border-bottom: 1px solid var(--accent); }
 
-.user-strip {
-    color: var(--fg-2);
-    font-size: 11px;
+.account-strip { flex: 0 0 auto; }
+.account-select {
+    background: var(--bg-2); color: var(--accent);
+    border: 1px solid var(--border); padding: 3px 8px;
+    font-family: inherit; font-size: 11px;
 }
+.user-strip { color: var(--fg-2); font-size: 11px; flex: 0 0 auto; }
 
 /* --- main -------------------------------------------------------- */
+main#app { height: calc(100% - 40px); overflow: auto; padding: 14px; }
 
-main#app {
-    height: calc(100% - 44px);
-    overflow: auto;
-    padding: 16px;
+.boot { color: var(--fg-2); text-align: center; padding: 60px 0; }
+
+.view-title {
+    color: var(--accent); margin: 0 0 14px;
+    font-size: 14px; text-transform: uppercase; letter-spacing: 3px;
+    border-bottom: 1px dashed var(--border); padding-bottom: 8px;
 }
+.view-title input[type=date] { display: inline-block; width: auto; margin-left: 12px; }
 
-.boot {
-    color: var(--fg-2);
-    text-align: center;
-    padding: 60px 0;
-}
-
-/* --- dashboard cards -------------------------------------------------------- */
-
+/* --- stat cards -------------------------------------------------------- */
 .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 10px; margin-bottom: 14px;
 }
 .card {
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    padding: 12px 14px;
+    background: var(--bg-1); border: 1px solid var(--border); padding: 10px 12px;
 }
 .card .label {
-    color: var(--fg-2);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 4px;
+    color: var(--fg-2); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;
 }
-.card .value {
-    color: var(--fg-0);
-    font-size: 22px;
-    font-weight: bold;
-}
+.card .value { color: var(--fg-0); font-size: 19px; font-weight: bold; }
 .card .value.pos { color: var(--green); }
 .card .value.neg { color: var(--red); }
 
-/* --- chart panel -------------------------------------------------------- */
-
+/* --- chart panel + panel grid -------------------------------------------------------- */
 .chart-panel {
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    padding: 12px;
+    background: var(--bg-1); border: 1px solid var(--border);
+    padding: 12px; margin-bottom: 14px;
 }
 .chart-panel h2 {
-    margin: 0 0 12px;
-    color: var(--accent);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    margin: 0 0 10px; color: var(--accent);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
 }
 
 /* --- table -------------------------------------------------------- */
-
-table.trades {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-1);
-}
+table.trades { width: 100%; border-collapse: collapse; background: var(--bg-1); }
 table.trades th, table.trades td {
-    text-align: left;
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
+    text-align: left; padding: 5px 8px;
+    border-bottom: 1px solid var(--border); font-size: 11.5px;
 }
 table.trades th {
-    color: var(--fg-2);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 10px;
-    background: var(--bg-2);
+    color: var(--fg-2); text-transform: uppercase; letter-spacing: 1px;
+    font-size: 9.5px; background: var(--bg-2);
 }
 table.trades tr:hover td { background: var(--bg-2); }
-table.trades .pnl-pos { color: var(--green); }
-table.trades .pnl-neg { color: var(--red); }
+table.trades .pos { color: var(--green); }
+table.trades .neg { color: var(--red); }
 
 /* --- buttons / inputs -------------------------------------------------------- */
-
 button.primary {
-    background: var(--accent);
-    color: var(--bg-0);
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: bold;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    background: var(--accent); color: var(--bg-0); border: none;
+    padding: 7px 14px; cursor: pointer; font-family: inherit;
+    font-weight: bold; letter-spacing: 1px; text-transform: uppercase;
+    font-size: 11px;
 }
 button.primary:hover { background: #4df0ff; }
+button.primary[disabled] { opacity: 0.4; cursor: not-allowed; }
 
-input[type=text], input[type=email], input[type=password], select, textarea {
-    background: var(--bg-2);
-    color: var(--fg-0);
-    border: 1px solid var(--border);
-    padding: 6px 10px;
-    font-family: inherit;
-    font-size: 12px;
-    width: 100%;
+input[type=text], input[type=email], input[type=password], input[type=number],
+input[type=date], input[type=search], select, textarea {
+    background: var(--bg-2); color: var(--fg-0);
+    border: 1px solid var(--border); padding: 5px 8px;
+    font-family: inherit; font-size: 12px; width: 100%;
 }
+input[type=color] {
+    background: var(--bg-2); border: 1px solid var(--border);
+    padding: 0; height: 30px; width: 50px;
+}
+textarea { min-height: 80px; resize: vertical; }
 input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--accent);
+    outline: none; border-color: var(--accent);
+}
+
+label { display: inline-flex; flex-direction: column; gap: 4px; color: var(--fg-2); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+label input, label select { margin-top: 0; }
+
+/* --- forms (inline) -------------------------------------------------------- */
+.inline-form {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: end;
+}
+.inline-form input, .inline-form select { width: auto; min-width: 100px; }
+.inline-form button { flex: 0 0 auto; }
+
+/* --- filter bar -------------------------------------------------------- */
+.filter-bar {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 10px;
+    padding: 8px; background: var(--bg-1); border: 1px solid var(--border);
+}
+.filter-bar input, .filter-bar select {
+    width: auto; min-width: 90px; flex: 1 1 110px;
+}
+.filter-bar button { flex: 0 0 auto; }
+
+.trades-toolbar { margin: 8px 0 14px; }
+
+/* --- calendar -------------------------------------------------------- */
+.mini-cal {
+    display: grid;
+    grid-template-columns: repeat(30, 1fr);
+    gap: 2px; padding: 4px;
+}
+.cal-cell { width: 100%; aspect-ratio: 1; background: var(--bg-2); border-radius: 1px; }
+.cal-cell.large {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--fg-1); font-size: 10px;
+}
+.cal-cell.empty { background: transparent; color: var(--fg-2); opacity: 0.4; }
+
+.cal-months {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+.cal-month { background: var(--bg-1); border: 1px solid var(--border); padding: 10px; }
+.cal-month h3 { margin: 0 0 8px; color: var(--accent); font-size: 12px; letter-spacing: 2px; }
+.cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+}
+.cal-dow {
+    color: var(--fg-2); font-size: 9px; text-align: center;
+    padding: 2px 0;
+}
+
+/* --- report tabs -------------------------------------------------------- */
+.report-tabs {
+    display: flex; flex-wrap: wrap; gap: 2px;
+    margin-bottom: 14px;
+    padding-bottom: 6px; border-bottom: 1px dashed var(--border);
+}
+.report-tab {
+    padding: 4px 10px; background: var(--bg-2);
+    color: var(--fg-1); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 1px;
+    border: 1px solid var(--border);
+}
+.report-tab:hover { color: var(--accent); border-color: var(--accent); }
+.report-tab.active {
+    color: var(--bg-0); background: var(--accent); border-color: var(--accent);
+}
+
+/* --- chart toolbar -------------------------------------------------------- */
+.chart-toolbar {
+    display: flex; gap: 10px; align-items: end; flex-wrap: wrap;
+    padding: 10px; background: var(--bg-1); border: 1px solid var(--border);
+    margin-bottom: 14px;
+}
+.chart-toolbar label { color: var(--fg-2); font-size: 9px; }
+.chart-toolbar input, .chart-toolbar select { width: 110px; }
+
+/* --- tags -------------------------------------------------------- */
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; background: var(--bg-2);
+    border: 1px solid var(--accent);
+    border-radius: 11px; font-size: 11px;
+}
+.tag-add { display: flex; gap: 6px; margin-top: 8px; }
+
+/* --- forum -------------------------------------------------------- */
+.forum-cats { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
+.forum-cat {
+    padding: 4px 10px; background: var(--bg-2);
+    border: 1px solid var(--border); color: var(--fg-1);
+    text-transform: uppercase; font-size: 10px; letter-spacing: 1px;
+}
+.forum-cat.active { color: var(--bg-0); background: var(--accent); border-color: var(--accent); }
+.thread-posts { display: flex; flex-direction: column; gap: 10px; }
+.forum-post {
+    padding: 10px; background: var(--bg-1); border-left: 2px solid var(--border);
+}
+.forum-post.op { border-left-color: var(--accent); }
+.forum-post .meta { color: var(--fg-2); font-size: 10px; margin-bottom: 4px; }
+
+/* --- journal + comments -------------------------------------------------------- */
+.journal-entry, .comment {
+    padding: 10px; background: var(--bg-1);
+    border-left: 2px solid var(--accent); margin-bottom: 10px;
+}
+.journal-entry .meta, .comment .meta {
+    color: var(--fg-2); font-size: 10px; margin-bottom: 4px;
+}
+.journal-entry .body, .comment .body { font-size: 12.5px; line-height: 1.5; }
+.journal-entry h1, .journal-entry h2, .journal-entry h3 { color: var(--accent); margin: 8px 0 4px; }
+.journal-entry code, .comment code {
+    background: var(--bg-2); padding: 1px 4px; font-size: 11px; color: var(--magenta);
+}
+
+/* --- screenshots -------------------------------------------------------- */
+.screenshots {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px; margin-bottom: 8px;
+}
+.shot { margin: 0; background: var(--bg-2); padding: 6px; border: 1px solid var(--border); }
+.shot img { width: 100%; height: auto; display: block; }
+.shot figcaption {
+    font-size: 11px; color: var(--fg-2);
+    padding-top: 4px; display: flex; justify-content: space-between;
+}
+
+/* --- risk form -------------------------------------------------------- */
+.risk-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.risk-form label { color: var(--fg-2); font-size: 10px; }
+.risk-form button { grid-column: span 2; }
+
+/* --- importer dropzone -------------------------------------------------------- */
+.dropzone {
+    border: 2px dashed var(--border); background: var(--bg-2);
+    padding: 40px 20px; text-align: center;
+    color: var(--fg-2); cursor: pointer; margin: 10px 0;
+}
+.dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+.import-form { display: flex; flex-direction: column; gap: 10px; }
+.import-form > label, .import-form > .dropzone, .import-form > button { width: 100%; }
+.result {
+    background: var(--bg-0); color: var(--accent);
+    padding: 8px; font-size: 12px; margin-top: 8px;
+    border: 1px solid var(--border);
 }
 
 /* --- auth screen -------------------------------------------------------- */
-
 .auth-screen {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+    position: fixed; inset: 0; background: var(--bg-0);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
 }
 .auth-card {
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    padding: 32px;
-    width: 360px;
-    box-shadow: var(--shadow);
+    background: var(--bg-1); border: 1px solid var(--border);
+    padding: 32px; width: 360px; box-shadow: var(--shadow);
 }
 .auth-card h1 {
-    color: var(--accent);
-    margin: 0 0 24px;
-    text-align: center;
-    letter-spacing: 3px;
-    font-size: 18px;
+    color: var(--accent); margin: 0 0 24px; text-align: center;
+    letter-spacing: 3px; font-size: 18px;
 }
-.auth-tabs {
-    display: flex;
-    margin-bottom: 16px;
-}
+.auth-tabs { display: flex; margin-bottom: 16px; }
 .auth-tab {
-    flex: 1;
-    background: transparent;
-    border: none;
+    flex: 1; background: transparent; border: none;
     border-bottom: 1px solid var(--border);
-    color: var(--fg-2);
-    padding: 8px;
-    cursor: pointer;
-    font-family: inherit;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--fg-2); padding: 8px; cursor: pointer;
+    font-family: inherit; text-transform: uppercase; letter-spacing: 1px;
 }
 .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 #auth-form { display: flex; flex-direction: column; gap: 10px; }
 #auth-form button[type=submit] {
-    background: var(--accent);
-    color: var(--bg-0);
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    font-family: inherit;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: bold;
+    background: var(--accent); color: var(--bg-0); border: none;
+    padding: 10px; cursor: pointer; font-family: inherit;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: bold;
 }
 .auth-error { color: var(--red); font-size: 11px; min-height: 14px; }
 
-/* --- importer dropzone -------------------------------------------------------- */
-
-.dropzone {
-    border: 2px dashed var(--border);
-    background: var(--bg-1);
-    padding: 60px 20px;
-    text-align: center;
-    color: var(--fg-2);
-    cursor: pointer;
-}
-.dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+/* --- uplot color override -------------------------------------------------------- */
+.u-legend { color: var(--fg-1) !important; }
+.u-axis { color: var(--fg-2) !important; }

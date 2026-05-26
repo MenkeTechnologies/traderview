@@ -10,11 +10,14 @@
 [![Tauri](https://img.shields.io/badge/tauri-v2-05d9e8.svg)](https://tauri.app)
 [![Axum](https://img.shields.io/badge/axum-0.7-ff2a6d.svg)](https://github.com/tokio-rs/axum)
 [![Postgres](https://img.shields.io/badge/postgres-embedded%20%2B%20external-d300c5.svg)](https://www.postgresql.org/)
+[![Brokers](https://img.shields.io/badge/brokers-12_importers-ff2a6d.svg)](#0x0a-importing-trades)
+[![Reports](https://img.shields.io/badge/reports-20+_TraderVue_parity-d300c5.svg)](#0x0c-status)
+[![Asset classes](https://img.shields.io/badge/assets-stocks_options_futures_forex-39ff14.svg)](#0x0c-status)
 [![Crates](https://img.shields.io/badge/crates-5-39ff14.svg)](#0x03-crate-graph)
 [![Docs](https://img.shields.io/badge/docs-online-05d9e8.svg)](https://menketechnologies.github.io/traderview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[TRADERVUE-STYLE TRADING JOURNAL // ONE CRATE GRAPH, TWO DEPLOY TARGETS]`
+### `[TRADERVUE-STYLE TRADING JOURNAL // FULL FEATURE PARITY // SELF-HOSTED]`
 
 > *"One workspace. Desktop with embedded Postgres. Multi-user web with axum. Same crates, same UI, same FIFO roll-up."*
 >
@@ -102,12 +105,11 @@ Same schema, same migrations, same FIFO roll-up, same frontend, same API surface
 
 | Crate                        | Lines | Purpose                                                                       |
 |------------------------------|-------|-------------------------------------------------------------------------------|
-| `traderview-core`            | 265   | Domain models, FIFO trade roll-up, summary statistics                         |
-| `traderview-db`              | 268   | `sqlx` pool factory, migrations, embedded-Postgres lifecycle                  |
-| `traderview-import`          | 73    | Broker parsers (Webull first, mapping wizard later)                           |
-| `traderview-web`             | 503   | axum router + JWT auth + `server` binary for web deploy                       |
-| `src-tauri` (`traderview-desktop`) | 148 | Tauri v2 shell — spawns embedded Postgres + axum on localhost              |
-| **Total**                    | **1,257** | 18 `.rs` files (excluding build script)                                   |
+| `traderview-core`            | ~1,500 | Domain models (24 types), FIFO roll-up + 6 tests, per-asset P&L, statistics (20+ reports), risk + R-multiple, MFE/MAE excursion, liquidity, slug |
+| `traderview-db`              | ~1,800 | 16 modules: accounts, trades, executions, tags, journal, screenshots, imports, mentorships, shares, comments, forum, prices (yfinance fetcher), settings, plans, users, embedded |
+| `traderview-import`          | ~1,000 | Generic ColumnMap CSV parser + 12 broker presets (Webull, IBKR Flex, TD, Schwab, TradeStation, Lightspeed, DAS, ThinkOrSwim, E*Trade, Fidelity, TradeZero, Robinhood, Generic) + 5 tests |
+| `traderview-web`             | ~2,500 | 16 route modules — 50+ HTTP endpoints (auth, accounts, trades, executions, tags, journal, screenshots, imports, 20 reports, mentorships, shares, comments, forum, charts/bars, settings, plans) |
+| `src-tauri` (`traderview-desktop`) | ~150  | Tauri v2 shell — spawns embedded Postgres + axum on localhost          |
 
 **Dependency direction** is one-way: `desktop` and `web` both depend on `core + db + import`. Neither depends on the other. `import` and `db` both depend on `core`. Nothing depends on `desktop` or `web`.
 
@@ -257,18 +259,28 @@ The desktop app stores its Postgres cluster under the OS-appropriate app-data di
 
 ---
 
-## [0x0C] ROADMAP
+## [0x0C] STATUS
 
 | Phase | Item                                                       | Status |
 |-------|------------------------------------------------------------|--------|
 | 1     | Workspace + crate scaffold + initial schema                | done   |
-| 2     | Webull importer (awaiting redacted real sample)            | in progress |
-| 3     | FIFO trade roll-up (`traderview-core::rollup`)             | in progress |
-| 4     | Trades UI — filters, tags, sort                            | todo   |
-| 5     | Equity curve + summary stats (uPlot)                       | todo   |
-| 6     | Journal — markdown, per-trade + per-day                    | todo   |
-| 7     | IBKR + TOS + Schwab importers via mapping wizard           | todo   |
-| 8     | Cloud sync (optional) — encrypted snapshot to S3 / R2      | todo   |
+| 2     | 12 broker importers + generic CSV mapping framework        | done   |
+| 3     | FIFO trade roll-up (`traderview-core::rollup`, 6 unit tests) | done |
+| 4     | Trades UI — filters, tags, multi-asset, sort, drill-down    | done   |
+| 5     | Equity curve + 20 stat reports + drawdown + Sharpe/Sortino  | done   |
+| 6     | Journal — markdown, per-trade + per-day, mood               | done   |
+| 7     | Multi-asset: stocks / options / futures / forex             | done   |
+| 8     | Screenshots — per-trade attachments via multipart           | done   |
+| 9     | Mentorship — request / accept / revoke read-only access     | done   |
+| 10    | Public trade shares + threaded comments                     | done   |
+| 11    | Community forum — 6 seeded categories, threads, posts       | done   |
+| 12    | Candlestick chart engine — uPlot custom OHLC + entry/exit marks | done |
+| 13    | Price-data fetcher (yfinance) + `price_bars` cache          | done   |
+| 14    | MFE / MAE / exit-efficiency from price bars                 | done   |
+| 15    | R-multiple risk reports + per-trade stop/risk inputs        | done   |
+| 16    | Trade plans (pre-trade) + saved filter sets                 | done   |
+| 17    | GitHub Actions CI + release matrix + Homebrew tap formula    | done   |
+| —     | Cloud sync — encrypted snapshot to S3 / R2                   | future |
 
 ---
 

@@ -1,0 +1,34 @@
+import { api } from '../api.js';
+import { esc } from '../util.js';
+
+export async function renderTags(mount) {
+    const tags = await api.tags();
+    mount.innerHTML = `
+        <h1 class="view-title">// TAGS</h1>
+        <div class="chart-panel">
+            <h2>Add tag</h2>
+            <form id="tag-form" class="inline-form">
+                <input name="name" placeholder="tag name" required>
+                <input type="color" name="color" value="#00e5ff">
+                <button class="primary" type="submit">Create</button>
+            </form>
+        </div>
+        <div class="tag-list">${tags.map(t => `
+            <span class="tag-chip" style="border-color:${esc(t.color)}">
+                ${esc(t.name)}
+                <button class="link" data-del="${t.id}">×</button>
+            </span>
+        `).join('') || '<p class="muted">No tags yet.</p>'}</div>
+    `;
+    document.getElementById('tag-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        await api.createTag(fd.get('name'), fd.get('color'));
+        renderTags(mount);
+    });
+    document.querySelectorAll('[data-del]').forEach(b =>
+        b.addEventListener('click', async () => {
+            await api.deleteTag(b.dataset.del);
+            renderTags(mount);
+        }));
+}

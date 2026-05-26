@@ -2,14 +2,28 @@
 
 import { api, initApi, ApiError } from './api.js';
 import { showAuthScreen, hideAuthScreen } from './auth.js';
-import { equityChart } from './charts.js';
-import { renderTradesView } from './trades.js';
-import { renderImportView } from './import.js';
-import { renderJournalView } from './journal.js';
+import { renderDashboard } from './views/dashboard.js';
+import { renderTradesView } from './views/trades.js';
+import { renderTradeDetail } from './views/trade_detail.js';
+import { renderJournalView } from './views/journal.js';
+import { renderCalendar } from './views/calendar.js';
+import { renderReports } from './views/reports.js';
+import { renderCharts } from './views/charts.js';
+import { renderImportView } from './views/import.js';
+import { renderPlans } from './views/plans.js';
+import { renderTags } from './views/tags.js';
+import { renderMentorship } from './views/mentorship.js';
+import { renderCommunity, renderCommunityThread } from './views/community.js';
+import { renderShares, renderSharedTrade } from './views/shares.js';
+import { renderAccounts } from './views/accounts.js';
+import { renderSettings } from './views/settings.js';
 
-const state = {
+export const state = {
     mode: 'web',
     accountId: null,
+    accounts: [],
+    me: null,
+    view: 'dashboard',
 };
 
 async function boot() {
@@ -20,10 +34,12 @@ async function boot() {
     } catch (_) { /* server may not be reachable yet */ }
     try {
         const me = await api.me();
+        state.me = me;
         document.getElementById('user-strip').textContent =
             me.is_local ? 'local user' : (me.email || me.display_name || '');
         await loadAccounts();
-        showView('dashboard');
+        renderAccountStrip();
+        await dispatch();
         hideAuthScreen();
     } catch (e) {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
@@ -36,88 +52,73 @@ async function boot() {
 }
 
 async function loadAccounts() {
-    const accounts = await api.accounts();
-    if (accounts.length) state.accountId = accounts[0].id;
+    state.accounts = await api.accounts();
+    if (state.accounts.length && !state.accountId) state.accountId = state.accounts[0].id;
+}
+
+function renderAccountStrip() {
+    const strip = document.getElementById('account-strip');
+    if (state.accounts.length === 0) {
+        strip.innerHTML = '<span class="muted">no account</span>';
+        return;
+    }
+    const options = state.accounts.map(a => `
+        <option value="${a.id}" ${a.id === state.accountId ? 'selected' : ''}>${a.broker} · ${a.name}</option>
+    `).join('');
+    strip.innerHTML = `<select id="account-select" class="account-select">${options}</select>`;
+    document.getElementById('account-select').addEventListener('change', (e) => {
+        state.accountId = e.target.value;
+        dispatch();
+    });
 }
 
 function bindTabs() {
     document.querySelectorAll('.tab').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
-            showView(btn.dataset.view);
+            window.location.hash = btn.dataset.view;
         });
     });
+    window.addEventListener('hashchange', dispatch);
 }
 
-async function showView(view) {
+export function go(view, params = '') {
+    window.location.hash = view + (params ? `/${params}` : '');
+}
+
+export async function dispatch() {
+    const hash = (window.location.hash || '#dashboard').slice(1);
+    const [view, ...rest] = hash.split('/');
+    state.view = view;
+    document.querySelectorAll('.tab').forEach(b =>
+        b.classList.toggle('active', b.dataset.view === view)
+    );
     const mount = document.getElementById('app');
     mount.innerHTML = '<div class="boot">loading…</div>';
     try {
-        if (view === 'dashboard') await renderDashboard(mount);
-        else if (view === 'trades') await renderTradesView(mount, state.accountId);
-        else if (view === 'journal') await renderJournalView(mount);
-        else if (view === 'import') renderImportView(mount);
-        else if (view === 'accounts') await renderAccounts(mount);
+        switch (view) {
+            case 'dashboard':   await renderDashboard(mount, state); break;
+            case 'trades':      await renderTradesView(mount, state); break;
+            case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
+            case 'journal':     await renderJournalView(mount, state, rest[0]); break;
+            case 'calendar':    await renderCalendar(mount, state); break;
+            case 'reports':     await renderReports(mount, state, rest[0] || 'overview'); break;
+            case 'charts':      await renderCharts(mount, state, rest[0] || ''); break;
+            case 'import':      await renderImportView(mount, state); break;
+            case 'plans':       await renderPlans(mount, state); break;
+            case 'tags':        await renderTags(mount, state); break;
+            case 'mentorship':  await renderMentorship(mount, state); break;
+            case 'community':   if (rest.length === 2) await renderCommunityThread(mount, state, rest[0], rest[1]);
+                                else await renderCommunity(mount, state, rest[0]); break;
+            case 'shares':      await renderShares(mount, state); break;
+            case 'shared':      await renderSharedTrade(mount, state, rest[0]); break;
+            case 'accounts':    await renderAccounts(mount, state, () => { renderAccountStrip(); }); break;
+            case 'settings':    await renderSettings(mount, state); break;
+            default:            mount.innerHTML = `<p class="boot">Unknown view: ${view}</p>`;
+        }
     } catch (e) {
         mount.innerHTML = `<p class="boot">Error: ${e.message}</p>`;
+        console.error(e);
     }
-}
-
-async function renderDashboard(mount) {
-    if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">No account. Go to Import to bring in broker data.</p>';
-        return;
-    }
-    const [summary, equity] = await Promise.all([
-        api.summary(state.accountId),
-        api.equity(state.accountId),
-    ]);
-    const pos = n => Number(n) >= 0 ? 'pos' : 'neg';
-    mount.innerHTML = `
-        <div class="cards">
-            <div class="card"><div class="label">Net P&L</div>
-                <div class="value ${pos(summary.net_pnl)}">${fmt(summary.net_pnl)}</div></div>
-            <div class="card"><div class="label">Trades</div>
-                <div class="value">${summary.trade_count}</div></div>
-            <div class="card"><div class="label">Win rate</div>
-                <div class="value">${(summary.win_rate * 100).toFixed(1)}%</div></div>
-            <div class="card"><div class="label">Profit factor</div>
-                <div class="value">${Number.isFinite(summary.profit_factor) ? summary.profit_factor.toFixed(2) : '∞'}</div></div>
-            <div class="card"><div class="label">Expectancy</div>
-                <div class="value ${pos(summary.expectancy)}">${fmt(summary.expectancy)}</div></div>
-            <div class="card"><div class="label">Fees</div>
-                <div class="value">${fmt(summary.fees)}</div></div>
-        </div>
-        <div class="chart-panel">
-            <h2>Equity Curve</h2>
-            <div id="equity-chart"></div>
-        </div>`;
-    equityChart(document.getElementById('equity-chart'), equity);
-}
-
-async function renderAccounts(mount) {
-    const accounts = await api.accounts();
-    if (!accounts.length) {
-        mount.innerHTML = '<p class="boot">No accounts yet. Account creation UI lands in phase 4.</p>';
-        return;
-    }
-    mount.innerHTML = `
-        <table class="trades">
-            <thead><tr><th>Broker</th><th>Name</th><th>Currency</th><th>Created</th></tr></thead>
-            <tbody>${accounts.map(a => `
-                <tr>
-                    <td>${a.broker}</td>
-                    <td>${a.name}</td>
-                    <td>${a.base_currency}</td>
-                    <td>${a.created_at.slice(0, 10)}</td>
-                </tr>`).join('')}
-            </tbody>
-        </table>`;
-}
-
-function fmt(n) {
-    const v = Number(n);
-    return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 window.addEventListener('tv:authed', () => boot());

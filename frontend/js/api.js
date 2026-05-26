@@ -5,12 +5,10 @@ let token = '';
 
 export async function initApi() {
     if (window.__TAURI__) {
-        // Desktop — fetch config from Tauri backend.
         const cfg = await window.__TAURI__.core.invoke('get_api_config');
         baseUrl = cfg.base_url;
         token = cfg.token;
     } else {
-        // Web — same origin, token from localStorage.
         baseUrl = '';
         token = localStorage.getItem('tv-token') || '';
     }
@@ -48,24 +46,166 @@ async function request(path, opts = {}) {
     return ct.includes('application/json') ? res.json() : res.text();
 }
 
+const qs = (obj) => {
+    const parts = [];
+    for (const [k, v] of Object.entries(obj || {})) {
+        if (v === undefined || v === null || v === '') continue;
+        parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+    }
+    return parts.length ? '?' + parts.join('&') : '';
+};
+
 export class ApiError extends Error {
     constructor(status, msg) { super(msg); this.status = status; }
 }
 
 export const api = {
+    // auth
     config: () => request('/config'),
     me: () => request('/auth/me'),
     login: (email, password) =>
         request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     register: (email, password, display_name) =>
-        request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify({ email, password, display_name }),
-        }),
+        request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, display_name }) }),
+
+    // accounts
     accounts: () => request('/accounts'),
-    trades: (account_id, limit = 50, offset = 0) =>
-        request(`/trades?account_id=${account_id}&limit=${limit}&offset=${offset}`),
+    createAccount: (broker, name, base_currency = 'USD') =>
+        request('/accounts', { method: 'POST', body: JSON.stringify({ broker, name, base_currency }) }),
+    deleteAccount: (id) => request(`/accounts/${id}`, { method: 'DELETE' }),
+
+    // trades
+    trades: (account_id, filter = {}) =>
+        request(`/trades${qs(Object.assign({ account_id, limit: 200 }, filter))}`),
+    trade: (id) => request(`/trades/${id}`),
+    rollupTrades: (account_id) => request(`/trades/rollup?account_id=${account_id}`, { method: 'POST' }),
+    setRisk: (trade_id, body) =>
+        request(`/trades/${trade_id}/risk`, { method: 'POST', body: JSON.stringify(body) }),
+
+    // executions
+    executions: (account_id) => request(`/executions?account_id=${account_id}`),
+    executionsForTrade: (trade_id) => request(`/trades/${trade_id}/executions`),
+    createExecution: (body) =>
+        request('/executions', { method: 'POST', body: JSON.stringify(body) }),
+    deleteExecution: (id) => request(`/executions/${id}`, { method: 'DELETE' }),
+
+    // tags
+    tags: () => request('/tags'),
+    createTag: (name, color) =>
+        request('/tags', { method: 'POST', body: JSON.stringify({ name, color }) }),
+    deleteTag: (id) => request(`/tags/${id}`, { method: 'DELETE' }),
+    tagsForTrade: (trade_id) => request(`/trades/${trade_id}/tags`),
+    attachTag: (trade_id, tag_id) =>
+        request(`/trades/${trade_id}/tags`, { method: 'POST', body: JSON.stringify({ tag_id }) }),
+    detachTag: (trade_id, tag_id) =>
+        request(`/trades/${trade_id}/tags/${tag_id}`, { method: 'DELETE' }),
+
+    // journal
+    journalForDay: (day) => request(`/journal/day/${day}`),
+    journalForTrade: (trade_id) => request(`/journal/trade/${trade_id}`),
+    createJournal: (body) => request('/journal', { method: 'POST', body: JSON.stringify(body) }),
+    updateJournal: (id, body) =>
+        request(`/journal/${id}`, { method: 'POST', body: JSON.stringify(body) }),
+    deleteJournal: (id) => request(`/journal/${id}`, { method: 'DELETE' }),
+
+    // screenshots (multipart)
+    screenshotsForTrade: (trade_id) => request(`/trades/${trade_id}/screenshots`),
+    uploadScreenshot: (trade_id, file, caption = '') => {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('caption', caption);
+        return request(`/trades/${trade_id}/screenshots`, { method: 'POST', body: fd });
+    },
+    screenshotUrl: (id) => `${baseUrl}/api/screenshots/${id}/bytes`,
+    deleteScreenshot: (id) => request(`/screenshots/${id}`, { method: 'DELETE' }),
+
+    // imports
+    importList: (account_id) => request(`/imports?account_id=${account_id}`),
+    importSources: () => request('/imports/sources'),
+    upload: (account_id, source, file) => {
+        const fd = new FormData();
+        fd.append('account_id', account_id);
+        fd.append('source', source);
+        fd.append('file', file);
+        return request('/imports', { method: 'POST', body: fd });
+    },
+
+    // reports
+    overview: (account_id) => request(`/reports/overview?account_id=${account_id}`),
+    bySymbol: (account_id) => request(`/reports/by-symbol?account_id=${account_id}`),
+    bySide: (account_id) => request(`/reports/by-side?account_id=${account_id}`),
+    byAssetClass: (account_id) => request(`/reports/by-asset-class?account_id=${account_id}`),
+    byDow: (account_id) => request(`/reports/by-day-of-week?account_id=${account_id}`),
+    byHour: (account_id) => request(`/reports/by-hour?account_id=${account_id}`),
+    byHold: (account_id) => request(`/reports/by-hold?account_id=${account_id}`),
+    byMonth: (account_id) => request(`/reports/by-month?account_id=${account_id}`),
+    rDist: (account_id) => request(`/reports/r-distribution?account_id=${account_id}`),
+    streaks: (account_id) => request(`/reports/streaks?account_id=${account_id}`),
+    comparison: (account_id) => request(`/reports/comparison?account_id=${account_id}`),
+    exitEff: (account_id) => request(`/reports/exit-efficiency?account_id=${account_id}`),
+    commissions: (account_id) => request(`/reports/commissions?account_id=${account_id}`),
+    liquidity: (account_id, adv = '') => request(`/reports/liquidity${qs({ account_id, adv })}`),
+    risk: (account_id) => request(`/reports/risk?account_id=${account_id}`),
+    drawdown: (account_id, starting_cash) =>
+        request(`/reports/drawdown${qs({ account_id, starting_cash })}`),
+    riskAdjusted: (account_id, starting_cash) =>
+        request(`/reports/risk-adjusted${qs({ account_id, starting_cash })}`),
+    calendar: (account_id) => request(`/reports/calendar?account_id=${account_id}`),
     summary: (account_id) => request(`/stats/summary?account_id=${account_id}`),
-    equity: (account_id) => request(`/stats/equity?account_id=${account_id}`),
-    journalForDay: (day) => request(`/journal/${day}`),
+    equity: (account_id, starting_cash) =>
+        request(`/stats/equity${qs({ account_id, starting_cash })}`),
+
+    // mentorships
+    mentorshipRequest: (mentor_id, scope = 'read') =>
+        request('/mentorships', { method: 'POST', body: JSON.stringify({ mentor_id, scope }) }),
+    mentors: () => request('/mentorships/mentors'),
+    mentees: () => request('/mentorships/mentees'),
+    acceptMentorship: (id) => request(`/mentorships/${id}/accept`, { method: 'POST' }),
+    revokeMentorship: (id) => request(`/mentorships/${id}`, { method: 'DELETE' }),
+
+    // shares
+    sharesPublic: () => request('/shares/public'),
+    sharesMine: () => request('/shares'),
+    createShare: (body) => request('/shares', { method: 'POST', body: JSON.stringify(body) }),
+    deleteShare: (id) => request(`/shares/${id}`, { method: 'DELETE' }),
+    viewShared: (slug) => request(`/shared/${slug}`),
+    comments: (slug) => request(`/shared/${slug}/comments`),
+    postComment: (slug, body_md, parent_id = null) =>
+        request(`/shared/${slug}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ body_md, parent_id }),
+        }),
+    deleteComment: (id) => request(`/comments/${id}`, { method: 'DELETE' }),
+
+    // forum
+    forumCategories: () => request('/forum/categories'),
+    forumThreadsIn: (slug) => request(`/forum/threads/category/${slug}`),
+    forumThreadBySlug: (cat_slug, thread_slug) =>
+        request(`/forum/by-slug/${cat_slug}/${thread_slug}`),
+    forumPosts: (thread_id) => request(`/forum/threads/${thread_id}/posts`),
+    forumCreateThread: (category_id, title, body_md) =>
+        request('/forum/threads', { method: 'POST', body: JSON.stringify({ category_id, title, body_md }) }),
+    forumCreatePost: (thread_id, body_md) =>
+        request(`/forum/threads/${thread_id}/posts`, { method: 'POST', body: JSON.stringify({ body_md }) }),
+    forumBumpView: (thread_id) =>
+        request(`/forum/threads/${thread_id}/view`, { method: 'POST' }),
+
+    // charts (price bars)
+    bars: (symbol, interval, from, to) =>
+        request(`/bars/${encodeURIComponent(symbol)}${qs({ interval, from, to })}`),
+
+    // settings
+    settings: () => request('/settings'),
+    updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
+    listFilters: () => request('/filter-sets'),
+    saveFilter: (name, payload, is_default = false) =>
+        request('/filter-sets', { method: 'POST', body: JSON.stringify({ name, payload, is_default }) }),
+    deleteFilter: (id) => request(`/filter-sets/${id}`, { method: 'DELETE' }),
+
+    // plans
+    plans: () => request('/plans'),
+    createPlan: (body) => request('/plans', { method: 'POST', body: JSON.stringify(body) }),
+    linkPlan: (plan_id, trade_id) =>
+        request(`/plans/${plan_id}/link/${trade_id}`, { method: 'POST' }),
+    abandonPlan: (id) => request(`/plans/${id}`, { method: 'DELETE' }),
 };
