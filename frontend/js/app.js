@@ -23,6 +23,16 @@ import { renderWatchlists } from './views/watchlists.js';
 import { renderResearch } from './views/research.js';
 import { renderScreener } from './views/screener.js';
 import { renderTopSignals } from './views/top_signals.js';
+import { renderScanners } from './views/scanners.js';
+import { renderSectors } from './views/sectors.js';
+import { renderPaper } from './views/paper.js';
+import { renderRisk } from './views/risk.js';
+import { renderAlerts } from './views/alerts.js';
+import { renderHotkeys } from './views/hotkeys.js';
+import { renderReplay } from './views/replay.js';
+import { renderTape } from './views/tape.js';
+import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
+import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
 export const state = {
     mode: 'web',
@@ -47,6 +57,11 @@ async function boot() {
         renderAccountStrip();
         await dispatch();
         hideAuthScreen();
+        // Boot background engines once authenticated.
+        startAlertEngine();
+        installHotkeyEngine();
+        reloadHotkeys();
+        requestNotifPermission();
     } catch (e) {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
             showAuthScreen();
@@ -110,6 +125,14 @@ export async function dispatch() {
             case 'research':    await renderResearch(mount, state, rest[0] || ''); break;
             case 'screener':    await renderScreener(mount, state); break;
             case 'top-signals': await renderTopSignals(mount, state); break;
+            case 'scanners':    await renderScanners(mount, state); break;
+            case 'sectors':     await renderSectors(mount, state); break;
+            case 'paper':       await renderPaper(mount, state); break;
+            case 'risk':        await renderRisk(mount, state); break;
+            case 'alerts':      await renderAlerts(mount, state); break;
+            case 'hotkeys':     await renderHotkeys(mount, state); break;
+            case 'replay':      await renderReplay(mount, state, rest[0]); break;
+            case 'tape':        await renderTape(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

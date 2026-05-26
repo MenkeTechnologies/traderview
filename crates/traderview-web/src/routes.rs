@@ -5,22 +5,27 @@ use crate::state::AppState;
 use axum::Router;
 
 mod accounts;
+mod alerts;
 mod auth;
 mod charts;
 mod comments;
 mod community;
 mod executions;
+mod hotkeys;
 mod imports;
 mod journal;
 mod markets;
 mod mentorships;
 mod note_templates;
+mod paper;
 mod plans;
 mod reports;
 mod research;
+mod scans;
 mod screener;
 mod screenshots;
 mod search;
+mod sectors;
 mod settings;
 mod shares;
 mod tags;
@@ -51,6 +56,11 @@ pub fn api_router() -> Router<AppState> {
         .merge(watchlists::router())
         .merge(research::router())
         .merge(screener::router())
+        .merge(scans::router())
+        .merge(sectors::router())
+        .merge(paper::router())
+        .merge(alerts::router())
+        .merge(hotkeys::router())
 }
 
 mod helpers {

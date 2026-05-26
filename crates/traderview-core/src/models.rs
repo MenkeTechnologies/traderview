@@ -168,6 +168,10 @@ pub struct UserSettings {
     pub auto_flatten: bool,
     #[serde(default)]
     pub require_account_tag: bool,
+    #[serde(default)]
+    pub daily_profit_goal: Decimal,
+    #[serde(default)]
+    pub daily_max_loss: Decimal,
     pub updated_at: DateTime<Utc>,
 }
 
@@ -187,6 +191,8 @@ impl Default for UserSettings {
             commission_per_contract: Decimal::ZERO,
             auto_flatten: true,
             require_account_tag: false,
+            daily_profit_goal: Decimal::ZERO,
+            daily_max_loss: Decimal::ZERO,
             updated_at: Utc::now(),
         }
     }

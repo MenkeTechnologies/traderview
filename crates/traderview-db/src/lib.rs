@@ -2,20 +2,25 @@
 //! repository layer (hand-written sqlx queries) used by `traderview-web`.
 
 pub mod accounts;
+pub mod alerts;
 pub mod comments;
 pub mod embedded;
 pub mod executions;
 pub mod forum;
+pub mod hotkeys;
 pub mod imports;
 pub mod journal;
 pub mod market_data;
 pub mod markets;
 pub mod mentorships;
 pub mod note_templates;
+pub mod paper;
 pub mod plans;
 pub mod prices;
+pub mod scans;
 pub mod screenshots;
 pub mod search;
+pub mod sectors;
 pub mod settings;
 pub mod shares;
 pub mod tags;

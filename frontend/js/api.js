@@ -239,6 +239,36 @@ export const api = {
     topSignals:  (side = 'buy', watchlist_id = null, limit = 25) =>
         request(`/screener/top${qs({ side, watchlist_id, limit })}`),
 
+    // scanners (Warrior/Zendoo presets)
+    scanRun: (preset, watchlist_id = null, limit = 50) =>
+        request(`/scans/run${qs({ preset, watchlist_id, limit })}`),
+
+    // sectors
+    sectors: () => request('/sectors'),
+
+    // paper trading
+    paperAccounts:  () => request('/paper/accounts'),
+    paperEnsure:    () => request('/paper/accounts', { method: 'POST' }),
+    paperReset:     (id, starting_cash) =>
+        request(`/paper/accounts/${id}/reset`, { method: 'POST', body: JSON.stringify({ starting_cash }) }),
+    paperOrders:    (id, limit = 100) => request(`/paper/accounts/${id}/orders${qs({ limit })}`),
+    paperSubmit:    (id, req) =>
+        request(`/paper/accounts/${id}/orders`, { method: 'POST', body: JSON.stringify(req) }),
+    paperPositions: (id) => request(`/paper/accounts/${id}/positions`),
+
+    // alerts
+    alerts:        () => request('/alerts'),
+    createAlert:   (body) => request('/alerts', { method: 'POST', body: JSON.stringify(body) }),
+    deleteAlert:   (id) => request(`/alerts/${id}`, { method: 'DELETE' }),
+    toggleAlert:   (id, enabled) =>
+        request(`/alerts/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
+    markAlertFired:(id) => request(`/alerts/${id}/fired`, { method: 'POST' }),
+
+    // hotkeys
+    hotkeys:       () => request('/hotkeys'),
+    upsertHotkey:  (body) => request('/hotkeys', { method: 'POST', body: JSON.stringify(body) }),
+    deleteHotkey:  (id) => request(`/hotkeys/${id}`, { method: 'DELETE' }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

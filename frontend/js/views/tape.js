@@ -1,0 +1,93 @@
+// Live tape — Zendoo-style streaming feed: news + scanner pings + sector
+// snapshot, refreshed every 30s.
+import { api } from '../api.js';
+import { esc, fmtDateTime } from '../util.js';
+
+let timer = null;
+
+export async function renderTape(mount) {
+    mount.innerHTML = `
+        <h1 class="view-title">// LIVE TAPE</h1>
+        <p class="muted small">Auto-refreshing news + sector snapshot from your watchlist universe. Updates every 30 seconds.</p>
+        <div class="panel-grid">
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2>News feed</h2>
+                <div id="tape-news">loading…</div>
+            </div>
+            <div class="chart-panel">
+                <h2>Sectors right now</h2>
+                <div id="tape-sectors">loading…</div>
+            </div>
+            <div class="chart-panel">
+                <h2>Watchlist quotes</h2>
+                <div id="tape-quotes">loading…</div>
+            </div>
+        </div>
+    `;
+    if (timer) clearInterval(timer);
+    timer = setInterval(refresh, 30_000);
+    await refresh();
+    // Stop polling when leaving the view.
+    window.addEventListener('hashchange', () => {
+        if (!window.location.hash.startsWith('#tape')) {
+            clearInterval(timer); timer = null;
+        }
+    }, { once: true });
+}
+
+async function refresh() {
+    const lists = await api.watchlists();
+    const symbols = new Set();
+    for (const w of lists) {
+        for (const s of await api.watchlistSymbols(w.id)) symbols.add(s);
+    }
+    const syms = Array.from(symbols).slice(0, 12);
+
+    // News: pull a few items per symbol, flatten, sort by time.
+    const allNews = [];
+    for (const sym of syms) {
+        try {
+            const items = await api.symbolNews(sym, 3);
+            for (const n of items) allNews.push({ ...n, symbol: sym });
+        } catch (_) {}
+    }
+    allNews.sort((a, b) => (b.provider_publish_time || 0) - (a.provider_publish_time || 0));
+    document.getElementById('tape-news').innerHTML = allNews.length
+        ? allNews.slice(0, 40).map(n => `
+            <div class="news-item">
+                <a href="${esc(n.link || '#')}" target="_blank" rel="noopener noreferrer">
+                    <span class="tape-sym">${esc(n.symbol)}</span> ${esc(n.title || '(no title)')}
+                </a>
+                <div class="meta">${esc(n.publisher || '')} ${n.provider_publish_time
+                    ? '· ' + new Date(n.provider_publish_time * 1000).toLocaleString(undefined, { hour12: false })
+                    : ''}</div>
+            </div>`).join('')
+        : '<p class="muted">No news in this universe yet.</p>';
+
+    // Sectors
+    try {
+        const sectors = await api.sectors();
+        document.getElementById('tape-sectors').innerHTML = `<table class="trades">
+            ${sectors.map(s => `<tr>
+                <td>${esc(s.label)}</td>
+                <td><a href="#research/${encodeURIComponent(s.sector)}">${esc(s.sector)}</a></td>
+                <td class="${Number(s.change_pct) >= 0 ? 'pos' : 'neg'}">${Number(s.change_pct) >= 0 ? '+' : ''}${Number(s.change_pct).toFixed(2)}%</td>
+            </tr>`).join('')}
+        </table>`;
+    } catch (_) {}
+
+    // Quotes
+    const quotes = [];
+    for (const sym of syms) {
+        try { quotes.push(await api.quote(sym)); } catch (_) {}
+    }
+    document.getElementById('tape-quotes').innerHTML = quotes.length ? `<table class="trades">
+        ${quotes.map(q => `<tr>
+            <td><a href="#research/${encodeURIComponent(q.symbol)}">${esc(q.symbol)}</a></td>
+            <td>${Number(q.price).toFixed(2)}</td>
+            <td class="${(q.change_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${q.change_pct != null ? (q.change_pct >= 0 ? '+' : '') + q.change_pct.toFixed(2) + '%' : '—'}</td>
+        </tr>`).join('')}
+    </table>` : '<p class="muted">Add symbols to a watchlist first.</p>';
+
+    void fmtDateTime;
+}

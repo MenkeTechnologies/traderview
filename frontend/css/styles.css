@@ -605,6 +605,65 @@ label {
     font-family: 'Share Tech Mono', monospace;
 }
 
+/* ---- scanner preset tiles ----------------------------------------------------- */
+.scanner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+}
+.scanner-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+    padding: 12px; border-radius: 2px;
+    text-align: left; cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.15s;
+}
+.scanner-tile:hover { border-color: var(--cyan); box-shadow: 0 0 14px var(--cyan-glow); }
+.scanner-tile.active { border-color: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
+.scanner-title {
+    color: var(--cyan); font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.scanner-desc { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
+/* ---- sector bars ----------------------------------------------------- */
+.sector-bar {
+    height: 14px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+}
+.sector-bar.pos { background: linear-gradient(90deg, var(--green), color-mix(in srgb, var(--green) 60%, var(--cyan))); }
+.sector-bar.neg { background: linear-gradient(90deg, var(--red), color-mix(in srgb, var(--red) 60%, var(--accent))); }
+
+/* ---- risk bars ----------------------------------------------------- */
+.risk-bar-wrap {
+    position: relative; height: 22px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 2px; overflow: hidden; margin: 4px 0;
+}
+.risk-bar {
+    height: 100%;
+    transition: width 0.6s cubic-bezier(.22,1,.36,1);
+}
+.risk-bar.pos { background: linear-gradient(90deg, var(--green), color-mix(in srgb, var(--green) 60%, var(--cyan))); }
+.risk-bar.neg { background: linear-gradient(90deg, var(--red), color-mix(in srgb, var(--red) 60%, var(--accent))); }
+.risk-bar-label {
+    position: absolute; right: 8px; top: 0; line-height: 22px;
+    color: var(--text); font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; text-shadow: 0 0 4px var(--bg-primary);
+}
+
+/* ---- tape ----------------------------------------------------- */
+.tape-sym {
+    display: inline-block; padding: 1px 6px;
+    background: var(--bg-secondary); border: 1px solid var(--cyan);
+    border-radius: 2px; color: var(--cyan);
+    font-family: 'Orbitron', sans-serif; font-size: 10px;
+    letter-spacing: 1.2px; margin-right: 6px;
+}
+
 /* ---- uplot color overrides ----------------------------------------------------- */
 .u-legend { color: var(--text-dim) !important; }
 .u-axis { color: var(--text-muted) !important; }

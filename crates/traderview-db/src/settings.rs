@@ -7,7 +7,8 @@ use uuid::Uuid;
 const SETTINGS_COLS: &str = "user_id, default_account_id, base_currency, timezone, theme,
                 starting_cash, dashboard_layout,
                 commission_per_share, commission_per_contract,
-                auto_flatten, require_account_tag, updated_at";
+                auto_flatten, require_account_tag,
+                daily_profit_goal, daily_max_loss, updated_at";
 
 pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<UserSettings> {
     let q = format!("SELECT {SETTINGS_COLS} FROM user_settings WHERE user_id = $1");
@@ -32,8 +33,9 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
             (user_id, default_account_id, base_currency, timezone, theme,
              starting_cash, dashboard_layout,
              commission_per_share, commission_per_contract,
-             auto_flatten, require_account_tag, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
+             auto_flatten, require_account_tag,
+             daily_profit_goal, daily_max_loss, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
          ON CONFLICT (user_id) DO UPDATE SET
             default_account_id      = EXCLUDED.default_account_id,
             base_currency           = EXCLUDED.base_currency,
@@ -45,6 +47,8 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
             commission_per_contract = EXCLUDED.commission_per_contract,
             auto_flatten            = EXCLUDED.auto_flatten,
             require_account_tag     = EXCLUDED.require_account_tag,
+            daily_profit_goal       = EXCLUDED.daily_profit_goal,
+            daily_max_loss          = EXCLUDED.daily_max_loss,
             updated_at              = now()",
     )
     .bind(s.user_id)
@@ -58,6 +62,8 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
     .bind(s.commission_per_contract)
     .bind(s.auto_flatten)
     .bind(s.require_account_tag)
+    .bind(s.daily_profit_goal)
+    .bind(s.daily_max_loss)
     .execute(pool)
     .await?;
     Ok(())
@@ -120,6 +126,8 @@ struct Row {
     commission_per_contract: Decimal,
     auto_flatten: bool,
     require_account_tag: bool,
+    daily_profit_goal: Decimal,
+    daily_max_loss: Decimal,
     updated_at: DateTime<Utc>,
 }
 
@@ -137,6 +145,8 @@ impl From<Row> for UserSettings {
             commission_per_contract: r.commission_per_contract,
             auto_flatten: r.auto_flatten,
             require_account_tag: r.require_account_tag,
+            daily_profit_goal: r.daily_profit_goal,
+            daily_max_loss: r.daily_max_loss,
             updated_at: r.updated_at,
         }
     }
