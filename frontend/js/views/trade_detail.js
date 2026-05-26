@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
+import { renderAiAnalyze } from './journal_ai.js';
 
 const dtLocal = (iso) => {
     if (!iso) return '';
@@ -283,4 +284,12 @@ export async function renderTradeDetail(mount, state, tradeId) {
             `Public link: <a href="#shared/${sh.slug}">/#shared/${sh.slug}</a> (slug: <code>${sh.slug}</code>)`;
     });
     void share;
+
+    // AI analysis panel — appended at the end. Self-contained: loads cache,
+    // shows Run/Re-analyze button, fetches LLM on demand.
+    const aiSlot = document.createElement('div');
+    mount.appendChild(aiSlot);
+    renderAiAnalyze(aiSlot, tradeId).catch((e) => {
+        aiSlot.innerHTML = `<p class="muted small">AI panel failed to load: ${esc(e.message)}</p>`;
+    });
 }

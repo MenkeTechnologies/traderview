@@ -20,6 +20,7 @@ pub mod heatmap;
 pub mod hotkeys;
 pub mod imports;
 pub mod journal;
+pub mod journal_ai;
 pub mod market_data;
 pub mod markets;
 pub mod mentorships;

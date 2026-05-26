@@ -27,6 +27,7 @@ mod heatmap;
 mod hotkeys;
 mod imports;
 mod journal;
+mod journal_ai;
 mod markets;
 mod mentorships;
 mod note_templates;
@@ -105,6 +106,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(export::router())
         .merge(chart_drawings::router())
         .merge(ws::router())
+        .merge(journal_ai::router())
 }
 
 mod helpers {

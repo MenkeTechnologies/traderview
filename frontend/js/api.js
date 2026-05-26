@@ -378,6 +378,15 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // AI journal analysis
+    getAiSettings: () => request('/journal-ai/settings'),
+    setAiSettings: (body) =>
+        request('/journal-ai/settings', { method: 'POST', body: JSON.stringify(body) }),
+    runAiAnalysis: (tradeId) =>
+        request(`/journal-ai/${tradeId}/analyze`, { method: 'POST' }),
+    getAiCached: (tradeId) =>
+        request(`/journal-ai/${tradeId}/cached`),
+
     // Chart drawings (per-user, per-symbol persisted overlays)
     listChartDrawings: (sym) => request(`/chart-drawings/${encodeURIComponent(sym)}`),
     createChartDrawing: (sym, draft) =>
