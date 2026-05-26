@@ -3,6 +3,7 @@
 
 pub mod accounts;
 pub mod alerts;
+pub mod api_tokens;
 pub mod breadth;
 pub mod chart_drawings;
 pub mod compare;

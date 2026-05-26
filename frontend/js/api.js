@@ -378,6 +378,12 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Personal Access Tokens (public API auth)
+    listApiTokens: () => request('/api-tokens'),
+    createApiToken: (body) =>
+        request('/api-tokens', { method: 'POST', body: JSON.stringify(body) }),
+    revokeApiToken: (id) => request(`/api-tokens/${id}`, { method: 'DELETE' }),
+
     // AI journal analysis
     getAiSettings: () => request('/journal-ai/settings'),
     setAiSettings: (body) =>

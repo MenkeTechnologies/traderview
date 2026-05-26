@@ -7,6 +7,7 @@ use axum::Router;
 mod accounts;
 mod alerts;
 mod analysis;
+mod api_tokens;
 mod auth;
 mod backtest;
 mod breadth;
@@ -107,6 +108,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(chart_drawings::router())
         .merge(ws::router())
         .merge(journal_ai::router())
+        .merge(api_tokens::router())
 }
 
 mod helpers {

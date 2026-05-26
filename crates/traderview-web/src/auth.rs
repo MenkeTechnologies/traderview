@@ -80,6 +80,11 @@ where
         if let Some(header) = parts.headers.get(axum::http::header::AUTHORIZATION) {
             if let Ok(s) = header.to_str() {
                 if let Some(tok) = s.strip_prefix("Bearer ") {
+                    // Personal Access Token path: pat_<24>_<32>
+                    if let Some(rest) = tok.strip_prefix("pat_") {
+                        let user_id = verify_pat(&app, rest).await?;
+                        return Ok(AuthUser { id: user_id });
+                    }
                     let claims = decode_token(&app.jwt_secret, tok)?;
                     return Ok(AuthUser { id: claims.sub });
                 }
@@ -95,4 +100,49 @@ where
 
         Err(ApiError::Unauthorized)
     }
+}
+
+// ===========================================================================
+// Personal Access Token helpers
+// ===========================================================================
+
+const PAT_PREFIX_LEN: usize = 24;
+const PAT_SECRET_LEN: usize = 32;
+
+/// Generate a new (prefix, secret, wire_token, hash) tuple. Caller persists
+/// `prefix` + `hash`; returns `wire_token` to the user exactly once.
+pub fn generate_pat() -> Result<(String, String, String, String), ApiError> {
+    use rand::distributions::Alphanumeric;
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let prefix: String = (&mut rng).sample_iter(Alphanumeric).take(PAT_PREFIX_LEN).map(char::from).collect();
+    let secret: String = (&mut rng).sample_iter(Alphanumeric).take(PAT_SECRET_LEN).map(char::from).collect();
+    let wire = format!("pat_{}_{}", prefix, secret);
+    let hash = hash_password(&format!("{}_{}", prefix, secret))?;
+    Ok((prefix, secret, wire, hash))
+}
+
+/// Verify a `Bearer pat_<rest>` token and return the owning user id. Bumps
+/// last_used_at on success.
+pub async fn verify_pat(app: &AppState, rest: &str) -> Result<Uuid, ApiError> {
+    // rest = "<24 prefix>_<32 secret>"
+    let mut split = rest.splitn(2, '_');
+    let prefix = split.next().ok_or(ApiError::Unauthorized)?;
+    let secret = split.next().ok_or(ApiError::Unauthorized)?;
+    if prefix.len() != PAT_PREFIX_LEN || secret.len() != PAT_SECRET_LEN {
+        return Err(ApiError::Unauthorized);
+    }
+    let row = traderview_db::api_tokens::find_active_by_prefix(&app.pool, prefix)
+        .await.map_err(ApiError::Internal)?
+        .ok_or(ApiError::Unauthorized)?;
+    let candidate = format!("{}_{}", prefix, secret);
+    let ok = verify_password(&candidate, &row.hash)?;
+    if !ok { return Err(ApiError::Unauthorized); }
+    // Fire-and-forget the usage bump — don't block the request on it.
+    let pool = app.pool.clone();
+    let id = row.id;
+    tokio::spawn(async move {
+        let _ = traderview_db::api_tokens::bump_usage(&pool, id).await;
+    });
+    Ok(row.user_id)
 }
