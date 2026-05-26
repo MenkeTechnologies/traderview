@@ -131,6 +131,46 @@ pub async fn delete(pool: &PgPool, execution_id: Uuid) -> anyhow::Result<bool> {
     Ok(r.rows_affected() > 0)
 }
 
+/// Edit any subset of mutable fields. None = leave unchanged.
+pub async fn update(
+    pool: &PgPool,
+    id: Uuid,
+    side: Option<Side>,
+    qty: Option<Decimal>,
+    price: Option<Decimal>,
+    fee: Option<Decimal>,
+    executed_at: Option<DateTime<Utc>>,
+) -> anyhow::Result<bool> {
+    let r = sqlx::query(
+        "UPDATE executions SET
+            side = COALESCE($2::side_t, side),
+            qty  = COALESCE($3, qty),
+            price = COALESCE($4, price),
+            fee = COALESCE($5, fee),
+            executed_at = COALESCE($6, executed_at)
+          WHERE id = $1",
+    )
+    .bind(id)
+    .bind(side.map(side_to_pg))
+    .bind(qty)
+    .bind(price)
+    .bind(fee)
+    .bind(executed_at)
+    .execute(pool)
+    .await?;
+    Ok(r.rows_affected() > 0)
+}
+
+/// Look up the account that owns an execution. Returns None if not found.
+pub async fn account_for(pool: &PgPool, execution_id: Uuid) -> anyhow::Result<Option<Uuid>> {
+    let row: Option<(Uuid,)> =
+        sqlx::query_as("SELECT account_id FROM executions WHERE id = $1")
+            .bind(execution_id)
+            .fetch_optional(pool)
+            .await?;
+    Ok(row.map(|(a,)| a))
+}
+
 fn side_to_pg(s: Side) -> &'static str {
     match s {
         Side::Buy => "buy",

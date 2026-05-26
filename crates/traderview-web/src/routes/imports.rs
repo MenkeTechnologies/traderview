@@ -97,9 +97,30 @@ async fn upload(
     let parser = parser_for(&source)
         .ok_or_else(|| ApiError::BadRequest(format!("unknown broker: {source}")))?;
     let sha = sha256_hex(&bytes);
-    let parsed = parser
+    let mut parsed = parser
         .parse(&bytes)
         .map_err(|e| ApiError::BadRequest(format!("parse: {e}")))?;
+
+    // Auto-apply per-share / per-contract commission for executions whose
+    // broker file omitted fees (fee == 0). Mirrors TraderVue's behavior:
+    // manual rates fill in only when source data is missing.
+    let settings = traderview_db::settings::get(&s.pool, user.id)
+        .await
+        .map_err(ApiError::Internal)?;
+    use rust_decimal::Decimal;
+    use traderview_core::AssetClass;
+    for p in &mut parsed {
+        if !p.fee.is_zero() {
+            continue;
+        }
+        let rate = match p.asset_class {
+            AssetClass::Option | AssetClass::Future => settings.commission_per_contract,
+            _ => settings.commission_per_share,
+        };
+        if rate > Decimal::ZERO {
+            p.fee = rate * p.qty;
+        }
+    }
 
     let import_row = traderview_db::imports::create(
         &s.pool,

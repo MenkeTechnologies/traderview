@@ -13,9 +13,11 @@ mod executions;
 mod imports;
 mod journal;
 mod mentorships;
+mod note_templates;
 mod plans;
 mod reports;
 mod screenshots;
+mod search;
 mod settings;
 mod shares;
 mod tags;
@@ -39,6 +41,8 @@ pub fn api_router() -> Router<AppState> {
         .merge(charts::router())
         .merge(settings::router())
         .merge(plans::router())
+        .merge(search::router())
+        .merge(note_templates::router())
 }
 
 mod helpers {

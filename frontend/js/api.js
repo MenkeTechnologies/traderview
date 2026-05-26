@@ -78,15 +78,30 @@ export const api = {
     trades: (account_id, filter = {}) =>
         request(`/trades${qs(Object.assign({ account_id, limit: 200 }, filter))}`),
     trade: (id) => request(`/trades/${id}`),
+    deleteTrade: (id) => request(`/trades/${id}`, { method: 'DELETE' }),
     rollupTrades: (account_id) => request(`/trades/rollup?account_id=${account_id}`, { method: 'POST' }),
     setRisk: (trade_id, body) =>
         request(`/trades/${trade_id}/risk`, { method: 'POST', body: JSON.stringify(body) }),
+    splitTrade: (id) => request(`/trades/${id}/split`, { method: 'POST' }),
+    mergeTrades: (trade_ids) =>
+        request('/trades/merge', { method: 'POST', body: JSON.stringify({ trade_ids }) }),
+    bulkTrades: (trade_ids, action, extras = {}) =>
+        request('/trades/bulk', {
+            method: 'POST',
+            body: JSON.stringify(Object.assign({ trade_ids, action }, extras)),
+        }),
+    closeExpiredOptions: (account_id) =>
+        request(`/trades/close-expired-options?account_id=${account_id}`, { method: 'POST' }),
 
     // executions
     executions: (account_id) => request(`/executions?account_id=${account_id}`),
     executionsForTrade: (trade_id) => request(`/trades/${trade_id}/executions`),
     createExecution: (body) =>
         request('/executions', { method: 'POST', body: JSON.stringify(body) }),
+    updateExecution: (id, body) =>
+        request(`/executions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    addExecutionToTrade: (trade_id, body) =>
+        request(`/trades/${trade_id}/executions`, { method: 'POST', body: JSON.stringify(body) }),
     deleteExecution: (id) => request(`/executions/${id}`, { method: 'DELETE' }),
 
     // tags
@@ -103,6 +118,7 @@ export const api = {
     // journal
     journalForDay: (day) => request(`/journal/day/${day}`),
     journalForTrade: (trade_id) => request(`/journal/trade/${trade_id}`),
+    journalGeneral: () => request('/journal/general'),
     createJournal: (body) => request('/journal', { method: 'POST', body: JSON.stringify(body) }),
     updateJournal: (id, body) =>
         request(`/journal/${id}`, { method: 'POST', body: JSON.stringify(body) }),
@@ -201,6 +217,16 @@ export const api = {
     saveFilter: (name, payload, is_default = false) =>
         request('/filter-sets', { method: 'POST', body: JSON.stringify({ name, payload, is_default }) }),
     deleteFilter: (id) => request(`/filter-sets/${id}`, { method: 'DELETE' }),
+
+    // search
+    search: (q, scope = 'all', limit = 50) => request(`/search${qs({ q, scope, limit })}`),
+
+    // note templates
+    noteTemplates: (scope) => request(`/note-templates${qs({ scope })}`),
+    upsertNoteTemplate: (name, scope, body_md, is_default) =>
+        request('/note-templates', { method: 'POST', body: JSON.stringify({ name, scope, body_md, is_default }) }),
+    deleteNoteTemplate: (id) => request(`/note-templates/${id}`, { method: 'DELETE' }),
+    defaultNoteTemplate: (scope) => request(`/note-templates/default${qs({ scope })}`),
 
     // plans
     plans: () => request('/plans'),

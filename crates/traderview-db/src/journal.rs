@@ -20,6 +20,19 @@ pub async fn list_for_day(
     Ok(rows.into_iter().map(Into::into).collect())
 }
 
+pub async fn list_general(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<JournalEntry>> {
+    let rows: Vec<Row> = sqlx::query_as(
+        "SELECT id, user_id, trade_id, day, body_md, mood, created_at, updated_at
+           FROM journal_entries
+          WHERE user_id = $1 AND trade_id IS NULL AND day IS NULL
+          ORDER BY created_at DESC",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(Into::into).collect())
+}
+
 pub async fn list_for_trade(
     pool: &PgPool,
     user_id: Uuid,

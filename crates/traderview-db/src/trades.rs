@@ -206,6 +206,228 @@ pub async fn set_risk_fields(
     Ok(())
 }
 
+pub async fn delete(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<bool> {
+    let r = sqlx::query("DELETE FROM trades WHERE id = $1")
+        .bind(trade_id)
+        .execute(pool)
+        .await?;
+    Ok(r.rows_affected() > 0)
+}
+
+/// Delete by id list (single-account; verify ownership at the route layer).
+pub async fn delete_many(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<u64> {
+    if ids.is_empty() {
+        return Ok(0);
+    }
+    let r = sqlx::query("DELETE FROM trades WHERE id = ANY($1)")
+        .bind(ids)
+        .execute(pool)
+        .await?;
+    Ok(r.rows_affected())
+}
+
+/// "Split" a trade into N pieces by deleting it and re-running rollup for the
+/// account, but only after marking the underlying executions to disable
+/// auto-grouping at the split point. Practical implementation: we re-run the
+/// account roll-up with the auto_flatten setting forcibly on for a single
+/// shot, which yields one trade per flat→nonzero transition.
+///
+/// For now, "split" is implemented as: delete the target trade, re-rollup the
+/// account. The current FIFO roll-up already splits naturally on flat boundary,
+/// so this restores natural grouping. Caller can then re-merge as desired.
+pub async fn split(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<usize> {
+    let row: Option<(Uuid,)> = sqlx::query_as("SELECT account_id FROM trades WHERE id = $1")
+        .bind(trade_id)
+        .fetch_optional(pool)
+        .await?;
+    let acct = row.ok_or_else(|| anyhow::anyhow!("trade not found"))?.0;
+    rollup_account(pool, acct).await
+}
+
+/// "Merge" — take N trades that belong to one account, delete them, and emit
+/// a single materialized trade that aggregates their legs. Inputs must share
+/// `account_id` + `symbol` + `asset_class` + `option_leg`; otherwise we
+/// refuse.
+pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
+    use traderview_core::{Trade, TradeStatus};
+    if ids.len() < 2 {
+        anyhow::bail!("need at least 2 trades to merge");
+    }
+    let trades: Vec<Trade> = futures(pool, ids).await?;
+    let first = trades.first().ok_or_else(|| anyhow::anyhow!("no trades"))?;
+    for t in &trades[1..] {
+        if t.account_id != first.account_id
+            || t.symbol != first.symbol
+            || t.asset_class != first.asset_class
+            || t.option_type != first.option_type
+            || t.expiration != first.expiration
+            || t.strike != first.strike
+        {
+            anyhow::bail!("trades differ on the merge key (account/symbol/asset/option-leg)");
+        }
+    }
+
+    let mut tx = pool.begin().await?;
+    // Sum legs into one new trade.
+    let total_qty: Decimal = trades.iter().map(|t| t.qty).sum();
+    let total_fees: Decimal = trades.iter().map(|t| t.fees).sum();
+    let weighted_entry: Decimal = trades
+        .iter()
+        .map(|t| t.entry_avg * t.qty)
+        .sum::<Decimal>()
+        / total_qty.max(Decimal::ONE);
+    let weighted_exit: Option<Decimal> = {
+        let parts: Vec<(Decimal, Decimal)> = trades
+            .iter()
+            .filter_map(|t| t.exit_avg.map(|x| (x, t.qty)))
+            .collect();
+        if parts.is_empty() {
+            None
+        } else {
+            let n: Decimal = parts.iter().map(|(_, q)| *q).sum();
+            Some(parts.iter().map(|(p, q)| *p * *q).sum::<Decimal>() / n.max(Decimal::ONE))
+        }
+    };
+    let total_gross: Option<Decimal> = sum_opt(trades.iter().map(|t| t.gross_pnl));
+    let total_net: Option<Decimal> = sum_opt(trades.iter().map(|t| t.net_pnl));
+    let opened_at = trades.iter().map(|t| t.opened_at).min().unwrap();
+    let closed_at = trades.iter().filter_map(|t| t.closed_at).max();
+    let status = if trades.iter().all(|t| t.status == TradeStatus::Closed) {
+        "closed"
+    } else {
+        "open"
+    };
+
+    let new_id: Uuid = sqlx::query_scalar(
+        "INSERT INTO trades (
+            account_id, symbol, side, status, opened_at, closed_at,
+            qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+            asset_class, option_type, strike, expiration, multiplier,
+            tick_size, tick_value, base_ccy, quote_ccy, pip_size
+         ) VALUES (
+            $1, $2, $3::trade_side_t, $4::trade_status_t, $5, $6,
+            $7, $8, $9, $10, $11, $12,
+            $13::asset_class_t, $14, $15, $16, $17,
+            $18, $19, $20, $21, $22
+         ) RETURNING id",
+    )
+    .bind(first.account_id)
+    .bind(&first.symbol)
+    .bind(side_to_pg(first.side))
+    .bind(status)
+    .bind(opened_at)
+    .bind(closed_at)
+    .bind(total_qty)
+    .bind(weighted_entry)
+    .bind(weighted_exit)
+    .bind(total_gross)
+    .bind(total_fees)
+    .bind(total_net)
+    .bind(ac_to_pg(first.asset_class))
+    .bind(first.option_type.map(option_type_to_pg).map(|s| s as &str))
+    .bind(first.strike)
+    .bind(first.expiration)
+    .bind(first.multiplier)
+    .bind(first.tick_size)
+    .bind(first.tick_value)
+    .bind(first.base_ccy.as_deref())
+    .bind(first.quote_ccy.as_deref())
+    .bind(first.pip_size)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    // Re-point legs from old trades to new id.
+    sqlx::query("UPDATE trade_executions SET trade_id = $1 WHERE trade_id = ANY($2)")
+        .bind(new_id)
+        .bind(ids)
+        .execute(&mut *tx)
+        .await?;
+    // Re-point tags too.
+    sqlx::query(
+        "INSERT INTO trade_tags (trade_id, tag_id)
+         SELECT $1, tag_id FROM trade_tags WHERE trade_id = ANY($2)
+         ON CONFLICT DO NOTHING",
+    )
+    .bind(new_id)
+    .bind(ids)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query("DELETE FROM trades WHERE id = ANY($1)")
+        .bind(ids)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok(new_id)
+}
+
+async fn futures(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Vec<traderview_core::Trade>> {
+    let rows: Vec<TradeRow> = sqlx::query_as(
+        "SELECT id, account_id, symbol, side::text, status::text, opened_at, closed_at,
+                qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+                asset_class::text, option_type::text, strike, expiration, multiplier,
+                tick_size, tick_value, base_ccy, quote_ccy, pip_size,
+                stop_loss, risk_amount, initial_target, mfe, mae, best_exit_pnl, exit_efficiency
+           FROM trades WHERE id = ANY($1)",
+    )
+    .bind(ids)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(Into::into).collect())
+}
+
+fn sum_opt<I: Iterator<Item = Option<Decimal>>>(iter: I) -> Option<Decimal> {
+    let mut acc: Option<Decimal> = None;
+    for v in iter {
+        match v {
+            Some(x) => acc = Some(acc.unwrap_or(Decimal::ZERO) + x),
+            None => return None,
+        }
+    }
+    acc
+}
+
+/// Insert zero-priced closing executions for every option leg whose
+/// expiration date has passed and which still has an open trade open.
+pub async fn close_expired_options(
+    pool: &PgPool,
+    account_id: Uuid,
+) -> anyhow::Result<usize> {
+    let open_options: Vec<(Uuid, String, Decimal, chrono::NaiveDate, String, Decimal)> =
+        sqlx::query_as(
+            "SELECT id, symbol, qty, expiration, side::text, multiplier
+               FROM trades
+              WHERE account_id = $1 AND status = 'open' AND asset_class = 'option'
+                AND expiration IS NOT NULL AND expiration < CURRENT_DATE",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+    let n = open_options.len();
+    for (_id, symbol, qty, expiration, side, multiplier) in open_options {
+        let closing_side = if side == "long" { "sell" } else { "cover" };
+        let exec_time = expiration.and_hms_opt(16, 0, 0).unwrap().and_utc();
+        sqlx::query(
+            "INSERT INTO executions (
+                account_id, symbol, side, qty, price, fee, executed_at,
+                asset_class, multiplier, raw
+             ) VALUES ($1, $2, $3::side_t, $4, 0, 0, $5,
+                       'option'::asset_class_t, $6, '{\"source\":\"close_expired\"}'::jsonb)",
+        )
+        .bind(account_id)
+        .bind(&symbol)
+        .bind(closing_side)
+        .bind(qty)
+        .bind(exec_time)
+        .bind(multiplier)
+        .execute(pool)
+        .await?;
+    }
+    if n > 0 {
+        rollup_account(pool, account_id).await?;
+    }
+    Ok(n)
+}
+
 pub async fn set_excursion(
     pool: &PgPool,
     trade_id: Uuid,

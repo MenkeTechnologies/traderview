@@ -2,6 +2,13 @@ import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
 
+const dtLocal = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export async function renderTradeDetail(mount, state, tradeId) {
     if (!tradeId) { mount.innerHTML = '<p class="boot">No trade id</p>'; return; }
     const [trade, executions, tags, journal, screenshots, share] = await Promise.all([
@@ -42,11 +49,40 @@ export async function renderTradeDetail(mount, state, tradeId) {
           <div class="chart-panel">
             <h2>Executions</h2>
             <table class="trades"><thead><tr>
-              <th>Time</th><th>Side</th><th>Qty</th><th>Price</th><th>Fee</th>
+              <th>Time</th><th>Side</th><th>Qty</th><th>Price</th><th>Fee</th><th></th>
             </tr></thead><tbody>${executions.map(e => `
-              <tr><td>${fmtDateTime(e.executed_at)}</td><td>${e.side}</td>
-              <td>${fmt(e.qty, 0)}</td><td>${fmt(e.price)}</td><td>${fmtMoney(e.fee)}</td></tr>
+              <tr data-eid="${e.id}">
+                <td><input class="ex-time" type="datetime-local"
+                      value="${dtLocal(e.executed_at)}"></td>
+                <td>
+                  <select class="ex-side">
+                    ${['buy','sell','short','cover'].map(s =>
+                      `<option ${s === e.side ? 'selected' : ''}>${s}</option>`).join('')}
+                  </select>
+                </td>
+                <td><input class="ex-qty" type="number" step="any" value="${e.qty}"></td>
+                <td><input class="ex-price" type="number" step="any" value="${e.price}"></td>
+                <td><input class="ex-fee" type="number" step="any" value="${e.fee}"></td>
+                <td>
+                  <button class="link" data-save-ex="${e.id}">save</button>
+                  <button class="link" data-del-ex="${e.id}">trash</button>
+                </td>
+              </tr>
             `).join('')}</tbody></table>
+            <details class="ex-add">
+              <summary>+ Add execution</summary>
+              <form id="ex-add-form" class="inline-form" style="margin-top:8px">
+                <select name="side">
+                  <option value="buy">buy</option><option value="sell">sell</option>
+                  <option value="short">short</option><option value="cover">cover</option>
+                </select>
+                <input name="qty" type="number" step="any" placeholder="qty" required>
+                <input name="price" type="number" step="any" placeholder="price" required>
+                <input name="fee" type="number" step="any" placeholder="fee" value="0">
+                <input name="executed_at" type="datetime-local" required>
+                <button class="primary" type="submit">Add</button>
+              </form>
+            </details>
           </div>
 
           <div class="chart-panel">
@@ -96,7 +132,10 @@ export async function renderTradeDetail(mount, state, tradeId) {
               </div>
             `).join('')}</div>
             <textarea id="journal-body" placeholder="What was the setup? What did you see? Mistakes? Lessons?"></textarea>
-            <button class="primary" id="journal-save">Save note</button>
+            <div class="inline-form">
+              <button class="primary" id="journal-save">Save note</button>
+              <button class="primary" id="journal-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+            </div>
           </div>
 
           <div class="chart-panel">
@@ -169,11 +208,73 @@ export async function renderTradeDetail(mount, state, tradeId) {
         await api.createJournal({ trade_id: tradeId, body_md });
         renderTradeDetail(mount, state, tradeId);
     });
+    document.getElementById('journal-template').addEventListener('click', async () => {
+        const tpl = await api.defaultNoteTemplate('trade');
+        const ta = document.getElementById('journal-body');
+        if (tpl && tpl.body_md) {
+            ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
+        } else {
+            alert('No default trade template set. Configure one under Settings → Notes Templates.');
+        }
+    });
     document.querySelectorAll('[data-del-journal]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteJournal(b.dataset.delJournal);
             renderTradeDetail(mount, state, tradeId);
         }));
+
+    // Execution editor — save / delete each row + add new
+    document.querySelectorAll('[data-save-ex]').forEach(b =>
+        b.addEventListener('click', async () => {
+            const eid = b.dataset.saveEx;
+            const row = b.closest('tr');
+            const body = {
+                side: row.querySelector('.ex-side').value,
+                qty: Number(row.querySelector('.ex-qty').value),
+                price: Number(row.querySelector('.ex-price').value),
+                fee: Number(row.querySelector('.ex-fee').value),
+                executed_at: new Date(row.querySelector('.ex-time').value).toISOString(),
+            };
+            try {
+                await api.updateExecution(eid, body);
+                renderTradeDetail(mount, state, tradeId);
+            } catch (err) { alert('Save failed: ' + err.message); }
+        }));
+    document.querySelectorAll('[data-del-ex]').forEach(b =>
+        b.addEventListener('click', async () => {
+            if (!confirm('Delete this execution? The trade will re-FIFO.')) return;
+            await api.deleteExecution(b.dataset.delEx);
+            renderTradeDetail(mount, state, tradeId);
+        }));
+    const addForm = document.getElementById('ex-add-form');
+    if (addForm) {
+        // pre-fill time with the trade's last close (or now)
+        const dt = trade.closed_at || trade.opened_at;
+        const d = new Date(dt);
+        const pad = (n) => String(n).padStart(2, '0');
+        addForm.querySelector('[name=executed_at]').value =
+            `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const body = {
+                side: fd.get('side'),
+                qty: Number(fd.get('qty')),
+                price: Number(fd.get('price')),
+                fee: Number(fd.get('fee') || 0),
+                executed_at: new Date(fd.get('executed_at')).toISOString(),
+                asset_class: trade.asset_class,
+                option_type: trade.option_type,
+                strike: trade.strike,
+                expiration: trade.expiration,
+                multiplier: Number(trade.multiplier),
+            };
+            try {
+                await api.addExecutionToTrade(tradeId, body);
+                renderTradeDetail(mount, state, tradeId);
+            } catch (err) { alert('Add failed: ' + err.message); }
+        });
+    }
 
     // Share
     document.getElementById('share-btn').addEventListener('click', async () => {

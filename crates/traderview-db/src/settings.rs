@@ -4,26 +4,24 @@ use sqlx::PgPool;
 use traderview_core::{FilterSet, UserSettings};
 use uuid::Uuid;
 
+const SETTINGS_COLS: &str = "user_id, default_account_id, base_currency, timezone, theme,
+                starting_cash, dashboard_layout,
+                commission_per_share, commission_per_contract,
+                auto_flatten, require_account_tag, updated_at";
+
 pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<UserSettings> {
-    let row: Option<Row> = sqlx::query_as(
-        "SELECT user_id, default_account_id, base_currency, timezone, theme,
-                starting_cash, dashboard_layout, updated_at
-           FROM user_settings WHERE user_id = $1",
-    )
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+    let q = format!("SELECT {SETTINGS_COLS} FROM user_settings WHERE user_id = $1");
+    let row: Option<Row> = sqlx::query_as(&q)
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
     if let Some(r) = row {
         Ok(r.into())
     } else {
-        let r: Row = sqlx::query_as(
-            "INSERT INTO user_settings (user_id) VALUES ($1)
-             RETURNING user_id, default_account_id, base_currency, timezone, theme,
-                       starting_cash, dashboard_layout, updated_at",
-        )
-        .bind(user_id)
-        .fetch_one(pool)
-        .await?;
+        let q = format!(
+            "INSERT INTO user_settings (user_id) VALUES ($1) RETURNING {SETTINGS_COLS}",
+        );
+        let r: Row = sqlx::query_as(&q).bind(user_id).fetch_one(pool).await?;
         Ok(r.into())
     }
 }
@@ -32,16 +30,22 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
     sqlx::query(
         "INSERT INTO user_settings
             (user_id, default_account_id, base_currency, timezone, theme,
-             starting_cash, dashboard_layout, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+             starting_cash, dashboard_layout,
+             commission_per_share, commission_per_contract,
+             auto_flatten, require_account_tag, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
          ON CONFLICT (user_id) DO UPDATE SET
-            default_account_id = EXCLUDED.default_account_id,
-            base_currency      = EXCLUDED.base_currency,
-            timezone           = EXCLUDED.timezone,
-            theme              = EXCLUDED.theme,
-            starting_cash      = EXCLUDED.starting_cash,
-            dashboard_layout   = EXCLUDED.dashboard_layout,
-            updated_at         = now()",
+            default_account_id      = EXCLUDED.default_account_id,
+            base_currency           = EXCLUDED.base_currency,
+            timezone                = EXCLUDED.timezone,
+            theme                   = EXCLUDED.theme,
+            starting_cash           = EXCLUDED.starting_cash,
+            dashboard_layout        = EXCLUDED.dashboard_layout,
+            commission_per_share    = EXCLUDED.commission_per_share,
+            commission_per_contract = EXCLUDED.commission_per_contract,
+            auto_flatten            = EXCLUDED.auto_flatten,
+            require_account_tag     = EXCLUDED.require_account_tag,
+            updated_at              = now()",
     )
     .bind(s.user_id)
     .bind(s.default_account_id)
@@ -50,6 +54,10 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
     .bind(&s.theme)
     .bind(s.starting_cash)
     .bind(&s.dashboard_layout)
+    .bind(s.commission_per_share)
+    .bind(s.commission_per_contract)
+    .bind(s.auto_flatten)
+    .bind(s.require_account_tag)
     .execute(pool)
     .await?;
     Ok(())
@@ -108,6 +116,10 @@ struct Row {
     theme: String,
     starting_cash: Decimal,
     dashboard_layout: serde_json::Value,
+    commission_per_share: Decimal,
+    commission_per_contract: Decimal,
+    auto_flatten: bool,
+    require_account_tag: bool,
     updated_at: DateTime<Utc>,
 }
 
@@ -121,6 +133,10 @@ impl From<Row> for UserSettings {
             theme: r.theme,
             starting_cash: r.starting_cash,
             dashboard_layout: r.dashboard_layout,
+            commission_per_share: r.commission_per_share,
+            commission_per_contract: r.commission_per_contract,
+            auto_flatten: r.auto_flatten,
+            require_account_tag: r.require_account_tag,
             updated_at: r.updated_at,
         }
     }

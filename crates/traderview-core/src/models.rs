@@ -160,8 +160,18 @@ pub struct UserSettings {
     pub theme: String,
     pub starting_cash: Decimal,
     pub dashboard_layout: serde_json::Value,
+    #[serde(default)]
+    pub commission_per_share: Decimal,
+    #[serde(default)]
+    pub commission_per_contract: Decimal,
+    #[serde(default = "true_default")]
+    pub auto_flatten: bool,
+    #[serde(default)]
+    pub require_account_tag: bool,
     pub updated_at: DateTime<Utc>,
 }
+
+fn true_default() -> bool { true }
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -173,9 +183,25 @@ impl Default for UserSettings {
             theme: "cyberpunk".into(),
             starting_cash: Decimal::ZERO,
             dashboard_layout: serde_json::json!({}),
+            commission_per_share: Decimal::ZERO,
+            commission_per_contract: Decimal::ZERO,
+            auto_flatten: true,
+            require_account_tag: false,
             updated_at: Utc::now(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NoteTemplate {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub name: String,
+    pub scope: String, // "trade" | "journal"
+    pub body_md: String,
+    pub is_default: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 // ===========================================================================

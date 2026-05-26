@@ -14,6 +14,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/journal/day/:day", get(for_day))
         .route("/journal/trade/:id", get(for_trade))
+        .route("/journal/general", get(general))
         .route("/journal", post(create))
         .route("/journal/:id", post(update).delete(delete_one))
 }
@@ -56,9 +57,8 @@ async fn create(
     user: AuthUser,
     Json(body): Json<CreateBody>,
 ) -> Result<Json<JournalEntry>, ApiError> {
-    if body.trade_id.is_none() && body.day.is_none() {
-        return Err(ApiError::BadRequest("trade_id or day required".into()));
-    }
+    // Migration 0009 dropped the trade_id-OR-day CHECK so general notes
+    // (both null) are now valid.
     if let Some(tid) = body.trade_id {
         ensure_trade_owner(&s.pool, user.id, tid).await?;
     }
@@ -73,6 +73,17 @@ async fn create(
         )
         .await
         .map_err(ApiError::Internal)?,
+    ))
+}
+
+async fn general(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<JournalEntry>>, ApiError> {
+    Ok(Json(
+        traderview_db::journal::list_general(&s.pool, user.id)
+            .await
+            .map_err(ApiError::Internal)?,
     ))
 }
 

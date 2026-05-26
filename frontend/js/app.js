@@ -17,6 +17,8 @@ import { renderCommunity, renderCommunityThread } from './views/community.js';
 import { renderShares, renderSharedTrade } from './views/shares.js';
 import { renderAccounts } from './views/accounts.js';
 import { renderSettings } from './views/settings.js';
+import { renderSearch } from './views/search.js';
+import { renderNewTrade } from './views/new_trade.js';
 
 export const state = {
     mode: 'web',
@@ -98,6 +100,8 @@ export async function dispatch() {
         switch (view) {
             case 'dashboard':   await renderDashboard(mount, state); break;
             case 'trades':      await renderTradesView(mount, state); break;
+            case 'new-trade':   await renderNewTrade(mount, state); break;
+            case 'search':      await renderSearch(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;
