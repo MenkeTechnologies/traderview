@@ -20,6 +20,7 @@ mod journal;
 mod markets;
 mod mentorships;
 mod note_templates;
+mod options;
 mod paper;
 mod plans;
 mod reports;
@@ -69,6 +70,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(disclosures::router())
         .merge(sentiment::router())
         .merge(heatmap::router())
+        .merge(options::router())
 }
 
 mod helpers {

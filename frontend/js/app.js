@@ -35,6 +35,7 @@ import { renderEarningsIv } from './views/earnings_iv.js';
 import { renderDisclosures } from './views/disclosures.js';
 import { renderSentiment } from './views/sentiment.js';
 import { renderHeatmap } from './views/heatmap.js';
+import { renderOptions } from './views/options_chain.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
@@ -141,6 +142,7 @@ export async function dispatch() {
             case 'disclosures': await renderDisclosures(mount, state); break;
             case 'sentiment':   await renderSentiment(mount, state, rest[0]); break;
             case 'heatmap':     await renderHeatmap(mount, state); break;
+            case 'options':     await renderOptions(mount, state, rest[0]); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

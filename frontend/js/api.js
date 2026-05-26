@@ -296,6 +296,10 @@ export const api = {
     // Finviz-style sector heatmap
     heatmap: () => request('/heatmap'),
 
+    // Options chain + Greeks
+    options:     (sym, expiration = null) => request(`/options/${encodeURIComponent(sym)}${qs({ expiration })}`),
+    greeksCalc:  (params) => request(`/greeks${qs(params)}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
