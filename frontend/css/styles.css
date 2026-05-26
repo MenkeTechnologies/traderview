@@ -704,6 +704,23 @@ label {
                    background: rgba(255, 221, 87, 0.12); }
 .econ-imp.low    { color: var(--text-muted); border: 1px solid var(--text-muted); }
 
+/* ---- correlation matrix table ----------------------------------------------------- */
+.corr-matrix {
+    border-collapse: collapse; width: 100%;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+}
+.corr-matrix th {
+    background: var(--bg-secondary); color: var(--cyan);
+    font-family: 'Orbitron', sans-serif; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 5px 8px; border: 1px solid var(--border);
+}
+.corr-matrix td {
+    text-align: center; padding: 5px 8px;
+    border: 1px solid var(--border); color: var(--text);
+    min-width: 50px;
+}
+
 /* ---- uplot color overrides ----------------------------------------------------- */
 .u-legend { color: var(--text-dim) !important; }
 .u-axis { color: var(--text-muted) !important; }

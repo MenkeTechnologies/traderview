@@ -312,6 +312,12 @@ export const api = {
     economyCalendar: (days = 60, importance = 'medium') =>
         request(`/economy/calendar${qs({ days, importance })}`),
 
+    // Pairs / correlation
+    correlationMatrix: (symbols, days = 90) =>
+        request(`/analysis/correlation${qs({ symbols, days })}`),
+    pairAnalysis: (a, b, days = 180) =>
+        request(`/analysis/pair${qs({ a, b, days })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

@@ -1,0 +1,122 @@
+// Correlation matrix + per-pair spread/z-score analyzer.
+import { api } from '../api.js';
+import { barChart } from '../charts.js';
+import { esc, fmt } from '../util.js';
+
+export async function renderPairs(mount) {
+    const lists = await api.watchlists();
+    mount.innerHTML = `
+        <h1 class="view-title">// PAIRS / CORRELATION</h1>
+        <p class="muted small">Pearson correlation matrix over log-returns + per-pair OLS spread &amp; z-score
+        (mean-reversion stat-arb signal — |z| ≥ 2 → consider fading).</p>
+
+        <div class="chart-panel">
+            <form id="cf" class="inline-form">
+                <label>Symbols
+                    <input name="symbols" placeholder="AAPL,MSFT,GOOGL,NVDA,META,AMZN,TSLA" required style="min-width:340px;text-transform:uppercase">
+                </label>
+                <label>or watchlist
+                    <select name="wl">
+                        <option value="">— ignore —</option>
+                        ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
+                    </select>
+                </label>
+                <label>Days <input name="days" type="number" value="90" style="width:80px"></label>
+                <button class="primary" type="submit">Run</button>
+            </form>
+        </div>
+
+        <div id="cmatrix"></div>
+
+        <div class="chart-panel">
+            <h2>Pair analyzer</h2>
+            <form id="pf" class="inline-form">
+                <input name="a" placeholder="A (KO)" required style="width:90px;text-transform:uppercase">
+                <input name="b" placeholder="B (PEP)" required style="width:90px;text-transform:uppercase">
+                <label>Days <input name="days" type="number" value="180" style="width:80px"></label>
+                <button class="primary" type="submit">Analyze</button>
+            </form>
+            <div id="pair-out"></div>
+        </div>
+    `;
+    document.getElementById('cf').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        let syms = fd.get('symbols').toUpperCase();
+        const wid = fd.get('wl');
+        if (wid) {
+            try {
+                const ws = await api.watchlistSymbols(wid);
+                if (ws.length) syms = ws.join(',');
+            } catch (_) {}
+        }
+        const days = Number(fd.get('days') || 90);
+        document.getElementById('cmatrix').innerHTML = '<div class="boot">computing matrix…</div>';
+        try {
+            const r = await api.correlationMatrix(syms, days);
+            renderMatrix(r);
+        } catch (err) {
+            document.getElementById('cmatrix').innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+        }
+    });
+    document.getElementById('pf').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const a = fd.get('a').toUpperCase();
+        const b = fd.get('b').toUpperCase();
+        const days = Number(fd.get('days') || 180);
+        const el = document.getElementById('pair-out');
+        el.innerHTML = '<div class="boot">analyzing…</div>';
+        try {
+            const r = await api.pairAnalysis(a, b, days);
+            renderPairOut(el, a, b, r);
+        } catch (err) {
+            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+        }
+    });
+}
+
+function renderMatrix(r) {
+    const heat = (c) => {
+        const intensity = Math.min(1, Math.abs(c));
+        if (c >= 0) return `rgba(35, 209, 96, ${0.15 + intensity * 0.65})`;
+        return `rgba(255, 56, 96, ${0.15 + intensity * 0.65})`;
+    };
+    const html = `<div class="chart-panel">
+        <h2>${r.symbols.length}×${r.symbols.length} correlation · ${r.days}d · ${r.samples} samples</h2>
+        <table class="corr-matrix">
+            <thead><tr><th></th>${r.symbols.map(s => `<th>${esc(s)}</th>`).join('')}</tr></thead>
+            <tbody>${r.symbols.map((row, i) => `<tr>
+                <th>${esc(row)}</th>
+                ${r.matrix[i].map((c, j) => `<td style="background:${heat(c)}">${c.toFixed(2)}</td>`).join('')}
+            </tr>`).join('')}</tbody>
+        </table>
+    </div>`;
+    document.getElementById('cmatrix').innerHTML = html;
+}
+
+function renderPairOut(el, a, b, r) {
+    const zCls = r.latest_zscore > 2 ? 'neg' : r.latest_zscore < -2 ? 'pos' : '';
+    const reco = r.latest_zscore > 2  ? `SHORT ${esc(a)} / LONG ${esc(b)}`
+              : r.latest_zscore < -2  ? `LONG ${esc(a)} / SHORT ${esc(b)}`
+              : 'NEUTRAL — wait for |z| ≥ 2';
+    el.innerHTML = `
+        <div class="cards" style="margin-top:10px">
+            <div class="card"><div class="label">Correlation</div><div class="value">${r.correlation.toFixed(3)}</div></div>
+            <div class="card"><div class="label">β</div><div class="value">${r.beta.toFixed(3)}</div></div>
+            <div class="card"><div class="label">α</div><div class="value">${r.alpha.toFixed(3)}</div></div>
+            <div class="card"><div class="label">Mean spread</div><div class="value">${fmt(r.mean_spread)}</div></div>
+            <div class="card"><div class="label">σ spread</div><div class="value">${fmt(r.stdev_spread)}</div></div>
+            <div class="card"><div class="label">Latest spread</div><div class="value">${fmt(r.latest_spread)}</div></div>
+            <div class="card"><div class="label">Latest z-score</div>
+                <div class="value ${zCls}">${r.latest_zscore.toFixed(2)}</div></div>
+            <div class="card"><div class="label">Samples</div><div class="value">${r.samples}</div></div>
+        </div>
+        <div class="chart-panel"><h2>Trade signal</h2><p><strong>${reco}</strong></p></div>
+        <div class="chart-panel"><h2>Spread series</h2><div id="sp-chart"></div></div>
+        <div class="chart-panel"><h2>Z-score</h2><div id="z-chart"></div></div>
+    `;
+    const labels = r.spread_series.map((_, i) => String(i));
+    barChart(document.getElementById('sp-chart'), labels, r.spread_series, { color: '#00e5ff' });
+    barChart(document.getElementById('z-chart'),  labels, r.zscore_series, { color: '#b86bff' });
+}

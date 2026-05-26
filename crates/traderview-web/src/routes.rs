@@ -6,6 +6,7 @@ use axum::Router;
 
 mod accounts;
 mod alerts;
+mod analysis;
 mod auth;
 mod backtest;
 mod charts;
@@ -77,6 +78,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(crypto::router())
         .merge(backtest::router())
         .merge(economy::router())
+        .merge(analysis::router())
 }
 
 mod helpers {

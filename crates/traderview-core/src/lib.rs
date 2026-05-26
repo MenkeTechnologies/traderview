@@ -5,6 +5,7 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod backtest;
+pub mod correlation;
 pub mod excursion;
 pub mod greeks;
 pub mod indicators;
