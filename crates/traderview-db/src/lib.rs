@@ -25,6 +25,7 @@ pub mod note_templates;
 pub mod options;
 pub mod paper;
 pub mod plans;
+pub mod premarket;
 pub mod prices;
 pub mod scans;
 pub mod screenshots;

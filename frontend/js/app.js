@@ -46,6 +46,7 @@ import { renderVol } from './views/vol.js';
 import { renderWebhooks } from './views/webhooks.js';
 import { renderBreadth } from './views/breadth.js';
 import { renderFearGreed } from './views/fear_greed.js';
+import { renderPremarket } from './views/premarket.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
@@ -163,6 +164,7 @@ export async function dispatch() {
             case 'webhooks':       await renderWebhooks(mount, state); break;
             case 'breadth':        await renderBreadth(mount, state); break;
             case 'fear-greed':     await renderFearGreed(mount, state); break;
+            case 'premarket':      await renderPremarket(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

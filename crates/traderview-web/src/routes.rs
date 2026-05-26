@@ -30,6 +30,7 @@ mod note_templates;
 mod options;
 mod paper;
 mod plans;
+mod premarket;
 mod reports;
 mod research;
 mod scans;
@@ -91,6 +92,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(webhooks::router())
         .merge(breadth::router())
         .merge(fear_greed::router())
+        .merge(premarket::router())
 }
 
 mod helpers {

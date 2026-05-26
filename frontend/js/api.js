@@ -346,6 +346,9 @@ export const api = {
     // Fear & Greed gauge (7-component CNN-style composite)
     fearGreed: () => request('/fear-greed'),
 
+    // Pre-market / overnight cross-asset dashboard
+    premarketSnapshot: () => request('/premarket/snapshot'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
