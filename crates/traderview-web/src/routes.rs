@@ -43,6 +43,7 @@ mod tags;
 mod trades;
 mod vol;
 mod watchlists;
+mod webhooks;
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
@@ -85,6 +86,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(short_interest::router())
         .merge(darkpool::router())
         .merge(vol::router())
+        .merge(webhooks::router())
 }
 
 mod helpers {

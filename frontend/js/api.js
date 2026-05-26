@@ -332,6 +332,14 @@ export const api = {
     volYields: () => request('/vol/yields'),
     volDollar: () => request('/vol/dollar'),
 
+    // Webhooks (Discord/Slack/generic)
+    webhooks:        () => request('/webhooks'),
+    createWebhook:   (body) => request('/webhooks', { method: 'POST', body: JSON.stringify(body) }),
+    deleteWebhook:   (id) => request(`/webhooks/${id}`, { method: 'DELETE' }),
+    toggleWebhook:   (id, enabled) =>
+        request(`/webhooks/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
+    testWebhook:     (id) => request(`/webhooks/${id}/test`, { method: 'POST' }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
