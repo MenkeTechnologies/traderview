@@ -8,6 +8,7 @@ pub mod executions;
 pub mod forum;
 pub mod imports;
 pub mod journal;
+pub mod markets;
 pub mod mentorships;
 pub mod note_templates;
 pub mod plans;

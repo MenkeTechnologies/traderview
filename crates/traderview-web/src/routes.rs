@@ -12,6 +12,7 @@ mod community;
 mod executions;
 mod imports;
 mod journal;
+mod markets;
 mod mentorships;
 mod note_templates;
 mod plans;
@@ -43,6 +44,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(plans::router())
         .merge(search::router())
         .merge(note_templates::router())
+        .merge(markets::router())
 }
 
 mod helpers {

@@ -210,6 +210,9 @@ export const api = {
     bars: (symbol, interval, from, to) =>
         request(`/bars/${encodeURIComponent(symbol)}${qs({ interval, from, to })}`),
 
+    // global markets snapshot
+    marketsSnapshot: () => request('/markets/snapshot'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
