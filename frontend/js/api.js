@@ -305,6 +305,9 @@ export const api = {
     cryptoGlobal:   () => request('/crypto/global'),
     cryptoBtcChain: () => request('/crypto/btc/chain'),
 
+    // Strategy backtest engine
+    backtestRun: (body) => request('/backtest/run', { method: 'POST', body: JSON.stringify(body) }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

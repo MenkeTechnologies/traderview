@@ -4,6 +4,7 @@
 //! Pure-Rust, no I/O. Consumed by `traderview-db` (persistence), `traderview-web`
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
+pub mod backtest;
 pub mod excursion;
 pub mod greeks;
 pub mod indicators;
