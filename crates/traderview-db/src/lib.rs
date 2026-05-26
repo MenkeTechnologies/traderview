@@ -8,6 +8,7 @@ pub mod executions;
 pub mod forum;
 pub mod imports;
 pub mod journal;
+pub mod market_data;
 pub mod markets;
 pub mod mentorships;
 pub mod note_templates;
@@ -20,6 +21,7 @@ pub mod shares;
 pub mod tags;
 pub mod trades;
 pub mod users;
+pub mod watchlists;
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;

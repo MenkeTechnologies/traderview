@@ -5,11 +5,13 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod excursion;
+pub mod indicators;
 pub mod liquidity;
 pub mod models;
 pub mod pnl;
 pub mod risk;
 pub mod rollup;
+pub mod signals;
 pub mod slug;
 pub mod stats;
 

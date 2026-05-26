@@ -17,12 +17,15 @@ mod mentorships;
 mod note_templates;
 mod plans;
 mod reports;
+mod research;
+mod screener;
 mod screenshots;
 mod search;
 mod settings;
 mod shares;
 mod tags;
 mod trades;
+mod watchlists;
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
@@ -45,6 +48,9 @@ pub fn api_router() -> Router<AppState> {
         .merge(search::router())
         .merge(note_templates::router())
         .merge(markets::router())
+        .merge(watchlists::router())
+        .merge(research::router())
+        .merge(screener::router())
 }
 
 mod helpers {

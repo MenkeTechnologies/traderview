@@ -576,6 +576,35 @@ label {
 .commodity-pct.pos { color: var(--green); }
 .commodity-pct.neg { color: var(--red); }
 
+/* ---- research / signal score card ----------------------------------------------------- */
+.score-card {
+    display: inline-flex; flex-direction: column; align-items: center;
+    padding: 14px 22px; border: 2px solid var(--cyan); border-radius: 4px;
+    background: var(--bg-secondary);
+    box-shadow: 0 0 16px var(--cyan-glow);
+    font-family: 'Orbitron', sans-serif;
+}
+.score-card.pos { border-color: var(--green); box-shadow: 0 0 18px rgba(57, 255, 20, 0.5); }
+.score-card.neg { border-color: var(--red);   box-shadow: 0 0 18px rgba(255, 7, 58, 0.5); }
+.score-card .score-num   { font-size: 38px; font-weight: 900; color: var(--cyan); }
+.score-card.pos .score-num { color: var(--green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
+.score-card.neg .score-num { color: var(--red);   text-shadow: 0 0 10px rgba(255, 7, 58, 0.4); }
+.score-card .score-label { font-size: 11px; letter-spacing: 3px; color: var(--text-dim); margin-top: 2px; }
+
+.news-item {
+    padding: 8px 10px; background: var(--bg-secondary);
+    border-left: 2px solid var(--accent); border-radius: 2px;
+    margin-bottom: 6px;
+}
+.news-item a {
+    color: var(--text); font-size: 12.5px; font-weight: 600;
+}
+.news-item a:hover { color: var(--cyan); }
+.news-item .meta {
+    color: var(--text-muted); font-size: 10.5px; margin-top: 2px;
+    font-family: 'Share Tech Mono', monospace;
+}
+
 /* ---- uplot color overrides ----------------------------------------------------- */
 .u-legend { color: var(--text-dim) !important; }
 .u-axis { color: var(--text-muted) !important; }

@@ -213,6 +213,32 @@ export const api = {
     // global markets snapshot
     marketsSnapshot: () => request('/markets/snapshot'),
 
+    // watchlists
+    watchlists:        () => request('/watchlists'),
+    createWatchlist:   (name) => request('/watchlists', { method: 'POST', body: JSON.stringify({ name }) }),
+    renameWatchlist:   (id, name) => request(`/watchlists/${id}`, { method: 'POST', body: JSON.stringify({ name }) }),
+    deleteWatchlist:   (id) => request(`/watchlists/${id}`, { method: 'DELETE' }),
+    watchlistSymbols:  (id) => request(`/watchlists/${id}/symbols`),
+    addWatchlistSym:   (id, symbol) => request(`/watchlists/${id}/symbols`, { method: 'POST', body: JSON.stringify({ symbol }) }),
+    removeWatchlistSym:(id, symbol) => request(`/watchlists/${id}/symbols/${encodeURIComponent(symbol)}`, { method: 'DELETE' }),
+    watchlistQuotes:   (id) => request(`/watchlists/${id}/quotes`),
+
+    // research (per symbol)
+    quote:           (sym) => request(`/symbols/${encodeURIComponent(sym)}/quote`),
+    symbolSignals:   (sym, days = 365) => request(`/symbols/${encodeURIComponent(sym)}/signals${qs({ days })}`),
+    symbolNews:      (sym, count = 20) => request(`/symbols/${encodeURIComponent(sym)}/news${qs({ count })}`),
+    symbolEarnings:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/earnings`),
+    symbolDividends: (sym) => request(`/symbols/${encodeURIComponent(sym)}/dividends`),
+    symbolRecs:      (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendations`),
+    symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
+    symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
+    symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),
+
+    // screener / top signals
+    screenerRun: (opts = {}) => request(`/screener/run${qs(opts)}`),
+    topSignals:  (side = 'buy', watchlist_id = null, limit = 25) =>
+        request(`/screener/top${qs({ side, watchlist_id, limit })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
