@@ -7,7 +7,7 @@
 //!      https://cdn.finra.org/equity/regsho/daily/CNMSshvolYYYYMMDD.txt
 //!      (one row per symbol per market center; we aggregate to per-day per-symbol)
 
-use chrono::{DateTime, Duration, NaiveDate, Utc};
+use chrono::{Datelike, DateTime, Duration, NaiveDate, Utc};
 use serde::Serialize;
 use std::collections::HashMap;
 
