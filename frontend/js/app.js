@@ -118,9 +118,42 @@ function bindTabs() {
     document.querySelectorAll('.tab').forEach(btn => {
         btn.addEventListener('click', () => {
             window.location.hash = btn.dataset.view;
+            // Auto-close mobile drawer after picking a tab.
+            closeNavDrawer();
         });
     });
     window.addEventListener('hashchange', dispatch);
+    bindNavToggle();
+}
+
+function bindNavToggle() {
+    const btn = document.getElementById('navToggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const open = document.body.classList.toggle('nav-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Close drawer if the viewport widens back past the breakpoint, so the
+    // drawer doesn't leave the body in `nav-open` state when switching to
+    // desktop layout.
+    const mql = window.matchMedia('(min-width: 901px)');
+    const onWidthChange = (e) => { if (e.matches) closeNavDrawer(); };
+    if (mql.addEventListener) mql.addEventListener('change', onWidthChange);
+    else if (mql.addListener) mql.addListener(onWidthChange);
+    // Tap outside the drawer closes it.
+    document.addEventListener('click', (e) => {
+        if (!document.body.classList.contains('nav-open')) return;
+        const tabs = document.querySelector('.tabs');
+        if (!tabs.contains(e.target) && !btn.contains(e.target)) {
+            closeNavDrawer();
+        }
+    });
+}
+
+function closeNavDrawer() {
+    document.body.classList.remove('nav-open');
+    const btn = document.getElementById('navToggle');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
 export function go(view, params = '') {

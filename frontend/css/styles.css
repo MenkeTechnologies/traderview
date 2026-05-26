@@ -723,4 +723,135 @@ label {
 
 /* ---- uplot color overrides ----------------------------------------------------- */
 .u-legend { color: var(--text-dim) !important; }
+
+/* ============================================================================
+   Mobile-responsive layouts
+   ============================================================================
+   Breakpoints:
+     900px — collapse tab strip into a hamburger drawer
+     720px — stack topbar elements; force tables into horizontal-scroll wrappers
+     520px — single-column card grids; tighter padding; smaller fonts
+   ============================================================================ */
+
+/* Hamburger button — desktop-hidden by default, surfaced under 900px. */
+.nav-toggle {
+    display: none;
+    background: transparent; border: 1px solid var(--cyan);
+    color: var(--cyan); width: 32px; height: 28px;
+    border-radius: 2px; cursor: pointer; padding: 0;
+    align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    box-shadow: 0 0 8px var(--cyan-dim);
+}
+.nav-toggle:focus { outline: 1px solid var(--accent); outline-offset: 1px; }
+.nav-toggle .nav-toggle-bars {
+    display: inline-block; width: 16px; height: 12px; position: relative;
+}
+.nav-toggle .nav-toggle-bars::before,
+.nav-toggle .nav-toggle-bars::after,
+.nav-toggle .nav-toggle-bars span {
+    content: ''; position: absolute; left: 0; right: 0; height: 2px;
+    background: var(--cyan); border-radius: 1px;
+}
+.nav-toggle .nav-toggle-bars::before { top: 0; }
+.nav-toggle .nav-toggle-bars span    { top: 5px; }
+.nav-toggle .nav-toggle-bars::after  { top: 10px; }
+
+@media (max-width: 900px) {
+    .nav-toggle { display: inline-flex; flex: 0 0 auto; }
+
+    /* Push the existing horizontally-scrolling tab strip out of layout flow,
+       turn it into a vertical drawer that slides down under the topbar. */
+    .tabs {
+        position: fixed;
+        top: 44px; left: 0; right: 0;
+        max-height: 0; overflow: hidden;
+        flex-direction: column; gap: 0;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--cyan);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        z-index: 20;
+        transition: max-height 0.18s ease-out;
+    }
+    body.nav-open .tabs { max-height: calc(100vh - 44px); overflow-y: auto; }
+
+    .tabs .tab {
+        display: block; width: 100%; text-align: left;
+        padding: 10px 16px;
+        border: 0; border-bottom: 1px solid var(--border);
+        font-size: 12px; letter-spacing: 1.4px;
+    }
+    .tabs .tab.active {
+        border: 0; border-left: 3px solid var(--cyan);
+        border-bottom: 1px solid var(--cyan-dim);
+        padding-left: 13px;
+    }
+
+    /* Topbar tightens so brand + hamburger + minimal user strip fit. */
+    .topbar { gap: 8px; padding: 6px 10px; }
+    .brand { font-size: 12px; letter-spacing: 2px; }
+    .hud-toggles .btn { padding: 3px 6px; font-size: 9px; }
+    .user-strip { display: none; }
+}
+
+@media (max-width: 720px) {
+    /* Even tighter topbar: account select gets a row of its own under the bar. */
+    .topbar { flex-wrap: wrap; height: auto; min-height: 44px; }
+    .account-strip { order: 5; flex: 1 1 100%;
+                     padding: 4px 0; border-top: 1px dashed var(--border); }
+    .account-select { width: 100%; box-sizing: border-box; }
+    body.nav-open .tabs { top: auto; }
+
+    /* Force tables to scroll horizontally instead of squashing or overflowing
+       the viewport. Wrap the existing <table class="trades"> at render time
+       — but also catch any bare table inside .chart-panel. */
+    .chart-panel { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table.trades, table.corr-matrix {
+        min-width: 600px;          /* keeps columns readable; scroll horizontally */
+        font-size: 11px;
+    }
+
+    /* Inline forms wrap and stretch on phones. */
+    .inline-form { flex-wrap: wrap; gap: 6px; }
+    .inline-form label, .inline-form input, .inline-form select {
+        flex: 1 1 auto; min-width: 0;
+    }
+    .inline-form input, .inline-form select { width: 100%; box-sizing: border-box; }
+    .inline-form button { flex: 1 1 100%; }
+
+    /* View titles trim & wrap. */
+    .view-title { font-size: 11px; letter-spacing: 2px; }
+    main#app { padding: 10px; }
+
+    /* Pin chips: hide labels (already done above) and shrink further. */
+    .pin { font-size: 8.5px; padding: 1px 4px; }
+}
+
+@media (max-width: 520px) {
+    .cards { grid-template-columns: 1fr; gap: 8px; }
+    .card  { padding: 8px 10px; }
+    .card .value { font-size: 16px; }
+
+    /* Scheme strip: stack label above the swatches; swatches single column. */
+    .hub-scheme-strip { padding: 4px 8px; }
+    .hub-scheme-strip .scheme-grid { grid-template-columns: 1fr; }
+
+    /* Drawer items full-bleed. */
+    body.nav-open .tabs { box-shadow: none; }
+    .tabs .tab { padding: 12px 14px; }
+
+    /* Auth card padding tightens. */
+    .auth-card { padding: 24px 18px !important; }
+
+    /* SVG/canvas charts stay full-width; viewBox is preserved. */
+    svg { max-width: 100%; height: auto; }
+}
+
+/* Tap target minimum for buttons/links on coarse pointers. */
+@media (pointer: coarse) {
+    .btn, .tab, button:not(.nav-toggle):not(.scheme-swatch),
+    .auth-tab, .nav-toggle {
+        min-height: 38px;
+    }
+}
 .u-axis { color: var(--text-muted) !important; }

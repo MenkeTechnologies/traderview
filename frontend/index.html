@@ -20,7 +20,11 @@
 
     <header class="topbar">
         <div class="brand">TRADERVIEW</div>
-        <nav class="tabs">
+        <button id="navToggle" class="nav-toggle" type="button"
+                aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+            <span class="nav-toggle-bars"><span></span></span>
+        </button>
+        <nav class="tabs" id="primary-nav">
             <button class="tab active" data-view="dashboard">Dashboard</button>
             <button class="tab" data-view="trades">Trades</button>
             <button class="tab" data-view="new-trade">New Trade</button>
