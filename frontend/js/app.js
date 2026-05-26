@@ -53,6 +53,7 @@ import { renderTaxLots } from './views/tax_lots.js';
 import { renderCompare } from './views/compare.js';
 import { renderExports } from './views/exports.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
+import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
 export const state = {
@@ -83,6 +84,8 @@ async function boot() {
         installHotkeyEngine();
         reloadHotkeys();
         requestNotifPermission();
+        startWs();
+        wireWsStatusIndicator();
     } catch (e) {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
             showAuthScreen();
@@ -148,6 +151,19 @@ function bindNavToggle() {
             closeNavDrawer();
         }
     });
+}
+
+function wireWsStatusIndicator() {
+    const dot = document.getElementById('wsStatus');
+    if (!dot) return;
+    const set = (cls, title) => {
+        dot.className = `ws-status ${cls}`;
+        dot.title = title;
+    };
+    set('warn', 'connecting…');
+    onWsEvent('_open',  () => set('on',  'real-time stream connected'));
+    onWsEvent('_close', () => set('off', 'real-time stream disconnected — reconnecting'));
+    onWsEvent('ping',   () => set('on',  `real-time stream alive @ ${new Date().toLocaleTimeString(undefined, { hour12: false })}`));
 }
 
 function closeNavDrawer() {

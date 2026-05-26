@@ -1,6 +1,8 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 
+use crate::realtime::Hub;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AppMode {
     /// Standalone web — full registration/login required.
@@ -14,6 +16,7 @@ pub struct AppState {
     pub pool: PgPool,
     pub mode: AppMode,
     pub jwt_secret: Arc<Vec<u8>>,
+    pub hub: Hub,
 }
 
 impl AppState {
@@ -22,6 +25,7 @@ impl AppState {
             pool,
             mode,
             jwt_secret: Arc::new(jwt_secret),
+            hub: Hub::new(),
         }
     }
 }

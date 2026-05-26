@@ -2,6 +2,9 @@
 import { api } from '../api.js';
 import { playSound } from '../alert_engine.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { on as onWsEvent } from '../ws.js';
+
+let wsUnsub = null;
 
 const KINDS = [
     { id: 'insider_form4', label: 'Insider (Form 4)' },
@@ -94,13 +97,19 @@ export async function renderDisclosures(mount) {
             renderDisclosures(mount);
         }));
 
-    // Poll loop.
+    // Poll loop — kept as a 60s safety net; WS push handles the real-time path.
     if (pollTimer) clearInterval(pollTimer);
     lastSeen = filings[0]?.id || '';
-    pollTimer = setInterval(() => refreshFeed(watchers), 20_000);
+    pollTimer = setInterval(() => refreshFeed(watchers), 60_000);
+
+    // Live push: refresh immediately on any disclosure event from the server.
+    if (wsUnsub) wsUnsub();
+    wsUnsub = onWsEvent('disclosure', () => refreshFeed(watchers));
+
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#disclosures')) {
             clearInterval(pollTimer); pollTimer = null;
+            if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
     }, { once: true });
 }

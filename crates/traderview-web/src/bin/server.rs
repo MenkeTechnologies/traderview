@@ -46,17 +46,36 @@ async fn main() -> anyhow::Result<()> {
     let pool = traderview_db::connect_external(&args.database_url).await?;
     traderview_db::migrate(&pool).await?;
 
+    let state = AppState::new(pool.clone(), AppMode::Web, jwt_secret);
+
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
         let pool = pool.clone();
+        let hub = state.hub.clone();
         tokio::spawn(async move {
             loop {
                 let r = traderview_db::disclosures::poll_all(&pool).await;
-                if r.edgar_inserted + r.senate_inserted + r.house_inserted > 0 {
+                let total = r.edgar_inserted + r.senate_inserted + r.house_inserted;
+                if total > 0 {
                     tracing::info!(
                         edgar = r.edgar_inserted, senate = r.senate_inserted, house = r.house_inserted,
                         "disclosures polled",
                     );
+                    if r.edgar_inserted > 0 {
+                        hub.publish(traderview_web::realtime::Event::Disclosure {
+                            source: "edgar", inserted: r.edgar_inserted,
+                        });
+                    }
+                    if r.senate_inserted > 0 {
+                        hub.publish(traderview_web::realtime::Event::Disclosure {
+                            source: "senate", inserted: r.senate_inserted,
+                        });
+                    }
+                    if r.house_inserted > 0 {
+                        hub.publish(traderview_web::realtime::Event::Disclosure {
+                            source: "house", inserted: r.house_inserted,
+                        });
+                    }
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(20)).await;
             }
@@ -66,18 +85,20 @@ async fn main() -> anyhow::Result<()> {
     // Background sentiment poller — every 60s, WSB + StockTwits per watchlist symbol.
     {
         let pool = pool.clone();
+        let hub = state.hub.clone();
         tokio::spawn(async move {
             loop {
                 let (wsb, st) = traderview_db::sentiment::poll_all(&pool).await;
                 if wsb + st > 0 {
                     tracing::info!(wsb = wsb, stocktwits = st, "sentiment polled");
+                    hub.publish(traderview_web::realtime::Event::Sentiment {
+                        wsb, stocktwits: st,
+                    });
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(60)).await;
             }
         });
     }
-
-    let state = AppState::new(pool, AppMode::Web, jwt_secret);
     let api = router(state);
 
     let static_service = ServeDir::new(&args.static_dir).append_index_html_on_directories(true);

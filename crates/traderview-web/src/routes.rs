@@ -52,6 +52,7 @@ mod vol;
 mod vol_surface;
 mod watchlists;
 mod webhooks;
+mod ws;
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
@@ -103,6 +104,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(compare::router())
         .merge(export::router())
         .merge(chart_drawings::router())
+        .merge(ws::router())
 }
 
 mod helpers {

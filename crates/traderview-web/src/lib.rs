@@ -10,6 +10,7 @@
 
 pub mod auth;
 pub mod error;
+pub mod realtime;
 pub mod routes;
 pub mod state;
 

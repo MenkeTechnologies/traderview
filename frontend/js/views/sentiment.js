@@ -4,8 +4,10 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { on as onWsEvent } from '../ws.js';
 
 let timer = null;
+let wsUnsub = null;
 
 export async function renderSentiment(mount, _state, symbol) {
     if (symbol) return renderSymbol(mount, symbol.toUpperCase());
@@ -69,9 +71,14 @@ export async function renderSentiment(mount, _state, symbol) {
 
     if (timer) clearInterval(timer);
     timer = setInterval(refresh, 60_000);
+
+    if (wsUnsub) wsUnsub();
+    wsUnsub = onWsEvent('sentiment', () => refresh());
+
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#sentiment')) {
             clearInterval(timer); timer = null;
+            if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
     }, { once: true });
     await refresh();
