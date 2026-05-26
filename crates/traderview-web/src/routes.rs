@@ -13,6 +13,7 @@ mod charts;
 mod comments;
 mod community;
 mod crypto;
+mod darkpool;
 mod disclosures;
 mod earnings_iv;
 mod economy;
@@ -81,6 +82,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(economy::router())
         .merge(analysis::router())
         .merge(short_interest::router())
+        .merge(darkpool::router())
 }
 
 mod helpers {

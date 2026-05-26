@@ -323,6 +323,10 @@ export const api = {
     shortFinra:  (sym, days = 30) => request(`/short/finra/${encodeURIComponent(sym)}${qs({ days })}`),
     shortRanked: (watchlist_id = null) => request(`/short/ranked${qs({ watchlist_id })}`),
 
+    // Dark pool / off-exchange volume
+    darkpoolSymbol: (sym, days = 30) => request(`/darkpool/symbol/${encodeURIComponent(sym)}${qs({ days })}`),
+    darkpoolRanked: (watchlist_id = null, days = 30) => request(`/darkpool/ranked${qs({ watchlist_id, days })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

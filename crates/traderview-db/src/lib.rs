@@ -5,6 +5,7 @@ pub mod accounts;
 pub mod alerts;
 pub mod comments;
 pub mod crypto;
+pub mod darkpool;
 pub mod disclosures;
 pub mod earnings_iv;
 pub mod economy;
