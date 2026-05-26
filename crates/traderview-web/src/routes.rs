@@ -37,6 +37,7 @@ mod sectors;
 mod sentiment;
 mod settings;
 mod shares;
+mod short_interest;
 mod tags;
 mod trades;
 mod watchlists;
@@ -79,6 +80,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(backtest::router())
         .merge(economy::router())
         .merge(analysis::router())
+        .merge(short_interest::router())
 }
 
 mod helpers {

@@ -318,6 +318,11 @@ export const api = {
     pairAnalysis: (a, b, days = 180) =>
         request(`/analysis/pair${qs({ a, b, days })}`),
 
+    // Short interest
+    shortSymbol: (sym) => request(`/short/symbol/${encodeURIComponent(sym)}`),
+    shortFinra:  (sym, days = 30) => request(`/short/finra/${encodeURIComponent(sym)}${qs({ days })}`),
+    shortRanked: (watchlist_id = null) => request(`/short/ranked${qs({ watchlist_id })}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
