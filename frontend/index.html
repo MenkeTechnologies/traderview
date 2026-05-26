@@ -3,40 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="dark light" name="color-scheme">
     <meta content="TraderView — TraderVue-style trading journal. Rust + Postgres + Tauri." name="description">
     <title>TraderView</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/hud-static.css">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="lib/uPlot.min.css">
 </head>
 <body>
-<header class="topbar">
-    <div class="brand">TRADERVIEW</div>
-    <nav class="tabs">
-        <button class="tab active" data-view="dashboard">Dashboard</button>
-        <button class="tab" data-view="trades">Trades</button>
-        <button class="tab" data-view="journal">Journal</button>
-        <button class="tab" data-view="calendar">Calendar</button>
-        <button class="tab" data-view="reports">Reports</button>
-        <button class="tab" data-view="charts">Charts</button>
-        <button class="tab" data-view="import">Import</button>
-        <button class="tab" data-view="plans">Plans</button>
-        <button class="tab" data-view="tags">Tags</button>
-        <button class="tab" data-view="mentorship">Mentorship</button>
-        <button class="tab" data-view="community">Community</button>
-        <button class="tab" data-view="shares">Shares</button>
-        <button class="tab" data-view="accounts">Accounts</button>
-        <button class="tab" data-view="settings">Settings</button>
-    </nav>
-    <div class="account-strip" id="account-strip"></div>
-    <div class="user-strip" id="user-strip"></div>
-</header>
+<div class="app" id="appRoot">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
 
-<main id="app">
-    <div class="boot">connecting…</div>
-</main>
+    <header class="topbar">
+        <div class="brand">TRADERVIEW</div>
+        <nav class="tabs">
+            <button class="tab active" data-view="dashboard">Dashboard</button>
+            <button class="tab" data-view="trades">Trades</button>
+            <button class="tab" data-view="journal">Journal</button>
+            <button class="tab" data-view="calendar">Calendar</button>
+            <button class="tab" data-view="reports">Reports</button>
+            <button class="tab" data-view="charts">Charts</button>
+            <button class="tab" data-view="import">Import</button>
+            <button class="tab" data-view="plans">Plans</button>
+            <button class="tab" data-view="tags">Tags</button>
+            <button class="tab" data-view="mentorship">Mentorship</button>
+            <button class="tab" data-view="community">Community</button>
+            <button class="tab" data-view="shares">Shares</button>
+            <button class="tab" data-view="accounts">Accounts</button>
+            <button class="tab" data-view="settings">Settings</button>
+        </nav>
+        <div class="account-strip" id="account-strip"></div>
+        <div class="hud-toggles">
+            <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+            <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+            <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+        <div class="user-strip" id="user-strip"></div>
+    </header>
+
+    <div class="hub-scheme-strip">
+        <div class="hub-scheme-strip-inner">
+            <span class="hud-scheme-label">// Color scheme</span>
+            <div class="scheme-grid" id="hudSchemeGrid"></div>
+        </div>
+    </div>
+
+    <main id="app">
+        <div class="boot">connecting…</div>
+    </main>
+</div>
 
 <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-card">
+    <div class="auth-card doc-card">
         <h1>TRADERVIEW</h1>
         <div class="auth-tabs">
             <button class="auth-tab active" data-auth="login">Log in</button>
@@ -53,6 +75,7 @@
 </div>
 
 <script src="lib/uPlot.iife.min.js"></script>
+<script src="js/hud-theme.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
