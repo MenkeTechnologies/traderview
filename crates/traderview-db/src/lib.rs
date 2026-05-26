@@ -4,6 +4,7 @@
 pub mod accounts;
 pub mod alerts;
 pub mod breadth;
+pub mod chart_drawings;
 pub mod compare;
 pub mod comments;
 pub mod crypto;

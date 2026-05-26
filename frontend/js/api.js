@@ -378,6 +378,16 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Chart drawings (per-user, per-symbol persisted overlays)
+    listChartDrawings: (sym) => request(`/chart-drawings/${encodeURIComponent(sym)}`),
+    createChartDrawing: (sym, draft) =>
+        request(`/chart-drawings/${encodeURIComponent(sym)}`,
+                { method: 'POST', body: JSON.stringify(draft) }),
+    deleteChartDrawing: (id) =>
+        request(`/chart-drawings/by-id/${id}`, { method: 'DELETE' }),
+    deleteChartDrawings: (sym) =>
+        request(`/chart-drawings/${encodeURIComponent(sym)}`, { method: 'DELETE' }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

@@ -10,6 +10,7 @@ mod analysis;
 mod auth;
 mod backtest;
 mod breadth;
+mod chart_drawings;
 mod charts;
 mod comments;
 mod community;
@@ -101,6 +102,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(tax_lots::router())
         .merge(compare::router())
         .merge(export::router())
+        .merge(chart_drawings::router())
 }
 
 mod helpers {
