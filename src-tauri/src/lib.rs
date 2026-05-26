@@ -89,6 +89,17 @@ pub fn run() {
                     let state = AppState::new(embedded.pool.clone(), AppMode::Desktop, jwt_secret_clone);
                     let app = router(state);
 
+                    // Background disclosure poller for sub-30s EDGAR/Congress alerts.
+                    {
+                        let pool = embedded.pool.clone();
+                        tokio::spawn(async move {
+                            loop {
+                                let _ = traderview_db::disclosures::poll_all(&pool).await;
+                                tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+                            }
+                        });
+                    }
+
                     let bind: SocketAddr = "127.0.0.1:0".parse().unwrap();
                     let listener = tokio::net::TcpListener::bind(bind).await.expect("bind");
                     let addr = listener.local_addr().expect("local addr");

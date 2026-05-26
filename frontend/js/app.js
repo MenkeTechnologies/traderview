@@ -31,6 +31,8 @@ import { renderAlerts } from './views/alerts.js';
 import { renderHotkeys } from './views/hotkeys.js';
 import { renderReplay } from './views/replay.js';
 import { renderTape } from './views/tape.js';
+import { renderEarningsIv } from './views/earnings_iv.js';
+import { renderDisclosures } from './views/disclosures.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
 
@@ -133,6 +135,8 @@ export async function dispatch() {
             case 'hotkeys':     await renderHotkeys(mount, state); break;
             case 'replay':      await renderReplay(mount, state, rest[0]); break;
             case 'tape':        await renderTape(mount, state); break;
+            case 'earnings-iv': await renderEarningsIv(mount, state, rest[0]); break;
+            case 'disclosures': await renderDisclosures(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

@@ -4,6 +4,8 @@
 pub mod accounts;
 pub mod alerts;
 pub mod comments;
+pub mod disclosures;
+pub mod earnings_iv;
 pub mod embedded;
 pub mod executions;
 pub mod forum;
@@ -14,6 +16,7 @@ pub mod market_data;
 pub mod markets;
 pub mod mentorships;
 pub mod note_templates;
+pub mod options;
 pub mod paper;
 pub mod plans;
 pub mod prices;

@@ -46,6 +46,23 @@ async fn main() -> anyhow::Result<()> {
     let pool = traderview_db::connect_external(&args.database_url).await?;
     traderview_db::migrate(&pool).await?;
 
+    // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
+    {
+        let pool = pool.clone();
+        tokio::spawn(async move {
+            loop {
+                let r = traderview_db::disclosures::poll_all(&pool).await;
+                if r.edgar_inserted + r.senate_inserted + r.house_inserted > 0 {
+                    tracing::info!(
+                        edgar = r.edgar_inserted, senate = r.senate_inserted, house = r.house_inserted,
+                        "disclosures polled",
+                    );
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+            }
+        });
+    }
+
     let state = AppState::new(pool, AppMode::Web, jwt_secret);
     let api = router(state);
 

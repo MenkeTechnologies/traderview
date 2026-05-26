@@ -10,6 +10,8 @@ mod auth;
 mod charts;
 mod comments;
 mod community;
+mod disclosures;
+mod earnings_iv;
 mod executions;
 mod hotkeys;
 mod imports;
@@ -61,6 +63,8 @@ pub fn api_router() -> Router<AppState> {
         .merge(paper::router())
         .merge(alerts::router())
         .merge(hotkeys::router())
+        .merge(earnings_iv::router())
+        .merge(disclosures::router())
 }
 
 mod helpers {

@@ -6,6 +6,7 @@
 
 pub mod excursion;
 pub mod indicators;
+pub mod iv_backtest;
 pub mod liquidity;
 pub mod models;
 pub mod pnl;

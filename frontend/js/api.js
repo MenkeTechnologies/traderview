@@ -269,6 +269,21 @@ export const api = {
     upsertHotkey:  (body) => request('/hotkeys', { method: 'POST', body: JSON.stringify(body) }),
     deleteHotkey:  (id) => request(`/hotkeys/${id}`, { method: 'DELETE' }),
 
+    // earnings IV scanner
+    ivScan:        (watchlist_id = null, horizon_days = 7, limit = 50) =>
+        request(`/iv/scan${qs({ watchlist_id, horizon_days, limit })}`),
+    ivSymbol:      (sym) => request(`/iv/symbols/${encodeURIComponent(sym)}`),
+
+    // disclosures (insider Form 4 + Senate / House STOCK Act)
+    disclosures:        (kind = null, symbol = null, limit = 200) =>
+        request(`/disclosures${qs({ kind, symbol, limit })}`),
+    disclosuresPollNow: () => request('/disclosures/poll', { method: 'POST' }),
+    disclosureWatchers: () => request('/disclosures/watchers'),
+    createDisclosureWatcher: (body) =>
+        request('/disclosures/watchers', { method: 'POST', body: JSON.stringify(body) }),
+    deleteDisclosureWatcher: (id) =>
+        request(`/disclosures/watchers/${id}`, { method: 'DELETE' }),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
