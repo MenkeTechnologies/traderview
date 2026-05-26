@@ -11,6 +11,7 @@ pub mod disclosures;
 pub mod earnings_iv;
 pub mod economy;
 pub mod embedded;
+pub mod fear_greed;
 pub mod executions;
 pub mod forum;
 pub mod heatmap;

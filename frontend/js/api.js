@@ -343,6 +343,9 @@ export const api = {
     // Market breadth (TICK/TRIN/A-D/Up-Dn vol/P-C)
     breadthSnapshot: () => request('/breadth/snapshot'),
 
+    // Fear & Greed gauge (7-component CNN-style composite)
+    fearGreed: () => request('/fear-greed'),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

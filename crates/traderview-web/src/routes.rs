@@ -19,6 +19,7 @@ mod disclosures;
 mod earnings_iv;
 mod economy;
 mod executions;
+mod fear_greed;
 mod heatmap;
 mod hotkeys;
 mod imports;
@@ -89,6 +90,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(vol::router())
         .merge(webhooks::router())
         .merge(breadth::router())
+        .merge(fear_greed::router())
 }
 
 mod helpers {
