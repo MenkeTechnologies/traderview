@@ -356,6 +356,10 @@ export const api = {
     walkForward: (body) =>
         request('/backtest/walk-forward', { method: 'POST', body: JSON.stringify(body) }),
 
+    // Tax-lot tracker (FIFO/LIFO, ST/LT, wash-sale)
+    taxLots: (accountId, year, method) =>
+        request(`/tax-lots/${accountId}?year=${year}&method=${method}`),
+
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),

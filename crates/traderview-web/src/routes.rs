@@ -43,6 +43,7 @@ mod settings;
 mod shares;
 mod short_interest;
 mod tags;
+mod tax_lots;
 mod trades;
 mod vol;
 mod vol_surface;
@@ -95,6 +96,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fear_greed::router())
         .merge(premarket::router())
         .merge(vol_surface::router())
+        .merge(tax_lots::router())
 }
 
 mod helpers {
