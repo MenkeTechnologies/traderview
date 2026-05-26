@@ -63,6 +63,9 @@ sha2 = "0.10"
 csv = "1"
 bytes = "1"
 
+# HTTP client (price-data fetcher)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip"] }
+
 # CLI / config
 clap = { version = "4", features = ["derive", "env"] }
 dirs = "5"

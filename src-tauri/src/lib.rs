@@ -75,7 +75,7 @@ pub fn run() {
                         .await
                         .expect("embedded postgres start");
 
-                    let user_id = traderview_db::repo::ensure_local_user(&embedded.pool)
+                    let user_id = traderview_db::users::ensure_local(&embedded.pool)
                         .await
                         .expect("ensure local user");
 

@@ -87,7 +87,7 @@ where
         }
 
         if app.mode == AppMode::Desktop {
-            let id = traderview_db::repo::ensure_local_user(&app.pool)
+            let id = traderview_db::users::ensure_local(&app.pool)
                 .await
                 .map_err(ApiError::Internal)?;
             return Ok(AuthUser { id });
