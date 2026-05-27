@@ -400,6 +400,10 @@ export const api = {
     // Fill quality (bar-level slippage approximation)
     fillQuality: (accountId) => request(`/fill-quality/${accountId}`),
 
+    // Trade comparison (2-4 trades, side-by-side + normalized P/L overlay)
+    tradeCompare: (tradeIds) =>
+        request(`/trade-compare?trade_ids=${tradeIds.join(',')}`),
+
     // Custom indicator registry
     listCustomIndicators:  () => request('/custom-indicators'),
     createCustomIndicator: (body) =>

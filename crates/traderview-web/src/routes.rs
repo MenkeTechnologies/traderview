@@ -67,6 +67,7 @@ mod strategy_alerts;
 mod tags;
 mod tape_replay;
 mod tax_lots;
+mod trade_compare;
 mod trade_reviews;
 mod trades;
 mod vol;
@@ -147,6 +148,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(equity_forecast::router())
         .merge(fill_quality::router())
         .merge(custom_indicators::router())
+        .merge(trade_compare::router())
 }
 
 mod helpers {
