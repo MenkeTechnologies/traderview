@@ -139,6 +139,7 @@ pub mod tax_loss_harvest;
 pub mod tilt_detector;
 pub mod time_in_force;
 pub mod trade_plan_checklist;
+pub mod trend_channel;
 pub mod treynor;
 pub mod triple_screen;
 pub mod trix;
