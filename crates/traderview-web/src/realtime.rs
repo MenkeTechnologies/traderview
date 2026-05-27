@@ -20,6 +20,8 @@ pub enum Event {
     Disclosure { source: &'static str, inserted: usize },
     /// Sentiment poller tick — both source counts.
     Sentiment  { wsb: usize, stocktwits: usize },
+    /// News poller tick.
+    News       { inserted: u64, symbols: usize },
     /// An alert rule fired.
     AlertFired { rule_id: String, symbol: String, message: String },
     /// Heartbeat — server emits one every 30s so clients can detect deadness.

@@ -22,6 +22,7 @@ const WIDGET_KINDS = [
     { kind: 'watchlist',  label: 'Watchlist',    defaults: { limit: 10 },         w: 4, h: 4 },
     { kind: 'alerts',     label: 'Alerts feed',  defaults: { limit: 10 },         w: 6, h: 4 },
     { kind: 'fear_greed', label: 'Fear & Greed', defaults: {},                    w: 3, h: 2 },
+    { kind: 'news',       label: 'News (symbol)',defaults: { symbol: 'SPY', limit: 6 }, w: 6, h: 4 },
     { kind: 'note',       label: 'Sticky note',  defaults: { text: '' },          w: 3, h: 2 },
 ];
 
@@ -301,6 +302,7 @@ function mountWidget(body, w) {
         case 'watchlist':   return mountWatchlist(body, w);
         case 'alerts':      return mountAlerts(body, w);
         case 'fear_greed':  return mountFearGreed(body);
+        case 'news':        return mountNews(body, w);
         case 'note':        return mountNote(body, w);
         default:            body.innerHTML = `<p class="muted small">unknown widget: ${esc(w.kind)}</p>`;
     }
@@ -445,6 +447,40 @@ async function mountAlerts(body, w) {
                 </tbody></table>`;
         } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
     });
+}
+
+async function mountNews(body, w) {
+    tickEvery(120, async () => {
+        try {
+            const items = await api.newsBySymbol(w.params.symbol, w.params.limit || 6);
+            if (!items.length) {
+                body.innerHTML = `<p class="muted small">No cached news for ${esc(w.params.symbol)} — hit Poll now on the News tab to seed.</p>`;
+                return;
+            }
+            body.innerHTML = items.map(n => {
+                const s = n.sentiment;
+                const color = s == null ? '#444' :
+                    s > 0.1 ? '#7af0a8' : s < -0.1 ? '#ff1f7a' : '#9aa0c8';
+                const link = n.link
+                    ? `<a href="${esc(n.link)}" target="_blank" rel="noopener" style="color:var(--text);">${esc(n.title)}</a>`
+                    : esc(n.title);
+                const when = n.published_at || n.fetched_at;
+                return `<div style="display:flex;border-left:2px solid ${color};padding:3px 6px;margin-bottom:3px;font-size:11px;">
+                    <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${link}</div>
+                    <span class="muted small" style="margin-left:6px;white-space:nowrap;">${esc(relTime(when))}</span>
+                </div>`;
+            }).join('');
+        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    });
+}
+
+function relTime(iso) {
+    if (!iso) return '';
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return `${Math.floor(diff)}s`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return `${Math.floor(diff / 86400)}d`;
 }
 
 function mountNote(body, w) {

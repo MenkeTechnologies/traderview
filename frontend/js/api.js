@@ -378,6 +378,16 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // News (sentiment-tagged history + FTS)
+    newsBySymbol: (sym, limit = 20) =>
+        request(`/news/symbol/${encodeURIComponent(sym)}?limit=${limit}`),
+    newsRecent: (limit = 40) => request(`/news/recent?limit=${limit}`),
+    newsSearch: (q, limit = 50) =>
+        request(`/news/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+    newsPollNow: () => request('/news/poll-now', { method: 'POST' }),
+    newsRefreshSymbol: (sym) =>
+        request(`/news/symbol/${encodeURIComponent(sym)}/refresh`, { method: 'POST' }),
+
     // Dashboards (multi-monitor / per-workflow custom boards)
     listDashboards: () => request('/dashboards'),
     getDashboard: (id) => request(`/dashboards/${id}`),

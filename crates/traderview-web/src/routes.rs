@@ -32,6 +32,7 @@ mod journal;
 mod journal_ai;
 mod markets;
 mod mentorships;
+mod news;
 mod note_templates;
 mod options;
 mod paper;
@@ -111,6 +112,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(journal_ai::router())
         .merge(api_tokens::router())
         .merge(dashboards::router())
+        .merge(news::router())
 }
 
 mod helpers {

@@ -26,6 +26,7 @@ pub mod journal_ai;
 pub mod market_data;
 pub mod markets;
 pub mod mentorships;
+pub mod news;
 pub mod note_templates;
 pub mod options;
 pub mod paper;

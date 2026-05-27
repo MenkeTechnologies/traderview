@@ -82,6 +82,25 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Background news poller — every 5 min over distinct watchlist symbols.
+    {
+        let pool = pool.clone();
+        let hub = state.hub.clone();
+        tokio::spawn(async move {
+            loop {
+                if let Ok(s) = traderview_db::news::poll_watchlists(&pool).await {
+                    if s.inserted > 0 {
+                        tracing::info!(symbols = s.symbols_polled, inserted = s.inserted, "news polled");
+                        hub.publish(traderview_web::realtime::Event::News {
+                            inserted: s.inserted, symbols: s.symbols_polled,
+                        });
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+            }
+        });
+    }
+
     // Background sentiment poller — every 60s, WSB + StockTwits per watchlist symbol.
     {
         let pool = pool.clone();
