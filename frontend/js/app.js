@@ -59,6 +59,7 @@ import { renderNews } from './views/news.js';
 import { renderEarningsCal } from './views/earnings_cal.js';
 import { renderPositionSize } from './views/position_size.js';
 import { renderLivePositions } from './views/live_positions.js';
+import { renderCorrMatrix } from './views/corr_matrix.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -238,6 +239,7 @@ export async function dispatch() {
             case 'earnings-cal':   await renderEarningsCal(mount, state); break;
             case 'sizing':         await renderPositionSize(mount, state); break;
             case 'live':           await renderLivePositions(mount, state); break;
+            case 'correlation':    await renderCorrMatrix(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

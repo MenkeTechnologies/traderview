@@ -16,6 +16,7 @@ mod charts;
 mod comments;
 mod community;
 mod compare;
+mod corr_matrix;
 mod crypto;
 mod dashboards;
 mod darkpool;
@@ -119,6 +120,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(earnings_cal::router())
         .merge(position_size::router())
         .merge(live_positions::router())
+        .merge(corr_matrix::router())
 }
 
 mod helpers {

@@ -381,6 +381,12 @@ export const api = {
     // Live P/L tracker (snapshot of open positions with fresh quotes)
     livePositions: (accountId) => request(`/live-positions/${accountId}`),
 
+    // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
+    corrWatchlist: (wid, days = 90) =>
+        request(`/correlation/watchlist/${wid}?days=${days}`),
+    corrSymbols: (csv, days = 90) =>
+        request(`/correlation/symbols?symbols=${encodeURIComponent(csv)}&days=${days}`),
+
     // Position sizing (Kelly / fixed-fractional / R-based, correlation-aware)
     positionSize: (body) =>
         request('/position-size', { method: 'POST', body: JSON.stringify(body) }),

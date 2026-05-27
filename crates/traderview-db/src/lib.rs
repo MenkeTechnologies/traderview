@@ -8,6 +8,7 @@ pub mod breadth;
 pub mod chart_drawings;
 pub mod compare;
 pub mod comments;
+pub mod corr_matrix;
 pub mod crypto;
 pub mod dashboards;
 pub mod darkpool;
