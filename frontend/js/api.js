@@ -378,6 +378,16 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Dashboards (multi-monitor / per-workflow custom boards)
+    listDashboards: () => request('/dashboards'),
+    getDashboard: (id) => request(`/dashboards/${id}`),
+    createDashboard: (body) =>
+        request('/dashboards', { method: 'POST', body: JSON.stringify(body) }),
+    updateDashboard: (id, body) =>
+        request(`/dashboards/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteDashboard: (id) =>
+        request(`/dashboards/${id}`, { method: 'DELETE' }),
+
     // Personal Access Tokens (public API auth)
     listApiTokens: () => request('/api-tokens'),
     createApiToken: (body) =>

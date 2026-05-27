@@ -54,6 +54,7 @@ import { renderCompare } from './views/compare.js';
 import { renderExports } from './views/exports.js';
 import { renderAiSettings } from './views/journal_ai.js';
 import { renderDeveloper } from './views/api_tokens.js';
+import { renderBoards } from './views/boards.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -228,6 +229,7 @@ export async function dispatch() {
             case 'exports':        await renderExports(mount, state); break;
             case 'ai':             await renderAiSettings(mount, state); break;
             case 'developer':      await renderDeveloper(mount, state); break;
+            case 'boards':         await renderBoards(mount, state, rest[0] || ''); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

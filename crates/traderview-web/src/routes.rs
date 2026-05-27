@@ -17,6 +17,7 @@ mod comments;
 mod community;
 mod compare;
 mod crypto;
+mod dashboards;
 mod darkpool;
 mod disclosures;
 mod earnings_iv;
@@ -109,6 +110,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(ws::router())
         .merge(journal_ai::router())
         .merge(api_tokens::router())
+        .merge(dashboards::router())
 }
 
 mod helpers {
