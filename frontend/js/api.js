@@ -378,6 +378,12 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Position sizing (Kelly / fixed-fractional / R-based, correlation-aware)
+    positionSize: (body) =>
+        request('/position-size', { method: 'POST', body: JSON.stringify(body) }),
+    positionSizeWinRate: (accountId) =>
+        request(`/position-size/account/${accountId}/winrate`),
+
     // Earnings calendar + surprise tracking
     earningsCalendar: (days = 7) => request(`/earnings/calendar?days=${days}`),
     earningsSurprises: (days = 30) => request(`/earnings/surprises?days=${days}`),

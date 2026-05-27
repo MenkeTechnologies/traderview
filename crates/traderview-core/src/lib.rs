@@ -13,6 +13,7 @@ pub mod iv_backtest;
 pub mod liquidity;
 pub mod models;
 pub mod pnl;
+pub mod position_size;
 pub mod risk;
 pub mod rollup;
 pub mod scan;

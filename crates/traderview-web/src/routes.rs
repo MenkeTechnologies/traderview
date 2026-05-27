@@ -38,6 +38,7 @@ mod note_templates;
 mod options;
 mod paper;
 mod plans;
+mod position_size;
 mod premarket;
 mod reports;
 mod research;
@@ -115,6 +116,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(dashboards::router())
         .merge(news::router())
         .merge(earnings_cal::router())
+        .merge(position_size::router())
 }
 
 mod helpers {
