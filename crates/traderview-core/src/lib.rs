@@ -6,6 +6,7 @@
 
 pub mod backtest;
 pub mod correlation;
+pub mod discipline_score;
 pub mod equity_forecast;
 pub mod excursion;
 pub mod greeks;
