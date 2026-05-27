@@ -257,3 +257,104 @@ pub fn analyze(symbol: &str, bars: &[PriceBar]) -> SignalReport {
         pivots,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::BarInterval;
+    use chrono::{TimeZone, Utc};
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    fn bar(day_offset: i64, close: &str) -> PriceBar {
+        let c = Decimal::from_str(close).unwrap();
+        // Base date + N days lets us build long series (300+ bars) without
+        // overflowing a single month.
+        let base = Utc.with_ymd_and_hms(2020, 1, 1, 16, 0, 0).unwrap();
+        PriceBar {
+            symbol: "TEST".into(),
+            interval: BarInterval::D1,
+            bar_time: base + chrono::Duration::days(day_offset),
+            open: c, high: c, low: c, close: c,
+            volume: Decimal::from(1_000_000),
+            source: "test".into(),
+        }
+    }
+
+    /// Build N bars with the given close sequence; open/high/low all equal close.
+    fn flat_series(closes: &[f64]) -> Vec<PriceBar> {
+        closes.iter().enumerate()
+            .map(|(i, &c)| bar(i as i64, &c.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn analyze_empty_bars_does_not_panic() {
+        let r = analyze("EMPTY", &[]);
+        assert_eq!(r.symbol, "EMPTY");
+        assert_eq!(r.last_close, 0.0);
+        // Empty input → no signals fire (some may still fire with 0/None).
+        assert!(r.score >= -10 && r.score <= 10, "score must stay clamped");
+    }
+
+    #[test]
+    fn analyze_score_is_clamped_to_signed_ten() {
+        // Strong uptrend: monotonic increase to flush all bullish signals.
+        let closes: Vec<f64> = (1..=300).map(|i| 100.0 + i as f64 * 0.5).collect();
+        let bars = flat_series(&closes);
+        let r = analyze("BULL", &bars);
+        assert!(r.score <= 10, "score above ceiling: {}", r.score);
+        assert!(r.score >= -10);
+    }
+
+    #[test]
+    fn analyze_summary_is_one_of_three_labels() {
+        let bars = flat_series(&[100.0, 101.0, 102.0]);
+        let r = analyze("S", &bars);
+        assert!(matches!(r.summary, "buy" | "sell" | "hold"),
+            "summary must be buy/sell/hold, got: {}", r.summary);
+    }
+
+    #[test]
+    fn analyze_last_close_matches_input() {
+        let bars = flat_series(&[100.0, 110.0, 120.0]);
+        let r = analyze("X", &bars);
+        assert_eq!(r.last_close, 120.0);
+    }
+
+    #[test]
+    fn analyze_pivots_require_at_least_two_bars() {
+        let r0 = analyze("X", &[]);
+        let r1 = analyze("X", &flat_series(&[100.0]));
+        let r2 = analyze("X", &flat_series(&[100.0, 105.0]));
+        assert!(r0.pivots.is_none());
+        assert!(r1.pivots.is_none(), "need >=2 bars for pivots");
+        assert!(r2.pivots.is_some());
+    }
+
+    #[test]
+    fn analyze_uptrend_yields_positive_or_neutral_score() {
+        // Sustained uptrend should never produce a strongly bearish score.
+        let closes: Vec<f64> = (1..=250).map(|i| 100.0 + i as f64).collect();
+        let bars = flat_series(&closes);
+        let r = analyze("UP", &bars);
+        assert!(r.score >= -2,
+            "uptrend should not score deeply bearish, got {}", r.score);
+    }
+
+    #[test]
+    fn analyze_signal_weights_sum_into_score_within_bounds() {
+        let bars = flat_series(&[100.0; 250]);
+        let r = analyze("FLAT", &bars);
+        // Each signal contributes its weight, but final score is clamped.
+        let raw_sum: i32 = r.signals.iter().map(|s| s.weight).sum();
+        if raw_sum > 10 {
+            assert_eq!(r.score, 10);
+        } else if raw_sum < -10 {
+            assert_eq!(r.score, -10);
+        } else {
+            assert_eq!(r.score, raw_sum,
+                "score should equal sum when within [-10, +10]");
+        }
+    }
+}

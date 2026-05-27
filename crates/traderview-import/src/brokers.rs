@@ -39,7 +39,11 @@ const MAP_WEBULL: ColumnMap = ColumnMap {
     side_lookup: SideLookup::DEFAULT,
     symbol: ColSpec::HeaderAny(&["symbol", "ticker"]),
     side: ColSpec::HeaderAny(&["side", "action", "buy/sell", "order side"]),
-    qty: ColSpec::HeaderAny(&["filled", "quantity", "qty", "total qty", "filled qty"]),
+    // "total qty" / "quantity" / "qty" describe the ORDER size; "filled"
+    // is the cumulative filled-so-far and is wrong on partial-fill rows.
+    // Prefer the unambiguous order-size columns first; fall back to "filled"
+    // only when the broker's export omits them.
+    qty: ColSpec::HeaderAny(&["total qty", "quantity", "qty", "filled qty", "filled"]),
     price: ColSpec::HeaderAny(&["avg price", "price", "filled price", "avgprice"]),
     fee: Some(ColSpec::HeaderAny(&["commission", "fees", "commission & fees"])),
     executed_at: ColSpec::HeaderAny(&["filled time", "executed", "executed time", "time"]),
@@ -290,13 +294,16 @@ const MAP_TOS: ColumnMap = ColumnMap {
         cover: &["cover"],
     },
     symbol: ColSpec::HeaderAny(&["symbol", "underlying symbol"]),
-    side: ColSpec::HeaderAny(&["side", "type"]),
+    // "side" only — "type" was previously listed as an alias here AND as the
+    // asset_class column below, so a TOS CSV with a literal "Type" column
+    // would resolve `side` to the asset-class string and break decoding.
+    side: ColSpec::HeaderAny(&["side"]),
     qty: ColSpec::HeaderAny(&["qty", "quantity"]),
     price: ColSpec::HeaderAny(&["price"]),
     fee: Some(ColSpec::HeaderAny(&["commissions & fees", "commission"])),
     executed_at: ColSpec::HeaderAny(&["exec time", "date/time"]),
     broker_order_id: Some(ColSpec::HeaderAny(&["order id"])),
-    asset_class: Some(ColSpec::HeaderAny(&["type", "asset type"])),
+    asset_class: Some(ColSpec::HeaderAny(&["asset type", "type"])),
     option_type: Some(ColSpec::HeaderAny(&["put/call"])),
     strike: Some(ColSpec::HeaderAny(&["strike"])),
     expiration: Some(ColSpec::HeaderAny(&["exp"])),
@@ -365,7 +372,11 @@ const MAP_FIDELITY: ColumnMap = ColumnMap {
     qty: ColSpec::HeaderAny(&["quantity"]),
     price: ColSpec::HeaderAny(&["price", "price per share"]),
     fee: Some(ColSpec::HeaderAny(&["commission", "fees"])),
-    executed_at: ColSpec::HeaderAny(&["run date", "settlement date", "trade date"]),
+    // "trade date" is when the order filled — what every other broker uses.
+    // "run date" is the settlement-batch date which lags by 1-3 days, and
+    // "settlement date" is the cash-clearing date (T+2). Picking trade date
+    // first avoids wash-sale and per-day P&L mis-bucketing.
+    executed_at: ColSpec::HeaderAny(&["trade date", "run date", "settlement date"]),
     broker_order_id: None,
     asset_class: None,
     option_type: None,
@@ -426,7 +437,10 @@ const MAP_RH: ColumnMap = ColumnMap {
     date_formats: &["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S"],
     utc_assumed: true,
     side_lookup: SideLookup::DEFAULT,
-    symbol: ColSpec::HeaderAny(&["instrument", "symbol"]),
+    // Real Robinhood activity CSVs put the ticker in "Symbol" and a long
+    // API URL in "Instrument". First-match-wins on "instrument" would grab
+    // the URL — flip the order so the ticker wins.
+    symbol: ColSpec::HeaderAny(&["symbol", "instrument"]),
     side: ColSpec::HeaderAny(&["side"]),
     qty: ColSpec::HeaderAny(&["quantity", "qty"]),
     price: ColSpec::HeaderAny(&["price"]),
@@ -757,5 +771,64 @@ mod tests {
         assert_eq!(out[0].fee.to_string(), "0.10");
         assert_eq!(out[0].broker_order_id.as_deref(), Some("TZ-1"));
         assert_eq!(out[1].side, Side::Sell);
+    }
+
+    // ─── Regression tests for column-map fixes (pass-5 audit) ─────────────
+
+    /// Webull: when a CSV has BOTH `total qty` (order size) and `filled`
+    /// (cumulative filled, may differ on partial-fill rows), the parser
+    /// must take `total qty`. Pre-fix it took whichever came first in the
+    /// alias list — `filled` — which mis-counted partial fills.
+    #[test]
+    fn webull_prefers_total_qty_over_filled() {
+        let csv = "Symbol,Side,Total Qty,Filled,Price,Filled Time\n\
+                   AAPL,buy,100,40,150,2026-01-15 09:30:00\n";
+        let out = WebullParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].qty.to_string(), "100",
+            "Webull must use Total Qty (order size), not Filled (partial)");
+    }
+
+    /// TOS: "type" was previously aliased for BOTH `side` and `asset_class`.
+    /// A CSV with a literal `Type` column would resolve side to the
+    /// asset-class string ("STOCK" / "OPTION") and break side decoding.
+    #[test]
+    fn tos_side_resolves_independently_of_type_column() {
+        let csv = "Symbol,Side,Type,Qty,Price,Exec Time\n\
+                   AAPL,BOT,STOCK,100,150,01/15/26 09:30:00\n\
+                   AAPL,SOLD,STOCK,100,160,01/15/26 14:30:00\n";
+        let out = ThinkOrSwimParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].side, Side::Buy,  "BOT must decode as Buy");
+        assert_eq!(out[1].side, Side::Sell, "SOLD must decode as Sell");
+    }
+
+    /// Robinhood: real activity exports put the ticker in `Symbol` and a
+    /// long API URL in `Instrument`. Pre-fix, the parser preferred
+    /// `instrument` and silently stored the URL as the symbol.
+    #[test]
+    fn robinhood_prefers_symbol_over_instrument_url() {
+        let csv = "Instrument,Symbol,Side,Quantity,Price,Execution Date\n\
+                   https://api.robinhood.com/instruments/abcd/,AAPL,buy,100,150,2026-01-15\n";
+        let out = RobinhoodParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].symbol, "AAPL",
+            "Robinhood must prefer Symbol column over Instrument URL");
+    }
+
+    /// Fidelity: pre-fix the parser preferred `run date` (settlement-batch,
+    /// lags by 1-3 days) over `trade date` (when the order filled).
+    /// Wrong execution timestamp breaks per-day P&L bucketing and wash-sale
+    /// detection.
+    #[test]
+    fn fidelity_prefers_trade_date_over_run_date() {
+        use chrono::Datelike;
+        let csv = "Symbol,Action,Quantity,Price,Run Date,Trade Date\n\
+                   AAPL,YOU BOUGHT,100,150,01/17/2026,01/15/2026\n";
+        let out = FidelityParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 1);
+        // Trade date is 01/15, run date is 01/17. We must pick trade date.
+        let day = out[0].executed_at.date_naive();
+        assert_eq!(day.day(), 15, "Fidelity must use trade date, not run date");
     }
 }

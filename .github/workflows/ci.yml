@@ -46,6 +46,20 @@ jobs:
       # The unit tests in -core and -import are pure compute (no DB needed).
       - run: cargo test --workspace --locked --no-fail-fast --lib
 
+  frontend-test:
+    name: Frontend JS Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # node --test is a built-in runner (Node 18+) — no npm install needed.
+      # The frontend has zero dependencies; tests live under frontend/tests/.
+      - name: Run frontend tests
+        run: node --test frontend/tests/*.test.mjs
+
   fmt:
     name: Format
     runs-on: ubuntu-latest

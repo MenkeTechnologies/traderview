@@ -107,7 +107,7 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY            -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on six shared library crates (<code>core / db / import / web / expense / ocr</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Twelve broker importers cover Webull, Lightspeed, IBKR, TOS, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, and a generic column-mapping wizard. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
+      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on six shared library crates (<code>core / db / import / web / expense / ocr</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Twelve broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">30,075</div><div class="stat-label">Rust Lines</div></div>
@@ -171,7 +171,7 @@
             <td class="num">1,005</td>
             <td class="num">3.3%</td>
             <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:3.3%;"></div></div></td>
-            <td>12 broker parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, Generic &middot; <code>Parser</code> trait + column-mapping wizard</td>
+            <td>12 broker parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero — plus a Generic <code>ColumnMap</code> parser. <code>Parser</code> trait + column-mapping wizard for unknown sources.</td>
           </tr>
           <tr>
             <td><code>traderview-web</code></td>
@@ -610,7 +610,7 @@
           <tr><td>Foundation</td><td>FIFO trade roll-up + stats (expectancy / R-multiple / SQN / Sharpe / Sortino)</td><td><code>traderview-core</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>Tauri v2 desktop + embedded Postgres bootstrap (stale-PID cleanup, persisted password)</td><td><code>src-tauri</code> + <code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>axum web binary with argon2 + JWT auth, custom logging middleware</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
-          <tr><td>Import</td><td>12 broker parsers — Webull, Lightspeed, IBKR, TOS, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, Generic</td><td><code>traderview-import</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td>Import</td><td>12 broker parsers + Generic — Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero</td><td><code>traderview-import</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Import</td><td>CSV column-mapping wizard for unknown sources</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Live</td><td>Nasdaq halts (3s RSS) + SEC EDGAR + 4 PR wires (catalyst radar)</td><td><code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Live</td><td>Finnhub WebSocket 6-panel intraday scanner with TTS voice alerts</td><td><code>traderview-db</code> + <code>frontend</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
