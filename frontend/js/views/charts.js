@@ -38,6 +38,13 @@ export async function renderCharts(mount, _state, symbol = '') {
             <button class="btn" id="clearDrawings" style="margin-left:auto;">Clear all</button>
         </div>
 
+        <div class="chart-toolbar">
+            <span class="muted small">Indicators:</span>
+            <select id="indicatorSel" multiple size="3" style="min-width:240px;"></select>
+            <button class="btn" id="indicatorReload">Apply</button>
+            <a href="#custom-indicators" class="small muted">manage…</a>
+        </div>
+
         <div class="chart-panel">
             <div id="chartWrap" style="position:relative;">
                 <div id="chart-mount"></div>
@@ -87,6 +94,17 @@ export async function renderCharts(mount, _state, symbol = '') {
 
     document.getElementById('drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
 
+    // Populate indicator selector from registry.
+    let allIndicators = [];
+    try {
+        allIndicators = await api.listCustomIndicators();
+        const sel = document.getElementById('indicatorSel');
+        sel.innerHTML = allIndicators.map(i =>
+            `<option value="${i.id}" ${i.is_default ? 'selected' : ''}>${esc(i.name)}</option>`
+        ).join('');
+    } catch (_) { /* ignore */ }
+    ds.indicatorSeries = [];
+
     const load = async () => {
         const sym = document.getElementById('sym').value.trim().toUpperCase();
         ds.symbol = sym;
@@ -98,6 +116,7 @@ export async function renderCharts(mount, _state, symbol = '') {
             ds.plot = ohlcChart(document.getElementById('chart-mount'), resp.bars, [], { height: 480 });
             sizeOverlay(ds);
             ds.drawings = await api.listChartDrawings(sym);
+            await loadIndicators(ds, sym, iv);
             drawAll(ds);
         } catch (e) {
             document.getElementById('chart-mount').innerHTML =
@@ -106,8 +125,32 @@ export async function renderCharts(mount, _state, symbol = '') {
     };
 
     document.getElementById('load').addEventListener('click', load);
+    document.getElementById('indicatorReload').addEventListener('click', async () => {
+        const sym = document.getElementById('sym').value.trim().toUpperCase();
+        const iv = document.getElementById('iv').value;
+        await loadIndicators(ds, sym, iv);
+        drawAll(ds);
+    });
     window.addEventListener('resize', () => { sizeOverlay(ds); drawAll(ds); });
     load();
+}
+
+async function loadIndicators(ds, sym, iv) {
+    const sel = document.getElementById('indicatorSel');
+    const ids = Array.from(sel.selectedOptions).map(o => o.value);
+    if (!ids.length) { ds.indicatorSeries = []; return; }
+    try {
+        const days = Math.max(30, Math.ceil(
+            (Number(document.getElementById('to').valueAsNumber || Date.now()) -
+             Number(document.getElementById('from').valueAsNumber || Date.now())) / 86400_000));
+        const r = await api.evalCustomIndicators(sym, iv, days, ids);
+        ds.indicatorSeries = (r.series || []).map(s => ({
+            name: s.name, color: s.color, values: s.values, times: r.times,
+        }));
+    } catch (e) {
+        console.warn('indicator eval failed', e);
+        ds.indicatorSeries = [];
+    }
 }
 
 function renderColorPicker(ds) {
@@ -218,9 +261,43 @@ function drawAll(ds, opts = {}) {
     const svg = document.getElementById('drawLayer');
     if (!svg) return;
     svg.innerHTML = '';
+    renderIndicators(svg, ds);
     for (const d of ds.drawings) renderOne(svg, ds, d);
     // Live preview of the in-flight 2-click drawing.
     if (opts.preview) renderPreview(svg, ds, opts.preview);
+}
+
+function renderIndicators(svg, ds) {
+    if (!ds.plot || !ds.indicatorSeries?.length) return;
+    let legendY = 14;
+    for (const s of ds.indicatorSeries) {
+        const pts = [];
+        const n = Math.min(s.times.length, s.values.length);
+        for (let i = 0; i < n; i++) {
+            const v = s.values[i];
+            if (v == null) continue;
+            const t = new Date(s.times[i]).getTime() / 1000;
+            const x = ds.plot.valToPos(t, 'x');
+            const y = ds.plot.valToPos(v, 'y');
+            if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+            pts.push(pts.length === 0 ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`);
+        }
+        if (!pts.length) continue;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pts.join(' '));
+        path.setAttribute('stroke', s.color || '#00e5ff');
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('opacity', '0.85');
+        svg.appendChild(path);
+        // Legend chip.
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', '8'); t.setAttribute('y', String(legendY));
+        t.setAttribute('fill', s.color); t.setAttribute('font-size', '11');
+        t.textContent = s.name;
+        svg.appendChild(t);
+        legendY += 14;
+    }
 }
 
 function renderOne(svg, ds, d) {

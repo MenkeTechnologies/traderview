@@ -400,6 +400,16 @@ export const api = {
     // Fill quality (bar-level slippage approximation)
     fillQuality: (accountId) => request(`/fill-quality/${accountId}`),
 
+    // Custom indicator registry
+    listCustomIndicators:  () => request('/custom-indicators'),
+    createCustomIndicator: (body) =>
+        request('/custom-indicators', { method: 'POST', body: JSON.stringify(body) }),
+    deleteCustomIndicator: (id) =>
+        request(`/custom-indicators/${id}`, { method: 'DELETE' }),
+    evalCustomIndicators:  (sym, interval, days, indicator_ids) =>
+        request(`/custom-indicators/eval/${encodeURIComponent(sym)}?interval=${interval}&days=${days}`,
+                { method: 'POST', body: JSON.stringify({ indicator_ids }) }),
+
     // Trade reviews (forced reflection on |R|>=2 trades)
     listReviews:    (limit = 50) => request(`/trade-reviews?limit=${limit}`),
     reviewsNeeded:  (accountId, limit = 50) =>
