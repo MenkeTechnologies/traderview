@@ -18,11 +18,12 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
     alligator, atr_cone, break_of_structure, breakout_detector, calmar_ratio, change_of_character,
-    crossover, cumulative_delta, cusum, daily_loss_limit, displacement, drawdown_throttle,
-    earnings_calendar, equal_levels, fair_value_gap, futures_roll, goal_tracker, heikin_ashi_reversal,
-    holiday_calendar, models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin,
-    order_block, pair_trade, portfolio_heat, position_aging, position_irr, premium_discount,
-    put_call_ratio, range_contraction, range_expansion, reconcile_1099b, risk_reward,
+    choppiness, crossover, cumulative_delta, cusum, daily_loss_limit, displacement,
+    drawdown_throttle, earnings_calendar, efficiency_ratio, equal_levels, fair_value_gap,
+    futures_roll, goal_tracker, heikin_ashi_reversal, holiday_calendar,
+    models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
+    pair_trade, portfolio_heat, position_aging, position_irr, premium_discount, put_call_ratio,
+    random_walk_index, range_contraction, range_expansion, reconcile_1099b, risk_reward,
     rolling_zscore, round_levels, sip_simulator, spread_attribution, stop_hunt,
     strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer, three_bar_reversal,
     timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
@@ -114,6 +115,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/heikin-ashi-reversal", post(heikin_ashi_reversal_route))
         .route("/analytics/three-bar-reversal",   post(three_bar_reversal_route))
         .route("/analytics/range-expansion",      post(range_expansion_route))
+        // ── Trend-efficiency primitives ────────────────────────────────
+        .route("/analytics/choppiness",           post(choppiness_route))
+        .route("/analytics/efficiency-ratio",     post(efficiency_ratio_route))
+        .route("/analytics/random-walk-index",    post(random_walk_index_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -867,4 +872,44 @@ async fn range_expansion_route(
     _u: AuthUser, Json(b): Json<RangeExpansionBody>,
 ) -> Json<range_expansion::ExpansionReport> {
     Json(range_expansion::detect(&b.bars, &b.atr, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Trend-efficiency primitives: Choppiness + KER + RWI.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct ChoppinessBody {
+    bars: Vec<choppiness::OhlcBar>,
+    period: usize,
+}
+
+async fn choppiness_route(
+    _u: AuthUser, Json(b): Json<ChoppinessBody>,
+) -> Json<choppiness::ChopReport> {
+    Json(choppiness::compute(&b.bars, b.period))
+}
+
+#[derive(Deserialize)]
+struct EfficiencyBody {
+    closes: Vec<f64>,
+    lookback: usize,
+}
+
+async fn efficiency_ratio_route(
+    _u: AuthUser, Json(b): Json<EfficiencyBody>,
+) -> Json<efficiency_ratio::EfficiencyReport> {
+    Json(efficiency_ratio::compute(&b.closes, b.lookback))
+}
+
+#[derive(Deserialize)]
+struct RwiBody {
+    bars: Vec<random_walk_index::OhlcBar>,
+    max_n: usize,
+}
+
+async fn random_walk_index_route(
+    _u: AuthUser, Json(b): Json<RwiBody>,
+) -> Json<random_walk_index::RwiReport> {
+    Json(random_walk_index::compute(&b.bars, b.max_n))
 }

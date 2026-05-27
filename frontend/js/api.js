@@ -950,4 +950,7 @@ export const api = {
     anlyHaReversal:          (b) => request('/analytics/heikin-ashi-reversal',       { method: 'POST', body: JSON.stringify(b) }),
     anlyThreeBarReversal:    (b) => request('/analytics/three-bar-reversal',         { method: 'POST', body: JSON.stringify(b) }),
     anlyRangeExpansion:      (b) => request('/analytics/range-expansion',            { method: 'POST', body: JSON.stringify(b) }),
+    anlyChoppiness:          (b) => request('/analytics/choppiness',                 { method: 'POST', body: JSON.stringify(b) }),
+    anlyEfficiencyRatio:     (b) => request('/analytics/efficiency-ratio',           { method: 'POST', body: JSON.stringify(b) }),
+    anlyRandomWalkIndex:     (b) => request('/analytics/random-walk-index',          { method: 'POST', body: JSON.stringify(b) }),
 };
