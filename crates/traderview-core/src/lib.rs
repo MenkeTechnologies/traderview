@@ -34,6 +34,8 @@ pub mod signals;
 pub mod slug;
 pub mod strategy_alert;
 pub mod stats;
+pub mod tax_loss_harvest;
+pub mod vwap_slippage;
 pub mod wash_sale;
 
 pub use models::*;
