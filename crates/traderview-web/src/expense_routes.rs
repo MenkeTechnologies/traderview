@@ -9,7 +9,7 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
-use axum::extract::{Multipart, Path, Query, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
 use axum::routing::{delete, get, patch, post};
 use axum::{Json, Router};
 use chrono::{DateTime, NaiveDate, Utc};
@@ -21,6 +21,11 @@ use traderview_expense::dedup::{AccountKind as DedupKind, DedupCandidate};
 use traderview_expense::rules::{CompiledRules, PatternKind as RulePatternKind, Rule};
 use traderview_expense::{seed_rules, ExpenseSource};
 use uuid::Uuid;
+
+/// Cap on a single CSV upload. A year of credit-card statements is well
+/// under 1 MB; we leave generous headroom but reject the malicious case
+/// where a client streams gigabytes to fill disk + the in-memory `Vec<u8>`.
+const CSV_UPLOAD_MAX_BYTES: usize = 50 * 1024 * 1024;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -41,6 +46,10 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mileage",             post(calc_mileage))
         .route("/calc/quarterly-tax",       post(calc_quarterly_tax))
         .route("/subscriptions/detect",     get(detect_subscriptions))
+        // Bound the multipart upload on /import so import_csv can't fill
+        // memory + disk on a runaway client. Receipts have their own,
+        // smaller limit set in receipt_routes.
+        .layer(DefaultBodyLimit::max(CSV_UPLOAD_MAX_BYTES))
         .nest("/receipts", crate::receipt_routes::router())
 }
 
@@ -231,11 +240,42 @@ fn default_tx_limit() -> i64 {
     200
 }
 
+/// Hard cap on a single transactions-list query. Without this, a client could
+/// pass `?limit=1000000` and force the server to materialize a multi-million
+/// row Vec into memory.
+const MAX_TX_LIMIT: i64 = 1000;
+
+/// Escape `%`, `_`, and `\` so the ILIKE pattern from a user search treats
+/// them as literal characters, not wildcards. Without this, searching "100%"
+/// matches every transaction (% is the ILIKE wildcard for any sequence).
+/// The bind is already parameterized so this is a UX/correctness fix, not a
+/// SQL-injection fix.
+pub(crate) fn escape_ilike_pattern(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        if matches!(c, '%' | '_' | '\\') {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// Clamp the caller's `limit` to [1, MAX_TX_LIMIT]. Negative / zero would
+/// error in SQL; huge values would OOM. `offset` is clamped at 0 lower bound.
+pub(crate) fn clamp_pagination(limit: i64, offset: i64) -> (i64, i64) {
+    let limit = limit.clamp(1, MAX_TX_LIMIT);
+    let offset = offset.max(0);
+    (limit, offset)
+}
+
 async fn list_transactions(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<ListTxQuery>,
 ) -> Result<Json<Vec<Transaction>>, ApiError> {
+    let (limit, offset) = clamp_pagination(q.limit, q.offset);
+    let search_pattern = q.search.as_deref().map(escape_ilike_pattern);
     // Always scope by the user's accounts; a future "ALL" account picker just
     // omits account_id and falls through to the user-wide JOIN below.
     let rows: Vec<TransactionRow> = sqlx::query_as(
@@ -252,8 +292,8 @@ async fn list_transactions(
             AND ($6::bool IS NULL OR t.is_business = $6)
             AND ($7::bool IS NULL OR t.is_transfer = $7)
             AND ($8::text IS NULL OR
-                  t.merchant_normalized ILIKE '%' || $8 || '%' OR
-                  t.description ILIKE '%' || $8 || '%')
+                  t.merchant_normalized ILIKE '%' || $8 || '%' ESCAPE '\\' OR
+                  t.description         ILIKE '%' || $8 || '%' ESCAPE '\\')
           ORDER BY t.posted_at DESC
           LIMIT $9 OFFSET $10",
     )
@@ -264,9 +304,9 @@ async fn list_transactions(
     .bind(q.category)
     .bind(q.is_business)
     .bind(q.is_transfer)
-    .bind(q.search)
-    .bind(q.limit)
-    .bind(q.offset)
+    .bind(search_pattern)
+    .bind(limit)
+    .bind(offset)
     .fetch_all(&s.pool)
     .await?;
     Ok(Json(rows.into_iter().map(Into::into).collect()))
@@ -1128,4 +1168,88 @@ async fn detect_subscriptions(
         .collect();
 
     Ok(Json(detect(&txns, DetectOptions::default())))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── escape_ilike_pattern ─────────────────────────────────────────────
+
+    #[test]
+    fn escape_ilike_passes_through_plain_text() {
+        // Normal merchant names must survive verbatim.
+        assert_eq!(escape_ilike_pattern("Starbucks"), "Starbucks");
+        assert_eq!(escape_ilike_pattern("café latté"), "café latté");
+    }
+
+    #[test]
+    fn escape_ilike_escapes_percent_so_100_pct_is_literal() {
+        // Searching "100%" must NOT match every transaction — `%` is the
+        // ILIKE wildcard for "any sequence of characters".
+        assert_eq!(escape_ilike_pattern("100%"), r"100\%");
+    }
+
+    #[test]
+    fn escape_ilike_escapes_underscore_single_char_wildcard() {
+        // `_` matches any single char under ILIKE — must be escaped.
+        assert_eq!(escape_ilike_pattern("a_b"), r"a\_b");
+    }
+
+    #[test]
+    fn escape_ilike_escapes_backslash() {
+        // The ESCAPE '\' clause uses backslash as the escape char; if user
+        // input contains a literal backslash it must itself be escaped.
+        assert_eq!(escape_ilike_pattern(r"path\to"), r"path\\to");
+    }
+
+    #[test]
+    fn escape_ilike_handles_all_three_simultaneously() {
+        assert_eq!(escape_ilike_pattern(r"10%_foo\bar"), r"10\%\_foo\\bar");
+    }
+
+    #[test]
+    fn escape_ilike_empty_string_is_empty() {
+        assert_eq!(escape_ilike_pattern(""), "");
+    }
+
+    // ─── clamp_pagination ─────────────────────────────────────────────────
+
+    #[test]
+    fn clamp_pagination_passes_through_normal_values() {
+        assert_eq!(clamp_pagination(200, 0),  (200, 0));
+        assert_eq!(clamp_pagination(50,  100), (50, 100));
+        assert_eq!(clamp_pagination(MAX_TX_LIMIT, 0), (MAX_TX_LIMIT, 0));
+    }
+
+    #[test]
+    fn clamp_pagination_caps_oversize_limit() {
+        // A client passing ?limit=1000000 must NOT force the server to
+        // materialize a multi-million row Vec.
+        assert_eq!(clamp_pagination(1_000_000, 0), (MAX_TX_LIMIT, 0));
+        assert_eq!(clamp_pagination(i64::MAX, 0),   (MAX_TX_LIMIT, 0));
+    }
+
+    #[test]
+    fn clamp_pagination_floors_limit_at_1() {
+        // Zero / negative would yield empty/error SQL — always serve at
+        // least one row.
+        assert_eq!(clamp_pagination(0,  0),  (1, 0));
+        assert_eq!(clamp_pagination(-1, 0),  (1, 0));
+        assert_eq!(clamp_pagination(i64::MIN, 0), (1, 0));
+    }
+
+    #[test]
+    fn clamp_pagination_floors_offset_at_0() {
+        // Negative offset is a SQL syntax error — clamp.
+        assert_eq!(clamp_pagination(100, -5), (100, 0));
+        assert_eq!(clamp_pagination(100, i64::MIN), (100, 0));
+    }
+
+    #[test]
+    fn clamp_pagination_allows_large_offset() {
+        // Deep pagination is the user's prerogative; only the per-page
+        // size is capped.
+        assert_eq!(clamp_pagination(100, 1_000_000), (100, 1_000_000));
+    }
 }
