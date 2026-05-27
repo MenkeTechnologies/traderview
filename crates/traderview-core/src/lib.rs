@@ -104,6 +104,7 @@ pub mod stops;
 pub mod strategy_alert;
 pub mod strategy_correlation;
 pub mod streaks;
+pub mod supertrend;
 pub mod swing_points;
 pub mod trade_quality;
 pub mod stats;
