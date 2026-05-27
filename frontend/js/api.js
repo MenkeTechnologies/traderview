@@ -381,6 +381,15 @@ export const api = {
     // Live P/L tracker (snapshot of open positions with fresh quotes)
     livePositions: (accountId) => request(`/live-positions/${accountId}`),
 
+    // Portfolio rebalancing
+    rebalanceTargetsList: () => request('/rebalance/targets'),
+    rebalanceTargetSave: (body) =>
+        request('/rebalance/targets', { method: 'POST', body: JSON.stringify(body) }),
+    rebalanceTargetDelete: (id) =>
+        request(`/rebalance/targets/${id}`, { method: 'DELETE' }),
+    rebalanceRun: (body) =>
+        request('/rebalance/run', { method: 'POST', body: JSON.stringify(body) }),
+
     // Strategy alerts (compound AND/OR/NOT rules)
     listStrategyAlerts: () => request('/strategy-alerts'),
     createStrategyAlert: (body) =>

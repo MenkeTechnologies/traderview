@@ -42,6 +42,7 @@ mod paper;
 mod plans;
 mod position_size;
 mod premarket;
+mod rebalance;
 mod reports;
 mod research;
 mod scans;
@@ -123,6 +124,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(live_positions::router())
         .merge(corr_matrix::router())
         .merge(strategy_alerts::router())
+        .merge(rebalance::router())
 }
 
 mod helpers {

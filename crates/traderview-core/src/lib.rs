@@ -14,6 +14,7 @@ pub mod liquidity;
 pub mod models;
 pub mod pnl;
 pub mod position_size;
+pub mod rebalance;
 pub mod risk;
 pub mod rollup;
 pub mod scan;

@@ -36,6 +36,7 @@ pub mod paper;
 pub mod plans;
 pub mod premarket;
 pub mod prices;
+pub mod rebalance;
 pub mod scans;
 pub mod screenshots;
 pub mod search;
