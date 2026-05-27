@@ -13,6 +13,7 @@ pub mod beta;
 pub mod bond_duration;
 pub mod bracket_order;
 pub mod buying_power;
+pub mod cagr;
 pub mod calendar_bias;
 pub mod commission_optimizer;
 pub mod concentration;
@@ -101,5 +102,6 @@ pub mod vwap_bands;
 pub mod vwap_slippage;
 pub mod wash_sale;
 pub mod williams_r;
+pub mod yield_curve;
 
 pub use models::*;
