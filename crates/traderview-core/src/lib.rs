@@ -84,6 +84,7 @@ pub mod open_type;
 pub mod options_margin;
 pub mod order_book_imbalance;
 pub mod order_flow;
+pub mod order_staleness;
 pub mod overtrading;
 pub mod pair_trade;
 pub mod parabolic_sar;

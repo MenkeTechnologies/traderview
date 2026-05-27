@@ -40,14 +40,14 @@ pub fn annualized_irr(flows: &[CashFlow]) -> Option<f64> {
     let mut lo = -0.99;
     let mut hi = 10.0;
     let mut f_lo = f(lo);
-    let mut f_hi = f(hi);
+    let f_hi = f(hi);
     if f_lo.signum() == f_hi.signum() { return None; }
     for _ in 0..100 {
         let mid = (lo + hi) / 2.0;
         let f_mid = f(mid);
         if f_mid.abs() < 1e-10 { return Some(mid); }
         if f_mid.signum() == f_lo.signum() { lo = mid; f_lo = f_mid; }
-        else { hi = mid; f_hi = f_mid; }
+        else { hi = mid; }
         if (hi - lo).abs() < 1e-10 { return Some((lo + hi) / 2.0); }
     }
     Some((lo + hi) / 2.0)
