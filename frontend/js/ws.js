@@ -28,7 +28,10 @@ function connect() {
     // not a valid WebSocket scheme. After initApi(), window.__tvApiBase holds
     // the real http://127.0.0.1:<port> backend; convert that to ws://.
     // Falls back to page origin for web mode where they match.
-    const token = (window.__tvApiToken) || localStorage.getItem('tv-token') || '';
+    let token = window.__tvApiToken || '';
+    if (!token) {
+        try { token = localStorage.getItem('tv-token') || ''; } catch (_) {}
+    }
     const tokenQs = token ? `?token=${encodeURIComponent(token)}` : '';
     const apiBase = window.__tvApiBase || location.origin;
     const wsBase = apiBase.replace(/^http/i, 'ws');

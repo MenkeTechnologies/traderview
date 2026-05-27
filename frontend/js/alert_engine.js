@@ -71,11 +71,15 @@ function fire(r) {
     } else {
         playSound(r.sound || 'bell');
     }
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`TraderView · ${r.symbol}`, {
-            body: `${r.trigger}${r.threshold != null ? ' @ ' + r.threshold : ''}`,
-        });
-    }
+    // Notification API throws SecurityError in custom-scheme contexts
+    // (tauri://localhost). Guard both the perm check and the constructor.
+    try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(`TraderView · ${r.symbol}`, {
+                body: `${r.trigger}${r.threshold != null ? ' @ ' + r.threshold : ''}`,
+            });
+        }
+    } catch (_) { /* SecurityError or NotSupportedError — ignore */ }
 }
 
 // ---- exports for manual test from UI -----------------------------
@@ -113,13 +117,22 @@ export function playSound(kind = 'bell') {
 
 export function speak(text) {
     if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
-    window.speechSynthesis.speak(u);
+    try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+        window.speechSynthesis.speak(u);
+    } catch (_) { /* SecurityError in custom-scheme WebKit contexts */ }
 }
 
 export function requestNotifPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
+    // Notification.requestPermission throws SecurityError under custom
+    // URL schemes (Tauri's tauri://localhost) — wrap to keep boot alive.
+    try {
+        if ('Notification' in window && Notification.permission === 'default') {
+            const r = Notification.requestPermission();
+            // Some implementations return a Promise that *rejects* with
+            // SecurityError instead of throwing synchronously.
+            if (r && typeof r.catch === 'function') r.catch(() => {});
+        }
+    } catch (_) { /* unsupported context — ignore */ }
 }

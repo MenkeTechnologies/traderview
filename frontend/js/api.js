@@ -10,7 +10,8 @@ export async function initApi() {
         token = cfg.token;
     } else {
         baseUrl = '';
-        token = localStorage.getItem('tv-token') || '';
+        try { token = localStorage.getItem('tv-token') || ''; }
+        catch (_) { token = ''; /* SecurityError (private mode etc.) */ }
     }
     // Expose for the error reporter (loaded as a non-importing script) and any
     // other module that needs to build WebSocket URLs synchronously.
@@ -39,12 +40,18 @@ export function wsUrl(path) {
 
 export function setToken(t) {
     token = t;
-    if (!window.__TAURI__) localStorage.setItem('tv-token', t);
+    window.__tvApiToken = t;
+    if (!window.__TAURI__) {
+        try { localStorage.setItem('tv-token', t); } catch (_) {}
+    }
 }
 
 export function clearToken() {
     token = '';
-    if (!window.__TAURI__) localStorage.removeItem('tv-token');
+    window.__tvApiToken = '';
+    if (!window.__TAURI__) {
+        try { localStorage.removeItem('tv-token'); } catch (_) {}
+    }
 }
 
 async function request(path, opts = {}) {

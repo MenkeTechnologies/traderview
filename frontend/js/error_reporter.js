@@ -31,19 +31,24 @@ function drain() {
     while (inflight < MAX_INFLIGHT && queue.length) {
         const body = queue.shift();
         inflight++;
-        const ok = (navigator.sendBeacon && body.kind !== 'log')
-            ? navigator.sendBeacon(url,
-                  new Blob([JSON.stringify(body)], { type: 'application/json' }))
-            : false;
-        if (ok) { inflight--; continue; }
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-            keepalive: true,
-        })
-            .catch(() => {})
-            .finally(() => { inflight--; drain(); });
+        // No sendBeacon — it throws SecurityError when called from a custom
+        // scheme (tauri://localhost) to a different origin (http://127.0.0.1).
+        // Plain fetch with keepalive works in all WebKit contexts and is
+        // already allowed by our CSP connect-src list.
+        try {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                keepalive: true,
+            })
+                .catch(() => {})
+                .finally(() => { inflight--; drain(); });
+        } catch (_) {
+            // Synchronous SecurityError / CSP block — drop and continue so
+            // the reporter itself never crashes the app.
+            inflight--;
+        }
     }
 }
 
