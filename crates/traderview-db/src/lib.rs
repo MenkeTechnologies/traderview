@@ -13,6 +13,7 @@ pub mod corr_matrix;
 pub mod crypto;
 pub mod dashboards;
 pub mod darkpool;
+pub mod discipline;
 pub mod disclosures;
 pub mod earnings_cal;
 pub mod earnings_iv;

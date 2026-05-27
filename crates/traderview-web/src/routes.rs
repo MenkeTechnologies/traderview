@@ -21,6 +21,7 @@ mod corr_matrix;
 mod crypto;
 mod dashboards;
 mod darkpool;
+mod discipline;
 mod disclosures;
 mod earnings_cal;
 mod earnings_iv;
@@ -133,6 +134,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(tape_replay::router())
         .merge(backtest_presets::router())
         .merge(mood_analytics::router())
+        .merge(discipline::router())
 }
 
 mod helpers {

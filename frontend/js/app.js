@@ -66,6 +66,7 @@ import { renderSectorRotation } from './views/sector_rotation.js';
 import { renderTapeReplay } from './views/tape_replay.js';
 import { renderBacktestPresets } from './views/backtest_presets.js';
 import { renderMoodAnalytics } from './views/mood_analytics.js';
+import { renderDiscipline } from './views/discipline.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -252,6 +253,7 @@ export async function dispatch() {
             case 'tape-replay':    await renderTapeReplay(mount, state, rest[0] || ''); break;
             case 'backtest-presets': await renderBacktestPresets(mount, state, rest[0] || ''); break;
             case 'mood':           await renderMoodAnalytics(mount, state); break;
+            case 'discipline':     await renderDiscipline(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

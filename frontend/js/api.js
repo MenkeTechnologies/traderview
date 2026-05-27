@@ -387,6 +387,9 @@ export const api = {
     // Mood-vs-PnL analytics
     moodAnalytics: (accountId) => request(`/mood-analytics/${accountId}`),
 
+    // Streaks + discipline scorecard
+    discipline: (accountId) => request(`/discipline/${accountId}`),
+
     // Per-trade tape replay (bars + execs timeline)
     tapeReplay: (tradeId) => request(`/tape-replay/${tradeId}`),
 
