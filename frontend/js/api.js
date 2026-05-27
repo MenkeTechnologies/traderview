@@ -390,6 +390,13 @@ export const api = {
     // Streaks + discipline scorecard
     discipline: (accountId) => request(`/discipline/${accountId}`),
 
+    // Trading goals
+    listGoals:   () => request('/goals'),
+    createGoal:  (body) => request('/goals', { method: 'POST', body: JSON.stringify(body) }),
+    updateGoal:  (id, body) => request(`/goals/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteGoal:  (id) => request(`/goals/${id}`, { method: 'DELETE' }),
+    goalProgress:(id) => request(`/goals/${id}/progress`),
+
     // Per-trade tape replay (bars + execs timeline)
     tapeReplay: (tradeId) => request(`/tape-replay/${tradeId}`),
 

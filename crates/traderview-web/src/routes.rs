@@ -29,6 +29,7 @@ mod economy;
 mod executions;
 mod export;
 mod fear_greed;
+mod goals;
 mod heatmap;
 mod hotkeys;
 mod imports;
@@ -135,6 +136,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(backtest_presets::router())
         .merge(mood_analytics::router())
         .merge(discipline::router())
+        .merge(goals::router())
 }
 
 mod helpers {

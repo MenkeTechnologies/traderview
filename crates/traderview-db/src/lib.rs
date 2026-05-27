@@ -21,6 +21,7 @@ pub mod economy;
 pub mod embedded;
 pub mod fear_greed;
 pub mod executions;
+pub mod goals;
 pub mod forum;
 pub mod heatmap;
 pub mod hotkeys;
