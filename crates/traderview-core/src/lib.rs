@@ -125,6 +125,7 @@ pub mod strategy_correlation;
 pub mod streaks;
 pub mod supertrend;
 pub mod swing_points;
+pub mod symbol_filter;
 pub mod trade_quality;
 pub mod stats;
 pub mod stochastic;
