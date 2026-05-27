@@ -6,6 +6,7 @@
 
 pub mod adx;
 pub mod anchored_vwap;
+pub mod aroon;
 pub mod atr_cone;
 pub mod awesome_oscillator;
 pub mod backtest;
@@ -17,8 +18,9 @@ pub mod bracket_order;
 pub mod buying_power;
 pub mod cagr;
 pub mod calendar_bias;
-pub mod chaikin_volatility;
 pub mod carry_score;
+pub mod cci;
+pub mod chaikin_volatility;
 pub mod commission_optimizer;
 pub mod concentration;
 pub mod correlation;
