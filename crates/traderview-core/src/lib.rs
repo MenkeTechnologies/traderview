@@ -46,6 +46,7 @@ pub mod optimal_f;
 pub mod options_margin;
 pub mod order_flow;
 pub mod overtrading;
+pub mod parabolic_sar;
 pub mod pnl;
 pub mod position_size;
 pub mod per_symbol_slippage;
@@ -88,5 +89,6 @@ pub mod volume_profile;
 pub mod vwap_bands;
 pub mod vwap_slippage;
 pub mod wash_sale;
+pub mod williams_r;
 
 pub use models::*;
