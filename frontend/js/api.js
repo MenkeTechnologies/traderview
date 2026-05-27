@@ -378,6 +378,9 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Live P/L tracker (snapshot of open positions with fresh quotes)
+    livePositions: (accountId) => request(`/live-positions/${accountId}`),
+
     // Position sizing (Kelly / fixed-fractional / R-based, correlation-aware)
     positionSize: (body) =>
         request('/position-size', { method: 'POST', body: JSON.stringify(body) }),

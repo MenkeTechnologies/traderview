@@ -31,6 +31,7 @@ mod hotkeys;
 mod imports;
 mod journal;
 mod journal_ai;
+mod live_positions;
 mod markets;
 mod mentorships;
 mod news;
@@ -117,6 +118,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(news::router())
         .merge(earnings_cal::router())
         .merge(position_size::router())
+        .merge(live_positions::router())
 }
 
 mod helpers {
