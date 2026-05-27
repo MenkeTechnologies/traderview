@@ -38,6 +38,7 @@ pub mod overtrading;
 pub mod pnl;
 pub mod position_size;
 pub mod per_symbol_slippage;
+pub mod pivots;
 pub mod position_aging;
 pub mod pyramid;
 pub mod rebalance;
@@ -64,6 +65,7 @@ pub mod stats;
 pub mod tax_loss_harvest;
 pub mod tilt_detector;
 pub mod twap;
+pub mod vwap_bands;
 pub mod vwap_slippage;
 pub mod wash_sale;
 
