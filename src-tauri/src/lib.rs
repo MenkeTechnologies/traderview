@@ -160,12 +160,18 @@ pub fn run() {
                 .spawn(move || {
                     rt_clone.block_on(async move {
                         match bring_up_backend(data_dir_clone, jwt_secret_clone).await {
-                            Ok((config, listener, app_router)) => {
+                            Ok((config, listener, app_router, embedded)) => {
                                 let _ = config_tx.send(Ok(config));
                                 tracing::info!("axum starting");
                                 if let Err(e) = axum::serve(listener, app_router).await {
                                     tracing::error!(error = %e, "axum serve failed");
                                 }
+                                // CRITICAL: keep `embedded` alive until axum::serve
+                                // returns. Dropping the Embedded wrapper triggers
+                                // postgresql_embedded's pg_ctl stop in its Drop
+                                // impl, which kills every pooled connection and
+                                // makes every subsequent query time out at 10s.
+                                drop(embedded);
                             }
                             Err(e) => {
                                 tracing::error!(error = %e, "backend bring-up failed");
@@ -226,7 +232,7 @@ pub fn run() {
 async fn bring_up_backend(
     data_dir: PathBuf,
     jwt_secret: Vec<u8>,
-) -> anyhow::Result<(ApiConfig, tokio::net::TcpListener, axum::Router)> {
+) -> anyhow::Result<(ApiConfig, tokio::net::TcpListener, axum::Router, Embedded)> {
     tracing::info!("starting embedded postgres (first run downloads ~80MB)");
     let embedded = Embedded::start(data_dir.clone())
         .await
@@ -275,7 +281,7 @@ async fn bring_up_backend(
     let base_url = format!("http://{addr}");
     tracing::info!(%base_url, "axum bound");
 
-    Ok((ApiConfig { base_url, token }, listener, app_router))
+    Ok((ApiConfig { base_url, token }, listener, app_router, embedded))
 }
 
 fn load_or_create_secret(path: &std::path::Path) -> anyhow::Result<Vec<u8>> {
