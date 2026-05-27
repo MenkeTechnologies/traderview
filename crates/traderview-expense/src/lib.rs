@@ -16,6 +16,7 @@ pub mod manual_entry;
 pub mod mileage;
 pub mod normalize;
 pub mod quarterly_tax;
+pub mod recurring;
 pub mod rules;
 pub mod seed_rules;
 pub mod self_employment_tax;

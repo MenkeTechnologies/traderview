@@ -5,6 +5,7 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod backtest;
+pub mod bracket_order;
 pub mod correlation;
 pub mod discipline_score;
 pub mod dow_hour_heatmap;
