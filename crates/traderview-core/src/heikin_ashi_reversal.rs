@@ -69,8 +69,8 @@ pub fn detect(bars: &[HaBar], cfg: &FlipConfig) -> FlipReport {
     let mut events = Vec::new();
     let mut streak_color = ha_color(bars[0]);
     let mut streak_len = 1usize;
-    for i in 1..n {
-        let color = ha_color(bars[i]);
+    for (i, bar) in bars.iter().enumerate().skip(1) {
+        let color = ha_color(*bar);
         if color == 0 {
             // Doji — keep prior streak intact but skip the flip check.
             continue;
@@ -80,8 +80,8 @@ pub fn detect(bars: &[HaBar], cfg: &FlipConfig) -> FlipReport {
             continue;
         }
         // Color changed — evaluate flip.
-        let body = (bars[i].close - bars[i].open).abs();
-        let range = bars[i].high - bars[i].low;
+        let body = (bar.close - bar.open).abs();
+        let range = bar.high - bar.low;
         let body_ratio = if range > 0.0 { body / range } else { 0.0 };
         let prior = streak_len;
         let direction = if streak_color == 1 {

@@ -19,13 +19,14 @@ use serde::{Deserialize, Serialize};
 use traderview_core::{
     alligator, atr_cone, break_of_structure, breakout_detector, calmar_ratio, change_of_character,
     crossover, cumulative_delta, cusum, daily_loss_limit, displacement, drawdown_throttle,
-    earnings_calendar, equal_levels, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
-    models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
-    pair_trade, portfolio_heat, position_aging, position_irr, premium_discount, put_call_ratio,
-    range_contraction, reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator,
-    spread_attribution, stop_hunt, strategy_correlation, swing_points, symbol_filter,
-    tax_lot_optimizer, timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop,
-    volume_burst, vsa, wyckoff,
+    earnings_calendar, equal_levels, fair_value_gap, futures_roll, goal_tracker, heikin_ashi_reversal,
+    holiday_calendar, models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin,
+    order_block, pair_trade, portfolio_heat, position_aging, position_irr, premium_discount,
+    put_call_ratio, range_contraction, range_expansion, reconcile_1099b, risk_reward,
+    rolling_zscore, round_levels, sip_simulator, spread_attribution, stop_hunt,
+    strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer, three_bar_reversal,
+    timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
+    wyckoff,
 };
 
 pub fn router() -> Router<AppState> {
@@ -109,6 +110,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/wyckoff",              post(wyckoff_route))
         .route("/analytics/premium-discount",     post(premium_discount_route))
         .route("/analytics/cusum",                post(cusum_route))
+        // ── HA reversal + 3-bar reversal + range expansion ─────────────
+        .route("/analytics/heikin-ashi-reversal", post(heikin_ashi_reversal_route))
+        .route("/analytics/three-bar-reversal",   post(three_bar_reversal_route))
+        .route("/analytics/range-expansion",      post(range_expansion_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -824,4 +829,42 @@ async fn cusum_route(
     _u: AuthUser, Json(b): Json<CusumBody>,
 ) -> Json<cusum::CusumReport> {
     Json(cusum::detect(&b.series, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// HA reversal + three-bar reversal + range expansion.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct HaReversalBody {
+    bars: Vec<traderview_core::heikin_ashi::HaBar>,
+    config: heikin_ashi_reversal::FlipConfig,
+}
+
+async fn heikin_ashi_reversal_route(
+    _u: AuthUser, Json(b): Json<HaReversalBody>,
+) -> Json<heikin_ashi_reversal::FlipReport> {
+    Json(heikin_ashi_reversal::detect(&b.bars, &b.config))
+}
+
+#[derive(Deserialize)]
+struct ThreeBarReversalBody { bars: Vec<three_bar_reversal::OhlcBar> }
+
+async fn three_bar_reversal_route(
+    _u: AuthUser, Json(b): Json<ThreeBarReversalBody>,
+) -> Json<three_bar_reversal::ReversalReport> {
+    Json(three_bar_reversal::detect(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct RangeExpansionBody {
+    bars: Vec<range_expansion::OhlcBar>,
+    atr: Vec<f64>,
+    config: range_expansion::ExpansionConfig,
+}
+
+async fn range_expansion_route(
+    _u: AuthUser, Json(b): Json<RangeExpansionBody>,
+) -> Json<range_expansion::ExpansionReport> {
+    Json(range_expansion::detect(&b.bars, &b.atr, &b.config))
 }

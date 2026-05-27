@@ -947,4 +947,7 @@ export const api = {
     anlyWyckoff:             (b) => request('/analytics/wyckoff',                    { method: 'POST', body: JSON.stringify(b) }),
     anlyPremiumDiscount:     (b) => request('/analytics/premium-discount',           { method: 'POST', body: JSON.stringify(b) }),
     anlyCusum:               (b) => request('/analytics/cusum',                      { method: 'POST', body: JSON.stringify(b) }),
+    anlyHaReversal:          (b) => request('/analytics/heikin-ashi-reversal',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyThreeBarReversal:    (b) => request('/analytics/three-bar-reversal',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyRangeExpansion:      (b) => request('/analytics/range-expansion',            { method: 'POST', body: JSON.stringify(b) }),
 };
