@@ -47,6 +47,7 @@ pub mod exit_timing;
 pub mod fibonacci;
 pub mod force_index;
 pub mod futures_roll;
+pub mod gap_analysis;
 pub mod gex;
 pub mod goal_tracker;
 pub mod greeks;
