@@ -32,5 +32,6 @@ pub mod signals;
 pub mod slug;
 pub mod strategy_alert;
 pub mod stats;
+pub mod wash_sale;
 
 pub use models::*;
