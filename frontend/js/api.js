@@ -944,4 +944,7 @@ export const api = {
     anlyVsa:                 (b) => request('/analytics/vsa',                        { method: 'POST', body: JSON.stringify(b) }),
     anlyUlcerIndex:          (b) => request('/analytics/ulcer-index',                { method: 'POST', body: JSON.stringify(b) }),
     anlyCalmarRatio:         (b) => request('/analytics/calmar-ratio',               { method: 'POST', body: JSON.stringify(b) }),
+    anlyWyckoff:             (b) => request('/analytics/wyckoff',                    { method: 'POST', body: JSON.stringify(b) }),
+    anlyPremiumDiscount:     (b) => request('/analytics/premium-discount',           { method: 'POST', body: JSON.stringify(b) }),
+    anlyCusum:               (b) => request('/analytics/cusum',                      { method: 'POST', body: JSON.stringify(b) }),
 };

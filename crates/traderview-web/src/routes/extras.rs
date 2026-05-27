@@ -18,13 +18,14 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
     alligator, atr_cone, break_of_structure, breakout_detector, calmar_ratio, change_of_character,
-    crossover, cumulative_delta, daily_loss_limit, displacement, drawdown_throttle,
+    crossover, cumulative_delta, cusum, daily_loss_limit, displacement, drawdown_throttle,
     earnings_calendar, equal_levels, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
     models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
-    pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, range_contraction,
-    reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
-    stop_hunt, strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer,
-    timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
+    pair_trade, portfolio_heat, position_aging, position_irr, premium_discount, put_call_ratio,
+    range_contraction, reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator,
+    spread_attribution, stop_hunt, strategy_correlation, swing_points, symbol_filter,
+    tax_lot_optimizer, timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop,
+    volume_burst, vsa, wyckoff,
 };
 
 pub fn router() -> Router<AppState> {
@@ -104,6 +105,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/vsa",                  post(vsa_route))
         .route("/analytics/ulcer-index",          post(ulcer_index_route))
         .route("/analytics/calmar-ratio",         post(calmar_ratio_route))
+        // ── Wyckoff + premium/discount + CUSUM ─────────────────────────
+        .route("/analytics/wyckoff",              post(wyckoff_route))
+        .route("/analytics/premium-discount",     post(premium_discount_route))
+        .route("/analytics/cusum",                post(cusum_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -777,4 +782,46 @@ async fn calmar_ratio_route(
     _u: AuthUser, Json(b): Json<CalmarBody>,
 ) -> Json<calmar_ratio::CalmarReport> {
     Json(calmar_ratio::compute(&b.equity, b.years))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Wyckoff + premium/discount + CUSUM.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct WyckoffBody {
+    closes: Vec<f64>,
+    config: wyckoff::WyckoffConfig,
+}
+
+async fn wyckoff_route(
+    _u: AuthUser, Json(b): Json<WyckoffBody>,
+) -> Json<wyckoff::WyckoffReport> {
+    Json(wyckoff::classify(&b.closes, &b.config))
+}
+
+#[derive(Deserialize)]
+struct PremiumDiscountBody {
+    range_high: f64,
+    range_low: f64,
+    price: f64,
+    trend: premium_discount::TrendBias,
+}
+
+async fn premium_discount_route(
+    _u: AuthUser, Json(b): Json<PremiumDiscountBody>,
+) -> Json<premium_discount::ZoneReport> {
+    Json(premium_discount::classify(b.range_high, b.range_low, b.price, b.trend))
+}
+
+#[derive(Deserialize)]
+struct CusumBody {
+    series: Vec<f64>,
+    config: cusum::CusumConfig,
+}
+
+async fn cusum_route(
+    _u: AuthUser, Json(b): Json<CusumBody>,
+) -> Json<cusum::CusumReport> {
+    Json(cusum::detect(&b.series, &b.config))
 }
