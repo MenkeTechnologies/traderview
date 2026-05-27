@@ -36,7 +36,7 @@ pub struct ColumnMap {
     pub fee: Option<ColSpec>,
     pub executed_at: ColSpec,
     pub broker_order_id: Option<ColSpec>,
-    pub asset_class: Option<ColSpec>,    // optional column; defaults to Stock
+    pub asset_class: Option<ColSpec>, // optional column; defaults to Stock
     pub option_type: Option<ColSpec>,
     pub strike: Option<ColSpec>,
     pub expiration: Option<ColSpec>,
@@ -57,7 +57,14 @@ impl SideLookup {
     pub const DEFAULT: SideLookup = SideLookup {
         buy: &["buy", "b", "bought", "long", "buy to open", "bto"],
         sell: &["sell", "s", "sold", "sell to close", "stc"],
-        short: &["short", "ss", "sell short", "sellshort", "sell to open", "sto"],
+        short: &[
+            "short",
+            "ss",
+            "sell short",
+            "sellshort",
+            "sell to open",
+            "sto",
+        ],
         cover: &["cover", "buy to cover", "btc", "cover short"],
     };
 }
@@ -93,7 +100,12 @@ pub fn parse_with(bytes: &[u8], map: &ColumnMap) -> Result<Vec<ParsedExecution>,
 
         let symbol = row.field(&map.symbol).map(|s| s.trim().to_string());
         let symbol = match symbol {
-            Some(s) if !s.is_empty() && !map.skip_symbols.iter().any(|k| k.eq_ignore_ascii_case(&s)) => s,
+            Some(s)
+                if !s.is_empty()
+                    && !map.skip_symbols.iter().any(|k| k.eq_ignore_ascii_case(&s)) =>
+            {
+                s
+            }
             _ => continue, // skip blank-symbol rows (totals etc.)
         };
 
@@ -304,4 +316,294 @@ fn parse_date(raw: &str) -> Option<NaiveDate> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── normalize_header ──────────────────────────────────────────────
+
+    #[test]
+    fn normalize_header_lowercases_and_trims() {
+        assert_eq!(normalize_header("  SYMBOL  "), "symbol");
+        assert_eq!(normalize_header("Trade Date"), "trade date");
+        assert_eq!(normalize_header(""), "");
+    }
+
+    // ─── decode_side ───────────────────────────────────────────────────
+
+    #[test]
+    fn decode_side_default_buy_variants() {
+        let l = SideLookup::DEFAULT;
+        for raw in ["buy", "B", "BOUGHT", "long", "Buy to Open", "bto"] {
+            assert_eq!(
+                decode_side(raw, &l),
+                Some(Side::Buy),
+                "{raw:?} should decode to Buy"
+            );
+        }
+    }
+
+    #[test]
+    fn decode_side_default_sell_variants() {
+        let l = SideLookup::DEFAULT;
+        for raw in ["sell", "S", "Sold", "sell to close", "STC"] {
+            assert_eq!(
+                decode_side(raw, &l),
+                Some(Side::Sell),
+                "{raw:?} should decode to Sell"
+            );
+        }
+    }
+
+    #[test]
+    fn decode_side_default_short_variants() {
+        let l = SideLookup::DEFAULT;
+        for raw in [
+            "short",
+            "SS",
+            "sell short",
+            "sellshort",
+            "sell to open",
+            "STO",
+        ] {
+            assert_eq!(
+                decode_side(raw, &l),
+                Some(Side::Short),
+                "{raw:?} should decode to Short"
+            );
+        }
+    }
+
+    #[test]
+    fn decode_side_default_cover_variants() {
+        let l = SideLookup::DEFAULT;
+        for raw in ["cover", "buy to cover", "BTC", "Cover Short"] {
+            assert_eq!(
+                decode_side(raw, &l),
+                Some(Side::Cover),
+                "{raw:?} should decode to Cover"
+            );
+        }
+    }
+
+    #[test]
+    fn decode_side_unknown_returns_none() {
+        let l = SideLookup::DEFAULT;
+        assert_eq!(decode_side("transfer", &l), None);
+        assert_eq!(decode_side("", &l), None);
+        assert_eq!(decode_side("?", &l), None);
+    }
+
+    #[test]
+    fn decode_side_with_whitespace_trims() {
+        let l = SideLookup::DEFAULT;
+        assert_eq!(decode_side("  buy  ", &l), Some(Side::Buy));
+        assert_eq!(decode_side("\tsell\n", &l), Some(Side::Sell));
+    }
+
+    #[test]
+    fn decode_side_custom_lookup_takes_precedence() {
+        // A broker that uses non-default codes; default vocabulary should NOT match here.
+        let custom = SideLookup {
+            buy: &["+"],
+            sell: &["-"],
+            short: &[],
+            cover: &[],
+        };
+        assert_eq!(decode_side("+", &custom), Some(Side::Buy));
+        assert_eq!(decode_side("-", &custom), Some(Side::Sell));
+        // The default "buy" string is NOT in this custom lookup.
+        assert_eq!(decode_side("buy", &custom), None);
+    }
+
+    // ─── decode_asset_class ────────────────────────────────────────────
+
+    #[test]
+    fn decode_asset_class_option_variants() {
+        for raw in ["option", "opt", "options", "OPTION", "  Option  "] {
+            assert_eq!(decode_asset_class(raw), AssetClass::Option, "{raw:?}");
+        }
+    }
+
+    #[test]
+    fn decode_asset_class_future_variants() {
+        for raw in ["future", "fut", "futures", "FUTURE"] {
+            assert_eq!(decode_asset_class(raw), AssetClass::Future, "{raw:?}");
+        }
+    }
+
+    #[test]
+    fn decode_asset_class_forex_variants() {
+        for raw in ["forex", "fx", "cash", "FX"] {
+            assert_eq!(decode_asset_class(raw), AssetClass::Forex, "{raw:?}");
+        }
+    }
+
+    #[test]
+    fn decode_asset_class_unknown_defaults_to_stock() {
+        // The fallback — anything we don't recognize is treated as a stock,
+        // which is the sensible default for most retail brokers.
+        assert_eq!(decode_asset_class("stock"), AssetClass::Stock);
+        assert_eq!(decode_asset_class(""), AssetClass::Stock);
+        assert_eq!(decode_asset_class("crypto"), AssetClass::Stock);
+        assert_eq!(decode_asset_class("bond"), AssetClass::Stock);
+    }
+
+    // ─── decode_option_type ────────────────────────────────────────────
+
+    #[test]
+    fn decode_option_type_call() {
+        assert_eq!(decode_option_type("c"), Some(OptionType::Call));
+        assert_eq!(decode_option_type("C"), Some(OptionType::Call));
+        assert_eq!(decode_option_type("Call"), Some(OptionType::Call));
+        assert_eq!(decode_option_type("CALL"), Some(OptionType::Call));
+        assert_eq!(decode_option_type("  call  "), Some(OptionType::Call));
+    }
+
+    #[test]
+    fn decode_option_type_put() {
+        assert_eq!(decode_option_type("p"), Some(OptionType::Put));
+        assert_eq!(decode_option_type("P"), Some(OptionType::Put));
+        assert_eq!(decode_option_type("Put"), Some(OptionType::Put));
+    }
+
+    #[test]
+    fn decode_option_type_unknown_returns_none() {
+        assert_eq!(decode_option_type("x"), None);
+        assert_eq!(decode_option_type(""), None);
+        assert_eq!(decode_option_type("Calls"), None); // strict
+    }
+
+    // ─── parse_decimal ─────────────────────────────────────────────────
+
+    #[test]
+    fn parse_decimal_plain_number() {
+        assert_eq!(
+            parse_decimal("123.45"),
+            Some(Decimal::from_str("123.45").unwrap())
+        );
+    }
+
+    #[test]
+    fn parse_decimal_strips_dollar_sign() {
+        assert_eq!(
+            parse_decimal("$1234.56"),
+            Some(Decimal::from_str("1234.56").unwrap())
+        );
+    }
+
+    #[test]
+    fn parse_decimal_strips_thousands_commas() {
+        // US-style "1,234,567.89" — comma is the thousands separator.
+        assert_eq!(
+            parse_decimal("1,234,567.89"),
+            Some(Decimal::from_str("1234567.89").unwrap())
+        );
+    }
+
+    #[test]
+    fn parse_decimal_strips_both_dollar_and_commas() {
+        assert_eq!(
+            parse_decimal("$1,234.56"),
+            Some(Decimal::from_str("1234.56").unwrap())
+        );
+    }
+
+    #[test]
+    fn parse_decimal_preserves_negative() {
+        assert_eq!(
+            parse_decimal("-50.00"),
+            Some(Decimal::from_str("-50.00").unwrap())
+        );
+    }
+
+    #[test]
+    fn parse_decimal_empty_returns_none() {
+        assert_eq!(parse_decimal(""), None);
+        assert_eq!(parse_decimal("   "), None);
+    }
+
+    #[test]
+    fn parse_decimal_garbage_returns_none() {
+        assert_eq!(parse_decimal("abc"), None);
+        assert_eq!(parse_decimal("12.34.56"), None);
+    }
+
+    // ─── parse_date ────────────────────────────────────────────────────
+
+    #[test]
+    fn parse_date_iso_format() {
+        let d = parse_date("2026-05-27").unwrap();
+        assert_eq!(d, NaiveDate::from_ymd_opt(2026, 5, 27).unwrap());
+    }
+
+    #[test]
+    fn parse_date_us_format() {
+        let d = parse_date("05/27/2026").unwrap();
+        assert_eq!(d, NaiveDate::from_ymd_opt(2026, 5, 27).unwrap());
+    }
+
+    #[test]
+    fn parse_date_compact_format() {
+        let d = parse_date("20260527").unwrap();
+        assert_eq!(d, NaiveDate::from_ymd_opt(2026, 5, 27).unwrap());
+    }
+
+    #[test]
+    fn parse_date_dashed_us_format() {
+        let d = parse_date("05-27-2026").unwrap();
+        assert_eq!(d, NaiveDate::from_ymd_opt(2026, 5, 27).unwrap());
+    }
+
+    #[test]
+    fn parse_date_invalid_returns_none() {
+        assert_eq!(parse_date("not a date"), None);
+        assert_eq!(parse_date(""), None);
+        // Feb 30 doesn't exist.
+        assert_eq!(parse_date("2026-02-30"), None);
+    }
+
+    // ─── parse_datetime ────────────────────────────────────────────────
+
+    #[test]
+    fn parse_datetime_with_format_utc_assumed() {
+        let formats = ["%Y-%m-%d %H:%M:%S"];
+        let dt = parse_datetime("2026-05-27 14:30:00", &formats, true).unwrap();
+        // With utc_assumed=true the naive datetime is treated as UTC.
+        assert_eq!(
+            dt.format("%Y-%m-%d %H:%M:%S").to_string(),
+            "2026-05-27 14:30:00"
+        );
+    }
+
+    #[test]
+    fn parse_datetime_rfc3339_with_offset() {
+        let formats: &[&str] = &[];
+        let dt = parse_datetime("2026-05-27T14:30:00-04:00", formats, true).unwrap();
+        // -04:00 from 14:30 → 18:30 UTC.
+        assert_eq!(dt.format("%H:%M").to_string(), "18:30");
+    }
+
+    #[test]
+    fn parse_datetime_date_only_falls_back_to_midnight() {
+        let formats: &[&str] = &[];
+        let dt = parse_datetime("2026-05-27", formats, true).unwrap();
+        assert_eq!(dt.format("%H:%M:%S").to_string(), "00:00:00");
+    }
+
+    #[test]
+    fn parse_datetime_garbage_returns_none() {
+        let formats: &[&str] = &[];
+        assert_eq!(parse_datetime("not a datetime", formats, true), None);
+    }
+
+    #[test]
+    fn parse_datetime_first_matching_format_wins() {
+        // Two formats; the first one matches.
+        let formats = ["%Y-%m-%d %H:%M:%S", "%m/%d/%Y %I:%M %p"];
+        let dt = parse_datetime("2026-05-27 09:15:00", &formats, true).unwrap();
+        assert_eq!(dt.format("%H:%M").to_string(), "09:15");
+    }
 }
