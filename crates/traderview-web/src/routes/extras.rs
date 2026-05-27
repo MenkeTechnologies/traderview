@@ -20,8 +20,9 @@ use traderview_core::{
     alligator, atr_cone, daily_loss_limit, drawdown_throttle, earnings_calendar, futures_roll,
     goal_tracker, holiday_calendar, models::{Trade, TradeSide}, mtm_reconciliation, options_margin,
     pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, reconcile_1099b,
-    risk_reward, rolling_zscore, sip_simulator, spread_attribution, strategy_correlation,
-    symbol_filter, tax_lot_optimizer, triple_screen, twap, volatility_stop,
+    risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
+    strategy_correlation, symbol_filter, tax_lot_optimizer, timeframe_confluence,
+    triple_screen, twap, volatility_stop, volume_burst,
 };
 
 pub fn router() -> Router<AppState> {
@@ -77,6 +78,10 @@ pub fn router() -> Router<AppState> {
         .route("/portfolio/sip-simulator",        post(sip_simulator_route))
         .route("/portfolio/heat",                 post(portfolio_heat_route))
         .route("/tax/lot-optimizer",              post(tax_lot_optimizer_route))
+        // ── New: Volume burst + round levels + timeframe confluence ────
+        .route("/analytics/volume-burst",         post(volume_burst_route))
+        .route("/charts/round-levels",            post(round_levels_route))
+        .route("/analytics/timeframe-confluence", post(timeframe_confluence_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -520,4 +525,43 @@ async fn tax_lot_optimizer_route(
     _u: AuthUser, Json(b): Json<TaxLotOptimizerBody>,
 ) -> Json<tax_lot_optimizer::CloseReport> {
     Json(tax_lot_optimizer::close(&b.lots, b.qty_to_close, b.sell_price, b.strategy))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Volume burst + round levels + timeframe confluence.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct VolumeBurstBody {
+    bars: Vec<volume_burst::VolumeBar>,
+    config: volume_burst::BurstConfig,
+}
+
+async fn volume_burst_route(
+    _u: AuthUser, Json(b): Json<VolumeBurstBody>,
+) -> Json<volume_burst::BurstReport> {
+    Json(volume_burst::detect(&b.bars, &b.config))
+}
+
+#[derive(Deserialize)]
+struct RoundLevelsBody {
+    current_price: f64,
+    /// Optional ATR for distance-in-ATRs annotations.
+    atr: Option<f64>,
+    config: round_levels::LevelsConfig,
+}
+
+async fn round_levels_route(
+    _u: AuthUser, Json(b): Json<RoundLevelsBody>,
+) -> Json<round_levels::LevelsReport> {
+    Json(round_levels::detect(b.current_price, b.atr, &b.config))
+}
+
+#[derive(Deserialize)]
+struct ConfluenceBody { verdicts: Vec<timeframe_confluence::TimeframeVerdict> }
+
+async fn timeframe_confluence_route(
+    _u: AuthUser, Json(b): Json<ConfluenceBody>,
+) -> Json<timeframe_confluence::ConfluenceReport> {
+    Json(timeframe_confluence::analyze(&b.verdicts))
 }

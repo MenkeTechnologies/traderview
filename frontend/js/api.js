@@ -926,4 +926,7 @@ export const api = {
     microSpreadTracker:      (b) => request('/microstructure/spread-tracker',        { method: 'POST', body: JSON.stringify(b) }),
     microImplShortfall:      (b) => request('/microstructure/implementation-shortfall', { method: 'POST', body: JSON.stringify(b) }),
     anlyMeanReversion:       (b) => request('/analytics/mean-reversion',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyVolumeBurst:         (b) => request('/analytics/volume-burst',               { method: 'POST', body: JSON.stringify(b) }),
+    chartsRoundLevels:       (b) => request('/charts/round-levels',                  { method: 'POST', body: JSON.stringify(b) }),
+    anlyTimeframeConfluence: (b) => request('/analytics/timeframe-confluence',       { method: 'POST', body: JSON.stringify(b) }),
 };
