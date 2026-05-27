@@ -5,6 +5,7 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod backtest;
+pub mod beta;
 pub mod bracket_order;
 pub mod buying_power;
 pub mod commission_optimizer;
@@ -22,6 +23,7 @@ pub mod halt_risk;
 pub mod hedge_ratio;
 pub mod high_water_mark;
 pub mod indicators;
+pub mod iv_rank;
 pub mod kelly;
 pub mod margin_call;
 pub mod iv_backtest;
