@@ -5,6 +5,7 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod adx;
+pub mod alligator;
 pub mod anchored_vwap;
 pub mod aroon;
 pub mod atr_cone;
