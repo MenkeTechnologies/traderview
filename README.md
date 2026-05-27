@@ -59,7 +59,7 @@
 - **Embedded Postgres on the desktop** — `postgresql_embedded` downloads a portable PostgreSQL on first launch (~80 MB, cached in `~/.theseus`), stores data under `$APP_DATA_DIR/traderview/pg/`, and shuts it down cleanly on app exit. Stale-PID lockfile cleanup survives a hard-killed parent. Zero external dependencies for desktop users.
 - **Multi-user web on the same crates** — the axum binary swaps the embedded pool for an external `DATABASE_URL`, layers in argon2 password hashing + JWT bearer auth, and serves the same vanilla-JS frontend.
 - **86-tile launcher (Cmd-K)** — categorized tile grid with live filter replaces the old 77-tab strip. Press `?` anywhere for the in-app tutorial. 11-shortcut topbar carries the most-used routes.
-- **Vanilla JS + uPlot frontend** — zero npm, zero bundler, zero framework. 82 view modules + 11 supporting modules across 15,042 LOC JS + 1,937 LOC CSS. Per-view race-token machinery prevents post-await DOM crashes; window.onerror + console.error funnel to a Rust-side `/api/client-errors` sink.
+- **Vanilla JS + uPlot frontend** — zero npm, zero bundler, zero framework. 84 view modules + 16 supporting modules across 16,220 LOC JS + 1,990 LOC CSS. Per-view race-token machinery prevents post-await DOM crashes; window.onerror + console.error funnel to a Rust-side `/api/client-errors` sink.
 - **Live data streams** — Nasdaq halts (3s RSS, TTS voice alerts), SEC EDGAR + 4 PR wires (catalyst radar with ticker NER), Finnhub WebSocket 6-panel intraday scanner, Webull read-only broker (paste session tokens, in-memory only), 16-symbol world markets snapshot (60s in-process cache). All live stores are bounded with oldest-first eviction.
 - **12 broker importers + Generic CSV wizard** — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, plus a column-mapping Generic parser for anything else.
 - **17 reports + R-multiple + Monte Carlo forecast + fill-quality TCA + tax-lot tracker** with Schedule-D export.
@@ -114,7 +114,7 @@ Same schema, same migrations, same FIFO roll-up, same frontend, same API surface
 | Crate                        | Lines  | Purpose                                                                       |
 |------------------------------|--------|-------------------------------------------------------------------------------|
 | `traderview-core`            | 5,286  | Domain types, FIFO roll-up + tests, per-asset P&L, statistics (R-multiple / SQN / Sharpe / Sortino / expectancy), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom-indicator AST. |
-| `traderview-db`              | 12,758 | ~50 repo modules — trades / executions / tags / journal / screenshots / imports / mentorships / shares / forum / settings / plans / users / watchlists / alerts / hotkeys / paper / disclosures / catalysts / halts / live_ticks / markets / premarket / earnings / news / strategy alerts / rebalance / goals / reviews / custom indicators. sqlx pool + 29 migrations + embedded PG lifecycle (stale-PID cleanup, persisted password). Background pollers for Yahoo / FINRA / EDGAR / Nasdaq RSS / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. Bounded in-memory stores. |
+| `traderview-db`              | 12,758 | ~50 repo modules — trades / executions / tags / journal / screenshots / imports / mentorships / shares / forum / settings / plans / users / watchlists / alerts / hotkeys / paper / disclosures / catalysts / halts / live_ticks / markets / premarket / earnings / news / strategy alerts / rebalance / goals / reviews / custom indicators. sqlx pool + 31 migrations + embedded PG lifecycle (stale-PID cleanup, persisted password). Background pollers for Yahoo / FINRA / EDGAR / Nasdaq RSS / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. Bounded in-memory stores. |
 | `traderview-import`          | 1,005  | Generic ColumnMap CSV parser + 12 broker presets — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero. |
 | `traderview-expense`         | 1,640  | Schedule C business-expense parsers (Amazon, BoA, Chase, Apple Card — CSV / XLSX / PDF via `calamine` + `lopdf`), merchant→category rule engine + seed, cross-account transfer dedup. |
 | `traderview-ocr`             | 640    | Receipt OCR via the system `tesseract` binary + image preprocessing (binarize, deskew), PDF text-layer extraction + amount/date/merchant regex parsing + Jaccard match scoring. |
@@ -127,7 +127,7 @@ Same schema, same migrations, same FIFO roll-up, same frontend, same API surface
 
 ## [0x04] SCHEMA
 
-29 migrations from `0001_initial.sql` through `0029_expenses.sql` define **67 tables, 87 indexes, 17 PostgreSQL enum types**. Each migration adds a self-contained feature; the schema grows by feature, not by big-bang. Money is `NUMERIC(20, 8)` everywhere — no floats. Grouped by domain:
+31 migrations from `0001_initial.sql` through `0031_risk_fires.sql` define **69 tables, 87 indexes, 17 PostgreSQL enum types**. Each migration adds a self-contained feature; the schema grows by feature, not by big-bang. Money is `NUMERIC(20, 8)` everywhere — no floats. Grouped by domain:
 
 | Domain                     | Tables                                                                 |
 |----------------------------|------------------------------------------------------------------------|
@@ -187,7 +187,7 @@ Desktop mode auto-logs in as the local user; the frontend talks to the embedded 
 
 ## [0x06] FRONTEND
 
-`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. **82 view modules + 11 supporting modules**, 15,042 LOC JS + 1,937 LOC CSS. All views render into `<main id="app">` via hash-routed dispatch. **86-tile launcher (Cmd-K)** is the primary entry point; topbar carries 11 shortcuts and the rest is the launcher. `?` opens the in-app tutorial.
+`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. **84 view modules + 16 supporting modules**, 16,220 LOC JS + 1,990 LOC CSS. All views render into `<main id="app">` via hash-routed dispatch. **86-tile launcher (Cmd-K)** is the primary entry point; topbar carries 11 shortcuts and the rest is the launcher. `?` opens the in-app tutorial.
 
 | Category              | Tiles | Notable views                                                       |
 |-----------------------|-------|---------------------------------------------------------------------|
