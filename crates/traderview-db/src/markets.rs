@@ -203,8 +203,11 @@ mod tests {
         *CACHE.lock().await = Some((Instant::now(), stored));
         let started = Instant::now();
         let got = snapshot().await.expect("cache hit must succeed");
+        // 2s ceiling: a cache MISS does 16 HTTP fetches and takes >>1s, so anything
+        // under 2s confirms the cache path. Tighter thresholds (<50ms) flake on
+        // CI runners under load (observed on macOS-latest).
         assert!(
-            started.elapsed() < std::time::Duration::from_millis(50),
+            started.elapsed() < std::time::Duration::from_secs(2),
             "cache hit should be near-instant; got {:?}",
             started.elapsed()
         );
