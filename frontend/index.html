@@ -3,32 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="dark light" name="color-scheme">
     <meta content="TraderView — TraderVue-style trading journal. Rust + Postgres + Tauri." name="description">
     <title>TraderView</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/hud-static.css">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="lib/uPlot.min.css">
 </head>
 <body>
-<header class="topbar">
-    <div class="brand">TRADERVIEW</div>
-    <nav class="tabs">
-        <button class="tab active" data-view="dashboard">Dashboard</button>
-        <button class="tab" data-view="trades">Trades</button>
-        <button class="tab" data-view="journal">Journal</button>
-        <button class="tab" data-view="import">Import</button>
-        <button class="tab" data-view="expenses">Expenses</button>
-        <button class="tab" data-view="accounts">Accounts</button>
-    </nav>
-    <div class="user-strip" id="user-strip"></div>
-</header>
+<div class="app" id="appRoot">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
 
-<main id="app">
-    <!-- views render here -->
-    <div class="boot">connecting…</div>
-</main>
+    <header class="topbar">
+        <div class="brand">TRADERVIEW</div>
+        <button id="navToggle" class="nav-toggle" type="button"
+                aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+            <span class="nav-toggle-bars"><span></span></span>
+        </button>
+        <nav class="tabs" id="primary-nav">
+            <button class="tab active" data-view="dashboard">Dashboard</button>
+            <button class="tab" data-view="trades">Trades</button>
+            <button class="tab" data-view="new-trade">New Trade</button>
+            <button class="tab" data-view="journal">Journal</button>
+            <button class="tab" data-view="mood">Mood</button>
+            <button class="tab" data-view="discipline">Discipline</button>
+            <button class="tab" data-view="goals">Goals</button>
+            <button class="tab" data-view="r-dist">R-Dist</button>
+            <button class="tab" data-view="reviews">Reviews</button>
+            <button class="tab" data-view="forecast">Forecast</button>
+            <button class="tab" data-view="fill-quality">Fill Quality</button>
+            <button class="tab" data-view="custom-indicators">Indicators</button>
+            <button class="tab" data-view="trade-compare">Trade Compare</button>
+            <button class="tab" data-view="search">Search</button>
+            <button class="tab" data-view="calendar">Calendar</button>
+            <button class="tab" data-view="reports">Reports</button>
+            <button class="tab" data-view="charts">Charts</button>
+            <button class="tab" data-view="watchlists">Watchlists</button>
+            <button class="tab" data-view="research">Research</button>
+            <button class="tab" data-view="screener">Screener</button>
+            <button class="tab" data-view="scanners">Scanners</button>
+            <button class="tab" data-view="top-signals">Top Signals</button>
+            <button class="tab" data-view="sectors">Sectors</button>
+            <button class="tab" data-view="sector-rotation">Rotation</button>
+            <button class="tab" data-view="paper">Paper</button>
+            <button class="tab" data-view="risk">Risk</button>
+            <button class="tab" data-view="sizing">Sizing</button>
+            <button class="tab" data-view="live">Live P/L</button>
+            <button class="tab" data-view="alerts">Alerts</button>
+            <button class="tab" data-view="strategy-alerts">Strategy Alerts</button>
+            <button class="tab" data-view="rebalance">Rebalance</button>
+            <button class="tab" data-view="hotkeys">Hotkeys</button>
+            <button class="tab" data-view="earnings-iv">Earnings IV</button>
+            <button class="tab" data-view="earnings-cal">Earnings Cal</button>
+            <button class="tab" data-view="disclosures">Disclosures</button>
+            <button class="tab" data-view="sentiment">Sentiment</button>
+            <button class="tab" data-view="news">News</button>
+            <button class="tab" data-view="heatmap">Heatmap</button>
+            <button class="tab" data-view="options">Options</button>
+            <button class="tab" data-view="crypto">Crypto</button>
+            <button class="tab" data-view="backtest">Backtest</button>
+            <button class="tab" data-view="backtest-presets">BT Presets</button>
+            <button class="tab" data-view="walk-forward">Walk-fwd</button>
+            <button class="tab" data-view="tax-lots">Tax Lots</button>
+            <button class="tab" data-view="expenses">Expenses</button>
+            <button class="tab" data-view="compare">Compare</button>
+            <button class="tab" data-view="exports">Exports</button>
+            <button class="tab" data-view="ai">AI</button>
+            <button class="tab" data-view="developer">Developer</button>
+            <button class="tab" data-view="boards">Boards</button>
+            <button class="tab" data-view="economy">Economy</button>
+            <button class="tab" data-view="pairs">Pairs</button>
+            <button class="tab" data-view="correlation">Correlation</button>
+            <button class="tab" data-view="short-interest">Short Interest</button>
+            <button class="tab" data-view="darkpool">Dark Pool</button>
+            <button class="tab" data-view="vol">Vol / Yields</button>
+            <button class="tab" data-view="breadth">Breadth</button>
+            <button class="tab" data-view="fear-greed">Fear/Greed</button>
+            <button class="tab" data-view="premarket">Pre-market</button>
+            <button class="tab" data-view="halts">Halts</button>
+            <button class="tab" data-view="live-scanner">Live Scanner</button>
+            <button class="tab" data-view="catalysts">Catalysts</button>
+            <button class="tab" data-view="webull">Webull</button>
+            <button class="tab" data-view="vol-surface">Vol Surface</button>
+            <button class="tab" data-view="webhooks">Webhooks</button>
+            <button class="tab" data-view="replay">Replay</button>
+            <button class="tab" data-view="tape">Tape</button>
+            <button class="tab" data-view="tape-replay">Tape Replay</button>
+            <button class="tab" data-view="import">Import</button>
+            <button class="tab" data-view="csv-wizard">CSV Wizard</button>
+            <button class="tab" data-view="plans">Plans</button>
+            <button class="tab" data-view="tags">Tags</button>
+            <button class="tab" data-view="mentorship">Mentorship</button>
+            <button class="tab" data-view="community">Community</button>
+            <button class="tab" data-view="shares">Shares</button>
+            <button class="tab" data-view="accounts">Accounts</button>
+            <button class="tab" data-view="accounts-overview">Accts Overview</button>
+            <button class="tab" data-view="settings">Settings</button>
+        </nav>
+        <div class="account-strip" id="account-strip"></div>
+        <div class="hud-toggles">
+            <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+            <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+            <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+        <span class="ws-status off" id="wsStatus" title="real-time stream"></span>
+        <div class="user-strip" id="user-strip"></div>
+    </header>
+
+    <div class="hub-scheme-strip">
+        <div class="hub-scheme-strip-inner">
+            <span class="hud-scheme-label">// Color scheme</span>
+            <div class="scheme-grid" id="hudSchemeGrid"></div>
+        </div>
+    </div>
+
+    <main id="app">
+        <div class="boot">connecting…</div>
+    </main>
+</div>
 
 <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-card">
+    <div class="auth-card doc-card">
         <h1>TRADERVIEW</h1>
         <div class="auth-tabs">
             <button class="auth-tab active" data-auth="login">Log in</button>
@@ -45,6 +144,7 @@
 </div>
 
 <script src="lib/uPlot.iife.min.js"></script>
+<script src="js/hud-theme.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

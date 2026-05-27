@@ -2,6 +2,8 @@ use sqlx::PgPool;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::realtime::Hub;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AppMode {
     /// Standalone web — full registration/login required.
@@ -19,6 +21,7 @@ pub struct AppState {
     /// Desktop = Tauri app_data_dir + "/traderview". Web = `TRADERVIEW_DATA_DIR`
     /// env var, defaulting to `./data`.
     pub data_dir: Arc<PathBuf>,
+    pub hub: Hub,
 }
 
 impl AppState {
@@ -28,6 +31,7 @@ impl AppState {
             mode,
             jwt_secret: Arc::new(jwt_secret),
             data_dir: Arc::new(data_dir),
+            hub: Hub::new(),
         }
     }
 

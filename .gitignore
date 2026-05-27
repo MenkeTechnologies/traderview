@@ -28,3 +28,7 @@ Cargo.lock.bak
 .env
 .env.local
 *.pem
+
+# Un-ignore the docs/ site (global gitignore excludes docs/ by default)
+!docs/
+!docs/**

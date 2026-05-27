@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build server binary
+        run: cargo build --release --locked -p traderview-web --bin server --target ${{ matrix.target }}
+
+      - name: Stage tarball contents
+        shell: bash
+        run: |
+          STAGE=traderview-${{ github.ref_name }}-${{ matrix.target }}
+          mkdir -p "$STAGE/frontend"
+          cp target/${{ matrix.target }}/release/server "$STAGE/traderview-server"
+          cp -R frontend/* "$STAGE/frontend/"
+          cp README.md LICENSE "$STAGE/" 2>/dev/null || true
+          tar czf "$STAGE.tar.gz" "$STAGE"
+          ls -lh "$STAGE.tar.gz"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: traderview-${{ matrix.target }}
+          path: traderview-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*.tar.gz
+
+  homebrew:
+    name: Update Homebrew tap
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Compute SHA256 sums
+        id: sha
+        shell: bash
+        run: |
+          for f in artifacts/*.tar.gz; do
+            base=$(basename "$f")
+            sum=$(sha256sum "$f" | awk '{print $1}')
+            key=$(echo "$base" | sed 's/traderview-v[^-]*-//; s/\.tar\.gz//; s/-/_/g; s/\./_/g')
+            echo "${key}=${sum}" >> "$GITHUB_OUTPUT"
+          done
+
+      - uses: actions/checkout@v4
+        with:
+          repository: MenkeTechnologies/homebrew-menketech
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update formula
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION="${VERSION#v}"
+          cd tap
+          cat > Formula/traderview.rb <<'FORMULA_HEAD'
+          class Traderview < Formula
+            desc "TraderVue-style trading journal — Rust + Postgres + vanilla JS"
+            homepage "https://github.com/MenkeTechnologies/traderview"
+            license "MIT"
+          FORMULA_HEAD
+          cat >> Formula/traderview.rb <<EOF
+            version "${VERSION}"
+
+            on_macos do
+            on_arm do
+              url "https://github.com/MenkeTechnologies/traderview/releases/download/v${VERSION}/traderview-v${VERSION}-aarch64-apple-darwin.tar.gz"
+              sha256 "${{ steps.sha.outputs.aarch64_apple_darwin }}"
+            end
+            on_intel do
+              url "https://github.com/MenkeTechnologies/traderview/releases/download/v${VERSION}/traderview-v${VERSION}-x86_64-apple-darwin.tar.gz"
+              sha256 "${{ steps.sha.outputs.x86_64_apple_darwin }}"
+            end
+            end
+
+            on_linux do
+            on_intel do
+              url "https://github.com/MenkeTechnologies/traderview/releases/download/v${VERSION}/traderview-v${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+              sha256 "${{ steps.sha.outputs.x86_64_unknown_linux_gnu }}"
+            end
+            end
+
+            def install
+              bin.install "traderview-server"
+              (share/"traderview/frontend").install Dir["frontend/*"]
+            end
+
+            def caveats
+              <<~EOS
+                traderview-server is the multi-user web binary.
+                Set DATABASE_URL + TRADERVIEW_JWT_SECRET, then:
+                  traderview-server --static-dir #{share}/traderview/frontend
+                Default bind is 0.0.0.0:8080. See README for details.
+              EOS
+            end
+
+            test do
+              assert_match "traderview", shell_output("\#{bin}/traderview-server --help 2>&1", 2)
+            end
+          end
+          EOF
+
+      - name: Push formula update
+        run: |
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/traderview.rb
+          if git diff --cached --quiet; then
+            echo "no changes — formula already up to date"
+            exit 0
+          fi
+          git commit -m "traderview: bump to ${{ github.ref_name }}"
+          git push

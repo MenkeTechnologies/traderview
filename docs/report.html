@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="traderview — engineering report. TraderVue-style trading journal. Rust workspace, 5 crates, 1,257 LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. Vanilla JS + uPlot frontend. 9 tables, 10 API routes, 5 views, single migration.">
+  <title>TraderView &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .tutorial-main { max-width: 78rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-fill.pink   { background:linear-gradient(90deg,#ff2a6d,#c01055);box-shadow:0 0 8px rgba(255,42,109,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-val.magenta{ color:var(--magenta);text-shadow:0 0 20px var(--magenta-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card.accent { border-left-color: var(--accent); }
+    .feature-card.magenta { border-left-color: var(--magenta); }
+    .feature-card.green { border-left-color: var(--green); }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card.accent h4 { color: var(--accent); }
+    .feature-card.magenta h4 { color: var(--magenta); }
+    .feature-card.green h4 { color: var(--green); }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+
+    .ascii-block {
+      margin: 0.7rem 0;
+      padding: 0.85rem 1rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--magenta);
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: var(--text-dim);
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.78;">
+            TraderVue-style trading journal &middot; Rust workspace &middot; Tauri v2 + embedded Postgres OR axum + external Postgres + JWT &middot; vanilla JS + uPlot frontend &middot; FIFO trade roll-up &middot; Webull importer
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 1: EXECUTIVE SUMMARY            -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">traderview is a TraderVue-style trading journal that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on the same <code>traderview-{core, db, import}</code> library crates; the vanilla JS + uPlot frontend is shared verbatim. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via FIFO roll-up — re-running the roll-up is always safe. Webull is the first supported broker; a mapping-wizard backend lands once the baseline is solid.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">1,257</div><div class="stat-label">Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">5</div><div class="stat-label">Workspace Crates</div></div>
+        <div class="stat-card"><div class="stat-val">18</div><div class="stat-label">Rust Source Files</div></div>
+        <div class="stat-card"><div class="stat-val green">9</div><div class="stat-label">Postgres Tables</div></div>
+        <div class="stat-card"><div class="stat-val">10</div><div class="stat-label">HTTP API Routes</div></div>
+        <div class="stat-card"><div class="stat-val magenta">5</div><div class="stat-label">Frontend Views</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Deploy Targets</div></div>
+        <div class="stat-card"><div class="stat-val">384</div><div class="stat-label">JS Frontend Lines</div></div>
+        <div class="stat-card"><div class="stat-val">259</div><div class="stat-label">Frontend CSS Lines</div></div>
+        <div class="stat-card"><div class="stat-val">149</div><div class="stat-label">SQL Migration Lines</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 1,257 Rust lines + 643 frontend lines + 149 SQL = 2,049 lines</p>
+        <div class="bar-wrap" style="height:26px;">
+          <div class="bar-fill cyan" style="width:61.3%;"></div>
+          <span class="bar-pct" style="font-size:12px;">1,257 Rust / 384 JS / 259 CSS / 149 SQL &middot; 61.3% Rust</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Rust dominates because both the desktop and web binaries import the same library crates — no duplication. Frontend is intentionally minimal (no framework, no bundler, no npm).</p>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 2: CRATE BREAKDOWN              -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>CRATE BREAKDOWN</h2>
+      <p class="tutorial-subtitle">Five workspace members. Three library crates (<code>core</code> + <code>db</code> + <code>import</code>) and two binary crates (<code>traderview-web</code> for the axum server, <code>src-tauri</code> a.k.a. <code>traderview-desktop</code> for the Tauri v2 desktop app). Dependencies point inward — nothing depends on the binaries.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Crate</th>
+            <th class="num">Lines</th>
+            <th class="num">Files</th>
+            <th class="num">Share</th>
+            <th>Distribution</th>
+            <th>Notable modules</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>traderview-core</code></td>
+            <td class="num">265</td>
+            <td class="num">4</td>
+            <td class="num">21.1%</td>
+            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:21.1%;"></div></div></td>
+            <td><code>models.rs</code> (110) &middot; <code>stats.rs</code> (118) &middot; <code>rollup.rs</code> (30)</td>
+          </tr>
+          <tr>
+            <td><code>traderview-db</code></td>
+            <td class="num">268</td>
+            <td class="num">3</td>
+            <td class="num">21.3%</td>
+            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:21.3%;"></div></div></td>
+            <td><code>repo.rs</code> (179) &middot; <code>embedded.rs</code> (62) &middot; <code>lib.rs</code> (27)</td>
+          </tr>
+          <tr>
+            <td><code>traderview-import</code></td>
+            <td class="num">73</td>
+            <td class="num">2</td>
+            <td class="num">5.8%</td>
+            <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:5.8%;"></div></div></td>
+            <td><code>webull.rs</code> (24) &middot; <code>lib.rs</code> (49)</td>
+          </tr>
+          <tr>
+            <td><code>traderview-web</code></td>
+            <td class="num">503</td>
+            <td class="num">6</td>
+            <td class="num">40.0%</td>
+            <td><div class="bar-wrap"><div class="bar-fill green" style="width:40.0%;"></div></div></td>
+            <td><code>routes.rs</code> (247) &middot; <code>auth.rs</code> (98) &middot; <code>bin/server.rs</code> (59) &middot; <code>error.rs</code> (43)</td>
+          </tr>
+          <tr>
+            <td><code>src-tauri</code></td>
+            <td class="num">148</td>
+            <td class="num">3</td>
+            <td class="num">11.8%</td>
+            <td><div class="bar-wrap"><div class="bar-fill pink" style="width:11.8%;"></div></div></td>
+            <td><code>lib.rs</code> (140) &middot; <code>main.rs</code> (5) &middot; <code>build.rs</code> (3)</td>
+          </tr>
+          <tr class="total-row">
+            <td>Total</td>
+            <td class="num">1,257</td>
+            <td class="num">18</td>
+            <td class="num">100%</td>
+            <td></td>
+            <td>18 <code>.rs</code> source files including build scripts</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;"><strong>Dependency direction.</strong> <code>traderview-desktop</code> depends on <em>all four</em> library crates. <code>traderview-web</code> depends on <code>core + db + import</code>. <code>traderview-import</code> and <code>traderview-db</code> depend on <code>core</code>. <code>traderview-core</code> has no internal dependencies. Nothing depends on either binary. This means the entire backend can be re-targeted (CLI, gRPC, Lambda) without touching domain logic.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 3: DOMAIN MODEL                 -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>DOMAIN MODEL — EXECUTIONS &amp; TRADES</h2>
+      <p class="tutorial-subtitle">The domain model is two-layered: <strong>executions</strong> are the immutable atoms imported from broker statements, <strong>trades</strong> are the FIFO-derived materialized view used by the UI. The roll-up is deterministic and idempotent — given the same execution set, the same trades fall out.</p>
+
+      <div class="ascii-block">  BROKER CSV (e.g. Webull Account Statement → Orders)
+        │
+        │  traderview-import::webull::parse()
+        ▼
+  ┌─────────────────────────────────────────┐
+  │  executions  (atom; one row per fill)   │
+  │  (account_id, symbol, side, qty, price, │
+  │   executed_at, broker_order_id, …)      │
+  │  UNIQUE(account_id, broker_order_id,    │
+  │         executed_at, symbol, side,      │
+  │         qty, price)  WHERE id NOT NULL  │
+  └────────────────────┬────────────────────┘
+                       │  traderview-core::rollup::fifo()
+                       ▼
+  ┌─────────────────────────────────────────┐
+  │  trades  (FIFO-derived; materialized)   │
+  │  status ∈ (open, closed)                │
+  │  side   ∈ (long, short)                 │
+  │  entry_avg, exit_avg, gross_pnl, fees   │
+  └────────────────────┬────────────────────┘
+                       │
+                       ▼
+  trade_executions (many-to-many backref)
+  trade_tags       (free-form tag table)
+  journal_entries  (per-trade or per-day markdown)</div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Atom &middot; execution</h4>
+          <p>One row per broker fill. Sides: <code>buy</code> / <code>sell</code> / <code>short</code> / <code>cover</code>. Qty + price are <code>NUMERIC(20, 8)</code> — no float arithmetic on money. <code>raw JSONB</code> preserves the original broker row for re-parsing if the importer is improved. <code>import_id</code> back-refs the audit row.</p>
+        </div>
+        <div class="feature-card accent">
+          <h4>Derived &middot; trade</h4>
+          <p>FIFO match of buy/sell (long) or short/cover (short) pairs per <code>(account_id, symbol)</code>. Carries <code>entry_avg</code>, <code>exit_avg</code>, <code>gross_pnl</code>, <code>fees</code>, <code>status</code> (<code>open</code> if qty still outstanding, <code>closed</code> if flat). Re-running the roll-up replaces the materialized rows.</p>
+        </div>
+        <div class="feature-card magenta">
+          <h4>Backref &middot; trade_executions</h4>
+          <p>Many-to-many: which executions composed each trade. Lets the UI drill from a trade into the fills that built the position — and detect when a partial close re-opens a new trade.</p>
+        </div>
+        <div class="feature-card green">
+          <h4>Annotation &middot; trade_tags + journal_entries</h4>
+          <p>Free-form per-trade tags (<code>scalp</code>, <code>earnings</code>, <code>momo</code>). Markdown journal entries scoped either to a single trade or a calendar day — that's the journaling primitive the UI surfaces.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 4: SCHEMA                       -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SCHEMA — ONE MIGRATION, 9 TABLES</h2>
+      <p class="tutorial-subtitle"><code>migrations/0001_initial.sql</code> defines the entire schema in 149 LOC. Three PG enum types. Eight content tables + sqlx's migration tracker. <code>pgcrypto</code> extension for <code>gen_random_uuid()</code>. All foreign keys cascade on delete; the user is the root of every ownership chain.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Primary key</th>
+            <th>Owner</th>
+            <th>Indexes</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>users</code></td><td><code>id UUID</code></td><td>—</td><td><code>users_email_lower_idx</code> (unique)</td><td>Real users (web) or one auto-created <code>local</code> user (desktop).</td></tr>
+          <tr><td><code>accounts</code></td><td><code>id UUID</code></td><td><code>users.id</code></td><td><code>accounts_user_id_idx</code></td><td>Broker accounts (<code>webull</code>, <code>ibkr</code>, <code>tos</code>, …).</td></tr>
+          <tr><td><code>executions</code></td><td><code>id UUID</code></td><td><code>accounts.id</code></td><td><code>executed_idx</code> &middot; <code>symbol_idx</code> &middot; <code>dedupe_idx</code> (unique)</td><td>Atomic fills. Idempotent dedupe on <code>(account_id, broker_order_id, executed_at, symbol, side, qty, price)</code>.</td></tr>
+          <tr><td><code>trades</code></td><td><code>id UUID</code></td><td><code>accounts.id</code></td><td>account+symbol+opened_at composite</td><td>FIFO-derived. Status + side enums. Money columns are <code>NUMERIC(20,8)</code>.</td></tr>
+          <tr><td><code>trade_executions</code></td><td><code>(trade_id, execution_id)</code></td><td><code>trades.id</code></td><td>FK indexes both sides</td><td>Many-to-many backref.</td></tr>
+          <tr><td><code>trade_tags</code></td><td><code>id UUID</code></td><td><code>trades.id</code></td><td><code>trade_id_idx</code></td><td>Free-form per-trade tags.</td></tr>
+          <tr><td><code>journal_entries</code></td><td><code>id UUID</code></td><td><code>users.id</code></td><td><code>user_day_idx</code> &middot; <code>trade_id_idx</code></td><td>Markdown, per-trade <em>or</em> per-day. Mutually exclusive scope.</td></tr>
+          <tr><td><code>imports</code></td><td><code>id UUID</code></td><td><code>accounts.id</code></td><td><code>account_id_idx</code></td><td>Audit trail — every CSV upload, file hash, row count.</td></tr>
+          <tr><td><code>_sqlx_migrations</code></td><td><code>version BIGINT</code></td><td>—</td><td>—</td><td>sqlx-managed migration tracker.</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;"><strong>Enum types.</strong> <code>side_t = (buy, sell, short, cover)</code> on executions; <code>trade_side_t = (long, short)</code> and <code>trade_status_t = (open, closed)</code> on trades.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 5: HTTP API                     -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>HTTP API SURFACE</h2>
+      <p class="tutorial-subtitle">10 axum routes mounted at <code>/api/</code>. The frontend is one of two clients (Tauri WebView in desktop mode, plain browser in web mode); the routes are identical. Desktop mode auto-attaches the local-user JWT so the frontend never has to think about auth; web mode requires a real login.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td>GET</td>  <td><code>/api/health</code></td>           <td>none</td>     <td>Liveness probe.</td></tr>
+          <tr><td class="num">2</td><td>GET</td>  <td><code>/api/config</code></td>           <td>none</td>     <td>Auth mode + server config. Frontend reads on boot.</td></tr>
+          <tr><td class="num">3</td><td>POST</td> <td><code>/api/auth/register</code></td>    <td>none</td>     <td>Create user. Web mode only.</td></tr>
+          <tr><td class="num">4</td><td>POST</td> <td><code>/api/auth/login</code></td>       <td>none</td>     <td>argon2 verify → issue JWT bearer.</td></tr>
+          <tr><td class="num">5</td><td>GET</td>  <td><code>/api/auth/me</code></td>          <td>bearer</td>   <td>Current user from token.</td></tr>
+          <tr><td class="num">6</td><td>GET</td>  <td><code>/api/accounts</code></td>         <td>bearer</td>   <td>List broker accounts for user.</td></tr>
+          <tr><td class="num">7</td><td>GET</td>  <td><code>/api/trades</code></td>           <td>bearer</td>   <td>List trades; filterable by symbol/status/date.</td></tr>
+          <tr><td class="num">8</td><td>GET</td>  <td><code>/api/stats/summary</code></td>    <td>bearer</td>   <td>Win rate / expectancy / profit factor / total P&amp;L.</td></tr>
+          <tr><td class="num">9</td><td>GET</td>  <td><code>/api/stats/equity</code></td>     <td>bearer</td>   <td>Equity curve points for uPlot.</td></tr>
+          <tr><td class="num">10</td><td>GET</td> <td><code>/api/journal/:day</code></td>     <td>bearer</td>   <td>Markdown journal entries for a calendar day.</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;"><strong>Auth middleware.</strong> All bearer-protected routes go through <code>auth.rs</code> which decodes the JWT against <code>TRADERVIEW_JWT_SECRET</code>, loads the <code>users</code> row, and injects a <code>CurrentUser</code> extractor into the handler. Desktop mode short-circuits this with an "is_local" check so it never has to mint or refresh real tokens.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 6: DEPLOY TARGET COMPARISON     -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPLOY TARGETS — DESKTOP vs WEB</h2>
+      <p class="tutorial-subtitle">The desktop and web binaries differ in exactly three places: the Postgres source, the auth posture, and how the frontend reaches the backend. Everything else (schema, migrations, FIFO roll-up, importers, JSON shapes, frontend assets) is shared verbatim.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Concern</th>
+            <th>Desktop &middot; <code>traderview-desktop</code></th>
+            <th>Web &middot; <code>server</code></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Binary</td><td><code>cargo tauri dev</code> / <code>cargo tauri build</code></td><td><code>cargo run -p traderview-web --bin server</code></td></tr>
+          <tr><td>Postgres</td><td>embedded — <code>postgresql_embedded</code> downloads on first launch, cached under <code>~/.theseus</code></td><td>external — <code>DATABASE_URL</code> required, expects a running Postgres</td></tr>
+          <tr><td>Data location</td><td><code>$APP_DATA_DIR/traderview/pg/</code></td><td>wherever the external Postgres lives</td></tr>
+          <tr><td>Auth</td><td>auto-login one <code>local</code> user (<code>is_local = true</code>, nullable email/hash)</td><td>argon2 password hashing on registration, JWT bearer on every protected call</td></tr>
+          <tr><td>Server lifetime</td><td>spawned by Tauri on a random localhost port; shut down on window close</td><td>long-running on <code>TRADERVIEW_BIND</code> (default <code>0.0.0.0:8080</code>)</td></tr>
+          <tr><td>Frontend transport</td><td>Tauri WebView <code>fetch</code> against <code>http://127.0.0.1:&lt;port&gt;</code></td><td>browser <code>fetch</code> against the configured origin</td></tr>
+          <tr><td>CORS</td><td>not needed — same-origin via Tauri</td><td><code>TRADERVIEW_CORS_ORIGIN</code> allowlist</td></tr>
+          <tr><td>Bundling</td><td>Tauri v2 — <code>.dmg</code>, <code>.app</code>, <code>.AppImage</code>, <code>.msi</code></td><td>plain Rust binary — Docker, systemd, fly.io, etc.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 7: EMBEDDED POSTGRES LIFECYCLE  -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EMBEDDED POSTGRES LIFECYCLE (DESKTOP)</h2>
+      <p class="tutorial-subtitle"><code>postgresql_embedded</code> handles download / extraction / cluster init / start / stop. <code>traderview-db::embedded</code> wraps it with the project-specific defaults: app-data dir, deterministic port, sqlx pool factory.</p>
+
+      <div class="ascii-block">  Tauri app launch
+        │
+        ▼
+  src-tauri/src/lib.rs::setup()
+        │
+        ▼
+  traderview_db::embedded::ensure_running(app_data_dir)
+        │
+        ├─ first launch?
+        │    ├─ yes → download portable PostgreSQL (~80 MB) to ~/.theseus
+        │    │       extract → initdb → start
+        │    └─ no  → start the existing cluster under $APP_DATA_DIR/traderview/pg/
+        │
+        ▼
+  sqlx::PgPool::connect_with(…)
+        │
+        ▼
+  traderview_db::run_migrations(&amp;pool)   ← idempotent
+        │
+        ▼
+  traderview_db::ensure_local_user(&amp;pool)
+        │  insert ON CONFLICT DO NOTHING — at most one row WHERE is_local
+        ▼
+  spawn axum on 127.0.0.1:&lt;random_free_port&gt;
+        │
+        ▼
+  inject (port, jwt-for-local-user) into the Tauri WebView state
+        │
+        ▼
+  WebView fetches /api/config → frontend boots → dashboard renders
+
+  ─── on window close ───
+        │
+        ▼
+  graceful axum shutdown
+        │
+        ▼
+  postgresql_embedded.stop()   ← clean pg_ctl stop, no zombie postmaster</div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 8: AUTH (WEB)                   -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>WEB AUTH — argon2 + JWT</h2>
+      <p class="tutorial-subtitle">Web mode layers a minimal but correct auth stack on top of the shared schema. argon2id for password hashing (default <code>argon2</code> crate parameters), HS256 JWT for session tokens, no refresh token (rotate the secret to invalidate everything).</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Registration</h4>
+          <p><code>POST /api/auth/register</code> with <code>{email, password, display_name}</code>. Server checks the unique <code>users_email_lower_idx</code>, hashes via <code>argon2::PasswordHasher::hash_password</code>, inserts the row, and immediately issues a JWT so the user is logged in.</p>
+        </div>
+        <div class="feature-card accent">
+          <h4>Login</h4>
+          <p><code>POST /api/auth/login</code> with <code>{email, password}</code>. Server loads the row, runs <code>argon2::PasswordVerifier::verify_password</code> in constant time, mints a JWT with <code>sub = user.id</code> and a configurable TTL.</p>
+        </div>
+        <div class="feature-card magenta">
+          <h4>Bearer middleware</h4>
+          <p>Every protected route uses an axum extractor that reads <code>Authorization: Bearer &lt;jwt&gt;</code>, decodes against <code>TRADERVIEW_JWT_SECRET</code>, looks up the user, and injects a <code>CurrentUser</code> value into the handler signature. Missing / invalid token → <code>401</code>.</p>
+        </div>
+        <div class="feature-card green">
+          <h4>Secret rotation</h4>
+          <p>JWTs are <em>not</em> stored server-side. To invalidate every outstanding token, rotate <code>TRADERVIEW_JWT_SECRET</code> and restart the server. Every client gets a <code>401</code> on the next call and is redirected to the login screen.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 9: FIFO ROLL-UP                 -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>FIFO TRADE ROLL-UP</h2>
+      <p class="tutorial-subtitle"><code>traderview-core::rollup</code> matches executions into trades using strict first-in-first-out per <code>(account_id, symbol)</code>. The algorithm is small, deterministic, and idempotent — running it twice on the same execution set produces the same trade set.</p>
+
+      <div class="ascii-block">  for each (account_id, symbol) in dirty_set:
+      load executions for that pair, ordered by executed_at
+      pop_queue = []     // open lots
+      trades    = []
+
+      for each exec in executions:
+          if exec.side opens a position:
+              pop_queue.push(exec)
+          else:                                // closes / partially closes
+              remaining = exec.qty
+              while remaining &gt; 0 and pop_queue.not_empty:
+                  open_exec = pop_queue.front
+                  take      = min(open_exec.qty_left, remaining)
+
+                  trade.add_open_leg(open_exec, take)
+                  trade.add_close_leg(exec,     take)
+
+                  open_exec.qty_left -= take
+                  remaining           -= take
+
+                  if open_exec.qty_left == 0:
+                      pop_queue.pop_front
+
+              if remaining &gt; 0:
+                  // close exceeds open lots → starts a new short
+                  pop_queue.push(synthetic_short_open(remaining))
+
+      emit closed_trades  with entry_avg, exit_avg, gross_pnl, fees
+      emit open_trades    for any remaining items in pop_queue</div>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;">The roll-up runs after every successful import and on demand via a maintenance route. It operates on a <em>dirty set</em> of <code>(account_id, symbol)</code> pairs so re-rolling 50,000 trades after a one-symbol import is cheap. The materialized <code>trades</code> rows are replaced atomically per-pair.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 10: FRONTEND                    -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>FRONTEND — VANILLA JS + uPlot</h2>
+      <p class="tutorial-subtitle">Zero npm. Zero bundler. Zero JS framework. 384 lines of JS, 259 lines of CSS, no build step. The same files serve both deploy targets — Tauri loads them from disk, axum serves them with <code>tower-http</code> <code>fs</code>.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr><th>File</th><th class="num">LOC</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>frontend/index.html</code></td>          <td class="num">—</td>  <td>Single-page shell, tab strip, auth screen, <code>&lt;main id="app"&gt;</code> mount point.</td></tr>
+          <tr><td><code>frontend/js/api.js</code></td>           <td class="num">~30</td><td><code>fetch</code> wrapper. Adds bearer header in web mode, no-op in desktop mode.</td></tr>
+          <tr><td><code>frontend/js/auth.js</code></td>          <td class="num">~70</td><td>Login / register / accounts UI.</td></tr>
+          <tr><td><code>frontend/js/app.js</code></td>           <td class="num">~80</td><td>Dashboard view; orchestrates tab switching and view mounting.</td></tr>
+          <tr><td><code>frontend/js/trades.js</code></td>        <td class="num">~80</td><td>Filterable trade table, drill-down to executions.</td></tr>
+          <tr><td><code>frontend/js/charts.js</code></td>        <td class="num">~50</td><td>uPlot setup — equity curve, P&amp;L distribution.</td></tr>
+          <tr><td><code>frontend/js/journal.js</code></td>       <td class="num">~40</td><td>Markdown journal editor + viewer.</td></tr>
+          <tr><td><code>frontend/js/import.js</code></td>        <td class="num">~35</td><td>CSV upload, dedupe report.</td></tr>
+          <tr><td><code>frontend/css/styles.css</code></td>      <td class="num">259</td><td>Light theme; functional, not cyberpunk (the cyberpunk lives in <em>this</em> docs site).</td></tr>
+          <tr><td><code>frontend/lib/</code></td>                <td class="num">vendored</td><td>uPlot — pinned via <code>./scripts/vendor-uplot.sh</code>, no CDN at runtime.</td></tr>
+          <tr class="total-row"><td>Total JS</td><td class="num">384</td><td>Plus 259 CSS lines. No transpiler, no minifier, no module bundler.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 11: DEPENDENCIES                -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>NOTABLE DEPENDENCIES</h2>
+      <p class="tutorial-subtitle">Workspace dependencies pinned in the root <code>Cargo.toml</code> so all crates use the same versions. Conservative, durable choices — no fashionable crates, nothing that bit-rots.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Runtime &middot; tokio 1</h4>
+          <p>Full features. Axum, sqlx, and embedded-Postgres all ride on it. No alternate executor anywhere in the workspace.</p>
+        </div>
+        <div class="feature-card accent">
+          <h4>HTTP &middot; axum 0.7 + tower 0.5</h4>
+          <p>Axum router with <code>macros</code> + <code>multipart</code>. <code>tower-http</code> for CORS, trace, static <code>fs</code>, request size limit. No tonic — gRPC is out of scope.</p>
+        </div>
+        <div class="feature-card magenta">
+          <h4>Database &middot; sqlx 0.8 + postgresql_embedded 0.20</h4>
+          <p>sqlx with <code>postgres + macros + uuid + chrono + json + migrate + rust_decimal</code>. <code>postgresql_embedded</code> with the <code>theseus + tokio + rustls</code> features for desktop mode.</p>
+        </div>
+        <div class="feature-card green">
+          <h4>Money &middot; rust_decimal 1</h4>
+          <p><code>NUMERIC(20,8)</code> on the SQL side maps to <code>rust_decimal::Decimal</code> on the Rust side. <em>No floats touch money</em>, ever. <code>serde-with-str</code> for JSON-safe serialization.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Auth &middot; argon2 0.5 + jsonwebtoken 9</h4>
+          <p>argon2id with crate defaults for password hashing. HS256 JWT, secret from <code>TRADERVIEW_JWT_SECRET</code>, no refresh tokens, no rotation infrastructure (rotate the secret to invalidate).</p>
+        </div>
+        <div class="feature-card accent">
+          <h4>Time &middot; chrono 0.4</h4>
+          <p><code>serde + std + clock</code>. <code>TIMESTAMPTZ</code> everywhere — no naive timestamps, no <code>SystemTime</code> in domain code.</p>
+        </div>
+        <div class="feature-card magenta">
+          <h4>Identifiers &middot; uuid 1</h4>
+          <p><code>v4 + serde</code>. Every primary key is a UUID generated either by the client (rare) or by PG's <code>gen_random_uuid()</code> (default).</p>
+        </div>
+        <div class="feature-card green">
+          <h4>Tauri &middot; tauri 2 + tauri-build 2</h4>
+          <p>Desktop wrapper only. Capabilities limited to FS + HTTP-localhost; CSP enforces same-origin against the embedded server. No remote Tauri commands — the WebView talks to axum, not to Rust directly.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 12: TRADERVUE COMPARISON        -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>TRADERVIEW vs HOSTED ALTERNATIVES</h2>
+      <p class="tutorial-subtitle">TraderVue is hosted-only, subscription-priced, and your fills live on their server. traderview ships as either a single-binary desktop app (your data never leaves the machine) or a self-hosted axum service (your data never leaves your infrastructure). Same UI shape — dashboard, trades, journal, equity curve, importer — but you own the schema and the deploy.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Concern</th>
+            <th>traderview</th>
+            <th>TraderVue (hosted)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Data location</td><td>local SQLite-shaped Postgres OR self-hosted PG</td><td>vendor's servers</td></tr>
+          <tr><td>Pricing</td><td>MIT, free, self-hosted</td><td>monthly subscription</td></tr>
+          <tr><td>Source code</td><td>open</td><td>closed</td></tr>
+          <tr><td>Schema</td><td>you migrate it</td><td>opaque</td></tr>
+          <tr><td>Importers</td><td>Webull first; mapping wizard for the rest</td><td>broker catalog (more brokers, less control)</td></tr>
+          <tr><td>Offline use</td><td>desktop mode is fully offline</td><td>requires network</td></tr>
+          <tr><td>Multi-device sync</td><td>self-hosted web mode, or roll your own</td><td>built-in via vendor</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 13: ROADMAP                     -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ROADMAP</h2>
+
+      <table class="file-table">
+        <thead>
+          <tr><th class="num">Phase</th><th>Item</th><th>Owner crate</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Workspace + crate scaffold + initial schema</td><td>workspace</td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td class="num">2</td><td>Webull importer (awaiting redacted real sample)</td><td><code>traderview-import</code></td><td><span style="color:var(--cyan);font-weight:700;">In progress</span></td></tr>
+          <tr><td class="num">3</td><td>FIFO trade roll-up</td><td><code>traderview-core::rollup</code></td><td><span style="color:var(--cyan);font-weight:700;">In progress</span></td></tr>
+          <tr><td class="num">4</td><td>Trades UI — filters, tags, sort</td><td><code>frontend</code></td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+          <tr><td class="num">5</td><td>Equity curve + summary stats (uPlot)</td><td><code>traderview-core::stats</code> + <code>frontend</code></td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+          <tr><td class="num">6</td><td>Journal — markdown, per-trade + per-day</td><td><code>traderview-web</code> + <code>frontend</code></td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+          <tr><td class="num">7</td><td>IBKR + TOS + Schwab via mapping wizard</td><td><code>traderview-import</code></td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+          <tr><td class="num">8</td><td>Cloud sync — encrypted snapshot to S3 / R2</td><td>new crate</td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+          <tr><td class="num">9</td><td>Homebrew tap formula (alongside <code>stryke</code>, <code>zshrs</code>, …)</td><td>release</td><td><span style="color:var(--text-muted);font-weight:700;">Todo</span></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <p style="font-size:11px;color:var(--text-muted);text-align:center;padding:2rem 0 1rem;">
+        Engineering report generated for <code>traderview</code> v0.1.0 &middot;
+        <a href="https://github.com/MenkeTechnologies/traderview">github.com/MenkeTechnologies/traderview</a> &middot;
+        MIT &middot; part of the
+        <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a> stack
+      </p>
+    </main>
+  </div>
+
+  <script src="hud-theme.js"></script>
+</body>
+</html>

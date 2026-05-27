@@ -1,0 +1,166 @@
+//! Outbound webhooks for alert fan-out.
+
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
+use uuid::Uuid;
+
+const UA: &str = "traderview/0.1 (github.com/MenkeTechnologies/traderview)";
+
+fn client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .user_agent(UA)
+        .timeout(std::time::Duration::from_secs(8))
+        .build()
+        .unwrap()
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct Webhook {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub name: String,
+    pub kind: String,
+    pub url: String,
+    pub secret: Option<String>,
+    pub enabled: bool,
+    pub last_fired_at: Option<DateTime<Utc>>,
+    pub fire_count: i32,
+    pub last_status: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Webhook>> {
+    Ok(sqlx::query_as::<_, Webhook>(
+        "SELECT id, user_id, name, kind::text, url, secret, enabled,
+                last_fired_at, fire_count, last_status, created_at
+           FROM webhooks WHERE user_id = $1 ORDER BY created_at DESC",
+    )
+    .bind(user_id)
+    .fetch_all(pool).await?)
+}
+
+pub async fn create(
+    pool: &PgPool,
+    user_id: Uuid,
+    name: &str,
+    kind: &str,
+    url: &str,
+    secret: Option<&str>,
+) -> anyhow::Result<Webhook> {
+    Ok(sqlx::query_as::<_, Webhook>(
+        "INSERT INTO webhooks (user_id, name, kind, url, secret)
+              VALUES ($1, $2, $3::webhook_kind_t, $4, $5)
+         RETURNING id, user_id, name, kind::text, url, secret, enabled,
+                   last_fired_at, fire_count, last_status, created_at",
+    )
+    .bind(user_id).bind(name).bind(kind).bind(url).bind(secret)
+    .fetch_one(pool).await?)
+}
+
+pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
+    let r = sqlx::query("DELETE FROM webhooks WHERE id = $1 AND user_id = $2")
+        .bind(id).bind(user_id).execute(pool).await?;
+    Ok(r.rows_affected() > 0)
+}
+
+pub async fn toggle(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool) -> anyhow::Result<bool> {
+    let r = sqlx::query("UPDATE webhooks SET enabled = $3 WHERE id = $1 AND user_id = $2")
+        .bind(id).bind(user_id).bind(enabled).execute(pool).await?;
+    Ok(r.rows_affected() > 0)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlertPayload {
+    pub title: String,
+    pub message: String,
+    pub symbol: Option<String>,
+    pub kind: String,           // "price_alert" | "disclosure" | "sentiment" | etc.
+    pub url: Option<String>,
+    pub fired_at: DateTime<Utc>,
+}
+
+/// Fire a payload to one webhook. Updates last_status + counters.
+pub async fn fire(pool: &PgPool, wh: &Webhook, payload: &AlertPayload) -> anyhow::Result<()> {
+    let status = match send(wh, payload).await {
+        Ok(s) => s,
+        Err(e) => format!("err: {e}"),
+    };
+    let _ = sqlx::query(
+        "UPDATE webhooks SET last_fired_at = now(), fire_count = fire_count + 1,
+                              last_status = $2 WHERE id = $1",
+    )
+    .bind(wh.id).bind(&status).execute(pool).await;
+    Ok(())
+}
+
+async fn send(wh: &Webhook, p: &AlertPayload) -> anyhow::Result<String> {
+    let body = match wh.kind.as_str() {
+        "discord" => discord_body(p),
+        "slack"   => slack_body(p),
+        _         => serde_json::to_value(p)?,
+    };
+    let mut req = client().post(&wh.url).json(&body);
+    if let Some(secret) = &wh.secret {
+        req = req.header("X-Webhook-Secret", secret);
+    }
+    let resp = req.send().await?;
+    Ok(format!("{}", resp.status()))
+}
+
+fn discord_body(p: &AlertPayload) -> serde_json::Value {
+    let color = match p.kind.as_str() {
+        "price_alert"   => 0x00e5ff,
+        "disclosure"    => 0xff2a6d,
+        "sentiment"     => 0xb86bff,
+        "earnings_iv"   => 0xffdd57,
+        _               => 0x23d160,
+    };
+    serde_json::json!({
+        "username": "TraderView",
+        "embeds": [{
+            "title": p.title,
+            "description": p.message,
+            "color": color,
+            "url": p.url,
+            "timestamp": p.fired_at.to_rfc3339(),
+            "fields": p.symbol.as_ref().map(|s| serde_json::json!([
+                { "name": "Symbol", "value": s, "inline": true },
+                { "name": "Kind",   "value": p.kind, "inline": true },
+            ])).unwrap_or(serde_json::json!([])),
+        }],
+    })
+}
+
+fn slack_body(p: &AlertPayload) -> serde_json::Value {
+    let header = if let Some(s) = &p.symbol {
+        format!("*{}* — {}", s, p.title)
+    } else {
+        p.title.clone()
+    };
+    serde_json::json!({
+        "text": format!("{}\n{}", header, p.message),
+        "blocks": [
+            { "type": "header", "text": { "type": "plain_text", "text": format!("TraderView · {}", p.kind) } },
+            { "type": "section", "text": { "type": "mrkdwn", "text": format!("{}\n{}", header, p.message) } },
+            { "type": "context", "elements": [
+                { "type": "mrkdwn", "text": format!("<!date^{}^{{date_short}} {{time}}|{}> ", p.fired_at.timestamp(), p.fired_at.to_rfc3339()) }
+            ]}
+        ],
+    })
+}
+
+/// Fan-out to all webhook IDs (called by alert engines).
+pub async fn fan_out(pool: &PgPool, user_id: Uuid, webhook_ids: &[Uuid], payload: &AlertPayload) {
+    if webhook_ids.is_empty() { return; }
+    let rows: Vec<Webhook> = match sqlx::query_as::<_, Webhook>(
+        "SELECT id, user_id, name, kind::text, url, secret, enabled,
+                last_fired_at, fire_count, last_status, created_at
+           FROM webhooks WHERE user_id = $1 AND enabled = TRUE AND id = ANY($2)",
+    )
+    .bind(user_id).bind(webhook_ids)
+    .fetch_all(pool).await { Ok(r) => r, Err(_) => return };
+    for wh in rows {
+        let _ = fire(pool, &wh, payload).await;
+    }
+}

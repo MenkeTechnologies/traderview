@@ -37,6 +37,8 @@ argon2 = { workspace = true }
 jsonwebtoken = { workspace = true }
 rand = { workspace = true }
 hex = { workspace = true }
+once_cell = { workspace = true }
+dashmap = { workspace = true }
 
 anyhow = { workspace = true }
 thiserror = { workspace = true }

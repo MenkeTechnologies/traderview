@@ -9,6 +9,7 @@ description = "sqlx pool factory, migrations, and embedded-Postgres lifecycle fo
 
 [dependencies]
 traderview-core = { path = "../traderview-core" }
+traderview-import = { path = "../traderview-import" }
 
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -22,3 +23,12 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 dirs = { workspace = true }
+reqwest = { workspace = true }
+bytes = { workspace = true }
+csv = { workspace = true }
+sha2 = { workspace = true }
+tokio-tungstenite = { workspace = true }
+futures-util = { workspace = true }
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+quick-xml = { workspace = true }

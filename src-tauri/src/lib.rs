@@ -76,7 +76,7 @@ pub fn run() {
                         .await
                         .expect("embedded postgres start");
 
-                    let user_id = traderview_db::repo::ensure_local_user(&embedded.pool)
+                    let user_id = traderview_db::users::ensure_local(&embedded.pool)
                         .await
                         .expect("ensure local user");
 
@@ -94,6 +94,28 @@ pub fn run() {
                         data_dir_clone,
                     );
                     let app = router(state);
+
+                    // Background disclosure poller for sub-30s EDGAR/Congress alerts.
+                    {
+                        let pool = embedded.pool.clone();
+                        tokio::spawn(async move {
+                            loop {
+                                let _ = traderview_db::disclosures::poll_all(&pool).await;
+                                tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+                            }
+                        });
+                    }
+
+                    // Background sentiment poller — every 60s (WSB + StockTwits).
+                    {
+                        let pool = embedded.pool.clone();
+                        tokio::spawn(async move {
+                            loop {
+                                let _ = traderview_db::sentiment::poll_all(&pool).await;
+                                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                            }
+                        });
+                    }
 
                     let bind: SocketAddr = "127.0.0.1:0".parse().unwrap();
                     let listener = tokio::net::TcpListener::bind(bind).await.expect("bind");
