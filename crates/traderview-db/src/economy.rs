@@ -31,7 +31,11 @@ enum Rule {
     LastWeekdayOfMonth { weekday: Weekday, time_et: (u32, u32) },
     EveryWeekday      { weekday: Weekday, time_et: (u32, u32) },
     NthBusinessDay    { n: u8, time_et: (u32, u32) },
-    // For irregular releases (FOMC) we pin specific dates.
+    // For irregular releases (FOMC) we pin specific dates. Currently
+    // matched-against in time_at / instances below but no row in the
+    // static release table uses it — dead_code allowed to keep the
+    // parser branch live for upcoming FOMC entries.
+    #[allow(dead_code)]
     FixedDate { y: i32, m: u32, d: u32, time_et: (u32, u32) },
 }
 

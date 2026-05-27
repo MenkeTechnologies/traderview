@@ -9,7 +9,7 @@
 //! flag every replacement BUY of the SAME ticker within ±30 days of a
 //! losing sell. The user reviews and refines.
 
-use chrono::{Duration, NaiveDate};
+use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
