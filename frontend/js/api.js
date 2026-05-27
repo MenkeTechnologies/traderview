@@ -383,6 +383,9 @@ export const api = {
     createApiToken: (body) =>
         request('/api-tokens', { method: 'POST', body: JSON.stringify(body) }),
     revokeApiToken: (id) => request(`/api-tokens/${id}`, { method: 'DELETE' }),
+    setApiTokenRateLimit: (id, rate_limit_per_min) =>
+        request(`/api-tokens/${id}/rate-limit`,
+                { method: 'PATCH', body: JSON.stringify({ rate_limit_per_min }) }),
 
     // AI journal analysis
     getAiSettings: () => request('/journal-ai/settings'),

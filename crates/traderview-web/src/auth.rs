@@ -138,6 +138,18 @@ pub async fn verify_pat(app: &AppState, rest: &str) -> Result<Uuid, ApiError> {
     let candidate = format!("{}_{}", prefix, secret);
     let ok = verify_password(&candidate, &row.hash)?;
     if !ok { return Err(ApiError::Unauthorized); }
+    // Rate-limit enforcement BEFORE bumping usage — throttled requests
+    // shouldn't count against the visible use_count.
+    let cap = row.rate_limit_per_min.max(1) as u32;
+    let rl = crate::rate_limit::check_and_consume(row.id, cap);
+    if !rl.allowed {
+        return Err(ApiError::RateLimited {
+            limit: rl.limit,
+            remaining: rl.remaining,
+            retry_after_secs: rl.retry_after_secs,
+            reset_epoch: rl.reset_epoch,
+        });
+    }
     // Fire-and-forget the usage bump — don't block the request on it.
     let pool = app.pool.clone();
     let id = row.id;

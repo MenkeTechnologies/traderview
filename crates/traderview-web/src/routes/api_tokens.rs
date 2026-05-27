@@ -2,7 +2,7 @@ use crate::auth::{generate_pat, AuthUser};
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::extract::{Path, State};
-use axum::routing::{delete, get};
+use axum::routing::{delete, get, patch};
 use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api-tokens", get(list).post(create))
         .route("/api-tokens/:id", delete(revoke))
+        .route("/api-tokens/:id/rate-limit", patch(set_rate_limit))
 }
 
 #[derive(Debug, Deserialize)]
@@ -20,6 +21,12 @@ struct CreateBody {
     name: String,
     scopes: Option<Vec<String>>,
     expires_at: Option<DateTime<Utc>>,
+    rate_limit_per_min: Option<i32>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RateLimitBody {
+    rate_limit_per_min: i32,
 }
 
 #[derive(Debug, Serialize)]
@@ -51,11 +58,29 @@ async fn create(
             return Err(ApiError::BadRequest(format!("unknown scope: {}", sc)));
         }
     }
+    if let Some(rl) = body.rate_limit_per_min {
+        if !(1..=10_000).contains(&rl) {
+            return Err(ApiError::BadRequest("rate_limit_per_min must be 1..=10000".into()));
+        }
+    }
     let (prefix, _secret, wire, hash) = generate_pat()?;
     let row = traderview_db::api_tokens::insert(
         &s.pool, u.id, &body.name, &prefix, &hash, &scopes, body.expires_at,
+        body.rate_limit_per_min,
     ).await.map_err(ApiError::Internal)?;
     Ok(Json(CreateResp { summary: row.into(), token: wire }))
+}
+
+async fn set_rate_limit(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<RateLimitBody>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let ok = traderview_db::api_tokens::set_rate_limit(&s.pool, u.id, id, body.rate_limit_per_min)
+        .await.map_err(ApiError::Internal)?;
+    if !ok { return Err(ApiError::NotFound); }
+    Ok(Json(serde_json::json!({ "ok": true, "rate_limit_per_min": body.rate_limit_per_min })))
 }
 
 async fn revoke(
