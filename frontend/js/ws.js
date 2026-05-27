@@ -24,12 +24,15 @@ export function startWs() {
 }
 
 function connect() {
-    const token = localStorage.getItem('tv-token') || '';
-    // Same origin, ws:// or wss:// based on current protocol.
-    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || 'localhost';
+    // In desktop (Tauri) mode the page origin is `tauri://localhost`, which is
+    // not a valid WebSocket scheme. After initApi(), window.__tvApiBase holds
+    // the real http://127.0.0.1:<port> backend; convert that to ws://.
+    // Falls back to page origin for web mode where they match.
+    const token = (window.__tvApiToken) || localStorage.getItem('tv-token') || '';
     const tokenQs = token ? `?token=${encodeURIComponent(token)}` : '';
-    const url = `${proto}//${host}/api/ws${tokenQs}`;
+    const apiBase = window.__tvApiBase || location.origin;
+    const wsBase = apiBase.replace(/^http/i, 'ws');
+    const url = `${wsBase}/api/ws${tokenQs}`;
 
     let ws;
     try { ws = new WebSocket(url); }

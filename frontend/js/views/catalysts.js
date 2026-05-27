@@ -2,7 +2,7 @@
 // GlobeNewswire / AccessWire firehose with auto-extracted tickers and
 // optional TTS announcements when a watchlist symbol is mentioned.
 
-import { api } from '../api.js';
+import { api, wsUrl } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 
 const catalysts = new Map();   // key → catalyst
@@ -67,8 +67,7 @@ function connectWs(mount) {
     try { if (ws) ws.close(); } catch (_) {}
     catalysts.clear();
     announced.clear();
-    const base = location.origin.replace(/^http/, 'ws');
-    ws = new WebSocket(`${base}/api/ws/catalysts`);
+    ws = new WebSocket(wsUrl('/api/ws/catalysts'));
     const dot = document.getElementById('cat-status');
     if (!dot) return;
     ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });

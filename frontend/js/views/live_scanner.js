@@ -5,7 +5,7 @@
 // re-ranks 6 panels in JS every 300 ms (Top Gappers, Top Gainers, Top
 // Losers, HOD Momentum, Volume Surge, Ross 5-Pillar).
 
-import { api } from '../api.js';
+import { api, wsUrl } from '../api.js';
 import { esc, fmt } from '../util.js';
 
 const states = new Map(); // symbol → SymbolState
@@ -79,8 +79,7 @@ function connectWs(mount) {
     try { if (ws) ws.close(); } catch (_) {}
     states.clear();
     announced.clear();
-    const base = location.origin.replace(/^http/, 'ws');
-    ws = new WebSocket(`${base}/api/ws/ticks`);
+    ws = new WebSocket(wsUrl('/api/ws/ticks'));
     const dot = document.getElementById('ls-status');
     if (!dot) return;
     ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });

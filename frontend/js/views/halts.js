@@ -1,7 +1,7 @@
 // Halt scanner — live WebSocket stream of Nasdaq halts with reason codes,
 // TTS voice alerts on every new halt.
 
-import { api } from '../api.js';
+import { api, wsUrl } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 
 let ws = null;
@@ -43,8 +43,7 @@ function connectWs(mount) {
         if (ws) { try { ws.close(); } catch (_) {} ws = null; }
     } catch (_) {}
     halts.clear();
-    const base = location.origin.replace(/^http/, 'ws');
-    ws = new WebSocket(`${base}/api/ws/halts`);
+    ws = new WebSocket(wsUrl('/api/ws/halts'));
     const dot = document.getElementById('halt-status');
     ws.addEventListener('open',  () => { dot.style.color = 'var(--green)'; dot.title = 'connected'; });
     ws.addEventListener('error', () => { dot.style.color = 'var(--red)';   dot.title = 'error'; });

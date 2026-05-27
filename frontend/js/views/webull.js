@@ -1,7 +1,7 @@
 // Webull personal-broker integration — paste session tokens from browser
 // DevTools, poll positions / orders / account every 5s.
 
-import { api } from '../api.js';
+import { api, wsUrl } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
 
 let ws = null;
@@ -86,8 +86,7 @@ export async function renderWebull(mount, _state) {
 
 function connectWs(mount) {
     try { if (ws) ws.close(); } catch (_) {}
-    const base = location.origin.replace(/^http/, 'ws');
-    ws = new WebSocket(`${base}/api/ws/webull`);
+    ws = new WebSocket(wsUrl('/api/ws/webull'));
     const dot = document.getElementById('wb-status');
     if (!dot) return;
     ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });

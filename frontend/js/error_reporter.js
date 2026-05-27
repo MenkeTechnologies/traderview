@@ -17,18 +17,26 @@ function send(payload) {
     drain();
 }
 
+function endpoint() {
+    // After initApi(), window.__tvApiBase is the real backend
+    // (http://127.0.0.1:<port> in desktop, '' in web). Until then we queue.
+    const base = window.__tvApiBase;
+    if (base === undefined) return null;  // not yet initialized — queue
+    return `${base}/api/client-errors`;
+}
+
 function drain() {
+    const url = endpoint();
+    if (!url && url !== '') return; // not initialized yet; keep queued
     while (inflight < MAX_INFLIGHT && queue.length) {
         const body = queue.shift();
         inflight++;
-        // Use sendBeacon when available — survives page-unload and doesn't
-        // need a CORS preflight for same-origin POST text/plain.
         const ok = (navigator.sendBeacon && body.kind !== 'log')
-            ? navigator.sendBeacon('/api/client-errors',
+            ? navigator.sendBeacon(url,
                   new Blob([JSON.stringify(body)], { type: 'application/json' }))
             : false;
         if (ok) { inflight--; continue; }
-        fetch('/api/client-errors', {
+        fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -38,6 +46,14 @@ function drain() {
             .finally(() => { inflight--; drain(); });
     }
 }
+
+// Drain whenever initApi finishes (it sets window.__tvApiBase).
+const __drainPoll = setInterval(() => {
+    if (window.__tvApiBase !== undefined) {
+        clearInterval(__drainPoll);
+        drain();
+    }
+}, 250);
 
 window.addEventListener('error', (e) => {
     send({

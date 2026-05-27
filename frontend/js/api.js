@@ -12,7 +12,29 @@ export async function initApi() {
         baseUrl = '';
         token = localStorage.getItem('tv-token') || '';
     }
+    // Expose for the error reporter (loaded as a non-importing script) and any
+    // other module that needs to build WebSocket URLs synchronously.
+    window.__tvApiBase = baseUrl;
+    window.__tvApiToken = token;
     return { baseUrl, hasToken: !!token };
+}
+
+/// Return the absolute API base URL (e.g. `http://127.0.0.1:54321` in Tauri,
+/// `` in web mode). Always usable for fetch and as the source for wsBase().
+export function httpBase() { return baseUrl; }
+
+/// Return the WebSocket base derived from baseUrl. Handles both http→ws and
+/// https→wss; for web mode (empty base) it falls back to the page's origin.
+export function wsBase() {
+    if (baseUrl) return baseUrl.replace(/^http/i, 'ws');
+    return location.origin.replace(/^http/i, 'ws');
+}
+
+/// Build a full WebSocket URL: `wsUrl('/api/ws/halts')` →
+/// `ws://127.0.0.1:54321/api/ws/halts` (Tauri) or `ws://host/api/ws/halts` (web).
+export function wsUrl(path) {
+    const b = wsBase();
+    return `${b}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
 export function setToken(t) {
