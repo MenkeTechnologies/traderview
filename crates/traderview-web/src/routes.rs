@@ -46,6 +46,7 @@ mod paper;
 mod plans;
 mod position_size;
 mod premarket;
+mod r_distribution;
 mod rebalance;
 mod reports;
 mod research;
@@ -137,6 +138,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(mood_analytics::router())
         .merge(discipline::router())
         .merge(goals::router())
+        .merge(r_distribution::router())
 }
 
 mod helpers {

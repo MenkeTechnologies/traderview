@@ -68,6 +68,7 @@ import { renderBacktestPresets } from './views/backtest_presets.js';
 import { renderMoodAnalytics } from './views/mood_analytics.js';
 import { renderDiscipline } from './views/discipline.js';
 import { renderGoals } from './views/goals.js';
+import { renderRDist } from './views/r_distribution.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -256,6 +257,7 @@ export async function dispatch() {
             case 'mood':           await renderMoodAnalytics(mount, state); break;
             case 'discipline':     await renderDiscipline(mount, state); break;
             case 'goals':          await renderGoals(mount, state); break;
+            case 'r-dist':         await renderRDist(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

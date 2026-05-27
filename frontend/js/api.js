@@ -390,6 +390,9 @@ export const api = {
     // Streaks + discipline scorecard
     discipline: (accountId) => request(`/discipline/${accountId}`),
 
+    // R-multiple distribution + SQN + per-tag breakdown
+    rDistribution: (accountId) => request(`/r-distribution/${accountId}`),
+
     // Trading goals
     listGoals:   () => request('/goals'),
     createGoal:  (body) => request('/goals', { method: 'POST', body: JSON.stringify(body) }),
