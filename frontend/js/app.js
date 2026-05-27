@@ -50,6 +50,7 @@ import { renderPremarket } from './views/premarket.js';
 import { renderHalts } from './views/halts.js';
 import { renderLiveScanner } from './views/live_scanner.js';
 import { renderCatalysts } from './views/catalysts.js';
+import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
 import { renderTaxLots } from './views/tax_lots.js';
@@ -249,6 +250,7 @@ export async function dispatch() {
             case 'halts':          await renderHalts(mount, state); break;
             case 'live-scanner':   await renderLiveScanner(mount, state); break;
             case 'catalysts':      await renderCatalysts(mount, state); break;
+            case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;
             case 'tax-lots':       await renderTaxLots(mount, state); break;

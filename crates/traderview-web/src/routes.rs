@@ -79,6 +79,7 @@ mod vol;
 mod vol_surface;
 mod watchlists;
 mod webhooks;
+mod webull;
 mod ws;
 
 pub fn api_router() -> Router<AppState> {
@@ -128,6 +129,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(premarket::router())
         .merge(halts::router())
         .merge(catalysts::router())
+        .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
         .merge(compare::router())

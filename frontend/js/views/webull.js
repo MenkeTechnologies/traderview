@@ -1,0 +1,154 @@
+// Webull personal-broker integration — paste session tokens from browser
+// DevTools, poll positions / orders / account every 5s.
+
+import { api } from '../api.js';
+import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
+
+let ws = null;
+
+export async function renderWebull(mount, _state) {
+    mount.innerHTML = `
+        <h1 class="view-title">// WEBULL · LIVE BROKER
+            <span class="status-dot" id="wb-status" title="connecting">●</span>
+        </h1>
+
+        <details class="chart-panel" id="wb-creds-panel">
+            <summary><strong>Connect</strong> — paste tokens from your browser session</summary>
+            <p class="muted small">
+                1. Open <code>webull.com</code> in another tab and log in (complete MFA / trade pin).<br>
+                2. Open DevTools → <strong>Network</strong> → click any <code>tradeapi.webullbroker.com</code> request.<br>
+                3. Copy the request headers <code>did</code>, <code>access_token</code>, and <code>t_token</code>.<br>
+                4. Paste below. Tokens are held in process memory only — never written to disk.
+            </p>
+            <form id="wb-form" class="inline-form">
+                <label>did <input name="did" type="text" required style="min-width:280px"></label>
+                <label>access_token <input name="access_token" type="password" required style="min-width:340px"></label>
+                <label>t_token (trade actions; optional for read-only) <input name="t_token" type="password" style="min-width:340px"></label>
+                <label>account_id (optional override) <input name="account_id" type="text" style="min-width:140px"></label>
+                <button class="primary" type="submit">Connect</button>
+            </form>
+            <p class="muted small">All endpoints used are read-only: positions, today's orders, account summary. Order entry is intentionally not implemented.</p>
+        </details>
+
+        <div class="cards" id="wb-account">
+            <div class="card"><div class="label">Net Liquidation</div><div class="value" id="wb-nl">—</div></div>
+            <div class="card"><div class="label">Cash</div><div class="value" id="wb-cash">—</div></div>
+            <div class="card"><div class="label">Day P/L</div><div class="value" id="wb-daypl">—</div></div>
+            <div class="card"><div class="label">Total Unrealized</div><div class="value" id="wb-totpl">—</div></div>
+            <div class="card"><div class="label">Buying Power</div><div class="value" id="wb-bp">—</div></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Open positions <span class="muted small" id="wb-fetched">—</span></h2>
+            <table class="trades" id="wb-pos">
+                <thead><tr>
+                    <th>Symbol</th><th>Side</th><th>Asset</th><th>Qty</th>
+                    <th>Avg cost</th><th>Last</th><th>Mkt value</th>
+                    <th>Unrealized</th><th>%</th><th>Day P/L</th>
+                </tr></thead>
+                <tbody><tr><td colspan="10" class="muted">waiting for first poll…</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Today's filled orders</h2>
+            <table class="trades" id="wb-orders">
+                <thead><tr>
+                    <th>Time</th><th>Symbol</th><th>Side</th>
+                    <th>Qty</th><th>Avg fill</th><th>Status</th>
+                </tr></thead>
+                <tbody><tr><td colspan="6" class="muted">waiting for first poll…</td></tr></tbody>
+            </table>
+        </div>
+    `;
+
+    document.getElementById('wb-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const body = {
+            did:          fd.get('did').trim(),
+            access_token: fd.get('access_token').trim(),
+            t_token:      fd.get('t_token').trim() || null,
+            account_id:   fd.get('account_id').trim() || null,
+        };
+        try {
+            const r = await api.connectWebull(body);
+            alert(`Connected. has_creds=${r.has_creds}`);
+            document.getElementById('wb-creds-panel').open = false;
+            connectWs(mount);
+        } catch (err) {
+            alert('Connect failed: ' + err.message);
+        }
+    });
+
+    connectWs(mount);
+}
+
+function connectWs(mount) {
+    try { if (ws) ws.close(); } catch (_) {}
+    const base = location.origin.replace(/^http/, 'ws');
+    ws = new WebSocket(`${base}/api/ws/webull`);
+    const dot = document.getElementById('wb-status');
+    if (!dot) return;
+    ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });
+    ws.addEventListener('error', () => { dot.style.color = 'var(--red)';        dot.title = 'error'; });
+    ws.addEventListener('close', () => {
+        dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
+        setTimeout(() => { if (document.body.contains(mount)) connectWs(mount); }, 4000);
+    });
+    ws.addEventListener('message', (e) => {
+        try {
+            const m = JSON.parse(e.data);
+            if (m.type === 'snapshot' && m.snap) render(m.snap);
+        } catch (_) {}
+    });
+}
+
+function render(snap) {
+    document.getElementById('wb-fetched').textContent =
+        snap.fetched_at ? `updated ${fmtDateTime(snap.fetched_at)}` : '';
+    const a = snap.account;
+    if (a) {
+        document.getElementById('wb-nl').textContent    = fmtMoney(a.net_liquidation);
+        document.getElementById('wb-cash').textContent  = fmtMoney(a.cash);
+        const dp = document.getElementById('wb-daypl');
+        dp.textContent = fmtMoney(a.day_pnl); dp.className = `value ${pnlClass(a.day_pnl)}`;
+        const tp = document.getElementById('wb-totpl');
+        tp.textContent = fmtMoney(a.total_pnl); tp.className = `value ${pnlClass(a.total_pnl)}`;
+        document.getElementById('wb-bp').textContent    = fmtMoney(a.buying_power);
+    }
+    const posBody = document.querySelector('#wb-pos tbody');
+    if (snap.positions && snap.positions.length) {
+        posBody.innerHTML = snap.positions.map(p => `
+            <tr>
+                <td><strong style="color:var(--accent)">${esc(p.symbol)}</strong></td>
+                <td>${esc(p.side)}</td>
+                <td>${esc(p.asset_type)}</td>
+                <td>${fmt(p.qty, 0)}</td>
+                <td>${fmt(p.avg_cost)}</td>
+                <td>${fmt(p.last_price)}</td>
+                <td>${fmtMoney(p.market_value)}</td>
+                <td class="${pnlClass(p.unrealized_pnl)}">${fmtMoney(p.unrealized_pnl)}</td>
+                <td class="${pnlClass(p.unrealized_pct)}">${(p.unrealized_pct).toFixed(2)}%</td>
+                <td class="${pnlClass(p.day_pnl)}">${fmtMoney(p.day_pnl)}</td>
+            </tr>
+        `).join('');
+    } else {
+        posBody.innerHTML = '<tr><td colspan="10" class="muted">no open positions</td></tr>';
+    }
+    const ordBody = document.querySelector('#wb-orders tbody');
+    if (snap.orders && snap.orders.length) {
+        ordBody.innerHTML = snap.orders.map(o => `
+            <tr>
+                <td>${o.filled_at ? fmtDateTime(o.filled_at) : (o.created_at ? fmtDateTime(o.created_at) : '—')}</td>
+                <td><strong>${esc(o.symbol)}</strong></td>
+                <td>${esc(o.side)}</td>
+                <td>${fmt(o.filled_qty || o.qty, 0)}</td>
+                <td>${fmt(o.avg_fill_price)}</td>
+                <td>${esc(o.status)}</td>
+            </tr>
+        `).join('');
+    } else {
+        ordBody.innerHTML = '<tr><td colspan="6" class="muted">no filled orders today</td></tr>';
+    }
+}

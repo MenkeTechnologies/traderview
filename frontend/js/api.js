@@ -233,6 +233,11 @@ export const api = {
         request('/ticks/configure', { method: 'POST', body: JSON.stringify(body) }),
     liveTicksSnapshot: () => request('/ticks/snapshot'),
 
+    // webull broker (read-only)
+    connectWebull: (body) =>
+        request('/webull/connect', { method: 'POST', body: JSON.stringify(body) }),
+    webullSnapshot: () => request('/webull/snapshot'),
+
     // watchlists
     watchlists:        () => request('/watchlists'),
     createWatchlist:   (name) => request('/watchlists', { method: 'POST', body: JSON.stringify({ name }) }),
