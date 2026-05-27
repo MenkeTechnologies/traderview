@@ -890,3 +890,27 @@ label {
 .halt-code.halt-ipo        { color: var(--cyan);    border-color: var(--cyan);    }
 .halt-code.halt-resume     { color: var(--green);   border-color: var(--green);   }
 .halt-code.halt-other      { color: var(--text-dim); }
+
+/* ---- live scanner grid -------------------------------------------------- */
+.scanner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 10px;
+}
+.scanner-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--cyan);
+    border-radius: 2px;
+    padding: 8px 10px;
+}
+.scanner-panel h3 {
+    margin: 0 0 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+table.scanner-table { font-size: 11px; }
+table.scanner-table td, table.scanner-table th { padding: 3px 6px; }

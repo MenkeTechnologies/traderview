@@ -228,6 +228,11 @@ export const api = {
     // global markets snapshot
     marketsSnapshot: () => request('/markets/snapshot'),
 
+    // live ticks (Finnhub-backed real-time scanner)
+    configureLiveTicks: (body) =>
+        request('/ticks/configure', { method: 'POST', body: JSON.stringify(body) }),
+    liveTicksSnapshot: () => request('/ticks/snapshot'),
+
     // watchlists
     watchlists:        () => request('/watchlists'),
     createWatchlist:   (name) => request('/watchlists', { method: 'POST', body: JSON.stringify({ name }) }),

@@ -34,6 +34,7 @@ pub mod imports;
 pub mod journal;
 pub mod journal_ai;
 pub mod live_positions;
+pub mod live_ticks;
 pub mod market_data;
 pub mod markets;
 pub mod mentorships;

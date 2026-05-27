@@ -42,6 +42,7 @@ mod imports;
 mod journal;
 mod journal_ai;
 mod live_positions;
+mod live_ticks;
 mod markets;
 mod mentorships;
 mod mood_analytics;
@@ -138,6 +139,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(earnings_cal::router())
         .merge(position_size::router())
         .merge(live_positions::router())
+        .merge(live_ticks::router())
         .merge(corr_matrix::router())
         .merge(strategy_alerts::router())
         .merge(rebalance::router())
