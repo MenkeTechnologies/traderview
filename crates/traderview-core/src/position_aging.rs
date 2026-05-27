@@ -10,7 +10,9 @@
 //! Pure compute. Input: list of open positions with entry timestamps;
 //! caller passes "now".
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
+#[cfg(test)]
+use chrono::Duration;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
