@@ -128,6 +128,7 @@ pub mod stats;
 pub mod stochastic;
 pub mod tax_loss_harvest;
 pub mod tilt_detector;
+pub mod time_in_force;
 pub mod trade_plan_checklist;
 pub mod treynor;
 pub mod triple_screen;
