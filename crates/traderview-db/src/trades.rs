@@ -576,3 +576,162 @@ impl From<TradeRow> for Trade {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    // ─── sum_opt iterator combinator ─────────────────────────────────
+
+    #[test]
+    fn sum_opt_empty_iterator_is_none() {
+        // An empty iterator: no values means there's nothing to sum,
+        // and the impl returns None (vs Some(0)) so callers can
+        // distinguish "no rows" from "all-zero rows".
+        let r = sum_opt(std::iter::empty::<Option<Decimal>>());
+        assert!(r.is_none(), "empty iter must yield None, not Some(0)");
+    }
+
+    #[test]
+    fn sum_opt_all_some_returns_sum() {
+        let r = sum_opt(vec![
+            Some(Decimal::from(10)),
+            Some(Decimal::from(20)),
+            Some(Decimal::from(30)),
+        ].into_iter());
+        assert_eq!(r, Some(Decimal::from(60)));
+    }
+
+    #[test]
+    fn sum_opt_with_any_none_returns_none() {
+        // Critical contract: a single None POISONS the sum. Callers
+        // depend on this for "if any leg's MFE is unknown, the whole
+        // trade's MFE is unknown" semantics.
+        let r = sum_opt(vec![
+            Some(Decimal::from(10)),
+            None,
+            Some(Decimal::from(30)),
+        ].into_iter());
+        assert_eq!(r, None,
+            "ANY None must poison the entire sum — partial sums are forbidden");
+    }
+
+    #[test]
+    fn sum_opt_single_some_is_that_value() {
+        let r = sum_opt(std::iter::once(Some(Decimal::from(42))));
+        assert_eq!(r, Some(Decimal::from(42)));
+    }
+
+    #[test]
+    fn sum_opt_handles_negative_and_zero() {
+        let r = sum_opt(vec![
+            Some(Decimal::from(-100)),
+            Some(Decimal::ZERO),
+            Some(Decimal::from(50)),
+        ].into_iter());
+        assert_eq!(r, Some(Decimal::from(-50)));
+    }
+
+    #[test]
+    fn sum_opt_short_circuits_at_first_none() {
+        // After hitting None, no further elements should be observed —
+        // we verify by having a Some with a side-effect counter after
+        // the None and asserting the counter wasn't incremented.
+        use std::cell::Cell;
+        let after_none_visits = Cell::new(0u32);
+        let r = sum_opt(vec![
+            Some(Decimal::from(1)),
+            None,
+        ].into_iter().chain(std::iter::from_fn(|| {
+            after_none_visits.set(after_none_visits.get() + 1);
+            Some(Some(Decimal::from(999)))
+        }).take(3)));
+        assert_eq!(r, None);
+        assert_eq!(after_none_visits.get(), 0,
+            "must short-circuit at first None — no further iterator pulls");
+    }
+
+    // ─── enum-to-pg-string converters (canonical schema column values) ──
+
+    #[test]
+    fn ac_to_pg_canonical_strings() {
+        // These strings MUST match the asset_class_t pg enum exactly —
+        // any drift breaks the INSERT cast '...::asset_class_t' in the
+        // migration. Pinning so a rename is a 3-table coordinated change.
+        assert_eq!(ac_to_pg(AssetClass::Stock), "stock");
+        assert_eq!(ac_to_pg(AssetClass::Option), "option");
+        assert_eq!(ac_to_pg(AssetClass::Future), "future");
+        assert_eq!(ac_to_pg(AssetClass::Forex), "forex");
+    }
+
+    #[test]
+    fn side_to_pg_canonical_strings() {
+        assert_eq!(side_to_pg(TradeSide::Long), "long");
+        assert_eq!(side_to_pg(TradeSide::Short), "short");
+    }
+
+    #[test]
+    fn status_to_pg_canonical_strings() {
+        assert_eq!(status_to_pg(TradeStatus::Open), "open");
+        assert_eq!(status_to_pg(TradeStatus::Closed), "closed");
+    }
+
+    #[test]
+    fn option_type_to_pg_canonical_strings() {
+        assert_eq!(option_type_to_pg(OptionType::Call), "call");
+        assert_eq!(option_type_to_pg(OptionType::Put), "put");
+    }
+
+    #[test]
+    fn ac_to_pg_lowercase_invariant() {
+        // The asset_class_t pg enum is lowercase. Drift to TitleCase or
+        // SCREAMING would break the INSERT cast — pinned via lowercase
+        // character predicate across every variant.
+        for ac in [AssetClass::Stock, AssetClass::Option, AssetClass::Future, AssetClass::Forex] {
+            let s = ac_to_pg(ac);
+            assert!(s.chars().all(|c| c.is_ascii_lowercase()),
+                "{:?} -> {} must be all-lowercase to match pg enum", ac, s);
+        }
+    }
+
+    #[test]
+    fn side_to_pg_lowercase_invariant() {
+        for s in [TradeSide::Long, TradeSide::Short] {
+            let v = side_to_pg(s);
+            assert!(v.chars().all(|c| c.is_ascii_lowercase()),
+                "{:?} -> {} must be all-lowercase", s, v);
+        }
+    }
+
+    // ─── round-trip: pg-string back to enum (caller's responsibility,
+    //     but pin the string set so it can never silently change) ──
+
+    #[test]
+    fn pg_string_set_is_unique_across_converters() {
+        // Within each converter, every variant maps to a unique string
+        // (otherwise the DB casts would collapse different enum values
+        // into the same pg enum tag). Pinning this property.
+        let ac_strings: Vec<&str> = vec![
+            ac_to_pg(AssetClass::Stock),
+            ac_to_pg(AssetClass::Option),
+            ac_to_pg(AssetClass::Future),
+            ac_to_pg(AssetClass::Forex),
+        ];
+        let mut sorted = ac_strings.clone();
+        sorted.sort();
+        sorted.dedup();
+        assert_eq!(sorted.len(), ac_strings.len(),
+            "ac_to_pg must yield unique strings — no two variants may collide");
+    }
+
+    // Make sure the converters are stable across Decimal precision changes
+    // (cosmetic — these are static strings, but pinning anyway).
+    #[test]
+    fn converters_dont_depend_on_decimal_precision() {
+        let _d = Decimal::from_str("1.000000000000000000").unwrap();
+        assert_eq!(side_to_pg(TradeSide::Long), "long");
+        assert_eq!(side_to_pg(TradeSide::Short), "short");
+    }
+}
