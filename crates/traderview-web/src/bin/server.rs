@@ -25,6 +25,9 @@ struct Args {
 
     #[arg(long, env = "TRADERVIEW_STATIC_DIR", default_value = "frontend")]
     static_dir: PathBuf,
+
+    #[arg(long, env = "TRADERVIEW_DATA_DIR", default_value = "data")]
+    data_dir: PathBuf,
 }
 
 #[tokio::main]
@@ -46,7 +49,8 @@ async fn main() -> anyhow::Result<()> {
     let pool = traderview_db::connect_external(&args.database_url).await?;
     traderview_db::migrate(&pool).await?;
 
-    let state = AppState::new(pool, AppMode::Web, jwt_secret);
+    std::fs::create_dir_all(&args.data_dir)?;
+    let state = AppState::new(pool, AppMode::Web, jwt_secret, args.data_dir.clone());
     let api = router(state);
 
     let static_service = ServeDir::new(&args.static_dir).append_index_html_on_directories(true);

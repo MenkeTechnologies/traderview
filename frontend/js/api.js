@@ -68,4 +68,51 @@ export const api = {
     summary: (account_id) => request(`/stats/summary?account_id=${account_id}`),
     equity: (account_id) => request(`/stats/equity?account_id=${account_id}`),
     journalForDay: (day) => request(`/journal/${day}`),
+
+    // --- expenses -------------------------------------------------------
+    expenseAccounts: () => request('/expense/accounts'),
+    createExpenseAccount: (body) =>
+        request('/expense/accounts', { method: 'POST', body: JSON.stringify(body) }),
+    expenseCategories: () => request('/expense/categories'),
+    expenseTransactions: (params = {}) => {
+        const q = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') q.set(k, v);
+        });
+        const s = q.toString();
+        return request(`/expense/transactions${s ? '?' + s : ''}`);
+    },
+    updateExpenseTransaction: (id, patch) =>
+        request(`/expense/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    importExpense: (account_id, source, file) => {
+        const fd = new FormData();
+        fd.append('account_id', account_id);
+        fd.append('source', source);
+        fd.append('file', file, file.name);
+        return request('/expense/import', { method: 'POST', body: fd });
+    },
+    expenseRules: () => request('/expense/rules'),
+    createExpenseRule: (body) =>
+        request('/expense/rules', { method: 'POST', body: JSON.stringify(body) }),
+    deleteExpenseRule: (id) => request(`/expense/rules/${id}`, { method: 'DELETE' }),
+    seedExpenseRules: () => request('/expense/rules/seed', { method: 'POST' }),
+
+    // --- receipts -------------------------------------------------------
+    receipts: () => request('/expense/receipts'),
+    uploadReceipt: (file) => {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+        return request('/expense/receipts', { method: 'POST', body: fd });
+    },
+    receiptMeta: (id) => request(`/expense/receipts/${id}/meta`),
+    receiptMatches: (id) => request(`/expense/receipts/${id}/matches`),
+    attachReceipt: (id, transaction_id) =>
+        request(`/expense/receipts/${id}/attach`, {
+            method: 'POST',
+            body: JSON.stringify({ transaction_id }),
+        }),
+    receiptBlobUrl: (id) => `${baseUrl}/api/expense/receipts/${id}`,
+
+    // --- schedule C report ---------------------------------------------
+    scheduleC: (year) => request(`/expense/report/schedule_c${year ? `?year=${year}` : ''}`),
 };

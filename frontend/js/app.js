@@ -6,6 +6,7 @@ import { equityChart } from './charts.js';
 import { renderTradesView } from './trades.js';
 import { renderImportView } from './import.js';
 import { renderJournalView } from './journal.js';
+import { renderExpensesView } from './expenses.js';
 
 const state = {
     mode: 'web',
@@ -57,6 +58,7 @@ async function showView(view) {
         else if (view === 'trades') await renderTradesView(mount, state.accountId);
         else if (view === 'journal') await renderJournalView(mount);
         else if (view === 'import') renderImportView(mount);
+        else if (view === 'expenses') await renderExpensesView(mount);
         else if (view === 'accounts') await renderAccounts(mount);
     } catch (e) {
         mount.innerHTML = `<p class="boot">Error: ${e.message}</p>`;

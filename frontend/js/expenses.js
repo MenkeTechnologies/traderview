@@ -1,0 +1,648 @@
+// Expenses view — business expense tracking + Schedule C mapping.
+//
+// Layout:
+//   ┌─ toolbar: account picker, source picker, csv upload, rules button ─┐
+//   ├─ filter row: date range, category, business toggle ────────────────┤
+//   ├─ transaction table (inline category dropdown per row) ─────────────┤
+//   └─ rules modal (lazy) ─────────────────────────────────────────────────┘
+//
+// CSV parsers are stubs until real samples arrive — upload returns 400 with
+// the parser-stub message, which we surface verbatim.
+
+import { api, ApiError } from './api.js';
+
+const state = {
+    accounts: [],
+    categories: [],
+    currentAccountId: '',     // '' = ALL
+    filters: { from: '', to: '', category: '', is_business: '', search: '' },
+    transactions: [],
+};
+
+export async function renderExpensesView(mount) {
+    mount.innerHTML = '<div class="boot">loading…</div>';
+    try {
+        const [accts, cats] = await Promise.all([
+            api.expenseAccounts(),
+            api.expenseCategories(),
+        ]);
+        state.accounts = accts;
+        state.categories = cats;
+    } catch (e) {
+        mount.innerHTML = `<p class="boot">expense load failed: ${e.message}</p>`;
+        return;
+    }
+    drawShell(mount);
+    await refresh();
+}
+
+function drawShell(mount) {
+    const accountOpts = ['<option value="">all accounts</option>']
+        .concat(state.accounts.map(a => `<option value="${a.id}">${esc(a.name)} (${a.kind})</option>`))
+        .join('');
+
+    const sourceOpts = [
+        ['amazon', 'Amazon (CSV / XLSX)'],
+        ['bofa', 'Bank of America (CSV / XLSX)'],
+        ['chase', 'Chase (CSV)'],
+        ['apple_card', 'Apple Card (PDF)'],
+    ].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+
+    const catOpts = state.categories
+        .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
+        .join('');
+
+    mount.innerHTML = `
+    <div class="expense-toolbar">
+        <select id="exp-account">${accountOpts}</select>
+        <button class="primary" id="exp-new-account">+ Account</button>
+        <span class="sep"></span>
+        <select id="exp-source">${sourceOpts}</select>
+        <input type="file" id="exp-file" class="hidden"
+               accept=".csv,.xlsx,.xls,.ods,.pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,application/pdf">
+        <button class="primary" id="exp-upload">Upload statement</button>
+        <span class="sep"></span>
+        <button id="exp-seed-rules">Seed default rules</button>
+        <button id="exp-rules-btn">Rules</button>
+        <button id="exp-receipts-btn">Receipts</button>
+        <button id="exp-report-btn">Schedule C</button>
+    </div>
+
+    <div class="receipt-dropzone" id="receipt-dz">
+        <strong>Drop receipt</strong> — JPG, PNG, WebP, or PDF.
+        OCR runs in the background; results auto-match candidate transactions.
+        <input type="file" id="receipt-file" class="hidden" accept="image/jpeg,image/png,image/webp,image/bmp,application/pdf">
+    </div>
+
+    <div class="expense-filters">
+        <label>From <input type="date" id="exp-from"></label>
+        <label>To <input type="date" id="exp-to"></label>
+        <label>Category
+            <select id="exp-category">
+                <option value="">all</option>
+                <option value="__none__">(uncategorized)</option>
+                ${catOpts}
+            </select>
+        </label>
+        <label>Business
+            <select id="exp-business">
+                <option value="">all</option>
+                <option value="true">business only</option>
+                <option value="false">personal only</option>
+            </select>
+        </label>
+        <label>Search <input type="text" id="exp-search" placeholder="merchant / description"></label>
+        <button id="exp-apply">Apply</button>
+    </div>
+
+    <div id="exp-status" class="expense-status"></div>
+    <div id="exp-table"></div>
+    <div id="exp-rules-modal" class="modal hidden"></div>
+    `;
+
+    document.getElementById('exp-account').addEventListener('change', e => {
+        state.currentAccountId = e.target.value;
+        refresh();
+    });
+    document.getElementById('exp-new-account').addEventListener('click', createAccountFlow);
+    document.getElementById('exp-upload').addEventListener('click', () => {
+        document.getElementById('exp-file').click();
+    });
+    document.getElementById('exp-file').addEventListener('change', handleUpload);
+    document.getElementById('exp-seed-rules').addEventListener('click', seedRulesFlow);
+    document.getElementById('exp-rules-btn').addEventListener('click', openRulesModal);
+    document.getElementById('exp-receipts-btn').addEventListener('click', openReceiptsModal);
+    document.getElementById('exp-report-btn').addEventListener('click', () => openScheduleCModal());
+
+    bindReceiptDropzone();
+    document.getElementById('exp-apply').addEventListener('click', () => {
+        state.filters.from = document.getElementById('exp-from').value;
+        state.filters.to = document.getElementById('exp-to').value;
+        const catVal = document.getElementById('exp-category').value;
+        state.filters.category = catVal === '__none__' ? '__none__' : catVal;
+        state.filters.is_business = document.getElementById('exp-business').value;
+        state.filters.search = document.getElementById('exp-search').value;
+        refresh();
+    });
+}
+
+async function refresh() {
+    const params = {
+        limit: 500,
+        ...(state.currentAccountId ? { account_id: state.currentAccountId } : {}),
+        ...(state.filters.from ? { from: state.filters.from } : {}),
+        ...(state.filters.to ? { to: state.filters.to } : {}),
+        ...(state.filters.category && state.filters.category !== '__none__'
+            ? { category: state.filters.category } : {}),
+        ...(state.filters.is_business !== '' ? { is_business: state.filters.is_business } : {}),
+        ...(state.filters.search ? { search: state.filters.search } : {}),
+    };
+    try {
+        let rows = await api.expenseTransactions(params);
+        if (state.filters.category === '__none__') {
+            rows = rows.filter(r => !r.category_code);
+        }
+        state.transactions = rows;
+        drawTable();
+    } catch (e) {
+        document.getElementById('exp-table').innerHTML =
+            `<p class="boot">transactions load failed: ${esc(e.message)}</p>`;
+    }
+}
+
+function drawTable() {
+    const host = document.getElementById('exp-table');
+    if (!state.transactions.length) {
+        host.innerHTML = `<p class="boot">no transactions. upload a CSV.</p>`;
+        return;
+    }
+    const acctNames = Object.fromEntries(state.accounts.map(a => [a.id, a.name]));
+
+    const catOptsBase = '<option value="">(uncategorized)</option>' +
+        state.categories
+            .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
+            .join('');
+
+    const rows = state.transactions.map(t => {
+        const amt = Number(t.amount);
+        const cls = amt < 0 ? 'pnl-neg' : 'pnl-pos';
+        const xferCls = t.is_transfer ? 'tx-transfer' : '';
+        const bizClass = t.is_business ? 'biz-on' : 'biz-off';
+        const catSel = state.categories
+            .map(c =>
+                `<option value="${c.code}"${c.code === t.category_code ? ' selected' : ''}>` +
+                `${c.schedule_c_line}. ${esc(c.label)}</option>`)
+            .join('');
+        return `
+        <tr class="${xferCls}" data-tx="${t.id}">
+            <td>${t.posted_at.slice(0, 10)}</td>
+            <td>${esc(acctNames[t.account_id] || t.account_id.slice(0, 8))}</td>
+            <td title="${esc(t.merchant_raw)}">${esc(t.merchant_raw)}</td>
+            <td class="${cls}">${amt.toFixed(2)}</td>
+            <td>
+                <select class="exp-cat" data-tx="${t.id}">
+                    <option value=""${t.category_code ? '' : ' selected'}>(uncategorized)</option>
+                    ${catSel}
+                </select>
+            </td>
+            <td>
+                <button class="tx-biz ${bizClass}" data-tx="${t.id}" data-biz="${t.is_business}">
+                    ${t.is_business ? 'BIZ' : 'pers'}
+                </button>
+            </td>
+            <td>
+                <button class="tx-xfer ${t.is_transfer ? 'biz-on' : ''}"
+                        data-tx="${t.id}" data-xfer="${t.is_transfer}">
+                    ${t.is_transfer ? 'XFER' : '—'}
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    host.innerHTML = `
+        <table class="trades expense-table">
+            <thead><tr>
+                <th>Date</th><th>Account</th><th>Merchant</th>
+                <th>Amount</th><th>Category (Schedule C)</th><th>Biz?</th><th>Transfer?</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+
+    host.querySelectorAll('select.exp-cat').forEach(sel => {
+        sel.addEventListener('change', async ev => {
+            const tx = ev.target.dataset.tx;
+            const code = ev.target.value || null;
+            try {
+                await api.updateExpenseTransaction(tx, { category_code: code });
+            } catch (e) {
+                alert(`update failed: ${e.message}`);
+            }
+        });
+    });
+    host.querySelectorAll('button.tx-biz').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const tx = btn.dataset.tx;
+            const next = btn.dataset.biz !== 'true';
+            try {
+                await api.updateExpenseTransaction(tx, { is_business: next });
+                btn.dataset.biz = String(next);
+                btn.textContent = next ? 'BIZ' : 'pers';
+                btn.classList.toggle('biz-on', next);
+                btn.classList.toggle('biz-off', !next);
+            } catch (e) { alert(`update failed: ${e.message}`); }
+        });
+    });
+    host.querySelectorAll('button.tx-xfer').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const tx = btn.dataset.tx;
+            const next = btn.dataset.xfer !== 'true';
+            try {
+                await api.updateExpenseTransaction(tx, { is_transfer: next });
+                btn.dataset.xfer = String(next);
+                btn.textContent = next ? 'XFER' : '—';
+                btn.classList.toggle('biz-on', next);
+            } catch (e) { alert(`update failed: ${e.message}`); }
+        });
+    });
+}
+
+async function createAccountFlow() {
+    const name = prompt('Account name (e.g. "BofA Business Checking"):');
+    if (!name) return;
+    const kind = prompt('Kind: bank | credit_card | marketplace', 'credit_card');
+    if (!['bank', 'credit_card', 'marketplace'].includes(kind)) {
+        alert('invalid kind');
+        return;
+    }
+    const source = prompt('Source id (bofa | chase | apple_card | amazon | manual):', 'chase');
+    if (!source) return;
+    try {
+        const acct = await api.createExpenseAccount({ kind, source, name });
+        state.accounts.push(acct);
+        state.currentAccountId = acct.id;
+        // Redraw shell so the account picker re-renders with the new option.
+        const mount = document.getElementById('app');
+        drawShell(mount);
+        document.getElementById('exp-account').value = acct.id;
+        await refresh();
+    } catch (e) {
+        alert(`create failed: ${e.message}`);
+    }
+}
+
+async function handleUpload(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!file) return;
+    if (!state.currentAccountId) {
+        alert('pick an account first (or create one)');
+        return;
+    }
+    const source = document.getElementById('exp-source').value;
+    const status = document.getElementById('exp-status');
+    status.textContent = `uploading ${file.name}…`;
+    try {
+        const res = await api.importExpense(state.currentAccountId, source, file);
+        if (res.duplicate) {
+            status.textContent = `already imported (sha matches existing import ${res.import_id.slice(0, 8)})`;
+        } else {
+            status.textContent =
+                `imported ${res.inserted_count}/${res.row_count} rows · ` +
+                `auto-categorized ${res.categorized_count} · ` +
+                `transfer pairs ${res.transfer_pairs}`;
+        }
+        await refresh();
+    } catch (e) {
+        if (e instanceof ApiError && e.status === 400) {
+            status.textContent = `parser: ${e.message}`;
+        } else {
+            status.textContent = `upload failed: ${e.message}`;
+        }
+    }
+}
+
+async function seedRulesFlow() {
+    const status = document.getElementById('exp-status');
+    try {
+        const res = await api.seedExpenseRules();
+        status.textContent = res.skipped_existing
+            ? `you already have ${res.skipped_existing} rules — seed skipped`
+            : `seeded ${res.inserted} default rules`;
+    } catch (e) {
+        status.textContent = `seed failed: ${e.message}`;
+    }
+}
+
+async function openRulesModal() {
+    const modal = document.getElementById('exp-rules-modal');
+    modal.classList.remove('hidden');
+    modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
+    let rules = [];
+    try { rules = await api.expenseRules(); }
+    catch (e) {
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
+            <button id="rules-close">Close</button></div>`;
+        document.getElementById('rules-close').onclick = () => modal.classList.add('hidden');
+        return;
+    }
+    const catOpts = state.categories
+        .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
+        .join('');
+
+    const rows = rules.map(r => `
+        <tr>
+            <td>${r.priority}</td>
+            <td>${esc(r.pattern)}</td>
+            <td>${r.pattern_kind}</td>
+            <td>${r.category_code}</td>
+            <td>${r.is_business ? 'biz' : 'pers'}</td>
+            <td>${r.hit_count}</td>
+            <td><button class="rule-del" data-id="${r.id}">delete</button></td>
+        </tr>`).join('');
+
+    modal.innerHTML = `
+    <div class="modal-inner wide">
+        <h2>Merchant rules</h2>
+        <form id="rule-form" class="rule-form">
+            <input name="pattern" placeholder="pattern (e.g. uber)" required>
+            <select name="pattern_kind">
+                <option value="substring">substring</option>
+                <option value="regex">regex</option>
+            </select>
+            <select name="category_code">${catOpts}</select>
+            <label><input type="checkbox" name="is_business" checked> biz</label>
+            <input name="priority" type="number" value="100" style="width:60px">
+            <label><input type="checkbox" name="apply_retroactively" checked> apply now</label>
+            <button class="primary" type="submit">add</button>
+        </form>
+        <table class="trades">
+            <thead><tr><th>Pri</th><th>Pattern</th><th>Kind</th><th>Cat</th><th>Biz?</th><th>Hits</th><th></th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="7" class="boot">no rules yet</td></tr>'}</tbody>
+        </table>
+        <button id="rules-close" style="margin-top:12px">Close</button>
+    </div>`;
+    document.getElementById('rules-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelectorAll('.rule-del').forEach(btn => {
+        btn.onclick = async () => {
+            if (!confirm('delete this rule?')) return;
+            try { await api.deleteExpenseRule(btn.dataset.id); }
+            catch (e) { alert(`delete failed: ${e.message}`); return; }
+            openRulesModal();
+        };
+    });
+    document.getElementById('rule-form').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const fd = new FormData(ev.target);
+        try {
+            await api.createExpenseRule({
+                pattern: fd.get('pattern'),
+                pattern_kind: fd.get('pattern_kind'),
+                category_code: fd.get('category_code'),
+                is_business: fd.get('is_business') === 'on',
+                priority: Number(fd.get('priority')) || 100,
+                apply_retroactively: fd.get('apply_retroactively') === 'on',
+            });
+            await refresh();
+            openRulesModal();
+        } catch (e) { alert(`create failed: ${e.message}`); }
+    });
+}
+
+function esc(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// --- receipt drag-drop + OCR poll + match modal --------------------------
+
+function bindReceiptDropzone() {
+    const dz = document.getElementById('receipt-dz');
+    const picker = document.getElementById('receipt-file');
+    if (!dz || !picker) return;
+    dz.addEventListener('click', () => picker.click());
+    ['dragenter', 'dragover'].forEach(ev =>
+        dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(ev =>
+        dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+    dz.addEventListener('drop', e => receiptUploadAll(e.dataTransfer.files));
+    picker.addEventListener('change', () => {
+        receiptUploadAll(picker.files);
+        picker.value = '';
+    });
+}
+
+async function receiptUploadAll(fileList) {
+    const status = document.getElementById('exp-status');
+    if (!fileList || !fileList.length) return;
+    for (const file of fileList) {
+        status.textContent = `uploading ${file.name}…`;
+        try {
+            const r = await api.uploadReceipt(file);
+            status.textContent = `uploaded ${file.name} — OCR running…`;
+            pollReceiptUntilReady(r.id);
+        } catch (e) {
+            status.textContent = `receipt upload failed: ${e.message}`;
+        }
+    }
+}
+
+async function pollReceiptUntilReady(receiptId) {
+    const status = document.getElementById('exp-status');
+    const maxAttempts = 60;        // 60 * 2s = 2 min ceiling
+    for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        let meta;
+        try { meta = await api.receiptMeta(receiptId); }
+        catch (e) {
+            status.textContent = `receipt poll failed: ${e.message}`;
+            return;
+        }
+        if (meta.ocr_status === 'pending') continue;
+        if (meta.ocr_status === 'failed') {
+            status.textContent = `OCR failed: ${meta.error_message || 'unknown'}`;
+            return;
+        }
+        if (meta.ocr_status === 'needs_image') {
+            status.textContent = `OCR needs image: ${meta.error_message}`;
+            return;
+        }
+        // done — open match suggestion modal
+        status.textContent = `OCR done: ${meta.ocr_merchant || '?'} · ${meta.ocr_total ?? '?'} · ${meta.ocr_date ?? '?'}`;
+        openReceiptMatchModal(meta);
+        return;
+    }
+    status.textContent = `OCR timed out for receipt ${receiptId.slice(0, 8)}`;
+}
+
+async function openReceiptMatchModal(meta) {
+    const modal = document.getElementById('exp-rules-modal');
+    modal.classList.remove('hidden');
+    modal.innerHTML = '<div class="modal-inner"><p class="boot">scoring candidates…</p></div>';
+    let matches = [];
+    try { matches = await api.receiptMatches(meta.id); }
+    catch (e) {
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">match load failed: ${esc(e.message)}</p>
+            <button id="m-close">Close</button></div>`;
+        document.getElementById('m-close').onclick = () => modal.classList.add('hidden');
+        return;
+    }
+
+    const acctNames = Object.fromEntries(state.accounts.map(a => [a.id, a.name]));
+
+    const rows = matches.map(m => `
+        <tr>
+            <td>${(m.score * 100).toFixed(0)}%</td>
+            <td>${m.transaction.posted_at.slice(0, 10)}</td>
+            <td>${esc(acctNames[m.transaction.account_id] || '?')}</td>
+            <td>${esc(m.transaction.merchant_raw)}</td>
+            <td>${Number(m.transaction.amount).toFixed(2)}</td>
+            <td><button class="m-pick primary" data-tx="${m.transaction.id}">attach</button></td>
+        </tr>`).join('');
+
+    modal.innerHTML = `
+    <div class="modal-inner wide">
+        <h2>Receipt → transaction</h2>
+        <div class="receipt-summary">
+            <strong>Merchant:</strong> ${esc(meta.ocr_merchant || '?')} ·
+            <strong>Total:</strong> ${meta.ocr_total ?? '?'} ·
+            <strong>Date:</strong> ${meta.ocr_date ?? '?'} ·
+            <strong>Conf:</strong> ${meta.ocr_confidence != null ? (meta.ocr_confidence * 100).toFixed(0) + '%' : '?'}
+        </div>
+        <table class="trades">
+            <thead><tr><th>Score</th><th>Date</th><th>Account</th><th>Merchant</th><th>Amount</th><th></th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="6" class="boot">no candidates above threshold — attach manually from the receipts list</td></tr>'}</tbody>
+        </table>
+        <div style="margin-top:12px;display:flex;gap:8px">
+            <a href="${api.receiptBlobUrl(meta.id)}" target="_blank">View receipt</a>
+            <button id="m-close" style="margin-left:auto">Close</button>
+        </div>
+    </div>`;
+    document.getElementById('m-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelectorAll('.m-pick').forEach(btn => {
+        btn.onclick = async () => {
+            try {
+                await api.attachReceipt(meta.id, btn.dataset.tx);
+                modal.classList.add('hidden');
+                document.getElementById('exp-status').textContent = 'receipt attached';
+                await refresh();
+            } catch (e) { alert(`attach failed: ${e.message}`); }
+        };
+    });
+}
+
+async function openScheduleCModal(year) {
+    const modal = document.getElementById('exp-rules-modal');
+    modal.classList.remove('hidden');
+    const initialYear = year || new Date().getFullYear();
+    modal.innerHTML = '<div class="modal-inner"><p class="boot">building report…</p></div>';
+    let report;
+    try { report = await api.scheduleC(initialYear); }
+    catch (e) {
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">report failed: ${esc(e.message)}</p>
+            <button id="sc-close">Close</button></div>`;
+        document.getElementById('sc-close').onclick = () => modal.classList.add('hidden');
+        return;
+    }
+
+    const fmt = n => Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+    });
+
+    const lines = report.lines.map(l => {
+        const ded = Number(l.deduction_pct);
+        const pctLabel = ded === 1 ? '100%' : `${(ded * 100).toFixed(0)}%`;
+        return `<tr>
+            <td>${l.schedule_c_line}</td>
+            <td>${esc(l.label)}</td>
+            <td class="num">${fmt(l.raw_total)}</td>
+            <td>${pctLabel}</td>
+            <td class="num"><strong>${fmt(l.deductible_total)}</strong></td>
+            <td class="num">${l.txn_count}</td>
+        </tr>`;
+    }).join('');
+
+    // Year picker: current year ± 4.
+    const now = new Date().getFullYear();
+    const years = [];
+    for (let y = now - 4; y <= now + 1; y++) years.push(y);
+    const yearOpts = years.map(y =>
+        `<option value="${y}"${y === report.year ? ' selected' : ''}>${y}</option>`).join('');
+
+    modal.innerHTML = `
+    <div class="modal-inner wide">
+        <h2>Schedule C report — ${report.year}</h2>
+        <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">
+            <label>Year <select id="sc-year">${yearOpts}</select></label>
+            <span style="color:var(--fg-2);font-size:11px">
+                window: ${report.from_date} → ${report.to_date} ·
+                excluded: ${report.excluded_transfers} transfers, ${report.excluded_personal} personal
+            </span>
+        </div>
+        <table class="trades sc-table">
+            <thead><tr>
+                <th>Line</th><th>Category</th>
+                <th class="num">Raw $</th><th>Ded %</th>
+                <th class="num">Deductible $</th><th class="num">#</th>
+            </tr></thead>
+            <tbody>${lines}</tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2"><strong>Grand total (categorized business)</strong></td>
+                    <td class="num">${fmt(report.grand_total_raw)}</td>
+                    <td></td>
+                    <td class="num"><strong>${fmt(report.grand_total_deductible)}</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="color:var(--yellow)">⚠ Uncategorized business expenses</td>
+                    <td class="num" style="color:var(--yellow)">${fmt(report.uncategorized_total)}</td>
+                    <td></td>
+                    <td></td>
+                    <td class="num">${report.uncategorized_count}</td>
+                </tr>
+            </tfoot>
+        </table>
+        <p style="color:var(--fg-2);font-size:11px;margin-top:12px">
+            Deductible column applies each category's IRS rate (meals 50%; everything else 100%).
+            Uncategorized business expenses do <strong>not</strong> roll into the grand total —
+            tag them in the transaction list first.
+        </p>
+        <button id="sc-close" style="margin-top:8px">Close</button>
+    </div>`;
+    document.getElementById('sc-close').onclick = () => modal.classList.add('hidden');
+    document.getElementById('sc-year').addEventListener('change', e => {
+        openScheduleCModal(Number(e.target.value));
+    });
+}
+
+async function openReceiptsModal() {
+    const modal = document.getElementById('exp-rules-modal');
+    modal.classList.remove('hidden');
+    modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
+    let rs = [];
+    try { rs = await api.receipts(); }
+    catch (e) {
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
+            <button id="r-close">Close</button></div>`;
+        document.getElementById('r-close').onclick = () => modal.classList.add('hidden');
+        return;
+    }
+
+    const rows = rs.map(r => `
+        <tr>
+            <td>${r.created_at.slice(0, 10)}</td>
+            <td>${esc(r.filename)}</td>
+            <td>${r.ocr_status}</td>
+            <td>${esc(r.ocr_merchant || '')}</td>
+            <td>${r.ocr_total ?? ''}</td>
+            <td>${r.ocr_date ?? ''}</td>
+            <td>${r.transaction_id ? r.transaction_id.slice(0, 8) : ''}</td>
+            <td>
+                <a href="${api.receiptBlobUrl(r.id)}" target="_blank">view</a>
+                ${!r.transaction_id && r.ocr_status === 'done' ? ` · <button class="r-match" data-id="${r.id}">match</button>` : ''}
+            </td>
+        </tr>`).join('');
+
+    modal.innerHTML = `
+    <div class="modal-inner wide">
+        <h2>Receipts</h2>
+        <table class="trades">
+            <thead><tr>
+                <th>Uploaded</th><th>Filename</th><th>OCR</th>
+                <th>Merchant</th><th>Total</th><th>Date</th><th>Tx</th><th></th>
+            </tr></thead>
+            <tbody>${rows || '<tr><td colspan="8" class="boot">no receipts uploaded</td></tr>'}</tbody>
+        </table>
+        <button id="r-close" style="margin-top:12px">Close</button>
+    </div>`;
+    document.getElementById('r-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelectorAll('.r-match').forEach(btn => {
+        btn.onclick = async () => {
+            try {
+                const meta = await api.receiptMeta(btn.dataset.id);
+                openReceiptMatchModal(meta);
+            } catch (e) { alert(`open failed: ${e.message}`); }
+        };
+    });
+}

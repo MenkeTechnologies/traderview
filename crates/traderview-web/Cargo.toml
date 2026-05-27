@@ -18,6 +18,8 @@ path = "src/bin/server.rs"
 traderview-core = { path = "../traderview-core" }
 traderview-db = { path = "../traderview-db" }
 traderview-import = { path = "../traderview-import" }
+traderview-expense = { path = "../traderview-expense" }
+traderview-ocr = { path = "../traderview-ocr", default-features = false }
 
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -41,3 +43,13 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 clap = { workspace = true }
+bytes = { workspace = true }
+sha2 = { workspace = true }
+regex = { workspace = true }
+
+[features]
+# Default OFF: pure-onnx-ocr-sync pulls tract-onnx + ndarray (~5 min cold
+# compile). Receipt OCR returns OcrError::EngineDisabled until this is set.
+# PDF text-layer extraction works regardless.
+default = []
+ocr-engine = ["traderview-ocr/engine"]

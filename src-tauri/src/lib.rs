@@ -71,7 +71,8 @@ pub fn run() {
 
             std::thread::spawn(move || {
                 rt_clone.block_on(async move {
-                    let embedded = Embedded::start(data_dir_clone)
+                    let pg_dir = data_dir_clone.clone();
+                    let embedded = Embedded::start(pg_dir)
                         .await
                         .expect("embedded postgres start");
 
@@ -86,7 +87,12 @@ pub fn run() {
                     )
                     .expect("issue token");
 
-                    let state = AppState::new(embedded.pool.clone(), AppMode::Desktop, jwt_secret_clone);
+                    let state = AppState::new(
+                        embedded.pool.clone(),
+                        AppMode::Desktop,
+                        jwt_secret_clone,
+                        data_dir_clone,
+                    );
                     let app = router(state);
 
                     let bind: SocketAddr = "127.0.0.1:0".parse().unwrap();

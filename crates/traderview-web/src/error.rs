@@ -17,6 +17,8 @@ pub enum ApiError {
     Conflict(String),
     #[error("database: {0}")]
     Db(#[from] sqlx::Error),
+    #[error("io: {0}")]
+    Io(#[from] std::io::Error),
     #[error("internal: {0}")]
     Internal(#[from] anyhow::Error),
 }
@@ -32,6 +34,10 @@ impl IntoResponse for ApiError {
             ApiError::Db(e) => {
                 tracing::error!(error = %e, "db error");
                 (StatusCode::INTERNAL_SERVER_ERROR, "database error".into())
+            }
+            ApiError::Io(e) => {
+                tracing::error!(error = %e, "io error");
+                (StatusCode::INTERNAL_SERVER_ERROR, "io error".into())
             }
             ApiError::Internal(e) => {
                 tracing::error!(error = %e, "internal error");

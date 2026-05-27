@@ -257,3 +257,180 @@ input:focus, select:focus, textarea:focus {
     cursor: pointer;
 }
 .dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+
+/* --- expenses -------------------------------------------------------- */
+
+.expense-toolbar,
+.expense-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+.expense-toolbar .sep,
+.expense-filters .sep {
+    width: 1px;
+    height: 22px;
+    background: var(--border);
+    margin: 0 4px;
+}
+.expense-toolbar select,
+.expense-toolbar input[type=text],
+.expense-filters input[type=date],
+.expense-filters input[type=text],
+.expense-filters select {
+    width: auto;
+    min-width: 120px;
+}
+.expense-filters label {
+    color: var(--fg-2);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.expense-toolbar button,
+.expense-filters button {
+    background: var(--bg-2);
+    color: var(--fg-0);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.expense-toolbar button:hover,
+.expense-filters button:hover { border-color: var(--accent); color: var(--accent); }
+.expense-toolbar button.primary { background: var(--accent); color: var(--bg-0); border-color: var(--accent); }
+
+.expense-status {
+    color: var(--fg-2);
+    font-size: 11px;
+    padding: 6px 0;
+    min-height: 18px;
+}
+
+.expense-table td select.exp-cat {
+    background: var(--bg-2);
+    color: var(--fg-0);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    font-size: 11px;
+    min-width: 200px;
+}
+.expense-table tr.tx-transfer td { opacity: 0.55; font-style: italic; }
+
+.expense-table button.tx-biz,
+.expense-table button.tx-xfer {
+    background: var(--bg-2);
+    color: var(--fg-2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.expense-table button.biz-on { background: var(--accent); color: var(--bg-0); border-color: var(--accent); }
+.expense-table button.biz-off { color: var(--fg-2); }
+
+/* --- generic modal (rules manager + future receipt match modal) ------ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+.modal-inner {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    padding: 20px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow: auto;
+}
+.modal-inner.wide { width: 800px; }
+.modal-inner h2 {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.rule-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.rule-form input[type=text],
+.rule-form input:not([type]),
+.rule-form select { width: auto; min-width: 120px; }
+.rule-form label { color: var(--fg-2); font-size: 11px; display: flex; gap: 4px; align-items: center; }
+.rule-form button.primary { padding: 5px 12px; }
+button.rule-del {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.receipt-dropzone {
+    border: 2px dashed var(--border);
+    background: var(--bg-1);
+    padding: 16px 20px;
+    margin-bottom: 8px;
+    color: var(--fg-2);
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+}
+.receipt-dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+.receipt-dropzone strong { color: var(--fg-0); }
+
+.receipt-summary {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+
+button.m-pick { padding: 3px 10px; font-size: 10px; }
+button.r-match {
+    background: var(--bg-2);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+table.sc-table td.num,
+table.sc-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.sc-table tfoot td {
+    border-top: 1px solid var(--accent);
+    padding: 8px 10px;
+    background: var(--bg-2);
+}

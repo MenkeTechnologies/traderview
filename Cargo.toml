@@ -3,6 +3,8 @@ members = [
     "crates/traderview-core",
     "crates/traderview-db",
     "crates/traderview-import",
+    "crates/traderview-expense",
+    "crates/traderview-ocr",
     "crates/traderview-web",
     "src-tauri",
 ]
@@ -62,6 +64,10 @@ sha2 = "0.10"
 # Parsing
 csv = "1"
 bytes = "1"
+regex = "1"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "bmp"] }
+lopdf = "0.34"
+calamine = "0.26"
 
 # CLI / config
 clap = { version = "4", features = ["derive", "env"] }

@@ -23,7 +23,7 @@ tauri-build = { version = "2", features = [] }
 traderview-core = { path = "../crates/traderview-core" }
 traderview-db = { path = "../crates/traderview-db" }
 traderview-import = { path = "../crates/traderview-import" }
-traderview-web = { path = "../crates/traderview-web" }
+traderview-web = { path = "../crates/traderview-web", default-features = false }
 
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
@@ -39,3 +39,10 @@ dirs = { workspace = true }
 rand = { workspace = true }
 hex = { workspace = true }
 axum = { workspace = true }
+
+[features]
+# Propagate the OCR engine flip to traderview-web/traderview-ocr.
+# Build with `cargo tauri dev --features ocr-engine` to enable receipt OCR
+# in the desktop app. Heavy first-time compile (~5 min) — leave off until needed.
+default = []
+ocr-engine = ["traderview-web/ocr-engine"]

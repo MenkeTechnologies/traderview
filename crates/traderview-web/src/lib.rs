@@ -10,6 +10,8 @@
 
 pub mod auth;
 pub mod error;
+pub mod expense_routes;
+pub mod receipt_routes;
 pub mod routes;
 pub mod state;
 

@@ -25,6 +25,7 @@ pub fn api_router() -> Router<AppState> {
         .route("/stats/summary", get(stats_summary))
         .route("/stats/equity", get(stats_equity))
         .route("/journal/:day", get(journal_for_day))
+        .nest("/expense", crate::expense_routes::router())
 }
 
 // --- health / config -----------------------------------------------------
