@@ -93,6 +93,15 @@ export async function renderRiskGate(mount, state) {
         </div>
 
         <div class="chart-panel">
+            <h2>Fires by rule <span class="muted small">— last 30 days</span></h2>
+            <p class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
+            <table class="trades" id="rg-by-rule">
+                <thead><tr><th>Rule</th><th>Total fires</th><th>Blocks</th><th>Warnings</th></tr></thead>
+                <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="chart-panel">
             <h2>Recent fires <span class="muted small">— rules that saved you</span></h2>
             <table class="trades" id="rg-fires">
                 <thead><tr>
@@ -209,10 +218,16 @@ export async function renderRiskGate(mount, state) {
     };
     killBtn.addEventListener('click', async () => {
         try {
+            const wasEnabled = killBtn.dataset.enabled === '1';
+            // Confirm in both directions so neither accidental hit
+            // halts nor accidental re-enable goes unnoticed.
+            const verb = !killBtn.dataset.id ? 'INSTALL + ENABLE'
+                : wasEnabled                 ? 'DISABLE (resume trading)'
+                                             : 'ENABLE (halt all trades)';
+            if (!confirm(`${verb} the kill switch?`)) return;
             if (!killBtn.dataset.id) {
                 await api.createRiskRule({ rule: { type: 'kill_switch' }, account_id: null });
             } else {
-                const wasEnabled = killBtn.dataset.enabled === '1';
                 await api.toggleRiskRule(killBtn.dataset.id, !wasEnabled);
             }
             if (!viewIsCurrent(tok)) return;
@@ -221,6 +236,9 @@ export async function renderRiskGate(mount, state) {
         } catch (e) { alert('Kill switch toggle failed: ' + e.message); }
     });
     await refreshKillState();
+
+    // Load analytics.
+    await reloadFiresByRule(mount, tok);
 
     // Load fire log.
     await reloadFires(mount, tok);
@@ -326,6 +344,29 @@ async function reloadRules(mount, tok) {
 function stripType(rule) {
     const { type: _, ...rest } = rule;
     return rest;
+}
+
+async function reloadFiresByRule(mount, tok) {
+    const tb = mount.querySelector('#rg-by-rule tbody');
+    if (!tb) return;
+    try {
+        const stats = await api.riskFiresByRule(30);
+        if (!viewIsCurrent(tok)) return;
+        if (!stats.length) {
+            tb.innerHTML = '<tr><td colspan="4" class="muted">no fires in the last 30 days</td></tr>';
+            return;
+        }
+        tb.innerHTML = stats.map(s => `
+            <tr>
+                <td><code>${esc(s.rule)}</code></td>
+                <td>${s.fires}</td>
+                <td>${s.blocks > 0 ? `<strong style="color:#ff2a6d">${s.blocks}</strong>` : 0}</td>
+                <td>${s.fires - s.blocks}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tb.innerHTML = `<tr><td colspan="4" class="muted">Error: ${esc(err.message)}</td></tr>`;
+    }
 }
 
 async function reloadFires(mount, tok) {

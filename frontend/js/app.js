@@ -121,6 +121,7 @@ async function boot() {
         requestNotifPermission();
         startWs();
         wireWsStatusIndicator();
+        wireKillSwitchIndicator();
     } catch (e) {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
             showAuthScreen();
@@ -222,6 +223,22 @@ function wireWsStatusIndicator() {
     onWsEvent('_open',  () => set('on',  'real-time stream connected'));
     onWsEvent('_close', () => set('off', 'real-time stream disconnected — reconnecting'));
     onWsEvent('ping',   () => set('on',  `real-time stream alive @ ${new Date().toLocaleTimeString(undefined, { hour12: false })}`));
+}
+
+/// Topbar 🛑 indicator. Polls /api/risk-gate/kill-switch every 30s and
+/// shows the icon only when the switch is ACTIVE — so the user can always
+/// see when trading is halted, regardless of which view they're on.
+function wireKillSwitchIndicator() {
+    const el = document.getElementById('killSwitchTop');
+    if (!el) return;
+    const tick = async () => {
+        try {
+            const s = await api.riskKillSwitchState();
+            el.style.display = s.active ? 'inline' : 'none';
+        } catch (_) { /* stay quiet on transient failures */ }
+    };
+    tick();
+    setInterval(tick, 30_000);
 }
 
 function closeNavDrawer() {

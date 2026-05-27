@@ -174,6 +174,42 @@ pub async fn log_fire(
     Ok(())
 }
 
+/// Aggregate fires by rule name for the trailing `days` window.
+/// Returns rows like `("max_loss_per_day_pct", 12, 3)` — fired 12 times,
+/// 3 of those blocked. Used by the "your most-triggered rule this
+/// month" panel so the user can tune.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuleFireStat {
+    pub rule: String,
+    pub fires: i64,
+    pub blocks: i64,
+}
+
+pub async fn fires_by_rule(pool: &PgPool, user_id: Uuid, days: i64)
+    -> anyhow::Result<Vec<RuleFireStat>>
+{
+    let days = days.clamp(1, 365);
+    // jsonb_array_elements expands the decision.violations array, then
+    // we group by the `rule` field. blocked is a top-level row column so
+    // we can SUM CASE on it.
+    let rows: Vec<(String, i64, i64)> = sqlx::query_as(
+        "SELECT v->>'rule'                                AS rule,
+                COUNT(*)::int8                            AS fires,
+                COUNT(*) FILTER (WHERE blocked)::int8     AS blocks
+           FROM risk_fires rf,
+                LATERAL jsonb_array_elements(rf.decision->'violations') AS v
+          WHERE rf.user_id = $1
+            AND rf.fired_at > now() - ($2 || ' days')::interval
+          GROUP BY v->>'rule'
+          ORDER BY fires DESC",
+    )
+    .bind(user_id).bind(days.to_string())
+    .fetch_all(pool).await?;
+    Ok(rows.into_iter()
+        .map(|(rule, fires, blocks)| RuleFireStat { rule, fires, blocks })
+        .collect())
+}
+
 /// Read recent fires for a user, newest first. `limit` capped at 500.
 pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
     -> anyhow::Result<Vec<RiskFire>>

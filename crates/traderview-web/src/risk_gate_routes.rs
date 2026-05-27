@@ -21,6 +21,41 @@ pub fn router() -> Router<AppState> {
         .route("/rules/install-preset", post(install_preset))
         .route("/evaluate",        post(evaluate_proposed))
         .route("/fires",           get(list_fires))
+        .route("/fires/by-rule",   get(fires_by_rule))
+        .route("/kill-switch",     get(kill_switch_state))
+}
+
+#[derive(Deserialize)]
+struct ByRuleQuery { #[serde(default = "default_days")] days: i64 }
+fn default_days() -> i64 { 30 }
+
+async fn fires_by_rule(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<ByRuleQuery>,
+) -> Result<Json<Vec<risk_rules::RuleFireStat>>, ApiError> {
+    let rows = risk_rules::fires_by_rule(&s.pool, user.id, q.days)
+        .await.map_err(ApiError::Internal)?;
+    Ok(Json(rows))
+}
+
+/// Lightweight check the topbar polls every 10s. Returns `installed`
+/// (is there a kill_switch rule at all?) + `active` (is it enabled?).
+/// Used to drive the red 🛑 indicator without pulling every rule.
+#[derive(Serialize)]
+struct KillState { installed: bool, active: bool }
+
+async fn kill_switch_state(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<KillState>, ApiError> {
+    let rows = risk_rules::list(&s.pool, user.id, None)
+        .await.map_err(ApiError::Internal)?;
+    let ks = rows.iter().find(|r| matches!(r.rule, RiskRule::KillSwitch));
+    Ok(Json(KillState {
+        installed: ks.is_some(),
+        active: ks.map(|r| r.enabled).unwrap_or(false),
+    }))
 }
 
 #[derive(Deserialize)]

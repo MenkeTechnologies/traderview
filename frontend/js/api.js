@@ -313,6 +313,8 @@ export const api = {
             body: JSON.stringify({ preset, account_id }),
         }),
     riskFires: (limit = 100) => request(`/risk-gate/fires?limit=${limit}`),
+    riskFiresByRule: (days = 30) => request(`/risk-gate/fires/by-rule?days=${days}`),
+    riskKillSwitchState: () => request('/risk-gate/kill-switch'),
 
     // mentorships
     mentorshipRequest: (mentor_id, scope = 'read') =>
