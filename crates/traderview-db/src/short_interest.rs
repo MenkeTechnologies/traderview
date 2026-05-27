@@ -99,7 +99,20 @@ async fn fetch_finra_day(symbol: &str, day: NaiveDate) -> Option<FinraDay> {
     let resp = client().get(&url).send().await.ok()?;
     if !resp.status().is_success() { return None; }
     let body = resp.text().await.ok()?;
-    let mut header_idx: HashMap<&str, usize> = HashMap::new();
+    parse_finra_body(&body, symbol, day)
+}
+
+/// Pipe-delimited Reg-SHO daily-file parser.
+///
+/// Header: `Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market`
+/// A single symbol may appear on multiple lines (one per market: NYSE, NSDQ,
+/// ARCA, etc.) — we sum across markets. Computes `short_pct = short_volume
+/// / total_volume * 100` when total_volume is non-zero.
+///
+/// Returns `None` when the symbol has no rows in the file — signals
+/// "FINRA had no data for this date" so the caller can skip.
+pub(crate) fn parse_finra_body(body: &str, symbol: &str, day: NaiveDate) -> Option<FinraDay> {
+    let mut header_idx: HashMap<String, usize> = HashMap::new();
     let mut total = FinraDay {
         date: day, short_volume: 0, short_exempt_volume: 0, total_volume: 0, short_pct: 0.0,
     };
@@ -107,7 +120,7 @@ async fn fetch_finra_day(symbol: &str, day: NaiveDate) -> Option<FinraDay> {
     for (i, line) in body.lines().enumerate() {
         if i == 0 {
             for (j, h) in line.split('|').enumerate() {
-                header_idx.insert(Box::leak(h.trim().to_string().into_boxed_str()), j);
+                header_idx.insert(h.trim().to_string(), j);
             }
             continue;
         }
@@ -115,7 +128,7 @@ async fn fetch_finra_day(symbol: &str, day: NaiveDate) -> Option<FinraDay> {
         let sym_i = match header_idx.get("Symbol") { Some(i) => *i, None => continue };
         if parts.get(sym_i).map(|s| s.trim()) != Some(symbol) { continue; }
         let pick = |k: &str| -> u64 {
-            header_idx.get(k).and_then(|&i| parts.get(i))
+            header_idx.get(k).and_then(|i| parts.get(*i))
                 .and_then(|s| s.trim().parse::<u64>().ok()).unwrap_or(0)
         };
         total.short_volume        += pick("ShortVolume");
@@ -141,4 +154,90 @@ pub async fn ranked_universe(symbols: &[String]) -> Vec<ShortStats> {
         .partial_cmp(&a.short_pct_float.unwrap_or(0.0))
         .unwrap_or(std::cmp::Ordering::Equal));
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Canonical FINRA Reg-SHO daily-file body, header + 3 sample rows for
+    /// AAPL across markets + a non-AAPL row that must be ignored.
+    const SAMPLE: &str = "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market
+20260527|AAPL|100000|500|400000|N
+20260527|AAPL|50000|0|200000|Q
+20260527|AAPL|25000|0|100000|P
+20260527|TSLA|999999|999|9999999|N
+";
+
+    fn day() -> NaiveDate { NaiveDate::from_ymd_opt(2026, 5, 27).unwrap() }
+
+    #[test]
+    fn parses_and_sums_across_markets() {
+        // AAPL across 3 markets: 100000 + 50000 + 25000 = 175000 short.
+        // Total: 400000 + 200000 + 100000 = 700000.
+        // Short pct: 175000 / 700000 = 25.0%.
+        let r = parse_finra_body(SAMPLE, "AAPL", day()).expect("AAPL rows present");
+        assert_eq!(r.short_volume, 175_000);
+        assert_eq!(r.short_exempt_volume, 500);
+        assert_eq!(r.total_volume, 700_000);
+        assert!((r.short_pct - 25.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn ignores_non_matching_symbols() {
+        let r = parse_finra_body(SAMPLE, "TSLA", day()).expect("TSLA row present");
+        assert_eq!(r.short_volume, 999_999);
+        assert_eq!(r.total_volume, 9_999_999);
+        // TSLA must not pick up AAPL's data.
+        assert_ne!(r.short_volume, 175_000);
+    }
+
+    #[test]
+    fn returns_none_when_symbol_absent() {
+        let r = parse_finra_body(SAMPLE, "NVDA", day());
+        assert!(r.is_none(), "no NVDA rows → must return None, not zeroed FinraDay");
+    }
+
+    #[test]
+    fn handles_zero_total_volume_without_divide_by_zero() {
+        let body = "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market
+20260527|FOO|0|0|0|N
+";
+        let r = parse_finra_body(body, "FOO", day()).expect("FOO row present");
+        assert_eq!(r.total_volume, 0);
+        assert_eq!(r.short_pct, 0.0, "zero total must yield 0%, not NaN/Inf");
+    }
+
+    #[test]
+    fn skips_unparseable_numeric_cells() {
+        // Cell with letters → should silently become 0, not panic.
+        let body = "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market
+20260527|FOO|abc|0|1000|N
+";
+        let r = parse_finra_body(body, "FOO", day()).expect("FOO row");
+        assert_eq!(r.short_volume, 0);   // unparseable → 0
+        assert_eq!(r.total_volume, 1_000);
+    }
+
+    #[test]
+    fn empty_body_returns_none() {
+        let r = parse_finra_body("", "AAPL", day());
+        assert!(r.is_none());
+    }
+
+    #[test]
+    fn header_only_returns_none() {
+        let r = parse_finra_body(
+            "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market",
+            "AAPL", day(),
+        );
+        assert!(r.is_none(), "header without data rows = no result");
+    }
+
+    #[test]
+    fn preserves_input_date() {
+        let target = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+        let r = parse_finra_body(SAMPLE, "AAPL", target).unwrap();
+        assert_eq!(r.date, target, "parser uses caller-supplied date, not header");
+    }
 }

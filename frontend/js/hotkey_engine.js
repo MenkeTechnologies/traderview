@@ -1,6 +1,7 @@
 // Hotkey engine — listens globally, dispatches to actions.
 import { api } from './api.js';
 import { localToday } from './local_date.js';
+import { buildCombo } from './_pure.js';
 
 let bindings = [];
 
@@ -18,15 +19,8 @@ function handler(e) {
     const tag = (e.target?.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
-    const parts = [];
-    if (e.ctrlKey)  parts.push('ctrl');
-    if (e.altKey)   parts.push('alt');
-    if (e.shiftKey) parts.push('shift');
-    if (e.metaKey)  parts.push('meta');
-    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
-    if (key === 'control' || key === 'shift' || key === 'alt' || key === 'meta') return;
-    parts.push(key);
-    const combo = parts.join('+');
+    const combo = buildCombo(e);
+    if (!combo) return;
     const hit = bindings.find(b => b.combo === combo);
     if (hit) {
         e.preventDefault();

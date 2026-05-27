@@ -3,6 +3,7 @@
 
 import { go } from '../app.js';
 import { esc } from '../util.js';
+import { matchesQuery } from '../_pure.js';
 
 // (view-id, label, glyph, description, badge | null)
 // `badge` shows a small chip — "LIVE" for streaming tiles, etc.
@@ -164,12 +165,6 @@ function renderGrid() {
             }
         });
     });
-}
-
-function matchesQuery(t, q) {
-    return t[1].toLowerCase().includes(q)
-        || t[0].toLowerCase().includes(q)
-        || (t[3] || '').toLowerCase().includes(q);
 }
 
 function renderTile([id, label, glyph, desc, badge]) {

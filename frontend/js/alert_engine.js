@@ -2,6 +2,7 @@
 // quote per symbol, evaluates triggers, fires sound or SpeechSynthesis voice.
 
 import { api } from './api.js';
+import { matchesAlert } from './_pure.js';
 
 let timer = null;
 const FIRE_COOLDOWN_MS = 5 * 60_000;
@@ -37,31 +38,12 @@ async function tick() {
             if (r.symbol !== sym) continue;
             const cooldown = lastFired.get(r.id);
             if (cooldown && Date.now() - cooldown < FIRE_COOLDOWN_MS) continue;
-            if (matches(r, q)) {
+            if (matchesAlert(r, q)) {
                 fire(r);
                 lastFired.set(r.id, Date.now());
                 api.markAlertFired(r.id).catch(() => {});
             }
         }
-    }
-}
-
-function matches(r, q) {
-    const price = Number(q.price);
-    const ch    = Number(q.change_pct ?? 0);
-    const vol   = Number(q.volume ?? 0);
-    const thr   = Number(r.threshold ?? 0);
-    switch (r.trigger) {
-        case 'price_above':       return price >= thr;
-        case 'price_below':       return price <= thr;
-        case 'pct_up':            return ch >=  thr;
-        case 'pct_down':          return ch <= -thr;
-        case 'new_high_of_day':   return q.day_high != null && price >= Number(q.day_high);
-        case 'new_low_of_day':    return q.day_low  != null && price <= Number(q.day_low);
-        case 'volume_surge':      return thr > 0 && vol >= thr;
-        // RSI / SMA crossovers need indicator data — fetch /symbols/:sym/signals.
-        // Skipped here; the screener and signals page surface them statically.
-        default: return false;
     }
 }
 

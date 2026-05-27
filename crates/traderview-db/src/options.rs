@@ -155,3 +155,132 @@ struct RawContract {
     open_interest: Option<i64>,
     in_the_money: Option<bool>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn c(strike: f64, bid: Option<f64>, ask: Option<f64>) -> OptionContract {
+        OptionContract {
+            strike,
+            bid, ask,
+            last_price: None,
+            implied_vol: None,
+            volume: None,
+            open_interest: None,
+            in_the_money: false,
+        }
+    }
+
+    // ─── mid() ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn mid_averages_bid_and_ask() {
+        // bid 1.00, ask 1.20 → mid 1.10
+        let m = mid(&c(100.0, Some(1.00), Some(1.20)));
+        assert_eq!(m, Some(1.10));
+    }
+
+    #[test]
+    fn mid_falls_back_to_last_price_when_quote_missing() {
+        // No bid/ask → use last_price.
+        let mut ct = c(100.0, None, None);
+        ct.last_price = Some(2.50);
+        assert_eq!(mid(&ct), Some(2.50));
+    }
+
+    #[test]
+    fn mid_falls_back_to_last_when_ask_is_zero() {
+        // Stale or invalid ask (0) → don't compute (0+bid)/2; use last instead.
+        let mut ct = c(100.0, Some(1.00), Some(0.0));
+        ct.last_price = Some(1.50);
+        assert_eq!(mid(&ct), Some(1.50));
+    }
+
+    #[test]
+    fn mid_returns_none_when_no_data() {
+        let ct = c(100.0, None, None);
+        assert_eq!(mid(&ct), None);
+    }
+
+    #[test]
+    fn mid_returns_none_when_last_price_is_zero_and_no_quote() {
+        let mut ct = c(100.0, None, None);
+        ct.last_price = Some(0.0);
+        assert_eq!(mid(&ct), None,
+            "zero last_price with no quotes shouldn't be treated as a real fill");
+    }
+
+    // ─── nearest_atm() ────────────────────────────────────────────────────
+
+    #[test]
+    fn nearest_atm_picks_strike_closest_to_spot() {
+        let strikes = vec![
+            c(95.0,  Some(5.0), Some(5.2)),
+            c(100.0, Some(2.0), Some(2.2)),
+            c(105.0, Some(0.5), Some(0.7)),
+        ];
+        // Spot 101 → 100 is closest (1 vs 4 vs 4).
+        let n = nearest_atm(&strikes, 101.0).expect("non-empty");
+        assert_eq!(n.strike, 100.0);
+    }
+
+    #[test]
+    fn nearest_atm_picks_lower_strike_when_equidistant() {
+        let strikes = vec![
+            c(95.0, Some(5.0), Some(5.2)),
+            c(105.0, Some(5.0), Some(5.2)),
+        ];
+        // Spot 100 — equidistant from 95 and 105. min_by returns first hit.
+        let n = nearest_atm(&strikes, 100.0).expect("non-empty");
+        assert_eq!(n.strike, 95.0);
+    }
+
+    #[test]
+    fn nearest_atm_returns_none_for_empty_chain() {
+        let n = nearest_atm(&[], 100.0);
+        assert!(n.is_none());
+    }
+
+    // ─── atm_straddle() ───────────────────────────────────────────────────
+
+    #[test]
+    fn atm_straddle_combines_call_and_put() {
+        let chain = Chain {
+            symbol: "TEST".into(),
+            spot: 100.0,
+            expiration: chrono::NaiveDate::from_ymd_opt(2026, 6, 18).unwrap(),
+            expirations: vec![],
+            calls: vec![
+                c(95.0,  Some(6.0), Some(6.2)),
+                c(100.0, Some(3.0), Some(3.2)),
+                c(105.0, Some(1.0), Some(1.2)),
+            ],
+            puts: vec![
+                c(95.0,  Some(1.0), Some(1.2)),
+                c(100.0, Some(3.0), Some(3.2)),
+                c(105.0, Some(6.0), Some(6.2)),
+            ],
+        };
+        let ((call, cm), (put, pm), atm) = atm_straddle(&chain).expect("straddle");
+        assert_eq!(call.strike, 100.0);
+        assert_eq!(put.strike,  100.0);
+        assert_eq!(cm, 3.10);    // (3.00 + 3.20) / 2
+        assert_eq!(pm, 3.10);
+        assert_eq!(atm, 100.0,   "ATM strike = avg of call+put strikes");
+    }
+
+    #[test]
+    fn atm_straddle_returns_none_when_either_side_empty() {
+        let chain = Chain {
+            symbol: "TEST".into(),
+            spot: 100.0,
+            expiration: chrono::NaiveDate::from_ymd_opt(2026, 6, 18).unwrap(),
+            expirations: vec![],
+            calls: vec![c(100.0, Some(3.0), Some(3.2))],
+            puts: vec![],   // no puts
+        };
+        assert!(atm_straddle(&chain).is_none(),
+            "straddle requires both call and put");
+    }
+}
