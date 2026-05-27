@@ -95,7 +95,11 @@ fn parse_pdf(bytes: &[u8]) -> Result<Vec<ParsedTransaction>, ImportError> {
         }
     }
 
-    let lines: Vec<&str> = full.lines().map(|l| l.trim()).filter(|l| !l.is_empty()).collect();
+    let lines: Vec<&str> = full
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect();
 
     let mut out = Vec::new();
     let mut i = 0usize;
@@ -115,11 +119,7 @@ fn parse_pdf(bytes: &[u8]) -> Result<Vec<ParsedTransaction>, ImportError> {
 }
 
 /// Returns the index AFTER the section terminator.
-fn parse_payments_block(
-    lines: &[&str],
-    mut i: usize,
-    out: &mut Vec<ParsedTransaction>,
-) -> usize {
+fn parse_payments_block(lines: &[&str], mut i: usize, out: &mut Vec<ParsedTransaction>) -> usize {
     // Skip the column-header lines that appear right after "Payments".
     while i < lines.len() && is_header_label(lines[i]) {
         i += 1;
@@ -192,9 +192,12 @@ fn is_header_label(s: &str) -> bool {
 
 fn is_section_end(date: &str, desc: &str) -> bool {
     let l = date.to_ascii_lowercase();
-    if l.starts_with("total payments") || l.starts_with("total transactions")
-        || l.starts_with("total interest") || l.starts_with("interest charged")
-        || l.starts_with("interest charges") || l.starts_with("transactions")
+    if l.starts_with("total payments")
+        || l.starts_with("total transactions")
+        || l.starts_with("total interest")
+        || l.starts_with("interest charged")
+        || l.starts_with("interest charges")
+        || l.starts_with("transactions")
         || l.starts_with("payments")
     {
         return true;
@@ -203,7 +206,12 @@ fn is_section_end(date: &str, desc: &str) -> bool {
     l2.starts_with("total payments") || l2.starts_with("total transactions")
 }
 
-fn make_tx(date_s: &str, desc: &str, amount_s: &str, is_payment: bool) -> Option<ParsedTransaction> {
+fn make_tx(
+    date_s: &str,
+    desc: &str,
+    amount_s: &str,
+    is_payment: bool,
+) -> Option<ParsedTransaction> {
     let date = parse_apple_date(date_s)?;
     let raw_amt = parse_dollar_amount(amount_s)?;
     // Negate to convert "balance impact" to "money flow" semantics.
@@ -228,7 +236,11 @@ fn make_tx(date_s: &str, desc: &str, amount_s: &str, is_payment: bool) -> Option
         currency: "USD".into(),
         merchant_raw,
         merchant_normalized,
-        description: if is_payment { "Apple Card payment".into() } else { String::new() },
+        description: if is_payment {
+            "Apple Card payment".into()
+        } else {
+            String::new()
+        },
         raw,
     })
 }

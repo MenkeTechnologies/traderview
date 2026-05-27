@@ -35,12 +35,17 @@ pub struct RiskParityReport {
 
 pub fn allocate(assets: &[AssetVol]) -> RiskParityReport {
     let mut report = RiskParityReport::default();
-    if assets.is_empty() { return report; }
-    let inv_vol: Vec<f64> = assets.iter()
+    if assets.is_empty() {
+        return report;
+    }
+    let inv_vol: Vec<f64> = assets
+        .iter()
         .map(|a| if a.vol > 0.0 { 1.0 / a.vol } else { 0.0 })
         .collect();
     let total: f64 = inv_vol.iter().sum();
-    if total <= 0.0 { return report; }
+    if total <= 0.0 {
+        return report;
+    }
     for (i, asset) in assets.iter().enumerate() {
         let weight = inv_vol[i] / total;
         let risk_contribution = weight * asset.vol;
@@ -59,7 +64,10 @@ mod tests {
     use super::*;
 
     fn a(sym: &str, v: f64) -> AssetVol {
-        AssetVol { symbol: sym.into(), vol: v }
+        AssetVol {
+            symbol: sym.into(),
+            vol: v,
+        }
     }
 
     #[test]
@@ -72,14 +80,14 @@ mod tests {
     fn equal_vol_assets_equal_weighted() {
         let r = allocate(&[a("A", 0.20), a("B", 0.20), a("C", 0.20)]);
         for w in &r.allocations {
-            assert!((w.weight - 1.0/3.0).abs() < 1e-9);
+            assert!((w.weight - 1.0 / 3.0).abs() < 1e-9);
         }
     }
 
     #[test]
     fn high_vol_asset_gets_smaller_weight() {
         let r = allocate(&[a("LOW", 0.10), a("HIGH", 0.40)]);
-        let low  = r.allocations.iter().find(|a| a.symbol == "LOW").unwrap();
+        let low = r.allocations.iter().find(|a| a.symbol == "LOW").unwrap();
         let high = r.allocations.iter().find(|a| a.symbol == "HIGH").unwrap();
         assert!(low.weight > high.weight);
         // Ratio: inv_vol_low / inv_vol_high = (1/0.10) / (1/0.40) = 4.
@@ -99,8 +107,10 @@ mod tests {
         let r = allocate(&[a("A", 0.10), a("B", 0.20), a("C", 0.30)]);
         let first_rc = r.allocations[0].risk_contribution;
         for w in &r.allocations[1..] {
-            assert!((w.risk_contribution - first_rc).abs() < 1e-9,
-                "risk parity → all assets equal risk contribution");
+            assert!(
+                (w.risk_contribution - first_rc).abs() < 1e-9,
+                "risk parity → all assets equal risk contribution"
+            );
         }
     }
 

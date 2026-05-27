@@ -11,9 +11,10 @@ use traderview_core::position_size::{
 use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/position-size", post(compute))
-        .route("/position-size/account/:account_id/winrate", get(account_winrate))
+    Router::new().route("/position-size", post(compute)).route(
+        "/position-size/account/:account_id/winrate",
+        get(account_winrate),
+    )
 }
 
 #[derive(Debug, Deserialize)]
@@ -22,8 +23,10 @@ struct Body {
     entry: f64,
     stop: f64,
     equity: f64,
-    #[serde(default)] correlation_drag: f64,
-    #[serde(default)] max_position_pct: f64,
+    #[serde(default)]
+    correlation_drag: f64,
+    #[serde(default)]
+    max_position_pct: f64,
     fixed_fractional: Option<FixedFractionalParams>,
     r_based: Option<RBasedParams>,
     kelly: Option<KellyParams>,
@@ -37,12 +40,18 @@ async fn compute(
     Json(b): Json<Body>,
 ) -> Result<Json<Report>, ApiError> {
     let inputs = Inputs {
-        side: b.side, entry: b.entry, stop: b.stop, equity: b.equity,
+        side: b.side,
+        entry: b.entry,
+        stop: b.stop,
+        equity: b.equity,
         correlation_drag: b.correlation_drag,
         max_position_pct: b.max_position_pct,
     };
     Ok(Json(position_size::report(
-        inputs, b.fixed_fractional, b.r_based, b.kelly,
+        inputs,
+        b.fixed_fractional,
+        b.r_based,
+        b.kelly,
         b.recommended_method.as_deref(),
     )))
 }
@@ -65,9 +74,11 @@ async fn account_winrate(
     axum::extract::Path(account_id): axum::extract::Path<Uuid>,
 ) -> Result<Json<WinRateResp>, ApiError> {
     // Confirm account ownership (matches helpers::ensure_account_owner).
-    let row: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT user_id FROM accounts WHERE id = $1",
-    ).bind(account_id).fetch_optional(&s.pool).await.map_err(ApiError::Db)?;
+    let row: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(&s.pool)
+        .await
+        .map_err(ApiError::Db)?;
     match row {
         Some((owner,)) if owner == u.id => {}
         Some(_) => return Err(ApiError::Forbidden),
@@ -82,16 +93,28 @@ async fn account_winrate(
             AVG(net_pnl) FILTER (WHERE net_pnl < 0)::float8
            FROM trades
           WHERE account_id = $1 AND status = 'closed' AND net_pnl IS NOT NULL",
-    ).bind(account_id).fetch_one(&s.pool).await.map_err(ApiError::Db)?;
+    )
+    .bind(account_id)
+    .fetch_one(&s.pool)
+    .await
+    .map_err(ApiError::Db)?;
     let wins = stats.0.unwrap_or(0);
     let losses = stats.1.unwrap_or(0);
     let total = wins + losses;
-    let win_rate = if total > 0 { wins as f64 / total as f64 } else { 0.0 };
+    let win_rate = if total > 0 {
+        wins as f64 / total as f64
+    } else {
+        0.0
+    };
     let avg_win = stats.2.unwrap_or(0.0);
     let avg_loss = stats.3.unwrap_or(0.0).abs();
     Ok(Json(WinRateResp {
-        samples: total, wins, losses,
-        win_rate, avg_win, avg_loss,
+        samples: total,
+        wins,
+        losses,
+        win_rate,
+        avg_win,
+        avg_loss,
         kelly: KellyParams {
             win_rate,
             avg_win: if avg_win > 0.0 { avg_win } else { 1.0 },

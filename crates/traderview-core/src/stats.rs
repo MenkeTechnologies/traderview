@@ -135,7 +135,11 @@ pub fn summary(trades: &[Trade]) -> Summary {
 
     let loss_abs = loss_sum.abs();
     s.profit_factor = if loss_abs.is_zero() {
-        if win_sum.is_zero() { 0.0 } else { f64::INFINITY }
+        if win_sum.is_zero() {
+            0.0
+        } else {
+            f64::INFINITY
+        }
     } else {
         decimal_to_f64(win_sum) / decimal_to_f64(loss_abs)
     };
@@ -365,16 +369,18 @@ pub fn by_asset_class(trades: &[Trade]) -> Vec<Bucket> {
 pub fn by_day_of_week(trades: &[Trade]) -> Vec<Bucket> {
     bucket_from(trades, |t| {
         let day = t.closed_at?.date_naive();
-        Some(match day.weekday() {
-            chrono::Weekday::Mon => "1_mon",
-            chrono::Weekday::Tue => "2_tue",
-            chrono::Weekday::Wed => "3_wed",
-            chrono::Weekday::Thu => "4_thu",
-            chrono::Weekday::Fri => "5_fri",
-            chrono::Weekday::Sat => "6_sat",
-            chrono::Weekday::Sun => "7_sun",
-        }
-        .into())
+        Some(
+            match day.weekday() {
+                chrono::Weekday::Mon => "1_mon",
+                chrono::Weekday::Tue => "2_tue",
+                chrono::Weekday::Wed => "3_wed",
+                chrono::Weekday::Thu => "4_thu",
+                chrono::Weekday::Fri => "5_fri",
+                chrono::Weekday::Sat => "6_sat",
+                chrono::Weekday::Sun => "7_sun",
+            }
+            .into(),
+        )
     })
 }
 
@@ -672,7 +678,11 @@ pub fn comparison(trades: &[Trade]) -> Comparison {
         } else {
             Decimal::ZERO
         },
-        avg_hold_seconds: if win_n > 0 { win_hold / win_n as i64 } else { 0 },
+        avg_hold_seconds: if win_n > 0 {
+            win_hold / win_n as i64
+        } else {
+            0
+        },
         avg_qty: if win_n > 0 {
             win_qty / Decimal::from(win_n as u64)
         } else {
@@ -834,7 +844,7 @@ mod tests {
             quote_ccy: None,
             pip_size: None,
             stop_loss: None,
-            risk_amount: Some(dec("100")),    // 1R = $100
+            risk_amount: Some(dec("100")), // 1R = $100
             initial_target: None,
             mfe: None,
             mae: None,
@@ -922,7 +932,7 @@ mod tests {
         assert_eq!(s.loss_count, 1);
         assert_eq!(s.net_pnl, dec("250"));
         assert!((s.win_rate - 0.75).abs() < 1e-9);
-        assert_eq!(s.expectancy, dec("62.5"));   // 250 / 4
+        assert_eq!(s.expectancy, dec("62.5")); // 250 / 4
         assert_eq!(s.avg_win, dec("100"));
         assert_eq!(s.avg_loss, dec("-50"));
     }
@@ -945,15 +955,20 @@ mod tests {
             t("AAPL", TradeSide::Long, dec("300"), 1),
             t("AAPL", TradeSide::Long, dec("-100"), 2),
         ]);
-        assert!((s.profit_factor - 3.0).abs() < 1e-9,
-            "expected profit_factor=3.0 got {}", s.profit_factor);
+        assert!(
+            (s.profit_factor - 3.0).abs() < 1e-9,
+            "expected profit_factor=3.0 got {}",
+            s.profit_factor
+        );
     }
 
     #[test]
     fn summary_max_consec_wins_and_losses() {
         // W, W, W, L, W, L, L, L, L → wins streak 3, loss streak 4.
         let pnls = [100, 100, 100, -50, 100, -50, -50, -50, -50];
-        let trades: Vec<Trade> = pnls.iter().enumerate()
+        let trades: Vec<Trade> = pnls
+            .iter()
+            .enumerate()
             .map(|(i, p)| t("AAPL", TradeSide::Long, Decimal::from(*p), (i + 1) as u32))
             .collect();
         let s = summary(&trades);
@@ -998,7 +1013,7 @@ mod tests {
             t("AAPL", TradeSide::Long, dec("-200"), 2),
         ];
         let eq = equity_curve(&trades, dec("10000"));
-        assert_eq!(eq[0].drawdown, dec("0"));   // at peak
+        assert_eq!(eq[0].drawdown, dec("0")); // at peak
         assert_eq!(eq[1].drawdown, dec("-200")); // 200 below peak of 500
     }
 
@@ -1022,8 +1037,11 @@ mod tests {
         ];
         let eq = equity_curve(&trades, dec("10000"));
         let dd = max_drawdown(&eq);
-        assert_eq!(dd.max_dd, dec("-250"),
-            "peak was 300 on day 2, trough 50 on day 4 → -250");
+        assert_eq!(
+            dd.max_dd,
+            dec("-250"),
+            "peak was 300 on day 2, trough 50 on day 4 → -250"
+        );
     }
 
     #[test]
@@ -1043,8 +1061,14 @@ mod tests {
             t("TSLA", TradeSide::Long, dec("50"), 3),
         ];
         let buckets = by_symbol(&trades);
-        let aapl = buckets.iter().find(|b| b.key == "AAPL").expect("AAPL bucket");
-        let tsla = buckets.iter().find(|b| b.key == "TSLA").expect("TSLA bucket");
+        let aapl = buckets
+            .iter()
+            .find(|b| b.key == "AAPL")
+            .expect("AAPL bucket");
+        let tsla = buckets
+            .iter()
+            .find(|b| b.key == "TSLA")
+            .expect("TSLA bucket");
         assert_eq!(aapl.trades, 2);
         assert_eq!(aapl.net_pnl, dec("300"));
         assert_eq!(tsla.trades, 1);

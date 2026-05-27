@@ -33,15 +33,14 @@ pub struct PollStats {
     pub symbols_polled: usize,
 }
 
-pub async fn fetch_for_symbol(pool: &PgPool, symbol: &str, count: usize)
-    -> anyhow::Result<u64>
-{
+pub async fn fetch_for_symbol(pool: &PgPool, symbol: &str, count: usize) -> anyhow::Result<u64> {
     let items = market_data::news(symbol, count).await.unwrap_or_default();
     let mut inserted = 0u64;
     for n in items {
         let Some(title) = n.title else { continue };
         let sentiment = Some(traderview_core::sentiment::score(&title) as f32);
-        let published = n.provider_publish_time
+        let published = n
+            .provider_publish_time
             .and_then(|ts| chrono::DateTime::from_timestamp(ts, 0));
         // ON CONFLICT DO NOTHING handles both unique indexes.
         let r = sqlx::query(
@@ -58,7 +57,8 @@ pub async fn fetch_for_symbol(pool: &PgPool, symbol: &str, count: usize)
         .bind(n.thumbnail.as_deref())
         .bind(sentiment)
         .bind(published)
-        .execute(pool).await?;
+        .execute(pool)
+        .await?;
         inserted += r.rows_affected();
     }
     Ok(inserted)
@@ -68,7 +68,10 @@ pub async fn fetch_for_symbol(pool: &PgPool, symbol: &str, count: usize)
 pub async fn poll_watchlists(pool: &PgPool) -> anyhow::Result<PollStats> {
     let symbols: Vec<String> = sqlx::query_scalar(
         "SELECT DISTINCT symbol FROM watchlist_symbols ORDER BY symbol LIMIT 100",
-    ).fetch_all(pool).await.unwrap_or_default();
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
     let mut inserted = 0u64;
     let mut fetched = 0usize;
     for s in &symbols {
@@ -79,12 +82,18 @@ pub async fn poll_watchlists(pool: &PgPool) -> anyhow::Result<PollStats> {
         // tiny politeness delay between Yahoo calls
         tokio::time::sleep(std::time::Duration::from_millis(120)).await;
     }
-    Ok(PollStats { fetched, inserted, symbols_polled: symbols.len() })
+    Ok(PollStats {
+        fetched,
+        inserted,
+        symbols_polled: symbols.len(),
+    })
 }
 
-pub async fn recent_for_symbol(pool: &PgPool, symbol: &str, limit: i64)
-    -> anyhow::Result<Vec<NewsRow>>
-{
+pub async fn recent_for_symbol(
+    pool: &PgPool,
+    symbol: &str,
+    limit: i64,
+) -> anyhow::Result<Vec<NewsRow>> {
     Ok(sqlx::query_as(
         "SELECT id, symbol, uuid, title, publisher, link, thumbnail, sentiment,
                 published_at, fetched_at
@@ -92,7 +101,11 @@ pub async fn recent_for_symbol(pool: &PgPool, symbol: &str, limit: i64)
           WHERE symbol = $1
           ORDER BY COALESCE(published_at, fetched_at) DESC
           LIMIT $2",
-    ).bind(symbol).bind(limit).fetch_all(pool).await?)
+    )
+    .bind(symbol)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn recent_global(pool: &PgPool, limit: i64) -> anyhow::Result<Vec<NewsRow>> {
@@ -102,7 +115,10 @@ pub async fn recent_global(pool: &PgPool, limit: i64) -> anyhow::Result<Vec<News
            FROM news_items
           ORDER BY COALESCE(published_at, fetched_at) DESC
           LIMIT $1",
-    ).bind(limit).fetch_all(pool).await?)
+    )
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn search(pool: &PgPool, q: &str, limit: i64) -> anyhow::Result<Vec<NewsRow>> {
@@ -115,5 +131,9 @@ pub async fn search(pool: &PgPool, q: &str, limit: i64) -> anyhow::Result<Vec<Ne
           ORDER BY ts_rank(search_tsv, websearch_to_tsquery('english', $1)) DESC,
                    COALESCE(published_at, fetched_at) DESC
           LIMIT $2",
-    ).bind(q).bind(limit).fetch_all(pool).await?)
+    )
+    .bind(q)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }

@@ -41,8 +41,8 @@ pub struct Creds {
 #[derive(Debug, Clone, Serialize)]
 pub struct WPosition {
     pub symbol: String,
-    pub side: String,                  // "long" | "short"
-    pub asset_type: String,            // "stock" | "option"
+    pub side: String,       // "long" | "short"
+    pub asset_type: String, // "stock" | "option"
     pub qty: f64,
     pub avg_cost: f64,
     pub last_price: f64,
@@ -111,7 +111,9 @@ impl WebullClient {
         !c.did.is_empty() && !c.access_token.is_empty()
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<WSnapshot> { self.tx.subscribe() }
+    pub fn subscribe(&self) -> broadcast::Receiver<WSnapshot> {
+        self.tx.subscribe()
+    }
 
     pub fn last_snapshot(&self) -> Option<WSnapshot> {
         self.last.get("last").map(|e| e.value().clone())
@@ -120,7 +122,9 @@ impl WebullClient {
     /// Spawn the polling task once. Safe to call repeatedly.
     async fn ensure_poller(&self) {
         let mut started = self.started.lock().await;
-        if *started { return; }
+        if *started {
+            return;
+        }
         *started = true;
         let me = self.clone();
         tokio::spawn(async move {
@@ -128,7 +132,9 @@ impl WebullClient {
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 interval.tick().await;
-                if !me.has_creds().await { continue; }
+                if !me.has_creds().await {
+                    continue;
+                }
                 match me.fetch_snapshot().await {
                     Ok(snap) => {
                         me.last.insert("last", snap.clone());
@@ -147,9 +153,15 @@ impl WebullClient {
             Some(id) => id.clone(),
             None => self.resolve_account_id(&client, &creds).await?,
         };
-        let positions = self.fetch_positions(&client, &creds, &account_id).await.unwrap_or_default();
-        let orders    = self.fetch_today_orders(&client, &creds, &account_id).await.unwrap_or_default();
-        let account   = self.fetch_account(&client, &creds, &account_id).await.ok();
+        let positions = self
+            .fetch_positions(&client, &creds, &account_id)
+            .await
+            .unwrap_or_default();
+        let orders = self
+            .fetch_today_orders(&client, &creds, &account_id)
+            .await
+            .unwrap_or_default();
+        let account = self.fetch_account(&client, &creds, &account_id).await.ok();
         Ok(WSnapshot {
             account,
             positions,
@@ -168,11 +180,23 @@ impl WebullClient {
 
     fn headers(&self, creds: &Creds) -> reqwest::header::HeaderMap {
         let mut h = reqwest::header::HeaderMap::new();
-        h.insert("did",          creds.did.parse().unwrap_or_else(|_| "x".parse().unwrap()));
-        h.insert("access_token", creds.access_token.parse().unwrap_or_else(|_| "x".parse().unwrap()));
+        h.insert(
+            "did",
+            creds.did.parse().unwrap_or_else(|_| "x".parse().unwrap()),
+        );
+        h.insert(
+            "access_token",
+            creds
+                .access_token
+                .parse()
+                .unwrap_or_else(|_| "x".parse().unwrap()),
+        );
         if let Some(t) = &creds.t_token {
             if !t.is_empty() {
-                h.insert("t_token", t.parse().unwrap_or_else(|_| "x".parse().unwrap()));
+                h.insert(
+                    "t_token",
+                    t.parse().unwrap_or_else(|_| "x".parse().unwrap()),
+                );
             }
         }
         h.insert("app", "global".parse().unwrap());
@@ -186,7 +210,11 @@ impl WebullClient {
         h
     }
 
-    async fn resolve_account_id(&self, client: &reqwest::Client, creds: &Creds) -> anyhow::Result<String> {
+    async fn resolve_account_id(
+        &self,
+        client: &reqwest::Client,
+        creds: &Creds,
+    ) -> anyhow::Result<String> {
         let url = format!("{TRADE_BASE}/api/trading/v1/global/account/list");
         let resp = client.get(&url).headers(self.headers(creds)).send().await?;
         if !resp.status().is_success() {
@@ -194,60 +222,113 @@ impl WebullClient {
         }
         let v: serde_json::Value = resp.json().await?;
         let id = v["data"][0]["secAccountId"]
-            .as_i64().map(|x| x.to_string())
+            .as_i64()
+            .map(|x| x.to_string())
             .or_else(|| v["data"][0]["secAccountId"].as_str().map(|s| s.into()))
             .or_else(|| v[0]["secAccountId"].as_str().map(|s| s.into()))
             .ok_or_else(|| anyhow::anyhow!("no account id in response"))?;
         Ok(id)
     }
 
-    async fn fetch_positions(&self, client: &reqwest::Client, creds: &Creds, acct: &str) -> anyhow::Result<Vec<WPosition>> {
+    async fn fetch_positions(
+        &self,
+        client: &reqwest::Client,
+        creds: &Creds,
+        acct: &str,
+    ) -> anyhow::Result<Vec<WPosition>> {
         let url = format!("{TRADE_BASE}/api/trading/v1/webull/account/{acct}/positions");
         let resp = client.get(&url).headers(self.headers(creds)).send().await?;
         if !resp.status().is_success() {
             anyhow::bail!("positions HTTP {}", resp.status());
         }
         let v: serde_json::Value = resp.json().await?;
-        let arr = v["data"].as_array().or_else(|| v.as_array()).cloned().unwrap_or_default();
-        Ok(arr.into_iter().map(|p| WPosition {
-            symbol:        p["ticker"]["symbol"].as_str().or(p["symbol"].as_str()).unwrap_or("").into(),
-            side:          if num(&p["position"]) >= 0.0 { "long".into() } else { "short".into() },
-            asset_type:    p["assetType"].as_str().unwrap_or("stock").to_string().to_lowercase(),
-            qty:           num(&p["position"]).abs(),
-            avg_cost:      num(&p["costPrice"]).max(num(&p["avgCost"])),
-            last_price:    num(&p["lastPrice"]),
-            market_value:  num(&p["marketValue"]),
-            unrealized_pnl: num(&p["unrealizedProfitLoss"]).max(num(&p["unrealizedProfitLossBase"])),
-            unrealized_pct: num(&p["unrealizedProfitLossRate"]) * 100.0,
-            day_pnl:       num(&p["dayProfitLoss"]),
-        }).collect())
+        let arr = v["data"]
+            .as_array()
+            .or_else(|| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        Ok(arr
+            .into_iter()
+            .map(|p| WPosition {
+                symbol: p["ticker"]["symbol"]
+                    .as_str()
+                    .or(p["symbol"].as_str())
+                    .unwrap_or("")
+                    .into(),
+                side: if num(&p["position"]) >= 0.0 {
+                    "long".into()
+                } else {
+                    "short".into()
+                },
+                asset_type: p["assetType"]
+                    .as_str()
+                    .unwrap_or("stock")
+                    .to_string()
+                    .to_lowercase(),
+                qty: num(&p["position"]).abs(),
+                avg_cost: num(&p["costPrice"]).max(num(&p["avgCost"])),
+                last_price: num(&p["lastPrice"]),
+                market_value: num(&p["marketValue"]),
+                unrealized_pnl: num(&p["unrealizedProfitLoss"])
+                    .max(num(&p["unrealizedProfitLossBase"])),
+                unrealized_pct: num(&p["unrealizedProfitLossRate"]) * 100.0,
+                day_pnl: num(&p["dayProfitLoss"]),
+            })
+            .collect())
     }
 
-    async fn fetch_today_orders(&self, client: &reqwest::Client, creds: &Creds, acct: &str) -> anyhow::Result<Vec<WOrder>> {
+    async fn fetch_today_orders(
+        &self,
+        client: &reqwest::Client,
+        creds: &Creds,
+        acct: &str,
+    ) -> anyhow::Result<Vec<WOrder>> {
         let url = format!("{TRADE_BASE}/api/trading/v1/webull/order/list?secAccountId={acct}&status=Filled&pageSize=50");
         let resp = client.get(&url).headers(self.headers(creds)).send().await?;
         if !resp.status().is_success() {
             anyhow::bail!("orders HTTP {}", resp.status());
         }
         let v: serde_json::Value = resp.json().await?;
-        let arr = v["data"]["items"].as_array()
+        let arr = v["data"]["items"]
+            .as_array()
             .or_else(|| v["data"].as_array())
             .or_else(|| v.as_array())
-            .cloned().unwrap_or_default();
-        Ok(arr.into_iter().map(|o| WOrder {
-            order_id: o["orderId"].as_str().or(o["id"].as_str()).unwrap_or("").into(),
-            symbol:   o["ticker"]["symbol"].as_str().or(o["symbol"].as_str()).unwrap_or("").into(),
-            side:     o["action"].as_str().unwrap_or("").to_string().to_lowercase(),
-            qty:           num(&o["totalQuantity"]),
-            filled_qty:    num(&o["filledQuantity"]),
-            avg_fill_price: num(&o["avgFilledPrice"]).max(num(&o["filledPrice"])),
-            status:        o["status"].as_str().unwrap_or("").into(),
-            created_at:    parse_ms(o["placedTime"].as_str()),
-            filled_at:     parse_ms(o["filledTime"].as_str()),
-        }).collect())
+            .cloned()
+            .unwrap_or_default();
+        Ok(arr
+            .into_iter()
+            .map(|o| WOrder {
+                order_id: o["orderId"]
+                    .as_str()
+                    .or(o["id"].as_str())
+                    .unwrap_or("")
+                    .into(),
+                symbol: o["ticker"]["symbol"]
+                    .as_str()
+                    .or(o["symbol"].as_str())
+                    .unwrap_or("")
+                    .into(),
+                side: o["action"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_string()
+                    .to_lowercase(),
+                qty: num(&o["totalQuantity"]),
+                filled_qty: num(&o["filledQuantity"]),
+                avg_fill_price: num(&o["avgFilledPrice"]).max(num(&o["filledPrice"])),
+                status: o["status"].as_str().unwrap_or("").into(),
+                created_at: parse_ms(o["placedTime"].as_str()),
+                filled_at: parse_ms(o["filledTime"].as_str()),
+            })
+            .collect())
     }
 
-    async fn fetch_account(&self, client: &reqwest::Client, creds: &Creds, acct: &str) -> anyhow::Result<WAccount> {
+    async fn fetch_account(
+        &self,
+        client: &reqwest::Client,
+        creds: &Creds,
+        acct: &str,
+    ) -> anyhow::Result<WAccount> {
         let url = format!("{TRADE_BASE}/api/trading/v1/webull/account/{acct}");
         let resp = client.get(&url).headers(self.headers(creds)).send().await?;
         if !resp.status().is_success() {
@@ -257,25 +338,32 @@ impl WebullClient {
         let d = &v["data"];
         Ok(WAccount {
             net_liquidation: num(&d["netLiquidation"]).max(num(&d["totalMarketValue"])),
-            cash:           num(&d["totalCash"]).max(num(&d["cashBalance"])),
-            day_pnl:        num(&d["dayProfitLoss"]),
-            total_pnl:      num(&d["unrealizedProfitLoss"]),
-            buying_power:   num(&d["dayBuyingPower"]).max(num(&d["overnightBuyingPower"])),
+            cash: num(&d["totalCash"]).max(num(&d["cashBalance"])),
+            day_pnl: num(&d["dayProfitLoss"]),
+            total_pnl: num(&d["unrealizedProfitLoss"]),
+            buying_power: num(&d["dayBuyingPower"]).max(num(&d["overnightBuyingPower"])),
         })
     }
 }
 
-impl Default for WebullClient { fn default() -> Self { Self::new() } }
+impl Default for WebullClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 fn num(v: &serde_json::Value) -> f64 {
-    v.as_f64().unwrap_or_else(|| v.as_str().and_then(|s| s.parse().ok()).unwrap_or(0.0))
+    v.as_f64()
+        .unwrap_or_else(|| v.as_str().and_then(|s| s.parse().ok()).unwrap_or(0.0))
 }
 fn parse_ms(s: Option<&str>) -> Option<DateTime<Utc>> {
     let s = s?;
     if let Ok(ms) = s.parse::<i64>() {
         return DateTime::<Utc>::from_timestamp_millis(ms);
     }
-    chrono::DateTime::parse_from_rfc3339(s).ok().map(|d| d.with_timezone(&Utc))
+    chrono::DateTime::parse_from_rfc3339(s)
+        .ok()
+        .map(|d| d.with_timezone(&Utc))
 }
 
 pub fn global() -> WebullClient {

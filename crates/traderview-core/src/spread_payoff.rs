@@ -20,7 +20,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Leg {
@@ -49,12 +52,19 @@ pub struct PayoffReport {
     pub net_debit: f64,
 }
 
-pub fn payoff(legs: &[Leg], price_low: f64, price_high: f64, steps: usize, multiplier: f64)
-    -> PayoffReport
-{
+pub fn payoff(
+    legs: &[Leg],
+    price_low: f64,
+    price_high: f64,
+    steps: usize,
+    multiplier: f64,
+) -> PayoffReport {
     let mut report = PayoffReport::default();
-    if legs.is_empty() || steps == 0 || price_high <= price_low { return report; }
-    let net_debit_per_share: f64 = legs.iter()
+    if legs.is_empty() || steps == 0 || price_high <= price_low {
+        return report;
+    }
+    let net_debit_per_share: f64 = legs
+        .iter()
         .map(|l| l.premium_per_share * l.contracts as f64)
         .sum();
     report.net_debit = net_debit_per_share * multiplier;
@@ -66,13 +76,19 @@ pub fn payoff(legs: &[Leg], price_low: f64, price_high: f64, steps: usize, multi
         for leg in legs {
             let intrinsic = match leg.kind {
                 OptionKind::Call => (price - leg.strike).max(0.0),
-                OptionKind::Put  => (leg.strike - price).max(0.0),
+                OptionKind::Put => (leg.strike - price).max(0.0),
             };
             pnl_per_share += intrinsic * leg.contracts as f64;
         }
-        points.push(PayoffPoint { price, pnl: pnl_per_share * multiplier });
+        points.push(PayoffPoint {
+            price,
+            pnl: pnl_per_share * multiplier,
+        });
     }
-    report.max_profit = points.iter().map(|p| p.pnl).fold(f64::NEG_INFINITY, f64::max);
+    report.max_profit = points
+        .iter()
+        .map(|p| p.pnl)
+        .fold(f64::NEG_INFINITY, f64::max);
     report.max_loss = points.iter().map(|p| p.pnl).fold(f64::INFINITY, f64::min);
     // Breakeven detection: sign-change between consecutive points, with
     // de-dup when sampling lands a point exactly on zero (which would
@@ -81,9 +97,11 @@ pub fn payoff(legs: &[Leg], price_low: f64, price_high: f64, steps: usize, multi
     for w in points.windows(2) {
         let (a, b) = (&w[0], &w[1]);
         let product = a.pnl * b.pnl;
-        let crosses = product < 0.0 || (a.pnl == 0.0 && b.pnl != 0.0)
-            || (b.pnl == 0.0 && a.pnl != 0.0);
-        if !crosses { continue; }
+        let crosses =
+            product < 0.0 || (a.pnl == 0.0 && b.pnl != 0.0) || (b.pnl == 0.0 && a.pnl != 0.0);
+        if !crosses {
+            continue;
+        }
         let span = b.pnl - a.pnl;
         let cross = if span == 0.0 {
             a.price
@@ -93,7 +111,9 @@ pub fn payoff(legs: &[Leg], price_low: f64, price_high: f64, steps: usize, multi
         // Skip if same as previous breakeven (exact zero straddle case).
         let dx = (b.price - a.price).abs();
         if let Some(last) = last_be {
-            if (cross - last).abs() < dx * 1.5 { continue; }
+            if (cross - last).abs() < dx * 1.5 {
+                continue;
+            }
         }
         report.breakevens.push(cross);
         last_be = Some(cross);
@@ -107,13 +127,28 @@ mod tests {
     use super::*;
 
     fn long_call(strike: f64, premium: f64) -> Leg {
-        Leg { kind: OptionKind::Call, strike, contracts: 1, premium_per_share: premium }
+        Leg {
+            kind: OptionKind::Call,
+            strike,
+            contracts: 1,
+            premium_per_share: premium,
+        }
     }
     fn short_call(strike: f64, premium: f64) -> Leg {
-        Leg { kind: OptionKind::Call, strike, contracts: -1, premium_per_share: premium }
+        Leg {
+            kind: OptionKind::Call,
+            strike,
+            contracts: -1,
+            premium_per_share: premium,
+        }
     }
     fn long_put(strike: f64, premium: f64) -> Leg {
-        Leg { kind: OptionKind::Put, strike, contracts: 1, premium_per_share: premium }
+        Leg {
+            kind: OptionKind::Put,
+            strike,
+            contracts: 1,
+            premium_per_share: premium,
+        }
     }
 
     #[test]
@@ -177,10 +212,30 @@ mod tests {
         // 5-wide iron condor centered around $100: long $90P / short $95P
         // / short $105C / long $110C. Net credit $2 each wing = $4 total.
         let legs = vec![
-            Leg { kind: OptionKind::Put,  strike: 90.0,  contracts: 1,  premium_per_share: 1.0 },
-            Leg { kind: OptionKind::Put,  strike: 95.0,  contracts: -1, premium_per_share: 3.0 },
-            Leg { kind: OptionKind::Call, strike: 105.0, contracts: -1, premium_per_share: 3.0 },
-            Leg { kind: OptionKind::Call, strike: 110.0, contracts: 1,  premium_per_share: 1.0 },
+            Leg {
+                kind: OptionKind::Put,
+                strike: 90.0,
+                contracts: 1,
+                premium_per_share: 1.0,
+            },
+            Leg {
+                kind: OptionKind::Put,
+                strike: 95.0,
+                contracts: -1,
+                premium_per_share: 3.0,
+            },
+            Leg {
+                kind: OptionKind::Call,
+                strike: 105.0,
+                contracts: -1,
+                premium_per_share: 3.0,
+            },
+            Leg {
+                kind: OptionKind::Call,
+                strike: 110.0,
+                contracts: 1,
+                premium_per_share: 1.0,
+            },
         ];
         let r = payoff(&legs, 80.0, 120.0, 800, 100.0);
         assert_eq!(r.breakevens.len(), 2);
@@ -200,9 +255,12 @@ mod tests {
     fn net_debit_negative_for_credit_strategies() {
         // Short put alone: $2 credit received per share × 100 = $200 credit
         // → net_debit field becomes -$200 (negative debit = credit).
-        let legs = vec![
-            Leg { kind: OptionKind::Put, strike: 100.0, contracts: -1, premium_per_share: 2.0 },
-        ];
+        let legs = vec![Leg {
+            kind: OptionKind::Put,
+            strike: 100.0,
+            contracts: -1,
+            premium_per_share: 2.0,
+        }];
         let r = payoff(&legs, 90.0, 110.0, 100, 100.0);
         assert_eq!(r.net_debit, -200.0);
     }

@@ -205,7 +205,10 @@ mod tests {
 
     #[test]
     fn parses_one_row() {
-        let csv = format!(",,,,,,,,,,,,,,,,,,,,,,\n,,,,,,,,,,,,,,,,,,,,,,\n{}\n", synthetic_row());
+        let csv = format!(
+            ",,,,,,,,,,,,,,,,,,,,,,\n,,,,,,,,,,,,,,,,,,,,,,\n{}\n",
+            synthetic_row()
+        );
         let r = AmazonParser.parse(csv.as_bytes()).unwrap();
         assert_eq!(r.len(), 1);
         assert_eq!(r[0].amount, Decimal::new(-13954, 2));

@@ -20,7 +20,7 @@ pub enum TimeInForce {
     Gtc,
     Ioc,
     Fok,
-    Gtd,    // requires good_until field
+    Gtd, // requires good_until field
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,9 +49,7 @@ pub struct TifVerdict {
     pub reason: String,
 }
 
-pub fn evaluate(order: &OrderState, now: DateTime<Utc>, session_open: NaiveDate)
-    -> TifVerdict
-{
+pub fn evaluate(order: &OrderState, now: DateTime<Utc>, session_open: NaiveDate) -> TifVerdict {
     let remaining = order.original_qty - order.filled_qty;
     if remaining <= 0.0 {
         return TifVerdict {
@@ -117,22 +115,20 @@ pub fn evaluate(order: &OrderState, now: DateTime<Utc>, session_open: NaiveDate)
                 }
             }
         }
-        TimeInForce::Gtd => {
-            match order.good_until {
-                Some(good) if session_open > good => TifVerdict {
-                    action: TifAction::Cancel,
-                    reason: format!("GTD order past good_until date {}", good),
-                },
-                Some(good) => TifVerdict {
-                    action: TifAction::Keep,
-                    reason: format!("GTD valid until {}", good),
-                },
-                None => TifVerdict {
-                    action: TifAction::Cancel,
-                    reason: "GTD missing good_until date".into(),
-                },
-            }
-        }
+        TimeInForce::Gtd => match order.good_until {
+            Some(good) if session_open > good => TifVerdict {
+                action: TifAction::Cancel,
+                reason: format!("GTD order past good_until date {}", good),
+            },
+            Some(good) => TifVerdict {
+                action: TifAction::Keep,
+                reason: format!("GTD valid until {}", good),
+            },
+            None => TifVerdict {
+                action: TifAction::Cancel,
+                reason: "GTD missing good_until date".into(),
+            },
+        },
     }
 }
 
@@ -144,7 +140,9 @@ mod tests {
     fn at(y: i32, m: u32, d: u32, h: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(y, m, d, h, 0, 0).unwrap()
     }
-    fn day(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn day(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
 
     fn ord(tif: TimeInForce, placed: DateTime<Utc>, filled: f64) -> OrderState {
         OrderState {
@@ -193,7 +191,7 @@ mod tests {
 
     #[test]
     fn ioc_with_remaining_qty_cancel() {
-        let o = ord(TimeInForce::Ioc, at(2026, 5, 27, 10), 50.0);    // 50 still unfilled
+        let o = ord(TimeInForce::Ioc, at(2026, 5, 27, 10), 50.0); // 50 still unfilled
         let v = evaluate(&o, at(2026, 5, 27, 10), day(2026, 5, 27));
         assert_eq!(v.action, TifAction::Cancel);
     }

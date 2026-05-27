@@ -23,7 +23,7 @@ pub struct ChartDrawing {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DrawingInput {
-    pub kind: String,                    // trendline | hline | fib | text
+    pub kind: String, // trendline | hline | fib | text
     pub points: serde_json::Value,
     pub label: Option<String>,
     pub color: Option<String>,
@@ -74,8 +74,10 @@ pub async fn create(
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM chart_drawings WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id)
-        .execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
@@ -85,7 +87,9 @@ pub async fn delete_all_for_symbol(
     symbol: &str,
 ) -> anyhow::Result<u64> {
     let r = sqlx::query("DELETE FROM chart_drawings WHERE user_id = $1 AND symbol = $2")
-        .bind(user_id).bind(symbol)
-        .execute(pool).await?;
+        .bind(user_id)
+        .bind(symbol)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected())
 }

@@ -29,7 +29,9 @@ pub struct AnchoredPoint {
 
 pub fn compute(bars: &[Bar], anchor_index: usize) -> Vec<AnchoredPoint> {
     let mut out = vec![AnchoredPoint::default(); bars.len()];
-    if bars.is_empty() || anchor_index >= bars.len() { return out; }
+    if bars.is_empty() || anchor_index >= bars.len() {
+        return out;
+    }
     let mut sum_pv = 0.0;
     let mut sum_v = 0.0;
     let mut sum_p2v = 0.0;
@@ -59,7 +61,12 @@ pub fn compute(bars: &[Bar], anchor_index: usize) -> Vec<AnchoredPoint> {
 mod tests {
     use super::*;
 
-    fn b(t: f64, v: f64) -> Bar { Bar { typical: t, volume: v } }
+    fn b(t: f64, v: f64) -> Bar {
+        Bar {
+            typical: t,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {

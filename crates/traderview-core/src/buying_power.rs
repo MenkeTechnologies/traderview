@@ -60,25 +60,30 @@ const PDT_MIN_EQUITY: i64 = 25_000;
 pub fn compute(input: &BpInput) -> BpReport {
     // FINRA Rule 4210: stocks under $5 require 100% initial margin (no
     // leverage on sub-$5 stocks regardless of account type).
-    let initial_req: f64 = if input.share_price < Decimal::from(5) { 1.00 } else { 0.50 };
+    let initial_req: f64 = if input.share_price < Decimal::from(5) {
+        1.00
+    } else {
+        0.50
+    };
 
-    let pdt_qualified = input.is_pdt
-        && input.equity >= Decimal::from(PDT_MIN_EQUITY)
-        && input.is_day_trade;
+    let pdt_qualified =
+        input.is_pdt && input.equity >= Decimal::from(PDT_MIN_EQUITY) && input.is_day_trade;
 
     let (leverage, note) = match input.account_type {
-        AccountType::Cash => (1.0,
-            "cash account: 1× equity, no margin".to_string()),
-        AccountType::RegT if pdt_qualified => (4.0,
-            "PDT day-trade: 4× equity intraday".to_string()),
-        AccountType::RegT if input.share_price < Decimal::from(5) => (1.0,
-            "sub-$5 stock — Reg-T requires 100% initial margin".to_string()),
-        AccountType::RegT => (2.0,
-            "Reg-T margin: 2× equity overnight".to_string()),
-        AccountType::PortfolioMargin if pdt_qualified => (6.0,
-            "portfolio margin + PDT: 6× equity intraday".to_string()),
-        AccountType::PortfolioMargin => (3.0,
-            "portfolio margin: ~3× equity overnight".to_string()),
+        AccountType::Cash => (1.0, "cash account: 1× equity, no margin".to_string()),
+        AccountType::RegT if pdt_qualified => {
+            (4.0, "PDT day-trade: 4× equity intraday".to_string())
+        }
+        AccountType::RegT if input.share_price < Decimal::from(5) => (
+            1.0,
+            "sub-$5 stock — Reg-T requires 100% initial margin".to_string(),
+        ),
+        AccountType::RegT => (2.0, "Reg-T margin: 2× equity overnight".to_string()),
+        AccountType::PortfolioMargin if pdt_qualified => (
+            6.0,
+            "portfolio margin + PDT: 6× equity intraday".to_string(),
+        ),
+        AccountType::PortfolioMargin => (3.0, "portfolio margin: ~3× equity overnight".to_string()),
     };
 
     let max_notional = input.equity * Decimal::try_from(leverage).unwrap_or(Decimal::ONE);
@@ -101,13 +106,17 @@ pub fn compute(input: &BpInput) -> BpReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn cash_account_is_one_to_one() {
         let r = compute(&BpInput {
             account_type: AccountType::Cash,
-            equity: d("10000"), is_pdt: false, is_day_trade: false,
+            equity: d("10000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: d("50"),
         });
         assert_eq!(r.leverage, 1.0);
@@ -119,7 +128,9 @@ mod tests {
     fn reg_t_overnight_is_two_to_one() {
         let r = compute(&BpInput {
             account_type: AccountType::RegT,
-            equity: d("10000"), is_pdt: false, is_day_trade: false,
+            equity: d("10000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: d("50"),
         });
         assert_eq!(r.leverage, 2.0);
@@ -130,7 +141,9 @@ mod tests {
     fn pdt_day_trade_is_four_to_one_above_25k() {
         let r = compute(&BpInput {
             account_type: AccountType::RegT,
-            equity: d("30000"), is_pdt: true, is_day_trade: true,
+            equity: d("30000"),
+            is_pdt: true,
+            is_day_trade: true,
             share_price: d("50"),
         });
         assert_eq!(r.leverage, 4.0);
@@ -142,7 +155,9 @@ mod tests {
         // PDT flag without the $25k minimum doesn't grant 4× leverage.
         let r = compute(&BpInput {
             account_type: AccountType::RegT,
-            equity: d("20000"), is_pdt: true, is_day_trade: true,
+            equity: d("20000"),
+            is_pdt: true,
+            is_day_trade: true,
             share_price: d("50"),
         });
         assert_eq!(r.leverage, 2.0, "PDT requires ≥ $25k equity");
@@ -153,7 +168,9 @@ mod tests {
         // Day-trade flag was false — should NOT get 4×, just 2× Reg-T.
         let r = compute(&BpInput {
             account_type: AccountType::RegT,
-            equity: d("30000"), is_pdt: true, is_day_trade: false,
+            equity: d("30000"),
+            is_pdt: true,
+            is_day_trade: false,
             share_price: d("50"),
         });
         assert_eq!(r.leverage, 2.0);
@@ -164,7 +181,9 @@ mod tests {
         // FINRA Rule 4210 — penny stocks get no margin.
         let r = compute(&BpInput {
             account_type: AccountType::RegT,
-            equity: d("10000"), is_pdt: false, is_day_trade: false,
+            equity: d("10000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: d("3"),
         });
         assert_eq!(r.leverage, 1.0);
@@ -176,7 +195,9 @@ mod tests {
     fn initial_requirement_drops_to_half_above_5_dollars() {
         let r = compute(&BpInput {
             account_type: AccountType::Cash,
-            equity: d("10000"), is_pdt: false, is_day_trade: false,
+            equity: d("10000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: d("5.01"),
         });
         assert_eq!(r.initial_requirement_pct, 0.50);
@@ -186,7 +207,9 @@ mod tests {
     fn zero_share_price_yields_zero_shares_not_divide_by_zero() {
         let r = compute(&BpInput {
             account_type: AccountType::Cash,
-            equity: d("10000"), is_pdt: false, is_day_trade: false,
+            equity: d("10000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: Decimal::ZERO,
         });
         assert_eq!(r.max_shares, Decimal::ZERO);
@@ -196,7 +219,9 @@ mod tests {
     fn portfolio_margin_overnight_is_3x() {
         let r = compute(&BpInput {
             account_type: AccountType::PortfolioMargin,
-            equity: d("100000"), is_pdt: false, is_day_trade: false,
+            equity: d("100000"),
+            is_pdt: false,
+            is_day_trade: false,
             share_price: d("100"),
         });
         assert_eq!(r.leverage, 3.0);
@@ -207,7 +232,9 @@ mod tests {
     fn portfolio_margin_pdt_day_trade_is_6x() {
         let r = compute(&BpInput {
             account_type: AccountType::PortfolioMargin,
-            equity: d("100000"), is_pdt: true, is_day_trade: true,
+            equity: d("100000"),
+            is_pdt: true,
+            is_day_trade: true,
             share_price: d("100"),
         });
         assert_eq!(r.leverage, 6.0);

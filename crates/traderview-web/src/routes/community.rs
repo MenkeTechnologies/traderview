@@ -13,7 +13,10 @@ pub fn router() -> Router<AppState> {
         .route("/forum/categories", get(categories))
         .route("/forum/threads", post(create_thread))
         .route("/forum/threads/category/:slug", get(list_in_category))
-        .route("/forum/threads/:thread_id/posts", get(list_posts).post(create_post))
+        .route(
+            "/forum/threads/:thread_id/posts",
+            get(list_posts).post(create_post),
+        )
         .route("/forum/threads/:thread_id/view", post(bump_view))
         .route("/forum/by-slug/:cat_slug/:thread_slug", get(by_slug))
 }

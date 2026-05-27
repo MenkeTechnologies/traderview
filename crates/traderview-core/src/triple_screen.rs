@@ -26,17 +26,24 @@ pub struct TripleScreenInput {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum TrendBias { Up, Down, Neutral }
+pub enum TrendBias {
+    Up,
+    Down,
+    Neutral,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Verdict { Buy, Sell, Wait }
+pub enum Verdict {
+    Buy,
+    Sell,
+    Wait,
+}
 
 pub fn evaluate(input: &TripleScreenInput) -> Verdict {
     match input.weekly_trend {
         TrendBias::Up => {
-            if input.daily_oscillator_value < input.oversold_threshold
-                && input.intraday_breakout_up
+            if input.daily_oscillator_value < input.oversold_threshold && input.intraday_breakout_up
             {
                 Verdict::Buy
             } else {
@@ -75,7 +82,7 @@ mod tests {
     fn all_three_aligned_long_buy() {
         let i = TripleScreenInput {
             weekly_trend: TrendBias::Up,
-            daily_oscillator_value: 25.0,    // oversold
+            daily_oscillator_value: 25.0, // oversold
             intraday_breakout_up: true,
             ..baseline()
         };
@@ -86,7 +93,7 @@ mod tests {
     fn all_three_aligned_short_sell() {
         let i = TripleScreenInput {
             weekly_trend: TrendBias::Down,
-            daily_oscillator_value: 75.0,    // overbought
+            daily_oscillator_value: 75.0, // overbought
             intraday_breakout_down: true,
             ..baseline()
         };
@@ -97,7 +104,7 @@ mod tests {
     fn weekly_up_but_oscillator_not_oversold_wait() {
         let i = TripleScreenInput {
             weekly_trend: TrendBias::Up,
-            daily_oscillator_value: 50.0,    // not oversold
+            daily_oscillator_value: 50.0, // not oversold
             intraday_breakout_up: true,
             ..baseline()
         };
@@ -131,10 +138,10 @@ mod tests {
         let i = TripleScreenInput {
             weekly_trend: TrendBias::Up,
             daily_oscillator_value: 80.0,
-            intraday_breakout_down: true,    // shorting setup
+            intraday_breakout_down: true, // shorting setup
             ..baseline()
         };
-        assert_eq!(evaluate(&i), Verdict::Wait);    // long-tide says no
+        assert_eq!(evaluate(&i), Verdict::Wait); // long-tide says no
     }
 
     #[test]
@@ -154,7 +161,7 @@ mod tests {
         let i = TripleScreenInput {
             weekly_trend: TrendBias::Up,
             daily_oscillator_value: 45.0,
-            oversold_threshold: 50.0,       // looser
+            oversold_threshold: 50.0, // looser
             overbought_threshold: 60.0,
             intraday_breakout_up: true,
             ..baseline()

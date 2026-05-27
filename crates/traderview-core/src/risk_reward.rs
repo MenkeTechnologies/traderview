@@ -63,10 +63,12 @@ pub fn compute(input: &RrInput) -> Result<RrReport, &'static str> {
     // Direction sanity: for a LONG, target > entry > stop. For a SHORT,
     // target < entry < stop. Otherwise the user inverted something.
     match input.side {
-        TradeSide::Long if input.target <= input.entry || input.stop >= input.entry =>
-            return Err("long requires target > entry > stop"),
-        TradeSide::Short if input.target >= input.entry || input.stop <= input.entry =>
-            return Err("short requires target < entry < stop"),
+        TradeSide::Long if input.target <= input.entry || input.stop >= input.entry => {
+            return Err("long requires target > entry > stop")
+        }
+        TradeSide::Short if input.target >= input.entry || input.stop <= input.entry => {
+            return Err("short requires target < entry < stop")
+        }
         _ => {}
     }
 
@@ -81,17 +83,29 @@ pub fn compute(input: &RrInput) -> Result<RrReport, &'static str> {
 
     // Scale-out at 1R + 2R (in the direction of target) then runner.
     let one_r = match input.side {
-        TradeSide::Long  => input.entry + stop_dist,
+        TradeSide::Long => input.entry + stop_dist,
         TradeSide::Short => input.entry - stop_dist,
     };
     let two_r = match input.side {
-        TradeSide::Long  => input.entry + stop_dist + stop_dist,
+        TradeSide::Long => input.entry + stop_dist + stop_dist,
         TradeSide::Short => input.entry - stop_dist - stop_dist,
     };
     let scale_outs = vec![
-        ScaleOut { label: "1R".into(),     price: one_r, fraction: 1.0/3.0 },
-        ScaleOut { label: "2R".into(),     price: two_r, fraction: 1.0/3.0 },
-        ScaleOut { label: "target".into(), price: input.target, fraction: 1.0/3.0 },
+        ScaleOut {
+            label: "1R".into(),
+            price: one_r,
+            fraction: 1.0 / 3.0,
+        },
+        ScaleOut {
+            label: "2R".into(),
+            price: two_r,
+            fraction: 1.0 / 3.0,
+        },
+        ScaleOut {
+            label: "target".into(),
+            price: input.target,
+            fraction: 1.0 / 3.0,
+        },
     ];
 
     Ok(RrReport {
@@ -113,14 +127,18 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn long_3r() -> RrInput {
         // $1 risk, $3 reward → R:R = 3.0, 25% breakeven win-rate.
         RrInput {
             side: TradeSide::Long,
-            entry: d("100"), stop: d("99"), target: d("103"),
-            risk_budget: d("100"),       // $100 risk → 100 shares
+            entry: d("100"),
+            stop: d("99"),
+            target: d("103"),
+            risk_budget: d("100"), // $100 risk → 100 shares
             multiplier: Decimal::ONE,
         }
     }
@@ -140,7 +158,9 @@ mod tests {
         // Short at 100, stop 101, target 97 → $1 risk, $3 reward.
         let i = RrInput {
             side: TradeSide::Short,
-            entry: d("100"), stop: d("101"), target: d("97"),
+            entry: d("100"),
+            stop: d("101"),
+            target: d("97"),
             risk_budget: d("100"),
             multiplier: Decimal::ONE,
         };
@@ -174,7 +194,9 @@ mod tests {
     fn short_with_target_above_entry_is_geometry_error() {
         let i = RrInput {
             side: TradeSide::Short,
-            entry: d("100"), stop: d("101"), target: d("103"),
+            entry: d("100"),
+            stop: d("101"),
+            target: d("103"),
             risk_budget: d("100"),
             multiplier: Decimal::ONE,
         };
@@ -187,7 +209,9 @@ mod tests {
         // Budget $100 → 1 contract.
         let i = RrInput {
             side: TradeSide::Long,
-            entry: d("5"), stop: d("4"), target: d("8"),
+            entry: d("5"),
+            stop: d("4"),
+            target: d("8"),
             risk_budget: d("100"),
             multiplier: d("100"),
         };
@@ -202,10 +226,10 @@ mod tests {
     fn breakeven_win_rate_matches_1_over_one_plus_r() {
         // Hand-compute for R:R = 2.0 → 33.33% breakeven.
         let mut i = long_3r();
-        i.target = d("102");   // $2 reward / $1 risk = 2R
+        i.target = d("102"); // $2 reward / $1 risk = 2R
         let r = compute(&i).unwrap();
         assert!((r.r_multiple - 2.0).abs() < 1e-9);
-        assert!((r.breakeven_win_rate - 1.0/3.0).abs() < 1e-9);
+        assert!((r.breakeven_win_rate - 1.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
@@ -225,7 +249,9 @@ mod tests {
     fn short_scale_outs_use_inverted_geometry() {
         let i = RrInput {
             side: TradeSide::Short,
-            entry: d("100"), stop: d("101"), target: d("97"),
+            entry: d("100"),
+            stop: d("101"),
+            target: d("97"),
             risk_budget: d("100"),
             multiplier: Decimal::ONE,
         };

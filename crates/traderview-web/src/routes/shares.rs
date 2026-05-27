@@ -27,7 +27,9 @@ struct CreateBody {
     #[serde(default = "default_true")]
     show_screenshots: bool,
 }
-fn default_true() -> bool { true }
+fn default_true() -> bool {
+    true
+}
 
 async fn create(
     State(s): State<AppState>,
@@ -60,9 +62,7 @@ async fn list_mine(
     ))
 }
 
-async fn list_public(
-    State(s): State<AppState>,
-) -> Result<Json<Vec<TradeShare>>, ApiError> {
+async fn list_public(State(s): State<AppState>) -> Result<Json<Vec<TradeShare>>, ApiError> {
     Ok(Json(
         traderview_db::shares::list_public(&s.pool, 100)
             .await

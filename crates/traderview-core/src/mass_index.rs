@@ -11,18 +11,20 @@
 //!
 //! Pure compute.
 
-pub fn compute(highs: &[f64], lows: &[f64], ema_period: usize, sum_period: usize)
-    -> Vec<f64>
-{
+pub fn compute(highs: &[f64], lows: &[f64], ema_period: usize, sum_period: usize) -> Vec<f64> {
     let n = highs.len();
     let mut out = vec![0.0; n];
-    if highs.len() != lows.len() || n < sum_period { return out; }
+    if highs.len() != lows.len() || n < sum_period {
+        return out;
+    }
     let ranges: Vec<f64> = highs.iter().zip(lows).map(|(h, l)| h - l).collect();
     let ema1 = ema(&ranges, ema_period);
     let ema2 = ema(&ema1, ema_period);
-    let ratio: Vec<f64> = ema1.iter().zip(&ema2).map(|(a, b)| {
-        if *b > 0.0 { a / b } else { 0.0 }
-    }).collect();
+    let ratio: Vec<f64> = ema1
+        .iter()
+        .zip(&ema2)
+        .map(|(a, b)| if *b > 0.0 { a / b } else { 0.0 })
+        .collect();
     for i in (sum_period - 1)..n {
         out[i] = ratio[(i + 1 - sum_period)..=i].iter().sum();
     }
@@ -31,7 +33,9 @@ pub fn compute(highs: &[f64], lows: &[f64], ema_period: usize, sum_period: usize
 
 fn ema(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
-    if n == 0 || period == 0 { return vec![]; }
+    if n == 0 || period == 0 {
+        return vec![];
+    }
     let k = 2.0 / (period as f64 + 1.0);
     let mut out = Vec::with_capacity(n);
     let mut prev = values[0];
@@ -47,13 +51,19 @@ fn ema(values: &[f64], period: usize) -> Vec<f64> {
 /// True when the indicator forms Dorsey's "reversal bulge" at index `i`:
 /// rose above `high_threshold` (default 27) recently AND dropped below
 /// `low_threshold` (default 26.5) at the current bar.
-pub fn detect_reversal_bulge(mi: &[f64], high_threshold: f64, low_threshold: f64,
-    lookback: usize) -> Vec<bool>
-{
+pub fn detect_reversal_bulge(
+    mi: &[f64],
+    high_threshold: f64,
+    low_threshold: f64,
+    lookback: usize,
+) -> Vec<bool> {
     let mut out = vec![false; mi.len()];
     for i in 1..mi.len() {
         let start = i.saturating_sub(lookback);
-        let max_in_window = mi[start..i].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let max_in_window = mi[start..i]
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
         if max_in_window > high_threshold && mi[i] < low_threshold {
             out[i] = true;
         }
@@ -75,7 +85,9 @@ mod tests {
         let highs = vec![10.0; 10];
         let lows = vec![9.0; 10];
         let out = compute(&highs, &lows, 9, 25);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]
@@ -83,7 +95,9 @@ mod tests {
         let highs = vec![10.0; 30];
         let lows = vec![9.0; 10];
         let out = compute(&highs, &lows, 9, 25);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]
@@ -111,14 +125,16 @@ mod tests {
     fn no_bulge_detected_when_mi_stays_low() {
         let mi = vec![20.0; 30];
         let out = detect_reversal_bulge(&mi, 27.0, 26.5, 5);
-        for b in &out { assert!(!*b); }
+        for b in &out {
+            assert!(!*b);
+        }
     }
 
     #[test]
     fn bulge_detected_after_spike_above_27_then_drop_below_26_5() {
         let mut mi = vec![25.0; 25];
-        mi.push(28.0);    // spike above 27
-        mi.push(26.0);    // drop below 26.5 → bulge!
+        mi.push(28.0); // spike above 27
+        mi.push(26.0); // drop below 26.5 → bulge!
         let out = detect_reversal_bulge(&mi, 27.0, 26.5, 5);
         assert!(out[26]);
     }
@@ -126,7 +142,7 @@ mod tests {
     #[test]
     fn no_bulge_when_high_threshold_not_breached() {
         let mut mi = vec![25.0; 25];
-        mi.push(26.8);    // below 27
+        mi.push(26.8); // below 27
         mi.push(26.0);
         let out = detect_reversal_bulge(&mi, 27.0, 26.5, 5);
         assert!(!out[26]);

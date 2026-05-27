@@ -36,7 +36,7 @@ impl Default for ChecklistConfig {
         Self {
             min_thesis_words: 10,
             min_r_multiple: 1.5,
-            max_risk_pct_per_trade: 0.02,    // 2%
+            max_risk_pct_per_trade: 0.02, // 2%
         }
     }
 }
@@ -67,51 +67,90 @@ pub fn evaluate(plan: &PlannedTrade, cfg: &ChecklistConfig) -> ChecklistReport {
     };
     // Thesis check.
     let word_count = plan.thesis.split_whitespace().count();
-    emit("thesis_present",
+    emit(
+        "thesis_present",
         word_count >= cfg.min_thesis_words,
-        format!("{} words (minimum {})", word_count, cfg.min_thesis_words));
+        format!("{} words (minimum {})", word_count, cfg.min_thesis_words),
+    );
     // Stop loss check.
     let has_stop = plan.stop_price.is_some();
-    emit("stop_loss_set", has_stop,
-        if has_stop { "stop is set".into() }
-        else        { "no stop loss defined — naked trade".into() });
+    emit(
+        "stop_loss_set",
+        has_stop,
+        if has_stop {
+            "stop is set".into()
+        } else {
+            "no stop loss defined — naked trade".into()
+        },
+    );
     // Target check.
     let has_target = plan.target_price.is_some();
-    emit("target_set", has_target,
-        if has_target { "target is set".into() }
-        else          { "no target — exit discipline missing".into() });
+    emit(
+        "target_set",
+        has_target,
+        if has_target {
+            "target is set".into()
+        } else {
+            "no target — exit discipline missing".into()
+        },
+    );
     // R-multiple check (requires both stop AND target).
     if let (Some(stop), Some(target)) = (plan.stop_price, plan.target_price) {
         let risk = (plan.entry_price - stop).abs();
         let reward = (target - plan.entry_price).abs();
         let r = if risk > 0.0 { reward / risk } else { 0.0 };
         report.computed_r_multiple = Some(r);
-        emit("r_multiple_meets_minimum",
+        emit(
+            "r_multiple_meets_minimum",
             r >= cfg.min_r_multiple,
-            format!("R = {:.2} (min {:.2})", r, cfg.min_r_multiple));
+            format!("R = {:.2} (min {:.2})", r, cfg.min_r_multiple),
+        );
         // Direction sanity.
-        let target_in_direction = if plan.is_long { target > plan.entry_price }
-            else                                   { target < plan.entry_price };
-        emit("target_in_direction",
+        let target_in_direction = if plan.is_long {
+            target > plan.entry_price
+        } else {
+            target < plan.entry_price
+        };
+        emit(
+            "target_in_direction",
             target_in_direction,
-            if target_in_direction { "target on profitable side of entry".into() }
-            else                    { "target on WRONG side of entry — direction bug".into() });
-        let stop_in_direction = if plan.is_long { stop < plan.entry_price }
-            else                                 { stop > plan.entry_price };
-        emit("stop_in_direction",
+            if target_in_direction {
+                "target on profitable side of entry".into()
+            } else {
+                "target on WRONG side of entry — direction bug".into()
+            },
+        );
+        let stop_in_direction = if plan.is_long {
+            stop < plan.entry_price
+        } else {
+            stop > plan.entry_price
+        };
+        emit(
+            "stop_in_direction",
             stop_in_direction,
-            if stop_in_direction { "stop on loss side of entry".into() }
-            else                  { "stop on WRONG side of entry".into() });
+            if stop_in_direction {
+                "stop on loss side of entry".into()
+            } else {
+                "stop on WRONG side of entry".into()
+            },
+        );
     }
     // Risk size check.
     let risk_pct = if plan.account_equity > 0.0 {
         plan.risk_dollars / plan.account_equity
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     report.risk_pct = risk_pct;
-    emit("risk_within_max",
+    emit(
+        "risk_within_max",
         risk_pct <= cfg.max_risk_pct_per_trade,
-        format!("risking {:.2}% (max {:.2}%)",
-            risk_pct * 100.0, cfg.max_risk_pct_per_trade * 100.0));
+        format!(
+            "risking {:.2}% (max {:.2}%)",
+            risk_pct * 100.0,
+            cfg.max_risk_pct_per_trade * 100.0
+        ),
+    );
     report.all_passed = report.gates.iter().all(|g| g.passed);
     report
 }
@@ -122,10 +161,11 @@ mod tests {
 
     fn long_plan() -> PlannedTrade {
         PlannedTrade {
-            thesis: "Breakout above prior month high on heavy volume with sector confirmation.".into(),
+            thesis: "Breakout above prior month high on heavy volume with sector confirmation."
+                .into(),
             entry_price: 100.0,
             stop_price: Some(98.0),
-            target_price: Some(106.0),    // 3R target
+            target_price: Some(106.0), // 3R target
             risk_dollars: 200.0,
             account_equity: 50_000.0,
             is_long: true,
@@ -135,13 +175,20 @@ mod tests {
     #[test]
     fn good_plan_all_gates_pass() {
         let r = evaluate(&long_plan(), &ChecklistConfig::default());
-        assert!(r.all_passed, "complete plan should pass all gates: {:?}", r.gates);
+        assert!(
+            r.all_passed,
+            "complete plan should pass all gates: {:?}",
+            r.gates
+        );
         assert_eq!(r.computed_r_multiple, Some(3.0));
     }
 
     #[test]
     fn missing_stop_fails() {
-        let plan = PlannedTrade { stop_price: None, ..long_plan() };
+        let plan = PlannedTrade {
+            stop_price: None,
+            ..long_plan()
+        };
         let r = evaluate(&plan, &ChecklistConfig::default());
         assert!(!r.all_passed);
         let stop = r.gates.iter().find(|g| g.gate == "stop_loss_set").unwrap();
@@ -150,14 +197,20 @@ mod tests {
 
     #[test]
     fn missing_target_fails() {
-        let plan = PlannedTrade { target_price: None, ..long_plan() };
+        let plan = PlannedTrade {
+            target_price: None,
+            ..long_plan()
+        };
         let r = evaluate(&plan, &ChecklistConfig::default());
         assert!(!r.all_passed);
     }
 
     #[test]
     fn short_thesis_fails() {
-        let plan = PlannedTrade { thesis: "yolo".into(), ..long_plan() };
+        let plan = PlannedTrade {
+            thesis: "yolo".into(),
+            ..long_plan()
+        };
         let r = evaluate(&plan, &ChecklistConfig::default());
         let thesis = r.gates.iter().find(|g| g.gate == "thesis_present").unwrap();
         assert!(!thesis.passed);
@@ -169,20 +222,31 @@ mod tests {
         let plan = PlannedTrade {
             entry_price: 100.0,
             stop_price: Some(98.0),
-            target_price: Some(102.0),    // 1R
+            target_price: Some(102.0), // 1R
             ..long_plan()
         };
         let r = evaluate(&plan, &ChecklistConfig::default());
-        let rm = r.gates.iter().find(|g| g.gate == "r_multiple_meets_minimum").unwrap();
+        let rm = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "r_multiple_meets_minimum")
+            .unwrap();
         assert!(!rm.passed);
     }
 
     #[test]
     fn oversize_risk_fails() {
         // Risk $2000 on $50k account = 4% > 2% max.
-        let plan = PlannedTrade { risk_dollars: 2_000.0, ..long_plan() };
+        let plan = PlannedTrade {
+            risk_dollars: 2_000.0,
+            ..long_plan()
+        };
         let r = evaluate(&plan, &ChecklistConfig::default());
-        let risk_gate = r.gates.iter().find(|g| g.gate == "risk_within_max").unwrap();
+        let risk_gate = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "risk_within_max")
+            .unwrap();
         assert!(!risk_gate.passed);
     }
 
@@ -194,18 +258,26 @@ mod tests {
             ..long_plan()
         };
         let r = evaluate(&plan, &ChecklistConfig::default());
-        let dir = r.gates.iter().find(|g| g.gate == "target_in_direction").unwrap();
+        let dir = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "target_in_direction")
+            .unwrap();
         assert!(!dir.passed);
     }
 
     #[test]
     fn stop_on_wrong_side_for_long_fails() {
         let plan = PlannedTrade {
-            stop_price: Some(105.0),    // above entry for a long? bug.
+            stop_price: Some(105.0), // above entry for a long? bug.
             ..long_plan()
         };
         let r = evaluate(&plan, &ChecklistConfig::default());
-        let dir = r.gates.iter().find(|g| g.gate == "stop_in_direction").unwrap();
+        let dir = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "stop_in_direction")
+            .unwrap();
         assert!(!dir.passed);
     }
 
@@ -213,14 +285,22 @@ mod tests {
     fn short_trade_uses_flipped_direction_checks() {
         let plan = PlannedTrade {
             entry_price: 100.0,
-            stop_price: Some(102.0),     // stop above entry for short — correct
-            target_price: Some(94.0),    // target below entry for short — correct
+            stop_price: Some(102.0),  // stop above entry for short — correct
+            target_price: Some(94.0), // target below entry for short — correct
             is_long: false,
             ..long_plan()
         };
         let r = evaluate(&plan, &ChecklistConfig::default());
-        let target_dir = r.gates.iter().find(|g| g.gate == "target_in_direction").unwrap();
-        let stop_dir = r.gates.iter().find(|g| g.gate == "stop_in_direction").unwrap();
+        let target_dir = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "target_in_direction")
+            .unwrap();
+        let stop_dir = r
+            .gates
+            .iter()
+            .find(|g| g.gate == "stop_in_direction")
+            .unwrap();
         assert!(target_dir.passed);
         assert!(stop_dir.passed);
     }
@@ -228,7 +308,7 @@ mod tests {
     #[test]
     fn custom_config_changes_thresholds() {
         let strict = ChecklistConfig {
-            min_thesis_words: 50,    // very high bar
+            min_thesis_words: 50, // very high bar
             min_r_multiple: 5.0,
             max_risk_pct_per_trade: 0.001,
         };

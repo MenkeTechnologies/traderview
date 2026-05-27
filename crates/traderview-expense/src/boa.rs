@@ -143,8 +143,8 @@ Date,Description,Amount,Running Bal.
     #[test]
     fn preserves_signed_amount() {
         let r = BofaParser.parse(SAMPLE.as_bytes()).unwrap();
-        assert_eq!(r[0].amount, Decimal::new(68950, 2));     // credit, positive
-        assert_eq!(r[1].amount, Decimal::new(-6000, 2));     // debit, negative
+        assert_eq!(r[0].amount, Decimal::new(68950, 2)); // credit, positive
+        assert_eq!(r[1].amount, Decimal::new(-6000, 2)); // debit, negative
     }
 
     #[test]

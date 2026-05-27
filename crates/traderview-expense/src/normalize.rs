@@ -37,9 +37,8 @@ pub fn normalize(raw: &str) -> String {
     //       → strip everything from the `*`/`#` onward.
     //   (b) Whitespace-separated ID-shaped token: "UBER TRIP 8KX91"
     //       → strip the trailing token if it contains a digit.
-    let ids = TRAILING_IDS.get_or_init(|| {
-        Regex::new(r"(?i)([#*]\S*$|\s+[A-Z0-9-]*\d[A-Z0-9-]*\s*$)").unwrap()
-    });
+    let ids = TRAILING_IDS
+        .get_or_init(|| Regex::new(r"(?i)([#*]\S*$|\s+[A-Z0-9-]*\d[A-Z0-9-]*\s*$)").unwrap());
     let mut s = ids.replace(&s, "").to_string();
     // A second pass catches "STAPLES INC #14201 STORE42" patterns where the
     // inner ID is followed by another ID-shaped token.

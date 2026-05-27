@@ -83,7 +83,7 @@ pub fn compute(input: &FtcInput) -> FtcReport {
     if de_minimis {
         return FtcReport {
             form_treatment: FormTreatment::DirectCreditDeMinimis,
-            limit_per_904: Decimal::ZERO,    // not computed in this branch
+            limit_per_904: Decimal::ZERO, // not computed in this branch
             credit_allowed: input.foreign_tax_paid,
             excess_carryover: Decimal::ZERO,
         };
@@ -92,8 +92,7 @@ pub fn compute(input: &FtcInput) -> FtcReport {
     let limit = if input.total_taxable_income.is_zero() {
         Decimal::ZERO
     } else {
-        input.us_tax_before_credits
-            * input.foreign_source_taxable_income
+        input.us_tax_before_credits * input.foreign_source_taxable_income
             / input.total_taxable_income
     };
     let credit = limit.min(input.foreign_tax_paid);
@@ -115,7 +114,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn baseline() -> FtcInput {
         FtcInput {
@@ -151,7 +152,10 @@ mod tests {
     #[test]
     fn over_threshold_forces_form_1116() {
         // Single, $500 foreign tax > $300.
-        let i = FtcInput { foreign_tax_paid: d("500"), ..baseline() };
+        let i = FtcInput {
+            foreign_tax_paid: d("500"),
+            ..baseline()
+        };
         let r = compute(&i);
         assert_eq!(r.form_treatment, FormTreatment::Form1116Required);
         // Limit = 25000 × 3000 / 150000 = 500. Credit = min(500, 500) = 500.
@@ -163,7 +167,10 @@ mod tests {
     #[test]
     fn over_threshold_with_excess_records_carryover() {
         // Foreign tax $800 > limit $500 → $300 excess carryover.
-        let i = FtcInput { foreign_tax_paid: d("800"), ..baseline() };
+        let i = FtcInput {
+            foreign_tax_paid: d("800"),
+            ..baseline()
+        };
         let r = compute(&i);
         assert_eq!(r.limit_per_904, d("500"));
         assert_eq!(r.credit_allowed, d("500"));
@@ -173,13 +180,16 @@ mod tests {
     #[test]
     fn non_passive_income_forces_form_1116_even_under_threshold() {
         let i = FtcInput {
-            foreign_tax_paid: d("250"),    // under $300
-            passive_only: false,           // but not passive
+            foreign_tax_paid: d("250"), // under $300
+            passive_only: false,        // but not passive
             ..baseline()
         };
         let r = compute(&i);
-        assert_eq!(r.form_treatment, FormTreatment::Form1116Required,
-            "non-passive income disqualifies de minimis even under threshold");
+        assert_eq!(
+            r.form_treatment,
+            FormTreatment::Form1116Required,
+            "non-passive income disqualifies de minimis even under threshold"
+        );
     }
 
     #[test]
@@ -193,8 +203,11 @@ mod tests {
         assert_eq!(r.form_treatment, FormTreatment::Form1116Required);
         assert_eq!(r.limit_per_904, Decimal::ZERO);
         assert_eq!(r.credit_allowed, Decimal::ZERO);
-        assert_eq!(r.excess_carryover, d("500"),
-            "all foreign tax carries over when no US tax to credit against");
+        assert_eq!(
+            r.excess_carryover,
+            d("500"),
+            "all foreign tax carries over when no US tax to credit against"
+        );
     }
 
     #[test]
@@ -206,8 +219,11 @@ mod tests {
             ..baseline()
         };
         let r = compute(&i);
-        assert_eq!(r.form_treatment, FormTreatment::Form1116Required,
-            "MFS uses $300 threshold like Single, not MFJ $600");
+        assert_eq!(
+            r.form_treatment,
+            FormTreatment::Form1116Required,
+            "MFS uses $300 threshold like Single, not MFJ $600"
+        );
     }
 
     #[test]

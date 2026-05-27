@@ -70,7 +70,9 @@ async fn upload(
         }
     }
     if bytes.is_empty() {
-        return Err(ApiError::BadRequest("no `file` part in multipart body".into()));
+        return Err(ApiError::BadRequest(
+            "no `file` part in multipart body".into(),
+        ));
     }
     Ok(Json(
         traderview_db::screenshots::create(
@@ -90,10 +92,7 @@ async fn upload(
     ))
 }
 
-async fn get_bytes(
-    State(s): State<AppState>,
-    Path(id): Path<Uuid>,
-) -> Result<Response, ApiError> {
+async fn get_bytes(State(s): State<AppState>, Path(id): Path<Uuid>) -> Result<Response, ApiError> {
     let (mime, bytes) = traderview_db::screenshots::get_bytes(&s.pool, id)
         .await
         .map_err(ApiError::Internal)?

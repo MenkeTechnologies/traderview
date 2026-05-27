@@ -37,7 +37,6 @@ pub struct RegimeReport {
     pub regime: EquityRegime,
 }
 
-
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DetectorConfig {
     /// Min |slope/mean_equity| to count as "trending" rather than Choppy.
@@ -48,7 +47,10 @@ pub struct DetectorConfig {
 
 impl Default for DetectorConfig {
     fn default() -> Self {
-        Self { trend_slope_pct: 0.001, clean_trend_rel_stdev: 0.02 }
+        Self {
+            trend_slope_pct: 0.001,
+            clean_trend_rel_stdev: 0.02,
+        }
     }
 }
 
@@ -56,7 +58,9 @@ pub fn analyze(equity: &[f64], cfg: &DetectorConfig) -> RegimeReport {
     let mut report = RegimeReport::default();
     let n = equity.len();
     report.n = n;
-    if n < 3 { return report; }
+    if n < 3 {
+        return report;
+    }
     let mean_t = (n as f64 - 1.0) / 2.0;
     let mean_e: f64 = equity.iter().sum::<f64>() / n as f64;
     let mut num = 0.0;
@@ -66,7 +70,9 @@ pub fn analyze(equity: &[f64], cfg: &DetectorConfig) -> RegimeReport {
         num += dt * (e - mean_e);
         den += dt * dt;
     }
-    if den == 0.0 { return report; }
+    if den == 0.0 {
+        return report;
+    }
     let slope = num / den;
     let intercept = mean_e - slope * mean_t;
     // R² + residual stdev.
@@ -77,19 +83,33 @@ pub fn analyze(equity: &[f64], cfg: &DetectorConfig) -> RegimeReport {
         ss_res += (e - fit).powi(2);
         ss_tot += (e - mean_e).powi(2);
     }
-    let r_squared = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
+    let r_squared = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
     let residual_stdev = (ss_res / n as f64).sqrt();
     let rel_slope = if mean_e > 0.0 { slope / mean_e } else { 0.0 };
-    let rel_stdev = if mean_e > 0.0 { residual_stdev / mean_e } else { 0.0 };
+    let rel_stdev = if mean_e > 0.0 {
+        residual_stdev / mean_e
+    } else {
+        0.0
+    };
 
     let regime = if rel_slope.abs() < cfg.trend_slope_pct {
         EquityRegime::Choppy
     } else if rel_slope > 0.0 {
-        if rel_stdev <= cfg.clean_trend_rel_stdev { EquityRegime::TrendingUp }
-        else                                       { EquityRegime::VolatileUp }
+        if rel_stdev <= cfg.clean_trend_rel_stdev {
+            EquityRegime::TrendingUp
+        } else {
+            EquityRegime::VolatileUp
+        }
     } else {
-        if rel_stdev <= cfg.clean_trend_rel_stdev { EquityRegime::TrendingDown }
-        else                                       { EquityRegime::VolatileDown }
+        if rel_stdev <= cfg.clean_trend_rel_stdev {
+            EquityRegime::TrendingDown
+        } else {
+            EquityRegime::VolatileDown
+        }
     };
     report.slope_per_period = slope;
     report.residual_stdev = residual_stdev;
@@ -127,9 +147,7 @@ mod tests {
 
     #[test]
     fn flat_choppy_classified_choppy() {
-        let equity: Vec<f64> = (0..30).map(|i|
-            10_000.0 + (i % 3) as f64 * 1.0
-        ).collect();
+        let equity: Vec<f64> = (0..30).map(|i| 10_000.0 + (i % 3) as f64 * 1.0).collect();
         let r = analyze(&equity, &DetectorConfig::default());
         assert_eq!(r.regime, EquityRegime::Choppy);
     }
@@ -137,14 +155,21 @@ mod tests {
     #[test]
     fn volatile_uptrend_classified_volatile_up() {
         // Uptrend with significant noise — R² < 1 but slope positive.
-        let equity: Vec<f64> = (0..30).map(|i| {
-            let trend = 10_000.0 + i as f64 * 100.0;
-            let noise = ((i * 73) % 31) as f64 * 100.0 - 1500.0;
-            trend + noise
-        }).collect();
+        let equity: Vec<f64> = (0..30)
+            .map(|i| {
+                let trend = 10_000.0 + i as f64 * 100.0;
+                let noise = ((i * 73) % 31) as f64 * 100.0 - 1500.0;
+                trend + noise
+            })
+            .collect();
         let r = analyze(&equity, &DetectorConfig::default());
-        assert!(matches!(r.regime, EquityRegime::VolatileUp | EquityRegime::TrendingUp),
-            "noise should produce VolatileUp or still-clean TrendingUp");
+        assert!(
+            matches!(
+                r.regime,
+                EquityRegime::VolatileUp | EquityRegime::TrendingUp
+            ),
+            "noise should produce VolatileUp or still-clean TrendingUp"
+        );
     }
 
     #[test]
@@ -167,7 +192,10 @@ mod tests {
         // Tiny slope (relative to equity) → Choppy under default,
         // but very-loose trend_slope_pct catches it.
         let equity: Vec<f64> = (0..30).map(|i| 10_000.0 + i as f64 * 0.01).collect();
-        let lax = DetectorConfig { trend_slope_pct: 0.0000001, clean_trend_rel_stdev: 1.0 };
+        let lax = DetectorConfig {
+            trend_slope_pct: 0.0000001,
+            clean_trend_rel_stdev: 1.0,
+        };
         let r = analyze(&equity, &lax);
         assert_eq!(r.regime, EquityRegime::TrendingUp);
     }

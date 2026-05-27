@@ -10,6 +10,13 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/breadth/snapshot", get(snapshot))
 }
 
-async fn snapshot(State(s): State<AppState>, _u: AuthUser) -> Result<Json<BreadthSnapshot>, ApiError> {
-    Ok(Json(traderview_db::breadth::snapshot(&s.pool).await.map_err(ApiError::Internal)?))
+async fn snapshot(
+    State(s): State<AppState>,
+    _u: AuthUser,
+) -> Result<Json<BreadthSnapshot>, ApiError> {
+    Ok(Json(
+        traderview_db::breadth::snapshot(&s.pool)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

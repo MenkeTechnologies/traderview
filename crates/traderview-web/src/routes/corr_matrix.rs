@@ -15,7 +15,9 @@ pub fn router() -> Router<AppState> {
 }
 
 #[derive(Debug, Deserialize)]
-struct WlQ { days: Option<i64> }
+struct WlQ {
+    days: Option<i64>,
+}
 
 async fn for_watchlist(
     State(s): State<AppState>,
@@ -24,28 +26,40 @@ async fn for_watchlist(
     Query(p): Query<WlQ>,
 ) -> Result<Json<CorrMatrix>, ApiError> {
     let days = p.days.unwrap_or(90).clamp(30, 730);
-    Ok(Json(traderview_db::corr_matrix::for_watchlist(&s.pool, u.id, wid, days)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::corr_matrix::for_watchlist(&s.pool, u.id, wid, days)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 #[derive(Debug, Deserialize)]
-struct SymsQ { symbols: String, days: Option<i64> }
+struct SymsQ {
+    symbols: String,
+    days: Option<i64>,
+}
 
 async fn for_symbols(
     State(s): State<AppState>,
     _u: AuthUser,
     Query(p): Query<SymsQ>,
 ) -> Result<Json<CorrMatrix>, ApiError> {
-    let syms: Vec<String> = p.symbols
+    let syms: Vec<String> = p
+        .symbols
         .split(',')
         .map(|x| x.trim().to_uppercase())
         .filter(|x| !x.is_empty())
         .take(50)
         .collect();
     if syms.len() < 2 {
-        return Err(ApiError::BadRequest("need at least 2 symbols (comma-separated)".into()));
+        return Err(ApiError::BadRequest(
+            "need at least 2 symbols (comma-separated)".into(),
+        ));
     }
     let days = p.days.unwrap_or(90).clamp(30, 730);
-    Ok(Json(traderview_db::corr_matrix::for_symbols(&s.pool, &syms, days)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::corr_matrix::for_symbols(&s.pool, &syms, days)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

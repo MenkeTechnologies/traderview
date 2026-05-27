@@ -16,7 +16,10 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/executions", get(list).post(create))
         .route("/executions/:id", patch(update).delete(delete_one))
-        .route("/trades/:id/executions", get(list_for_trade).post(add_to_trade))
+        .route(
+            "/trades/:id/executions",
+            get(list_for_trade).post(add_to_trade),
+        )
 }
 
 #[derive(Deserialize)]
@@ -78,12 +81,10 @@ async fn create(
     Json(body): Json<ManualBody>,
 ) -> Result<Json<Uuid>, ApiError> {
     ensure_account_owner(&s, user.id, body.account_id).await?;
-    let multiplier = body
-        .multiplier
-        .unwrap_or_else(|| match body.asset_class {
-            AssetClass::Option => Decimal::from(100),
-            _ => Decimal::ONE,
-        });
+    let multiplier = body.multiplier.unwrap_or_else(|| match body.asset_class {
+        AssetClass::Option => Decimal::from(100),
+        _ => Decimal::ONE,
+    });
     let p = ParsedExecution {
         symbol: body.symbol,
         side: body.side,
@@ -154,7 +155,13 @@ async fn update(
         .ok_or(ApiError::NotFound)?;
     ensure_account_owner(&s, user.id, acct).await?;
     let r = traderview_db::executions::update(
-        &s.pool, id, body.side, body.qty, body.price, body.fee, body.executed_at,
+        &s.pool,
+        id,
+        body.side,
+        body.qty,
+        body.price,
+        body.fee,
+        body.executed_at,
     )
     .await
     .map_err(ApiError::Internal)?;

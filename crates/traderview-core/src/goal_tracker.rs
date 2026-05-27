@@ -57,18 +57,30 @@ pub fn evaluate(goals: &Goals, equity_history: &[f64], today: NaiveDate) -> Prog
         target_pct_return: goals.target_pct_return,
         ..Default::default()
     };
-    if equity_history.is_empty() { return report; }
+    if equity_history.is_empty() {
+        return report;
+    }
     let current = *equity_history.last().unwrap();
-    let peak = equity_history.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let dd = if peak <= 0.0 { 0.0 } else { (peak - current) / peak };
+    let peak = equity_history
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+    let dd = if peak <= 0.0 {
+        0.0
+    } else {
+        (peak - current) / peak
+    };
     report.current_equity = current;
     report.peak_equity = peak;
     report.current_dd_pct = dd;
     if goals.period_start_equity > 0.0 {
-        report.current_pct_return = (current - goals.period_start_equity) / goals.period_start_equity;
+        report.current_pct_return =
+            (current - goals.period_start_equity) / goals.period_start_equity;
         report.pct_of_target = if goals.target_pct_return > 0.0 {
             report.current_pct_return / goals.target_pct_return
-        } else { 0.0 };
+        } else {
+            0.0
+        };
     }
     report.kill_switch_breached = dd > goals.max_dd_pct;
     let total_days = (goals.period_end - goals.period_start).num_days().max(1);
@@ -82,7 +94,9 @@ pub fn evaluate(goals: &Goals, equity_history: &[f64], today: NaiveDate) -> Prog
     let pct_period_elapsed = elapsed as f64 / total_days as f64;
     report.annualized_pace = if elapsed > 0 {
         report.current_pct_return * 365.0 / elapsed as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let target_fraction_today = goals.target_pct_return * pct_period_elapsed;
     let buffer = 0.10 * goals.target_pct_return.abs();
     report.on_pace = if report.current_pct_return > target_fraction_today + buffer {
@@ -106,8 +120,8 @@ mod tests {
     fn goals() -> Goals {
         Goals {
             period_start_equity: 100_000.0,
-            target_pct_return: 0.30,           // 30% target
-            max_dd_pct: 0.10,                  // 10% max DD
+            target_pct_return: 0.30, // 30% target
+            max_dd_pct: 0.10,        // 10% max DD
             period_start: d(2026, 1, 1),
             period_end: d(2026, 12, 31),
         }
@@ -123,9 +137,11 @@ mod tests {
     #[test]
     fn on_target_at_30_pct_mid_year() {
         // After ~half the year, equity at 115k → 15% return ≈ on-pace for 30% annual.
-        let r = evaluate(&goals(),
+        let r = evaluate(
+            &goals(),
             &[100_000.0, 105_000.0, 110_000.0, 115_000.0],
-            d(2026, 6, 30));
+            d(2026, 6, 30),
+        );
         assert!((r.current_pct_return - 0.15).abs() < 1e-9);
         assert_eq!(r.on_pace, OnPace::OnPace);
     }
@@ -133,27 +149,21 @@ mod tests {
     #[test]
     fn ahead_of_pace_when_well_above_proportional_target() {
         // At mid-year, equity at 130k → 30% already achieved.
-        let r = evaluate(&goals(),
-            &[100_000.0, 130_000.0],
-            d(2026, 6, 30));
+        let r = evaluate(&goals(), &[100_000.0, 130_000.0], d(2026, 6, 30));
         assert_eq!(r.on_pace, OnPace::AheadOfPace);
         assert!(r.pct_of_target > 0.9);
     }
 
     #[test]
     fn behind_pace_when_well_below_proportional_target() {
-        let r = evaluate(&goals(),
-            &[100_000.0, 102_000.0],
-            d(2026, 6, 30));
+        let r = evaluate(&goals(), &[100_000.0, 102_000.0], d(2026, 6, 30));
         assert_eq!(r.on_pace, OnPace::BehindPace);
     }
 
     #[test]
     fn kill_switch_breached_at_15pct_dd() {
         // Peak 120k, current 100k → DD = 16.7% > 10% limit.
-        let r = evaluate(&goals(),
-            &[100_000.0, 120_000.0, 100_000.0],
-            d(2026, 6, 30));
+        let r = evaluate(&goals(), &[100_000.0, 120_000.0, 100_000.0], d(2026, 6, 30));
         assert!(r.kill_switch_breached);
         assert!(r.current_dd_pct > 0.10);
     }
@@ -161,34 +171,26 @@ mod tests {
     #[test]
     fn kill_switch_not_breached_within_dd_limit() {
         // Peak 110k, current 105k → DD = 4.5% < 10%.
-        let r = evaluate(&goals(),
-            &[100_000.0, 110_000.0, 105_000.0],
-            d(2026, 6, 30));
+        let r = evaluate(&goals(), &[100_000.0, 110_000.0, 105_000.0], d(2026, 6, 30));
         assert!(!r.kill_switch_breached);
     }
 
     #[test]
     fn out_of_period_when_today_before_start() {
-        let r = evaluate(&goals(),
-            &[100_000.0, 110_000.0],
-            d(2025, 12, 31));
+        let r = evaluate(&goals(), &[100_000.0, 110_000.0], d(2025, 12, 31));
         assert_eq!(r.on_pace, OnPace::OutOfPeriod);
     }
 
     #[test]
     fn out_of_period_when_today_after_end() {
-        let r = evaluate(&goals(),
-            &[100_000.0, 130_000.0],
-            d(2027, 1, 1));
+        let r = evaluate(&goals(), &[100_000.0, 130_000.0], d(2027, 1, 1));
         assert_eq!(r.on_pace, OnPace::OutOfPeriod);
     }
 
     #[test]
     fn annualized_pace_extrapolates_from_partial_year() {
         // Half-year, 15% gain → annualized = 30%.
-        let r = evaluate(&goals(),
-            &[100_000.0, 115_000.0],
-            d(2026, 7, 1));
+        let r = evaluate(&goals(), &[100_000.0, 115_000.0], d(2026, 7, 1));
         let half_year_days = (d(2026, 7, 1) - d(2026, 1, 1)).num_days() as f64;
         let expected = 0.15 * 365.0 / half_year_days;
         assert!((r.annualized_pace - expected).abs() < 1e-9);

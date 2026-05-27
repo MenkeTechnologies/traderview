@@ -22,7 +22,7 @@ pub struct OptionPosition {
     /// Signed contract count: positive = long, negative = short.
     pub contracts: i64,
     pub underlying_price: f64,
-    pub multiplier: f64,    // typically 100 for equity options
+    pub multiplier: f64, // typically 100 for equity options
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -58,14 +58,23 @@ pub fn aggregate(positions: &[OptionPosition]) -> PortfolioGreeks {
 mod tests {
     use super::*;
 
-    fn pos(sym: &str, delta: f64, gamma: f64, vega: f64, theta: f64,
-           contracts: i64, underlying: f64) -> OptionPosition
-    {
+    fn pos(
+        sym: &str,
+        delta: f64,
+        gamma: f64,
+        vega: f64,
+        theta: f64,
+        contracts: i64,
+        underlying: f64,
+    ) -> OptionPosition {
         OptionPosition {
             symbol: sym.into(),
             greeks: Greeks {
                 price: 0.0,
-                delta, gamma, vega, theta,
+                delta,
+                gamma,
+                vega,
+                theta,
                 rho: 0.0,
                 d1: 0.0,
                 d2: 0.0,
@@ -95,7 +104,7 @@ mod tests {
 
     #[test]
     fn short_position_negates_signs() {
-        let long  = vec![pos("X", 0.50, 0.02, 0.30, -0.05, 1, 200.0)];
+        let long = vec![pos("X", 0.50, 0.02, 0.30, -0.05, 1, 200.0)];
         let short = vec![pos("X", 0.50, 0.02, 0.30, -0.05, -1, 200.0)];
         let rl = aggregate(&long);
         let rs = aggregate(&short);
@@ -110,7 +119,7 @@ mod tests {
     fn delta_neutral_combo_aggregates_to_zero_delta_but_positive_gamma() {
         // Long 1 call (+0.5 delta) and short 1 call further OTM (-0.5 delta).
         let positions = vec![
-            pos("CALL_ATM", 0.50, 0.02, 0.30, -0.05,  1, 200.0),
+            pos("CALL_ATM", 0.50, 0.02, 0.30, -0.05, 1, 200.0),
             pos("CALL_OTM", 0.50, 0.01, 0.20, -0.03, -1, 200.0),
         ];
         let r = aggregate(&positions);
@@ -140,9 +149,9 @@ mod tests {
 
     #[test]
     fn position_count_tracked() {
-        let positions: Vec<_> = (0..5).map(|i|
-            pos(&format!("S{i}"), 0.5, 0.02, 0.30, -0.05, 1, 100.0)
-        ).collect();
+        let positions: Vec<_> = (0..5)
+            .map(|i| pos(&format!("S{i}"), 0.5, 0.02, 0.30, -0.05, 1, 100.0))
+            .collect();
         let r = aggregate(&positions);
         assert_eq!(r.position_count, 5);
     }
@@ -151,8 +160,8 @@ mod tests {
     fn dollar_delta_uses_per_position_underlying() {
         // Different underlying prices per position.
         let positions = vec![
-            pos("AAPL250620C200", 0.50, 0.02, 0.3, -0.05, 1, 200.0),    // dd = 10000
-            pos("TSLA250620C300", 0.40, 0.02, 0.3, -0.05, 1, 300.0),    // dd = 12000
+            pos("AAPL250620C200", 0.50, 0.02, 0.3, -0.05, 1, 200.0), // dd = 10000
+            pos("TSLA250620C300", 0.40, 0.02, 0.3, -0.05, 1, 300.0), // dd = 12000
         ];
         let r = aggregate(&positions);
         assert_eq!(r.dollar_delta, 22_000.0);

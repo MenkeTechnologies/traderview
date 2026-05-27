@@ -74,25 +74,27 @@ pub fn suggest(
 
     // Sort losers by loss size (largest first) so the biggest harvest
     // shows at the top of the report.
-    let mut sorted: Vec<&OpenLoser> = losers.iter()
-        .filter(|l| l.current_price < l.avg_cost)   // genuinely losing
+    let mut sorted: Vec<&OpenLoser> = losers
+        .iter()
+        .filter(|l| l.current_price < l.avg_cost) // genuinely losing
         .collect();
     sorted.sort_by_key(|a| std::cmp::Reverse(a.unrealized_loss()));
 
     for l in sorted {
         let loss = l.unrealized_loss();
-        let wash_risk = recent_buys.iter().any(|b| {
-            b.symbol == l.symbol
-                && (today - b.executed_at).num_days().abs() <= 30
-        });
+        let wash_risk = recent_buys
+            .iter()
+            .any(|b| b.symbol == l.symbol && (today - b.executed_at).num_days().abs() <= 30);
         running_loss += loss;
         let exceeds_cap = !mtm_elected && running_loss > three_k;
 
         let note = if wash_risk {
             "WASH SALE: bought within 30 days — loss would be disallowed".to_string()
         } else if exceeds_cap {
-            format!("loss pushes YTD past $3k capital-loss cap (current ${running_loss}); \
-                     surplus carries forward to next year")
+            format!(
+                "loss pushes YTD past $3k capital-loss cap (current ${running_loss}); \
+                     surplus carries forward to next year"
+            )
         } else {
             "safe to harvest".to_string()
         };
@@ -107,9 +109,11 @@ pub fn suggest(
         });
     }
     let total: Decimal = candidates.iter().map(|c| c.unrealized_loss).sum();
-    let safe: Decimal = candidates.iter()
+    let safe: Decimal = candidates
+        .iter()
         .filter(|c| !c.wash_sale_risk)
-        .map(|c| c.unrealized_loss).sum();
+        .map(|c| c.unrealized_loss)
+        .sum();
     HarvestReport {
         candidates,
         total_available_loss: total,
@@ -122,14 +126,18 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn day(y: i32, m: u32, d_: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, d_).unwrap()
     }
     fn loser(symbol: &str, qty: &str, cost: &str, price: &str) -> OpenLoser {
         OpenLoser {
-            symbol: symbol.into(), qty: d(qty),
-            avg_cost: d(cost), current_price: d(price),
+            symbol: symbol.into(),
+            qty: d(qty),
+            avg_cost: d(cost),
+            current_price: d(price),
         }
     }
 
@@ -138,7 +146,10 @@ mod tests {
         // Current price ABOVE cost — not a loser.
         let r = suggest(
             &[loser("AAPL", "100", "150", "160")],
-            &[], day(2026, 12, 15), Decimal::ZERO, false,
+            &[],
+            day(2026, 12, 15),
+            Decimal::ZERO,
+            false,
         );
         assert!(r.candidates.is_empty());
     }
@@ -154,8 +165,13 @@ mod tests {
         // Bought 10 days before today.
         let r = suggest(
             &[loser("AAPL", "100", "150", "140")],
-            &[RecentBuy { symbol: "AAPL".into(), executed_at: day(2026, 12, 5) }],
-            day(2026, 12, 15), Decimal::ZERO, false,
+            &[RecentBuy {
+                symbol: "AAPL".into(),
+                executed_at: day(2026, 12, 5),
+            }],
+            day(2026, 12, 15),
+            Decimal::ZERO,
+            false,
         );
         let c = &r.candidates[0];
         assert!(c.wash_sale_risk);
@@ -166,8 +182,13 @@ mod tests {
     fn old_buy_outside_30_day_window_does_not_flag() {
         let r = suggest(
             &[loser("AAPL", "100", "150", "140")],
-            &[RecentBuy { symbol: "AAPL".into(), executed_at: day(2026, 1, 1) }],
-            day(2026, 12, 15), Decimal::ZERO, false,
+            &[RecentBuy {
+                symbol: "AAPL".into(),
+                executed_at: day(2026, 1, 1),
+            }],
+            day(2026, 12, 15),
+            Decimal::ZERO,
+            false,
         );
         assert!(!r.candidates[0].wash_sale_risk);
     }
@@ -176,8 +197,11 @@ mod tests {
     fn three_k_cap_flagged_when_not_mtm_elected() {
         // Already lost $2.5k YTD; harvesting another $1k pushes past $3k.
         let r = suggest(
-            &[loser("AAPL", "100", "150", "140")],   // $1k loss
-            &[], day(2026, 12, 15), d("2500"), false,
+            &[loser("AAPL", "100", "150", "140")], // $1k loss
+            &[],
+            day(2026, 12, 15),
+            d("2500"),
+            false,
         );
         assert!(r.candidates[0].exceeds_3k_cap);
         assert!(r.candidates[0].note.contains("$3k"));
@@ -188,7 +212,10 @@ mod tests {
         // Same scenario but MTM elected — no $3k cap applies.
         let r = suggest(
             &[loser("AAPL", "100", "150", "140")],
-            &[], day(2026, 12, 15), d("10000"), true,
+            &[],
+            day(2026, 12, 15),
+            d("10000"),
+            true,
         );
         assert!(!r.candidates[0].exceeds_3k_cap);
         assert!(!r.candidates[0].note.contains("$3k"));
@@ -196,11 +223,17 @@ mod tests {
 
     #[test]
     fn candidates_sorted_by_loss_size_descending() {
-        let r = suggest(&[
-            loser("TINY", "10",   "50", "48"),    // $20 loss
-            loser("BIG",  "1000", "50", "30"),    // $20,000 loss
-            loser("MID",  "100",  "50", "40"),    // $1,000 loss
-        ], &[], day(2026, 12, 15), Decimal::ZERO, false);
+        let r = suggest(
+            &[
+                loser("TINY", "10", "50", "48"),  // $20 loss
+                loser("BIG", "1000", "50", "30"), // $20,000 loss
+                loser("MID", "100", "50", "40"),  // $1,000 loss
+            ],
+            &[],
+            day(2026, 12, 15),
+            Decimal::ZERO,
+            false,
+        );
         assert_eq!(r.candidates[0].symbol, "BIG");
         assert_eq!(r.candidates[1].symbol, "MID");
         assert_eq!(r.candidates[2].symbol, "TINY");
@@ -208,14 +241,21 @@ mod tests {
 
     #[test]
     fn totals_correctly_split_safe_vs_total() {
-        let r = suggest(&[
-            loser("AAPL", "100", "150", "140"),     // $1k loss, wash flagged
-            loser("TSLA", "10",  "300", "250"),     // $500 loss, safe
-        ], &[
-            RecentBuy { symbol: "AAPL".into(), executed_at: day(2026, 12, 1) },
-        ], day(2026, 12, 15), Decimal::ZERO, false);
+        let r = suggest(
+            &[
+                loser("AAPL", "100", "150", "140"), // $1k loss, wash flagged
+                loser("TSLA", "10", "300", "250"),  // $500 loss, safe
+            ],
+            &[RecentBuy {
+                symbol: "AAPL".into(),
+                executed_at: day(2026, 12, 1),
+            }],
+            day(2026, 12, 15),
+            Decimal::ZERO,
+            false,
+        );
         assert_eq!(r.total_available_loss, d("1500"));
-        assert_eq!(r.safe_harvest_loss, d("500"));   // AAPL excluded
+        assert_eq!(r.safe_harvest_loss, d("500")); // AAPL excluded
     }
 
     #[test]

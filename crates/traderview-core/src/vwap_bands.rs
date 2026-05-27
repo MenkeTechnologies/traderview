@@ -34,7 +34,9 @@ pub struct VwapSnapshot {
 }
 
 impl VwapBandsAccumulator {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Feed a new bar. `typical` is usually (H+L+C)/3.
     pub fn update(&mut self, typical: f64, volume: f64) {
@@ -45,7 +47,9 @@ impl VwapBandsAccumulator {
     }
 
     pub fn snapshot(&self) -> VwapSnapshot {
-        if self.sum_v == 0.0 { return VwapSnapshot::default(); }
+        if self.sum_v == 0.0 {
+            return VwapSnapshot::default();
+        }
         let vwap = self.sum_pv / self.sum_v;
         let var = (self.sum_p2v / self.sum_v) - vwap * vwap;
         let sd = var.max(0.0).sqrt();
@@ -65,7 +69,9 @@ impl VwapBandsAccumulator {
 /// final snapshot only.
 pub fn final_snapshot(bars: &[(f64, f64)]) -> VwapSnapshot {
     let mut acc = VwapBandsAccumulator::new();
-    for (t, v) in bars { acc.update(*t, *v); }
+    for (t, v) in bars {
+        acc.update(*t, *v);
+    }
     acc.snapshot()
 }
 
@@ -147,7 +153,7 @@ mod tests {
     #[test]
     fn negative_volume_clamped_to_zero() {
         let mut acc = VwapBandsAccumulator::new();
-        acc.update(100.0, -100.0);    // ignored
+        acc.update(100.0, -100.0); // ignored
         acc.update(100.0, 1000.0);
         assert_eq!(acc.snapshot().vwap, 100.0);
     }
@@ -157,7 +163,9 @@ mod tests {
         let bars = vec![(100.0, 1.0), (105.0, 2.0), (110.0, 3.0)];
         let convenience = final_snapshot(&bars);
         let mut acc = VwapBandsAccumulator::new();
-        for (t, v) in &bars { acc.update(*t, *v); }
+        for (t, v) in &bars {
+            acc.update(*t, *v);
+        }
         let manual = acc.snapshot();
         assert_eq!(convenience.vwap, manual.vwap);
         assert_eq!(convenience.upper_band_2sd, manual.upper_band_2sd);

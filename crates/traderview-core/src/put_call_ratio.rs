@@ -32,10 +32,10 @@ pub struct PutCallInput {
 #[serde(rename_all = "snake_case")]
 #[derive(Default)]
 pub enum SentimentZone {
-    BullishExtreme,    // contrarian SELL (heavy call activity)
+    BullishExtreme, // contrarian SELL (heavy call activity)
     #[default]
     Normal,
-    BearishExtreme,    // contrarian BUY (heavy put activity)
+    BearishExtreme, // contrarian BUY (heavy put activity)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -46,7 +46,6 @@ pub struct PutCallReport {
     pub zone: SentimentZone,
 }
 
-
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Thresholds {
     pub bullish_extreme_below: f64,
@@ -55,15 +54,22 @@ pub struct Thresholds {
 
 impl Default for Thresholds {
     fn default() -> Self {
-        Self { bullish_extreme_below: 0.7, bearish_extreme_above: 1.0 }
+        Self {
+            bullish_extreme_below: 0.7,
+            bearish_extreme_above: 1.0,
+        }
     }
 }
 
 pub fn compute(input: &PutCallInput, thresh: &Thresholds) -> PutCallReport {
-    let vol_pc = if input.call_volume == 0 { None } else {
+    let vol_pc = if input.call_volume == 0 {
+        None
+    } else {
         Some(input.put_volume as f64 / input.call_volume as f64)
     };
-    let oi_pc = if input.call_oi == 0 { None } else {
+    let oi_pc = if input.call_oi == 0 {
+        None
+    } else {
         Some(input.put_oi as f64 / input.call_oi as f64)
     };
     // Use volume P/C for zone classification — more responsive than OI.
@@ -84,7 +90,12 @@ mod tests {
     use super::*;
 
     fn i(pv: u64, cv: u64, poi: u64, coi: u64) -> PutCallInput {
-        PutCallInput { put_volume: pv, call_volume: cv, put_oi: poi, call_oi: coi }
+        PutCallInput {
+            put_volume: pv,
+            call_volume: cv,
+            put_oi: poi,
+            call_oi: coi,
+        }
     }
 
     #[test]

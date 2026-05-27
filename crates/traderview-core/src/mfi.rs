@@ -35,7 +35,9 @@ pub struct MfiPoint {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<MfiPoint> {
     let n = bars.len();
     let mut out = vec![MfiPoint::default(); n];
-    if n < 2 || period == 0 { return out; }
+    if n < 2 || period == 0 {
+        return out;
+    }
     let mut typical_series = vec![0.0; n];
     let mut mf_series = vec![0.0; n];
     for i in 0..n {
@@ -48,14 +50,23 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<MfiPoint> {
         let mut pos = 0.0;
         let mut neg = 0.0;
         for j in (i + 1 - period)..=i {
-            if j == 0 { continue; }
+            if j == 0 {
+                continue;
+            }
             let tp = typical_series[j];
             let prev_tp = typical_series[j - 1];
-            if tp > prev_tp { pos += mf_series[j]; }
-            else if tp < prev_tp { neg += mf_series[j]; }
+            if tp > prev_tp {
+                pos += mf_series[j];
+            } else if tp < prev_tp {
+                neg += mf_series[j];
+            }
         }
         slot.mfi = if neg == 0.0 {
-            if pos > 0.0 { 100.0 } else { 50.0 }
+            if pos > 0.0 {
+                100.0
+            } else {
+                50.0
+            }
         } else {
             let ratio = pos / neg;
             100.0 - 100.0 / (1.0 + ratio)
@@ -66,12 +77,20 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<MfiPoint> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum MfiZone { Oversold, Neutral, Overbought }
+pub enum MfiZone {
+    Oversold,
+    Neutral,
+    Overbought,
+}
 
 pub fn classify(mfi: f64) -> MfiZone {
-    if mfi > 80.0 { MfiZone::Overbought }
-    else if mfi < 20.0 { MfiZone::Oversold }
-    else { MfiZone::Neutral }
+    if mfi > 80.0 {
+        MfiZone::Overbought
+    } else if mfi < 20.0 {
+        MfiZone::Oversold
+    } else {
+        MfiZone::Neutral
+    }
 }
 
 #[cfg(test)]
@@ -79,7 +98,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -103,20 +127,24 @@ mod tests {
     #[test]
     fn all_positive_money_flow_yields_100_mfi() {
         // Every bar has higher typical than prior → no negative flow.
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c, 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c, 1000.0)
+            })
+            .collect();
         let out = compute(&bars, 5);
         assert_eq!(out.last().unwrap().mfi, 100.0);
     }
 
     #[test]
     fn all_negative_money_flow_yields_zero_mfi() {
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 0.5, c - 0.5, c, 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 0.5, c - 0.5, c, 1000.0)
+            })
+            .collect();
         let out = compute(&bars, 5);
         let last = out.last().unwrap();
         // pos = 0, neg > 0 → MFI = 100 - 100/(1+0) = 0.
@@ -128,17 +156,20 @@ mod tests {
         // Alternating up/down typical → roughly equal pos/neg flows.
         let bars = vec![
             b(10.0, 9.0, 9.5, 1000.0),
-            b(11.0, 10.0, 10.5, 1000.0),    // up
-            b(10.0, 9.0, 9.5, 1000.0),       // down
-            b(11.0, 10.0, 10.5, 1000.0),    // up
-            b(10.0, 9.0, 9.5, 1000.0),       // down
+            b(11.0, 10.0, 10.5, 1000.0), // up
+            b(10.0, 9.0, 9.5, 1000.0),   // down
+            b(11.0, 10.0, 10.5, 1000.0), // up
+            b(10.0, 9.0, 9.5, 1000.0),   // down
         ];
         let out = compute(&bars, 4);
         let last = out.last().unwrap();
         // 2 up bars × ~10.5 × 1000 = 21000. 2 down bars × ~9.5 × 1000 = 19000.
         // pos/neg ≈ 1.105, MFI ≈ 100 - 100/2.105 ≈ 52.5.
-        assert!(last.mfi > 40.0 && last.mfi < 60.0,
-            "balanced flow should produce MFI near 50, got {}", last.mfi);
+        assert!(
+            last.mfi > 40.0 && last.mfi < 60.0,
+            "balanced flow should produce MFI near 50, got {}",
+            last.mfi
+        );
     }
 
     // ─── classify ────────────────────────────────────────────────────

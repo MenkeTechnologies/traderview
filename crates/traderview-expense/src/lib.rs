@@ -133,8 +133,8 @@ mod tests {
             ExpenseSource::AppleCard,
         ] {
             let s = src.as_str();
-            let back = ExpenseSource::parse_str(s)
-                .unwrap_or_else(|| panic!("`{s}` did not roundtrip"));
+            let back =
+                ExpenseSource::parse_str(s).unwrap_or_else(|| panic!("`{s}` did not roundtrip"));
             assert_eq!(back, src);
         }
     }
@@ -142,8 +142,14 @@ mod tests {
     #[test]
     fn expense_source_parse_str_accepts_aliases() {
         // `bank_of_america` should map to Bofa; `apple` should map to AppleCard.
-        assert_eq!(ExpenseSource::parse_str("bank_of_america"), Some(ExpenseSource::Bofa));
-        assert_eq!(ExpenseSource::parse_str("apple"),           Some(ExpenseSource::AppleCard));
+        assert_eq!(
+            ExpenseSource::parse_str("bank_of_america"),
+            Some(ExpenseSource::Bofa)
+        );
+        assert_eq!(
+            ExpenseSource::parse_str("apple"),
+            Some(ExpenseSource::AppleCard)
+        );
     }
 
     #[test]

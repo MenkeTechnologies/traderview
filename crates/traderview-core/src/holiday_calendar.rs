@@ -13,15 +13,14 @@ use chrono::{Datelike, Duration, NaiveDate, Weekday};
 /// Returns true if `date` is a US equity-market trading day (not a
 /// weekend AND not on the holiday list).
 pub fn is_trading_day(date: NaiveDate) -> bool {
-    !matches!(date.weekday(), Weekday::Sat | Weekday::Sun)
-        && !is_holiday(date)
+    !matches!(date.weekday(), Weekday::Sat | Weekday::Sun) && !is_holiday(date)
 }
 
 /// Returns true if `date` is a US equity-market holiday.
 pub fn is_holiday(date: NaiveDate) -> bool {
-    HOLIDAYS.iter().any(|(y, m, d)| {
-        *y == date.year() && *m == date.month() && *d == date.day()
-    })
+    HOLIDAYS
+        .iter()
+        .any(|(y, m, d)| *y == date.year() && *m == date.month() && *d == date.day())
 }
 
 /// Next trading day strictly after `date`.
@@ -49,18 +48,24 @@ pub fn add_trading_days(date: NaiveDate, n: i32) -> NaiveDate {
     let mut remaining = n.abs();
     while remaining > 0 {
         d += Duration::days(step as i64);
-        if is_trading_day(d) { remaining -= 1; }
+        if is_trading_day(d) {
+            remaining -= 1;
+        }
     }
     d
 }
 
 /// Count trading days in [start, end] inclusive.
 pub fn trading_days_between(start: NaiveDate, end: NaiveDate) -> i32 {
-    if end < start { return 0; }
+    if end < start {
+        return 0;
+    }
     let mut count = 0;
     let mut d = start;
     while d <= end {
-        if is_trading_day(d) { count += 1; }
+        if is_trading_day(d) {
+            count += 1;
+        }
         d += Duration::days(1);
     }
     count
@@ -82,7 +87,7 @@ const HOLIDAYS: &[(i32, u32, u32)] = &[
     (2024, 12, 25), // Christmas
     // 2025
     (2025, 1, 1),
-    (2025, 1, 9),   // Jimmy Carter National Day of Mourning (added)
+    (2025, 1, 9), // Jimmy Carter National Day of Mourning (added)
     (2025, 1, 20),
     (2025, 2, 17),
     (2025, 4, 18),
@@ -99,7 +104,7 @@ const HOLIDAYS: &[(i32, u32, u32)] = &[
     (2026, 4, 3),
     (2026, 5, 25),
     (2026, 6, 19),
-    (2026, 7, 3),   // 4th observed Friday
+    (2026, 7, 3), // 4th observed Friday
     (2026, 9, 7),
     (2026, 11, 26),
     (2026, 12, 25),
@@ -109,13 +114,13 @@ const HOLIDAYS: &[(i32, u32, u32)] = &[
     (2027, 2, 15),
     (2027, 3, 26),
     (2027, 5, 31),
-    (2027, 6, 18),  // Juneteenth Friday observed
-    (2027, 7, 5),   // 4th Monday observed
+    (2027, 6, 18), // Juneteenth Friday observed
+    (2027, 7, 5),  // 4th Monday observed
     (2027, 9, 6),
     (2027, 11, 25),
-    (2027, 12, 24),  // Christmas Friday observed
+    (2027, 12, 24), // Christmas Friday observed
     // 2028
-    (2028, 1, 17),  // New Year's Day Sunday → MLK absorbs
+    (2028, 1, 17), // New Year's Day Sunday → MLK absorbs
     (2028, 2, 21),
     (2028, 4, 14),
     (2028, 5, 29),
@@ -152,7 +157,9 @@ const HOLIDAYS: &[(i32, u32, u32)] = &[
 mod tests {
     use super::*;
 
-    fn d(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn d(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
 
     #[test]
     fn weekday_non_holiday_is_trading_day() {
@@ -162,12 +169,12 @@ mod tests {
 
     #[test]
     fn saturday_not_trading_day() {
-        assert!(!is_trading_day(d(2026, 5, 30)));    // Sat
+        assert!(!is_trading_day(d(2026, 5, 30))); // Sat
     }
 
     #[test]
     fn sunday_not_trading_day() {
-        assert!(!is_trading_day(d(2026, 5, 31)));    // Sun
+        assert!(!is_trading_day(d(2026, 5, 31))); // Sun
     }
 
     #[test]
@@ -225,8 +232,8 @@ mod tests {
 
     #[test]
     fn trading_days_between_one_week_is_five() {
-        let mon = d(2026, 5, 11);    // Monday
-        let fri = d(2026, 5, 15);    // Friday
+        let mon = d(2026, 5, 11); // Monday
+        let fri = d(2026, 5, 15); // Friday
         assert_eq!(trading_days_between(mon, fri), 5);
     }
 
@@ -237,7 +244,11 @@ mod tests {
         let start = d(2026, 1, 1);
         let end = d(2026, 12, 31);
         let n = trading_days_between(start, end);
-        assert!((250..=253).contains(&n), "should be ~252 trading days, got {}", n);
+        assert!(
+            (250..=253).contains(&n),
+            "should be ~252 trading days, got {}",
+            n
+        );
     }
 
     #[test]

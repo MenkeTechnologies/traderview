@@ -27,8 +27,7 @@ pub struct LossLimitConfig {
 impl LossLimitConfig {
     pub fn binding_limit(&self) -> Decimal {
         let pct_limit = self.account_equity * self.max_daily_loss_pct;
-        if self.max_daily_loss_dollars > Decimal::ZERO
-            && self.max_daily_loss_dollars < pct_limit {
+        if self.max_daily_loss_dollars > Decimal::ZERO && self.max_daily_loss_dollars < pct_limit {
             self.max_daily_loss_dollars
         } else {
             pct_limit
@@ -56,9 +55,17 @@ pub struct LossLimitReport {
 }
 
 pub fn evaluate(today_pnl: Decimal, cfg: &LossLimitConfig) -> LossLimitReport {
-    let loss = if today_pnl < Decimal::ZERO { -today_pnl } else { Decimal::ZERO };
+    let loss = if today_pnl < Decimal::ZERO {
+        -today_pnl
+    } else {
+        Decimal::ZERO
+    };
     let limit = cfg.binding_limit();
-    let pct = if limit > Decimal::ZERO { loss / limit } else { Decimal::ZERO };
+    let pct = if limit > Decimal::ZERO {
+        loss / limit
+    } else {
+        Decimal::ZERO
+    };
     let state = if pct >= cfg.kill_threshold {
         LossState::KillSwitch
     } else if pct >= cfg.cut_size_threshold {
@@ -69,9 +76,12 @@ pub fn evaluate(today_pnl: Decimal, cfg: &LossLimitConfig) -> LossLimitReport {
         LossState::OK
     };
     let note = match state {
-        LossState::OK         => "within limits".into(),
-        LossState::Warning    => format!("warning: {:.1}% of daily loss budget used", pct * Decimal::from(100)),
-        LossState::CutSize    => "cut size: half-size positions only".into(),
+        LossState::OK => "within limits".into(),
+        LossState::Warning => format!(
+            "warning: {:.1}% of daily loss budget used",
+            pct * Decimal::from(100)
+        ),
+        LossState::CutSize => "cut size: half-size positions only".into(),
         LossState::KillSwitch => "KILL SWITCH: stop trading for the day".into(),
     };
     LossLimitReport {
@@ -87,7 +97,9 @@ pub fn evaluate(today_pnl: Decimal, cfg: &LossLimitConfig) -> LossLimitReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn cfg() -> LossLimitConfig {
         LossLimitConfig {

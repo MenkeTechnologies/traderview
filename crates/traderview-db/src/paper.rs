@@ -74,21 +74,33 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     .await?)
 }
 
-pub async fn reset(pool: &PgPool, user_id: Uuid, account_id: Uuid, starting: Decimal) -> anyhow::Result<bool> {
+pub async fn reset(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    starting: Decimal,
+) -> anyhow::Result<bool> {
     let mut tx = pool.begin().await?;
     let r = sqlx::query(
         "UPDATE paper_accounts SET starting_cash = $3, cash = $3, reset_at = now()
           WHERE id = $1 AND user_id = $2",
     )
-    .bind(account_id).bind(user_id).bind(starting)
-    .execute(&mut *tx).await?;
+    .bind(account_id)
+    .bind(user_id)
+    .bind(starting)
+    .execute(&mut *tx)
+    .await?;
     if r.rows_affected() == 0 {
         return Ok(false);
     }
     sqlx::query("DELETE FROM paper_orders WHERE paper_account_id = $1")
-        .bind(account_id).execute(&mut *tx).await?;
+        .bind(account_id)
+        .execute(&mut *tx)
+        .await?;
     sqlx::query("DELETE FROM paper_positions WHERE paper_account_id = $1")
-        .bind(account_id).execute(&mut *tx).await?;
+        .bind(account_id)
+        .execute(&mut *tx)
+        .await?;
     tx.commit().await?;
     Ok(true)
 }
@@ -98,7 +110,7 @@ pub struct OrderRequest {
     pub symbol: String,
     pub side: Side,
     pub qty: Decimal,
-    pub order_type: String,         // 'market' | 'limit' | 'stop' | 'stop_limit'
+    pub order_type: String, // 'market' | 'limit' | 'stop' | 'stop_limit'
     pub limit_price: Option<Decimal>,
     pub stop_price: Option<Decimal>,
 }
@@ -114,7 +126,9 @@ pub async fn submit(
 ) -> anyhow::Result<PaperOrder> {
     // Ownership check.
     let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
-        .bind(account_id).fetch_optional(pool).await?;
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
     if !matches!(owner, Some((u,)) if u == user_id) {
         anyhow::bail!("forbidden");
     }
@@ -147,7 +161,11 @@ pub async fn submit(
     let mut tx = pool.begin().await?;
     let (status, filled_at, reject) = match fill_price {
         Some(_) => ("filled", Some(Utc::now()), None),
-        None => ("rejected", None, Some("limit/stop not triggered at current quote".to_string())),
+        None => (
+            "rejected",
+            None,
+            Some("limit/stop not triggered at current quote".to_string()),
+        ),
     };
     let order: PaperOrder = sqlx::query_as(
         "INSERT INTO paper_orders
@@ -167,7 +185,15 @@ pub async fn submit(
     .await?;
 
     if let Some(price) = fill_price {
-        apply_fill(&mut tx, account_id, &req.symbol.to_uppercase(), req.side, req.qty, price).await?;
+        apply_fill(
+            &mut tx,
+            account_id,
+            &req.symbol.to_uppercase(),
+            req.side,
+            req.qty,
+            price,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(order)
@@ -190,24 +216,34 @@ async fn apply_fill(
         "SELECT qty, avg_price, realized_pnl FROM paper_positions
           WHERE paper_account_id = $1 AND symbol = $2",
     )
-    .bind(account_id).bind(symbol)
-    .fetch_optional(&mut *tx).await?;
+    .bind(account_id)
+    .bind(symbol)
+    .fetch_optional(&mut *tx)
+    .await?;
 
     let (new_qty, new_avg, new_realized) = match row {
         None => (signed_qty, price, Decimal::ZERO),
         Some((cur_qty, cur_avg, cur_realized)) => {
             let same_sign = (cur_qty > Decimal::ZERO && signed_qty > Decimal::ZERO)
-                         || (cur_qty < Decimal::ZERO && signed_qty < Decimal::ZERO);
+                || (cur_qty < Decimal::ZERO && signed_qty < Decimal::ZERO);
             let new_q = cur_qty + signed_qty;
             if same_sign || cur_qty.is_zero() {
                 // Adding to position — weighted-average.
                 let total = cur_avg * cur_qty.abs() + price * signed_qty.abs();
-                let avg = if new_q.abs() > Decimal::ZERO { total / new_q.abs() } else { Decimal::ZERO };
+                let avg = if new_q.abs() > Decimal::ZERO {
+                    total / new_q.abs()
+                } else {
+                    Decimal::ZERO
+                };
                 (new_q, avg, cur_realized)
             } else {
                 // Reducing or flipping — realize P&L on the part that crosses.
                 let close_qty = cur_qty.abs().min(signed_qty.abs());
-                let direction = if cur_qty > Decimal::ZERO { Decimal::ONE } else { -Decimal::ONE };
+                let direction = if cur_qty > Decimal::ZERO {
+                    Decimal::ONE
+                } else {
+                    -Decimal::ONE
+                };
                 let realized = (price - cur_avg) * close_qty * direction;
                 let avg = if new_q.abs() > Decimal::ZERO {
                     if (cur_qty > Decimal::ZERO) == (new_q > Decimal::ZERO) {
@@ -224,9 +260,11 @@ async fn apply_fill(
     };
 
     if new_qty.is_zero() {
-        sqlx::query(
-            "DELETE FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2",
-        ).bind(account_id).bind(symbol).execute(&mut *tx).await?;
+        sqlx::query("DELETE FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2")
+            .bind(account_id)
+            .bind(symbol)
+            .execute(&mut *tx)
+            .await?;
     } else {
         sqlx::query(
             "INSERT INTO paper_positions (paper_account_id, symbol, qty, avg_price, realized_pnl, updated_at)
@@ -240,17 +278,22 @@ async fn apply_fill(
     }
 
     // Cash impact (no fees in sim).
-    let cash_delta = -signed_qty * price;  // buy decreases cash, sell increases
-    sqlx::query(
-        "UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1",
-    )
-    .bind(account_id).bind(cash_delta).execute(&mut *tx).await?;
+    let cash_delta = -signed_qty * price; // buy decreases cash, sell increases
+    sqlx::query("UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1")
+        .bind(account_id)
+        .bind(cash_delta)
+        .execute(&mut *tx)
+        .await?;
 
     let _ = notional;
     Ok(())
 }
 
-pub async fn list_orders(pool: &PgPool, account_id: Uuid, limit: i64) -> anyhow::Result<Vec<PaperOrder>> {
+pub async fn list_orders(
+    pool: &PgPool,
+    account_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<PaperOrder>> {
     Ok(sqlx::query_as::<_, PaperOrder>(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
                 limit_price, stop_price, status::text,
@@ -258,8 +301,10 @@ pub async fn list_orders(pool: &PgPool, account_id: Uuid, limit: i64) -> anyhow:
            FROM paper_orders WHERE paper_account_id = $1
           ORDER BY submitted_at DESC LIMIT $2",
     )
-    .bind(account_id).bind(limit)
-    .fetch_all(pool).await?)
+    .bind(account_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn positions(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec<PaperPosition>> {
@@ -268,5 +313,6 @@ pub async fn positions(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec<Pa
            FROM paper_positions WHERE paper_account_id = $1 ORDER BY symbol",
     )
     .bind(account_id)
-    .fetch_all(pool).await?)
+    .fetch_all(pool)
+    .await?)
 }

@@ -11,7 +11,9 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<f64> {
     let n = closes.len();
     let mut out = vec![0.0; n];
-    if n < period || period == 0 { return out; }
+    if n < period || period == 0 {
+        return out;
+    }
     let shift = period / 2 + 1;
     for i in (period - 1)..n {
         let sma = closes[(i + 1 - period)..=i].iter().sum::<f64>() / period as f64;
@@ -35,7 +37,9 @@ mod tests {
     fn under_period_returns_zeros() {
         let closes = vec![100.0; 5];
         let out = compute(&closes, 20);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]
@@ -66,14 +70,16 @@ mod tests {
         // Pure sin wave around 100. DPO should remove the trend (none here)
         // and emit the oscillation.
         use std::f64::consts::PI;
-        let closes: Vec<f64> = (0..40).map(|i| {
-            100.0 + 10.0 * (2.0 * PI * (i as f64) / 20.0).sin()
-        }).collect();
+        let closes: Vec<f64> = (0..40)
+            .map(|i| 100.0 + 10.0 * (2.0 * PI * (i as f64) / 20.0).sin())
+            .collect();
         let out = compute(&closes, 10);
         // Some bars should be positive, some negative — confirms cycle.
         let positives = out.iter().skip(15).filter(|v| **v > 0.5).count();
         let negatives = out.iter().skip(15).filter(|v| **v < -0.5).count();
-        assert!(positives > 0 && negatives > 0,
-            "sinusoidal input should produce both positive and negative DPO");
+        assert!(
+            positives > 0 && negatives > 0,
+            "sinusoidal input should produce both positive and negative DPO"
+        );
     }
 }

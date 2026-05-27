@@ -17,15 +17,22 @@ pub const CAPACITY: usize = 256;
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
     /// New regulatory disclosure inserted (EDGAR / Senate / House).
-    Disclosure { source: &'static str, inserted: usize },
+    Disclosure {
+        source: &'static str,
+        inserted: usize,
+    },
     /// Sentiment poller tick — both source counts.
-    Sentiment  { wsb: usize, stocktwits: usize },
+    Sentiment { wsb: usize, stocktwits: usize },
     /// News poller tick.
-    News       { inserted: u64, symbols: usize },
+    News { inserted: u64, symbols: usize },
     /// An alert rule fired.
-    AlertFired { rule_id: String, symbol: String, message: String },
+    AlertFired {
+        rule_id: String,
+        symbol: String,
+        message: String,
+    },
     /// Heartbeat — server emits one every 30s so clients can detect deadness.
-    Ping       { ts: i64 },
+    Ping { ts: i64 },
 }
 
 #[derive(Clone)]
@@ -49,5 +56,7 @@ impl Hub {
 }
 
 impl Default for Hub {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

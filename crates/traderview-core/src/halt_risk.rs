@@ -26,10 +26,10 @@ pub struct HaltEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HaltRiskTier {
-    Low,        // < 0.01 halts/trading-day (almost never)
-    Medium,     // 0.01-0.05 (rare but notable)
-    High,       // 0.05-0.20 (regularly)
-    Extreme,    // > 0.20 (multiple times per month)
+    Low,     // < 0.01 halts/trading-day (almost never)
+    Medium,  // 0.01-0.05 (rare but notable)
+    High,    // 0.05-0.20 (regularly)
+    Extreme, // > 0.20 (multiple times per month)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,7 +50,9 @@ pub struct HaltRiskReport {
 
 pub fn analyze(events: &[HaltEvent], now: NaiveDate, lookback: Duration) -> HaltRiskReport {
     let mut report = HaltRiskReport::default();
-    if events.is_empty() { return report; }
+    if events.is_empty() {
+        return report;
+    }
     let cutoff = now - lookback;
     let lookback_days = lookback.num_days().max(1);
     let mut by_symbol: std::collections::BTreeMap<String, usize> = Default::default();
@@ -61,10 +63,15 @@ pub fn analyze(events: &[HaltEvent], now: NaiveDate, lookback: Duration) -> Halt
     }
     for (sym, count) in by_symbol {
         let per_day = count as f64 / lookback_days as f64;
-        let tier = if per_day > 0.20 { HaltRiskTier::Extreme }
-            else if per_day > 0.05 { HaltRiskTier::High }
-            else if per_day > 0.01 { HaltRiskTier::Medium }
-            else                    { HaltRiskTier::Low };
+        let tier = if per_day > 0.20 {
+            HaltRiskTier::Extreme
+        } else if per_day > 0.05 {
+            HaltRiskTier::High
+        } else if per_day > 0.01 {
+            HaltRiskTier::Medium
+        } else {
+            HaltRiskTier::Low
+        };
         if matches!(tier, HaltRiskTier::Extreme | HaltRiskTier::High) {
             report.watch_list.push(sym.clone());
         }
@@ -76,8 +83,11 @@ pub fn analyze(events: &[HaltEvent], now: NaiveDate, lookback: Duration) -> Halt
             tier,
         });
     }
-    report.by_symbol.sort_by(|a, b| b.halts_per_day.partial_cmp(&a.halts_per_day)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    report.by_symbol.sort_by(|a, b| {
+        b.halts_per_day
+            .partial_cmp(&a.halts_per_day)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report.watch_list.sort();
     report
 }
@@ -86,9 +96,15 @@ pub fn analyze(events: &[HaltEvent], now: NaiveDate, lookback: Duration) -> Halt
 mod tests {
     use super::*;
 
-    fn day(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn day(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
     fn ev(sym: &str, when: NaiveDate, reason: &str) -> HaltEvent {
-        HaltEvent { symbol: sym.into(), when, reason: reason.into() }
+        HaltEvent {
+            symbol: sym.into(),
+            when,
+            reason: reason.into(),
+        }
     }
 
     #[test]
@@ -119,7 +135,9 @@ mod tests {
     #[test]
     fn many_halts_in_90_days_yields_high_or_extreme() {
         // 20 halts in 90 days = 0.222/day → Extreme.
-        let events: Vec<_> = (1..=20).map(|i| ev("GME", day(2026, 3, i), "LULD")).collect();
+        let events: Vec<_> = (1..=20)
+            .map(|i| ev("GME", day(2026, 3, i), "LULD"))
+            .collect();
         let r = analyze(&events, day(2026, 5, 27), Duration::days(90));
         assert_eq!(r.by_symbol[0].halt_count, 20);
         assert_eq!(r.by_symbol[0].tier, HaltRiskTier::Extreme);
@@ -129,7 +147,7 @@ mod tests {
     #[test]
     fn halts_outside_window_excluded() {
         let events = vec![
-            ev("OLD", day(2025, 1, 1), "old"),    // 1+ years ago
+            ev("OLD", day(2025, 1, 1), "old"), // 1+ years ago
             ev("NEW", day(2026, 5, 1), "recent"),
         ];
         let r = analyze(&events, day(2026, 5, 27), Duration::days(90));
@@ -165,14 +183,14 @@ mod tests {
         let date = day(2026, 5, 27);
         let lookback = Duration::days(100);
         let case = |n_events: usize| -> HaltRiskTier {
-            let events: Vec<_> = (1..=n_events).map(|i|
-                ev("X", date - Duration::days(i as i64), "x")
-            ).collect();
+            let events: Vec<_> = (1..=n_events)
+                .map(|i| ev("X", date - Duration::days(i as i64), "x"))
+                .collect();
             analyze(&events, date, lookback).by_symbol[0].tier
         };
-        assert_eq!(case(1),  HaltRiskTier::Low);
-        assert_eq!(case(5),  HaltRiskTier::Medium);    // 0.05/day → boundary
-        assert_eq!(case(6),  HaltRiskTier::High);
+        assert_eq!(case(1), HaltRiskTier::Low);
+        assert_eq!(case(5), HaltRiskTier::Medium); // 0.05/day → boundary
+        assert_eq!(case(6), HaltRiskTier::High);
         assert_eq!(case(21), HaltRiskTier::Extreme);
     }
 }

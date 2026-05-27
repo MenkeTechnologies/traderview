@@ -58,7 +58,10 @@ pub fn compute(input: &KellyInput) -> KellyOutput {
     } else if full > 0.50 {
         "Edge is very large (full-Kelly > 50%). Half-Kelly recommended due to extreme drawdown risk.".into()
     } else {
-        format!("Half-Kelly = {:.2}% of bankroll per trade.", recommended * 100.0)
+        format!(
+            "Half-Kelly = {:.2}% of bankroll per trade.",
+            recommended * 100.0
+        )
     };
     KellyOutput {
         full_kelly: full,
@@ -76,7 +79,10 @@ mod tests {
     #[test]
     fn no_edge_yields_zero_or_negative_full_kelly() {
         // 50/50 with 1:1 payoff → f* = 0.5 - 0.5/1 = 0.
-        let r = compute(&KellyInput { win_rate: 0.5, payoff_ratio: 1.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.5,
+            payoff_ratio: 1.0,
+        });
         assert!((r.full_kelly - 0.0).abs() < 1e-12);
         assert_eq!(r.recommended_f, 0.0);
     }
@@ -84,17 +90,25 @@ mod tests {
     #[test]
     fn negative_edge_returns_negative_full_kelly_and_zero_recommended() {
         // 40% wr at 1:1 → f* = 0.4 - 0.6 = -0.2.
-        let r = compute(&KellyInput { win_rate: 0.4, payoff_ratio: 1.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.4,
+            payoff_ratio: 1.0,
+        });
         assert!(r.full_kelly < 0.0);
-        assert_eq!(r.recommended_f, 0.0,
-            "recommended must clamp at 0 — don't size negative bets");
+        assert_eq!(
+            r.recommended_f, 0.0,
+            "recommended must clamp at 0 — don't size negative bets"
+        );
         assert!(r.note.contains("No edge"));
     }
 
     #[test]
     fn positive_edge_60_percent_wr_2_to_1_payoff() {
         // f* = (2 × 0.6 - 0.4) / 2 = (1.2 - 0.4) / 2 = 0.4.
-        let r = compute(&KellyInput { win_rate: 0.6, payoff_ratio: 2.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.6,
+            payoff_ratio: 2.0,
+        });
         assert!((r.full_kelly - 0.4).abs() < 1e-9);
         assert!((r.half_kelly - 0.2).abs() < 1e-9);
         assert!((r.quarter_kelly - 0.1).abs() < 1e-9);
@@ -103,7 +117,10 @@ mod tests {
 
     #[test]
     fn payoff_zero_returns_default_with_note() {
-        let r = compute(&KellyInput { win_rate: 0.6, payoff_ratio: 0.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.6,
+            payoff_ratio: 0.0,
+        });
         assert_eq!(r.full_kelly, 0.0);
         assert!(r.note.contains("payoff_ratio"));
     }
@@ -111,7 +128,10 @@ mod tests {
     #[test]
     fn extreme_edge_yields_full_over_50pct_warning() {
         // 90% wr, 5:1 payoff → f* = (5 × 0.9 - 0.1) / 5 = 0.88.
-        let r = compute(&KellyInput { win_rate: 0.9, payoff_ratio: 5.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.9,
+            payoff_ratio: 5.0,
+        });
         assert!(r.full_kelly > 0.50);
         assert!(r.note.contains("very large"));
     }
@@ -119,14 +139,20 @@ mod tests {
     #[test]
     fn win_rate_clamps_above_one_at_one() {
         // p > 1 is invalid input — clamp to 1.0 → f* = 1.
-        let r = compute(&KellyInput { win_rate: 1.5, payoff_ratio: 1.0 });
+        let r = compute(&KellyInput {
+            win_rate: 1.5,
+            payoff_ratio: 1.0,
+        });
         // With p=1, q=0, f* = (1×1 - 0)/1 = 1.0.
         assert!((r.full_kelly - 1.0).abs() < 1e-12);
     }
 
     #[test]
     fn half_and_quarter_are_strict_proportions() {
-        let r = compute(&KellyInput { win_rate: 0.55, payoff_ratio: 1.5 });
+        let r = compute(&KellyInput {
+            win_rate: 0.55,
+            payoff_ratio: 1.5,
+        });
         assert!((r.half_kelly - r.full_kelly / 2.0).abs() < 1e-12);
         assert!((r.quarter_kelly - r.full_kelly / 4.0).abs() < 1e-12);
     }
@@ -134,7 +160,10 @@ mod tests {
     #[test]
     fn tiny_edge_emits_dedicated_note() {
         // Edge < 1% full Kelly.
-        let r = compute(&KellyInput { win_rate: 0.501, payoff_ratio: 1.0 });
+        let r = compute(&KellyInput {
+            win_rate: 0.501,
+            payoff_ratio: 1.0,
+        });
         assert!(r.full_kelly > 0.0 && r.full_kelly < 0.01);
         assert!(r.note.contains("tiny"));
     }

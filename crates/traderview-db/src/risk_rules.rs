@@ -22,12 +22,29 @@ pub struct StoredRule {
 }
 
 /// List all rules belonging to a user, optionally filtered by account.
-type RiskRuleRow = (Uuid, Uuid, Option<Uuid>, serde_json::Value, bool, DateTime<Utc>);
-type RiskFireRow = (Uuid, Uuid, Option<Uuid>, String, serde_json::Value, bool, DateTime<Utc>);
+type RiskRuleRow = (
+    Uuid,
+    Uuid,
+    Option<Uuid>,
+    serde_json::Value,
+    bool,
+    DateTime<Utc>,
+);
+type RiskFireRow = (
+    Uuid,
+    Uuid,
+    Option<Uuid>,
+    String,
+    serde_json::Value,
+    bool,
+    DateTime<Utc>,
+);
 
-pub async fn list(pool: &PgPool, user_id: Uuid, account_id: Option<Uuid>)
-    -> anyhow::Result<Vec<StoredRule>>
-{
+pub async fn list(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Option<Uuid>,
+) -> anyhow::Result<Vec<StoredRule>> {
     let rows: Vec<RiskRuleRow> = sqlx::query_as(
         "SELECT id, user_id, account_id, rule, enabled, created_at
            FROM risk_rules
@@ -42,14 +59,24 @@ pub async fn list(pool: &PgPool, user_id: Uuid, account_id: Option<Uuid>)
     let mut out = Vec::with_capacity(rows.len());
     for (id, user_id, account_id, rule_json, enabled, created_at) in rows {
         let rule: RiskRule = serde_json::from_value(rule_json)?;
-        out.push(StoredRule { id, user_id, account_id, rule, enabled, created_at });
+        out.push(StoredRule {
+            id,
+            user_id,
+            account_id,
+            rule,
+            enabled,
+            created_at,
+        });
     }
     Ok(out)
 }
 
-pub async fn create(pool: &PgPool, user_id: Uuid, account_id: Option<Uuid>, rule: &RiskRule)
-    -> anyhow::Result<Uuid>
-{
+pub async fn create(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Option<Uuid>,
+    rule: &RiskRule,
+) -> anyhow::Result<Uuid> {
     let id: (Uuid,) = sqlx::query_as(
         "INSERT INTO risk_rules (user_id, account_id, rule) VALUES ($1, $2, $3)
          RETURNING id",
@@ -64,19 +91,25 @@ pub async fn create(pool: &PgPool, user_id: Uuid, account_id: Option<Uuid>, rule
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<u64> {
     let r = sqlx::query("DELETE FROM risk_rules WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id)
-        .execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected())
 }
 
-pub async fn set_enabled(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool)
-    -> anyhow::Result<u64>
-{
-    let r = sqlx::query(
-        "UPDATE risk_rules SET enabled = $3 WHERE id = $1 AND user_id = $2",
-    )
-    .bind(id).bind(user_id).bind(enabled)
-    .execute(pool).await?;
+pub async fn set_enabled(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+    enabled: bool,
+) -> anyhow::Result<u64> {
+    let r = sqlx::query("UPDATE risk_rules SET enabled = $3 WHERE id = $1 AND user_id = $2")
+        .bind(id)
+        .bind(user_id)
+        .bind(enabled)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected())
 }
 
@@ -87,11 +120,13 @@ pub async fn set_enabled(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool)
 ///   - today's realized P&L
 ///   - count of currently-open positions on this account
 ///   - all closed trades from today (for streak + cool-down rules)
-pub async fn build_context(pool: &PgPool, account_id: Uuid)
-    -> anyhow::Result<GateContext>
-{
+pub async fn build_context(pool: &PgPool, account_id: Uuid) -> anyhow::Result<GateContext> {
     use chrono::Utc;
-    let today_start = Utc::now().date_naive().and_hms_opt(0, 0, 0).unwrap().and_utc();
+    let today_start = Utc::now()
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc();
 
     let equity: Option<(Decimal,)> = sqlx::query_as(
         "SELECT COALESCE(starting_cash, 0)::numeric
@@ -109,14 +144,17 @@ pub async fn build_context(pool: &PgPool, account_id: Uuid)
         "SELECT SUM(net_pnl) FROM trades
           WHERE account_id = $1 AND closed_at >= $2 AND net_pnl IS NOT NULL",
     )
-    .bind(account_id).bind(today_start)
-    .fetch_optional(pool).await?;
+    .bind(account_id)
+    .bind(today_start)
+    .fetch_optional(pool)
+    .await?;
     let today_realized_pnl = today_pnl.and_then(|x| x.0).unwrap_or(Decimal::ZERO);
 
-    let open: Option<(i64,)> = sqlx::query_as(
-        "SELECT COUNT(*) FROM trades WHERE account_id = $1 AND status = 'open'",
-    )
-    .bind(account_id).fetch_optional(pool).await?;
+    let open: Option<(i64,)> =
+        sqlx::query_as("SELECT COUNT(*) FROM trades WHERE account_id = $1 AND status = 'open'")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
     let open_position_count = open.map(|x| x.0 as usize).unwrap_or(0);
 
     let today_trades: Vec<(DateTime<Utc>, Decimal)> = sqlx::query_as(
@@ -124,9 +162,12 @@ pub async fn build_context(pool: &PgPool, account_id: Uuid)
           WHERE account_id = $1 AND closed_at >= $2 AND net_pnl IS NOT NULL
           ORDER BY closed_at ASC",
     )
-    .bind(account_id).bind(today_start)
-    .fetch_all(pool).await?;
-    let today_closed_trades = today_trades.into_iter()
+    .bind(account_id)
+    .bind(today_start)
+    .fetch_all(pool)
+    .await?;
+    let today_closed_trades = today_trades
+        .into_iter()
         .map(|(closed_at, net_pnl)| RecentTrade { closed_at, net_pnl })
         .collect();
 
@@ -162,7 +203,9 @@ pub async fn log_fire(
     symbol: &str,
     decision: &GateDecision,
 ) -> anyhow::Result<()> {
-    if decision.violations.is_empty() { return Ok(()); }
+    if decision.violations.is_empty() {
+        return Ok(());
+    }
     sqlx::query(
         "INSERT INTO risk_fires (user_id, account_id, symbol, decision, blocked)
          VALUES ($1, $2, $3, $4, $5)",
@@ -188,9 +231,11 @@ pub struct RuleFireStat {
     pub blocks: i64,
 }
 
-pub async fn fires_by_rule(pool: &PgPool, user_id: Uuid, days: i64)
-    -> anyhow::Result<Vec<RuleFireStat>>
-{
+pub async fn fires_by_rule(
+    pool: &PgPool,
+    user_id: Uuid,
+    days: i64,
+) -> anyhow::Result<Vec<RuleFireStat>> {
     let days = days.clamp(1, 365);
     // jsonb_array_elements expands the decision.violations array, then
     // we group by the `rule` field. blocked is a top-level row column so
@@ -206,36 +251,55 @@ pub async fn fires_by_rule(pool: &PgPool, user_id: Uuid, days: i64)
           GROUP BY v->>'rule'
           ORDER BY fires DESC",
     )
-    .bind(user_id).bind(days.to_string())
-    .fetch_all(pool).await?;
-    Ok(rows.into_iter()
-        .map(|(rule, fires, blocks)| RuleFireStat { rule, fires, blocks })
+    .bind(user_id)
+    .bind(days.to_string())
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|(rule, fires, blocks)| RuleFireStat {
+            rule,
+            fires,
+            blocks,
+        })
         .collect())
 }
 
 /// Read recent fires for a user, newest first. `limit` capped at 500.
-pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
-    -> anyhow::Result<Vec<RiskFire>>
-{
+pub async fn recent_fires(
+    pool: &PgPool,
+    user_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<RiskFire>> {
     let limit = limit.clamp(1, 500);
     let rows: Vec<RiskFireRow> = sqlx::query_as(
         "SELECT id, user_id, account_id, symbol, decision, blocked, fired_at
            FROM risk_fires WHERE user_id = $1
           ORDER BY fired_at DESC LIMIT $2",
     )
-    .bind(user_id).bind(limit)
-    .fetch_all(pool).await?;
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
     let mut out = Vec::with_capacity(rows.len());
     for (id, user_id, account_id, symbol, dj, blocked, fired_at) in rows {
         let decision: GateDecision = serde_json::from_value(dj)?;
-        out.push(RiskFire { id, user_id, account_id, symbol, decision, blocked, fired_at });
+        out.push(RiskFire {
+            id,
+            user_id,
+            account_id,
+            symbol,
+            decision,
+            blocked,
+            fired_at,
+        });
     }
     Ok(out)
 }
 
 #[cfg(test)]
 mod tests {
-    use traderview_core::risk_gate::{Preset, preset_rules};
+    use traderview_core::risk_gate::{preset_rules, Preset};
 
     /// The 0030 migration shape is load-bearing for the risk_rules CRUD
     /// helpers above — every column name + type must match what the SELECT
@@ -247,8 +311,10 @@ mod tests {
 
     #[test]
     fn migration_creates_risk_rules_table() {
-        assert!(MIGRATION_0030.contains("CREATE TABLE risk_rules"),
-            "migration 0030 must create the risk_rules table");
+        assert!(
+            MIGRATION_0030.contains("CREATE TABLE risk_rules"),
+            "migration 0030 must create the risk_rules table"
+        );
     }
 
     #[test]
@@ -256,9 +322,18 @@ mod tests {
         // The list/create/build_context helpers SELECT these columns.
         // If anyone renames a column in the migration without updating
         // the helpers (or vice versa) this test catches the drift.
-        for col in ["id", "user_id", "account_id", "rule", "enabled", "created_at"] {
-            assert!(MIGRATION_0030.contains(col),
-                "migration 0030 missing column `{col}` that risk_rules.rs reads");
+        for col in [
+            "id",
+            "user_id",
+            "account_id",
+            "rule",
+            "enabled",
+            "created_at",
+        ] {
+            assert!(
+                MIGRATION_0030.contains(col),
+                "migration 0030 missing column `{col}` that risk_rules.rs reads"
+            );
         }
     }
 
@@ -268,8 +343,10 @@ mod tests {
         // new variants doesn't require a schema migration. If this ever
         // becomes plain TEXT or JSON we'd lose the GIN index option +
         // strict validation. Pinned.
-        assert!(MIGRATION_0030.contains("rule") && MIGRATION_0030.contains("JSONB"),
-            "rule column must be JSONB");
+        assert!(
+            MIGRATION_0030.contains("rule") && MIGRATION_0030.contains("JSONB"),
+            "rule column must be JSONB"
+        );
     }
 
     #[test]
@@ -277,16 +354,20 @@ mod tests {
         // Deleting an account must auto-delete its scoped rules.
         // Otherwise orphan rules accumulate and the next account that
         // happens to get the same UUID inherits stale rules.
-        assert!(MIGRATION_0030.contains("ON DELETE CASCADE"),
-            "account_id FK must cascade on delete");
+        assert!(
+            MIGRATION_0030.contains("ON DELETE CASCADE"),
+            "account_id FK must cascade on delete"
+        );
     }
 
     #[test]
     fn migration_has_user_index_for_per_user_lookup() {
         // list() filters by user_id; without the index this is a full
         // table scan once the rule count grows past a few thousand.
-        assert!(MIGRATION_0030.contains("risk_rules_user_idx"),
-            "must index by user_id for the per-user list query");
+        assert!(
+            MIGRATION_0030.contains("risk_rules_user_idx"),
+            "must index by user_id for the per-user list query"
+        );
     }
 
     // 0031 — risk_fires audit log.
@@ -311,8 +392,10 @@ mod tests {
             for rule in preset_rules(p) {
                 let v = serde_json::to_value(&rule).expect("serialize");
                 let obj = v.as_object().expect("rule must be a JSON object");
-                assert!(obj.contains_key("type"),
-                    "rule {rule:?} missing serde tag — JSONB queries would break");
+                assert!(
+                    obj.contains_key("type"),
+                    "rule {rule:?} missing serde tag — JSONB queries would break"
+                );
             }
         }
     }

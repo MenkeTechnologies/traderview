@@ -10,7 +10,9 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<f64> {
     let n = closes.len();
     let mut out = vec![0.0; n];
-    if n <= period || period == 0 { return out; }
+    if n <= period || period == 0 {
+        return out;
+    }
     for i in period..n {
         let prior = closes[i - period];
         if prior > 0.0 {
@@ -32,7 +34,9 @@ mod tests {
     #[test]
     fn under_period_zeros() {
         let out = compute(&[100.0, 105.0], 10);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]
@@ -50,7 +54,9 @@ mod tests {
     #[test]
     fn flat_yields_zero_roc() {
         let out = compute(&[100.0; 10], 5);
-        for v in &out[5..] { assert_eq!(*v, 0.0); }
+        for v in &out[5..] {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]

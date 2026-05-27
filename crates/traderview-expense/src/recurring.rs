@@ -16,7 +16,7 @@ pub enum Cadence {
     Daily,
     Weekly,
     BiWeekly,
-    Monthly,    // Same day-of-month each month; falls back to last day if absent
+    Monthly, // Same day-of-month each month; falls back to last day if absent
     Quarterly,
     Annual,
 }
@@ -24,7 +24,7 @@ pub enum Cadence {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Template {
     pub merchant: String,
-    pub amount: Decimal,           // negative for expense, positive for income
+    pub amount: Decimal, // negative for expense, positive for income
     pub currency: String,
     pub cadence: Cadence,
     /// First date the template applies. Cadence increments from here.
@@ -46,16 +46,26 @@ pub struct DueEntry {
 /// Enumerate every (cadence-aligned) due date inside `[window_start, window_end]`
 /// for this template, capped at 10k entries to defend against pathological
 /// anchor+cadence combinations.
-pub fn due_in_window(t: &Template, window_start: NaiveDate, window_end: NaiveDate)
-    -> Vec<DueEntry>
-{
-    if window_end < window_start { return vec![]; }
+pub fn due_in_window(
+    t: &Template,
+    window_start: NaiveDate,
+    window_end: NaiveDate,
+) -> Vec<DueEntry> {
+    if window_end < window_start {
+        return vec![];
+    }
     let mut out = Vec::new();
     let mut step = 0u32;
     while let Some(date) = advance(t.anchor, t.cadence, step) {
         // Walk forward until we enter or pass the window.
-        if date > window_end { break; }
-        if let Some(end) = t.end { if date > end { break; } }
+        if date > window_end {
+            break;
+        }
+        if let Some(end) = t.end {
+            if date > end {
+                break;
+            }
+        }
         if date >= window_start {
             out.push(DueEntry {
                 date,
@@ -66,7 +76,9 @@ pub fn due_in_window(t: &Template, window_start: NaiveDate, window_end: NaiveDat
             });
         }
         step += 1;
-        if step > 10_000 { break; }   // safety floor
+        if step > 10_000 {
+            break;
+        } // safety floor
     }
     out
 }
@@ -74,18 +86,17 @@ pub fn due_in_window(t: &Template, window_start: NaiveDate, window_end: NaiveDat
 fn advance(anchor: NaiveDate, cadence: Cadence, step: u32) -> Option<NaiveDate> {
     let step_i = step as i64;
     match cadence {
-        Cadence::Daily    => Some(anchor + Duration::days(step_i)),
-        Cadence::Weekly   => Some(anchor + Duration::days(7 * step_i)),
+        Cadence::Daily => Some(anchor + Duration::days(step_i)),
+        Cadence::Weekly => Some(anchor + Duration::days(7 * step_i)),
         Cadence::BiWeekly => Some(anchor + Duration::days(14 * step_i)),
-        Cadence::Monthly  => add_months(anchor, step_i as i32),
+        Cadence::Monthly => add_months(anchor, step_i as i32),
         Cadence::Quarterly => add_months(anchor, (step_i as i32) * 3),
-        Cadence::Annual   => {
+        Cadence::Annual => {
             let y = anchor.year() + step_i as i32;
-            NaiveDate::from_ymd_opt(y, anchor.month(), anchor.day())
-                .or_else(|| {
-                    // Feb 29 → Feb 28 on non-leap.
-                    NaiveDate::from_ymd_opt(y, anchor.month(), 28)
-                })
+            NaiveDate::from_ymd_opt(y, anchor.month(), anchor.day()).or_else(|| {
+                // Feb 29 → Feb 28 on non-leap.
+                NaiveDate::from_ymd_opt(y, anchor.month(), 28)
+            })
         }
     }
 }
@@ -98,17 +109,16 @@ fn add_months(d: NaiveDate, n: i32) -> Option<NaiveDate> {
     let y = (total_months.div_euclid(12)) as i32;
     let m = (total_months.rem_euclid(12)) as u32 + 1;
     // Pick the smaller of (anchor day, last day of target month).
-    
-    NaiveDate::from_ymd_opt(y, m, d.day())
-        .or_else(|| {
-            // Walk back to find the last valid day.
-            for candidate_day in (1..=31u32).rev() {
-                if let Some(d2) = NaiveDate::from_ymd_opt(y, m, candidate_day) {
-                    return Some(d2);
-                }
+
+    NaiveDate::from_ymd_opt(y, m, d.day()).or_else(|| {
+        // Walk back to find the last valid day.
+        for candidate_day in (1..=31u32).rev() {
+            if let Some(d2) = NaiveDate::from_ymd_opt(y, m, candidate_day) {
+                return Some(d2);
             }
-            None
-        })
+        }
+        None
+    })
 }
 
 #[cfg(test)]
@@ -116,7 +126,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn date(y: i32, m: u32, day: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, day).unwrap()
     }
@@ -149,7 +161,7 @@ mod tests {
     fn weekly_yields_every_seven_days() {
         let t = Template {
             cadence: Cadence::Weekly,
-            anchor: date(2026, 1, 5),  // Monday
+            anchor: date(2026, 1, 5), // Monday
             ..netflix()
         };
         let out = due_in_window(&t, date(2026, 1, 1), date(2026, 1, 31));
@@ -161,7 +173,10 @@ mod tests {
 
     #[test]
     fn end_date_truncates_recurrence() {
-        let t = Template { end: Some(date(2026, 3, 31)), ..netflix() };
+        let t = Template {
+            end: Some(date(2026, 3, 31)),
+            ..netflix()
+        };
         let out = due_in_window(&t, date(2026, 1, 1), date(2026, 12, 31));
         // Jan 15, Feb 15, Mar 15 only.
         assert_eq!(out.len(), 3);
@@ -169,7 +184,10 @@ mod tests {
 
     #[test]
     fn jan_31_anchor_falls_back_to_feb_last_day_each_month() {
-        let t = Template { anchor: date(2026, 1, 31), ..netflix() };
+        let t = Template {
+            anchor: date(2026, 1, 31),
+            ..netflix()
+        };
         let out = due_in_window(&t, date(2026, 1, 1), date(2026, 4, 30));
         // Jan 31, Feb 28 (non-leap), Mar 31, Apr 30.
         assert_eq!(out.len(), 4);
@@ -182,20 +200,23 @@ mod tests {
     #[test]
     fn feb_29_leap_anchor_falls_back_to_feb_28_on_non_leap_years() {
         let t = Template {
-            anchor: date(2024, 2, 29),     // leap
+            anchor: date(2024, 2, 29), // leap
             cadence: Cadence::Annual,
             ..netflix()
         };
         let out = due_in_window(&t, date(2024, 1, 1), date(2027, 12, 31));
         // 2024 Feb 29, 2025 Feb 28, 2026 Feb 28, 2027 Feb 28.
         assert_eq!(out.len(), 4);
-        assert_eq!(out[0], DueEntry {
-            date: date(2024, 2, 29),
-            merchant: t.merchant.clone(),
-            amount: t.amount,
-            currency: t.currency.clone(),
-            note: t.note.clone(),
-        });
+        assert_eq!(
+            out[0],
+            DueEntry {
+                date: date(2024, 2, 29),
+                merchant: t.merchant.clone(),
+                amount: t.amount,
+                currency: t.currency.clone(),
+                note: t.note.clone(),
+            }
+        );
         assert_eq!(out[1].date, date(2025, 2, 28));
     }
 

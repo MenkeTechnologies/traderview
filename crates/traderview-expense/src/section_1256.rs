@@ -28,17 +28,22 @@ pub fn is_section_1256_symbol(symbol: &str) -> bool {
     let broad_index_options = [
         "SPX", "XSP", "NDX", "NQX", "RUT", "MNX", "DJX", "OEX", "VIX",
     ];
-    if broad_index_options.contains(&s.as_str()) { return true; }
+    if broad_index_options.contains(&s.as_str()) {
+        return true;
+    }
     // Futures roots: /ES, /NQ, /CL, /GC, /SI, /ZB, /ZN, /6E, etc.
     // Convention: leading "/" or "@" prefix or 1-3 letter root.
-    if s.starts_with('/') || s.starts_with('@') { return true; }
+    if s.starts_with('/') || s.starts_with('@') {
+        return true;
+    }
     // Common futures roots (heuristic — most users tag with the / prefix).
     let common_futures_roots = [
-        "ES", "NQ", "RTY", "YM", "MES", "MNQ", "M2K", "MYM",
-        "CL", "GC", "SI", "HG", "NG", "ZB", "ZN", "ZF", "ZT",
-        "6E", "6J", "6B", "6A", "6C", "6S", "BTC", "ETH",
+        "ES", "NQ", "RTY", "YM", "MES", "MNQ", "M2K", "MYM", "CL", "GC", "SI", "HG", "NG", "ZB",
+        "ZN", "ZF", "ZT", "6E", "6J", "6B", "6A", "6C", "6S", "BTC", "ETH",
     ];
-    if common_futures_roots.contains(&s.as_str()) { return true; }
+    if common_futures_roots.contains(&s.as_str()) {
+        return true;
+    }
     false
 }
 
@@ -73,7 +78,9 @@ pub fn report(trades: &[Section1256Trade]) -> Section1256Report {
         ..Section1256Report::default()
     };
     for t in trades {
-        let is_1256 = t.is_1256.unwrap_or_else(|| is_section_1256_symbol(&t.symbol));
+        let is_1256 = t
+            .is_1256
+            .unwrap_or_else(|| is_section_1256_symbol(&t.symbol));
         if is_1256 {
             report.section_1256_trade_count += 1;
             report.total_1256_pnl += t.realized_pnl;
@@ -91,7 +98,9 @@ pub fn report(trades: &[Section1256Trade]) -> Section1256Report {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     // ─── classifier ────────────────────────────────────────────────────
 
@@ -174,8 +183,16 @@ mod tests {
     #[test]
     fn non_1256_trades_excluded_from_split() {
         let trades = vec![
-            Section1256Trade { symbol: "SPX".into(),  realized_pnl: d("1000"), is_1256: None },
-            Section1256Trade { symbol: "AAPL".into(), realized_pnl: d("500"),  is_1256: None },
+            Section1256Trade {
+                symbol: "SPX".into(),
+                realized_pnl: d("1000"),
+                is_1256: None,
+            },
+            Section1256Trade {
+                symbol: "AAPL".into(),
+                realized_pnl: d("500"),
+                is_1256: None,
+            },
         ];
         let r = report(&trades);
         assert_eq!(r.total_1256_pnl, d("1000"));
@@ -190,7 +207,7 @@ mod tests {
         let trades = vec![Section1256Trade {
             symbol: "FOOBAR".into(),
             realized_pnl: d("1000"),
-            is_1256: Some(true),     // user-tagged
+            is_1256: Some(true), // user-tagged
         }];
         let r = report(&trades);
         assert_eq!(r.section_1256_trade_count, 1);

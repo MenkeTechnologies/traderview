@@ -38,11 +38,26 @@ impl Default for ThrottleConfig {
     fn default() -> Self {
         Self {
             tiers: vec![
-                ThrottleTier { min_dd: 0.0,  multiplier: 1.00 },
-                ThrottleTier { min_dd: 0.05, multiplier: 0.75 },
-                ThrottleTier { min_dd: 0.10, multiplier: 0.50 },
-                ThrottleTier { min_dd: 0.15, multiplier: 0.25 },
-                ThrottleTier { min_dd: 0.20, multiplier: 0.10 },
+                ThrottleTier {
+                    min_dd: 0.0,
+                    multiplier: 1.00,
+                },
+                ThrottleTier {
+                    min_dd: 0.05,
+                    multiplier: 0.75,
+                },
+                ThrottleTier {
+                    min_dd: 0.10,
+                    multiplier: 0.50,
+                },
+                ThrottleTier {
+                    min_dd: 0.15,
+                    multiplier: 0.25,
+                },
+                ThrottleTier {
+                    min_dd: 0.20,
+                    multiplier: 0.10,
+                },
             ],
         }
     }
@@ -67,12 +82,21 @@ pub fn evaluate(equity_history: &[f64], cfg: &ThrottleConfig) -> ThrottleReport 
         };
     }
     let current = *equity_history.last().unwrap();
-    let peak = equity_history.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let dd = if peak <= 0.0 { 0.0 } else { ((peak - current) / peak).max(0.0) };
+    let peak = equity_history
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+    let dd = if peak <= 0.0 {
+        0.0
+    } else {
+        ((peak - current) / peak).max(0.0)
+    };
     // Pick the highest-min_dd tier that current_dd qualifies for.
     let mut chosen = &cfg.tiers[0];
     for tier in &cfg.tiers {
-        if dd >= tier.min_dd { chosen = tier; }
+        if dd >= tier.min_dd {
+            chosen = tier;
+        }
     }
     ThrottleReport {
         current_equity: current,
@@ -82,7 +106,9 @@ pub fn evaluate(equity_history: &[f64], cfg: &ThrottleConfig) -> ThrottleReport 
         tier_min_dd: chosen.min_dd,
         note: format!(
             "DD {:.2}% — using {:.2}x sizing (tier ≥ {:.0}%)",
-            dd * 100.0, chosen.multiplier, chosen.min_dd * 100.0,
+            dd * 100.0,
+            chosen.multiplier,
+            chosen.min_dd * 100.0,
         ),
     }
 }
@@ -158,8 +184,14 @@ mod tests {
     fn custom_tiers_override_default() {
         let cfg = ThrottleConfig {
             tiers: vec![
-                ThrottleTier { min_dd: 0.0,  multiplier: 1.0 },
-                ThrottleTier { min_dd: 0.02, multiplier: 0.5 },   // aggressive
+                ThrottleTier {
+                    min_dd: 0.0,
+                    multiplier: 1.0,
+                },
+                ThrottleTier {
+                    min_dd: 0.02,
+                    multiplier: 0.5,
+                }, // aggressive
             ],
         };
         // 3% DD → tier ≥ 2% → 0.5x.

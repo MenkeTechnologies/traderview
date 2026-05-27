@@ -109,12 +109,20 @@ pub fn classify(events: &[CryptoEvent]) -> CryptoTaxReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
-    fn day(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
+    fn day(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
 
-    fn ev(kind: CryptoEventKind, sym: &str, when: NaiveDate, amount: &str,
-          acquired: Option<NaiveDate>) -> CryptoEvent
-    {
+    fn ev(
+        kind: CryptoEventKind,
+        sym: &str,
+        when: NaiveDate,
+        amount: &str,
+        acquired: Option<NaiveDate>,
+    ) -> CryptoEvent {
         CryptoEvent {
             kind,
             symbol: sym.into(),
@@ -133,7 +141,13 @@ mod tests {
 
     #[test]
     fn mining_reward_classified_as_ordinary_income() {
-        let events = vec![ev(CryptoEventKind::MiningReward, "BTC", day(2026, 3, 1), "5000", None)];
+        let events = vec![ev(
+            CryptoEventKind::MiningReward,
+            "BTC",
+            day(2026, 3, 1),
+            "5000",
+            None,
+        )];
         let r = classify(&events);
         assert_eq!(r.mining_income, d("5000"));
         assert_eq!(r.ordinary_income, d("5000"));
@@ -143,8 +157,20 @@ mod tests {
     #[test]
     fn staking_reward_separate_bucket_but_same_ordinary_total() {
         let events = vec![
-            ev(CryptoEventKind::StakingReward, "ETH", day(2026, 3, 1), "2000", None),
-            ev(CryptoEventKind::MiningReward,  "BTC", day(2026, 3, 1), "5000", None),
+            ev(
+                CryptoEventKind::StakingReward,
+                "ETH",
+                day(2026, 3, 1),
+                "2000",
+                None,
+            ),
+            ev(
+                CryptoEventKind::MiningReward,
+                "BTC",
+                day(2026, 3, 1),
+                "5000",
+                None,
+            ),
         ];
         let r = classify(&events);
         assert_eq!(r.staking_income, d("2000"));
@@ -155,8 +181,20 @@ mod tests {
     #[test]
     fn airdrop_and_hardfork_separate_but_both_ordinary() {
         let events = vec![
-            ev(CryptoEventKind::Airdrop,         "UNI", day(2026, 3, 1), "100", None),
-            ev(CryptoEventKind::HardForkAirdrop, "BCH", day(2026, 3, 1), "500", None),
+            ev(
+                CryptoEventKind::Airdrop,
+                "UNI",
+                day(2026, 3, 1),
+                "100",
+                None,
+            ),
+            ev(
+                CryptoEventKind::HardForkAirdrop,
+                "BCH",
+                day(2026, 3, 1),
+                "500",
+                None,
+            ),
         ];
         let r = classify(&events);
         assert_eq!(r.airdrop_income, d("100"));
@@ -167,8 +205,10 @@ mod tests {
     #[test]
     fn sale_held_under_one_year_short_term() {
         let events = vec![ev(
-            CryptoEventKind::Sale, "BTC",
-            day(2026, 6, 1), "1000",
+            CryptoEventKind::Sale,
+            "BTC",
+            day(2026, 6, 1),
+            "1000",
             Some(day(2026, 1, 1)),
         )];
         let r = classify(&events);
@@ -179,8 +219,10 @@ mod tests {
     #[test]
     fn sale_held_over_one_year_long_term() {
         let events = vec![ev(
-            CryptoEventKind::Sale, "BTC",
-            day(2026, 6, 1), "1000",
+            CryptoEventKind::Sale,
+            "BTC",
+            day(2026, 6, 1),
+            "1000",
             Some(day(2024, 1, 1)),
         )];
         let r = classify(&events);
@@ -194,21 +236,28 @@ mod tests {
         // but is still EXACTLY one year. A naive 365-day rule would
         // misclassify as long-term. Calendar-date rule says short-term.
         let events = vec![ev(
-            CryptoEventKind::Sale, "BTC",
-            day(2025, 1, 15), "1000",
+            CryptoEventKind::Sale,
+            "BTC",
+            day(2025, 1, 15),
+            "1000",
             Some(day(2024, 1, 15)),
         )];
         let r = classify(&events);
-        assert_eq!(r.short_term_capital, d("1000"),
-            "exactly-1-year hold across leap year must be short-term");
+        assert_eq!(
+            r.short_term_capital,
+            d("1000"),
+            "exactly-1-year hold across leap year must be short-term"
+        );
     }
 
     #[test]
     fn sale_missing_acquired_date_defaults_to_short_term() {
         // Conservative: no holding-period proof → ST treatment (higher tax).
         let events = vec![ev(
-            CryptoEventKind::Sale, "BTC",
-            day(2026, 6, 1), "1000",
+            CryptoEventKind::Sale,
+            "BTC",
+            day(2026, 6, 1),
+            "1000",
             None,
         )];
         let r = classify(&events);
@@ -218,8 +267,10 @@ mod tests {
     #[test]
     fn negative_amount_means_loss() {
         let events = vec![ev(
-            CryptoEventKind::Sale, "ETH",
-            day(2026, 6, 1), "-500",
+            CryptoEventKind::Sale,
+            "ETH",
+            day(2026, 6, 1),
+            "-500",
             Some(day(2026, 1, 1)),
         )];
         let r = classify(&events);
@@ -229,8 +280,20 @@ mod tests {
     #[test]
     fn net_capital_combines_st_plus_lt() {
         let events = vec![
-            ev(CryptoEventKind::Sale, "A", day(2026, 6, 1), "1000",  Some(day(2026, 1, 1))),
-            ev(CryptoEventKind::Sale, "B", day(2026, 6, 1), "-500",  Some(day(2024, 1, 1))),
+            ev(
+                CryptoEventKind::Sale,
+                "A",
+                day(2026, 6, 1),
+                "1000",
+                Some(day(2026, 1, 1)),
+            ),
+            ev(
+                CryptoEventKind::Sale,
+                "B",
+                day(2026, 6, 1),
+                "-500",
+                Some(day(2024, 1, 1)),
+            ),
         ];
         let r = classify(&events);
         assert_eq!(r.short_term_capital, d("1000"));
@@ -241,12 +304,30 @@ mod tests {
     #[test]
     fn mixed_events_independently_tracked() {
         let events = vec![
-            ev(CryptoEventKind::MiningReward, "BTC", day(2026, 3, 1), "5000", None),
-            ev(CryptoEventKind::Sale,         "BTC", day(2026, 6, 1), "3000", Some(day(2024, 1, 1))),
-            ev(CryptoEventKind::Airdrop,      "UNI", day(2026, 9, 1), "100",  None),
+            ev(
+                CryptoEventKind::MiningReward,
+                "BTC",
+                day(2026, 3, 1),
+                "5000",
+                None,
+            ),
+            ev(
+                CryptoEventKind::Sale,
+                "BTC",
+                day(2026, 6, 1),
+                "3000",
+                Some(day(2024, 1, 1)),
+            ),
+            ev(
+                CryptoEventKind::Airdrop,
+                "UNI",
+                day(2026, 9, 1),
+                "100",
+                None,
+            ),
         ];
         let r = classify(&events);
-        assert_eq!(r.ordinary_income, d("5100"));    // 5000 + 100
+        assert_eq!(r.ordinary_income, d("5100")); // 5000 + 100
         assert_eq!(r.long_term_capital, d("3000"));
         assert_eq!(r.short_term_capital, Decimal::ZERO);
     }

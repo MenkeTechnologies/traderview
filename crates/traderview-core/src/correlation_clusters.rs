@@ -38,25 +38,36 @@ pub struct Cluster {
 ///
 /// `corr` is the (i, j) -> rho lookup. Symmetric — caller fills both
 /// orderings or this honors whichever appears first.
-pub fn cluster(positions: &[Position], corr: &BTreeMap<(String, String), f64>, threshold: f64)
-    -> Vec<Cluster>
-{
+pub fn cluster(
+    positions: &[Position],
+    corr: &BTreeMap<(String, String), f64>,
+    threshold: f64,
+) -> Vec<Cluster> {
     let n = positions.len();
-    if n == 0 { return vec![]; }
+    if n == 0 {
+        return vec![];
+    }
     let mut parent: Vec<usize> = (0..n).collect();
-    let idx_of: BTreeMap<&str, usize> = positions.iter().enumerate()
+    let idx_of: BTreeMap<&str, usize> = positions
+        .iter()
+        .enumerate()
         .map(|(i, p)| (p.symbol.as_str(), i))
         .collect();
     for i in 0..n {
-        for j in (i+1)..n {
+        for j in (i + 1)..n {
             let a = &positions[i].symbol;
             let b = &positions[j].symbol;
-            let rho = corr.get(&(a.clone(), b.clone()))
+            let rho = corr
+                .get(&(a.clone(), b.clone()))
                 .or_else(|| corr.get(&(b.clone(), a.clone())))
                 .copied()
                 .unwrap_or(0.0);
             if rho.abs() >= threshold {
-                union(&mut parent, *idx_of.get(a.as_str()).unwrap(), *idx_of.get(b.as_str()).unwrap());
+                union(
+                    &mut parent,
+                    *idx_of.get(a.as_str()).unwrap(),
+                    *idx_of.get(b.as_str()).unwrap(),
+                );
             }
         }
     }
@@ -65,21 +76,33 @@ pub fn cluster(positions: &[Position], corr: &BTreeMap<(String, String), f64>, t
         let r = find(&mut parent, i);
         groups.entry(r).or_default().push(i);
     }
-    let mut out: Vec<Cluster> = groups.into_values().map(|idxs| {
-        let members: Vec<String> = idxs.iter().map(|&i| positions[i].symbol.clone()).collect();
-        let net: f64 = idxs.iter().map(|&i| positions[i].notional).sum();
-        let gross: f64 = idxs.iter().map(|&i| positions[i].notional.abs()).sum();
-        Cluster { members, gross_exposure: gross, net_exposure: net }
-    }).collect();
+    let mut out: Vec<Cluster> = groups
+        .into_values()
+        .map(|idxs| {
+            let members: Vec<String> = idxs.iter().map(|&i| positions[i].symbol.clone()).collect();
+            let net: f64 = idxs.iter().map(|&i| positions[i].notional).sum();
+            let gross: f64 = idxs.iter().map(|&i| positions[i].notional.abs()).sum();
+            Cluster {
+                members,
+                gross_exposure: gross,
+                net_exposure: net,
+            }
+        })
+        .collect();
     // Sort: largest gross-exposure cluster first.
-    out.sort_by(|a, b| b.gross_exposure.partial_cmp(&a.gross_exposure)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    out.sort_by(|a, b| {
+        b.gross_exposure
+            .partial_cmp(&a.gross_exposure)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     out
 }
 
 fn find(p: &mut [usize], i: usize) -> usize {
     let mut r = i;
-    while p[r] != r { r = p[r]; }
+    while p[r] != r {
+        r = p[r];
+    }
     // Path compression.
     let mut cur = i;
     while p[cur] != r {
@@ -93,7 +116,9 @@ fn find(p: &mut [usize], i: usize) -> usize {
 fn union(p: &mut [usize], a: usize, b: usize) {
     let ra = find(p, a);
     let rb = find(p, b);
-    if ra != rb { p[ra] = rb; }
+    if ra != rb {
+        p[ra] = rb;
+    }
 }
 
 #[cfg(test)]
@@ -101,7 +126,10 @@ mod tests {
     use super::*;
 
     fn pos(sym: &str, notional: f64) -> Position {
-        Position { symbol: sym.into(), notional }
+        Position {
+            symbol: sym.into(),
+            notional,
+        }
     }
     fn pair(a: &str, b: &str, rho: f64) -> ((String, String), f64) {
         ((a.into(), b.into()), rho)
@@ -141,9 +169,15 @@ mod tests {
             pair("A", "B", 0.8),
             pair("B", "C", 0.8),
             pair("A", "C", 0.0),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         let out = cluster(&positions, &corr, 0.7);
-        assert_eq!(out.len(), 1, "transitive chain links A-B-C into one cluster");
+        assert_eq!(
+            out.len(),
+            1,
+            "transitive chain links A-B-C into one cluster"
+        );
         assert_eq!(out[0].members.len(), 3);
     }
 
@@ -172,7 +206,7 @@ mod tests {
     #[test]
     fn missing_pair_defaults_to_zero_correlation() {
         let positions = vec![pos("X", 1.0), pos("Y", 1.0)];
-        let corr: BTreeMap<_, _> = BTreeMap::new();   // none provided
+        let corr: BTreeMap<_, _> = BTreeMap::new(); // none provided
         let out = cluster(&positions, &corr, 0.7);
         assert_eq!(out.len(), 2, "absent pair → rho=0 → no cluster");
     }

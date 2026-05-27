@@ -40,8 +40,11 @@ async fn list(
     State(s): State<AppState>,
     u: AuthUser,
 ) -> Result<Json<Vec<ApiTokenSummary>>, ApiError> {
-    Ok(Json(traderview_db::api_tokens::list_for_user(&s.pool, u.id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::api_tokens::list_for_user(&s.pool, u.id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 async fn create(
@@ -60,7 +63,9 @@ async fn create(
     }
     if let Some(rl) = body.rate_limit_per_min {
         if !(1..=10_000).contains(&rl) {
-            return Err(ApiError::BadRequest("rate_limit_per_min must be 1..=10000".into()));
+            return Err(ApiError::BadRequest(
+                "rate_limit_per_min must be 1..=10000".into(),
+            ));
         }
     }
     let (prefix, _secret, wire, hash) = generate_pat()?;
@@ -75,8 +80,13 @@ async fn create(
             expires_at: body.expires_at,
             rate_limit_per_min: body.rate_limit_per_min,
         },
-    ).await.map_err(ApiError::Internal)?;
-    Ok(Json(CreateResp { summary: row.into(), token: wire }))
+    )
+    .await
+    .map_err(ApiError::Internal)?;
+    Ok(Json(CreateResp {
+        summary: row.into(),
+        token: wire,
+    }))
 }
 
 async fn set_rate_limit(
@@ -86,9 +96,14 @@ async fn set_rate_limit(
     Json(body): Json<RateLimitBody>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let ok = traderview_db::api_tokens::set_rate_limit(&s.pool, u.id, id, body.rate_limit_per_min)
-        .await.map_err(ApiError::Internal)?;
-    if !ok { return Err(ApiError::NotFound); }
-    Ok(Json(serde_json::json!({ "ok": true, "rate_limit_per_min": body.rate_limit_per_min })))
+        .await
+        .map_err(ApiError::Internal)?;
+    if !ok {
+        return Err(ApiError::NotFound);
+    }
+    Ok(Json(
+        serde_json::json!({ "ok": true, "rate_limit_per_min": body.rate_limit_per_min }),
+    ))
 }
 
 async fn revoke(
@@ -97,7 +112,10 @@ async fn revoke(
     Path(id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let ok = traderview_db::api_tokens::revoke(&s.pool, u.id, id)
-        .await.map_err(ApiError::Internal)?;
-    if !ok { return Err(ApiError::NotFound); }
+        .await
+        .map_err(ApiError::Internal)?;
+    if !ok {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({ "revoked": true })))
 }

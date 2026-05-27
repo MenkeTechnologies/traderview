@@ -20,7 +20,10 @@ pub struct Bar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum SwingKind { High, Low }
+pub enum SwingKind {
+    High,
+    Low,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwingPoint {
@@ -31,24 +34,42 @@ pub struct SwingPoint {
 
 pub fn detect(bars: &[Bar], lookback: usize) -> Vec<SwingPoint> {
     let mut out = Vec::new();
-    if bars.len() < 2 * lookback + 1 || lookback == 0 { return out; }
+    if bars.len() < 2 * lookback + 1 || lookback == 0 {
+        return out;
+    }
     for i in lookback..(bars.len() - lookback) {
         let center = bars[i];
         let mut is_high = true;
         let mut is_low = true;
         for bar in &bars[(i - lookback)..i] {
-            if bar.high >= center.high { is_high = false; }
-            if bar.low <= center.low   { is_low = false; }
+            if bar.high >= center.high {
+                is_high = false;
+            }
+            if bar.low <= center.low {
+                is_low = false;
+            }
         }
         for bar in &bars[(i + 1)..=(i + lookback)] {
-            if bar.high >= center.high { is_high = false; }
-            if bar.low <= center.low   { is_low = false; }
+            if bar.high >= center.high {
+                is_high = false;
+            }
+            if bar.low <= center.low {
+                is_low = false;
+            }
         }
         if is_high {
-            out.push(SwingPoint { index: i, price: center.high, kind: SwingKind::High });
+            out.push(SwingPoint {
+                index: i,
+                price: center.high,
+                kind: SwingKind::High,
+            });
         }
         if is_low {
-            out.push(SwingPoint { index: i, price: center.low, kind: SwingKind::Low });
+            out.push(SwingPoint {
+                index: i,
+                price: center.low,
+                kind: SwingKind::Low,
+            });
         }
     }
     out
@@ -58,7 +79,9 @@ pub fn detect(bars: &[Bar], lookback: usize) -> Vec<SwingPoint> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_series_returns_empty() {
@@ -85,7 +108,7 @@ mod tests {
             b(1.0, 0.5),
             b(2.0, 1.5),
             b(3.0, 2.5),
-            b(5.0, 4.0),   // swing high
+            b(5.0, 4.0), // swing high
             b(3.0, 2.5),
             b(2.0, 1.5),
             b(1.0, 0.5),
@@ -103,7 +126,7 @@ mod tests {
             b(5.0, 4.0),
             b(4.0, 3.0),
             b(3.0, 2.0),
-            b(2.0, 1.0),   // swing low
+            b(2.0, 1.0), // swing low
             b(3.0, 2.0),
             b(4.0, 3.0),
             b(5.0, 4.0),
@@ -121,8 +144,8 @@ mod tests {
             b(1.0, 0.5),
             b(2.0, 1.5),
             b(3.0, 2.5),
-            b(5.0, 4.0),   // candidate
-            b(5.0, 4.0),   // tied — disqualifies
+            b(5.0, 4.0), // candidate
+            b(5.0, 4.0), // tied — disqualifies
             b(2.0, 1.5),
             b(1.0, 0.5),
         ];
@@ -137,16 +160,19 @@ mod tests {
         let bars = vec![
             b(1.0, 0.5),
             b(2.0, 1.5),
-            b(5.0, 4.0),   // swing high (idx 2)
+            b(5.0, 4.0), // swing high (idx 2)
             b(2.0, 1.5),
             b(1.0, 0.5),
             b(2.0, 1.5),
-            b(6.0, 5.0),   // swing high (idx 6)
+            b(6.0, 5.0), // swing high (idx 6)
             b(3.0, 2.5),
             b(2.0, 1.5),
         ];
         let swings = detect(&bars, 2);
-        let highs: Vec<_> = swings.iter().filter(|s| s.kind == SwingKind::High).collect();
+        let highs: Vec<_> = swings
+            .iter()
+            .filter(|s| s.kind == SwingKind::High)
+            .collect();
         assert_eq!(highs.len(), 2);
         assert_eq!(highs[0].index, 2);
         assert_eq!(highs[1].index, 6);
@@ -162,13 +188,13 @@ mod tests {
     fn lookback_window_pinned_at_boundaries() {
         // First and last `lookback` bars never qualify (insufficient window).
         let bars = vec![
-            b(100.0, 99.0),   // can't be swing — at boundary
+            b(100.0, 99.0), // can't be swing — at boundary
             b(99.0, 98.0),
             b(98.0, 97.0),
             b(97.0, 96.0),
             b(98.0, 97.0),
             b(99.0, 98.0),
-            b(100.0, 99.0),   // can't be swing — at boundary
+            b(100.0, 99.0), // can't be swing — at boundary
         ];
         let swings = detect(&bars, 3);
         // idx 3 is candidate swing low (96).
@@ -183,11 +209,15 @@ mod tests {
         let bars = vec![
             b(5.0, 4.0),
             b(5.5, 4.5),
-            b(6.0, 3.0),    // wide bar — high above, low below all neighbors
+            b(6.0, 3.0), // wide bar — high above, low below all neighbors
             b(5.5, 4.5),
             b(5.0, 4.0),
         ];
         let swings = detect(&bars, 2);
-        assert_eq!(swings.len(), 2, "wide bar registers as both swing high AND swing low");
+        assert_eq!(
+            swings.len(),
+            2,
+            "wide bar registers as both swing high AND swing low"
+        );
     }
 }

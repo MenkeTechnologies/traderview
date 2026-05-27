@@ -13,12 +13,17 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 pub fn compute(bars: &[Bar], ema_period: usize, change_lookback: usize) -> Vec<f64> {
     let n = bars.len();
     let mut out = vec![0.0; n];
-    if n == 0 || ema_period == 0 { return out; }
+    if n == 0 || ema_period == 0 {
+        return out;
+    }
     let mut ema_range = vec![0.0; n];
     let k = 2.0 / (ema_period as f64 + 1.0);
     let mut prev_ema = bars[0].high - bars[0].low;
@@ -40,19 +45,29 @@ pub fn compute(bars: &[Bar], ema_period: usize, change_lookback: usize) -> Vec<f
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum VolatilityRegime { Expanding, Contracting, Stable }
+pub enum VolatilityRegime {
+    Expanding,
+    Contracting,
+    Stable,
+}
 
 pub fn classify(chv: f64) -> VolatilityRegime {
-    if chv > 20.0 { VolatilityRegime::Expanding }
-    else if chv < -20.0 { VolatilityRegime::Contracting }
-    else { VolatilityRegime::Stable }
+    if chv > 20.0 {
+        VolatilityRegime::Expanding
+    } else if chv < -20.0 {
+        VolatilityRegime::Contracting
+    } else {
+        VolatilityRegime::Stable
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -63,7 +78,9 @@ mod tests {
     fn under_lookback_returns_zeros() {
         let bars = vec![b(10.0, 9.0); 5];
         let out = compute(&bars, 10, 10);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]

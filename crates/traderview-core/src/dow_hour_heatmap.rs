@@ -23,7 +23,11 @@ pub struct HeatCell {
 
 impl HeatCell {
     pub fn win_rate(&self) -> f64 {
-        if self.trades == 0 { 0.0 } else { self.wins as f64 / self.trades as f64 }
+        if self.trades == 0 {
+            0.0
+        } else {
+            self.wins as f64 / self.trades as f64
+        }
     }
 }
 
@@ -48,16 +52,22 @@ impl Default for DowHourHeatmap {
 pub fn build(trades: &[Trade]) -> DowHourHeatmap {
     let mut h = DowHourHeatmap::default();
     for t in trades {
-        if t.status != TradeStatus::Closed { continue; }
+        if t.status != TradeStatus::Closed {
+            continue;
+        }
         let Some(net) = t.net_pnl else { continue };
         // Use opened_at — entries determine when the user was at the desk.
-        let dow  = t.opened_at.weekday().num_days_from_sunday() as usize; // 0..6
-        let hour = t.opened_at.hour() as usize;                            // 0..23
-        if dow >= 7 || hour >= 24 { continue; }                            // belt + braces
+        let dow = t.opened_at.weekday().num_days_from_sunday() as usize; // 0..6
+        let hour = t.opened_at.hour() as usize; // 0..23
+        if dow >= 7 || hour >= 24 {
+            continue;
+        } // belt + braces
         let cell = &mut h.cells[dow][hour];
         cell.trades += 1;
         cell.net_pnl += net;
-        if net > Decimal::ZERO { cell.wins += 1; }
+        if net > Decimal::ZERO {
+            cell.wins += 1;
+        }
         h.total_trades += 1;
         h.total_pnl += net;
     }
@@ -72,11 +82,14 @@ mod tests {
     use std::str::FromStr;
     use uuid::Uuid;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn trade_at(year: i32, month: u32, day: u32, hour: u32, net_pnl: &str) -> Trade {
         Trade {
-            id: Uuid::new_v4(), account_id: Uuid::nil(),
+            id: Uuid::new_v4(),
+            account_id: Uuid::nil(),
             symbol: "X".into(),
             side: TradeSide::Long,
             status: TradeStatus::Closed,
@@ -89,12 +102,22 @@ mod tests {
             fees: Decimal::ZERO,
             net_pnl: Some(d(net_pnl)),
             asset_class: AssetClass::Stock,
-            option_type: None, strike: None, expiration: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
-            base_ccy: None, quote_ccy: None, pip_size: None,
-            stop_loss: None, risk_amount: None, initial_target: None,
-            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+            stop_loss: None,
+            risk_amount: None,
+            initial_target: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
         }
     }
 
@@ -133,7 +156,7 @@ mod tests {
         assert_eq!(cell.trades, 3);
         assert_eq!(cell.wins, 2);
         assert_eq!(cell.net_pnl, d("250"));
-        assert!((cell.win_rate() - 2.0/3.0).abs() < 1e-9);
+        assert!((cell.win_rate() - 2.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
@@ -156,8 +179,8 @@ mod tests {
     fn cells_across_different_days_dont_bleed() {
         // Tue + Wed at 10am — separate cells.
         let trades = vec![
-            trade_at(2026, 5, 26, 10, "100"),   // Tue
-            trade_at(2026, 5, 27, 10, "-50"),   // Wed
+            trade_at(2026, 5, 26, 10, "100"), // Tue
+            trade_at(2026, 5, 27, 10, "-50"), // Wed
         ];
         let h = build(&trades);
         assert_eq!(h.cells[2][10].net_pnl, d("100"));
@@ -174,7 +197,7 @@ mod tests {
             trade_at(2026, 5, 31, 10, "100"),
         ];
         let h = build(&trades);
-        assert_eq!(h.cells[6][10].trades, 1);   // Saturday = weekday 6 (Sun=0)
-        assert_eq!(h.cells[0][10].trades, 1);   // Sunday   = weekday 0
+        assert_eq!(h.cells[6][10].trades, 1); // Saturday = weekday 6 (Sun=0)
+        assert_eq!(h.cells[0][10].trades, 1); // Sunday   = weekday 0
     }
 }

@@ -82,7 +82,7 @@ mod tests {
     fn entry() -> ManualEntry {
         ManualEntry {
             posted_at: Utc::now(),
-            amount: Decimal::from(-25),  // $25 cash expense
+            amount: Decimal::from(-25), // $25 cash expense
             currency: "USD".into(),
             merchant_raw: "Whole Foods #312".into(),
             description: "team lunch".into(),
@@ -100,36 +100,52 @@ mod tests {
 
     #[test]
     fn rejects_zero_amount() {
-        let mut e = entry(); e.amount = Decimal::ZERO;
-        assert!(matches!(validate_and_normalize(e), Err(ManualEntryError::ZeroAmount)));
+        let mut e = entry();
+        e.amount = Decimal::ZERO;
+        assert!(matches!(
+            validate_and_normalize(e),
+            Err(ManualEntryError::ZeroAmount)
+        ));
     }
 
     #[test]
     fn rejects_sanity_cap_overage() {
         let mut e = entry();
         e.amount = Decimal::from_str("-1000001").unwrap();
-        assert!(matches!(validate_and_normalize(e),
-            Err(ManualEntryError::AmountExceedsSanityCap { .. })));
+        assert!(matches!(
+            validate_and_normalize(e),
+            Err(ManualEntryError::AmountExceedsSanityCap { .. })
+        ));
     }
 
     #[test]
     fn sanity_cap_inclusive_at_one_million() {
         let mut e = entry();
         e.amount = Decimal::from(-1_000_000);
-        assert!(validate_and_normalize(e).is_ok(),
-            "exactly the cap must be accepted; only OVER the cap rejects");
+        assert!(
+            validate_and_normalize(e).is_ok(),
+            "exactly the cap must be accepted; only OVER the cap rejects"
+        );
     }
 
     #[test]
     fn rejects_non_iso_currency() {
-        let mut e = entry(); e.currency = "Dollars".into();
-        assert!(matches!(validate_and_normalize(e), Err(ManualEntryError::BadCurrency(_))));
+        let mut e = entry();
+        e.currency = "Dollars".into();
+        assert!(matches!(
+            validate_and_normalize(e),
+            Err(ManualEntryError::BadCurrency(_))
+        ));
     }
 
     #[test]
     fn rejects_empty_merchant() {
-        let mut e = entry(); e.merchant_raw = "   ".into();
-        assert!(matches!(validate_and_normalize(e), Err(ManualEntryError::EmptyMerchant)));
+        let mut e = entry();
+        e.merchant_raw = "   ".into();
+        assert!(matches!(
+            validate_and_normalize(e),
+            Err(ManualEntryError::EmptyMerchant)
+        ));
     }
 
     #[test]
@@ -145,7 +161,7 @@ mod tests {
     #[test]
     fn refunds_are_positive_and_pass_validation() {
         let mut e = entry();
-        e.amount = Decimal::from(15);   // refund
+        e.amount = Decimal::from(15); // refund
         let p = validate_and_normalize(e).unwrap();
         assert!(p.amount.is_sign_positive());
     }

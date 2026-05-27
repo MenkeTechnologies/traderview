@@ -35,7 +35,9 @@ pub struct SupertrendPoint {
 pub fn compute(bars: &[Bar], atr: &[f64], multiplier: f64) -> Vec<SupertrendPoint> {
     let n = bars.len();
     let mut out = vec![SupertrendPoint::default(); n];
-    if n == 0 || atr.len() != n { return out; }
+    if n == 0 || atr.len() != n {
+        return out;
+    }
     let mut prev_upper = 0.0;
     let mut prev_lower = 0.0;
     let mut prev_trend = 0i8;
@@ -58,13 +60,21 @@ pub fn compute(bars: &[Bar], atr: &[f64], multiplier: f64) -> Vec<SupertrendPoin
             prev_lower
         };
         let trend = if i == 0 {
-            if b.close >= median { 1 } else { -1 }
+            if b.close >= median {
+                1
+            } else {
+                -1
+            }
         } else if prev_trend == 1 && b.close < final_lower {
             -1
         } else if prev_trend == -1 && b.close > final_upper {
             1
         } else if prev_trend == 0 {
-            if b.close >= median { 1 } else { -1 }
+            if b.close >= median {
+                1
+            } else {
+                -1
+            }
         } else {
             prev_trend
         };
@@ -87,7 +97,13 @@ pub fn compute(bars: &[Bar], atr: &[f64], multiplier: f64) -> Vec<SupertrendPoin
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -107,10 +123,12 @@ mod tests {
 
     #[test]
     fn uptrend_persists_when_price_stays_above_lower_band() {
-        let bars: Vec<Bar> = (1..=15).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=15)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let atr = vec![1.0; 15];
         let out = compute(&bars, &atr, 3.0);
         // After initial bar, trend should establish and persist up.
@@ -119,10 +137,12 @@ mod tests {
 
     #[test]
     fn downtrend_persists_when_price_stays_below_upper_band() {
-        let bars: Vec<Bar> = (1..=15).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=15)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let atr = vec![1.0; 15];
         let out = compute(&bars, &atr, 3.0);
         assert_eq!(out[14].trend, -1);
@@ -130,10 +150,12 @@ mod tests {
 
     #[test]
     fn super_trend_is_lower_band_in_uptrend() {
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let atr = vec![1.0; 10];
         let out = compute(&bars, &atr, 3.0);
         let last = &out[9];
@@ -143,10 +165,12 @@ mod tests {
 
     #[test]
     fn super_trend_is_upper_band_in_downtrend() {
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let atr = vec![1.0; 10];
         let out = compute(&bars, &atr, 3.0);
         let last = &out[9];
@@ -157,11 +181,13 @@ mod tests {
     #[test]
     fn trend_flips_when_close_pierces_supertrend() {
         // Uptrend then sudden close below lower band → flip to -1.
-        let mut bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
-        bars.push(b(102.0, 70.0, 70.0));    // huge drop
+        let mut bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
+        bars.push(b(102.0, 70.0, 70.0)); // huge drop
         let atr = vec![1.0; 11];
         let out = compute(&bars, &atr, 3.0);
         assert_eq!(out[10].trend, -1, "huge drop should flip trend");
@@ -172,9 +198,9 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 100.0); 5];
         let atr = vec![1.0; 5];
         let tight = compute(&bars, &atr, 1.0);
-        let wide  = compute(&bars, &atr, 5.0);
+        let wide = compute(&bars, &atr, 5.0);
         let tight_range = tight[4].upper_band - tight[4].lower_band;
-        let wide_range  = wide[4].upper_band  - wide[4].lower_band;
+        let wide_range = wide[4].upper_band - wide[4].lower_band;
         assert!(wide_range > tight_range);
     }
 }

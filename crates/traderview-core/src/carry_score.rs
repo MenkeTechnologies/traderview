@@ -37,11 +37,20 @@ pub enum CarryTier {
 
 pub fn score(long_rate: f64, funding_rate: f64, annualized_vol: f64) -> CarryReport {
     let diff = long_rate - funding_rate;
-    let score = if annualized_vol > 0.0 { diff / annualized_vol } else { 0.0 };
-    let tier = if diff < 0.0 { CarryTier::Negative }
-        else if score >= 1.0 { CarryTier::Strong }
-        else if score >= 0.5 { CarryTier::Okay }
-        else                  { CarryTier::Poor };
+    let score = if annualized_vol > 0.0 {
+        diff / annualized_vol
+    } else {
+        0.0
+    };
+    let tier = if diff < 0.0 {
+        CarryTier::Negative
+    } else if score >= 1.0 {
+        CarryTier::Strong
+    } else if score >= 0.5 {
+        CarryTier::Okay
+    } else {
+        CarryTier::Poor
+    };
     CarryReport {
         long_rate,
         funding_rate,
@@ -95,7 +104,7 @@ mod tests {
 
     #[test]
     fn exactly_one_score_at_strong_boundary() {
-        let r = score(0.05, 0.0, 0.05);    // diff/vol = 1.0
+        let r = score(0.05, 0.0, 0.05); // diff/vol = 1.0
         assert!((r.carry_score - 1.0).abs() < 1e-12);
         assert_eq!(r.tier, CarryTier::Strong);
     }

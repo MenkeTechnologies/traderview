@@ -33,7 +33,11 @@ pub struct ScoredMatch {
     pub score: f32,
 }
 
-pub fn score(receipt: &ReceiptFields, candidates: &[TxCandidate], threshold: f32) -> Vec<ScoredMatch> {
+pub fn score(
+    receipt: &ReceiptFields,
+    candidates: &[TxCandidate],
+    threshold: f32,
+) -> Vec<ScoredMatch> {
     let mut out: Vec<ScoredMatch> = candidates
         .iter()
         .map(|c| ScoredMatch {
@@ -42,7 +46,11 @@ pub fn score(receipt: &ReceiptFields, candidates: &[TxCandidate], threshold: f32
         })
         .filter(|m| m.score >= threshold)
         .collect();
-    out.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    out.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     out
 }
 
@@ -99,7 +107,11 @@ fn jaccard(a: &HashSet<String>, b: &HashSet<String>) -> f32 {
     }
     let inter = a.intersection(b).count() as f32;
     let union = a.union(b).count() as f32;
-    if union == 0.0 { 0.0 } else { inter / union }
+    if union == 0.0 {
+        0.0
+    } else {
+        inter / union
+    }
 }
 
 fn decimal_to_f32(d: Decimal) -> f32 {
@@ -170,9 +182,9 @@ mod tests {
             date: Some(NaiveDate::from_ymd_opt(2026, 5, 15).unwrap()),
         };
         let cands = vec![
-            cand(1, 18, -2500, "uber trip"),  // date off by 3, but exact amount + merchant overlap
-            cand(2, 15, -2500, "uber trip"),  // perfect date
-            cand(3, 15, -2400, "lyft"),       // off amount, no merchant overlap
+            cand(1, 18, -2500, "uber trip"), // date off by 3, but exact amount + merchant overlap
+            cand(2, 15, -2500, "uber trip"), // perfect date
+            cand(3, 15, -2400, "lyft"),      // off amount, no merchant overlap
         ];
         let matches = score(&receipt, &cands, 0.5);
         assert!(matches.len() >= 2);
@@ -183,6 +195,7 @@ mod tests {
             assert!(w[0].score >= w[1].score);
         }
         // Sanity on the year being correct so chrono::Datelike pulls in.
-        let _ = matches[0].id.as_bytes()[0] + NaiveDate::from_ymd_opt(2026, 5, 15).unwrap().year() as u8;
+        let _ = matches[0].id.as_bytes()[0]
+            + NaiveDate::from_ymd_opt(2026, 5, 15).unwrap().year() as u8;
     }
 }

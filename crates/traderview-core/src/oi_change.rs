@@ -33,7 +33,10 @@ pub struct OiAlert {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OiSide { Call, Put }
+pub enum OiSide {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OiAlertReport {
@@ -42,19 +45,21 @@ pub struct OiAlertReport {
 }
 
 /// Emit alerts where |pct_change| ≥ threshold AND absolute size ≥ min_oi.
-pub fn analyze(snapshots: &[StrikeOiSnapshot], pct_threshold: f64, min_oi: u64)
-    -> OiAlertReport
-{
+pub fn analyze(snapshots: &[StrikeOiSnapshot], pct_threshold: f64, min_oi: u64) -> OiAlertReport {
     let mut report = OiAlertReport::default();
     for s in snapshots {
         for (kind, current, baseline) in [
             (OiSide::Call, s.call_oi, s.call_oi_baseline),
-            (OiSide::Put,  s.put_oi,  s.put_oi_baseline),
+            (OiSide::Put, s.put_oi, s.put_oi_baseline),
         ] {
-            if current < min_oi { continue; }
+            if current < min_oi {
+                continue;
+            }
             let abs = current as f64 - baseline;
             let pct = if baseline > 0.0 { abs / baseline } else { 0.0 };
-            if pct.abs() < pct_threshold { continue; }
+            if pct.abs() < pct_threshold {
+                continue;
+            }
             let alert = OiAlert {
                 strike: s.strike,
                 kind,
@@ -65,15 +70,23 @@ pub fn analyze(snapshots: &[StrikeOiSnapshot], pct_threshold: f64, min_oi: u64)
             };
             match kind {
                 OiSide::Call => report.call_alerts.push(alert),
-                OiSide::Put  => report.put_alerts.push(alert),
+                OiSide::Put => report.put_alerts.push(alert),
             }
         }
     }
     // Sort biggest absolute change first.
-    report.call_alerts.sort_by(|a, b|
-        b.abs_change.abs().partial_cmp(&a.abs_change.abs()).unwrap_or(std::cmp::Ordering::Equal));
-    report.put_alerts.sort_by(|a, b|
-        b.abs_change.abs().partial_cmp(&a.abs_change.abs()).unwrap_or(std::cmp::Ordering::Equal));
+    report.call_alerts.sort_by(|a, b| {
+        b.abs_change
+            .abs()
+            .partial_cmp(&a.abs_change.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    report.put_alerts.sort_by(|a, b| {
+        b.abs_change
+            .abs()
+            .partial_cmp(&a.abs_change.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report
 }
 
@@ -83,8 +96,11 @@ mod tests {
 
     fn s(strike: f64, c: u64, p: u64, cb: f64, pb: f64) -> StrikeOiSnapshot {
         StrikeOiSnapshot {
-            strike, call_oi: c, put_oi: p,
-            call_oi_baseline: cb, put_oi_baseline: pb,
+            strike,
+            call_oi: c,
+            put_oi: p,
+            call_oi_baseline: cb,
+            put_oi_baseline: pb,
         }
     }
 
@@ -132,9 +148,9 @@ mod tests {
     #[test]
     fn alerts_sorted_largest_abs_change_first() {
         let snaps = vec![
-            s(100.0, 2000, 0, 1000.0, 0.0),     // +1000 change
-            s(105.0, 5000, 0, 1000.0, 0.0),     // +4000 change
-            s(110.0, 1700, 0, 1000.0, 0.0),     // +700 change
+            s(100.0, 2000, 0, 1000.0, 0.0), // +1000 change
+            s(105.0, 5000, 0, 1000.0, 0.0), // +4000 change
+            s(110.0, 1700, 0, 1000.0, 0.0), // +700 change
         ];
         let r = analyze(&snaps, 0.5, 100);
         assert_eq!(r.call_alerts.len(), 3);

@@ -20,20 +20,14 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Tag>> {
         .collect())
 }
 
-pub async fn create(
-    pool: &PgPool,
-    user_id: Uuid,
-    name: &str,
-    color: &str,
-) -> anyhow::Result<Tag> {
-    let (id,): (Uuid,) = sqlx::query_as(
-        "INSERT INTO tags (user_id, name, color) VALUES ($1, $2, $3) RETURNING id",
-    )
-    .bind(user_id)
-    .bind(name)
-    .bind(color)
-    .fetch_one(pool)
-    .await?;
+pub async fn create(pool: &PgPool, user_id: Uuid, name: &str, color: &str) -> anyhow::Result<Tag> {
+    let (id,): (Uuid,) =
+        sqlx::query_as("INSERT INTO tags (user_id, name, color) VALUES ($1, $2, $3) RETURNING id")
+            .bind(user_id)
+            .bind(name)
+            .bind(color)
+            .fetch_one(pool)
+            .await?;
     Ok(Tag {
         id,
         user_id,

@@ -29,12 +29,11 @@ pub enum FilingStatus {
 impl FilingStatus {
     pub fn niit_threshold(self) -> Decimal {
         match self {
-            FilingStatus::Single | FilingStatus::HeadOfHousehold =>
-                Decimal::from_str("200000").unwrap(),
-            FilingStatus::MarriedFilingJointly =>
-                Decimal::from_str("250000").unwrap(),
-            FilingStatus::MarriedFilingSeparately =>
-                Decimal::from_str("125000").unwrap(),
+            FilingStatus::Single | FilingStatus::HeadOfHousehold => {
+                Decimal::from_str("200000").unwrap()
+            }
+            FilingStatus::MarriedFilingJointly => Decimal::from_str("250000").unwrap(),
+            FilingStatus::MarriedFilingSeparately => Decimal::from_str("125000").unwrap(),
         }
     }
 }
@@ -104,7 +103,9 @@ pub fn compute(input: &NiitInput) -> NiitReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn under_threshold_no_tax() {

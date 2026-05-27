@@ -16,21 +16,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Preset {
-    SmaCross    { fast: usize, slow: usize },
-    RsiReversion { period: usize, oversold: f64, overbought: f64 },
-    BollingerBreakout { period: usize, k: f64 },
+    SmaCross {
+        fast: usize,
+        slow: usize,
+    },
+    RsiReversion {
+        period: usize,
+        oversold: f64,
+        overbought: f64,
+    },
+    BollingerBreakout {
+        period: usize,
+        k: f64,
+    },
     MacdCross,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Action { None, Buy, Sell }
+enum Action {
+    None,
+    Buy,
+    Sell,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BtTrade {
     pub entry_time: DateTime<Utc>,
-    pub exit_time:  DateTime<Utc>,
+    pub exit_time: DateTime<Utc>,
     pub entry_price: f64,
-    pub exit_price:  f64,
+    pub exit_price: f64,
     pub qty: f64,
     pub pnl: f64,
     pub pnl_pct: f64,
@@ -68,14 +82,23 @@ pub struct BtResult {
     pub summary: BtSummary,
 }
 
-pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trade: f64) -> BtResult {
+pub fn run(
+    bars: &[PriceBar],
+    preset: Preset,
+    initial_capital: f64,
+    fee_per_trade: f64,
+) -> BtResult {
     let n = bars.len();
     let c = closes(bars);
     let h = highs(bars);
     let l = lows(bars);
     let signals: Vec<Action> = match preset {
         Preset::SmaCross { fast, slow } => sma_cross(&c, fast, slow),
-        Preset::RsiReversion { period, oversold, overbought } => rsi_rev(&c, period, oversold, overbought),
+        Preset::RsiReversion {
+            period,
+            oversold,
+            overbought,
+        } => rsi_rev(&c, period, oversold, overbought),
         Preset::BollingerBreakout { period, k } => bb_breakout(&c, period, k),
         Preset::MacdCross => macd_cross(&c),
     };
@@ -102,7 +125,8 @@ pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trad
                 position = Some((i, qty));
             }
             (Action::Sell, Some((entry_idx, qty))) => {
-                let entry_idx = *entry_idx; let qty = *qty;
+                let entry_idx = *entry_idx;
+                let qty = *qty;
                 cash += qty * price;
                 cash -= fee_per_trade;
                 let entry = c[entry_idx];
@@ -110,29 +134,43 @@ pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trad
                 let pnl_pct = (price - entry) / entry * 100.0;
                 trades.push(BtTrade {
                     entry_time: bars[entry_idx].bar_time,
-                    exit_time:  bars[i].bar_time,
+                    exit_time: bars[i].bar_time,
                     entry_price: entry,
-                    exit_price:  price,
-                    qty, pnl, pnl_pct,
+                    exit_price: price,
+                    qty,
+                    pnl,
+                    pnl_pct,
                     bars_held: i - entry_idx,
                 });
                 position = None;
             }
             _ => {}
         }
-        if position.is_some() { bars_in += 1; }
+        if position.is_some() {
+            bars_in += 1;
+        }
 
         let mark = cash + position.map(|(_, q)| q * price).unwrap_or(0.0);
-        if mark > peak { peak = mark; }
+        if mark > peak {
+            peak = mark;
+        }
         let dd = (mark - peak) / peak * 100.0;
-        if dd < max_dd { max_dd = dd; }
+        if dd < max_dd {
+            max_dd = dd;
+        }
 
-        let day_ret = if last_equity > 0.0 { (mark - last_equity) / last_equity } else { 0.0 };
+        let day_ret = if last_equity > 0.0 {
+            (mark - last_equity) / last_equity
+        } else {
+            0.0
+        };
         daily_returns.push(day_ret);
         last_equity = mark;
 
         equity.push(BtPoint {
-            time: bars[i].bar_time, equity: mark, drawdown_pct: dd,
+            time: bars[i].bar_time,
+            equity: mark,
+            drawdown_pct: dd,
         });
     }
     // Close any open position at last close.
@@ -149,8 +187,12 @@ pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trad
         let pnl_pct = (price - entry) / entry * 100.0;
         trades.push(BtTrade {
             entry_time: bars[entry_idx].bar_time,
-            exit_time:  bars[n - 1].bar_time,
-            entry_price: entry, exit_price: price, qty, pnl, pnl_pct,
+            exit_time: bars[n - 1].bar_time,
+            entry_price: entry,
+            exit_price: price,
+            qty,
+            pnl,
+            pnl_pct,
             bars_held: n - 1 - entry_idx,
         });
     }
@@ -160,29 +202,55 @@ pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trad
     let losses = trades.iter().filter(|t| t.pnl < 0.0).count();
     let total_win: f64 = trades.iter().filter(|t| t.pnl > 0.0).map(|t| t.pnl).sum();
     let total_loss: f64 = trades.iter().filter(|t| t.pnl < 0.0).map(|t| t.pnl).sum();
-    let pf = if total_loss.abs() > 0.0 { total_win / total_loss.abs() } else { 0.0 };
+    let pf = if total_loss.abs() > 0.0 {
+        total_win / total_loss.abs()
+    } else {
+        0.0
+    };
     let final_eq = equity.last().map(|p| p.equity).unwrap_or(initial_capital);
     let total_return = (final_eq - initial_capital) / initial_capital * 100.0;
     let mean = daily_returns.iter().sum::<f64>() / daily_returns.len().max(1) as f64;
-    let var = daily_returns.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
+    let var = daily_returns
+        .iter()
+        .map(|x| (x - mean).powi(2))
+        .sum::<f64>()
         / daily_returns.len().max(1) as f64;
     let stdev = var.sqrt();
     let sharpe = if stdev > 0.0 { mean / stdev } else { 0.0 };
 
     BtResult {
-        preset, trades: trades.clone(), equity,
+        preset,
+        trades: trades.clone(),
+        equity,
         summary: BtSummary {
             trades: trades.len(),
-            wins, losses,
-            win_rate: if trades.is_empty() { 0.0 } else { wins as f64 / trades.len() as f64 },
-            avg_win: if wins > 0 { total_win / wins as f64 } else { 0.0 },
-            avg_loss: if losses > 0 { total_loss / losses as f64 } else { 0.0 },
+            wins,
+            losses,
+            win_rate: if trades.is_empty() {
+                0.0
+            } else {
+                wins as f64 / trades.len() as f64
+            },
+            avg_win: if wins > 0 {
+                total_win / wins as f64
+            } else {
+                0.0
+            },
+            avg_loss: if losses > 0 {
+                total_loss / losses as f64
+            } else {
+                0.0
+            },
             profit_factor: pf,
             total_return_pct: total_return,
             max_drawdown_pct: max_dd,
             final_equity: final_eq,
             sharpe_daily: sharpe,
-            bars_in_market_pct: if n > 0 { bars_in as f64 / n as f64 * 100.0 } else { 0.0 },
+            bars_in_market_pct: if n > 0 {
+                bars_in as f64 / n as f64 * 100.0
+            } else {
+                0.0
+            },
         },
     }
 }
@@ -196,9 +264,12 @@ fn sma_cross(c: &[f64], fast: usize, slow: usize) -> Vec<Action> {
     let s = sma(c, slow);
     let mut out = vec![Action::None; c.len()];
     for i in 1..c.len() {
-        if let (Some(pf), Some(ps), Some(cf), Some(cs)) = (f[i-1], s[i-1], f[i], s[i]) {
-            if pf <= ps && cf > cs { out[i] = Action::Buy; }
-            else if pf >= ps && cf < cs { out[i] = Action::Sell; }
+        if let (Some(pf), Some(ps), Some(cf), Some(cs)) = (f[i - 1], s[i - 1], f[i], s[i]) {
+            if pf <= ps && cf > cs {
+                out[i] = Action::Buy;
+            } else if pf >= ps && cf < cs {
+                out[i] = Action::Sell;
+            }
         }
     }
     out
@@ -209,8 +280,11 @@ fn rsi_rev(c: &[f64], period: usize, oversold: f64, overbought: f64) -> Vec<Acti
     let mut out = vec![Action::None; c.len()];
     for i in 0..c.len() {
         if let Some(v) = r[i] {
-            if v <= oversold { out[i] = Action::Buy; }
-            else if v >= overbought { out[i] = Action::Sell; }
+            if v <= oversold {
+                out[i] = Action::Buy;
+            } else if v >= overbought {
+                out[i] = Action::Sell;
+            }
         }
     }
     out
@@ -221,8 +295,11 @@ fn bb_breakout(c: &[f64], period: usize, k: f64) -> Vec<Action> {
     let mut out = vec![Action::None; c.len()];
     for i in 0..c.len() {
         if let (Some(u), Some(l)) = (bb.upper[i], bb.lower[i]) {
-            if c[i] > u { out[i] = Action::Buy; }
-            else if c[i] < l { out[i] = Action::Sell; }
+            if c[i] > u {
+                out[i] = Action::Buy;
+            } else if c[i] < l {
+                out[i] = Action::Sell;
+            }
         }
     }
     out
@@ -241,14 +318,19 @@ fn macd_cross(c: &[f64]) -> Vec<Action> {
     let sig = ema(&line_compact, 9);
     let offset = c.len() - line_compact.len();
     let mut sig_full = vec![None; c.len()];
-    for (i, v) in sig.iter().enumerate() { sig_full[offset + i] = *v; }
+    for (i, v) in sig.iter().enumerate() {
+        sig_full[offset + i] = *v;
+    }
     let mut out = vec![Action::None; c.len()];
     for i in 1..c.len() {
         if let (Some(pl), Some(ps), Some(cl), Some(cs)) =
-            (line[i-1], sig_full[i-1], line[i], sig_full[i])
+            (line[i - 1], sig_full[i - 1], line[i], sig_full[i])
         {
-            if pl <= ps && cl > cs { out[i] = Action::Buy; }
-            else if pl >= ps && cl < cs { out[i] = Action::Sell; }
+            if pl <= ps && cl > cs {
+                out[i] = Action::Buy;
+            } else if pl >= ps && cl < cs {
+                out[i] = Action::Sell;
+            }
         }
     }
     out
@@ -291,7 +373,9 @@ pub fn default_grid(kind: PresetKind) -> Vec<Preset> {
             let mut v = Vec::new();
             for &fast in &[5usize, 8, 10, 12, 15, 20] {
                 for &slow in &[20usize, 30, 40, 50, 100, 200] {
-                    if slow > fast { v.push(Preset::SmaCross { fast, slow }); }
+                    if slow > fast {
+                        v.push(Preset::SmaCross { fast, slow });
+                    }
                 }
             }
             v
@@ -300,7 +384,11 @@ pub fn default_grid(kind: PresetKind) -> Vec<Preset> {
             let mut v = Vec::new();
             for &period in &[5usize, 7, 10, 14, 21] {
                 for &(os, ob) in &[(20.0, 80.0), (25.0, 75.0), (30.0, 70.0), (35.0, 65.0)] {
-                    v.push(Preset::RsiReversion { period, oversold: os, overbought: ob });
+                    v.push(Preset::RsiReversion {
+                        period,
+                        oversold: os,
+                        overbought: ob,
+                    });
                 }
             }
             v
@@ -322,9 +410,9 @@ pub fn default_grid(kind: PresetKind) -> Vec<Preset> {
 pub struct WfWindow {
     pub idx: usize,
     pub is_start: DateTime<Utc>,
-    pub is_end:   DateTime<Utc>,
+    pub is_end: DateTime<Utc>,
     pub oos_start: DateTime<Utc>,
-    pub oos_end:   DateTime<Utc>,
+    pub oos_end: DateTime<Utc>,
     pub chosen: Preset,
     pub is_return_pct: f64,
     pub is_sharpe: f64,
@@ -370,7 +458,15 @@ pub struct WfConfig {
 }
 
 pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
-    let WfConfig { kind, is_bars, oos_bars, step, initial_capital, fee_per_trade, metric } = cfg;
+    let WfConfig {
+        kind,
+        is_bars,
+        oos_bars,
+        step,
+        initial_capital,
+        fee_per_trade,
+        metric,
+    } = cfg;
     let grid = default_grid(kind);
     let mut windows = Vec::new();
     let mut oos_equity: Vec<WfPoint> = Vec::new();
@@ -380,7 +476,7 @@ pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
     let mut idx = 0;
     let mut start = 0;
     while start + is_bars + oos_bars <= bars.len() {
-        let is_slice  = &bars[start..start + is_bars];
+        let is_slice = &bars[start..start + is_bars];
         let oos_slice = &bars[start + is_bars..start + is_bars + oos_bars];
 
         // Sweep on IS.
@@ -404,22 +500,25 @@ pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
         // Apply chosen params to OOS at running equity.
         let oos_r = run(oos_slice, best_preset, equity, fee_per_trade);
         for pt in &oos_r.equity {
-            oos_equity.push(WfPoint { time: pt.time, equity: pt.equity });
+            oos_equity.push(WfPoint {
+                time: pt.time,
+                equity: pt.equity,
+            });
         }
         equity = oos_r.summary.final_equity;
 
         windows.push(WfWindow {
             idx,
             is_start: is_slice[0].bar_time,
-            is_end:   is_slice.last().unwrap().bar_time,
+            is_end: is_slice.last().unwrap().bar_time,
             oos_start: oos_slice[0].bar_time,
-            oos_end:   oos_slice.last().unwrap().bar_time,
+            oos_end: oos_slice.last().unwrap().bar_time,
             chosen: best_preset,
             is_return_pct: is_r.summary.total_return_pct,
-            is_sharpe:     is_r.summary.sharpe_daily,
+            is_sharpe: is_r.summary.sharpe_daily,
             oos_return_pct: oos_r.summary.total_return_pct,
-            oos_sharpe:     oos_r.summary.sharpe_daily,
-            oos_trades:     oos_r.summary.trades,
+            oos_sharpe: oos_r.summary.sharpe_daily,
+            oos_trades: oos_r.summary.trades,
             equity_after_window: equity,
         });
         idx += 1;
@@ -427,9 +526,13 @@ pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
     }
 
     let n = windows.len().max(1) as f64;
-    let avg_is  = windows.iter().map(|w| w.is_return_pct).sum::<f64>() / n;
+    let avg_is = windows.iter().map(|w| w.is_return_pct).sum::<f64>() / n;
     let avg_oos = windows.iter().map(|w| w.oos_return_pct).sum::<f64>() / n;
-    let wfe = if avg_is.abs() > 1e-9 { avg_oos / avg_is } else { 0.0 };
+    let wfe = if avg_is.abs() > 1e-9 {
+        avg_oos / avg_is
+    } else {
+        0.0
+    };
     let total_return = (equity - initial_capital) / initial_capital * 100.0;
 
     // Baseline: best single fit on the full series.
@@ -451,7 +554,9 @@ pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
 
     WfResult {
         kind,
-        is_bars, oos_bars, step_bars: step,
+        is_bars,
+        oos_bars,
+        step_bars: step,
         grid_size: grid.len(),
         windows,
         oos_equity,
@@ -474,11 +579,12 @@ mod tests {
 
     fn bar(close: f64, ts: i64) -> PriceBar {
         PriceBar {
-            symbol: "X".into(), interval: BarInterval::D1,
+            symbol: "X".into(),
+            interval: BarInterval::D1,
             bar_time: Utc.timestamp_opt(ts, 0).unwrap(),
             open: Decimal::try_from(close).unwrap(),
             high: Decimal::try_from(close).unwrap(),
-            low:  Decimal::try_from(close).unwrap(),
+            low: Decimal::try_from(close).unwrap(),
             close: Decimal::try_from(close).unwrap(),
             volume: Decimal::from(1_000_000),
             source: "test".into(),
@@ -507,13 +613,23 @@ mod tests {
             let p = 100.0 + 0.02 * i as f64 + 8.0 * (i as f64 / 10.0).sin();
             bars.push(bar(p, i * 86_400));
         }
-        let r = walk_forward(&bars, WfConfig {
-            kind: PresetKind::SmaCross,
-            is_bars: 200, oos_bars: 60, step: 60,
-            initial_capital: 10_000.0, fee_per_trade: 0.0,
-            metric: OptMetric::Return,
-        });
-        assert!(r.windows.len() >= 4, "expected at least 4 windows, got {}", r.windows.len());
+        let r = walk_forward(
+            &bars,
+            WfConfig {
+                kind: PresetKind::SmaCross,
+                is_bars: 200,
+                oos_bars: 60,
+                step: 60,
+                initial_capital: 10_000.0,
+                fee_per_trade: 0.0,
+                metric: OptMetric::Return,
+            },
+        );
+        assert!(
+            r.windows.len() >= 4,
+            "expected at least 4 windows, got {}",
+            r.windows.len()
+        );
         assert!(r.grid_size > 1, "grid should contain multiple presets");
         assert!(!r.oos_equity.is_empty(), "OOS equity stitched curve empty");
         // Every window must have chosen a Preset variant that was in the grid.

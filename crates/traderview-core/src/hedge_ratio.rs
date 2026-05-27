@@ -54,19 +54,29 @@ pub fn compute(
     spy_price: Option<Decimal>,
 ) -> HedgeReport {
     let default_beta = Decimal::ONE;
-    let weighted: Vec<WeightedPosition> = positions.iter().map(|p| {
-        let beta = beta_by_symbol.get(&p.symbol).copied().unwrap_or(default_beta);
-        WeightedPosition {
-            symbol: p.symbol.clone(),
-            notional: p.notional,
-            beta,
-            beta_weighted_notional: p.notional * beta,
-        }
-    }).collect();
+    let weighted: Vec<WeightedPosition> = positions
+        .iter()
+        .map(|p| {
+            let beta = beta_by_symbol
+                .get(&p.symbol)
+                .copied()
+                .unwrap_or(default_beta);
+            WeightedPosition {
+                symbol: p.symbol.clone(),
+                notional: p.notional,
+                beta,
+                beta_weighted_notional: p.notional * beta,
+            }
+        })
+        .collect();
     let total: Decimal = weighted.iter().map(|w| w.beta_weighted_notional).sum();
-    let hedge_notional = -total;   // short net long, long net short
+    let hedge_notional = -total; // short net long, long net short
     let hedge_shares = spy_price.and_then(|p| {
-        if p.is_zero() { None } else { Some(hedge_notional / p) }
+        if p.is_zero() {
+            None
+        } else {
+            Some(hedge_notional / p)
+        }
     });
     HedgeReport {
         positions: weighted,
@@ -82,10 +92,17 @@ pub fn default_betas() -> HashMap<String, Decimal> {
     let d = |s: &str| Decimal::from_str(s).unwrap();
     let mut m = HashMap::new();
     for (sym, b) in [
-        ("SPY", "1.00"), ("QQQ", "1.15"), ("IWM", "1.20"),
-        ("AAPL", "1.20"), ("MSFT", "1.05"), ("NVDA", "1.65"),
-        ("TSLA", "2.20"), ("GME", "1.50"),
-    ] { m.insert(sym.into(), d(b)); }
+        ("SPY", "1.00"),
+        ("QQQ", "1.15"),
+        ("IWM", "1.20"),
+        ("AAPL", "1.20"),
+        ("MSFT", "1.05"),
+        ("NVDA", "1.65"),
+        ("TSLA", "2.20"),
+        ("GME", "1.50"),
+    ] {
+        m.insert(sym.into(), d(b));
+    }
     m
 }
 
@@ -93,7 +110,9 @@ pub fn default_betas() -> HashMap<String, Decimal> {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn empty_positions_zero_exposure() {
@@ -105,7 +124,10 @@ mod tests {
     #[test]
     fn unknown_symbol_defaults_to_beta_one() {
         let r = compute(
-            &[Position { symbol: "RANDO".into(), notional: d("10000") }],
+            &[Position {
+                symbol: "RANDO".into(),
+                notional: d("10000"),
+            }],
             &HashMap::new(),
             None,
         );
@@ -117,8 +139,12 @@ mod tests {
     fn higher_beta_inflates_weighted_exposure() {
         let betas = default_betas();
         let r = compute(
-            &[Position { symbol: "TSLA".into(), notional: d("10000") }],
-            &betas, None,
+            &[Position {
+                symbol: "TSLA".into(),
+                notional: d("10000"),
+            }],
+            &betas,
+            None,
         );
         // TSLA β=2.20 → weighted = 22000.
         assert_eq!(r.total_beta_exposure, d("22000.00"));
@@ -127,19 +153,36 @@ mod tests {
     #[test]
     fn short_positions_subtract_from_exposure() {
         let betas = default_betas();
-        let r = compute(&[
-            Position { symbol: "AAPL".into(), notional: d("10000") },   // 1.20 × 10k = 12k
-            Position { symbol: "SPY".into(),  notional: d("-5000") },   // 1.00 × -5k = -5k
-        ], &betas, None);
+        let r = compute(
+            &[
+                Position {
+                    symbol: "AAPL".into(),
+                    notional: d("10000"),
+                }, // 1.20 × 10k = 12k
+                Position {
+                    symbol: "SPY".into(),
+                    notional: d("-5000"),
+                }, // 1.00 × -5k = -5k
+            ],
+            &betas,
+            None,
+        );
         assert_eq!(r.total_beta_exposure, d("7000.00"));
     }
 
     #[test]
     fn hedge_size_is_negative_of_net_exposure() {
         let betas = default_betas();
-        let r = compute(&[
-            Position { symbol: "QQQ".into(), notional: d("100000") },  // 1.15 × 100k = 115k
-        ], &betas, Some(d("500")));
+        let r = compute(
+            &[
+                Position {
+                    symbol: "QQQ".into(),
+                    notional: d("100000"),
+                }, // 1.15 × 100k = 115k
+            ],
+            &betas,
+            Some(d("500")),
+        );
         assert_eq!(r.total_beta_exposure, d("115000.00"));
         assert_eq!(r.hedge_notional, d("-115000.00"));
         // Hedge shares = -115000 / 500 = -230 SPY (short 230 shares).
@@ -149,10 +192,20 @@ mod tests {
     #[test]
     fn flat_portfolio_zero_hedge() {
         let betas = default_betas();
-        let r = compute(&[
-            Position { symbol: "SPY".into(), notional: d("10000") },
-            Position { symbol: "SPY".into(), notional: d("-10000") },
-        ], &betas, Some(d("400")));
+        let r = compute(
+            &[
+                Position {
+                    symbol: "SPY".into(),
+                    notional: d("10000"),
+                },
+                Position {
+                    symbol: "SPY".into(),
+                    notional: d("-10000"),
+                },
+            ],
+            &betas,
+            Some(d("400")),
+        );
         assert_eq!(r.total_beta_exposure, Decimal::ZERO);
         assert_eq!(r.hedge_notional, Decimal::ZERO);
     }
@@ -160,18 +213,28 @@ mod tests {
     #[test]
     fn zero_spy_price_yields_no_share_count() {
         let betas = default_betas();
-        let r = compute(&[
-            Position { symbol: "AAPL".into(), notional: d("10000") },
-        ], &betas, Some(Decimal::ZERO));
+        let r = compute(
+            &[Position {
+                symbol: "AAPL".into(),
+                notional: d("10000"),
+            }],
+            &betas,
+            Some(Decimal::ZERO),
+        );
         assert!(r.hedge_shares.is_none());
     }
 
     #[test]
     fn no_spy_price_yields_no_share_count() {
         let betas = default_betas();
-        let r = compute(&[
-            Position { symbol: "AAPL".into(), notional: d("10000") },
-        ], &betas, None);
+        let r = compute(
+            &[Position {
+                symbol: "AAPL".into(),
+                notional: d("10000"),
+            }],
+            &betas,
+            None,
+        );
         assert!(r.hedge_shares.is_none());
     }
 }

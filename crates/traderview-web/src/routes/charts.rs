@@ -13,19 +13,19 @@ use traderview_core::{
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/bars/:symbol",                          get(bars))
-        .route("/bars/:symbol/heikin-ashi",              get(heikin_ashi_route))
-        .route("/bars/:symbol/renko",                    get(renko_route))
-        .route("/bars/:symbol/volume-profile",           get(volume_profile_route))
-        .route("/bars/:symbol/ichimoku",                 get(ichimoku_route))
-        .route("/bars/:symbol/fibonacci",                get(fibonacci_route))
-        .route("/bars/:symbol/supertrend",               get(supertrend_route))
-        .route("/bars/:symbol/swing-points",             get(swing_points_route))
-        .route("/bars/:symbol/candlestick-patterns",     get(candlestick_patterns_route))
-        .route("/bars/:symbol/pivots/floor",             get(pivots_floor_route))
-        .route("/bars/:symbol/pivots/camarilla",         get(pivots_camarilla_route))
-        .route("/bars/:symbol/pivots/woodie",            get(pivots_woodie_route))
-        .route("/bars/:symbol/pivots/demark",            get(pivots_demark_route))
+        .route("/bars/:symbol", get(bars))
+        .route("/bars/:symbol/heikin-ashi", get(heikin_ashi_route))
+        .route("/bars/:symbol/renko", get(renko_route))
+        .route("/bars/:symbol/volume-profile", get(volume_profile_route))
+        .route("/bars/:symbol/ichimoku", get(ichimoku_route))
+        .route("/bars/:symbol/fibonacci", get(fibonacci_route))
+        .route("/bars/:symbol/supertrend", get(supertrend_route))
+        .route("/bars/:symbol/swing-points", get(swing_points_route))
+        .route("/bars/:symbol/candlestick-patterns", get(candlestick_patterns_route))
+        .route("/bars/:symbol/pivots/floor", get(pivots_floor_route))
+        .route("/bars/:symbol/pivots/camarilla", get(pivots_camarilla_route))
+        .route("/bars/:symbol/pivots/woodie", get(pivots_woodie_route))
+        .route("/bars/:symbol/pivots/demark", get(pivots_demark_route))
 }
 
 #[derive(Deserialize)]
@@ -66,9 +66,13 @@ async fn fetch_bars(
 ) -> Result<(BarInterval, Vec<PriceBar>), ApiError> {
     let iv = parse_interval(&q.interval)
         .ok_or_else(|| ApiError::BadRequest(format!("unknown interval: {}", q.interval)))?;
-    let from: DateTime<Utc> = Utc.timestamp_opt(q.from, 0).single()
+    let from: DateTime<Utc> = Utc
+        .timestamp_opt(q.from, 0)
+        .single()
         .ok_or_else(|| ApiError::BadRequest("bad from".into()))?;
-    let to: DateTime<Utc> = Utc.timestamp_opt(q.to, 0).single()
+    let to: DateTime<Utc> = Utc
+        .timestamp_opt(q.to, 0)
+        .single()
         .ok_or_else(|| ApiError::BadRequest("bad to".into()))?;
     let bars = traderview_db::prices::get_bars(&s.pool, symbol, iv, from, to)
         .await

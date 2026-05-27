@@ -18,7 +18,8 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Hotkey>> {
            FROM hotkeys WHERE user_id = $1 ORDER BY name",
     )
     .bind(user_id)
-    .fetch_all(pool).await?)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn upsert(
@@ -36,12 +37,20 @@ pub async fn upsert(
             name = EXCLUDED.name, action = EXCLUDED.action, payload = EXCLUDED.payload
          RETURNING id, user_id, name, combo, action, payload",
     )
-    .bind(user_id).bind(name).bind(combo).bind(action).bind(payload)
-    .fetch_one(pool).await?)
+    .bind(user_id)
+    .bind(name)
+    .bind(combo)
+    .bind(action)
+    .bind(payload)
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM hotkeys WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }

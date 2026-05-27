@@ -45,7 +45,12 @@ pub struct GoalInput {
 
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Pace { OnTrack, FallingShort, Exceeded, NoTarget }
+pub enum Pace {
+    OnTrack,
+    FallingShort,
+    Exceeded,
+    NoTarget,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct GoalProgress {
@@ -59,11 +64,11 @@ pub struct GoalProgress {
     pub days_total: i64,
     pub days_elapsed: i64,
     pub elapsed_pct: f64,
-    pub projected_pnl: Option<f64>,         // linear run-rate to end
-    pub pnl_pct_complete: Option<f64>,       // actual / target
+    pub projected_pnl: Option<f64>,    // linear run-rate to end
+    pub pnl_pct_complete: Option<f64>, // actual / target
     pub pnl_pace: Pace,
     pub win_rate_pace: Pace,
-    pub drawdown_pace: Pace,                 // exceeded = within cap; falling_short = over cap
+    pub drawdown_pace: Pace, // exceeded = within cap; falling_short = over cap
 }
 
 pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Goal>> {
@@ -72,7 +77,10 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Goal>> {
                 target_pnl, target_win_rate, target_max_drawdown_pct, notes,
                 created_at, updated_at
            FROM trading_goals WHERE user_id = $1 ORDER BY start_date DESC",
-    ).bind(user_id).fetch_all(pool).await?)
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn get(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<Option<Goal>> {
@@ -81,7 +89,11 @@ pub async fn get(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<Optio
                 target_pnl, target_win_rate, target_max_drawdown_pct, notes,
                 created_at, updated_at
            FROM trading_goals WHERE id = $1 AND user_id = $2",
-    ).bind(id).bind(user_id).fetch_optional(pool).await?)
+    )
+    .bind(id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?)
 }
 
 pub async fn create(pool: &PgPool, user_id: Uuid, dto: &GoalInput) -> anyhow::Result<Goal> {
@@ -94,17 +106,26 @@ pub async fn create(pool: &PgPool, user_id: Uuid, dto: &GoalInput) -> anyhow::Re
                    target_pnl, target_win_rate, target_max_drawdown_pct, notes,
                    created_at, updated_at",
     )
-    .bind(user_id).bind(dto.account_id).bind(&dto.name).bind(&dto.period)
-    .bind(dto.start_date).bind(dto.end_date)
+    .bind(user_id)
+    .bind(dto.account_id)
+    .bind(&dto.name)
+    .bind(&dto.period)
+    .bind(dto.start_date)
+    .bind(dto.end_date)
     .bind(dto.target_pnl.and_then(|x| Decimal::try_from(x).ok()))
-    .bind(dto.target_win_rate).bind(dto.target_max_drawdown_pct)
+    .bind(dto.target_win_rate)
+    .bind(dto.target_max_drawdown_pct)
     .bind(dto.notes.as_deref())
-    .fetch_one(pool).await?)
+    .fetch_one(pool)
+    .await?)
 }
 
-pub async fn update(pool: &PgPool, user_id: Uuid, id: Uuid, dto: &GoalInput)
-    -> anyhow::Result<Option<Goal>>
-{
+pub async fn update(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+    dto: &GoalInput,
+) -> anyhow::Result<Option<Goal>> {
     Ok(sqlx::query_as(
         "UPDATE trading_goals SET
             account_id              = $3,
@@ -122,21 +143,36 @@ pub async fn update(pool: &PgPool, user_id: Uuid, id: Uuid, dto: &GoalInput)
                     target_pnl, target_win_rate, target_max_drawdown_pct, notes,
                     created_at, updated_at",
     )
-    .bind(id).bind(user_id).bind(dto.account_id).bind(&dto.name).bind(&dto.period)
-    .bind(dto.start_date).bind(dto.end_date)
+    .bind(id)
+    .bind(user_id)
+    .bind(dto.account_id)
+    .bind(&dto.name)
+    .bind(&dto.period)
+    .bind(dto.start_date)
+    .bind(dto.end_date)
     .bind(dto.target_pnl.and_then(|x| Decimal::try_from(x).ok()))
-    .bind(dto.target_win_rate).bind(dto.target_max_drawdown_pct)
+    .bind(dto.target_win_rate)
+    .bind(dto.target_max_drawdown_pct)
     .bind(dto.notes.as_deref())
-    .fetch_optional(pool).await?)
+    .fetch_optional(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
-    Ok(sqlx::query("DELETE FROM trading_goals WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?.rows_affected() > 0)
+    Ok(
+        sqlx::query("DELETE FROM trading_goals WHERE id = $1 AND user_id = $2")
+            .bind(id)
+            .bind(user_id)
+            .execute(pool)
+            .await?
+            .rows_affected()
+            > 0,
+    )
 }
 
 pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<GoalProgress> {
-    let goal = get(pool, user_id, id).await?
+    let goal = get(pool, user_id, id)
+        .await?
         .ok_or_else(|| anyhow::anyhow!("goal not found"))?;
 
     // Fetch closed trades in window. Account filter is optional.
@@ -148,7 +184,12 @@ pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<
                 AND net_pnl IS NOT NULL
                 AND DATE(opened_at AT TIME ZONE 'UTC') BETWEEN $2 AND $3
               ORDER BY opened_at ASC",
-        ).bind(aid).bind(goal.start_date).bind(goal.end_date).fetch_all(pool).await?
+        )
+        .bind(aid)
+        .bind(goal.start_date)
+        .bind(goal.end_date)
+        .fetch_all(pool)
+        .await?
     } else {
         sqlx::query_as(
             "SELECT t.net_pnl, t.opened_at
@@ -159,14 +200,23 @@ pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<
                 AND t.net_pnl IS NOT NULL
                 AND DATE(t.opened_at AT TIME ZONE 'UTC') BETWEEN $2 AND $3
               ORDER BY t.opened_at ASC",
-        ).bind(user_id).bind(goal.start_date).bind(goal.end_date).fetch_all(pool).await?
+        )
+        .bind(user_id)
+        .bind(goal.start_date)
+        .bind(goal.end_date)
+        .fetch_all(pool)
+        .await?
     };
 
     let pnls: Vec<f64> = trades.iter().map(|(p, _)| dec(*p)).collect();
-    let wins   = pnls.iter().filter(|x| **x > 0.0).count();
+    let wins = pnls.iter().filter(|x| **x > 0.0).count();
     let losses = pnls.iter().filter(|x| **x < 0.0).count();
     let total: f64 = pnls.iter().sum();
-    let win_rate = if pnls.is_empty() { 0.0 } else { wins as f64 / pnls.len() as f64 };
+    let win_rate = if pnls.is_empty() {
+        0.0
+    } else {
+        wins as f64 / pnls.len() as f64
+    };
 
     // Max drawdown across cumulative P/L curve, expressed as % of peak.
     let mut peak = 0.0f64;
@@ -174,24 +224,37 @@ pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<
     let mut max_dd_pct = 0.0f64;
     for p in &pnls {
         cum += p;
-        if cum > peak { peak = cum; }
+        if cum > peak {
+            peak = cum;
+        }
         if peak > 0.0 {
             let dd = (cum - peak) / peak * 100.0;
-            if dd < max_dd_pct { max_dd_pct = dd; }
+            if dd < max_dd_pct {
+                max_dd_pct = dd;
+            }
         }
     }
     let actual_max_drawdown_pct = max_dd_pct.abs();
 
     let today = Utc::now().date_naive();
     let total_days = (goal.end_date - goal.start_date).num_days() + 1;
-    let elapsed = (today.min(goal.end_date) - goal.start_date).num_days().max(0) + 1;
+    let elapsed = (today.min(goal.end_date) - goal.start_date)
+        .num_days()
+        .max(0)
+        + 1;
     let elapsed = elapsed.min(total_days);
-    let elapsed_pct = if total_days > 0 { elapsed as f64 / total_days as f64 * 100.0 } else { 0.0 };
+    let elapsed_pct = if total_days > 0 {
+        elapsed as f64 / total_days as f64 * 100.0
+    } else {
+        0.0
+    };
 
     // Linear run-rate projection.
     let projected_pnl = if elapsed > 0 {
         Some(total / elapsed as f64 * total_days as f64)
-    } else { None };
+    } else {
+        None
+    };
 
     // Per-metric pace.
     let pnl_pace = match goal.target_pnl.as_ref().map(|d| dec(*d)) {
@@ -205,7 +268,10 @@ pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<
     let win_rate_pace = match goal.target_win_rate {
         None => Pace::NoTarget,
         Some(t) if win_rate >= t as f64 => Pace::Exceeded,
-        Some(t) if pnls.is_empty() => { let _ = t; Pace::FallingShort },
+        Some(t) if pnls.is_empty() => {
+            let _ = t;
+            Pace::FallingShort
+        }
         Some(_) => Pace::FallingShort,
     };
     let drawdown_pace = match goal.target_max_drawdown_pct {
@@ -217,19 +283,32 @@ pub async fn progress(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<
 
     let pnl_pct_complete = goal.target_pnl.as_ref().map(|d| {
         let t = dec(*d);
-        if t.abs() < 1e-9 { 0.0 } else { total / t * 100.0 }
+        if t.abs() < 1e-9 {
+            0.0
+        } else {
+            total / t * 100.0
+        }
     });
 
     Ok(GoalProgress {
         goal,
-        trades_in_window: pnls.len(), wins, losses,
+        trades_in_window: pnls.len(),
+        wins,
+        losses,
         actual_pnl: total,
         actual_win_rate: win_rate,
         actual_max_drawdown_pct,
-        days_total: total_days, days_elapsed: elapsed, elapsed_pct,
-        projected_pnl, pnl_pct_complete,
-        pnl_pace, win_rate_pace, drawdown_pace,
+        days_total: total_days,
+        days_elapsed: elapsed,
+        elapsed_pct,
+        projected_pnl,
+        pnl_pct_complete,
+        pnl_pace,
+        win_rate_pace,
+        drawdown_pace,
     })
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

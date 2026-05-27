@@ -68,7 +68,6 @@ pub enum AssetClass {
     Forex,
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OptionType {
@@ -172,7 +171,9 @@ pub struct UserSettings {
     pub updated_at: DateTime<Utc>,
 }
 
-fn true_default() -> bool { true }
+fn true_default() -> bool {
+    true
+}
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -553,8 +554,11 @@ mod tests {
     #[test]
     fn side_opens_and_closes_are_mutually_exclusive() {
         for s in [Side::Buy, Side::Sell, Side::Short, Side::Cover] {
-            assert!(s.opens() ^ s.closes(),
-                "{:?}: every side must be either open or close, never both", s);
+            assert!(
+                s.opens() ^ s.closes(),
+                "{:?}: every side must be either open or close, never both",
+                s
+            );
         }
     }
 
@@ -562,8 +566,8 @@ mod tests {
     fn side_serde_lowercase_roundtrip() {
         // Side must serialize as the lowercase string the DB enum expects.
         for (variant, expected) in [
-            (Side::Buy,   r#""buy""#),
-            (Side::Sell,  r#""sell""#),
+            (Side::Buy, r#""buy""#),
+            (Side::Sell, r#""sell""#),
             (Side::Short, r#""short""#),
             (Side::Cover, r#""cover""#),
         ] {
@@ -595,12 +599,12 @@ mod tests {
 
     #[test]
     fn bar_interval_seconds_match_real_durations() {
-        assert_eq!(BarInterval::M1.seconds(),  60);
-        assert_eq!(BarInterval::M5.seconds(),  300);
+        assert_eq!(BarInterval::M1.seconds(), 60);
+        assert_eq!(BarInterval::M5.seconds(), 300);
         assert_eq!(BarInterval::M15.seconds(), 900);
-        assert_eq!(BarInterval::H1.seconds(),  3_600);
-        assert_eq!(BarInterval::D1.seconds(),  86_400);
-        assert_eq!(BarInterval::W1.seconds(),  604_800);
+        assert_eq!(BarInterval::H1.seconds(), 3_600);
+        assert_eq!(BarInterval::D1.seconds(), 86_400);
+        assert_eq!(BarInterval::W1.seconds(), 604_800);
     }
 
     #[test]
@@ -628,12 +632,22 @@ mod tests {
             fees: Decimal::ZERO,
             net_pnl,
             asset_class: AssetClass::Stock,
-            option_type: None, strike: None, expiration: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
-            base_ccy: None, quote_ccy: None, pip_size: None,
-            stop_loss: None, risk_amount, initial_target: None,
-            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+            stop_loss: None,
+            risk_amount,
+            initial_target: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
         }
     }
 

@@ -20,13 +20,17 @@ async fn connect(
     Json(body): Json<webull::ConnectRequest>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let client = webull::global();
-    client.set_creds(webull::Creds {
-        did: body.did,
-        access_token: body.access_token,
-        t_token: body.t_token,
-        account_id: body.account_id,
-    }).await;
-    Ok(Json(serde_json::json!({"ok": true, "has_creds": client.has_creds().await})))
+    client
+        .set_creds(webull::Creds {
+            did: body.did,
+            access_token: body.access_token,
+            t_token: body.t_token,
+            account_id: body.account_id,
+        })
+        .await;
+    Ok(Json(
+        serde_json::json!({"ok": true, "has_creds": client.has_creds().await}),
+    ))
 }
 
 async fn snapshot(
@@ -44,8 +48,15 @@ async fn handle_ws(mut socket: WebSocket) {
     let client = webull::global();
     if let Some(snap) = client.last_snapshot() {
         if let Ok(j) = serde_json::to_string(&snap) {
-            if socket.send(Message::Text(format!("{{\"type\":\"snapshot\",\"snap\":{j}}}")))
-                .await.is_err() { return; }
+            if socket
+                .send(Message::Text(format!(
+                    "{{\"type\":\"snapshot\",\"snap\":{j}}}"
+                )))
+                .await
+                .is_err()
+            {
+                return;
+            }
         }
     }
     let mut rx = client.subscribe();

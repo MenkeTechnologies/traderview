@@ -19,7 +19,9 @@ pub struct ZPoint {
 pub fn compute(series: &[f64], window: usize) -> Vec<ZPoint> {
     let n = series.len();
     let mut out = vec![ZPoint::default(); n];
-    if n < window || window == 0 { return out; }
+    if n < window || window == 0 {
+        return out;
+    }
     for i in (window - 1)..n {
         let w = &series[(i + 1 - window)..=i];
         let mean = w.iter().sum::<f64>() / window as f64;
@@ -77,7 +79,7 @@ mod tests {
         let series: Vec<f64> = (1..=8).map(|i| i as f64).collect();
         let out = compute(&series, 3);
         for p in &out[..2] {
-            assert_eq!(p.z_score, 0.0);    // pre-warmup
+            assert_eq!(p.z_score, 0.0); // pre-warmup
         }
         for (i, p) in out.iter().enumerate().take(8).skip(2) {
             // Each window of [i-2, i-1, i] = arithmetic progression → window_mean = i.
@@ -96,9 +98,12 @@ mod tests {
     #[test]
     fn outlier_at_end_produces_high_z() {
         let mut series: Vec<f64> = (0..20).map(|i| 100.0 + (i % 2) as f64).collect();
-        series[19] = 200.0;    // outlier
+        series[19] = 200.0; // outlier
         let out = compute(&series, 10);
-        assert!(out[19].z_score.abs() > 2.0,
-            "outlier should produce |z| > 2, got {}", out[19].z_score);
+        assert!(
+            out[19].z_score.abs() > 2.0,
+            "outlier should produce |z| > 2, got {}",
+            out[19].z_score
+        );
     }
 }

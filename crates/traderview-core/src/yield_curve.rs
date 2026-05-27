@@ -27,7 +27,12 @@ pub struct YieldCurve {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum CurveShape { Normal, Flat, Inverted, Humped }
+pub enum CurveShape {
+    Normal,
+    Flat,
+    Inverted,
+    Humped,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurveReport {
@@ -43,7 +48,12 @@ pub fn classify(c: &YieldCurve) -> CurveReport {
     let spread_10_2 = (c.y10y - c.y2y) * 10_000.0;
     let spread_10_3m = (c.y10y - c.y3m) * 10_000.0;
     let is_humped = c.y5y > c.y3m && c.y5y > c.y30y && c.y2y < c.y5y && c.y10y < c.y5y;
-    let spreads = [c.y2y - c.y3m, c.y5y - c.y2y, c.y10y - c.y5y, c.y30y - c.y10y];
+    let spreads = [
+        c.y2y - c.y3m,
+        c.y5y - c.y2y,
+        c.y10y - c.y5y,
+        c.y30y - c.y10y,
+    ];
     let shape = if spread_10_2 < 0.0 {
         CurveShape::Inverted
     } else if is_humped {
@@ -58,10 +68,13 @@ pub fn classify(c: &YieldCurve) -> CurveReport {
         CurveShape::Flat
     };
     let note = match shape {
-        CurveShape::Normal   => "monotonic upward slope — healthy expansion".into(),
-        CurveShape::Flat     => "tenors compressed — late-cycle uncertainty".into(),
-        CurveShape::Inverted => format!("2Y/10Y inverted by {:.0} bps — recession signal", -spread_10_2),
-        CurveShape::Humped   => "5Y peak with both ends lower — rare transitional shape".into(),
+        CurveShape::Normal => "monotonic upward slope — healthy expansion".into(),
+        CurveShape::Flat => "tenors compressed — late-cycle uncertainty".into(),
+        CurveShape::Inverted => format!(
+            "2Y/10Y inverted by {:.0} bps — recession signal",
+            -spread_10_2
+        ),
+        CurveShape::Humped => "5Y peak with both ends lower — rare transitional shape".into(),
     };
     CurveReport {
         shape,
@@ -76,7 +89,13 @@ mod tests {
     use super::*;
 
     fn normal_curve() -> YieldCurve {
-        YieldCurve { y3m: 0.03, y2y: 0.035, y5y: 0.04, y10y: 0.045, y30y: 0.05 }
+        YieldCurve {
+            y3m: 0.03,
+            y2y: 0.035,
+            y5y: 0.04,
+            y10y: 0.045,
+            y30y: 0.05,
+        }
     }
 
     #[test]
@@ -88,7 +107,13 @@ mod tests {
 
     #[test]
     fn inverted_2y_above_10y_classified_inverted() {
-        let c = YieldCurve { y3m: 0.04, y2y: 0.055, y5y: 0.05, y10y: 0.045, y30y: 0.045 };
+        let c = YieldCurve {
+            y3m: 0.04,
+            y2y: 0.055,
+            y5y: 0.05,
+            y10y: 0.045,
+            y30y: 0.045,
+        };
         let r = classify(&c);
         assert_eq!(r.shape, CurveShape::Inverted);
         assert!(r.spread_10y_2y_bps < 0.0);
@@ -96,14 +121,26 @@ mod tests {
 
     #[test]
     fn flat_curve_all_yields_close_classified_flat() {
-        let c = YieldCurve { y3m: 0.04, y2y: 0.041, y5y: 0.042, y10y: 0.0425, y30y: 0.043 };
+        let c = YieldCurve {
+            y3m: 0.04,
+            y2y: 0.041,
+            y5y: 0.042,
+            y10y: 0.0425,
+            y30y: 0.043,
+        };
         let r = classify(&c);
         assert_eq!(r.shape, CurveShape::Flat);
     }
 
     #[test]
     fn humped_curve_5y_peak_both_ends_lower() {
-        let c = YieldCurve { y3m: 0.03, y2y: 0.04, y5y: 0.06, y10y: 0.045, y30y: 0.03 };
+        let c = YieldCurve {
+            y3m: 0.03,
+            y2y: 0.04,
+            y5y: 0.06,
+            y10y: 0.045,
+            y30y: 0.03,
+        };
         let r = classify(&c);
         assert_eq!(r.shape, CurveShape::Humped);
     }
@@ -124,7 +161,13 @@ mod tests {
 
     #[test]
     fn inverted_note_quotes_magnitude() {
-        let c = YieldCurve { y3m: 0.04, y2y: 0.055, y5y: 0.05, y10y: 0.045, y30y: 0.045 };
+        let c = YieldCurve {
+            y3m: 0.04,
+            y2y: 0.055,
+            y5y: 0.05,
+            y10y: 0.045,
+            y30y: 0.045,
+        };
         let r = classify(&c);
         // 5.5% - 4.5% = 1% = 100 bps. Note: "by 100 bps".
         assert!(r.note.contains("100"));
@@ -133,7 +176,13 @@ mod tests {
     #[test]
     fn slightly_falling_30y_after_normal_still_normal_with_tiny_noise() {
         // Allow tiny noise tolerance in normal classification.
-        let c = YieldCurve { y3m: 0.03, y2y: 0.035, y5y: 0.04, y10y: 0.045, y30y: 0.0449 };
+        let c = YieldCurve {
+            y3m: 0.03,
+            y2y: 0.035,
+            y5y: 0.04,
+            y10y: 0.045,
+            y30y: 0.0449,
+        };
         let r = classify(&c);
         assert_eq!(r.shape, CurveShape::Normal);
     }

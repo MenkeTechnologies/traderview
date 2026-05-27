@@ -31,7 +31,9 @@ pub struct DonchianPoint {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<DonchianPoint> {
     let n = bars.len();
     let mut out = vec![DonchianPoint::default(); n];
-    if n < period || period == 0 { return out; }
+    if n < period || period == 0 {
+        return out;
+    }
     let mut prev_upper = 0.0;
     let mut prev_lower = 0.0;
     for i in (period - 1)..n {
@@ -45,7 +47,10 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<DonchianPoint> {
         let upper = if window.is_empty() {
             bars[i].high
         } else {
-            window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max)
+            window
+                .iter()
+                .map(|b| b.high)
+                .fold(f64::NEG_INFINITY, f64::max)
         };
         let lower = if window.is_empty() {
             bars[i].low
@@ -56,7 +61,9 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<DonchianPoint> {
         let upper_break = i > 0 && bars[i].close > prev_upper;
         let lower_break = i > 0 && bars[i].close < prev_lower;
         out[i] = DonchianPoint {
-            upper, middle, lower,
+            upper,
+            middle,
+            lower,
             upper_breakout: upper_break,
             lower_breakout: lower_break,
         };
@@ -70,7 +77,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<DonchianPoint> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -81,7 +94,9 @@ mod tests {
     fn under_period_returns_zero_points() {
         let bars = vec![b(10.0, 9.0, 9.5); 5];
         let out = compute(&bars, 20);
-        for p in &out { assert_eq!(p.upper, 0.0); }
+        for p in &out {
+            assert_eq!(p.upper, 0.0);
+        }
     }
 
     #[test]
@@ -93,7 +108,7 @@ mod tests {
             b(12.0, 11.0, 11.5),
             b(13.0, 12.0, 12.5),
             b(14.0, 13.0, 13.5),
-            b(15.0, 14.0, 16.0),    // close above upper (14)
+            b(15.0, 14.0, 16.0), // close above upper (14)
         ];
         let out = compute(&bars, 5);
         assert_eq!(out[5].upper, 14.0);
@@ -108,7 +123,7 @@ mod tests {
             b(20.0, 13.0, 16.0),
             b(20.0, 12.0, 15.0),
             b(20.0, 11.0, 14.0),
-            b(20.0, 10.0, 9.0),     // close below lower (11)
+            b(20.0, 10.0, 9.0), // close below lower (11)
         ];
         let out = compute(&bars, 5);
         assert_eq!(out[5].lower, 11.0);
@@ -117,11 +132,13 @@ mod tests {
 
     #[test]
     fn middle_is_upper_lower_average() {
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let h = i as f64;
-            let l = i as f64 - 0.5;
-            b(h, l, (h + l) / 2.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let h = i as f64;
+                let l = i as f64 - 0.5;
+                b(h, l, (h + l) / 2.0)
+            })
+            .collect();
         let out = compute(&bars, 5);
         let p = &out[5];
         assert!((p.middle - (p.upper + p.lower) / 2.0).abs() < 1e-9);
@@ -146,7 +163,7 @@ mod tests {
             b(10.0, 8.0, 9.0),
             b(10.0, 8.0, 9.0),
             b(10.0, 8.0, 9.0),
-            b(10.0, 8.0, 10.0),    // close exactly at upper
+            b(10.0, 8.0, 10.0), // close exactly at upper
         ];
         let out = compute(&bars, 5);
         assert_eq!(out[5].upper, 10.0);

@@ -12,9 +12,13 @@
 pub fn compute(closes: &[f64], roc1: usize, roc2: usize, wma_period: usize) -> Vec<f64> {
     let n = closes.len();
     let mut out = vec![0.0; n];
-    if n == 0 || roc1 == 0 || roc2 == 0 || wma_period == 0 { return out; }
+    if n == 0 || roc1 == 0 || roc2 == 0 || wma_period == 0 {
+        return out;
+    }
     let max_roc = roc1.max(roc2);
-    if n <= max_roc { return out; }
+    if n <= max_roc {
+        return out;
+    }
     // ROC series.
     let mut combined = vec![0.0; n];
     for i in max_roc..n {
@@ -49,7 +53,9 @@ mod tests {
     fn under_warmup_returns_zeros() {
         let closes = vec![100.0; 15];
         let out = compute(&closes, 14, 11, 10);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]

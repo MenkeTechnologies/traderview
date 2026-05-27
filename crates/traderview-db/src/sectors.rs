@@ -31,11 +31,10 @@ pub struct Sector {
 
 pub async fn ranked(pool: &PgPool) -> anyhow::Result<Vec<Sector>> {
     // Refresh cache if older than 5 min.
-    let stale: Option<(DateTime<Utc>,)> = sqlx::query_as(
-        "SELECT MIN(fetched_at) FROM sector_strength",
-    )
-    .fetch_optional(pool)
-    .await?;
+    let stale: Option<(DateTime<Utc>,)> =
+        sqlx::query_as("SELECT MIN(fetched_at) FROM sector_strength")
+            .fetch_optional(pool)
+            .await?;
     let needs_refresh = stale
         .map(|(t,)| (Utc::now() - t).num_seconds() > 300)
         .unwrap_or(true);

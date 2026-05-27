@@ -27,11 +27,24 @@ pub struct TreynorReport {
 
 pub fn treynor(portfolio_returns: &[f64], rf_per_period: f64, beta: f64) -> TreynorReport {
     if portfolio_returns.is_empty() {
-        return TreynorReport { rf: rf_per_period, beta, ..Default::default() };
+        return TreynorReport {
+            rf: rf_per_period,
+            beta,
+            ..Default::default()
+        };
     }
     let mean = portfolio_returns.iter().sum::<f64>() / portfolio_returns.len() as f64;
-    let treynor = if beta == 0.0 { f64::NAN } else { (mean - rf_per_period) / beta };
-    TreynorReport { portfolio_mean: mean, rf: rf_per_period, beta, treynor }
+    let treynor = if beta == 0.0 {
+        f64::NAN
+    } else {
+        (mean - rf_per_period) / beta
+    };
+    TreynorReport {
+        portfolio_mean: mean,
+        rf: rf_per_period,
+        beta,
+        treynor,
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -48,13 +61,23 @@ pub fn information_ratio(
     benchmark: &[f64],
     annualization: f64,
 ) -> Option<InfoRatioReport> {
-    if portfolio.len() != benchmark.len() || portfolio.len() < 2 { return None; }
+    if portfolio.len() != benchmark.len() || portfolio.len() < 2 {
+        return None;
+    }
     let n = portfolio.len();
-    let active: Vec<f64> = portfolio.iter().zip(benchmark).map(|(p, b)| p - b).collect();
+    let active: Vec<f64> = portfolio
+        .iter()
+        .zip(benchmark)
+        .map(|(p, b)| p - b)
+        .collect();
     let mean = active.iter().sum::<f64>() / n as f64;
     let var = active.iter().map(|a| (a - mean).powi(2)).sum::<f64>() / n as f64;
     let te = var.sqrt();
-    let ir = if te == 0.0 { 0.0 } else { mean / te * annualization.sqrt() };
+    let ir = if te == 0.0 {
+        0.0
+    } else {
+        mean / te * annualization.sqrt()
+    };
     Some(InfoRatioReport {
         n,
         mean_active_return: mean,
@@ -94,9 +117,11 @@ mod tests {
     fn treynor_higher_when_beta_is_lower_for_same_returns() {
         // Less risk per unit of return → higher treynor.
         let r_high = treynor(&[0.05, 0.05, 0.05], 0.01, 2.0);
-        let r_low  = treynor(&[0.05, 0.05, 0.05], 0.01, 1.0);
-        assert!(r_low.treynor > r_high.treynor,
-            "lower beta → higher treynor for same returns");
+        let r_low = treynor(&[0.05, 0.05, 0.05], 0.01, 1.0);
+        assert!(
+            r_low.treynor > r_high.treynor,
+            "lower beta → higher treynor for same returns"
+        );
     }
 
     #[test]
@@ -138,10 +163,11 @@ mod tests {
     #[test]
     fn ir_positive_when_alpha_with_some_variance() {
         let r = information_ratio(
-            &[0.05, 0.06, 0.04],    // mean = 0.05
-            &[0.04, 0.04, 0.04],    // mean = 0.04
+            &[0.05, 0.06, 0.04], // mean = 0.05
+            &[0.04, 0.04, 0.04], // mean = 0.04
             252.0,
-        ).unwrap();
+        )
+        .unwrap();
         assert!((r.mean_active_return - 0.01).abs() < 1e-9);
         assert!(r.tracking_error > 0.0);
         assert!(r.information_ratio > 0.0);
@@ -149,11 +175,7 @@ mod tests {
 
     #[test]
     fn ir_negative_when_underperforming() {
-        let r = information_ratio(
-            &[0.03, 0.04, 0.02],
-            &[0.05, 0.05, 0.05],
-            252.0,
-        ).unwrap();
+        let r = information_ratio(&[0.03, 0.04, 0.02], &[0.05, 0.05, 0.05], 252.0).unwrap();
         assert!(r.mean_active_return < 0.0);
         assert!(r.information_ratio < 0.0);
     }

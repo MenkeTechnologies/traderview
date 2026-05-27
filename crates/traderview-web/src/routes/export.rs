@@ -24,9 +24,15 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/export/executions/:account_id.csv", get(executions_csv))
         .route("/export/trades/:account_id.csv", get(trades_csv))
-        .route("/export/tax-lots/:account_id/realized.csv", get(tax_realized_csv))
+        .route(
+            "/export/tax-lots/:account_id/realized.csv",
+            get(tax_realized_csv),
+        )
         .route("/export/tax-lots/:account_id/open.csv", get(tax_open_csv))
-        .route("/export/tax-package/:account_id.html", get(tax_package_html))
+        .route(
+            "/export/tax-package/:account_id.html",
+            get(tax_package_html),
+        )
 }
 
 // ---------------------------------------------------------------------------
@@ -42,20 +48,33 @@ fn csv_cell(s: &str) -> String {
 }
 
 fn csv_row(cells: &[String]) -> String {
-    cells.iter().map(|c| csv_cell(c)).collect::<Vec<_>>().join(",")
+    cells
+        .iter()
+        .map(|c| csv_cell(c))
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
-fn dec_to_string(d: rust_decimal::Decimal) -> String { d.to_string() }
-fn dec_opt(d: Option<rust_decimal::Decimal>) -> String { d.map(dec_to_string).unwrap_or_default() }
+fn dec_to_string(d: rust_decimal::Decimal) -> String {
+    d.to_string()
+}
+fn dec_opt(d: Option<rust_decimal::Decimal>) -> String {
+    d.map(dec_to_string).unwrap_or_default()
+}
 
 fn csv_response(filename: &str, body: String) -> impl IntoResponse {
     (
         StatusCode::OK,
         [
-            (CONTENT_TYPE, HeaderValue::from_static("text/csv; charset=utf-8")),
-            (CONTENT_DISPOSITION,
-             HeaderValue::from_str(&format!("attachment; filename=\"{}\"", filename))
-                 .unwrap_or(HeaderValue::from_static("attachment"))),
+            (
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/csv; charset=utf-8"),
+            ),
+            (
+                CONTENT_DISPOSITION,
+                HeaderValue::from_str(&format!("attachment; filename=\"{}\"", filename))
+                    .unwrap_or(HeaderValue::from_static("attachment")),
+            ),
         ],
         body,
     )
@@ -65,10 +84,15 @@ fn html_response(filename: &str, body: String) -> impl IntoResponse {
     (
         StatusCode::OK,
         [
-            (CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8")),
-            (CONTENT_DISPOSITION,
-             HeaderValue::from_str(&format!("inline; filename=\"{}\"", filename))
-                 .unwrap_or(HeaderValue::from_static("inline"))),
+            (
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            ),
+            (
+                CONTENT_DISPOSITION,
+                HeaderValue::from_str(&format!("inline; filename=\"{}\"", filename))
+                    .unwrap_or(HeaderValue::from_static("inline")),
+            ),
         ],
         body,
     )
@@ -85,13 +109,29 @@ async fn executions_csv(
 ) -> Result<axum::response::Response, ApiError> {
     ensure_account_owner(&s, u.id, account_id).await?;
     let execs = traderview_db::executions::list_for_account(&s.pool, account_id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     let mut body = String::new();
-    body.push_str(&csv_row(&[
-        "executed_at", "symbol", "side", "qty", "price", "fee",
-        "asset_class", "option_type", "strike", "expiration",
-        "multiplier", "broker_order_id", "id",
-    ].iter().map(|s| s.to_string()).collect::<Vec<_>>()));
+    body.push_str(&csv_row(
+        &[
+            "executed_at",
+            "symbol",
+            "side",
+            "qty",
+            "price",
+            "fee",
+            "asset_class",
+            "option_type",
+            "strike",
+            "expiration",
+            "multiplier",
+            "broker_order_id",
+            "id",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    ));
     body.push('\n');
     for e in execs {
         body.push_str(&csv_row(&[
@@ -102,7 +142,9 @@ async fn executions_csv(
             dec_to_string(e.price),
             dec_to_string(e.fee),
             format!("{:?}", e.asset_class).to_lowercase(),
-            e.option_type.map(|o| format!("{:?}", o).to_lowercase()).unwrap_or_default(),
+            e.option_type
+                .map(|o| format!("{:?}", o).to_lowercase())
+                .unwrap_or_default(),
             dec_opt(e.strike),
             e.expiration.map(|d| d.to_string()).unwrap_or_default(),
             dec_to_string(e.multiplier),
@@ -125,16 +167,40 @@ async fn trades_csv(
 ) -> Result<axum::response::Response, ApiError> {
     ensure_account_owner(&s, u.id, account_id).await?;
     let trades = traderview_db::trades::list_for_account(
-        &s.pool, account_id,
+        &s.pool,
+        account_id,
         &traderview_db::trades::TradeFilter::default(),
-    ).await.map_err(ApiError::Internal)?;
+    )
+    .await
+    .map_err(ApiError::Internal)?;
     let mut body = String::new();
-    body.push_str(&csv_row(&[
-        "opened_at", "closed_at", "symbol", "side", "status", "qty",
-        "entry_avg", "exit_avg", "gross_pnl", "fees", "net_pnl",
-        "asset_class", "option_type", "strike", "expiration",
-        "stop_loss", "risk_amount", "mfe", "mae", "id",
-    ].iter().map(|s| s.to_string()).collect::<Vec<_>>()));
+    body.push_str(&csv_row(
+        &[
+            "opened_at",
+            "closed_at",
+            "symbol",
+            "side",
+            "status",
+            "qty",
+            "entry_avg",
+            "exit_avg",
+            "gross_pnl",
+            "fees",
+            "net_pnl",
+            "asset_class",
+            "option_type",
+            "strike",
+            "expiration",
+            "stop_loss",
+            "risk_amount",
+            "mfe",
+            "mae",
+            "id",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    ));
     body.push('\n');
     for t in trades {
         body.push_str(&csv_row(&[
@@ -150,7 +216,9 @@ async fn trades_csv(
             dec_to_string(t.fees),
             dec_opt(t.net_pnl),
             format!("{:?}", t.asset_class).to_lowercase(),
-            t.option_type.map(|o| format!("{:?}", o).to_lowercase()).unwrap_or_default(),
+            t.option_type
+                .map(|o| format!("{:?}", o).to_lowercase())
+                .unwrap_or_default(),
             dec_opt(t.strike),
             t.expiration.map(|d| d.to_string()).unwrap_or_default(),
             dec_opt(t.stop_loss),
@@ -184,13 +252,29 @@ async fn tax_realized_csv(
     ensure_account_owner(&s, u.id, account_id).await?;
     let year = p.year.unwrap_or_else(|| Utc::now().year());
     let method = p.method.unwrap_or(LotMethod::Fifo);
-    let r = compute(&s.pool, account_id, year, method).await.map_err(ApiError::Internal)?;
+    let r = compute(&s.pool, account_id, year, method)
+        .await
+        .map_err(ApiError::Internal)?;
     let mut body = String::new();
-    body.push_str(&csv_row(&[
-        "symbol", "acquired", "disposed", "holding_days", "term",
-        "qty", "cost_basis", "proceeds", "gain_loss", "wash_sale_disallowed",
-        "buy_exec_id", "sell_exec_id",
-    ].iter().map(|s| s.to_string()).collect::<Vec<_>>()));
+    body.push_str(&csv_row(
+        &[
+            "symbol",
+            "acquired",
+            "disposed",
+            "holding_days",
+            "term",
+            "qty",
+            "cost_basis",
+            "proceeds",
+            "gain_loss",
+            "wash_sale_disallowed",
+            "buy_exec_id",
+            "sell_exec_id",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    ));
     body.push('\n');
     for ev in r.realized {
         body.push_str(&csv_row(&[
@@ -198,7 +282,11 @@ async fn tax_realized_csv(
             ev.acquired_at.format("%Y-%m-%d").to_string(),
             ev.disposed_at.format("%Y-%m-%d").to_string(),
             ev.holding_days.to_string(),
-            if ev.long_term { "LT".into() } else { "ST".into() },
+            if ev.long_term {
+                "LT".into()
+            } else {
+                "ST".into()
+            },
             ev.qty.to_string(),
             format!("{:.2}", ev.cost_basis),
             format!("{:.2}", ev.proceeds),
@@ -221,19 +309,36 @@ async fn tax_open_csv(
     ensure_account_owner(&s, u.id, account_id).await?;
     let year = p.year.unwrap_or_else(|| Utc::now().year());
     let method = p.method.unwrap_or(LotMethod::Fifo);
-    let r = compute(&s.pool, account_id, year, method).await.map_err(ApiError::Internal)?;
+    let r = compute(&s.pool, account_id, year, method)
+        .await
+        .map_err(ApiError::Internal)?;
     let mut body = String::new();
-    body.push_str(&csv_row(&[
-        "symbol", "acquired", "holding_days", "term",
-        "qty_remaining", "cost_per_share", "cost_basis", "exec_id",
-    ].iter().map(|s| s.to_string()).collect::<Vec<_>>()));
+    body.push_str(&csv_row(
+        &[
+            "symbol",
+            "acquired",
+            "holding_days",
+            "term",
+            "qty_remaining",
+            "cost_per_share",
+            "cost_basis",
+            "exec_id",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    ));
     body.push('\n');
     for l in r.open_lots {
         body.push_str(&csv_row(&[
             l.symbol,
             l.acquired_at.format("%Y-%m-%d").to_string(),
             l.holding_days.to_string(),
-            if l.long_term { "LT".into() } else { "ST".into() },
+            if l.long_term {
+                "LT".into()
+            } else {
+                "ST".into()
+            },
             l.qty_remaining.to_string(),
             format!("{:.4}", l.cost_per_share),
             format!("{:.2}", l.cost_basis),
@@ -258,41 +363,66 @@ async fn tax_package_html(
     ensure_account_owner(&s, u.id, account_id).await?;
     let year = p.year.unwrap_or_else(|| Utc::now().year());
     let method = p.method.unwrap_or(LotMethod::Fifo);
-    let r = compute(&s.pool, account_id, year, method).await.map_err(ApiError::Internal)?;
+    let r = compute(&s.pool, account_id, year, method)
+        .await
+        .map_err(ApiError::Internal)?;
 
-    let method_str = match method { LotMethod::Fifo => "FIFO", LotMethod::Lifo => "LIFO" };
-    let realized_rows: String = r.realized.iter().map(|ev| {
-        format!(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>\
+    let method_str = match method {
+        LotMethod::Fifo => "FIFO",
+        LotMethod::Lifo => "LIFO",
+    };
+    let realized_rows: String = r
+        .realized
+        .iter()
+        .map(|ev| {
+            format!(
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>\
              <td class=\"r\">{:.4}</td><td class=\"r\">${:.2}</td><td class=\"r\">${:.2}</td>\
              <td class=\"r {sgn}\">${:.2}</td><td class=\"r {wash}\">{wash_amt}</td></tr>",
-            ev.symbol,
-            ev.acquired_at.format("%Y-%m-%d"),
-            ev.disposed_at.format("%Y-%m-%d"),
-            ev.holding_days,
-            if ev.long_term { "LT" } else { "ST" },
-            ev.qty, ev.cost_basis, ev.proceeds, ev.gain_loss,
-            sgn = if ev.gain_loss >= 0.0 { "pos" } else { "neg" },
-            wash = if ev.wash_sale_disallowed > 0.0 { "warn" } else { "" },
-            wash_amt = if ev.wash_sale_disallowed > 0.0 {
-                format!("${:.2}", ev.wash_sale_disallowed)
-            } else { "—".into() },
-        )
-    }).collect();
+                ev.symbol,
+                ev.acquired_at.format("%Y-%m-%d"),
+                ev.disposed_at.format("%Y-%m-%d"),
+                ev.holding_days,
+                if ev.long_term { "LT" } else { "ST" },
+                ev.qty,
+                ev.cost_basis,
+                ev.proceeds,
+                ev.gain_loss,
+                sgn = if ev.gain_loss >= 0.0 { "pos" } else { "neg" },
+                wash = if ev.wash_sale_disallowed > 0.0 {
+                    "warn"
+                } else {
+                    ""
+                },
+                wash_amt = if ev.wash_sale_disallowed > 0.0 {
+                    format!("${:.2}", ev.wash_sale_disallowed)
+                } else {
+                    "—".into()
+                },
+            )
+        })
+        .collect();
 
-    let open_rows: String = r.open_lots.iter().map(|l| {
-        format!(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>\
+    let open_rows: String = r
+        .open_lots
+        .iter()
+        .map(|l| {
+            format!(
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>\
              <td class=\"r\">{:.4}</td><td class=\"r\">${:.4}</td><td class=\"r\">${:.2}</td></tr>",
-            l.symbol,
-            l.acquired_at.format("%Y-%m-%d"),
-            l.holding_days,
-            if l.long_term { "LT" } else { "ST" },
-            l.qty_remaining, l.cost_per_share, l.cost_basis,
-        )
-    }).collect();
+                l.symbol,
+                l.acquired_at.format("%Y-%m-%d"),
+                l.holding_days,
+                if l.long_term { "LT" } else { "ST" },
+                l.qty_remaining,
+                l.cost_per_share,
+                l.cost_basis,
+            )
+        })
+        .collect();
 
-    let html = format!(r#"<!DOCTYPE html>
+    let html = format!(
+        r#"<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <title>Tax package — {year} — {account_id}</title>
 <style>
@@ -363,12 +493,21 @@ async fn tax_package_html(
         account_id = account_id,
         method_str = method_str,
         generated = r.fetched_at.format("%Y-%m-%d %H:%M UTC"),
-        nett = r.net_total, nett_cls = if r.net_total >= 0.0 { "pos" } else { "neg" },
-        nst = r.net_short_term, nst_cls = if r.net_short_term >= 0.0 { "pos" } else { "neg" },
-        nlt = r.net_long_term, nlt_cls = if r.net_long_term >= 0.0 { "pos" } else { "neg" },
+        nett = r.net_total,
+        nett_cls = if r.net_total >= 0.0 { "pos" } else { "neg" },
+        nst = r.net_short_term,
+        nst_cls = if r.net_short_term >= 0.0 {
+            "pos"
+        } else {
+            "neg"
+        },
+        nlt = r.net_long_term,
+        nlt_cls = if r.net_long_term >= 0.0 { "pos" } else { "neg" },
         wsh = r.wash_sale_total,
-        prc = r.total_proceeds, bss = r.total_basis,
-        rct = r.realized_count, oct = r.open_lot_count,
+        prc = r.total_proceeds,
+        bss = r.total_basis,
+        rct = r.realized_count,
+        oct = r.open_lot_count,
         realized_rows = realized_rows,
         open_rows = open_rows,
     );

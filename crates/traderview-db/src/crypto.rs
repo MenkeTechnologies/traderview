@@ -76,7 +76,9 @@ pub async fn global() -> anyhow::Result<Global> {
     Ok(Global {
         total_market_cap_usd: d["total_market_cap"]["usd"].as_f64().unwrap_or(0.0),
         total_volume_usd: d["total_volume"]["usd"].as_f64().unwrap_or(0.0),
-        market_cap_change_24h_pct: d["market_cap_change_percentage_24h_usd"].as_f64().unwrap_or(0.0),
+        market_cap_change_24h_pct: d["market_cap_change_percentage_24h_usd"]
+            .as_f64()
+            .unwrap_or(0.0),
         btc_dominance: d["market_cap_percentage"]["btc"].as_f64().unwrap_or(0.0),
         eth_dominance: d["market_cap_percentage"]["eth"].as_f64().unwrap_or(0.0),
         active_cryptocurrencies: d["active_cryptocurrencies"].as_i64().unwrap_or(0) as i32,
@@ -99,22 +101,45 @@ pub struct OnChainBtc {
 /// Bitcoin on-chain stats via blockchain.com (no auth).
 pub async fn btc_onchain() -> anyhow::Result<OnChainBtc> {
     let mut out = OnChainBtc {
-        hash_rate_thps: None, difficulty: None, block_height: None,
-        mempool_size: None, mempool_tx_count: None,
+        hash_rate_thps: None,
+        difficulty: None,
+        block_height: None,
+        mempool_size: None,
+        mempool_tx_count: None,
         fetched_at: Utc::now(),
     };
     let c = client();
     if let Ok(s) = c.get("https://blockchain.info/q/hashrate").send().await {
-        if let Ok(t) = s.text().await { out.hash_rate_thps = t.trim().parse().ok(); }
+        if let Ok(t) = s.text().await {
+            out.hash_rate_thps = t.trim().parse().ok();
+        }
     }
-    if let Ok(s) = c.get("https://blockchain.info/q/getdifficulty").send().await {
-        if let Ok(t) = s.text().await { out.difficulty = t.trim().parse().ok(); }
+    if let Ok(s) = c
+        .get("https://blockchain.info/q/getdifficulty")
+        .send()
+        .await
+    {
+        if let Ok(t) = s.text().await {
+            out.difficulty = t.trim().parse().ok();
+        }
     }
-    if let Ok(s) = c.get("https://blockchain.info/q/getblockcount").send().await {
-        if let Ok(t) = s.text().await { out.block_height = t.trim().parse().ok(); }
+    if let Ok(s) = c
+        .get("https://blockchain.info/q/getblockcount")
+        .send()
+        .await
+    {
+        if let Ok(t) = s.text().await {
+            out.block_height = t.trim().parse().ok();
+        }
     }
-    if let Ok(s) = c.get("https://blockchain.info/q/unconfirmedcount").send().await {
-        if let Ok(t) = s.text().await { out.mempool_tx_count = t.trim().parse().ok(); }
+    if let Ok(s) = c
+        .get("https://blockchain.info/q/unconfirmedcount")
+        .send()
+        .await
+    {
+        if let Ok(t) = s.text().await {
+            out.mempool_tx_count = t.trim().parse().ok();
+        }
     }
     Ok(out)
 }

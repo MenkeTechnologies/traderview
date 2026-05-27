@@ -20,11 +20,18 @@ struct RunQ {
     #[serde(default = "default_limit")]
     limit: usize,
 }
-fn default_limit() -> usize { 50 }
+fn default_limit() -> usize {
+    50
+}
 
-async fn run(State(s): State<AppState>, user: AuthUser, Query(q): Query<RunQ>)
-    -> Result<Json<ScanRun>, ApiError>
-{
-    Ok(Json(traderview_db::scans::run_preset(&s.pool, user.id, q.preset, q.watchlist_id, q.limit)
-        .await.map_err(ApiError::Internal)?))
+async fn run(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RunQ>,
+) -> Result<Json<ScanRun>, ApiError> {
+    Ok(Json(
+        traderview_db::scans::run_preset(&s.pool, user.id, q.preset, q.watchlist_id, q.limit)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

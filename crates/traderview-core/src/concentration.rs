@@ -53,9 +53,9 @@ pub fn evaluate(holdings: &[Holding]) -> ConcentrationReport {
         total_gross_exposure: total,
         hhi,
         effective_n,
-        top_1_pct:  sorted.iter().take(1).sum(),
-        top_3_pct:  sorted.iter().take(3).sum(),
-        top_5_pct:  sorted.iter().take(5).sum(),
+        top_1_pct: sorted.iter().take(1).sum(),
+        top_3_pct: sorted.iter().take(3).sum(),
+        top_5_pct: sorted.iter().take(5).sum(),
         top_10_pct: sorted.iter().take(10).sum(),
         flag_single_position_over_25pct: sorted.first().is_some_and(|w| *w > 0.25),
     }
@@ -66,7 +66,10 @@ mod tests {
     use super::*;
 
     fn h(sym: &str, n: f64) -> Holding {
-        Holding { symbol: sym.into(), abs_notional: n }
+        Holding {
+            symbol: sym.into(),
+            abs_notional: n,
+        }
     }
 
     #[test]
@@ -101,7 +104,9 @@ mod tests {
     fn concentrated_portfolio_flags_25pct() {
         // 40% in one name + 6 equal-weighted at 10% each = 100%.
         let mut holdings = vec![h("BIG", 4_000.0)];
-        for i in 0..6 { holdings.push(h(&format!("S{i}"), 1000.0)); }
+        for i in 0..6 {
+            holdings.push(h(&format!("S{i}"), 1000.0));
+        }
         let r = evaluate(&holdings);
         assert!(r.flag_single_position_over_25pct);
         assert!((r.top_1_pct - 0.4).abs() < 1e-9);

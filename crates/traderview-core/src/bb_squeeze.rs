@@ -27,7 +27,11 @@ pub struct SqueezeInput {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum SqueezeState { InSqueeze, Released, Normal }
+pub enum SqueezeState {
+    InSqueeze,
+    Released,
+    Normal,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SqueezeBar {
@@ -55,7 +59,13 @@ pub fn analyze(input: &[SqueezeInput]) -> Vec<SqueezeBar> {
             SqueezeState::Normal
         };
         prev_in_squeeze = in_squeeze;
-        out.push(SqueezeBar { state, bb_upper, bb_lower, kc_upper, kc_lower });
+        out.push(SqueezeBar {
+            state,
+            bb_upper,
+            bb_lower,
+            kc_upper,
+            kc_lower,
+        });
     }
     out
 }
@@ -65,7 +75,13 @@ mod tests {
     use super::*;
 
     fn inp(close: f64, sma: f64, stdev: f64, ema: f64, atr: f64) -> SqueezeInput {
-        SqueezeInput { close, sma_20: sma, stdev_20: stdev, ema_20: ema, atr_20: atr }
+        SqueezeInput {
+            close,
+            sma_20: sma,
+            stdev_20: stdev,
+            ema_20: ema,
+            atr_20: atr,
+        }
     }
 
     #[test]
@@ -92,9 +108,9 @@ mod tests {
     #[test]
     fn transition_from_squeeze_to_normal_emits_released() {
         let out = analyze(&[
-            inp(100.0, 100.0, 1.0, 100.0, 5.0),    // InSqueeze
-            inp(100.0, 100.0, 5.0, 100.0, 3.0),    // Released
-            inp(100.0, 100.0, 5.0, 100.0, 3.0),    // Normal
+            inp(100.0, 100.0, 1.0, 100.0, 5.0), // InSqueeze
+            inp(100.0, 100.0, 5.0, 100.0, 3.0), // Released
+            inp(100.0, 100.0, 5.0, 100.0, 3.0), // Normal
         ]);
         assert_eq!(out[0].state, SqueezeState::InSqueeze);
         assert_eq!(out[1].state, SqueezeState::Released);
@@ -116,12 +132,15 @@ mod tests {
     #[test]
     fn release_only_fires_once_then_returns_to_normal() {
         let out = analyze(&[
-            inp(100.0, 100.0, 1.0, 100.0, 5.0),    // InSqueeze
-            inp(100.0, 100.0, 5.0, 100.0, 3.0),    // Released
-            inp(100.0, 100.0, 5.0, 100.0, 3.0),    // Normal
-            inp(100.0, 100.0, 5.0, 100.0, 3.0),    // Normal
+            inp(100.0, 100.0, 1.0, 100.0, 5.0), // InSqueeze
+            inp(100.0, 100.0, 5.0, 100.0, 3.0), // Released
+            inp(100.0, 100.0, 5.0, 100.0, 3.0), // Normal
+            inp(100.0, 100.0, 5.0, 100.0, 3.0), // Normal
         ]);
-        let released_count = out.iter().filter(|b| b.state == SqueezeState::Released).count();
+        let released_count = out
+            .iter()
+            .filter(|b| b.state == SqueezeState::Released)
+            .count();
         assert_eq!(released_count, 1);
     }
 
@@ -146,7 +165,7 @@ mod tests {
         // BB == KC exactly → strict < fails → Normal.
         // sma=100, stdev=2 → BB ±4. ema=100, atr=8/3 → KC ±4.
         // BB upper 104 NOT < KC upper 104 → Normal.
-        let out = analyze(&[inp(100.0, 100.0, 2.0, 100.0, 8.0/3.0)]);
+        let out = analyze(&[inp(100.0, 100.0, 2.0, 100.0, 8.0 / 3.0)]);
         assert_eq!(out[0].state, SqueezeState::Normal);
     }
 }

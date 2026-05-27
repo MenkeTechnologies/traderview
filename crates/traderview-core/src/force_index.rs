@@ -13,7 +13,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn raw(bars: &[Bar]) -> Vec<f64> {
     let n = bars.len();
@@ -28,7 +31,9 @@ pub fn smoothed(bars: &[Bar], period: usize) -> Vec<f64> {
     let raw_fi = raw(bars);
     let n = raw_fi.len();
     let mut out = vec![0.0; n];
-    if n == 0 || period == 0 { return out; }
+    if n == 0 || period == 0 {
+        return out;
+    }
     let k = 2.0 / (period as f64 + 1.0);
     let mut prev = raw_fi[0];
     out[0] = prev;
@@ -42,14 +47,22 @@ pub fn smoothed(bars: &[Bar], period: usize) -> Vec<f64> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ForceCross { Bullish, Bearish, NoCross }
+pub enum ForceCross {
+    Bullish,
+    Bearish,
+    NoCross,
+}
 
 pub fn detect_zero_cross(fi: &[f64]) -> Vec<ForceCross> {
     let mut out = vec![ForceCross::NoCross; fi.len()];
     for i in 1..fi.len() {
-        out[i] = if fi[i - 1] < 0.0 && fi[i] >= 0.0 { ForceCross::Bullish }
-            else if fi[i - 1] >= 0.0 && fi[i] < 0.0 { ForceCross::Bearish }
-            else { ForceCross::NoCross };
+        out[i] = if fi[i - 1] < 0.0 && fi[i] >= 0.0 {
+            ForceCross::Bullish
+        } else if fi[i - 1] >= 0.0 && fi[i] < 0.0 {
+            ForceCross::Bearish
+        } else {
+            ForceCross::NoCross
+        };
     }
     out
 }
@@ -58,7 +71,12 @@ pub fn detect_zero_cross(fi: &[f64]) -> Vec<ForceCross> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -76,34 +94,28 @@ mod tests {
     fn up_close_positive_force() {
         let out = raw(&[
             b(100.0, 1000.0),
-            b(105.0, 500.0),    // up $5 × 500 vol = +2500.
+            b(105.0, 500.0), // up $5 × 500 vol = +2500.
         ]);
         assert_eq!(out[1], 2500.0);
     }
 
     #[test]
     fn down_close_negative_force() {
-        let out = raw(&[
-            b(100.0, 1000.0),
-            b(95.0, 500.0),
-        ]);
+        let out = raw(&[b(100.0, 1000.0), b(95.0, 500.0)]);
         assert_eq!(out[1], -2500.0);
     }
 
     #[test]
     fn flat_close_zero_force() {
-        let out = raw(&[
-            b(100.0, 1000.0),
-            b(100.0, 500.0),
-        ]);
+        let out = raw(&[b(100.0, 1000.0), b(100.0, 500.0)]);
         assert_eq!(out[1], 0.0);
     }
 
     #[test]
     fn smoothed_attenuates_volatile_raw() {
-        let bars: Vec<Bar> = (1..=20).map(|i|
-            b(100.0 + (i % 2) as f64 * 10.0, 1000.0)
-        ).collect();
+        let bars: Vec<Bar> = (1..=20)
+            .map(|i| b(100.0 + (i % 2) as f64 * 10.0, 1000.0))
+            .collect();
         let r = raw(&bars);
         let s = smoothed(&bars, 5);
         // Last smoothed should be in absolute terms less than the max raw.

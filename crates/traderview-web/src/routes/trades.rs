@@ -169,12 +169,22 @@ async fn close_expired_options(
 #[serde(tag = "action", rename_all = "snake_case")]
 enum BulkAction {
     Delete,
-    AddTag { tag_id: Uuid },
-    RemoveTag { tag_id: Uuid },
-    SetRisk { stop_loss: Option<Decimal>, risk_amount: Option<Decimal>, initial_target: Option<Decimal> },
+    AddTag {
+        tag_id: Uuid,
+    },
+    RemoveTag {
+        tag_id: Uuid,
+    },
+    SetRisk {
+        stop_loss: Option<Decimal>,
+        risk_amount: Option<Decimal>,
+        initial_target: Option<Decimal>,
+    },
     Merge,
     Split,
-    Share { is_public: bool },
+    Share {
+        is_public: bool,
+    },
 }
 
 #[derive(Deserialize)]
@@ -225,7 +235,11 @@ async fn bulk(
         } => {
             for id in &body.trade_ids {
                 traderview_db::trades::set_risk_fields(
-                    &s.pool, *id, stop_loss, risk_amount, initial_target,
+                    &s.pool,
+                    *id,
+                    stop_loss,
+                    risk_amount,
+                    initial_target,
                 )
                 .await
                 .map_err(ApiError::Internal)?;

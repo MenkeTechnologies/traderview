@@ -3,19 +3,32 @@ use traderview_core::Account;
 use uuid::Uuid;
 
 pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Account>> {
-    let rows: Vec<(Uuid, Uuid, String, String, String, chrono::DateTime<chrono::Utc>)> =
-        sqlx::query_as(
-            "SELECT id, user_id, broker, name, base_currency, created_at
+    let rows: Vec<(
+        Uuid,
+        Uuid,
+        String,
+        String,
+        String,
+        chrono::DateTime<chrono::Utc>,
+    )> = sqlx::query_as(
+        "SELECT id, user_id, broker, name, base_currency, created_at
                FROM accounts WHERE user_id = $1 ORDER BY created_at ASC",
-        )
-        .bind(user_id)
-        .fetch_all(pool)
-        .await?;
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
     Ok(rows
         .into_iter()
-        .map(|(id, user_id, broker, name, base_currency, created_at)| Account {
-            id, user_id, broker, name, base_currency, created_at,
-        })
+        .map(
+            |(id, user_id, broker, name, base_currency, created_at)| Account {
+                id,
+                user_id,
+                broker,
+                name,
+                base_currency,
+                created_at,
+            },
+        )
         .collect())
 }
 

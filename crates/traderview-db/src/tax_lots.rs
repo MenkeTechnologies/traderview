@@ -28,7 +28,10 @@ const LONG_TERM_DAYS: i64 = 365;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum LotMethod { Fifo, Lifo }
+pub enum LotMethod {
+    Fifo,
+    Lifo,
+}
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct ExecutionRow {
@@ -46,8 +49,8 @@ pub struct OpenLot {
     pub exec_id: Uuid,
     pub symbol: String,
     pub qty_remaining: f64,
-    pub cost_per_share: f64,    // fee-loaded
-    pub cost_basis: f64,        // qty_remaining * cost_per_share
+    pub cost_per_share: f64, // fee-loaded
+    pub cost_basis: f64,     // qty_remaining * cost_per_share
     pub acquired_at: DateTime<Utc>,
     pub holding_days: i64,
     pub long_term: bool,
@@ -126,9 +129,9 @@ pub async fn compute(
         let mut buy_dates: Vec<DateTime<Utc>> = Vec::new();
 
         for e in &events {
-            let qty   = dec(e.qty);
+            let qty = dec(e.qty);
             let price = dec(e.price);
-            let fee   = dec(e.fee);
+            let fee = dec(e.fee);
             match e.side.as_str() {
                 "buy" => {
                     let cps = price + (fee / qty.max(1e-9));
@@ -146,7 +149,7 @@ pub async fn compute(
                         let (buy_id, lot_qty, cps, acquired_at) = queue[pick_idx];
                         let consumed = remaining.min(lot_qty);
                         let cost_basis = consumed * cps;
-                        let proceeds   = consumed * proceeds_per_share;
+                        let proceeds = consumed * proceeds_per_share;
                         let holding_days = (e.executed_at - acquired_at).num_days();
                         all_realized.push(RealizedEvent {
                             symbol: symbol.clone(),
@@ -200,11 +203,16 @@ pub async fn compute(
 
         // Wash-sale pass: for each loss event, search same-symbol buy_dates
         // within ±30 days of the sale.
-        for ev in all_realized.iter_mut().filter(|r| r.symbol == symbol && r.gain_loss < 0.0) {
+        for ev in all_realized
+            .iter_mut()
+            .filter(|r| r.symbol == symbol && r.gain_loss < 0.0)
+        {
             let sale = ev.disposed_at;
             let lo = sale - Duration::days(WASH_SALE_WINDOW_DAYS);
             let hi = sale + Duration::days(WASH_SALE_WINDOW_DAYS);
-            let any_buy_in_window = buy_dates.iter().any(|b| *b >= lo && *b <= hi && *b != ev.acquired_at);
+            let any_buy_in_window = buy_dates
+                .iter()
+                .any(|b| *b >= lo && *b <= hi && *b != ev.acquired_at);
             if any_buy_in_window {
                 ev.wash_sale_disallowed = (-ev.gain_loss).max(0.0);
             }
@@ -213,7 +221,11 @@ pub async fn compute(
 
     // Sort realized chronologically.
     all_realized.sort_by_key(|r| r.disposed_at);
-    all_open.sort_by(|a, b| a.symbol.cmp(&b.symbol).then(a.acquired_at.cmp(&b.acquired_at)));
+    all_open.sort_by(|a, b| {
+        a.symbol
+            .cmp(&b.symbol)
+            .then(a.acquired_at.cmp(&b.acquired_at))
+    });
 
     // Filter to the requested tax year. Realized events use disposed_at.year;
     // open lots are reported as of now regardless.
@@ -222,20 +234,31 @@ pub async fn compute(
         .filter(|r| r.disposed_at.year() == year)
         .collect();
 
-    let mut st_g = 0.0; let mut st_l = 0.0;
-    let mut lt_g = 0.0; let mut lt_l = 0.0;
-    let mut proceeds = 0.0; let mut basis = 0.0;
+    let mut st_g = 0.0;
+    let mut st_l = 0.0;
+    let mut lt_g = 0.0;
+    let mut lt_l = 0.0;
+    let mut proceeds = 0.0;
+    let mut basis = 0.0;
     let mut wash_total = 0.0;
     for r in &year_realized {
         proceeds += r.proceeds;
-        basis    += r.cost_basis;
+        basis += r.cost_basis;
         wash_total += r.wash_sale_disallowed;
         // The disallowed portion of the loss is removed from the net,
         // i.e., treat the loss as `gain_loss + wash_sale_disallowed`.
         let recognized = r.gain_loss + r.wash_sale_disallowed;
         if r.long_term {
-            if recognized >= 0.0 { lt_g += recognized; } else { lt_l += -recognized; }
-        } else if recognized >= 0.0 { st_g += recognized; } else { st_l += -recognized; }
+            if recognized >= 0.0 {
+                lt_g += recognized;
+            } else {
+                lt_l += -recognized;
+            }
+        } else if recognized >= 0.0 {
+            st_g += recognized;
+        } else {
+            st_l += -recognized;
+        }
     }
     let open_basis: f64 = all_open.iter().map(|l| l.cost_basis).sum();
     let net_st = st_g - st_l;
@@ -285,7 +308,10 @@ mod tests {
         }
     }
 
-    fn run_engine(execs: Vec<ExecutionRow>, method: LotMethod) -> (Vec<RealizedEvent>, Vec<OpenLot>) {
+    fn run_engine(
+        execs: Vec<ExecutionRow>,
+        method: LotMethod,
+    ) -> (Vec<RealizedEvent>, Vec<OpenLot>) {
         let mut queue: Vec<(Uuid, f64, f64, DateTime<Utc>)> = Vec::new();
         let mut realized: Vec<RealizedEvent> = Vec::new();
         let mut buy_dates: Vec<DateTime<Utc>> = Vec::new();
@@ -303,7 +329,10 @@ mod tests {
                     let pps = price - (fee / qty.max(1e-9));
                     let mut remaining = qty;
                     while remaining > 1e-9 && !queue.is_empty() {
-                        let idx = match method { LotMethod::Fifo => 0, LotMethod::Lifo => queue.len() - 1 };
+                        let idx = match method {
+                            LotMethod::Fifo => 0,
+                            LotMethod::Lifo => queue.len() - 1,
+                        };
                         let (bid, lq, cps, at) = queue[idx];
                         let consumed = remaining.min(lq);
                         let cb = consumed * cps;
@@ -311,30 +340,46 @@ mod tests {
                         let hd = (e.executed_at - at).num_days();
                         realized.push(RealizedEvent {
                             symbol: e.symbol.clone(),
-                            buy_exec_id: bid, sell_exec_id: e.id,
-                            acquired_at: at, disposed_at: e.executed_at,
-                            qty: consumed, cost_basis: cb, proceeds: pr,
-                            gain_loss: pr - cb, holding_days: hd,
+                            buy_exec_id: bid,
+                            sell_exec_id: e.id,
+                            acquired_at: at,
+                            disposed_at: e.executed_at,
+                            qty: consumed,
+                            cost_basis: cb,
+                            proceeds: pr,
+                            gain_loss: pr - cb,
+                            holding_days: hd,
                             long_term: hd >= LONG_TERM_DAYS,
                             wash_sale_disallowed: 0.0,
                         });
                         let nq = lq - consumed;
-                        if nq <= 1e-9 { queue.remove(idx); } else { queue[idx].1 = nq; }
+                        if nq <= 1e-9 {
+                            queue.remove(idx);
+                        } else {
+                            queue[idx].1 = nq;
+                        }
                         remaining -= consumed;
                     }
                 }
                 _ => {}
             }
         }
-        let opens: Vec<OpenLot> = queue.into_iter().map(|(id, q, cps, at)| {
-            let hd = (Utc::now() - at).num_days();
-            OpenLot {
-                exec_id: id, symbol: "AAPL".into(),
-                qty_remaining: q, cost_per_share: cps,
-                cost_basis: q * cps, acquired_at: at,
-                holding_days: hd, long_term: hd >= LONG_TERM_DAYS,
-            }
-        }).collect();
+        let opens: Vec<OpenLot> = queue
+            .into_iter()
+            .map(|(id, q, cps, at)| {
+                let hd = (Utc::now() - at).num_days();
+                OpenLot {
+                    exec_id: id,
+                    symbol: "AAPL".into(),
+                    qty_remaining: q,
+                    cost_per_share: cps,
+                    cost_basis: q * cps,
+                    acquired_at: at,
+                    holding_days: hd,
+                    long_term: hd >= LONG_TERM_DAYS,
+                }
+            })
+            .collect();
         (realized, opens)
     }
 
@@ -345,16 +390,24 @@ mod tests {
         // LIFO consumes the @200 lot → basis 2000, gain 1000.
         let day = 86_400;
         let execs = vec![
-            make_exec("buy",  10.0, 100.0, 0.0, 0),
-            make_exec("buy",  10.0, 200.0, 0.0, 10 * day),
+            make_exec("buy", 10.0, 100.0, 0.0, 0),
+            make_exec("buy", 10.0, 200.0, 0.0, 10 * day),
             make_exec("sell", 10.0, 300.0, 0.0, 20 * day),
         ];
         let (fifo, _) = run_engine(execs.clone(), LotMethod::Fifo);
         let (lifo, _) = run_engine(execs, LotMethod::Lifo);
         assert_eq!(fifo.len(), 1);
         assert_eq!(lifo.len(), 1);
-        assert!((fifo[0].cost_basis - 1000.0).abs() < 1e-6, "FIFO basis = {}", fifo[0].cost_basis);
-        assert!((lifo[0].cost_basis - 2000.0).abs() < 1e-6, "LIFO basis = {}", lifo[0].cost_basis);
+        assert!(
+            (fifo[0].cost_basis - 1000.0).abs() < 1e-6,
+            "FIFO basis = {}",
+            fifo[0].cost_basis
+        );
+        assert!(
+            (lifo[0].cost_basis - 2000.0).abs() < 1e-6,
+            "LIFO basis = {}",
+            lifo[0].cost_basis
+        );
         assert!((fifo[0].gain_loss - 2000.0).abs() < 1e-6);
         assert!((lifo[0].gain_loss - 1000.0).abs() < 1e-6);
     }
@@ -363,7 +416,7 @@ mod tests {
     fn long_term_classification_at_365_days() {
         let day = 86_400;
         let execs = vec![
-            make_exec("buy",  10.0, 100.0, 0.0, 0),
+            make_exec("buy", 10.0, 100.0, 0.0, 0),
             make_exec("sell", 10.0, 110.0, 0.0, 365 * day),
         ];
         let (r, _) = run_engine(execs, LotMethod::Fifo);
@@ -375,8 +428,8 @@ mod tests {
     fn partial_sell_leaves_open_lot() {
         let day = 86_400;
         let execs = vec![
-            make_exec("buy",  10.0, 100.0, 0.0, 0),
-            make_exec("sell", 6.0,  120.0, 0.0, 30 * day),
+            make_exec("buy", 10.0, 100.0, 0.0, 0),
+            make_exec("sell", 6.0, 120.0, 0.0, 30 * day),
         ];
         let (r, opens) = run_engine(execs, LotMethod::Fifo);
         assert_eq!(r.len(), 1);

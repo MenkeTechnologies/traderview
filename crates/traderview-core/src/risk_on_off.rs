@@ -24,7 +24,11 @@ pub struct CrossAssetSnapshot {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum RiskRegime { On, Off, Neutral }
+pub enum RiskRegime {
+    On,
+    Off,
+    Neutral,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RiskReport {
@@ -40,23 +44,47 @@ pub fn evaluate(snap: &CrossAssetSnapshot) -> RiskReport {
     let mut total = 0i32;
     // SPY direction.
     total += 1;
-    if snap.spy_change_pct > 0.001 { score += 1; agreement += 1; }
-    else if snap.spy_change_pct < -0.001 { score -= 1; agreement += 1; }
+    if snap.spy_change_pct > 0.001 {
+        score += 1;
+        agreement += 1;
+    } else if snap.spy_change_pct < -0.001 {
+        score -= 1;
+        agreement += 1;
+    }
     // Gold (inverse of risk-on).
     total += 1;
-    if snap.gold_change_pct < -0.001 { score += 1; agreement += 1; }
-    else if snap.gold_change_pct > 0.001 { score -= 1; agreement += 1; }
+    if snap.gold_change_pct < -0.001 {
+        score += 1;
+        agreement += 1;
+    } else if snap.gold_change_pct > 0.001 {
+        score -= 1;
+        agreement += 1;
+    }
     // Dollar (inverse of risk-on).
     total += 1;
-    if snap.dxy_change_pct < -0.001 { score += 1; agreement += 1; }
-    else if snap.dxy_change_pct > 0.001 { score -= 1; agreement += 1; }
+    if snap.dxy_change_pct < -0.001 {
+        score += 1;
+        agreement += 1;
+    } else if snap.dxy_change_pct > 0.001 {
+        score -= 1;
+        agreement += 1;
+    }
     // Yields (positive correlation with risk-on).
     total += 1;
-    if snap.ten_year_yield_bps_change > 1.0 { score += 1; agreement += 1; }
-    else if snap.ten_year_yield_bps_change < -1.0 { score -= 1; agreement += 1; }
-    let regime = if score >= 2 { RiskRegime::On }
-        else if score <= -2 { RiskRegime::Off }
-        else { RiskRegime::Neutral };
+    if snap.ten_year_yield_bps_change > 1.0 {
+        score += 1;
+        agreement += 1;
+    } else if snap.ten_year_yield_bps_change < -1.0 {
+        score -= 1;
+        agreement += 1;
+    }
+    let regime = if score >= 2 {
+        RiskRegime::On
+    } else if score <= -2 {
+        RiskRegime::Off
+    } else {
+        RiskRegime::Neutral
+    };
     RiskReport {
         regime,
         score,

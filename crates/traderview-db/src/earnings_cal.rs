@@ -48,7 +48,10 @@ pub struct PollStats {
 pub async fn poll_watchlists(pool: &PgPool) -> anyhow::Result<PollStats> {
     let symbols: Vec<String> = sqlx::query_scalar(
         "SELECT DISTINCT symbol FROM watchlist_symbols ORDER BY symbol LIMIT 100",
-    ).fetch_all(pool).await.unwrap_or_default();
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
     let mut events_upserted = 0u64;
     let mut reactions_computed = 0u64;
     for s in &symbols {
@@ -60,7 +63,8 @@ pub async fn poll_watchlists(pool: &PgPool) -> anyhow::Result<PollStats> {
     }
     Ok(PollStats {
         symbols_polled: symbols.len(),
-        events_upserted, reactions_computed,
+        events_upserted,
+        reactions_computed,
     })
 }
 
@@ -74,24 +78,49 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
         let timing = guess_timing(&cal["earningsDate"][0]);
         let est = f_opt(&cal["earningsAverage"]);
         let rev_est = f_opt(&cal["revenueAverage"]);
-        if upsert_event(pool, EventUpsert {
-            symbol, date, timing: timing.as_deref(),
-            eps_est: est, eps_act: None, rev_est, rev_act: None,
-        }).await? {
+        if upsert_event(
+            pool,
+            EventUpsert {
+                symbol,
+                date,
+                timing: timing.as_deref(),
+                eps_est: est,
+                eps_act: None,
+                rev_est,
+                rev_act: None,
+            },
+        )
+        .await?
+        {
             upserted += 1;
         }
     }
 
     // History (past quarters with actuals).
-    let history = v["earningsHistory"]["history"].as_array().cloned().unwrap_or_default();
+    let history = v["earningsHistory"]["history"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
     for h in history.iter() {
-        let Some(date) = pick_date(&h["quarter"]) else { continue };
+        let Some(date) = pick_date(&h["quarter"]) else {
+            continue;
+        };
         let est = f_opt(&h["epsEstimate"]);
         let act = f_opt(&h["epsActual"]);
-        if upsert_event(pool, EventUpsert {
-            symbol, date, timing: None,
-            eps_est: est, eps_act: act, rev_est: None, rev_act: None,
-        }).await? {
+        if upsert_event(
+            pool,
+            EventUpsert {
+                symbol,
+                date,
+                timing: None,
+                eps_est: est,
+                eps_act: act,
+                rev_est: None,
+                rev_act: None,
+            },
+        )
+        .await?
+        {
             upserted += 1;
         }
     }
@@ -102,7 +131,11 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
           WHERE symbol = $1 AND reaction_5d_pct IS NULL
             AND earnings_date <= CURRENT_DATE
           ORDER BY earnings_date DESC LIMIT 20",
-    ).bind(symbol).fetch_all(pool).await.unwrap_or_default();
+    )
+    .bind(symbol)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
     let mut reactions = 0u64;
     for (id, date) in stale {
         if let Some((pre, c1, c5, r1, r5)) = compute_reactions(pool, symbol, date).await {
@@ -119,7 +152,8 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
             .bind(Decimal::try_from(c5).ok())
             .bind(r1 as f32)
             .bind(r5 as f32)
-            .execute(pool).await;
+            .execute(pool)
+            .await;
             reactions += 1;
         }
     }
@@ -138,7 +172,9 @@ struct EventUpsert<'a> {
 
 async fn upsert_event(pool: &PgPool, e: EventUpsert<'_>) -> anyhow::Result<bool> {
     let surprise_pct = match (e.eps_est, e.eps_act) {
-        (Some(est), Some(act)) if est.abs() > 1e-9 => Some(((act - est) / est.abs() * 100.0) as f32),
+        (Some(est), Some(act)) if est.abs() > 1e-9 => {
+            Some(((act - est) / est.abs() * 100.0) as f32)
+        }
         _ => None,
     };
     let r = sqlx::query(
@@ -165,20 +201,27 @@ async fn upsert_event(pool: &PgPool, e: EventUpsert<'_>) -> anyhow::Result<bool>
     Ok(r.rows_affected() > 0)
 }
 
-async fn compute_reactions(pool: &PgPool, symbol: &str, date: NaiveDate)
-    -> Option<(f64, f64, f64, f64, f64)>
-{
+async fn compute_reactions(
+    pool: &PgPool,
+    symbol: &str,
+    date: NaiveDate,
+) -> Option<(f64, f64, f64, f64, f64)> {
     let to = Utc::now();
     let from = to - Duration::days(45);
     let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
-        .await.ok()?;
-    if bars.len() < 7 { return None; }
+        .await
+        .ok()?;
+    if bars.len() < 7 {
+        return None;
+    }
     // Find the bar at or just before `date` = pre-earnings close.
     let pre_idx = bars.iter().rposition(|b| b.bar_time.date_naive() <= date)?;
     let pre = dec(bars[pre_idx].close);
-    let c1  = bars.get(pre_idx + 1).map(|b| dec(b.close))?;
-    let c5  = bars.get(pre_idx + 5).map(|b| dec(b.close))?;
-    if pre <= 0.0 { return None; }
+    let c1 = bars.get(pre_idx + 1).map(|b| dec(b.close))?;
+    let c5 = bars.get(pre_idx + 5).map(|b| dec(b.close))?;
+    if pre <= 0.0 {
+        return None;
+    }
     let r1 = (c1 - pre) / pre * 100.0;
     let r5 = (c5 - pre) / pre * 100.0;
     Some((pre, c1, c5, r1, r5))
@@ -193,7 +236,10 @@ pub async fn calendar_upcoming(pool: &PgPool, days: i64) -> anyhow::Result<Vec<E
            FROM earnings_events
           WHERE earnings_date BETWEEN CURRENT_DATE AND CURRENT_DATE + ($1::int)
           ORDER BY earnings_date, symbol",
-    ).bind(days as i32).fetch_all(pool).await?)
+    )
+    .bind(days as i32)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn surprises_recent(pool: &PgPool, days: i64) -> anyhow::Result<Vec<EarningsEvent>> {
@@ -207,14 +253,19 @@ pub async fn surprises_recent(pool: &PgPool, days: i64) -> anyhow::Result<Vec<Ea
             AND surprise_pct IS NOT NULL
           ORDER BY ABS(surprise_pct) DESC NULLS LAST
           LIMIT 100",
-    ).bind(days as i32).fetch_all(pool).await?)
+    )
+    .bind(days as i32)
+    .fetch_all(pool)
+    .await?)
 }
 
 // ---- helpers --------------------------------------------------------------
 
 fn pick_date(v: &Value) -> Option<NaiveDate> {
     if let Some(s) = v["fmt"].as_str() {
-        if let Ok(d) = NaiveDate::parse_from_str(s, "%Y-%m-%d") { return Some(d); }
+        if let Ok(d) = NaiveDate::parse_from_str(s, "%Y-%m-%d") {
+            return Some(d);
+        }
     }
     if let Some(ts) = v["raw"].as_i64() {
         if let Some(d) = chrono::DateTime::from_timestamp(ts, 0) {
@@ -230,8 +281,19 @@ fn guess_timing(v: &Value) -> Option<String> {
     if let Some(ts) = v["raw"].as_i64() {
         if let Some(d) = chrono::DateTime::from_timestamp(ts, 0) {
             // ET hour after market close (>= 16) → AMC, before open (< 9) → BMO.
-            let h = d.with_timezone(&chrono::FixedOffset::west_opt(5 * 3600).unwrap()).hour();
-            return Some(if h >= 16 { "amc" } else if h < 9 { "bmo" } else { "unknown" }.into());
+            let h = d
+                .with_timezone(&chrono::FixedOffset::west_opt(5 * 3600).unwrap())
+                .hour();
+            return Some(
+                if h >= 16 {
+                    "amc"
+                } else if h < 9 {
+                    "bmo"
+                } else {
+                    "unknown"
+                }
+                .into(),
+            );
         }
     }
     None
@@ -240,9 +302,15 @@ fn guess_timing(v: &Value) -> Option<String> {
 use chrono::Timelike;
 
 fn f_opt(v: &Value) -> Option<f64> {
-    if let Some(n) = v["raw"].as_f64() { return Some(n); }
-    if let Some(n) = v["raw"].as_i64() { return Some(n as f64); }
+    if let Some(n) = v["raw"].as_f64() {
+        return Some(n);
+    }
+    if let Some(n) = v["raw"].as_i64() {
+        return Some(n as f64);
+    }
     None
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

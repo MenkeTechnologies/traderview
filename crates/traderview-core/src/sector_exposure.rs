@@ -44,14 +44,19 @@ pub struct SectorReport {
 
 pub fn analyze(positions: &[PositionWithSector]) -> SectorReport {
     let mut report = SectorReport::default();
-    if positions.is_empty() { return report; }
+    if positions.is_empty() {
+        return report;
+    }
     let mut by_sector: BTreeMap<String, (f64, f64, usize)> = BTreeMap::new();
     let mut total_gross = 0.0;
     let mut total_net = 0.0;
     for p in positions {
         let entry = by_sector.entry(p.sector.clone()).or_insert((0.0, 0.0, 0));
-        if p.notional >= 0.0 { entry.0 += p.notional; }
-        else                  { entry.1 += -p.notional; }   // store as positive magnitude
+        if p.notional >= 0.0 {
+            entry.0 += p.notional;
+        } else {
+            entry.1 += -p.notional;
+        } // store as positive magnitude
         entry.2 += 1;
         total_gross += p.notional.abs();
         total_net += p.notional;
@@ -61,8 +66,14 @@ pub fn analyze(positions: &[PositionWithSector]) -> SectorReport {
     for (sector, (long, short, count)) in by_sector {
         let gross = long + short;
         let net = long - short;
-        let pct = if total_gross > 0.0 { gross / total_gross } else { 0.0 };
-        if pct > 0.33 { report.overweight_sectors.push(sector.clone()); }
+        let pct = if total_gross > 0.0 {
+            gross / total_gross
+        } else {
+            0.0
+        };
+        if pct > 0.33 {
+            report.overweight_sectors.push(sector.clone());
+        }
         report.by_sector.push(SectorStats {
             sector,
             long_notional: long,
@@ -74,8 +85,11 @@ pub fn analyze(positions: &[PositionWithSector]) -> SectorReport {
         });
     }
     // Largest sector first.
-    report.by_sector.sort_by(|a, b| b.gross_notional.partial_cmp(&a.gross_notional)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    report.by_sector.sort_by(|a, b| {
+        b.gross_notional
+            .partial_cmp(&a.gross_notional)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report.overweight_sectors.sort();
     report
 }
@@ -85,7 +99,11 @@ mod tests {
     use super::*;
 
     fn p(sym: &str, n: f64, sector: &str) -> PositionWithSector {
-        PositionWithSector { symbol: sym.into(), notional: n, sector: sector.into() }
+        PositionWithSector {
+            symbol: sym.into(),
+            notional: n,
+            sector: sector.into(),
+        }
     }
 
     #[test]
@@ -105,10 +123,7 @@ mod tests {
 
     #[test]
     fn long_and_short_in_same_sector_track_separately() {
-        let positions = vec![
-            p("AAPL", 10_000.0, "Tech"),
-            p("META", -4_000.0, "Tech"),
-        ];
+        let positions = vec![p("AAPL", 10_000.0, "Tech"), p("META", -4_000.0, "Tech")];
         let r = analyze(&positions);
         let tech = &r.by_sector[0];
         assert_eq!(tech.long_notional, 10_000.0);
@@ -122,8 +137,8 @@ mod tests {
         // 30/30/40 split — only Finance (40%) crosses the 33% bar.
         let positions = vec![
             p("AAPL", 3_000.0, "Tech"),
-            p("XOM",  3_000.0, "Energy"),
-            p("JPM",  4_000.0, "Finance"),
+            p("XOM", 3_000.0, "Energy"),
+            p("JPM", 4_000.0, "Finance"),
         ];
         let r = analyze(&positions);
         assert_eq!(r.overweight_sectors, vec!["Finance"]);
@@ -132,10 +147,7 @@ mod tests {
     #[test]
     fn overweight_flag_triggers_when_one_sector_dominates() {
         // 70% Tech, 30% Energy.
-        let positions = vec![
-            p("AAPL", 7_000.0, "Tech"),
-            p("XOM",  3_000.0, "Energy"),
-        ];
+        let positions = vec![p("AAPL", 7_000.0, "Tech"), p("XOM", 3_000.0, "Energy")];
         let r = analyze(&positions);
         assert_eq!(r.overweight_sectors, vec!["Tech"]);
     }
@@ -143,9 +155,9 @@ mod tests {
     #[test]
     fn sectors_sorted_by_gross_descending() {
         let positions = vec![
-            p("SMALL",  1_000.0, "Small"),
-            p("BIG",   10_000.0, "Big"),
-            p("MID",    5_000.0, "Mid"),
+            p("SMALL", 1_000.0, "Small"),
+            p("BIG", 10_000.0, "Big"),
+            p("MID", 5_000.0, "Mid"),
         ];
         let r = analyze(&positions);
         assert_eq!(r.by_sector[0].sector, "Big");
@@ -159,7 +171,7 @@ mod tests {
             p("AAPL", 1.0, "Tech"),
             p("MSFT", 1.0, "Tech"),
             p("GOOGL", 1.0, "Tech"),
-            p("XOM",  1.0, "Energy"),
+            p("XOM", 1.0, "Energy"),
         ];
         let r = analyze(&positions);
         let tech = r.by_sector.iter().find(|s| s.sector == "Tech").unwrap();
@@ -171,10 +183,7 @@ mod tests {
     #[test]
     fn total_net_signed_sum() {
         // Net should reflect long minus short across all positions.
-        let positions = vec![
-            p("LONG",   10_000.0, "X"),
-            p("SHORT", -10_000.0, "Y"),
-        ];
+        let positions = vec![p("LONG", 10_000.0, "X"), p("SHORT", -10_000.0, "Y")];
         let r = analyze(&positions);
         assert_eq!(r.total_net, 0.0);
         assert_eq!(r.total_gross, 20_000.0);

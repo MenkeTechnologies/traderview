@@ -31,10 +31,10 @@ pub struct VixTermStructure {
 }
 
 const VIX_POINTS: &[(&str, &str, u32)] = &[
-    ("VIX9D",   "^VIX9D", 9),
-    ("VIX",     "^VIX",   30),
-    ("VIX3M",   "^VIX3M", 90),
-    ("VIX6M",   "^VIX6M", 180),
+    ("VIX9D", "^VIX9D", 9),
+    ("VIX", "^VIX", 30),
+    ("VIX3M", "^VIX3M", 90),
+    ("VIX6M", "^VIX6M", 180),
 ];
 
 pub async fn vix_term_structure(pool: &PgPool) -> anyhow::Result<VixTermStructure> {
@@ -42,25 +42,42 @@ pub async fn vix_term_structure(pool: &PgPool) -> anyhow::Result<VixTermStructur
     for &(label, sym, days) in VIX_POINTS {
         if let Ok(q) = crate::market_data::quote(pool, sym).await {
             points.push(VolPoint {
-                label, symbol: sym, tenor_days: days,
-                value: q.price, change_pct: q.change_pct.unwrap_or(0.0),
+                label,
+                symbol: sym,
+                tenor_days: days,
+                value: q.price,
+                change_pct: q.change_pct.unwrap_or(0.0),
             });
         }
     }
-    let spot   = points.iter().find(|p| p.symbol == "^VIX").map(|p| p.value);
-    let three  = points.iter().find(|p| p.symbol == "^VIX3M").map(|p| p.value);
+    let spot = points.iter().find(|p| p.symbol == "^VIX").map(|p| p.value);
+    let three = points
+        .iter()
+        .find(|p| p.symbol == "^VIX3M")
+        .map(|p| p.value);
     let contango = match (spot, three) {
         (Some(s), Some(t)) if t > 0.0 => Some((s - t) / t * 100.0),
         _ => None,
     };
     let regime = match contango {
-        Some(c) if c >  1.0 => "backwardation",
+        Some(c) if c > 1.0 => "backwardation",
         Some(c) if c < -1.0 => "contango",
-        Some(_)             => "flat",
-        None                => "unknown",
+        Some(_) => "flat",
+        None => "unknown",
     };
-    let vvix = crate::market_data::quote(pool, "^VVIX").await.ok().map(|q| q.price);
-    Ok(VixTermStructure { points, spot, three_month: three, contango_pct: contango, regime, vvix, fetched_at: Utc::now() })
+    let vvix = crate::market_data::quote(pool, "^VVIX")
+        .await
+        .ok()
+        .map(|q| q.price);
+    Ok(VixTermStructure {
+        points,
+        spot,
+        three_month: three,
+        contango_pct: contango,
+        regime,
+        vvix,
+        fetched_at: Utc::now(),
+    })
 }
 
 // ===========================================================================
@@ -86,8 +103,8 @@ pub struct YieldCurve {
 }
 
 const YIELD_POINTS: &[(&str, &str, f64)] = &[
-    ("3M",  "^IRX", 0.25),
-    ("5Y",  "^FVX", 5.0),
+    ("3M", "^IRX", 0.25),
+    ("5Y", "^FVX", 5.0),
     ("10Y", "^TNX", 10.0),
     ("30Y", "^TYX", 30.0),
 ];
@@ -97,20 +114,40 @@ pub async fn yield_curve(pool: &PgPool) -> anyhow::Result<YieldCurve> {
     for &(label, sym, tenor) in YIELD_POINTS {
         if let Ok(q) = crate::market_data::quote(pool, sym).await {
             points.push(YieldPoint {
-                label, symbol: sym, tenor_years: tenor,
+                label,
+                symbol: sym,
+                tenor_years: tenor,
                 yield_pct: q.price,
                 change_bp: q.change_pct.unwrap_or(0.0) * 100.0,
             });
         }
     }
-    let y10 = points.iter().find(|p| p.symbol == "^TNX").map(|p| p.yield_pct);
-    let y5  = points.iter().find(|p| p.symbol == "^FVX").map(|p| p.yield_pct);
-    let y3m = points.iter().find(|p| p.symbol == "^IRX").map(|p| p.yield_pct);
-    let sp_10_2 = match (y10, y5) { (Some(a), Some(b)) => Some(a - b), _ => None };
-    let sp_10_3m = match (y10, y3m) { (Some(a), Some(b)) => Some(a - b), _ => None };
+    let y10 = points
+        .iter()
+        .find(|p| p.symbol == "^TNX")
+        .map(|p| p.yield_pct);
+    let y5 = points
+        .iter()
+        .find(|p| p.symbol == "^FVX")
+        .map(|p| p.yield_pct);
+    let y3m = points
+        .iter()
+        .find(|p| p.symbol == "^IRX")
+        .map(|p| p.yield_pct);
+    let sp_10_2 = match (y10, y5) {
+        (Some(a), Some(b)) => Some(a - b),
+        _ => None,
+    };
+    let sp_10_3m = match (y10, y3m) {
+        (Some(a), Some(b)) => Some(a - b),
+        _ => None,
+    };
     let inverted = sp_10_3m.map(|s| s < 0.0).unwrap_or(false);
     Ok(YieldCurve {
-        points, spread_10y_2y: sp_10_2, spread_10y_3m: sp_10_3m, inverted,
+        points,
+        spread_10y_2y: sp_10_2,
+        spread_10y_3m: sp_10_3m,
+        inverted,
         fetched_at: Utc::now(),
     })
 }
@@ -127,9 +164,9 @@ pub struct DollarSnapshot {
 
 pub async fn dollar_snapshot(pool: &PgPool) -> anyhow::Result<DollarSnapshot> {
     let dxy = crate::market_data::quote(pool, "DX-Y.NYB").await.ok();
-    let eu  = crate::market_data::quote(pool, "EURUSD=X").await.ok();
-    let uj  = crate::market_data::quote(pool, "USDJPY=X").await.ok();
-    let gu  = crate::market_data::quote(pool, "GBPUSD=X").await.ok();
+    let eu = crate::market_data::quote(pool, "EURUSD=X").await.ok();
+    let uj = crate::market_data::quote(pool, "USDJPY=X").await.ok();
+    let gu = crate::market_data::quote(pool, "GBPUSD=X").await.ok();
     Ok(DollarSnapshot {
         dxy: dxy.as_ref().map(|x| x.price),
         dxy_change_pct: dxy.as_ref().and_then(|x| x.change_pct),

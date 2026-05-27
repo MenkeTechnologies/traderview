@@ -77,28 +77,41 @@ pub fn validate(
     is_long: bool,
     rules: &PyramidRules,
 ) -> ValidationReport {
-    let mut report = ValidationReport { is_long, ..Default::default() };
+    let mut report = ValidationReport {
+        is_long,
+        ..Default::default()
+    };
     if adds.len() + 1 > rules.max_tranches {
         report.violations.push(Violation {
             kind: ViolationKind::TooManyTranches,
             tranche_index: adds.len(),
-            detail: format!("{} adds + initial entry > {} max", adds.len(), rules.max_tranches),
+            detail: format!(
+                "{} adds + initial entry > {} max",
+                adds.len(),
+                rules.max_tranches
+            ),
         });
     }
-    let initial_qty = 1.0_f64;    // implied; real qty comes from caller via adds
+    let initial_qty = 1.0_f64; // implied; real qty comes from caller via adds
     let mut last_price = entry_price;
     let mut last_qty = initial_qty;
     let mut last_stop: Option<f64> = None;
     let mut total = initial_qty;
     let min_spacing = rules.min_favorable_atrs_between_adds * atr;
     for (i, add) in adds.iter().enumerate() {
-        let direction_distance = if is_long { add.price - last_price } else { last_price - add.price };
+        let direction_distance = if is_long {
+            add.price - last_price
+        } else {
+            last_price - add.price
+        };
         if direction_distance < min_spacing {
             report.violations.push(Violation {
                 kind: ViolationKind::AddBelowMinSpacing,
                 tranche_index: i + 1,
-                detail: format!("add at {} only {} above prior {} (need {})",
-                    add.price, direction_distance, last_price, min_spacing),
+                detail: format!(
+                    "add at {} only {} above prior {} (need {})",
+                    add.price, direction_distance, last_price, min_spacing
+                ),
             });
         }
         if rules.require_stop_raise {
@@ -111,7 +124,11 @@ pub fn validate(
                     });
                 }
                 (Some(new_stop), Some(prev)) => {
-                    let raised = if is_long { new_stop > prev } else { new_stop < prev };
+                    let raised = if is_long {
+                        new_stop > prev
+                    } else {
+                        new_stop < prev
+                    };
                     if !raised {
                         report.violations.push(Violation {
                             kind: ViolationKind::StopWidened,
@@ -140,7 +157,9 @@ pub fn validate(
         }
         last_price = add.price;
         last_qty = add.qty;
-        if let Some(s) = add.raised_stop_to { last_stop = Some(s); }
+        if let Some(s) = add.raised_stop_to {
+            last_stop = Some(s);
+        }
     }
     report.total_qty = total;
     report.passed = report.violations.is_empty();
@@ -152,7 +171,11 @@ mod tests {
     use super::*;
 
     fn add(price: f64, qty: f64, stop: Option<f64>) -> PyramidAdd {
-        PyramidAdd { price, qty, raised_stop_to: stop }
+        PyramidAdd {
+            price,
+            qty,
+            raised_stop_to: stop,
+        }
     }
 
     fn rules() -> PyramidRules {
@@ -170,9 +193,9 @@ mod tests {
         // Long entry at $100, ATR 1. Three adds at +1, +2, +3 ATR with
         // halved sizes and rising stops.
         let adds = vec![
-            add(101.0, 0.5, Some(100.0)),    // first add
-            add(102.0, 0.25, Some(101.0)),   // half of 0.5
-            add(103.0, 0.125, Some(102.0)),  // half of 0.25
+            add(101.0, 0.5, Some(100.0)),   // first add
+            add(102.0, 0.25, Some(101.0)),  // half of 0.5
+            add(103.0, 0.125, Some(102.0)), // half of 0.25
         ];
         let r = validate(100.0, &adds, 1.0, true, &rules());
         assert!(r.passed, "violations: {:?}", r.violations);
@@ -184,10 +207,13 @@ mod tests {
             add(101.0, 0.5, Some(100.0)),
             add(102.0, 0.25, Some(101.0)),
             add(103.0, 0.125, Some(102.0)),
-            add(104.0, 0.06, Some(103.0)),    // 5th tranche (entry + 4 adds)
+            add(104.0, 0.06, Some(103.0)), // 5th tranche (entry + 4 adds)
         ];
         let r = validate(100.0, &adds, 1.0, true, &rules());
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::TooManyTranches));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::TooManyTranches));
     }
 
     #[test]
@@ -195,24 +221,33 @@ mod tests {
         // Add at only +0.5 ATR — needs ≥ 1.0 ATR.
         let adds = vec![add(100.5, 0.5, Some(100.0))];
         let r = validate(100.0, &adds, 1.0, true, &rules());
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::AddBelowMinSpacing));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::AddBelowMinSpacing));
     }
 
     #[test]
     fn stop_not_raised_violation() {
-        let adds = vec![add(101.0, 0.5, None)];    // no stop raised
+        let adds = vec![add(101.0, 0.5, None)]; // no stop raised
         let r = validate(100.0, &adds, 1.0, true, &rules());
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::StopNotRaised));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::StopNotRaised));
     }
 
     #[test]
     fn stop_widened_violation() {
         let adds = vec![
             add(101.0, 0.5, Some(100.0)),
-            add(102.0, 0.25, Some(99.0)),    // widening for a long
+            add(102.0, 0.25, Some(99.0)), // widening for a long
         ];
         let r = validate(100.0, &adds, 1.0, true, &rules());
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::StopWidened));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::StopWidened));
     }
 
     #[test]
@@ -220,37 +255,48 @@ mod tests {
         // Initial qty 1.0, add 1.0 → not halved.
         let adds = vec![add(101.0, 1.0, Some(100.0))];
         let r = validate(100.0, &adds, 1.0, true, &rules());
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::TrancheSizeNotHalved));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::TrancheSizeNotHalved));
     }
 
     #[test]
     fn total_qty_exceeded_violation() {
-        let strict = PyramidRules { max_total_qty: 1.4, ..rules() };
-        let adds = vec![add(101.0, 0.5, Some(100.0))];    // total 1.5 > 1.4
+        let strict = PyramidRules {
+            max_total_qty: 1.4,
+            ..rules()
+        };
+        let adds = vec![add(101.0, 0.5, Some(100.0))]; // total 1.5 > 1.4
         let r = validate(100.0, &adds, 1.0, true, &strict);
-        assert!(r.violations.iter().any(|v| v.kind == ViolationKind::TotalQtyExceeded));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.kind == ViolationKind::TotalQtyExceeded));
     }
 
     #[test]
     fn short_trade_spacing_uses_lower_prices() {
         // Short at $100; adds should be at LOWER prices for "favorable".
-        let adds = vec![add(99.0, 0.5, Some(100.0))];    // +1 ATR favorable
+        let adds = vec![add(99.0, 0.5, Some(100.0))]; // +1 ATR favorable
         let r = validate(100.0, &adds, 1.0, false, &rules());
         // Spacing OK; stop raised (closer to entry → 100 > 99, stop "tighter").
         // For a short, stop should LOWER over time (tighter against rising price).
         // Initial stop is None; first add sets it. Should pass.
-        let spacing_violations: Vec<_> = r.violations.iter()
+        let spacing_violations: Vec<_> = r
+            .violations
+            .iter()
             .filter(|v| v.kind == ViolationKind::AddBelowMinSpacing)
             .collect();
-        assert!(spacing_violations.is_empty(), "short add at lower price should be OK");
+        assert!(
+            spacing_violations.is_empty(),
+            "short add at lower price should be OK"
+        );
     }
 
     #[test]
     fn total_qty_tracks_cumulative_correctly() {
-        let adds = vec![
-            add(101.0, 0.5, Some(100.0)),
-            add(102.0, 0.25, Some(101.0)),
-        ];
+        let adds = vec![add(101.0, 0.5, Some(100.0)), add(102.0, 0.25, Some(101.0))];
         let r = validate(100.0, &adds, 1.0, true, &rules());
         // initial 1.0 + 0.5 + 0.25 = 1.75.
         assert!((r.total_qty - 1.75).abs() < 1e-9);

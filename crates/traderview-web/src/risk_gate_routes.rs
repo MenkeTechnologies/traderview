@@ -9,25 +9,32 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use traderview_core::risk_gate::{evaluate, preset_rules, GateDecision, Preset, ProposedTrade, RiskRule};
+use traderview_core::risk_gate::{
+    evaluate, preset_rules, GateDecision, Preset, ProposedTrade, RiskRule,
+};
 use traderview_db::risk_rules;
 use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/rules",           get(list_rules).post(create_rule))
-        .route("/rules/:id",       delete(delete_rule))
+        .route("/rules", get(list_rules).post(create_rule))
+        .route("/rules/:id", delete(delete_rule))
         .route("/rules/:id/toggle", post(toggle_rule))
         .route("/rules/install-preset", post(install_preset))
-        .route("/evaluate",        post(evaluate_proposed))
-        .route("/fires",           get(list_fires))
-        .route("/fires/by-rule",   get(fires_by_rule))
-        .route("/kill-switch",     get(kill_switch_state))
+        .route("/evaluate", post(evaluate_proposed))
+        .route("/fires", get(list_fires))
+        .route("/fires/by-rule", get(fires_by_rule))
+        .route("/kill-switch", get(kill_switch_state))
 }
 
 #[derive(Deserialize)]
-struct ByRuleQuery { #[serde(default = "default_days")] days: i64 }
-fn default_days() -> i64 { 30 }
+struct ByRuleQuery {
+    #[serde(default = "default_days")]
+    days: i64,
+}
+fn default_days() -> i64 {
+    30
+}
 
 async fn fires_by_rule(
     State(s): State<AppState>,
@@ -35,7 +42,8 @@ async fn fires_by_rule(
     Query(q): Query<ByRuleQuery>,
 ) -> Result<Json<Vec<risk_rules::RuleFireStat>>, ApiError> {
     let rows = risk_rules::fires_by_rule(&s.pool, user.id, q.days)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(rows))
 }
 
@@ -43,14 +51,18 @@ async fn fires_by_rule(
 /// (is there a kill_switch rule at all?) + `active` (is it enabled?).
 /// Used to drive the red 🛑 indicator without pulling every rule.
 #[derive(Serialize)]
-struct KillState { installed: bool, active: bool }
+struct KillState {
+    installed: bool,
+    active: bool,
+}
 
 async fn kill_switch_state(
     State(s): State<AppState>,
     user: AuthUser,
 ) -> Result<Json<KillState>, ApiError> {
     let rows = risk_rules::list(&s.pool, user.id, None)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     let ks = rows.iter().find(|r| matches!(r.rule, RiskRule::KillSwitch));
     Ok(Json(KillState {
         installed: ks.is_some(),
@@ -67,7 +79,10 @@ mod tests {
     /// the topbar 🛑 icon silently stops working. Pin the wire shape.
     #[test]
     fn kill_state_serializes_with_expected_field_names() {
-        let s = KillState { installed: true, active: false };
+        let s = KillState {
+            installed: true,
+            active: false,
+        };
         let v = serde_json::to_value(&s).unwrap();
         assert_eq!(v["installed"], serde_json::Value::Bool(true));
         assert_eq!(v["active"], serde_json::Value::Bool(false));
@@ -79,14 +94,20 @@ mod tests {
     /// any query string and expect to get the most recent batch.
     #[test]
     fn default_fires_limit_is_sensible() {
-        assert_eq!(default_fires_limit(), 100,
-            "default limit is the UI's page size; bumping it changes the public contract");
+        assert_eq!(
+            default_fires_limit(),
+            100,
+            "default limit is the UI's page size; bumping it changes the public contract"
+        );
     }
 
     #[test]
     fn default_days_for_by_rule_is_30() {
-        assert_eq!(default_days(), 30,
-            "30 days is what 'Fires by rule — last 30 days' header promises");
+        assert_eq!(
+            default_days(),
+            30,
+            "30 days is what 'Fires by rule — last 30 days' header promises"
+        );
     }
 
     /// FiresQuery + ByRuleQuery + InstallPresetBody all reach the wire as
@@ -100,15 +121,20 @@ mod tests {
             r#"{"preset":"aggressive","account_id":null}"#,
         ];
         for s in cases {
-            let _: InstallPresetBody = serde_json::from_str(s)
-                .unwrap_or_else(|e| panic!("must parse `{s}`: {e}"));
+            let _: InstallPresetBody =
+                serde_json::from_str(s).unwrap_or_else(|e| panic!("must parse `{s}`: {e}"));
         }
     }
 }
 
 #[derive(Deserialize)]
-struct FiresQuery { #[serde(default = "default_fires_limit")] limit: i64 }
-fn default_fires_limit() -> i64 { 100 }
+struct FiresQuery {
+    #[serde(default = "default_fires_limit")]
+    limit: i64,
+}
+fn default_fires_limit() -> i64 {
+    100
+}
 
 async fn list_fires(
     State(s): State<AppState>,
@@ -116,7 +142,8 @@ async fn list_fires(
     Query(q): Query<FiresQuery>,
 ) -> Result<Json<Vec<risk_rules::RiskFire>>, ApiError> {
     let rows = risk_rules::recent_fires(&s.pool, user.id, q.limit)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(rows))
 }
 
@@ -135,7 +162,8 @@ async fn list_rules(
     Query(q): Query<ListRulesQuery>,
 ) -> Result<Json<Vec<risk_rules::StoredRule>>, ApiError> {
     let rows = risk_rules::list(&s.pool, user.id, q.account_id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(rows))
 }
 
@@ -146,7 +174,9 @@ struct CreateRuleBody {
 }
 
 #[derive(Serialize)]
-struct CreatedRule { id: Uuid }
+struct CreatedRule {
+    id: Uuid,
+}
 
 async fn create_rule(
     State(s): State<AppState>,
@@ -154,7 +184,8 @@ async fn create_rule(
     Json(body): Json<CreateRuleBody>,
 ) -> Result<Json<CreatedRule>, ApiError> {
     let id = risk_rules::create(&s.pool, user.id, body.account_id, &body.rule)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(CreatedRule { id }))
 }
 
@@ -164,13 +195,18 @@ async fn delete_rule(
     Path(id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let n = risk_rules::delete(&s.pool, user.id, id)
-        .await.map_err(ApiError::Internal)?;
-    if n == 0 { return Err(ApiError::NotFound); }
+        .await
+        .map_err(ApiError::Internal)?;
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({ "deleted": n })))
 }
 
 #[derive(Deserialize)]
-struct ToggleBody { enabled: bool }
+struct ToggleBody {
+    enabled: bool,
+}
 
 async fn toggle_rule(
     State(s): State<AppState>,
@@ -179,9 +215,14 @@ async fn toggle_rule(
     Json(body): Json<ToggleBody>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let n = risk_rules::set_enabled(&s.pool, user.id, id, body.enabled)
-        .await.map_err(ApiError::Internal)?;
-    if n == 0 { return Err(ApiError::NotFound); }
-    Ok(Json(serde_json::json!({ "updated": n, "enabled": body.enabled })))
+        .await
+        .map_err(ApiError::Internal)?;
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
+    Ok(Json(
+        serde_json::json!({ "updated": n, "enabled": body.enabled }),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +236,9 @@ struct InstallPresetBody {
 }
 
 #[derive(Serialize)]
-struct InstalledPreset { inserted: usize }
+struct InstalledPreset {
+    inserted: usize,
+}
 
 /// Bulk-insert every rule in the chosen preset. Existing rules are kept;
 /// the user can delete them manually if they want a clean slate. We
@@ -209,7 +252,8 @@ async fn install_preset(
     let n = rules.len();
     for r in rules {
         risk_rules::create(&s.pool, user.id, body.account_id, &r)
-            .await.map_err(ApiError::Internal)?;
+            .await
+            .map_err(ApiError::Internal)?;
     }
     Ok(Json(InstalledPreset { inserted: n }))
 }
@@ -230,27 +274,29 @@ async fn evaluate_proposed(
     Json(req): Json<EvaluateRequest>,
 ) -> Result<Json<GateDecision>, ApiError> {
     // Owner-scope check: must own the account being evaluated against.
-    let owner: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT user_id FROM accounts WHERE id = $1",
-    )
-    .bind(req.account_id)
-    .fetch_optional(&s.pool).await?;
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
+        .bind(req.account_id)
+        .fetch_optional(&s.pool)
+        .await?;
     match owner {
         Some((u,)) if u == user.id => {}
         Some(_) => return Err(ApiError::Forbidden),
-        None    => return Err(ApiError::NotFound),
+        None => return Err(ApiError::NotFound),
     }
 
     // Pull only enabled rules that apply to this account (or are global).
     let rows = risk_rules::list(&s.pool, user.id, Some(req.account_id))
-        .await.map_err(ApiError::Internal)?;
-    let rules: Vec<RiskRule> = rows.into_iter()
+        .await
+        .map_err(ApiError::Internal)?;
+    let rules: Vec<RiskRule> = rows
+        .into_iter()
         .filter(|r| r.enabled)
         .map(|r| r.rule)
         .collect();
 
     let ctx = risk_rules::build_context(&s.pool, req.account_id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
 
     let decision = evaluate(&req.proposed, &ctx, &rules, Utc::now());
 
@@ -264,7 +310,9 @@ async fn evaluate_proposed(
         let symbol = req.proposed.symbol.clone();
         let decision_clone = decision.clone();
         tokio::spawn(async move {
-            let _ = risk_rules::log_fire(&pool, user_id, Some(account_id), &symbol, &decision_clone).await;
+            let _ =
+                risk_rules::log_fire(&pool, user_id, Some(account_id), &symbol, &decision_clone)
+                    .await;
         });
     }
 
@@ -272,20 +320,23 @@ async fn evaluate_proposed(
     // sees the veto in Discord/Slack/etc. Fire-and-forget — never block
     // the response on outbound HTTP.
     if !decision.allow {
-        let blocks: Vec<_> = decision.violations.iter()
+        let blocks: Vec<_> = decision
+            .violations
+            .iter()
             .filter(|v| matches!(v.severity, traderview_core::risk_gate::Severity::Block))
             .collect();
         if !blocks.is_empty() {
-            let summary = blocks.iter()
+            let summary = blocks
+                .iter()
                 .map(|b| format!("[{}] {}", b.rule, b.message))
                 .collect::<Vec<_>>()
                 .join("\n");
             let payload = traderview_db::webhooks::AlertPayload {
-                title:   format!("Risk Gate vetoed {} entry", req.proposed.symbol),
+                title: format!("Risk Gate vetoed {} entry", req.proposed.symbol),
                 message: summary,
-                symbol:  Some(req.proposed.symbol.clone()),
-                kind:    "risk_gate_block".into(),
-                url:     None,
+                symbol: Some(req.proposed.symbol.clone()),
+                kind: "risk_gate_block".into(),
+                url: None,
                 fired_at: Utc::now(),
             };
             let pool = s.pool.clone();

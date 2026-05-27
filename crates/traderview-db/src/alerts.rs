@@ -26,7 +26,8 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<AlertRule>
            FROM alert_rules WHERE user_id = $1 ORDER BY created_at DESC",
     )
     .bind(user_id)
-    .fetch_all(pool).await?)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn create(
@@ -44,19 +45,32 @@ pub async fn create(
          RETURNING id, user_id, symbol, trigger::text, threshold, sound, voice_text,
                    enabled, triggered_at, trigger_count, created_at",
     )
-    .bind(user_id).bind(symbol.to_uppercase()).bind(trigger).bind(threshold).bind(sound).bind(voice_text)
-    .fetch_one(pool).await?)
+    .bind(user_id)
+    .bind(symbol.to_uppercase())
+    .bind(trigger)
+    .bind(threshold)
+    .bind(sound)
+    .bind(voice_text)
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM alert_rules WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
 pub async fn toggle(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool) -> anyhow::Result<bool> {
     let r = sqlx::query("UPDATE alert_rules SET enabled = $3 WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).bind(enabled).execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .bind(enabled)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
@@ -65,6 +79,8 @@ pub async fn mark_fired(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
         "UPDATE alert_rules SET triggered_at = now(), trigger_count = trigger_count + 1
           WHERE id = $1",
     )
-    .bind(id).execute(pool).await?;
+    .bind(id)
+    .execute(pool)
+    .await?;
     Ok(())
 }

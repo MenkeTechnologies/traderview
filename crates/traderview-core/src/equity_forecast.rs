@@ -13,25 +13,29 @@
 //!   * `ruin_probability`        = P(`equity[k]` <= `ruin_threshold` for any k)
 //!   * `double_probability`      = P(`equity[num_trades]` >= 2 × `starting_equity`)
 
-use serde::{Deserialize, Serialize};
+use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
-use rand::rngs::StdRng;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastInput {
     pub r_samples: Vec<f64>,
     pub starting_equity: f64,
-    pub risk_pct_per_trade: f64,    // 0..1
+    pub risk_pct_per_trade: f64, // 0..1
     pub num_trades: usize,
     pub num_paths: usize,
     pub seed: Option<u64>,
-    pub ruin_threshold_pct: Option<f64>,   // ruin if equity / starting <= this (e.g. 0.5 = -50%)
+    pub ruin_threshold_pct: Option<f64>, // ruin if equity / starting <= this (e.g. 0.5 = -50%)
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Percentiles {
-    pub p5: f64, pub p25: f64, pub p50: f64, pub p75: f64, pub p95: f64,
+    pub p5: f64,
+    pub p25: f64,
+    pub p50: f64,
+    pub p75: f64,
+    pub p95: f64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -61,16 +65,31 @@ pub struct ForecastReport {
 }
 
 pub fn forecast(input: &ForecastInput) -> ForecastReport {
-    let r_samples: Vec<f64> = input.r_samples.iter().copied()
-        .filter(|x| x.is_finite()).collect();
+    let r_samples: Vec<f64> = input
+        .r_samples
+        .iter()
+        .copied()
+        .filter(|x| x.is_finite())
+        .collect();
     if r_samples.is_empty() {
         return ForecastReport {
-            samples_used: 0, paths: 0, steps: 0,
+            samples_used: 0,
+            paths: 0,
+            steps: 0,
             starting_equity: input.starting_equity,
             risk_pct_per_trade: input.risk_pct_per_trade,
-            mean_r: 0.0, stdev_r: 0.0, steps_stats: vec![],
-            final_bands: Percentiles { p5: 0.0, p25: 0.0, p50: 0.0, p75: 0.0, p95: 0.0 },
-            ruin_probability: 1.0, double_probability: 0.0,
+            mean_r: 0.0,
+            stdev_r: 0.0,
+            steps_stats: vec![],
+            final_bands: Percentiles {
+                p5: 0.0,
+                p25: 0.0,
+                p50: 0.0,
+                p75: 0.0,
+                p95: 0.0,
+            },
+            ruin_probability: 1.0,
+            double_probability: 0.0,
             sample_paths: vec![],
             ruin_threshold_pct: input.ruin_threshold_pct.unwrap_or(0.5),
         };
@@ -99,8 +118,14 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
 
     for p in 0..paths {
         let mut equity = input.starting_equity;
-        let mut path = if p < 50 { Vec::with_capacity(steps + 1) } else { Vec::new() };
-        if p < 50 { path.push(equity); }
+        let mut path = if p < 50 {
+            Vec::with_capacity(steps + 1)
+        } else {
+            Vec::new()
+        };
+        if p < 50 {
+            path.push(equity);
+        }
         let mut hit_ruin = false;
         for col in step_columns.iter_mut().take(steps) {
             if !hit_ruin {
@@ -114,11 +139,19 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
                 }
             }
             col.push(equity);
-            if p < 50 { path.push(equity); }
+            if p < 50 {
+                path.push(equity);
+            }
         }
-        if hit_ruin { ruin_count += 1; }
-        if equity >= 2.0 * input.starting_equity { double_count += 1; }
-        if p < 50 { sample_paths.push(path); }
+        if hit_ruin {
+            ruin_count += 1;
+        }
+        if equity >= 2.0 * input.starting_equity {
+            double_count += 1;
+        }
+        if p < 50 {
+            sample_paths.push(path);
+        }
     }
 
     // Per-step percentiles + mean.
@@ -127,17 +160,32 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
         let mean = col.iter().sum::<f64>() / col.len() as f64;
         col.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         steps_stats.push(StepStats {
-            step: k + 1, mean, bands: pct(col),
+            step: k + 1,
+            mean,
+            bands: pct(col),
         });
     }
-    let final_bands = steps_stats.last().map(|s| s.bands.clone())
-        .unwrap_or(Percentiles { p5: 0.0, p25: 0.0, p50: 0.0, p75: 0.0, p95: 0.0 });
+    let final_bands = steps_stats
+        .last()
+        .map(|s| s.bands.clone())
+        .unwrap_or(Percentiles {
+            p5: 0.0,
+            p25: 0.0,
+            p50: 0.0,
+            p75: 0.0,
+            p95: 0.0,
+        });
 
     ForecastReport {
-        samples_used: n, paths, steps,
+        samples_used: n,
+        paths,
+        steps,
         starting_equity: input.starting_equity,
         risk_pct_per_trade: risk,
-        mean_r, stdev_r, steps_stats, final_bands,
+        mean_r,
+        stdev_r,
+        steps_stats,
+        final_bands,
         ruin_probability: ruin_count as f64 / paths as f64,
         double_probability: double_count as f64 / paths as f64,
         sample_paths,
@@ -148,12 +196,18 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
 fn pct(sorted: &[f64]) -> Percentiles {
     let q = |frac: f64| -> f64 {
         let n = sorted.len();
-        if n == 0 { return 0.0; }
+        if n == 0 {
+            return 0.0;
+        }
         let idx = ((n - 1) as f64 * frac).round() as usize;
         sorted[idx.min(n - 1)]
     };
     Percentiles {
-        p5: q(0.05), p25: q(0.25), p50: q(0.50), p75: q(0.75), p95: q(0.95),
+        p5: q(0.05),
+        p25: q(0.25),
+        p50: q(0.50),
+        p75: q(0.75),
+        p95: q(0.95),
     }
 }
 
@@ -166,14 +220,21 @@ mod tests {
         // All wins: every R is +1. Median equity must grow monotonically.
         let inp = ForecastInput {
             r_samples: vec![1.0; 20],
-            starting_equity: 10_000.0, risk_pct_per_trade: 0.01,
-            num_trades: 100, num_paths: 200, seed: Some(42),
+            starting_equity: 10_000.0,
+            risk_pct_per_trade: 0.01,
+            num_trades: 100,
+            num_paths: 200,
+            seed: Some(42),
             ruin_threshold_pct: Some(0.5),
         };
         let r = forecast(&inp);
         assert_eq!(r.steps_stats.len(), 100);
         let last = r.steps_stats.last().unwrap();
-        assert!(last.bands.p50 > inp.starting_equity, "p50 should grow but is {}", last.bands.p50);
+        assert!(
+            last.bands.p50 > inp.starting_equity,
+            "p50 should grow but is {}",
+            last.bands.p50
+        );
         assert!(r.ruin_probability < 0.05, "all-wins should not ruin");
     }
 
@@ -182,13 +243,19 @@ mod tests {
         // All losses: every R is -1, 5% risk → 20 trades to lose all.
         let inp = ForecastInput {
             r_samples: vec![-1.0; 10],
-            starting_equity: 10_000.0, risk_pct_per_trade: 0.05,
-            num_trades: 200, num_paths: 100, seed: Some(7),
+            starting_equity: 10_000.0,
+            risk_pct_per_trade: 0.05,
+            num_trades: 200,
+            num_paths: 100,
+            seed: Some(7),
             ruin_threshold_pct: Some(0.5),
         };
         let r = forecast(&inp);
-        assert!(r.ruin_probability >= 0.95,
-                "all-loss system should ruin nearly always, got {}", r.ruin_probability);
+        assert!(
+            r.ruin_probability >= 0.95,
+            "all-loss system should ruin nearly always, got {}",
+            r.ruin_probability
+        );
         assert_eq!(r.double_probability, 0.0);
     }
 
@@ -197,8 +264,11 @@ mod tests {
         // Mixed sample. Percentiles must be ordered p5 <= p25 <= p50 <= p75 <= p95.
         let inp = ForecastInput {
             r_samples: vec![-2.0, -1.0, 0.0, 1.0, 2.0, 3.0],
-            starting_equity: 10_000.0, risk_pct_per_trade: 0.02,
-            num_trades: 50, num_paths: 500, seed: Some(123),
+            starting_equity: 10_000.0,
+            risk_pct_per_trade: 0.02,
+            num_trades: 50,
+            num_paths: 500,
+            seed: Some(123),
             ruin_threshold_pct: Some(0.5),
         };
         let r = forecast(&inp);

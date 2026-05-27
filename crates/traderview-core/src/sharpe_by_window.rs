@@ -50,38 +50,56 @@ pub fn by(returns: &[TradeReturn], bucket: Bucket, annualization: f64) -> Vec<Wi
         let key = bucket_key(r.when, bucket);
         groups.entry(key).or_default().push(r.r);
     }
-    let mut out: Vec<WindowStats> = groups.into_iter()
+    let mut out: Vec<WindowStats> = groups
+        .into_iter()
         .map(|(k, vals)| stats_for(label_for(k, bucket), vals, annualization))
         .collect();
     // Sort by chronological key already (BTreeMap), but for week labels we
     // want Mon..Sun rather than 0..6 which is already the case; for hour
     // the key IS the sort order; for month the key IS the order. So
     // BTreeMap insertion order is fine — no extra sort.
-    out.sort_by(|a, b| a.label.cmp(&b.label));   // alpha within bucket type
+    out.sort_by(|a, b| a.label.cmp(&b.label)); // alpha within bucket type
     out
 }
 
 fn bucket_key(t: DateTime<Utc>, bucket: Bucket) -> u32 {
     match bucket {
-        Bucket::HourOfDay   => t.hour(),
-        Bucket::DayOfWeek   => t.weekday().num_days_from_monday(),
+        Bucket::HourOfDay => t.hour(),
+        Bucket::DayOfWeek => t.weekday().num_days_from_monday(),
         Bucket::MonthOfYear => t.month(),
     }
 }
 
 fn label_for(key: u32, bucket: Bucket) -> String {
     match bucket {
-        Bucket::HourOfDay   => format!("{:02}", key),
-        Bucket::DayOfWeek   => match key {
-            0 => "Mon", 1 => "Tue", 2 => "Wed", 3 => "Thu",
-            4 => "Fri", 5 => "Sat", 6 => "Sun", _ => "?",
-        }.into(),
-        Bucket::MonthOfYear => match key {
-            1 => "Jan", 2 => "Feb", 3 => "Mar", 4 => "Apr",
-            5 => "May", 6 => "Jun", 7 => "Jul", 8 => "Aug",
-            9 => "Sep", 10 => "Oct", 11 => "Nov", 12 => "Dec",
+        Bucket::HourOfDay => format!("{:02}", key),
+        Bucket::DayOfWeek => match key {
+            0 => "Mon",
+            1 => "Tue",
+            2 => "Wed",
+            3 => "Thu",
+            4 => "Fri",
+            5 => "Sat",
+            6 => "Sun",
             _ => "?",
-        }.into(),
+        }
+        .into(),
+        Bucket::MonthOfYear => match key {
+            1 => "Jan",
+            2 => "Feb",
+            3 => "Mar",
+            4 => "Apr",
+            5 => "May",
+            6 => "Jun",
+            7 => "Jul",
+            8 => "Aug",
+            9 => "Sep",
+            10 => "Oct",
+            11 => "Nov",
+            12 => "Dec",
+            _ => "?",
+        }
+        .into(),
     }
 }
 
@@ -89,14 +107,23 @@ fn stats_for(label: String, vals: Vec<f64>, annualization: f64) -> WindowStats {
     let n = vals.len();
     if n == 0 {
         return WindowStats {
-            label, trade_count: 0, mean_r: 0.0, stdev_r: 0.0, sharpe: 0.0, sum_r: 0.0,
+            label,
+            trade_count: 0,
+            mean_r: 0.0,
+            stdev_r: 0.0,
+            sharpe: 0.0,
+            sum_r: 0.0,
         };
     }
     let sum: f64 = vals.iter().sum();
     let mean = sum / n as f64;
     let var = vals.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
     let stdev = var.sqrt();
-    let sharpe = if stdev == 0.0 { 0.0 } else { mean / stdev * annualization.sqrt() };
+    let sharpe = if stdev == 0.0 {
+        0.0
+    } else {
+        mean / stdev * annualization.sqrt()
+    };
     WindowStats {
         label,
         trade_count: n,
@@ -174,24 +201,24 @@ mod tests {
     fn sharpe_positive_for_positive_edge() {
         // Mean=1, stdev>0, annualization=252 → sqrt(252) ≈ 15.87.
         let trades = vec![
-            at(2026, 5, 1, 10,  2.0),
-            at(2026, 5, 2, 10,  1.0),
-            at(2026, 5, 3, 10,  0.0),
+            at(2026, 5, 1, 10, 2.0),
+            at(2026, 5, 2, 10, 1.0),
+            at(2026, 5, 3, 10, 0.0),
         ];
         let out = by(&trades, Bucket::HourOfDay, 252.0);
         let s = &out[0];
         assert!(s.sharpe > 0.0);
         // Mean = 1, var = ((1)^2 + 0 + (1)^2)/3 = 2/3, stdev ≈ 0.8165.
         // Sharpe = 1 / 0.8165 × sqrt(252) ≈ 19.44.
-        assert!((s.sharpe - (1.0 / (2.0f64/3.0).sqrt() * 252.0_f64.sqrt())).abs() < 1e-6);
+        assert!((s.sharpe - (1.0 / (2.0f64 / 3.0).sqrt() * 252.0_f64.sqrt())).abs() < 1e-6);
     }
 
     #[test]
     fn day_of_week_ordered_returns_array_in_mon_to_sun_order() {
         let trades = vec![
-            at(2026, 5, 4, 10,  1.0),  // 2026-05-04 = Mon
-            at(2026, 5, 5, 10, -1.0),  // Tue
-            at(2026, 5, 6, 10,  2.0),  // Wed
+            at(2026, 5, 4, 10, 1.0),  // 2026-05-04 = Mon
+            at(2026, 5, 5, 10, -1.0), // Tue
+            at(2026, 5, 6, 10, 2.0),  // Wed
         ];
         let arr = day_of_week_ordered(&trades, 252.0);
         assert_eq!(arr[0].label, "Mon");
@@ -208,9 +235,9 @@ mod tests {
     #[test]
     fn month_of_year_buckets_use_three_letter_labels() {
         let trades = vec![
-            at(2026, 1, 5, 10,  1.0),
+            at(2026, 1, 5, 10, 1.0),
             at(2026, 6, 5, 10, -1.0),
-            at(2026, 12, 5, 10,  3.0),
+            at(2026, 12, 5, 10, 3.0),
         ];
         let out = by(&trades, Bucket::MonthOfYear, 12.0);
         assert_eq!(out.len(), 3);
@@ -221,10 +248,7 @@ mod tests {
     #[test]
     fn sum_r_independent_of_sharpe() {
         // Useful sanity: sum_r is just total P&L per bucket, no annualization.
-        let trades = vec![
-            at(2026, 5, 1, 10,  2.0),
-            at(2026, 5, 2, 10,  3.0),
-        ];
+        let trades = vec![at(2026, 5, 1, 10, 2.0), at(2026, 5, 2, 10, 3.0)];
         let out = by(&trades, Bucket::HourOfDay, 252.0);
         assert_eq!(out[0].sum_r, 5.0);
     }

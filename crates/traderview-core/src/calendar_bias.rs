@@ -46,15 +46,20 @@ pub struct CalendarBiasReport {
 
 pub fn analyze(trades: &[CalendarTaggedTrade]) -> CalendarBiasReport {
     let mut report = CalendarBiasReport::default();
-    if trades.is_empty() { return report; }
+    if trades.is_empty() {
+        return report;
+    }
     let collect = |label: &str, filter: fn(&CalendarTaggedTrade) -> bool| -> BiasBucket {
         let filtered: Vec<_> = trades.iter().filter(|t| filter(t)).collect();
         let n = filtered.len();
         if n == 0 {
             return BiasBucket {
-                label: label.into(), trade_count: 0,
-                total_pnl: 0.0, avg_pnl: 0.0,
-                win_count: 0, win_rate: 0.0,
+                label: label.into(),
+                trade_count: 0,
+                total_pnl: 0.0,
+                avg_pnl: 0.0,
+                win_count: 0,
+                win_rate: 0.0,
             };
         }
         let total: f64 = filtered.iter().map(|t| t.pnl).sum();
@@ -69,12 +74,12 @@ pub fn analyze(trades: &[CalendarTaggedTrade]) -> CalendarBiasReport {
         }
     };
     report.buckets = vec![
-        collect("Monday",         |t| t.is_monday),
-        collect("Friday",         |t| t.is_friday),
-        collect("Earnings Week",  |t| t.is_earnings_week),
-        collect("FOMC Day",       |t| t.is_fomc_day),
-        collect("First Week",     |t| t.is_first_week_of_month),
-        collect("Last Week",      |t| t.is_last_week_of_month),
+        collect("Monday", |t| t.is_monday),
+        collect("Friday", |t| t.is_friday),
+        collect("Earnings Week", |t| t.is_earnings_week),
+        collect("FOMC Day", |t| t.is_fomc_day),
+        collect("First Week", |t| t.is_first_week_of_month),
+        collect("Last Week", |t| t.is_last_week_of_month),
     ];
     // Flag buckets where avg_pnl is negative AND trade count is meaningful.
     for b in &report.buckets {
@@ -102,10 +107,18 @@ mod tests {
     }
 
     fn monday(pnl: f64) -> CalendarTaggedTrade {
-        CalendarTaggedTrade { is_monday: true, pnl, ..t_default() }
+        CalendarTaggedTrade {
+            is_monday: true,
+            pnl,
+            ..t_default()
+        }
     }
     fn fomc(pnl: f64) -> CalendarTaggedTrade {
-        CalendarTaggedTrade { is_fomc_day: true, pnl, ..t_default() }
+        CalendarTaggedTrade {
+            is_fomc_day: true,
+            pnl,
+            ..t_default()
+        }
     }
 
     #[test]
@@ -123,7 +136,7 @@ mod tests {
         assert_eq!(mon.total_pnl, 250.0);
         assert!((mon.avg_pnl - 83.333333).abs() < 1e-3);
         assert_eq!(mon.win_count, 2);
-        assert!((mon.win_rate - 2.0/3.0).abs() < 1e-9);
+        assert!((mon.win_rate - 2.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
@@ -138,8 +151,10 @@ mod tests {
     fn problem_bucket_not_flagged_when_under_5_trades() {
         let trades: Vec<_> = (0..3).map(|_| fomc(-100.0)).collect();
         let r = analyze(&trades);
-        assert!(!r.problem_buckets.contains(&"FOMC Day".to_string()),
-            "needs ≥ 5 trades for statistical meaningfulness");
+        assert!(
+            !r.problem_buckets.contains(&"FOMC Day".to_string()),
+            "needs ≥ 5 trades for statistical meaningfulness"
+        );
     }
 
     #[test]
@@ -154,7 +169,17 @@ mod tests {
         let trades = vec![monday(10.0)];
         let r = analyze(&trades);
         let labels: Vec<&str> = r.buckets.iter().map(|b| b.label.as_str()).collect();
-        assert_eq!(labels, vec!["Monday", "Friday", "Earnings Week", "FOMC Day", "First Week", "Last Week"]);
+        assert_eq!(
+            labels,
+            vec![
+                "Monday",
+                "Friday",
+                "Earnings Week",
+                "FOMC Day",
+                "First Week",
+                "Last Week"
+            ]
+        );
     }
 
     #[test]

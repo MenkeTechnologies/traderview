@@ -33,8 +33,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast;
 
-pub const HALT_FEED_URL: &str =
-    "https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts";
+pub const HALT_FEED_URL: &str = "https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Halt {
@@ -96,13 +95,16 @@ impl HaltStore {
     fn evict_if_full(&self) {
         const MAX_ENTRIES: usize = 2_000;
         const EVICT_FRACTION: usize = 4; // drop oldest 1/N
-        if self.latest.len() <= MAX_ENTRIES { return; }
+        if self.latest.len() <= MAX_ENTRIES {
+            return;
+        }
         let drop_n = self.latest.len() / EVICT_FRACTION;
-        let mut by_age: Vec<(String, DateTime<Utc>)> = self.latest
+        let mut by_age: Vec<(String, DateTime<Utc>)> = self
+            .latest
             .iter()
             .map(|e| (e.key().clone(), e.value().fetched_at))
             .collect();
-        by_age.sort_by_key(|(_, t)| *t);   // oldest first
+        by_age.sort_by_key(|(_, t)| *t); // oldest first
         for (key, _) in by_age.into_iter().take(drop_n) {
             self.latest.remove(&key);
         }
@@ -110,7 +112,9 @@ impl HaltStore {
 }
 
 impl Default for HaltStore {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Spawn the polling loop. Runs forever; cancel by dropping the store.
@@ -211,7 +215,10 @@ fn parse_rss(body: &str) -> Vec<Halt> {
 
 fn halt_from_description(_title: &str, desc: &str) -> Option<Halt> {
     // The description is a sequence of "Key: Value<br/>" pairs.
-    let clean = desc.replace("<br/>", "\n").replace("<br />", "\n").replace("<BR>", "\n");
+    let clean = desc
+        .replace("<br/>", "\n")
+        .replace("<br />", "\n")
+        .replace("<BR>", "\n");
     let mut fields = std::collections::HashMap::<&str, String>::new();
     for line in clean.lines() {
         if let Some((k, v)) = line.split_once(':') {
@@ -230,42 +237,51 @@ fn halt_from_description(_title: &str, desc: &str) -> Option<Halt> {
         halt_time: fields.get("Halt Time").cloned().unwrap_or_default(),
         reason_label: reason_label(&reason_code).into(),
         reason_code,
-        resumption_date: fields.get("Resumption Date").cloned().filter(|s| !s.is_empty()),
-        resumption_quote_time: fields.get("Resumption Quote Time").cloned().filter(|s| !s.is_empty()),
-        resumption_trade_time: fields.get("Resumption Trade Time").cloned().filter(|s| !s.is_empty()),
+        resumption_date: fields
+            .get("Resumption Date")
+            .cloned()
+            .filter(|s| !s.is_empty()),
+        resumption_quote_time: fields
+            .get("Resumption Quote Time")
+            .cloned()
+            .filter(|s| !s.is_empty()),
+        resumption_trade_time: fields
+            .get("Resumption Trade Time")
+            .cloned()
+            .filter(|s| !s.is_empty()),
         fetched_at: Utc::now(),
     })
 }
 
 pub fn reason_label(code: &str) -> &'static str {
     match code {
-        "T1"   => "News Pending",
-        "T2"   => "News Released",
-        "T3"   => "News and Resumption",
-        "T5"   => "Single Stock Trading Pause (5%+/-)",
-        "T6"   => "Extraordinary Market Activity",
-        "T8"   => "Halt ETF",
-        "T12"  => "Trading For Additional Information",
-        "H4"   => "Halt Non Compliance",
-        "H9"   => "Halt Filings Non Current",
-        "H10"  => "Halt SEC Trading Suspension",
-        "H11"  => "Halt Regulatory Concern",
-        "O1"   => "Operations Halt",
-        "IPO"  => "IPO Issue Not Yet Trading",
+        "T1" => "News Pending",
+        "T2" => "News Released",
+        "T3" => "News and Resumption",
+        "T5" => "Single Stock Trading Pause (5%+/-)",
+        "T6" => "Extraordinary Market Activity",
+        "T8" => "Halt ETF",
+        "T12" => "Trading For Additional Information",
+        "H4" => "Halt Non Compliance",
+        "H9" => "Halt Filings Non Current",
+        "H10" => "Halt SEC Trading Suspension",
+        "H11" => "Halt Regulatory Concern",
+        "O1" => "Operations Halt",
+        "IPO" => "IPO Issue Not Yet Trading",
         "IPOQ" => "IPO Quotation Open",
-        "M1"   => "Corporate Action",
-        "M2"   => "Quotation Not Available",
+        "M1" => "Corporate Action",
+        "M2" => "Quotation Not Available",
         "LUDP" => "Volatility Pause (LULD)",
         "LUDS" => "Volatility Pause — Straddle (LULD)",
         "MWC1" => "Market Wide Circuit Breaker — Level 1",
         "MWC2" => "Market Wide Circuit Breaker — Level 2",
         "MWC3" => "Market Wide Circuit Breaker — Level 3",
         "MWCO" => "Market Wide Circuit Breaker — Carry-over",
-        "R4"   => "Issue Available for Quotation",
-        "R9"   => "Issue Available for Trading",
-        "C3"   => "Issue Cleared to Trade",
-        "D"    => "Deletion (Delisting)",
-        _      => "Unknown Halt",
+        "R4" => "Issue Available for Quotation",
+        "R9" => "Issue Available for Trading",
+        "C3" => "Issue Cleared to Trade",
+        "D" => "Deletion (Delisting)",
+        _ => "Unknown Halt",
     }
 }
 
@@ -314,14 +330,19 @@ mod tests {
             store.observe(halt(i));
             assert!(
                 store.latest.len() <= 2_000,
-                "store grew past cap: {} after {} inserts", store.latest.len(), i + 1
+                "store grew past cap: {} after {} inserts",
+                store.latest.len(),
+                i + 1
             );
         }
         // After eviction the store should be at or below cap and well above
         // the post-eviction floor (cap - cap/EVICT_FRACTION = 1500).
         assert!(store.latest.len() <= 2_000);
-        assert!(store.latest.len() >= 1_500,
-            "post-eviction floor breached: {}", store.latest.len());
+        assert!(
+            store.latest.len() >= 1_500,
+            "post-eviction floor breached: {}",
+            store.latest.len()
+        );
     }
 
     #[test]
@@ -334,10 +355,14 @@ mod tests {
         // The oldest (i=0..500) should be gone; the newest (i=2000) must survive.
         let oldest_key = format!("{}|{}|{}", halt(0).symbol, halt(0).halt_time, "T1");
         let newest_key = format!("{}|{}|{}", halt(2000).symbol, halt(2000).halt_time, "T1");
-        assert!(!store.latest.contains_key(&oldest_key),
-            "oldest entry survived eviction");
-        assert!(store.latest.contains_key(&newest_key),
-            "newest entry was incorrectly evicted");
+        assert!(
+            !store.latest.contains_key(&oldest_key),
+            "oldest entry survived eviction"
+        );
+        assert!(
+            store.latest.contains_key(&newest_key),
+            "newest entry was incorrectly evicted"
+        );
     }
 
     #[test]

@@ -31,7 +31,9 @@ struct CreateBody {
     #[serde(default = "default_color")]
     color: String,
 }
-fn default_color() -> String { "#00e5ff".into() }
+fn default_color() -> String {
+    "#00e5ff".into()
+}
 
 async fn create(
     State(s): State<AppState>,

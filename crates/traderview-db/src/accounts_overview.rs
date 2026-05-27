@@ -68,12 +68,26 @@ pub async fn report(pool: &PgPool, user_id: Uuid) -> anyhow::Result<OverviewRepo
     let accounts: Vec<(Uuid, String, String, Option<String>)> = sqlx::query_as(
         "SELECT id, broker, name, base_currency FROM accounts WHERE user_id = $1
           ORDER BY broker, name",
-    ).bind(user_id).fetch_all(pool).await?;
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
 
     let mut summaries = Vec::with_capacity(accounts.len());
-    let mut grand = GrandTotal { accounts: accounts.len(), ..Default::default() };
+    let mut grand = GrandTotal {
+        accounts: accounts.len(),
+        ..Default::default()
+    };
 
-    type AccountAggRow = (i64, i64, i64, Option<f64>, Option<f64>, Option<f64>, Option<f64>);
+    type AccountAggRow = (
+        i64,
+        i64,
+        i64,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+    );
     for (id, broker, name, ccy) in accounts {
         // Aggregates for closed trades — one CTE-style query per account.
         let row: AccountAggRow = sqlx::query_as(
@@ -103,24 +117,30 @@ pub async fn report(pool: &PgPool, user_id: Uuid) -> anyhow::Result<OverviewRepo
             "SELECT net_pnl, symbol FROM trades
               WHERE account_id = $1 AND status = 'closed' AND net_pnl IS NOT NULL
               ORDER BY net_pnl DESC LIMIT 1",
-        ).bind(id).fetch_optional(pool).await?;
+        )
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
         let worst: Option<(Decimal, String)> = sqlx::query_as(
             "SELECT net_pnl, symbol FROM trades
               WHERE account_id = $1 AND status = 'closed' AND net_pnl IS NOT NULL
               ORDER BY net_pnl ASC LIMIT 1",
-        ).bind(id).fetch_optional(pool).await?;
+        )
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
 
         // Open positions — reuse the existing live snapshot. May hit Yahoo;
         // 60s cache makes repeated calls cheap.
         let live = crate::live_positions::snapshot(pool, id).await.ok();
-        let open_count   = live.as_ref().map(|l| l.position_count).unwrap_or(0);
-        let open_not     = live.as_ref().map(|l| l.total_notional).unwrap_or(0.0);
-        let open_upnl    = live.as_ref().map(|l| l.total_unrealized_pnl).unwrap_or(0.0);
+        let open_count = live.as_ref().map(|l| l.position_count).unwrap_or(0);
+        let open_not = live.as_ref().map(|l| l.total_notional).unwrap_or(0.0);
+        let open_upnl = live.as_ref().map(|l| l.total_unrealized_pnl).unwrap_or(0.0);
         let open_day_pnl = live.as_ref().map(|l| l.total_day_pnl).unwrap_or(0.0);
 
         let total_v = total.unwrap_or(0.0);
-        let ytd_v   = ytd.unwrap_or(0.0);
-        let mtd_v   = mtd.unwrap_or(0.0);
+        let ytd_v = ytd.unwrap_or(0.0);
+        let mtd_v = mtd.unwrap_or(0.0);
         let today_v = today.unwrap_or(0.0);
 
         let win_rate = if n > 0 { wins as f64 / n as f64 } else { 0.0 };
@@ -133,17 +153,26 @@ pub async fn report(pool: &PgPool, user_id: Uuid) -> anyhow::Result<OverviewRepo
         grand.mtd_pnl += mtd_v;
         grand.today_pnl += today_v;
         grand.open_positions_count += open_count;
-        grand.open_notional       += open_not;
+        grand.open_notional += open_not;
         grand.open_unrealized_pnl += open_upnl;
-        grand.open_day_pnl        += open_day_pnl;
+        grand.open_day_pnl += open_day_pnl;
 
         summaries.push(AccountSummary {
-            account_id: id, broker, name, base_currency: ccy,
-            trade_count: n, win_count: wins, loss_count: losses, win_rate,
-            total_closed_pnl: total_v, ytd_pnl: ytd_v, mtd_pnl: mtd_v, today_pnl: today_v,
-            best_trade_pnl:    best.as_ref().map(|(p, _)| dec(*p)),
+            account_id: id,
+            broker,
+            name,
+            base_currency: ccy,
+            trade_count: n,
+            win_count: wins,
+            loss_count: losses,
+            win_rate,
+            total_closed_pnl: total_v,
+            ytd_pnl: ytd_v,
+            mtd_pnl: mtd_v,
+            today_pnl: today_v,
+            best_trade_pnl: best.as_ref().map(|(p, _)| dec(*p)),
             best_trade_symbol: best.map(|(_, s)| s),
-            worst_trade_pnl:    worst.as_ref().map(|(p, _)| dec(*p)),
+            worst_trade_pnl: worst.as_ref().map(|(p, _)| dec(*p)),
             worst_trade_symbol: worst.map(|(_, s)| s),
             open_positions_count: open_count,
             open_notional: open_not,
@@ -153,9 +182,12 @@ pub async fn report(pool: &PgPool, user_id: Uuid) -> anyhow::Result<OverviewRepo
     }
 
     Ok(OverviewReport {
-        accounts: summaries, grand_total: grand,
+        accounts: summaries,
+        grand_total: grand,
         computed_at: Utc::now(),
     })
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

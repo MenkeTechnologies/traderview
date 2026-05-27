@@ -84,9 +84,15 @@ impl Embedded {
 /// Safe no-op if the file is missing or unreadable.
 fn clean_stale_lock(pg_data: &Path) {
     let pid_file = pg_data.join("postmaster.pid");
-    let Ok(contents) = std::fs::read_to_string(&pid_file) else { return };
-    let Some(first) = contents.lines().next() else { return };
-    let Ok(pid) = first.trim().parse::<i32>() else { return };
+    let Ok(contents) = std::fs::read_to_string(&pid_file) else {
+        return;
+    };
+    let Some(first) = contents.lines().next() else {
+        return;
+    };
+    let Ok(pid) = first.trim().parse::<i32>() else {
+        return;
+    };
 
     // kill(pid, 0) probes existence without delivering a signal.
     #[cfg(unix)]
@@ -166,8 +172,8 @@ mod tests {
     }
 
     fn write_pid_file(pg_data: &Path, pid_line: &str) {
-        let mut f = std::fs::File::create(pg_data.join("postmaster.pid"))
-            .expect("create postmaster.pid");
+        let mut f =
+            std::fs::File::create(pg_data.join("postmaster.pid")).expect("create postmaster.pid");
         f.write_all(pid_line.as_bytes()).expect("write pid");
     }
 
@@ -225,10 +231,12 @@ mod tests {
         let path = dir.join("pg-password");
         let pw1 = load_or_create_password(&path).expect("first call");
         let pw2 = load_or_create_password(&path).expect("second call");
-        assert_eq!(pw1, pw2,
+        assert_eq!(
+            pw1, pw2,
             "load_or_create_password must return the same password \
              once the file exists — randomizing on relaunch is what \
-             caused the auth-failed crashes in pass 1");
+             caused the auth-failed crashes in pass 1"
+        );
         assert!(!pw1.is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }

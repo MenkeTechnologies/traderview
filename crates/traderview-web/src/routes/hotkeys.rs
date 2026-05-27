@@ -15,8 +15,11 @@ pub fn router() -> Router<AppState> {
 }
 
 async fn list(State(s): State<AppState>, user: AuthUser) -> Result<Json<Vec<Hotkey>>, ApiError> {
-    Ok(Json(traderview_db::hotkeys::list(&s.pool, user.id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::hotkeys::list(&s.pool, user.id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -28,17 +31,26 @@ struct UpsertBody {
     payload: serde_json::Value,
 }
 
-async fn upsert(State(s): State<AppState>, user: AuthUser, Json(b): Json<UpsertBody>)
-    -> Result<Json<Hotkey>, ApiError>
-{
-    Ok(Json(traderview_db::hotkeys::upsert(
-        &s.pool, user.id, &b.name, &b.combo, &b.action, &b.payload,
-    ).await.map_err(ApiError::Internal)?))
+async fn upsert(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(b): Json<UpsertBody>,
+) -> Result<Json<Hotkey>, ApiError> {
+    Ok(Json(
+        traderview_db::hotkeys::upsert(&s.pool, user.id, &b.name, &b.combo, &b.action, &b.payload)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
-async fn delete_one(State(s): State<AppState>, user: AuthUser, Path(id): Path<Uuid>)
-    -> Result<Json<bool>, ApiError>
-{
-    Ok(Json(traderview_db::hotkeys::delete(&s.pool, user.id, id)
-        .await.map_err(ApiError::Internal)?))
+async fn delete_one(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<bool>, ApiError> {
+    Ok(Json(
+        traderview_db::hotkeys::delete(&s.pool, user.id, id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

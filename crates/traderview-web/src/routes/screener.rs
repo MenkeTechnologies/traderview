@@ -17,8 +17,8 @@ use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/screener/run",  get(run))
-        .route("/screener/top",  get(top))
+        .route("/screener/run", get(run))
+        .route("/screener/top", get(top))
 }
 
 #[derive(Deserialize)]
@@ -36,8 +36,12 @@ struct RunQ {
     #[serde(default = "default_limit")]
     limit: usize,
 }
-fn default_days() -> i64 { 365 }
-fn default_limit() -> usize { 50 }
+fn default_days() -> i64 {
+    365
+}
+fn default_limit() -> usize {
+    50
+}
 
 #[derive(Serialize)]
 struct ScreenerHit {
@@ -58,7 +62,11 @@ struct ScreenerResult {
     hits: Vec<ScreenerHit>,
 }
 
-async fn collect_universe(pool: &PgPool, user_id: Uuid, watchlist_id: Option<Uuid>) -> anyhow::Result<Vec<String>> {
+async fn collect_universe(
+    pool: &PgPool,
+    user_id: Uuid,
+    watchlist_id: Option<Uuid>,
+) -> anyhow::Result<Vec<String>> {
     if let Some(wid) = watchlist_id {
         if !traderview_db::watchlists::ensure_owner(pool, user_id, wid).await? {
             anyhow::bail!("forbidden");
@@ -78,8 +86,12 @@ async fn collect_universe(pool: &PgPool, user_id: Uuid, watchlist_id: Option<Uui
 async fn score_symbol(pool: &PgPool, symbol: &str, days: i64) -> Option<SignalReport> {
     let to = Utc::now();
     let from = to - Duration::days(days);
-    let bars = traderview_db::prices::get_bars(pool, symbol, BarInterval::D1, from, to).await.ok()?;
-    if bars.is_empty() { return None; }
+    let bars = traderview_db::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
+        .await
+        .ok()?;
+    if bars.is_empty() {
+        return None;
+    }
     Some(analyze(symbol, &bars))
 }
 
@@ -97,28 +109,36 @@ fn project(r: SignalReport) -> ScreenerHit {
     }
 }
 
-async fn run(State(s): State<AppState>, user: AuthUser, Query(q): Query<RunQ>)
-    -> Result<Json<ScreenerResult>, ApiError>
-{
+async fn run(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RunQ>,
+) -> Result<Json<ScreenerResult>, ApiError> {
     let universe = collect_universe(&s.pool, user.id, q.watchlist_id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     let universe_size = universe.len();
 
     let mut hits = Vec::new();
     for sym in &universe {
         if let Some(r) = score_symbol(&s.pool, sym, q.days).await {
             if q.min_score.is_none_or(|m| r.score >= m)
-               && q.max_score.is_none_or(|m| r.score <= m)
-               && q.summary.as_deref().is_none_or(|w| w == r.summary)
+                && q.max_score.is_none_or(|m| r.score <= m)
+                && q.summary.as_deref().is_none_or(|w| w == r.summary)
             {
                 hits.push(project(r));
             }
         }
-        if hits.len() >= q.limit * 3 { break; } // bound work
+        if hits.len() >= q.limit * 3 {
+            break;
+        } // bound work
     }
     hits.sort_by_key(|a| std::cmp::Reverse(a.score));
     hits.truncate(q.limit);
-    Ok(Json(ScreenerResult { universe_size, hits }))
+    Ok(Json(ScreenerResult {
+        universe_size,
+        hits,
+    }))
 }
 
 #[derive(Deserialize)]
@@ -129,14 +149,21 @@ struct TopQ {
     #[serde(default = "default_top")]
     limit: usize,
 }
-fn default_side() -> String { "buy".into() }
-fn default_top() -> usize { 25 }
+fn default_side() -> String {
+    "buy".into()
+}
+fn default_top() -> usize {
+    25
+}
 
-async fn top(State(s): State<AppState>, user: AuthUser, Query(q): Query<TopQ>)
-    -> Result<Json<ScreenerResult>, ApiError>
-{
+async fn top(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<TopQ>,
+) -> Result<Json<ScreenerResult>, ApiError> {
     let universe = collect_universe(&s.pool, user.id, q.watchlist_id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     let universe_size = universe.len();
     let mut hits = Vec::new();
     for sym in &universe {
@@ -150,5 +177,8 @@ async fn top(State(s): State<AppState>, user: AuthUser, Query(q): Query<TopQ>)
         hits.sort_by_key(|a| std::cmp::Reverse(a.score));
     }
     hits.truncate(q.limit);
-    Ok(Json(ScreenerResult { universe_size, hits }))
+    Ok(Json(ScreenerResult {
+        universe_size,
+        hits,
+    }))
 }

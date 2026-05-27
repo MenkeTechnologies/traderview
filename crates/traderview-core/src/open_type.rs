@@ -54,9 +54,11 @@ pub fn classify(input: &OpenInput) -> OpenTypeReport {
     let inside = input.open_price >= input.prior_day_val && input.open_price <= input.prior_day_vah;
 
     // OpenDrive: opened AT prior extreme + drove past it AND closed near opposite end.
-    let drive_up = input.open_price >= input.prior_day_high && above
+    let drive_up = input.open_price >= input.prior_day_high
+        && above
         && input.opening_range_close >= input.opening_range_high * 0.95;
-    let drive_down = input.open_price <= input.prior_day_low && below
+    let drive_down = input.open_price <= input.prior_day_low
+        && below
         && input.opening_range_close <= input.opening_range_low * 1.05;
     if drive_up || drive_down {
         return OpenTypeReport {
@@ -69,9 +71,11 @@ pub fn classify(input: &OpenInput) -> OpenTypeReport {
     }
 
     // OpenTestDrive: opened in range, tested an extreme, then drove past.
-    let test_drive_up = above && input.open_price < input.prior_day_high
+    let test_drive_up = above
+        && input.open_price < input.prior_day_high
         && input.opening_range_close > input.prior_day_high;
-    let test_drive_down = below && input.open_price > input.prior_day_low
+    let test_drive_down = below
+        && input.open_price > input.prior_day_low
         && input.opening_range_close < input.prior_day_low;
     if test_drive_up || test_drive_down {
         return OpenTypeReport {
@@ -138,7 +142,7 @@ mod tests {
         i.open_price = 103.0;
         i.opening_range_high = 105.0;
         i.opening_range_low = 102.5;
-        i.opening_range_close = 105.0;    // closed at high of OR
+        i.opening_range_close = 105.0; // closed at high of OR
         let r = classify(&i);
         assert_eq!(r.open_type, OpenType::OpenDrive);
         assert!(r.above_prior_high);
@@ -150,7 +154,7 @@ mod tests {
         i.open_price = 97.0;
         i.opening_range_high = 98.0;
         i.opening_range_low = 95.0;
-        i.opening_range_close = 95.0;    // closed at low of OR
+        i.opening_range_close = 95.0; // closed at low of OR
         let r = classify(&i);
         assert_eq!(r.open_type, OpenType::OpenDrive);
         assert!(r.below_prior_low);
@@ -160,7 +164,7 @@ mod tests {
     fn open_test_drive_up_when_opens_in_range_breaks_above() {
         let mut i = baseline();
         i.open_price = 101.0;
-        i.opening_range_high = 103.0;    // above prior high 102
+        i.opening_range_high = 103.0; // above prior high 102
         i.opening_range_close = 103.0;
         let r = classify(&i);
         assert_eq!(r.open_type, OpenType::OpenTestDrive);
@@ -170,8 +174,8 @@ mod tests {
     fn open_rejection_reverse_up() {
         // OR pokes above prior high but closes back below.
         let mut i = baseline();
-        i.opening_range_high = 103.0;    // above prior 102
-        i.opening_range_close = 100.0;    // back below prior high
+        i.opening_range_high = 103.0; // above prior 102
+        i.opening_range_close = 100.0; // back below prior high
         let r = classify(&i);
         assert_eq!(r.open_type, OpenType::OpenRejectionReverse);
     }
@@ -179,8 +183,8 @@ mod tests {
     #[test]
     fn open_rejection_reverse_down() {
         let mut i = baseline();
-        i.opening_range_low = 97.0;       // below prior 98
-        i.opening_range_close = 100.0;    // back above prior low
+        i.opening_range_low = 97.0; // below prior 98
+        i.opening_range_close = 100.0; // back above prior low
         let r = classify(&i);
         assert_eq!(r.open_type, OpenType::OpenRejectionReverse);
     }
@@ -194,7 +198,7 @@ mod tests {
     #[test]
     fn outside_value_flag_correctly_set() {
         let mut i = baseline();
-        i.open_price = 103.0;    // above VAH 101
+        i.open_price = 103.0; // above VAH 101
         let r = classify(&i);
         assert!(!r.inside_prior_value);
     }

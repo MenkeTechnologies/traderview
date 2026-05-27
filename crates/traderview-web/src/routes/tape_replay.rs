@@ -16,6 +16,9 @@ async fn build(
     u: AuthUser,
     Path(trade_id): Path<Uuid>,
 ) -> Result<Json<TapeReplay>, ApiError> {
-    Ok(Json(traderview_db::tape_replay::build(&s.pool, u.id, trade_id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::tape_replay::build(&s.pool, u.id, trade_id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

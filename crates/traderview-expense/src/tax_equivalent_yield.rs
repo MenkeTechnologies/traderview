@@ -35,8 +35,12 @@ impl TeyInput {
     /// Combined marginal rate applicable to the comparison.
     pub fn combined_rate(&self) -> Decimal {
         let mut total = self.federal_marginal_rate;
-        if self.in_state_muni { total += self.state_marginal_rate; }
-        if self.niit_applies { total += self.niit_rate; }
+        if self.in_state_muni {
+            total += self.state_marginal_rate;
+        }
+        if self.niit_applies {
+            total += self.niit_rate;
+        }
         total
     }
 }
@@ -46,7 +50,7 @@ impl TeyInput {
 pub fn tey_from_muni(muni_yield: Decimal, input: &TeyInput) -> Decimal {
     let denom = Decimal::ONE - input.combined_rate();
     if denom <= Decimal::ZERO {
-        return Decimal::ZERO;    // rate ≥ 100% — undefined
+        return Decimal::ZERO; // rate ≥ 100% — undefined
     }
     muni_yield / denom
 }
@@ -60,20 +64,30 @@ pub fn after_tax_yield(taxable_yield: Decimal, input: &TeyInput) -> Decimal {
 /// Standalone helper: which is better given both yields?
 pub fn better(taxable: Decimal, muni: Decimal, input: &TeyInput) -> BetterChoice {
     let muni_tey = tey_from_muni(muni, input);
-    if muni_tey > taxable { BetterChoice::Muni }
-    else if muni_tey < taxable { BetterChoice::Taxable }
-    else { BetterChoice::Tie }
+    if muni_tey > taxable {
+        BetterChoice::Muni
+    } else if muni_tey < taxable {
+        BetterChoice::Taxable
+    } else {
+        BetterChoice::Tie
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum BetterChoice { Muni, Taxable, Tie }
+pub enum BetterChoice {
+    Muni,
+    Taxable,
+    Tie,
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn fed_24() -> TeyInput {
         TeyInput {
@@ -92,14 +106,20 @@ mod tests {
 
     #[test]
     fn in_state_muni_adds_state_rate() {
-        let i = TeyInput { in_state_muni: true, ..fed_24() };
+        let i = TeyInput {
+            in_state_muni: true,
+            ..fed_24()
+        };
         // 0.24 + 0.05 = 0.29.
         assert_eq!(i.combined_rate(), d("0.29"));
     }
 
     #[test]
     fn niit_adds_3_8_pct() {
-        let i = TeyInput { niit_applies: true, ..fed_24() };
+        let i = TeyInput {
+            niit_applies: true,
+            ..fed_24()
+        };
         assert_eq!(i.combined_rate(), d("0.278"));
     }
 

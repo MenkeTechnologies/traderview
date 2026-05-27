@@ -7,7 +7,7 @@
 //!      <https://cdn.finra.org/equity/regsho/daily/CNMSshvolYYYYMMDD.txt>
 //!      (one row per symbol per market center; we aggregate to per-day per-symbol)
 
-use chrono::{Datelike, DateTime, Duration, NaiveDate, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, Utc};
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -26,20 +26,19 @@ pub struct ShortStats {
     pub symbol: String,
     pub shares_short: Option<f64>,
     pub shares_short_prior: Option<f64>,
-    pub short_ratio: Option<f64>,        // days to cover
-    pub short_pct_float: Option<f64>,    // 0-1
+    pub short_ratio: Option<f64>,     // days to cover
+    pub short_pct_float: Option<f64>, // 0-1
     pub short_pct_outstanding: Option<f64>,
     pub float: Option<f64>,
-    pub change_pct: Option<f64>,         // shares_short vs prior month
+    pub change_pct: Option<f64>, // shares_short vs prior month
     pub fetched_at: DateTime<Utc>,
 }
 
 pub async fn yahoo_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
     let v = crate::market_data::quote_summary(symbol, &["defaultKeyStatistics"]).await?;
     let ks = &v["defaultKeyStatistics"];
-    let raw = |path: &str| -> Option<f64> {
-        ks[path]["raw"].as_f64().or_else(|| ks[path].as_f64())
-    };
+    let raw =
+        |path: &str| -> Option<f64> { ks[path]["raw"].as_f64().or_else(|| ks[path].as_f64()) };
     let cur = raw("sharesShort");
     let prior = raw("sharesShortPriorMonth");
     let change = match (cur, prior) {
@@ -82,7 +81,9 @@ pub async fn finra_daily(symbol: &str, days: i64) -> anyhow::Result<Vec<FinraDay
         day -= Duration::days(1);
         // Skip weekends.
         let wd = day.weekday();
-        if matches!(wd, chrono::Weekday::Sat | chrono::Weekday::Sun) { continue; }
+        if matches!(wd, chrono::Weekday::Sat | chrono::Weekday::Sun) {
+            continue;
+        }
         if let Some(row) = fetch_finra_day(&symbol, day).await {
             out.push(row);
         }
@@ -94,10 +95,14 @@ pub async fn finra_daily(symbol: &str, days: i64) -> anyhow::Result<Vec<FinraDay
 async fn fetch_finra_day(symbol: &str, day: NaiveDate) -> Option<FinraDay> {
     let url = format!(
         "https://cdn.finra.org/equity/regsho/daily/CNMSshvol{y}{m:02}{d:02}.txt",
-        y = day.year(), m = day.month(), d = day.day(),
+        y = day.year(),
+        m = day.month(),
+        d = day.day(),
     );
     let resp = client().get(&url).send().await.ok()?;
-    if !resp.status().is_success() { return None; }
+    if !resp.status().is_success() {
+        return None;
+    }
     let body = resp.text().await.ok()?;
     parse_finra_body(&body, symbol, day)
 }
@@ -114,7 +119,11 @@ async fn fetch_finra_day(symbol: &str, day: NaiveDate) -> Option<FinraDay> {
 pub(crate) fn parse_finra_body(body: &str, symbol: &str, day: NaiveDate) -> Option<FinraDay> {
     let mut header_idx: HashMap<String, usize> = HashMap::new();
     let mut total = FinraDay {
-        date: day, short_volume: 0, short_exempt_volume: 0, total_volume: 0, short_pct: 0.0,
+        date: day,
+        short_volume: 0,
+        short_exempt_volume: 0,
+        total_volume: 0,
+        short_pct: 0.0,
     };
     let mut found = false;
     for (i, line) in body.lines().enumerate() {
@@ -125,18 +134,28 @@ pub(crate) fn parse_finra_body(body: &str, symbol: &str, day: NaiveDate) -> Opti
             continue;
         }
         let parts: Vec<&str> = line.split('|').collect();
-        let sym_i = match header_idx.get("Symbol") { Some(i) => *i, None => continue };
-        if parts.get(sym_i).map(|s| s.trim()) != Some(symbol) { continue; }
-        let pick = |k: &str| -> u64 {
-            header_idx.get(k).and_then(|i| parts.get(*i))
-                .and_then(|s| s.trim().parse::<u64>().ok()).unwrap_or(0)
+        let sym_i = match header_idx.get("Symbol") {
+            Some(i) => *i,
+            None => continue,
         };
-        total.short_volume        += pick("ShortVolume");
+        if parts.get(sym_i).map(|s| s.trim()) != Some(symbol) {
+            continue;
+        }
+        let pick = |k: &str| -> u64 {
+            header_idx
+                .get(k)
+                .and_then(|i| parts.get(*i))
+                .and_then(|s| s.trim().parse::<u64>().ok())
+                .unwrap_or(0)
+        };
+        total.short_volume += pick("ShortVolume");
         total.short_exempt_volume += pick("ShortExemptVolume");
-        total.total_volume        += pick("TotalVolume");
+        total.total_volume += pick("TotalVolume");
         found = true;
     }
-    if !found { return None; }
+    if !found {
+        return None;
+    }
     if total.total_volume > 0 {
         total.short_pct = total.short_volume as f64 / total.total_volume as f64 * 100.0;
     }
@@ -148,11 +167,16 @@ pub(crate) fn parse_finra_body(body: &str, symbol: &str, day: NaiveDate) -> Opti
 pub async fn ranked_universe(symbols: &[String]) -> Vec<ShortStats> {
     let mut out = Vec::new();
     for s in symbols {
-        if let Ok(r) = yahoo_short_stats(s).await { out.push(r); }
+        if let Ok(r) = yahoo_short_stats(s).await {
+            out.push(r);
+        }
     }
-    out.sort_by(|a, b| b.short_pct_float.unwrap_or(0.0)
-        .partial_cmp(&a.short_pct_float.unwrap_or(0.0))
-        .unwrap_or(std::cmp::Ordering::Equal));
+    out.sort_by(|a, b| {
+        b.short_pct_float
+            .unwrap_or(0.0)
+            .partial_cmp(&a.short_pct_float.unwrap_or(0.0))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     out
 }
 
@@ -169,7 +193,9 @@ mod tests {
 20260527|TSLA|999999|999|9999999|N
 ";
 
-    fn day() -> NaiveDate { NaiveDate::from_ymd_opt(2026, 5, 27).unwrap() }
+    fn day() -> NaiveDate {
+        NaiveDate::from_ymd_opt(2026, 5, 27).unwrap()
+    }
 
     #[test]
     fn parses_and_sums_across_markets() {
@@ -195,7 +221,10 @@ mod tests {
     #[test]
     fn returns_none_when_symbol_absent() {
         let r = parse_finra_body(SAMPLE, "NVDA", day());
-        assert!(r.is_none(), "no NVDA rows → must return None, not zeroed FinraDay");
+        assert!(
+            r.is_none(),
+            "no NVDA rows → must return None, not zeroed FinraDay"
+        );
     }
 
     #[test]
@@ -215,7 +244,7 @@ mod tests {
 20260527|FOO|abc|0|1000|N
 ";
         let r = parse_finra_body(body, "FOO", day()).expect("FOO row");
-        assert_eq!(r.short_volume, 0);   // unparseable → 0
+        assert_eq!(r.short_volume, 0); // unparseable → 0
         assert_eq!(r.total_volume, 1_000);
     }
 
@@ -229,7 +258,8 @@ mod tests {
     fn header_only_returns_none() {
         let r = parse_finra_body(
             "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market",
-            "AAPL", day(),
+            "AAPL",
+            day(),
         );
         assert!(r.is_none(), "header without data rows = no result");
     }
@@ -238,6 +268,9 @@ mod tests {
     fn preserves_input_date() {
         let target = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
         let r = parse_finra_body(SAMPLE, "AAPL", target).unwrap();
-        assert_eq!(r.date, target, "parser uses caller-supplied date, not header");
+        assert_eq!(
+            r.date, target,
+            "parser uses caller-supplied date, not header"
+        );
     }
 }

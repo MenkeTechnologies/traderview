@@ -40,33 +40,52 @@ pub fn compute(eq: &[EquityPoint], periods_per_year: f64) -> RiskMetrics {
     let mut dd_series = Vec::with_capacity(eq.len());
     let mut max_dd = 0.0_f64;
     for p in eq {
-        if p.equity > peak { peak = p.equity; }
-        let dd = if peak > 0.0 { (peak - p.equity) / peak } else { 0.0 };
+        if p.equity > peak {
+            peak = p.equity;
+        }
+        let dd = if peak > 0.0 {
+            (peak - p.equity) / peak
+        } else {
+            0.0
+        };
         dd_series.push(dd);
-        if dd > max_dd { max_dd = dd; }
+        if dd > max_dd {
+            max_dd = dd;
+        }
     }
     // 2) CAGR + annualized return.
     let start = eq[0].equity.max(f64::EPSILON);
     let end = eq.last().unwrap().equity;
-    let n = (eq.len() - 1) as f64;       // periods elapsed
+    let n = (eq.len() - 1) as f64; // periods elapsed
     let years = if n > 0.0 { n / periods_per_year } else { 1.0 };
     let cagr = if start > 0.0 && years > 0.0 && end > 0.0 {
         (end / start).powf(1.0 / years) - 1.0
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     // For Calmar we use annualized return — same as CAGR for a single
     // long series.
-    let calmar = if max_dd > 0.0 { cagr / max_dd } else if cagr > 0.0 { f64::INFINITY } else { 0.0 };
-    let mar = calmar;       // single-series alias
-    // 3) Ulcer + pain.
+    let calmar = if max_dd > 0.0 {
+        cagr / max_dd
+    } else if cagr > 0.0 {
+        f64::INFINITY
+    } else {
+        0.0
+    };
+    let mar = calmar; // single-series alias
+                      // 3) Ulcer + pain.
     let n_dd = dd_series.len() as f64;
     let mean_sq: f64 = dd_series.iter().map(|d| d * d).sum::<f64>() / n_dd;
-    let mean_abs: f64 = dd_series.iter().sum::<f64>() / n_dd;   // dd already ≥ 0
+    let mean_abs: f64 = dd_series.iter().sum::<f64>() / n_dd; // dd already ≥ 0
     let ulcer_index = mean_sq.sqrt() * 100.0;
-    let pain_index  = mean_abs * 100.0;
+    let pain_index = mean_abs * 100.0;
     RiskMetrics {
         max_dd_pct: max_dd,
-        calmar, mar, cagr,
-        ulcer_index, pain_index,
+        calmar,
+        mar,
+        cagr,
+        ulcer_index,
+        pain_index,
     }
 }
 
@@ -80,11 +99,19 @@ pub fn compute(eq: &[EquityPoint], periods_per_year: f64) -> RiskMetrics {
 /// the bankroll expressed in R-multiples (i.e. how many full stops can
 /// the account take before zero). Returns 0..=1 probability.
 pub fn risk_of_ruin(avg_r: f64, bankroll_units: f64) -> f64 {
-    if avg_r >= 1.0 { return 0.0; }      // edge ≥ +1 → can't go to zero
-    if avg_r <= -1.0 { return 1.0; }     // edge ≤ -1 → certain ruin
-    if avg_r == 0.0 { return 1.0; }      // zero edge → ruin in infinite
+    if avg_r >= 1.0 {
+        return 0.0;
+    } // edge ≥ +1 → can't go to zero
+    if avg_r <= -1.0 {
+        return 1.0;
+    } // edge ≤ -1 → certain ruin
+    if avg_r == 0.0 {
+        return 1.0;
+    } // zero edge → ruin in infinite
     let ratio = (1.0 - avg_r) / (1.0 + avg_r);
-    if ratio <= 0.0 { return 0.0; }
+    if ratio <= 0.0 {
+        return 0.0;
+    }
     ratio.powf(bankroll_units).clamp(0.0, 1.0)
 }
 
@@ -92,7 +119,9 @@ pub fn risk_of_ruin(avg_r: f64, bankroll_units: f64) -> f64 {
 /// compute how many periods until the equity curve set a new high.
 /// Returns a list of (start_index, trough_index, recovery_index_or_none).
 pub fn recovery_periods(eq: &[EquityPoint]) -> Vec<RecoveryEvent> {
-    if eq.len() < 2 { return vec![]; }
+    if eq.len() < 2 {
+        return vec![];
+    }
     let mut out = Vec::new();
     let mut peak_value = eq[0].equity;
     let mut peak_idx = 0usize;
@@ -116,7 +145,11 @@ pub fn recovery_periods(eq: &[EquityPoint]) -> Vec<RecoveryEvent> {
             trough_idx = i;
         } else if p.equity < peak_value {
             // Track trough.
-            if !in_dd { in_dd = true; trough_value = p.equity; trough_idx = i; }
+            if !in_dd {
+                in_dd = true;
+                trough_value = p.equity;
+                trough_idx = i;
+            }
             if p.equity < trough_value {
                 trough_value = p.equity;
                 trough_idx = i;
@@ -192,7 +225,7 @@ mod tests {
         let mut series = vec![100.0];
         for _ in 0..252 {
             let last = *series.last().unwrap();
-            series.push(last * (2.0_f64).powf(1.0/252.0));
+            series.push(last * (2.0_f64).powf(1.0 / 252.0));
         }
         let r = compute(&pts(&series), 252.0);
         // CAGR ~= 1.00 (= 100%).
@@ -204,8 +237,10 @@ mod tests {
         // Same average DD, but Ulcer squares first → larger.
         let series = pts(&[100.0, 80.0, 100.0, 80.0, 100.0, 80.0]);
         let r = compute(&series, 252.0);
-        assert!(r.ulcer_index >= r.pain_index,
-            "Ulcer (RMS) must be ≥ Pain (linear avg) by Cauchy-Schwarz");
+        assert!(
+            r.ulcer_index >= r.pain_index,
+            "Ulcer (RMS) must be ≥ Pain (linear avg) by Cauchy-Schwarz"
+        );
     }
 
     // ─── risk_of_ruin ──────────────────────────────────────────────────
@@ -225,9 +260,11 @@ mod tests {
     #[test]
     fn ror_positive_edge_decreases_with_more_bankroll() {
         let small_bank = risk_of_ruin(0.30, 5.0);
-        let big_bank   = risk_of_ruin(0.30, 50.0);
-        assert!(big_bank < small_bank,
-            "deeper bankroll must lower ruin probability");
+        let big_bank = risk_of_ruin(0.30, 50.0);
+        assert!(
+            big_bank < small_bank,
+            "deeper bankroll must lower ruin probability"
+        );
     }
 
     #[test]

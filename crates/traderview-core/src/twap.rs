@@ -35,12 +35,14 @@ pub struct TwapResult {
 }
 
 pub fn compute(input: &TwapInput) -> Option<TwapResult> {
-    if input.typical_prices.is_empty() { return None; }
+    if input.typical_prices.is_empty() {
+        return None;
+    }
     let n = Decimal::from(input.typical_prices.len() as u64);
     let sum: Decimal = input.typical_prices.iter().copied().sum();
     let twap = sum / n;
     let slippage = match input.side {
-        TradeSide::Long  => twap - input.fill_price,
+        TradeSide::Long => twap - input.fill_price,
         TradeSide::Short => input.fill_price - twap,
     };
     let slippage_bps = if twap.is_zero() {
@@ -57,19 +59,25 @@ pub fn compute(input: &TwapInput) -> Option<TwapResult> {
     })
 }
 
-fn to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn empty_bars_returns_none() {
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("100"), typical_prices: vec![],
+            side: TradeSide::Long,
+            fill_price: d("100"),
+            typical_prices: vec![],
         });
         assert!(r.is_none());
     }
@@ -77,9 +85,11 @@ mod tests {
     #[test]
     fn single_bar_twap_equals_price() {
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("99"),
+            side: TradeSide::Long,
+            fill_price: d("99"),
             typical_prices: vec![d("100")],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.twap, d("100"));
         assert_eq!(r.slippage_dollars, d("1"));
         assert!(r.beat_twap);
@@ -89,9 +99,11 @@ mod tests {
     fn twap_is_simple_arithmetic_mean() {
         // Three bars at 100, 110, 120 → TWAP = 110.
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("105"),
+            side: TradeSide::Long,
+            fill_price: d("105"),
             typical_prices: vec![d("100"), d("110"), d("120")],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.twap, d("110"));
         assert_eq!(r.slippage_dollars, d("5"));
     }
@@ -100,9 +112,11 @@ mod tests {
     fn twap_unlike_vwap_does_not_weight_volume() {
         // Same three bars. TWAP just averages them — no volume consideration.
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("100"),
+            side: TradeSide::Long,
+            fill_price: d("100"),
             typical_prices: vec![d("100"), d("100"), d("100")],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.twap, d("100"));
         assert_eq!(r.slippage_dollars, Decimal::ZERO);
         assert!(!r.beat_twap, "exact match is not a beat");
@@ -111,9 +125,11 @@ mod tests {
     #[test]
     fn long_filled_above_twap_is_unfavorable() {
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("115"),
+            side: TradeSide::Long,
+            fill_price: d("115"),
             typical_prices: vec![d("100"), d("110"), d("120")],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.slippage_dollars, d("-5"));
         assert!(!r.beat_twap);
     }
@@ -121,9 +137,11 @@ mod tests {
     #[test]
     fn short_filled_above_twap_is_favorable() {
         let r = compute(&TwapInput {
-            side: TradeSide::Short, fill_price: d("115"),
+            side: TradeSide::Short,
+            fill_price: d("115"),
             typical_prices: vec![d("100"), d("110"), d("120")],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.slippage_dollars, d("5"));
         assert!(r.beat_twap);
     }
@@ -131,9 +149,11 @@ mod tests {
     #[test]
     fn slippage_bps_uses_twap_as_denominator() {
         let r = compute(&TwapInput {
-            side: TradeSide::Long, fill_price: d("99"),
+            side: TradeSide::Long,
+            fill_price: d("99"),
             typical_prices: vec![d("100")],
-        }).unwrap();
+        })
+        .unwrap();
         // 1 / 100 × 10000 = 100bps.
         assert!((r.slippage_bps - 100.0).abs() < 1e-6);
     }

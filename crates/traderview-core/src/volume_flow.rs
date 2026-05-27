@@ -36,8 +36,11 @@ pub fn obv(bars: &[Bar]) -> Vec<f64> {
     let mut prev_close: Option<f64> = None;
     for b in bars {
         if let Some(prev) = prev_close {
-            if b.close > prev      { running += b.volume; }
-            else if b.close < prev { running -= b.volume; }
+            if b.close > prev {
+                running += b.volume;
+            } else if b.close < prev {
+                running -= b.volume;
+            }
             // close == prev → unchanged
         }
         // First bar contributes 0 — convention.
@@ -56,7 +59,9 @@ pub fn accumulation_distribution(bars: &[Bar]) -> Vec<f64> {
         // Money Flow Multiplier — set to 0 for zero-range bars (limit up/down).
         let mfm = if range > 0.0 {
             ((b.close - b.low) - (b.high - b.close)) / range
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         let mfv = mfm * b.volume;
         running += mfv;
         out.push(running);
@@ -69,7 +74,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     // ─── OBV ──────────────────────────────────────────────────────────
@@ -89,38 +99,29 @@ mod tests {
     #[test]
     fn obv_up_day_adds_volume() {
         // Bar 1: close 100. Bar 2: close 105 (up) with vol 500.
-        let out = obv(&[
-            b(101.0, 99.0, 100.0, 1000.0),
-            b(106.0, 99.0, 105.0, 500.0),
-        ]);
+        let out = obv(&[b(101.0, 99.0, 100.0, 1000.0), b(106.0, 99.0, 105.0, 500.0)]);
         assert_eq!(out[1], 500.0);
     }
 
     #[test]
     fn obv_down_day_subtracts_volume() {
-        let out = obv(&[
-            b(101.0, 99.0, 100.0, 1000.0),
-            b(100.0, 94.0, 95.0,  300.0),
-        ]);
+        let out = obv(&[b(101.0, 99.0, 100.0, 1000.0), b(100.0, 94.0, 95.0, 300.0)]);
         assert_eq!(out[1], -300.0);
     }
 
     #[test]
     fn obv_flat_close_unchanged() {
-        let out = obv(&[
-            b(101.0, 99.0, 100.0, 1000.0),
-            b(102.0, 98.0, 100.0,  500.0),
-        ]);
+        let out = obv(&[b(101.0, 99.0, 100.0, 1000.0), b(102.0, 98.0, 100.0, 500.0)]);
         assert_eq!(out[1], 0.0);
     }
 
     #[test]
     fn obv_accumulates_across_multiple_bars() {
         let out = obv(&[
-            b(101.0, 99.0,  100.0, 1000.0),
-            b(105.0, 99.0,  105.0,  500.0),    // +500
-            b(106.0, 102.0, 103.0,  200.0),    // -200
-            b(108.0, 102.0, 108.0,  100.0),    // +100
+            b(101.0, 99.0, 100.0, 1000.0),
+            b(105.0, 99.0, 105.0, 500.0),  // +500
+            b(106.0, 102.0, 103.0, 200.0), // -200
+            b(108.0, 102.0, 108.0, 100.0), // +100
         ]);
         assert_eq!(out, vec![0.0, 500.0, 300.0, 400.0]);
     }
@@ -159,7 +160,7 @@ mod tests {
         // Bar 2: close at low  → -500.
         let out = accumulation_distribution(&[
             b(110.0, 100.0, 110.0, 1000.0),
-            b(110.0, 100.0, 100.0,  500.0),
+            b(110.0, 100.0, 100.0, 500.0),
         ]);
         assert_eq!(out[0], 1000.0);
         assert_eq!(out[1], 500.0);
@@ -167,9 +168,9 @@ mod tests {
 
     #[test]
     fn obv_and_ad_same_length_as_input() {
-        let bars: Vec<Bar> = (1..=10).map(|i|
-            b(i as f64 + 1.0, i as f64, i as f64 + 0.5, 1000.0)
-        ).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| b(i as f64 + 1.0, i as f64, i as f64 + 0.5, 1000.0))
+            .collect();
         let o = obv(&bars);
         let a = accumulation_distribution(&bars);
         assert_eq!(o.len(), 10);

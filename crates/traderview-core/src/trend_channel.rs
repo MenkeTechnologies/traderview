@@ -26,20 +26,26 @@ pub struct ChannelReport {
     pub current_lower: f64,
 }
 
-pub fn fit(swings_high: &[SwingPoint], swings_low: &[SwingPoint], last_bar: usize)
-    -> Option<ChannelReport>
-{
-    if swings_high.len() < 2 || swings_low.len() < 2 { return None; }
+pub fn fit(
+    swings_high: &[SwingPoint],
+    swings_low: &[SwingPoint],
+    last_bar: usize,
+) -> Option<ChannelReport> {
+    if swings_high.len() < 2 || swings_low.len() < 2 {
+        return None;
+    }
     let (slope_h, intercept_h) = ols_fit(swings_high)?;
     let (slope_l, intercept_l) = ols_fit(swings_low)?;
     // Average the two slopes to enforce parallel channel.
     let slope = (slope_h + slope_l) / 2.0;
     // Re-fit intercepts using the averaged slope:
     //   intercept = mean(price) - slope × mean(bar_index)
-    let h_mean_x = swings_high.iter().map(|s| s.bar_index as f64).sum::<f64>() / swings_high.len() as f64;
+    let h_mean_x =
+        swings_high.iter().map(|s| s.bar_index as f64).sum::<f64>() / swings_high.len() as f64;
     let h_mean_y = swings_high.iter().map(|s| s.price).sum::<f64>() / swings_high.len() as f64;
     let upper_intercept = h_mean_y - slope * h_mean_x;
-    let l_mean_x = swings_low.iter().map(|s| s.bar_index as f64).sum::<f64>() / swings_low.len() as f64;
+    let l_mean_x =
+        swings_low.iter().map(|s| s.bar_index as f64).sum::<f64>() / swings_low.len() as f64;
     let l_mean_y = swings_low.iter().map(|s| s.price).sum::<f64>() / swings_low.len() as f64;
     let lower_intercept = l_mean_y - slope * l_mean_x;
     let current_upper = upper_intercept + slope * last_bar as f64;
@@ -58,7 +64,9 @@ pub fn fit(swings_high: &[SwingPoint], swings_low: &[SwingPoint], last_bar: usiz
 
 fn ols_fit(points: &[SwingPoint]) -> Option<(f64, f64)> {
     let n = points.len() as f64;
-    if n < 2.0 { return None; }
+    if n < 2.0 {
+        return None;
+    }
     let mean_x = points.iter().map(|p| p.bar_index as f64).sum::<f64>() / n;
     let mean_y = points.iter().map(|p| p.price).sum::<f64>() / n;
     let mut num = 0.0;
@@ -68,7 +76,9 @@ fn ols_fit(points: &[SwingPoint]) -> Option<(f64, f64)> {
         num += dx * (p.price - mean_y);
         den += dx * dx;
     }
-    if den == 0.0 { return None; }
+    if den == 0.0 {
+        return None;
+    }
     let slope = num / den;
     let intercept = mean_y - slope * mean_x;
     Some((slope, intercept))
@@ -79,7 +89,10 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64) -> SwingPoint {
-        SwingPoint { bar_index: idx, price }
+        SwingPoint {
+            bar_index: idx,
+            price,
+        }
     }
 
     #[test]

@@ -72,15 +72,17 @@ pub fn ema(values: &[f64], window: usize) -> Vec<Option<f64>> {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Macd {
-    pub line:      Vec<Option<f64>>,
-    pub signal:    Vec<Option<f64>>,
+    pub line: Vec<Option<f64>>,
+    pub signal: Vec<Option<f64>>,
     pub histogram: Vec<Option<f64>>,
 }
 
 pub fn macd(closes: &[f64], fast: usize, slow: usize, signal: usize) -> Macd {
     let ef = ema(closes, fast);
     let es = ema(closes, slow);
-    let line: Vec<Option<f64>> = ef.iter().zip(es.iter())
+    let line: Vec<Option<f64>> = ef
+        .iter()
+        .zip(es.iter())
         .map(|(a, b)| match (a, b) {
             (Some(a), Some(b)) => Some(a - b),
             _ => None,
@@ -94,13 +96,19 @@ pub fn macd(closes: &[f64], fast: usize, slow: usize, signal: usize) -> Macd {
     for (i, v) in sig_compact.iter().enumerate() {
         sig[offset + i] = *v;
     }
-    let histogram: Vec<Option<f64>> = line.iter().zip(sig.iter())
+    let histogram: Vec<Option<f64>> = line
+        .iter()
+        .zip(sig.iter())
         .map(|(l, s)| match (l, s) {
             (Some(l), Some(s)) => Some(l - s),
             _ => None,
         })
         .collect();
-    Macd { line, signal: sig, histogram }
+    Macd {
+        line,
+        signal: sig,
+        histogram,
+    }
 }
 
 // ===========================================================================
@@ -117,7 +125,11 @@ pub fn rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut loss = 0.0;
     for i in 1..=period {
         let d = closes[i] - closes[i - 1];
-        if d >= 0.0 { gain += d; } else { loss += -d; }
+        if d >= 0.0 {
+            gain += d;
+        } else {
+            loss += -d;
+        }
     }
     gain /= period as f64;
     loss /= period as f64;
@@ -132,7 +144,9 @@ pub fn rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     out
 }
 fn rsi_from(gain: f64, loss: f64) -> f64 {
-    if loss == 0.0 { return 100.0; }
+    if loss == 0.0 {
+        return 100.0;
+    }
     let rs = gain / loss;
     100.0 - 100.0 / (1.0 + rs)
 }
@@ -143,9 +157,9 @@ fn rsi_from(gain: f64, loss: f64) -> f64 {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Adx {
-    pub plus_di:  Vec<Option<f64>>,
+    pub plus_di: Vec<Option<f64>>,
     pub minus_di: Vec<Option<f64>>,
-    pub adx:      Vec<Option<f64>>,
+    pub adx: Vec<Option<f64>>,
 }
 
 pub fn adx(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Adx {
@@ -156,27 +170,25 @@ pub fn adx(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Adx {
     for i in 1..n {
         let up = highs[i] - highs[i - 1];
         let down = lows[i - 1] - lows[i];
-        plus_dm[i]  = if up > down && up > 0.0   { up   } else { 0.0 };
+        plus_dm[i] = if up > down && up > 0.0 { up } else { 0.0 };
         minus_dm[i] = if down > up && down > 0.0 { down } else { 0.0 };
         tr[i] = (highs[i] - lows[i])
             .max((highs[i] - closes[i - 1]).abs())
-            .max((lows[i]  - closes[i - 1]).abs());
+            .max((lows[i] - closes[i - 1]).abs());
     }
-    let smoothed = |v: &[f64]| -> Vec<Option<f64>> {
-        wilder_smooth(v, period)
-    };
-    let pdi_smooth  = smoothed(&plus_dm);
-    let mdi_smooth  = smoothed(&minus_dm);
-    let tr_smooth   = smoothed(&tr);
-    let mut plus_di  = vec![None; n];
+    let smoothed = |v: &[f64]| -> Vec<Option<f64>> { wilder_smooth(v, period) };
+    let pdi_smooth = smoothed(&plus_dm);
+    let mdi_smooth = smoothed(&minus_dm);
+    let tr_smooth = smoothed(&tr);
+    let mut plus_di = vec![None; n];
     let mut minus_di = vec![None; n];
-    let mut dx       = vec![None; n];
+    let mut dx = vec![None; n];
     for i in 0..n {
         if let (Some(p), Some(m), Some(t)) = (pdi_smooth[i], mdi_smooth[i], tr_smooth[i]) {
             if t > 0.0 {
                 let pd = 100.0 * p / t;
                 let md = 100.0 * m / t;
-                plus_di[i]  = Some(pd);
+                plus_di[i] = Some(pd);
                 minus_di[i] = Some(md);
                 if pd + md > 0.0 {
                     dx[i] = Some(100.0 * (pd - md).abs() / (pd + md));
@@ -185,7 +197,11 @@ pub fn adx(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Adx {
         }
     }
     let adx_series = wilder_smooth_optional(&dx, period);
-    Adx { plus_di, minus_di, adx: adx_series }
+    Adx {
+        plus_di,
+        minus_di,
+        adx: adx_series,
+    }
 }
 
 fn wilder_smooth(values: &[f64], period: usize) -> Vec<Option<f64>> {
@@ -213,7 +229,9 @@ fn wilder_smooth_optional(values: &[Option<f64>], period: usize) -> Vec<Option<f
             start = None;
             continue;
         }
-        if start.is_none() { start = Some(i); }
+        if start.is_none() {
+            start = Some(i);
+        }
         if let Some(s) = start {
             if i + 1 - s >= period {
                 let sum: f64 = values[s..=i].iter().map(|x| x.unwrap()).sum();
@@ -245,13 +263,27 @@ pub struct Stoch {
     pub d: Vec<Option<f64>>,
 }
 
-pub fn stochastic(highs: &[f64], lows: &[f64], closes: &[f64], k_period: usize, d_period: usize) -> Stoch {
+pub fn stochastic(
+    highs: &[f64],
+    lows: &[f64],
+    closes: &[f64],
+    k_period: usize,
+    d_period: usize,
+) -> Stoch {
     let n = highs.len();
     let mut k = vec![None; n];
     for i in 0..n {
-        if i + 1 < k_period { continue; }
-        let lo = lows[(i + 1 - k_period)..=i].iter().cloned().fold(f64::INFINITY, f64::min);
-        let hi = highs[(i + 1 - k_period)..=i].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        if i + 1 < k_period {
+            continue;
+        }
+        let lo = lows[(i + 1 - k_period)..=i]
+            .iter()
+            .cloned()
+            .fold(f64::INFINITY, f64::min);
+        let hi = highs[(i + 1 - k_period)..=i]
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
         if hi - lo > 0.0 {
             k[i] = Some(100.0 * (closes[i] - lo) / (hi - lo));
         }
@@ -273,8 +305,8 @@ pub fn stochastic(highs: &[f64], lows: &[f64], closes: &[f64], k_period: usize, 
 #[derive(Debug, Clone, Serialize)]
 pub struct Bollinger {
     pub middle: Vec<Option<f64>>,
-    pub upper:  Vec<Option<f64>>,
-    pub lower:  Vec<Option<f64>>,
+    pub upper: Vec<Option<f64>>,
+    pub lower: Vec<Option<f64>>,
 }
 
 pub fn bollinger(closes: &[f64], period: usize, k: f64) -> Bollinger {
@@ -293,7 +325,11 @@ pub fn bollinger(closes: &[f64], period: usize, k: f64) -> Bollinger {
             }
         }
     }
-    Bollinger { middle: m, upper, lower }
+    Bollinger {
+        middle: m,
+        upper,
+        lower,
+    }
 }
 
 // ===========================================================================
@@ -320,7 +356,7 @@ pub fn classic_pivots(high: f64, low: f64, close: f64) -> Pivots {
         r2: p + (high - low),
         s2: p - (high - low),
         r3: high + 2.0 * (p - low),
-        s3: low  - 2.0 * (high - p),
+        s3: low - 2.0 * (high - p),
     }
 }
 
@@ -388,8 +424,8 @@ mod tests {
 
     #[test]
     fn stochastic_at_high_is_100() {
-        let highs:  Vec<f64> = (1..=10).map(|x| x as f64).collect();
-        let lows:   Vec<f64> = (1..=10).map(|x| x as f64 - 0.5).collect();
+        let highs: Vec<f64> = (1..=10).map(|x| x as f64).collect();
+        let lows: Vec<f64> = (1..=10).map(|x| x as f64 - 0.5).collect();
         let closes: Vec<f64> = (1..=10).map(|x| x as f64).collect();
         let s = stochastic(&highs, &lows, &closes, 5, 3);
         assert!(s.k[9].unwrap() > 90.0);

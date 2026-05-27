@@ -55,7 +55,11 @@ pub enum OcrError {
 /// `model_dir` is the directory holding the PaddleOCR `.onnx` files. For the
 /// desktop Tauri build this is `$APP_DATA_DIR/traderview/models/paddleocr/`.
 /// PDF extraction ignores this parameter.
-pub fn extract(bytes: &[u8], mime: &str, model_dir: Option<&std::path::Path>) -> Result<OcrResult, OcrError> {
+pub fn extract(
+    bytes: &[u8],
+    mime: &str,
+    model_dir: Option<&std::path::Path>,
+) -> Result<OcrResult, OcrError> {
     let mime_lower = mime.to_ascii_lowercase();
     if mime_lower == "application/pdf" || mime_lower.starts_with("application/pdf") {
         let text = pdf::extract_text(bytes)?;
@@ -133,7 +137,10 @@ mod tests {
         let needs_img = OcrError::NeedsImage.to_string();
         assert!(needs_img.to_lowercase().contains("image") || needs_img.contains("JPG"));
 
-        let models_missing = OcrError::ModelsMissing { expected_dir: "/path/to/dir".into() }.to_string();
+        let models_missing = OcrError::ModelsMissing {
+            expected_dir: "/path/to/dir".into(),
+        }
+        .to_string();
         assert!(models_missing.contains("/path/to/dir"));
         assert!(models_missing.contains(".onnx"));
     }

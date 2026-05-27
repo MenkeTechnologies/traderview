@@ -7,7 +7,9 @@ use serde::Serialize;
 /// Pearson correlation of two equal-length series.
 pub fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
     let n = a.len().min(b.len());
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let mean_a = a[..n].iter().sum::<f64>() / n as f64;
     let mean_b = b[..n].iter().sum::<f64>() / n as f64;
     let mut cov = 0.0;
@@ -16,11 +18,13 @@ pub fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
     for i in 0..n {
         let da = a[i] - mean_a;
         let db = b[i] - mean_b;
-        cov   += da * db;
+        cov += da * db;
         var_a += da * da;
         var_b += db * db;
     }
-    if var_a == 0.0 || var_b == 0.0 { return None; }
+    if var_a == 0.0 || var_b == 0.0 {
+        return None;
+    }
     Some(cov / (var_a * var_b).sqrt())
 }
 
@@ -28,8 +32,11 @@ pub fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
 pub fn log_returns(prices: &[f64]) -> Vec<f64> {
     let mut out = Vec::with_capacity(prices.len().saturating_sub(1));
     for w in prices.windows(2) {
-        if w[0] > 0.0 && w[1] > 0.0 { out.push((w[1] / w[0]).ln()); }
-        else { out.push(0.0); }
+        if w[0] > 0.0 && w[1] > 0.0 {
+            out.push((w[1] / w[0]).ln());
+        } else {
+            out.push(0.0);
+        }
     }
     out
 }
@@ -37,7 +44,9 @@ pub fn log_returns(prices: &[f64]) -> Vec<f64> {
 /// Beta of a vs b (slope of OLS regression a_t = α + β·b_t + ε).
 pub fn beta(a: &[f64], b: &[f64]) -> Option<f64> {
     let n = a.len().min(b.len());
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let mean_a = a[..n].iter().sum::<f64>() / n as f64;
     let mean_b = b[..n].iter().sum::<f64>() / n as f64;
     let mut num = 0.0;
@@ -46,7 +55,11 @@ pub fn beta(a: &[f64], b: &[f64]) -> Option<f64> {
         num += (a[i] - mean_a) * (b[i] - mean_b);
         den += (b[i] - mean_b).powi(2);
     }
-    if den == 0.0 { None } else { Some(num / den) }
+    if den == 0.0 {
+        None
+    } else {
+        Some(num / den)
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -67,7 +80,9 @@ pub struct PairAnalysis {
 /// Z-score is normalized over the whole window.
 pub fn pair_analysis(prices_a: &[f64], prices_b: &[f64]) -> Option<PairAnalysis> {
     let n = prices_a.len().min(prices_b.len());
-    if n < 30 { return None; }
+    if n < 30 {
+        return None;
+    }
     let beta_v = beta(prices_a, prices_b)?;
     let mean_a = prices_a[..n].iter().sum::<f64>() / n as f64;
     let mean_b = prices_b[..n].iter().sum::<f64>() / n as f64;
@@ -79,17 +94,24 @@ pub fn pair_analysis(prices_a: &[f64], prices_b: &[f64]) -> Option<PairAnalysis>
     let mean_s = spread.iter().sum::<f64>() / n as f64;
     let var_s = spread.iter().map(|x| (x - mean_s).powi(2)).sum::<f64>() / n as f64;
     let sd_s = var_s.sqrt();
-    let z: Vec<f64> = spread.iter().map(|x| if sd_s > 0.0 { (x - mean_s) / sd_s } else { 0.0 }).collect();
+    let z: Vec<f64> = spread
+        .iter()
+        .map(|x| if sd_s > 0.0 { (x - mean_s) / sd_s } else { 0.0 })
+        .collect();
     let ra = log_returns(prices_a);
     let rb = log_returns(prices_b);
     let cor = pearson(&ra, &rb)?;
     Some(PairAnalysis {
-        correlation: cor, beta: beta_v, alpha: alpha_v,
-        mean_spread: mean_s, stdev_spread: sd_s,
+        correlation: cor,
+        beta: beta_v,
+        alpha: alpha_v,
+        mean_spread: mean_s,
+        stdev_spread: sd_s,
         latest_spread: *spread.last().unwrap_or(&0.0),
         latest_zscore: *z.last().unwrap_or(&0.0),
         samples: n,
-        spread_series: spread, zscore_series: z,
+        spread_series: spread,
+        zscore_series: z,
     })
 }
 

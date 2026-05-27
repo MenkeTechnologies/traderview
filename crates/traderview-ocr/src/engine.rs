@@ -51,7 +51,9 @@ pub fn run(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
     let reader = ImageReader::new(cursor)
         .with_guessed_format()
         .map_err(|e| OcrError::Decode(e.to_string()))?;
-    let img = reader.decode().map_err(|e| OcrError::Decode(e.to_string()))?;
+    let img = reader
+        .decode()
+        .map_err(|e| OcrError::Decode(e.to_string()))?;
 
     let engine = pure_onnx_ocr_sync::OcrEngineBuilder::new()
         .det_model_path(&det)
@@ -104,8 +106,12 @@ fn polygon_top_left(p: &pure_onnx_ocr_sync::Polygon<f64>) -> (f64, f64) {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     for c in p.exterior().coords() {
-        if c.x < min_x { min_x = c.x; }
-        if c.y < min_y { min_y = c.y; }
+        if c.x < min_x {
+            min_x = c.x;
+        }
+        if c.y < min_y {
+            min_y = c.y;
+        }
     }
     (min_x, min_y)
 }
@@ -123,7 +129,10 @@ mod tests {
     fn raw_text_holds_string_and_confidence() {
         // Smoke test on the struct — defends against accidental field
         // renames that would break engine→parse pipeline.
-        let r = RawText { text: "TOTAL $12.34".into(), confidence: 0.85 };
+        let r = RawText {
+            text: "TOTAL $12.34".into(),
+            confidence: 0.85,
+        };
         assert_eq!(r.text, "TOTAL $12.34");
         assert!((r.confidence - 0.85).abs() < 1e-6);
     }

@@ -67,9 +67,9 @@ pub struct QuarterlyForecast {
 /// Weekend / holiday shifts are NOT modeled — IRS publishes the exact date.
 pub fn due_dates(year: i32) -> [NaiveDate; 4] {
     [
-        NaiveDate::from_ymd_opt(year,     4, 15).unwrap(),
-        NaiveDate::from_ymd_opt(year,     6, 15).unwrap(),
-        NaiveDate::from_ymd_opt(year,     9, 15).unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 15).unwrap(),
+        NaiveDate::from_ymd_opt(year, 6, 15).unwrap(),
+        NaiveDate::from_ymd_opt(year, 9, 15).unwrap(),
         NaiveDate::from_ymd_opt(year + 1, 1, 15).unwrap(),
     ]
 }
@@ -89,28 +89,41 @@ pub fn forecast(input: &ForecastInput) -> QuarterlyForecast {
     // Project annual net profit. If 0 days passed, can't project — fall back
     // to YTD (will be $0).
     let projected_annual_net_profit = if input.days_through_ytd > 0 {
-        input.ytd_net_profit * Decimal::from(365)
-            / Decimal::from(input.days_through_ytd as i64)
+        input.ytd_net_profit * Decimal::from(365) / Decimal::from(input.days_through_ytd as i64)
     } else {
         input.ytd_net_profit
     };
 
-    let projected_annual_tax = projected_annual_net_profit
-        * input.estimated_effective_tax_rate;
+    let projected_annual_tax = projected_annual_net_profit * input.estimated_effective_tax_rate;
     let ninety_pct = Decimal::from_str("0.90").unwrap();
     let safe_harbor_current = projected_annual_tax * ninety_pct;
 
     let safe_harbor_target = safe_harbor_prior.min(safe_harbor_current);
-    let remaining = (safe_harbor_target - input.withholding_ytd)
-        .max(Decimal::ZERO);
+    let remaining = (safe_harbor_target - input.withholding_ytd).max(Decimal::ZERO);
     let per_q = remaining / Decimal::from(4);
 
     let dates = due_dates(input.tax_year);
     let quarters = [
-        Quarter { period_label: "Q1 (Jan-Mar)".into(), due_date: dates[0], estimated_payment: per_q },
-        Quarter { period_label: "Q2 (Apr-May)".into(), due_date: dates[1], estimated_payment: per_q },
-        Quarter { period_label: "Q3 (Jun-Aug)".into(), due_date: dates[2], estimated_payment: per_q },
-        Quarter { period_label: "Q4 (Sep-Dec)".into(), due_date: dates[3], estimated_payment: per_q },
+        Quarter {
+            period_label: "Q1 (Jan-Mar)".into(),
+            due_date: dates[0],
+            estimated_payment: per_q,
+        },
+        Quarter {
+            period_label: "Q2 (Apr-May)".into(),
+            due_date: dates[1],
+            estimated_payment: per_q,
+        },
+        Quarter {
+            period_label: "Q3 (Jun-Aug)".into(),
+            due_date: dates[2],
+            estimated_payment: per_q,
+        },
+        Quarter {
+            period_label: "Q4 (Sep-Dec)".into(),
+            due_date: dates[3],
+            estimated_payment: per_q,
+        },
     ];
 
     QuarterlyForecast {
@@ -128,7 +141,9 @@ pub fn forecast(input: &ForecastInput) -> QuarterlyForecast {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn base_input() -> ForecastInput {
         ForecastInput {
@@ -136,7 +151,7 @@ mod tests {
             prior_year_total_tax: d("20000"),
             prior_year_agi: d("100000"),
             ytd_net_profit: d("30000"),
-            days_through_ytd: 90,             // ~Q1 done
+            days_through_ytd: 90, // ~Q1 done
             estimated_effective_tax_rate: d("0.28"),
             withholding_ytd: Decimal::ZERO,
         }
@@ -161,7 +176,7 @@ mod tests {
     #[test]
     fn safe_harbor_uses_110_percent_above_high_agi() {
         let mut i = base_input();
-        i.prior_year_agi = d("200000");   // > $150k
+        i.prior_year_agi = d("200000"); // > $150k
         let f = forecast(&i);
         assert_eq!(f.safe_harbor_prior_year, d("22000.00"));
     }
@@ -186,8 +201,8 @@ mod tests {
     #[test]
     fn target_uses_current_year_when_prior_higher() {
         let mut i = base_input();
-        i.prior_year_total_tax = d("100000");   // huge prior tax
-        i.ytd_net_profit = d("1000");           // tiny current YTD
+        i.prior_year_total_tax = d("100000"); // huge prior tax
+        i.ytd_net_profit = d("1000"); // tiny current YTD
         let f = forecast(&i);
         // Current 90% should be much smaller now.
         assert!(f.safe_harbor_target < d("10000"));

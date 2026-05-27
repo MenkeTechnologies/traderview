@@ -50,14 +50,19 @@ pub struct CloseReport {
     pub qty_remaining_to_close: Decimal,
 }
 
-pub fn close(lots: &[CostLot], qty_to_close: Decimal, price_per_share: Decimal,
-    method: LotMethod) -> CloseReport
-{
+pub fn close(
+    lots: &[CostLot],
+    qty_to_close: Decimal,
+    price_per_share: Decimal,
+    method: LotMethod,
+) -> CloseReport {
     let mut report = CloseReport {
         qty_remaining_to_close: qty_to_close,
         ..Default::default()
     };
-    if lots.is_empty() || qty_to_close <= Decimal::ZERO { return report; }
+    if lots.is_empty() || qty_to_close <= Decimal::ZERO {
+        return report;
+    }
     let mut sorted: Vec<&CostLot> = lots.iter().collect();
     sorted.sort_by(|a, b| match method {
         LotMethod::Fifo => a.acquired.cmp(&b.acquired),
@@ -67,7 +72,9 @@ pub fn close(lots: &[CostLot], qty_to_close: Decimal, price_per_share: Decimal,
     });
     let mut remaining = qty_to_close;
     for lot in sorted {
-        if remaining <= Decimal::ZERO { break; }
+        if remaining <= Decimal::ZERO {
+            break;
+        }
         let take = remaining.min(lot.qty);
         let realized_per_share = price_per_share - lot.cost_per_share;
         let realized_total = realized_per_share * take;
@@ -90,14 +97,33 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
-    fn day(y: i32, m: u32, day: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, day).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
+    fn day(y: i32, m: u32, day: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, day).unwrap()
+    }
 
     fn lots() -> Vec<CostLot> {
         vec![
-            CostLot { lot_id: "A".into(), acquired: day(2024, 1, 15), qty: d("100"), cost_per_share: d("100") },
-            CostLot { lot_id: "B".into(), acquired: day(2024, 6, 10), qty: d("100"), cost_per_share: d("150") },
-            CostLot { lot_id: "C".into(), acquired: day(2025, 3, 5),  qty: d("100"), cost_per_share: d("125") },
+            CostLot {
+                lot_id: "A".into(),
+                acquired: day(2024, 1, 15),
+                qty: d("100"),
+                cost_per_share: d("100"),
+            },
+            CostLot {
+                lot_id: "B".into(),
+                acquired: day(2024, 6, 10),
+                qty: d("100"),
+                cost_per_share: d("150"),
+            },
+            CostLot {
+                lot_id: "C".into(),
+                acquired: day(2025, 3, 5),
+                qty: d("100"),
+                cost_per_share: d("125"),
+            },
         ]
     }
 

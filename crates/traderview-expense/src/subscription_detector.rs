@@ -30,23 +30,23 @@ impl Cadence {
     pub fn from_avg_days(days: f64) -> Self {
         // Tolerance windows around each cadence midpoint.
         match days {
-            d if (5.0..=10.0).contains(&d)     => Cadence::Weekly,
-            d if (25.0..=35.0).contains(&d)    => Cadence::Monthly,
-            d if (80.0..=100.0).contains(&d)   => Cadence::Quarterly,
-            d if (170.0..=190.0).contains(&d)  => Cadence::SemiAnnual,
-            d if (350.0..=380.0).contains(&d)  => Cadence::Annual,
+            d if (5.0..=10.0).contains(&d) => Cadence::Weekly,
+            d if (25.0..=35.0).contains(&d) => Cadence::Monthly,
+            d if (80.0..=100.0).contains(&d) => Cadence::Quarterly,
+            d if (170.0..=190.0).contains(&d) => Cadence::SemiAnnual,
+            d if (350.0..=380.0).contains(&d) => Cadence::Annual,
             _ => Cadence::Irregular,
         }
     }
 
     pub fn label(self) -> &'static str {
         match self {
-            Cadence::Weekly      => "weekly",
-            Cadence::Monthly     => "monthly",
-            Cadence::Quarterly   => "quarterly",
-            Cadence::SemiAnnual  => "semi-annual",
-            Cadence::Annual      => "annual",
-            Cadence::Irregular   => "irregular",
+            Cadence::Weekly => "weekly",
+            Cadence::Monthly => "monthly",
+            Cadence::Quarterly => "quarterly",
+            Cadence::SemiAnnual => "semi-annual",
+            Cadence::Annual => "annual",
+            Cadence::Irregular => "irregular",
         }
     }
 }
@@ -77,7 +77,11 @@ pub struct DetectOptions {
 
 impl Default for DetectOptions {
     fn default() -> Self {
-        Self { min_samples: 3, max_gap_cv: 0.20, max_amount_variation: 0.05 }
+        Self {
+            min_samples: 3,
+            max_gap_cv: 0.20,
+            max_amount_variation: 0.05,
+        }
     }
 }
 
@@ -88,28 +92,44 @@ pub fn detect(txns: &[ParsedTransaction], opts: DetectOptions) -> Vec<Subscripti
     let mut by_merch: HashMap<String, Vec<&ParsedTransaction>> = HashMap::new();
     for t in txns {
         // Only expenses (negative amounts) qualify. Refunds skew the median.
-        if t.amount >= Decimal::ZERO { continue; }
-        by_merch.entry(t.merchant_normalized.clone()).or_default().push(t);
+        if t.amount >= Decimal::ZERO {
+            continue;
+        }
+        by_merch
+            .entry(t.merchant_normalized.clone())
+            .or_default()
+            .push(t);
     }
 
     let mut out = Vec::new();
     for (merch, mut rows) in by_merch {
-        if rows.len() < opts.min_samples { continue; }
+        if rows.len() < opts.min_samples {
+            continue;
+        }
         rows.sort_by_key(|t| t.posted_at);
 
         // Gap days between consecutive postings.
         let mut gaps: Vec<f64> = Vec::with_capacity(rows.len() - 1);
         for w in rows.windows(2) {
             let d = (w[1].posted_at - w[0].posted_at).num_days() as f64;
-            if d > 0.0 { gaps.push(d); }
+            if d > 0.0 {
+                gaps.push(d);
+            }
         }
-        if gaps.is_empty() { continue; }
+        if gaps.is_empty() {
+            continue;
+        }
 
         let avg_gap = gaps.iter().sum::<f64>() / gaps.len() as f64;
-        let var = gaps.iter().map(|d| (d - avg_gap).powi(2)).sum::<f64>()
-            / gaps.len() as f64;
-        let cv = if avg_gap > 0.0 { var.sqrt() / avg_gap } else { f64::INFINITY };
-        if cv > opts.max_gap_cv { continue; }
+        let var = gaps.iter().map(|d| (d - avg_gap).powi(2)).sum::<f64>() / gaps.len() as f64;
+        let cv = if avg_gap > 0.0 {
+            var.sqrt() / avg_gap
+        } else {
+            f64::INFINITY
+        };
+        if cv > opts.max_gap_cv {
+            continue;
+        }
 
         // Amount stability — abs() each since expenses are negative.
         let mut amounts: Vec<Decimal> = rows.iter().map(|t| t.amount.abs()).collect();
@@ -122,13 +142,14 @@ pub fn detect(txns: &[ParsedTransaction], opts: DetectOptions) -> Vec<Subscripti
         } else {
             decimal_to_f64(max - min) / decimal_to_f64(median)
         };
-        if variation > opts.max_amount_variation { continue; }
+        if variation > opts.max_amount_variation {
+            continue;
+        }
 
         let cadence = Cadence::from_avg_days(avg_gap);
         // Periods per year = 365.25 / avg_gap; multiplied by median = projected.
         let periods_per_year = if avg_gap > 0.0 { 365.25 / avg_gap } else { 0.0 };
-        let projected = median
-            * Decimal::try_from(periods_per_year).unwrap_or(Decimal::ZERO);
+        let projected = median * Decimal::try_from(periods_per_year).unwrap_or(Decimal::ZERO);
 
         out.push(Subscription {
             merchant: merch,
@@ -157,7 +178,9 @@ mod tests {
     use chrono::Duration;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn tx(merchant: &str, amount: &str, days_offset: i64) -> ParsedTransaction {
         let base = Utc::now() - Duration::days(365);
@@ -226,19 +249,24 @@ mod tests {
     fn rejects_high_amount_variation() {
         // Monthly cadence but amounts swing 50% — not a subscription.
         let amounts = ["-10", "-20", "-15", "-8", "-25"];
-        let txns: Vec<_> = amounts.iter().enumerate()
+        let txns: Vec<_> = amounts
+            .iter()
+            .enumerate()
             .map(|(i, a)| tx("variable charge", a, (i * 30) as i64))
             .collect();
         let out = detect(&txns, DetectOptions::default());
-        assert!(out.is_empty(),
-            "amount swings should disqualify the recurring detector");
+        assert!(
+            out.is_empty(),
+            "amount swings should disqualify the recurring detector"
+        );
     }
 
     #[test]
     fn rejects_high_gap_variance() {
         // Same amount but irregular gaps (5, 60, 5, 60 days).
         let offsets = [0, 5, 65, 70, 130];
-        let txns: Vec<_> = offsets.iter()
+        let txns: Vec<_> = offsets
+            .iter()
             .map(|o| tx("bursty merchant", "-10.00", *o))
             .collect();
         let out = detect(&txns, DetectOptions::default());
@@ -259,9 +287,13 @@ mod tests {
     fn sorts_results_by_projected_cost_descending() {
         let mut txns = Vec::new();
         // Cheap monthly $5.
-        for i in 0..6 { txns.push(tx("cheap", "-5.00", (i * 30) as i64)); }
+        for i in 0..6 {
+            txns.push(tx("cheap", "-5.00", (i * 30) as i64));
+        }
         // Expensive monthly $99.
-        for i in 0..6 { txns.push(tx("expensive", "-99.00", (i * 30) as i64)); }
+        for i in 0..6 {
+            txns.push(tx("expensive", "-99.00", (i * 30) as i64));
+        }
         let out = detect(&txns, DetectOptions::default());
         assert_eq!(out.len(), 2);
         assert_eq!(out[0].merchant, "expensive");
@@ -270,11 +302,11 @@ mod tests {
 
     #[test]
     fn cadence_classification_boundaries() {
-        assert_eq!(Cadence::from_avg_days(7.0),   Cadence::Weekly);
-        assert_eq!(Cadence::from_avg_days(30.0),  Cadence::Monthly);
-        assert_eq!(Cadence::from_avg_days(90.0),  Cadence::Quarterly);
+        assert_eq!(Cadence::from_avg_days(7.0), Cadence::Weekly);
+        assert_eq!(Cadence::from_avg_days(30.0), Cadence::Monthly);
+        assert_eq!(Cadence::from_avg_days(90.0), Cadence::Quarterly);
         assert_eq!(Cadence::from_avg_days(180.0), Cadence::SemiAnnual);
         assert_eq!(Cadence::from_avg_days(365.0), Cadence::Annual);
-        assert_eq!(Cadence::from_avg_days(45.0),  Cadence::Irregular);
+        assert_eq!(Cadence::from_avg_days(45.0), Cadence::Irregular);
     }
 }

@@ -52,11 +52,21 @@ pub struct ReviewStats {
     pub last_review_at: Option<DateTime<Utc>>,
 }
 
-type NeedsReviewSqlRow = (Uuid, String, Decimal, Decimal, Option<DateTime<Utc>>, String);
+type NeedsReviewSqlRow = (
+    Uuid,
+    String,
+    Decimal,
+    Decimal,
+    Option<DateTime<Utc>>,
+    String,
+);
 
-pub async fn needs_review(pool: &PgPool, user_id: Uuid, account_id: Uuid, limit: i64)
-    -> anyhow::Result<Vec<NeedsReviewRow>>
-{
+pub async fn needs_review(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<NeedsReviewRow>> {
     let rows: Vec<NeedsReviewSqlRow> = sqlx::query_as(
         "SELECT t.id, t.symbol, t.net_pnl, t.risk_amount, t.closed_at, t.side::text
            FROM trades t
@@ -69,22 +79,32 @@ pub async fn needs_review(pool: &PgPool, user_id: Uuid, account_id: Uuid, limit:
             AND r.id IS NULL
           ORDER BY ABS(t.net_pnl / t.risk_amount) DESC
           LIMIT $4",
-    ).bind(user_id).bind(account_id).bind(R_THRESHOLD).bind(limit)
-     .fetch_all(pool).await?;
-    Ok(rows.into_iter().map(|(id, sym, pnl, risk, closed, side)| {
-        let net = dec(pnl);
-        let r = dec(risk);
-        NeedsReviewRow {
-            trade_id: id, symbol: sym, net_pnl: net, risk_amount: r,
-            r_multiple: if r > 0.0 { net / r } else { 0.0 },
-            closed_at: closed, side,
-        }
-    }).collect())
+    )
+    .bind(user_id)
+    .bind(account_id)
+    .bind(R_THRESHOLD)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|(id, sym, pnl, risk, closed, side)| {
+            let net = dec(pnl);
+            let r = dec(risk);
+            NeedsReviewRow {
+                trade_id: id,
+                symbol: sym,
+                net_pnl: net,
+                risk_amount: r,
+                r_multiple: if r > 0.0 { net / r } else { 0.0 },
+                closed_at: closed,
+                side,
+            }
+        })
+        .collect())
 }
 
-pub async fn stats(pool: &PgPool, user_id: Uuid, account_id: Uuid)
-    -> anyhow::Result<ReviewStats>
-{
+pub async fn stats(pool: &PgPool, user_id: Uuid, account_id: Uuid) -> anyhow::Result<ReviewStats> {
     let (total, reviewed, last): (i64, i64, Option<DateTime<Utc>>) = sqlx::query_as(
         "WITH high_r AS (
             SELECT id FROM trades
@@ -102,12 +122,23 @@ pub async fn stats(pool: &PgPool, user_id: Uuid, account_id: Uuid)
             (SELECT MAX(completed_at) FROM trade_reviews r
               WHERE r.user_id = $1
                 AND r.trade_id IN (SELECT id FROM high_r))",
-    ).bind(user_id).bind(account_id).bind(R_THRESHOLD)
-     .fetch_one(pool).await?;
-    let pct = if total > 0 { reviewed as f64 / total as f64 * 100.0 } else { 0.0 };
+    )
+    .bind(user_id)
+    .bind(account_id)
+    .bind(R_THRESHOLD)
+    .fetch_one(pool)
+    .await?;
+    let pct = if total > 0 {
+        reviewed as f64 / total as f64 * 100.0
+    } else {
+        0.0
+    };
     Ok(ReviewStats {
-        total_high_r_trades: total, reviewed,
-        pending: total - reviewed, completion_pct: pct, last_review_at: last,
+        total_high_r_trades: total,
+        reviewed,
+        pending: total - reviewed,
+        completion_pct: pct,
+        last_review_at: last,
     })
 }
 
@@ -117,22 +148,34 @@ pub async fn list(pool: &PgPool, user_id: Uuid, limit: i64) -> anyhow::Result<Ve
                 would_change, mood_at_exit, setup_tag, completed_at
            FROM trade_reviews WHERE user_id = $1
           ORDER BY completed_at DESC LIMIT $2",
-    ).bind(user_id).bind(limit).fetch_all(pool).await?)
+    )
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
-pub async fn for_trade(pool: &PgPool, user_id: Uuid, trade_id: Uuid)
-    -> anyhow::Result<Option<TradeReview>>
-{
+pub async fn for_trade(
+    pool: &PgPool,
+    user_id: Uuid,
+    trade_id: Uuid,
+) -> anyhow::Result<Option<TradeReview>> {
     Ok(sqlx::query_as(
         "SELECT id, user_id, trade_id, entry_per_plan, exit_per_plan,
                 would_change, mood_at_exit, setup_tag, completed_at
            FROM trade_reviews WHERE user_id = $1 AND trade_id = $2",
-    ).bind(user_id).bind(trade_id).fetch_optional(pool).await?)
+    )
+    .bind(user_id)
+    .bind(trade_id)
+    .fetch_optional(pool)
+    .await?)
 }
 
-pub async fn upsert(pool: &PgPool, user_id: Uuid, dto: &ReviewInput)
-    -> anyhow::Result<TradeReview>
-{
+pub async fn upsert(
+    pool: &PgPool,
+    user_id: Uuid,
+    dto: &ReviewInput,
+) -> anyhow::Result<TradeReview> {
     Ok(sqlx::query_as(
         "INSERT INTO trade_reviews
             (user_id, trade_id, entry_per_plan, exit_per_plan,
@@ -148,16 +191,29 @@ pub async fn upsert(pool: &PgPool, user_id: Uuid, dto: &ReviewInput)
          RETURNING id, user_id, trade_id, entry_per_plan, exit_per_plan,
                    would_change, mood_at_exit, setup_tag, completed_at",
     )
-    .bind(user_id).bind(dto.trade_id)
-    .bind(dto.entry_per_plan).bind(dto.exit_per_plan)
-    .bind(dto.would_change.as_deref()).bind(dto.mood_at_exit)
+    .bind(user_id)
+    .bind(dto.trade_id)
+    .bind(dto.entry_per_plan)
+    .bind(dto.exit_per_plan)
+    .bind(dto.would_change.as_deref())
+    .bind(dto.mood_at_exit)
     .bind(dto.setup_tag.as_deref())
-    .fetch_one(pool).await?)
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, trade_id: Uuid) -> anyhow::Result<bool> {
-    Ok(sqlx::query("DELETE FROM trade_reviews WHERE user_id = $1 AND trade_id = $2")
-        .bind(user_id).bind(trade_id).execute(pool).await?.rows_affected() > 0)
+    Ok(
+        sqlx::query("DELETE FROM trade_reviews WHERE user_id = $1 AND trade_id = $2")
+            .bind(user_id)
+            .bind(trade_id)
+            .execute(pool)
+            .await?
+            .rows_affected()
+            > 0,
+    )
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

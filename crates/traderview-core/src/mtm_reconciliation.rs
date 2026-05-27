@@ -40,9 +40,9 @@ pub struct Mismatch {
 pub enum MismatchKind {
     QtyDiffers,
     PriceDiffers,
-    MissingInternal,    // broker has position, internal doesn't
-    MissingBroker,      // internal has position, broker doesn't
-    ValueDiffers,       // qty + price both match but value differs (e.g. fees)
+    MissingInternal, // broker has position, internal doesn't
+    MissingBroker,   // internal has position, broker doesn't
+    ValueDiffers,    // qty + price both match but value differs (e.g. fees)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -82,9 +82,13 @@ pub fn reconcile(
                 let i_value = i.qty * i.mark_price;
                 let diff = b_value - i_value;
                 if diff.abs() > threshold_dollars {
-                    let kind = if b.qty != i.qty { MismatchKind::QtyDiffers }
-                        else if b.mark_price != i.mark_price { MismatchKind::PriceDiffers }
-                        else { MismatchKind::ValueDiffers };
+                    let kind = if b.qty != i.qty {
+                        MismatchKind::QtyDiffers
+                    } else if b.mark_price != i.mark_price {
+                        MismatchKind::PriceDiffers
+                    } else {
+                        MismatchKind::ValueDiffers
+                    };
                     report.mismatches.push(Mismatch {
                         symbol: b.symbol.clone(),
                         broker_qty: b.qty,
@@ -124,12 +128,22 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn bp(sym: &str, q: &str, p: &str) -> BrokerPosition {
-        BrokerPosition { symbol: sym.into(), qty: d(q), mark_price: d(p) }
+        BrokerPosition {
+            symbol: sym.into(),
+            qty: d(q),
+            mark_price: d(p),
+        }
     }
     fn ip(sym: &str, q: &str, p: &str) -> InternalPosition {
-        InternalPosition { symbol: sym.into(), qty: d(q), mark_price: d(p) }
+        InternalPosition {
+            symbol: sym.into(),
+            qty: d(q),
+            mark_price: d(p),
+        }
     }
 
     #[test]
@@ -174,21 +188,13 @@ mod tests {
 
     #[test]
     fn missing_internal_flagged() {
-        let r = reconcile(
-            &[bp("AAPL", "100", "150")],
-            &[],
-            d("0.01"),
-        );
+        let r = reconcile(&[bp("AAPL", "100", "150")], &[], d("0.01"));
         assert_eq!(r.mismatches[0].kind, MismatchKind::MissingInternal);
     }
 
     #[test]
     fn missing_broker_flagged() {
-        let r = reconcile(
-            &[],
-            &[ip("AAPL", "100", "150")],
-            d("0.01"),
-        );
+        let r = reconcile(&[], &[ip("AAPL", "100", "150")], d("0.01"));
         assert_eq!(r.mismatches[0].kind, MismatchKind::MissingBroker);
     }
 
@@ -207,8 +213,8 @@ mod tests {
     #[test]
     fn total_difference_signed() {
         let r = reconcile(
-            &[bp("AAPL", "100", "150")],         // $15,000 broker
-            &[ip("AAPL", "100", "140")],         // $14,000 internal
+            &[bp("AAPL", "100", "150")], // $15,000 broker
+            &[ip("AAPL", "100", "140")], // $14,000 internal
             d("0.01"),
         );
         assert_eq!(r.total_difference, d("1000"));
@@ -223,6 +229,6 @@ mod tests {
         );
         // TSLA missing internal + MSFT missing broker = 2 mismatches.
         assert_eq!(r.mismatches.len(), 2);
-        assert_eq!(r.matched_count, 1);    // AAPL only
+        assert_eq!(r.matched_count, 1); // AAPL only
     }
 }

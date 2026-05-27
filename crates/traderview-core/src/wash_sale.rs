@@ -19,7 +19,7 @@ pub struct ClosingTrade {
     pub trade_id: Uuid,
     pub symbol: String,
     pub closed_at: NaiveDate,
-    pub net_pnl: Decimal,           // negative if loss
+    pub net_pnl: Decimal, // negative if loss
     pub qty: Decimal,
 }
 
@@ -50,18 +50,21 @@ const WASH_WINDOW_DAYS: i64 = 30;
 /// For each LOSING closing trade, find every replacement buy of the
 /// same symbol within ±30 days. Return one WashHit per qualifying
 /// (losing_trade, replacement_exec) pair.
-pub fn detect_hits(
-    closings: &[ClosingTrade],
-    openings: &[OpeningExecution],
-) -> Vec<WashHit> {
+pub fn detect_hits(closings: &[ClosingTrade], openings: &[OpeningExecution]) -> Vec<WashHit> {
     let mut hits = Vec::new();
     for closing in closings {
-        if closing.net_pnl >= Decimal::ZERO { continue; }
+        if closing.net_pnl >= Decimal::ZERO {
+            continue;
+        }
         let loss = -closing.net_pnl;
         for open in openings {
-            if open.symbol != closing.symbol { continue; }
+            if open.symbol != closing.symbol {
+                continue;
+            }
             let days = (open.executed_at - closing.closed_at).num_days();
-            if days.abs() > WASH_WINDOW_DAYS { continue; }
+            if days.abs() > WASH_WINDOW_DAYS {
+                continue;
+            }
             // Disallowed loss is min(loss, opening_qty × per-share loss).
             // Without per-share basis we approximate: cap at loss × (min
             // qty / closing qty) — straightforward proportion.
@@ -69,7 +72,8 @@ pub fn detect_hits(
                 Decimal::ZERO
             } else {
                 (open.qty.min(closing.qty) / closing.qty)
-                    .max(Decimal::ZERO).min(Decimal::ONE)
+                    .max(Decimal::ZERO)
+                    .min(Decimal::ONE)
             };
             let disallowed = loss * qty_ratio;
             hits.push(WashHit {
@@ -96,7 +100,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn day(y: i32, m: u32, d_: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, d_).unwrap()
     }
@@ -131,7 +137,7 @@ mod tests {
     #[test]
     fn replacement_buy_inside_window_flags() {
         let closings = vec![losing_close("AAPL", day(2026, 6, 1), "-500", "100")];
-        let openings = vec![open("AAPL", day(2026, 6, 15), "100")];   // +14 days
+        let openings = vec![open("AAPL", day(2026, 6, 15), "100")]; // +14 days
         let hits = detect_hits(&closings, &openings);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].days_offset, 14);
@@ -142,7 +148,7 @@ mod tests {
     #[test]
     fn replacement_buy_outside_window_does_not_flag() {
         let closings = vec![losing_close("AAPL", day(2026, 6, 1), "-500", "100")];
-        let openings = vec![open("AAPL", day(2026, 7, 5), "100")];    // +34 days
+        let openings = vec![open("AAPL", day(2026, 7, 5), "100")]; // +34 days
         let hits = detect_hits(&closings, &openings);
         assert!(hits.is_empty());
     }
@@ -152,7 +158,7 @@ mod tests {
         // The wash-sale window is BIDIRECTIONAL ±30 days — buying
         // 20 days before the loss-sell also disqualifies.
         let closings = vec![losing_close("AAPL", day(2026, 6, 30), "-500", "100")];
-        let openings = vec![open("AAPL", day(2026, 6, 10), "100")];   // -20 days
+        let openings = vec![open("AAPL", day(2026, 6, 10), "100")]; // -20 days
         let hits = detect_hits(&closings, &openings);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].days_offset, -20);
@@ -189,7 +195,7 @@ mod tests {
     #[test]
     fn boundary_exactly_at_30_days_flags() {
         let closings = vec![losing_close("AAPL", day(2026, 6, 1), "-500", "100")];
-        let openings = vec![open("AAPL", day(2026, 7, 1), "100")];   // +30 days
+        let openings = vec![open("AAPL", day(2026, 7, 1), "100")]; // +30 days
         let hits = detect_hits(&closings, &openings);
         assert_eq!(hits.len(), 1, "30 days exactly is INSIDE the window");
     }
@@ -198,8 +204,8 @@ mod tests {
     fn total_disallowed_sums_correctly() {
         let losing = losing_close("AAPL", day(2026, 6, 1), "-500", "100");
         let openings = vec![
-            open("AAPL", day(2026, 6, 5),  "100"),     // disallows 500
-            open("AAPL", day(2026, 6, 20), "100"),     // disallows another 500
+            open("AAPL", day(2026, 6, 5), "100"),  // disallows 500
+            open("AAPL", day(2026, 6, 20), "100"), // disallows another 500
         ];
         let hits = detect_hits(&[losing], &openings);
         assert_eq!(total_disallowed(&hits), d("1000"));

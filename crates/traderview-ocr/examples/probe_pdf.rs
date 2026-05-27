@@ -11,7 +11,9 @@ fn main() {
         match doc.extract_text(&[p]) {
             Ok(t) => {
                 println!("--- page {p} ---");
-                for line in t.lines().take(80) { println!("{line}"); }
+                for line in t.lines().take(80) {
+                    println!("{line}");
+                }
             }
             Err(e) => println!("page {p} err: {e}"),
         }

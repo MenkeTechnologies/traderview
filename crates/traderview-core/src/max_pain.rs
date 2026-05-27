@@ -33,7 +33,9 @@ pub struct MaxPainReport {
 
 pub fn compute(chain: &[StrikeOi]) -> MaxPainReport {
     let mut report = MaxPainReport::default();
-    if chain.is_empty() { return report; }
+    if chain.is_empty() {
+        return report;
+    }
     let mut min_pain = f64::INFINITY;
     let mut min_strike = chain[0].strike;
     for candidate in chain {
@@ -65,7 +67,11 @@ mod tests {
     use super::*;
 
     fn s(strike: f64, call_oi: u64, put_oi: u64) -> StrikeOi {
-        StrikeOi { strike, call_oi, put_oi }
+        StrikeOi {
+            strike,
+            call_oi,
+            put_oi,
+        }
     }
 
     #[test]
@@ -79,16 +85,18 @@ mod tests {
     fn single_strike_max_pain_is_that_strike() {
         let r = compute(&[s(100.0, 100, 100)]);
         assert_eq!(r.max_pain_strike, 100.0);
-        assert_eq!(r.min_total_pain, 0.0,
-            "no other strikes → pain at the only candidate = 0");
+        assert_eq!(
+            r.min_total_pain, 0.0,
+            "no other strikes → pain at the only candidate = 0"
+        );
     }
 
     #[test]
     fn symmetric_chain_max_pain_at_center() {
         // Symmetric OI around 100 → max pain should be at 100.
         let chain = vec![
-            s(90.0,  100, 100),
-            s(95.0,  100, 100),
+            s(90.0, 100, 100),
+            s(95.0, 100, 100),
             s(100.0, 100, 100),
             s(105.0, 100, 100),
             s(110.0, 100, 100),
@@ -101,10 +109,7 @@ mod tests {
     fn heavy_calls_at_low_strikes_max_pain_pulls_down() {
         // Lots of call OI at $90 → if price closes at $110, those calls
         // would pay out massively. Max pain wants to MINIMIZE that.
-        let chain = vec![
-            s(90.0,  10_000, 0),
-            s(110.0, 100,    100),
-        ];
+        let chain = vec![s(90.0, 10_000, 0), s(110.0, 100, 100)];
         let r = compute(&compute_chain(&chain));
         // Either $90 or $110 — at $90, calls pay 0, put at $110 pays 20×100.
         // At $110, calls at $90 pay 20×10,000=200,000. Min is at $90.
@@ -113,10 +118,7 @@ mod tests {
 
     #[test]
     fn heavy_puts_at_high_strikes_max_pain_pulls_up() {
-        let chain = vec![
-            s(90.0,  100, 100),
-            s(110.0, 0,   10_000),
-        ];
+        let chain = vec![s(90.0, 100, 100), s(110.0, 0, 10_000)];
         let r = compute(&compute_chain(&chain));
         // At $90 puts pay 20×10,000=200,000. At $110 they pay 0. Min at $110.
         assert_eq!(r.max_pain_strike, 110.0);
@@ -141,5 +143,7 @@ mod tests {
         assert_eq!(r.min_total_pain, 1000.0);
     }
 
-    fn compute_chain(c: &[StrikeOi]) -> Vec<StrikeOi> { c.to_vec() }
+    fn compute_chain(c: &[StrikeOi]) -> Vec<StrikeOi> {
+        c.to_vec()
+    }
 }

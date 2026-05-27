@@ -29,7 +29,9 @@ struct CreateBody {
     #[serde(default = "default_ccy")]
     base_currency: String,
 }
-fn default_ccy() -> String { "USD".into() }
+fn default_ccy() -> String {
+    "USD".into()
+}
 
 async fn create(
     State(s): State<AppState>,
@@ -37,9 +39,15 @@ async fn create(
     Json(body): Json<CreateBody>,
 ) -> Result<Json<Account>, ApiError> {
     Ok(Json(
-        traderview_db::accounts::create(&s.pool, user.id, &body.broker, &body.name, &body.base_currency)
-            .await
-            .map_err(ApiError::Internal)?,
+        traderview_db::accounts::create(
+            &s.pool,
+            user.id,
+            &body.broker,
+            &body.name,
+            &body.base_currency,
+        )
+        .await
+        .map_err(ApiError::Internal)?,
     ))
 }
 

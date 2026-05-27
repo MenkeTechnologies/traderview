@@ -70,8 +70,12 @@ mod tests {
         // Total PnL = $10 (long) + $0 (short) = $10.
         // All of it attributable to spread movement.
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 110.0, long_qty: 1.0,
-            short_entry: 90.0, short_exit: 90.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 110.0,
+            long_qty: 1.0,
+            short_entry: 90.0,
+            short_exit: 90.0,
+            short_qty: 1.0,
         };
         let r = attribute(&t);
         assert_eq!(r.long_leg_pnl, 10.0);
@@ -86,8 +90,12 @@ mod tests {
         // Both go up by $10 → spread unchanged.
         // Long +$10, Short -$10. Net = 0.
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 110.0, long_qty: 1.0,
-            short_entry: 90.0, short_exit: 100.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 110.0,
+            long_qty: 1.0,
+            short_entry: 90.0,
+            short_exit: 100.0,
+            short_qty: 1.0,
         };
         let r = attribute(&t);
         assert_eq!(r.total_pnl, 0.0);
@@ -99,8 +107,12 @@ mod tests {
     #[test]
     fn short_leg_negative_pnl_when_short_price_rises() {
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 100.0, long_qty: 1.0,
-            short_entry: 90.0, short_exit: 100.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 100.0,
+            long_qty: 1.0,
+            short_entry: 90.0,
+            short_exit: 100.0,
+            short_qty: 1.0,
         };
         let r = attribute(&t);
         assert_eq!(r.short_leg_pnl, -10.0);
@@ -109,8 +121,12 @@ mod tests {
     #[test]
     fn short_leg_positive_pnl_when_short_price_falls() {
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 100.0, long_qty: 1.0,
-            short_entry: 100.0, short_exit: 90.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 100.0,
+            long_qty: 1.0,
+            short_entry: 100.0,
+            short_exit: 90.0,
+            short_qty: 1.0,
         };
         let r = attribute(&t);
         assert_eq!(r.short_leg_pnl, 10.0);
@@ -119,11 +135,17 @@ mod tests {
     #[test]
     fn quantity_scales_pnl_linearly() {
         let one_share = PairTrade {
-            long_entry: 100.0, long_exit: 110.0, long_qty: 1.0,
-            short_entry: 90.0, short_exit: 85.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 110.0,
+            long_qty: 1.0,
+            short_entry: 90.0,
+            short_exit: 85.0,
+            short_qty: 1.0,
         };
         let ten_share = PairTrade {
-            long_qty: 10.0, short_qty: 10.0, ..one_share.clone()
+            long_qty: 10.0,
+            short_qty: 10.0,
+            ..one_share.clone()
         };
         let a = attribute(&one_share);
         let b = attribute(&ten_share);
@@ -134,8 +156,12 @@ mod tests {
     fn min_qty_used_for_spread_contribution() {
         // Asymmetric position size — long 10, short 5. Spread × min(10,5)=5.
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 110.0, long_qty: 10.0,
-            short_entry: 100.0, short_exit: 105.0, short_qty: 5.0,
+            long_entry: 100.0,
+            long_exit: 110.0,
+            long_qty: 10.0,
+            short_entry: 100.0,
+            short_exit: 105.0,
+            short_qty: 5.0,
         };
         let r = attribute(&t);
         // Spread change = (110-105) - (100-100) = 5. Spread contrib = 5 × 5 = 25.
@@ -146,12 +172,15 @@ mod tests {
     fn spread_shrink_attributes_negative_spread_contribution() {
         // Long $100 → $95 (-5). Short $90 → $90 (0). Spread $10 → $5 (shrink -5).
         let t = PairTrade {
-            long_entry: 100.0, long_exit: 95.0, long_qty: 1.0,
-            short_entry: 90.0, short_exit: 90.0, short_qty: 1.0,
+            long_entry: 100.0,
+            long_exit: 95.0,
+            long_qty: 1.0,
+            short_entry: 90.0,
+            short_exit: 90.0,
+            short_qty: 1.0,
         };
         let r = attribute(&t);
         assert_eq!(r.spread_change, -5.0);
         assert_eq!(r.spread_contribution, -5.0);
     }
-
 }

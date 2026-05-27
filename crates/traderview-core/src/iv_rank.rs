@@ -42,7 +42,9 @@ pub fn compute(current_iv: f64, history: &[f64]) -> IvRankReport {
     let range = high - low;
     let iv_rank = if range > 0.0 {
         ((current_iv - low) / range * 100.0).clamp(0.0, 100.0)
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let le_count = history.iter().filter(|v| **v <= current_iv).count();
     let iv_percentile = le_count as f64 / history.len() as f64 * 100.0;
     IvRankReport {
@@ -61,14 +63,22 @@ pub fn compute(current_iv: f64, history: &[f64]) -> IvRankReport {
 ///   - IV rank 25-75: normal
 ///   - IV rank > 75: high (favor net-credit strategies, sell premium)
 pub fn classify(rank: f64) -> IvEnvironment {
-    if rank < 25.0 { IvEnvironment::Low }
-    else if rank < 75.0 { IvEnvironment::Normal }
-    else { IvEnvironment::High }
+    if rank < 25.0 {
+        IvEnvironment::Low
+    } else if rank < 75.0 {
+        IvEnvironment::Normal
+    } else {
+        IvEnvironment::High
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum IvEnvironment { Low, Normal, High }
+pub enum IvEnvironment {
+    Low,
+    Normal,
+    High,
+}
 
 #[cfg(test)]
 mod tests {
@@ -85,7 +95,10 @@ mod tests {
     fn current_at_52w_low_rank_zero() {
         let r = compute(0.10, &[0.10, 0.20, 0.30, 0.40]);
         assert_eq!(r.iv_rank, 0.0);
-        assert!(r.iv_percentile > 0.0, "percentile reflects the obs at current");
+        assert!(
+            r.iv_percentile > 0.0,
+            "percentile reflects the obs at current"
+        );
     }
 
     #[test]

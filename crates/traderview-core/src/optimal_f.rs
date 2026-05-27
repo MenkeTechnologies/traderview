@@ -56,7 +56,7 @@ pub fn compute(returns: &[f64]) -> OptimalFReport {
 
     // Grid search f from 0.001 to 0.999.
     let mut best_f = 0.0_f64;
-    let mut best_twr = 1.0_f64;        // f=0 → wealth never moves
+    let mut best_twr = 1.0_f64; // f=0 → wealth never moves
     let mut f = 0.001_f64;
     while f < 1.0 {
         let twr = returns.iter().fold(1.0_f64, |w, r| {
@@ -64,7 +64,11 @@ pub fn compute(returns: &[f64]) -> OptimalFReport {
             let factor = 1.0 + f * (r / worst_abs);
             // Truncated bankroll — if factor goes to 0 or below the
             // sequence ruins out.
-            if factor <= 0.0 { 0.0 } else { w * factor }
+            if factor <= 0.0 {
+                0.0
+            } else {
+                w * factor
+            }
         });
         if twr > best_twr {
             best_twr = twr;
@@ -111,8 +115,9 @@ mod tests {
     fn coin_flip_50_50_with_positive_edge_picks_positive_f() {
         // 5 wins of +100, 4 losses of -50. Avg = (500-200)/9 = +33.33,
         // positive edge → optimal_f > 0.
-        let returns = vec![100.0, 100.0, 100.0, 100.0, 100.0,
-                           -50.0, -50.0, -50.0, -50.0];
+        let returns = vec![
+            100.0, 100.0, 100.0, 100.0, 100.0, -50.0, -50.0, -50.0, -50.0,
+        ];
         let r = compute(&returns);
         assert!(r.optimal_f > 0.0);
         assert!(r.optimal_f < 1.0, "won't over-bet to ruin");
@@ -129,7 +134,8 @@ mod tests {
 
     #[test]
     fn half_and_quarter_kelly_are_proportional_to_optimal() {
-        let returns = vec![100.0; 30].into_iter()
+        let returns = vec![100.0; 30]
+            .into_iter()
             .chain(vec![-50.0; 20])
             .collect::<Vec<_>>();
         let r = compute(&returns);
@@ -140,8 +146,10 @@ mod tests {
     #[test]
     fn small_sample_warns_in_note() {
         let r = compute(&[100.0, -50.0, 100.0, -50.0]);
-        assert!(r.note.contains("<30 trades"),
-            "small sample should disclose the caveat");
+        assert!(
+            r.note.contains("<30 trades"),
+            "small sample should disclose the caveat"
+        );
     }
 
     #[test]

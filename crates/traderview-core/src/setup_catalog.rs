@@ -42,13 +42,16 @@ pub fn stats_by_setup(
 ) -> Vec<SetupStats> {
     let mut by_setup: HashMap<String, Vec<&Trade>> = HashMap::new();
     for t in trades {
-        if t.status != TradeStatus::Closed { continue; }
+        if t.status != TradeStatus::Closed {
+            continue;
+        }
         if let Some(setup) = trade_setups.get(&t.id) {
             by_setup.entry(setup.clone()).or_default().push(t);
         }
     }
 
-    let mut out: Vec<SetupStats> = by_setup.into_iter()
+    let mut out: Vec<SetupStats> = by_setup
+        .into_iter()
         .map(|(setup, ts)| compute_one(setup, &ts))
         .collect();
     // Sort by net_pnl descending — winning setups float to the top.
@@ -58,12 +61,23 @@ pub fn stats_by_setup(
 
 fn compute_one(setup: String, trades: &[&Trade]) -> SetupStats {
     let mut s = SetupStats {
-        setup, trades: trades.len(), wins: 0, losses: 0, scratches: 0,
-        net_pnl: Decimal::ZERO, gross_pnl: Decimal::ZERO, fees: Decimal::ZERO,
-        win_rate: 0.0, avg_pnl: Decimal::ZERO,
-        avg_win: Decimal::ZERO, avg_loss: Decimal::ZERO,
-        profit_factor: 0.0, expectancy: Decimal::ZERO, avg_r: 0.0,
-        largest_win: Decimal::ZERO, largest_loss: Decimal::ZERO,
+        setup,
+        trades: trades.len(),
+        wins: 0,
+        losses: 0,
+        scratches: 0,
+        net_pnl: Decimal::ZERO,
+        gross_pnl: Decimal::ZERO,
+        fees: Decimal::ZERO,
+        win_rate: 0.0,
+        avg_pnl: Decimal::ZERO,
+        avg_win: Decimal::ZERO,
+        avg_loss: Decimal::ZERO,
+        profit_factor: 0.0,
+        expectancy: Decimal::ZERO,
+        avg_r: 0.0,
+        largest_win: Decimal::ZERO,
+        largest_loss: Decimal::ZERO,
     };
     let mut win_sum = Decimal::ZERO;
     let mut loss_sum = Decimal::ZERO;
@@ -78,11 +92,15 @@ fn compute_one(setup: String, trades: &[&Trade]) -> SetupStats {
         if net > Decimal::ZERO {
             s.wins += 1;
             win_sum += net;
-            if net > s.largest_win { s.largest_win = net; }
+            if net > s.largest_win {
+                s.largest_win = net;
+            }
         } else if net < Decimal::ZERO {
             s.losses += 1;
             loss_sum += net;
-            if net < s.largest_loss { s.largest_loss = net; }
+            if net < s.largest_loss {
+                s.largest_loss = net;
+            }
         } else {
             s.scratches += 1;
         }
@@ -96,19 +114,31 @@ fn compute_one(setup: String, trades: &[&Trade]) -> SetupStats {
         s.avg_pnl = s.net_pnl / Decimal::from(s.trades as u64);
         s.expectancy = s.avg_pnl;
     }
-    if s.wins > 0   { s.avg_win  = win_sum  / Decimal::from(s.wins   as u64); }
-    if s.losses > 0 { s.avg_loss = loss_sum / Decimal::from(s.losses as u64); }
+    if s.wins > 0 {
+        s.avg_win = win_sum / Decimal::from(s.wins as u64);
+    }
+    if s.losses > 0 {
+        s.avg_loss = loss_sum / Decimal::from(s.losses as u64);
+    }
     let loss_abs = loss_sum.abs();
     s.profit_factor = if loss_abs.is_zero() {
-        if win_sum.is_zero() { 0.0 } else { f64::INFINITY }
+        if win_sum.is_zero() {
+            0.0
+        } else {
+            f64::INFINITY
+        }
     } else {
         dec_to_f64(win_sum) / dec_to_f64(loss_abs)
     };
-    if r_count > 0 { s.avg_r = r_sum / r_count as f64; }
+    if r_count > 0 {
+        s.avg_r = r_sum / r_count as f64;
+    }
     s
 }
 
-fn dec_to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec_to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[cfg(test)]
 mod tests {
@@ -118,7 +148,9 @@ mod tests {
     use std::str::FromStr;
     use uuid::Uuid;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn closed_trade(net_pnl: &str, risk_amount: Option<&str>) -> Trade {
         Trade {
@@ -136,14 +168,22 @@ mod tests {
             fees: Decimal::ZERO,
             net_pnl: Some(d(net_pnl)),
             asset_class: AssetClass::Stock,
-            option_type: None, strike: None, expiration: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
-            base_ccy: None, quote_ccy: None, pip_size: None,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
             stop_loss: None,
             risk_amount: risk_amount.map(d),
             initial_target: None,
-            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
         }
     }
 
@@ -168,12 +208,15 @@ mod tests {
         map.insert(t.id, "gap_and_go".into());
         let v = stats_by_setup(&[t], &map);
         // Open trades don't enter the catalog at all — by_setup empty.
-        assert!(v.is_empty(), "open trades must not create empty setup buckets");
+        assert!(
+            v.is_empty(),
+            "open trades must not create empty setup buckets"
+        );
     }
 
     #[test]
     fn single_winning_setup_computes_correctly() {
-        let t = closed_trade("500", Some("100"));   // +5R
+        let t = closed_trade("500", Some("100")); // +5R
         let mut map = HashMap::new();
         map.insert(t.id, "orb".into());
         let v = stats_by_setup(&[t], &map);
@@ -205,7 +248,7 @@ mod tests {
         assert_eq!(s.net_pnl, d("400"));
         assert_eq!(s.avg_win, d("250"));
         assert_eq!(s.avg_loss, d("-100"));
-        assert!((s.win_rate - 2.0/3.0).abs() < 1e-9);
+        assert!((s.win_rate - 2.0 / 3.0).abs() < 1e-9);
         // Profit factor = 500 / 100 = 5.0.
         assert!((s.profit_factor - 5.0).abs() < 1e-9);
     }
@@ -216,9 +259,9 @@ mod tests {
         let small_winner = closed_trade("100", None);
         let loser = closed_trade("-500", None);
         let mut map = HashMap::new();
-        map.insert(big_winner.id,   "winner_setup".into());
+        map.insert(big_winner.id, "winner_setup".into());
         map.insert(small_winner.id, "meh_setup".into());
-        map.insert(loser.id,        "loser_setup".into());
+        map.insert(loser.id, "loser_setup".into());
         let v = stats_by_setup(&[big_winner, small_winner, loser], &map);
         assert_eq!(v.len(), 3);
         assert_eq!(v[0].setup, "winner_setup");

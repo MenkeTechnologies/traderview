@@ -40,7 +40,9 @@ async fn configure(
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let store = live_ticks::global();
     if let Some(k) = body.api_key {
-        if !k.is_empty() { store.set_api_key(k).await; }
+        if !k.is_empty() {
+            store.set_api_key(k).await;
+        }
     }
     if !body.symbols.is_empty() {
         store
@@ -63,7 +65,9 @@ async fn handle_ws(mut socket: WebSocket) {
     let store = live_ticks::global();
     if let Ok(snap) = serde_json::to_string(&store.snapshot()) {
         if socket
-            .send(Message::Text(format!("{{\"type\":\"snapshot\",\"states\":{snap}}}")))
+            .send(Message::Text(format!(
+                "{{\"type\":\"snapshot\",\"states\":{snap}}}"
+            )))
             .await
             .is_err()
         {

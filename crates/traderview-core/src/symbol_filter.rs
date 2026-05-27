@@ -14,7 +14,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FilterMode { Allowlist, Blocklist }
+pub enum FilterMode {
+    Allowlist,
+    Blocklist,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SymbolFilter {
@@ -25,15 +28,18 @@ pub struct SymbolFilter {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FilterDecision { Permit, Block }
+pub enum FilterDecision {
+    Permit,
+    Block,
+}
 
 impl SymbolFilter {
     pub fn check(&self, symbol: &str) -> FilterDecision {
         let matched = self.patterns.iter().any(|p| matches(p, symbol));
         match (self.mode, matched) {
-            (FilterMode::Allowlist, true)  => FilterDecision::Permit,
+            (FilterMode::Allowlist, true) => FilterDecision::Permit,
             (FilterMode::Allowlist, false) => FilterDecision::Block,
-            (FilterMode::Blocklist, true)  => FilterDecision::Block,
+            (FilterMode::Blocklist, true) => FilterDecision::Block,
             (FilterMode::Blocklist, false) => FilterDecision::Permit,
         }
     }

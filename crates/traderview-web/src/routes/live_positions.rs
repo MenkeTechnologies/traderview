@@ -18,6 +18,9 @@ async fn snapshot(
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<LiveSnapshot>, ApiError> {
     ensure_account_owner(&s, u.id, account_id).await?;
-    Ok(Json(traderview_db::live_positions::snapshot(&s.pool, account_id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::live_positions::snapshot(&s.pool, account_id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

@@ -29,10 +29,14 @@ pub struct CustomIndicator {
 pub struct IndicatorInput {
     pub name: String,
     pub definition: Value,
-    #[serde(default = "default_color")] pub color: String,
-    #[serde(default)] pub is_default: bool,
+    #[serde(default = "default_color")]
+    pub color: String,
+    #[serde(default)]
+    pub is_default: bool,
 }
-fn default_color() -> String { "#00e5ff".into() }
+fn default_color() -> String {
+    "#00e5ff".into()
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EvalSeries {
@@ -55,12 +59,17 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<CustomIndi
         "SELECT id, user_id, name, definition, color, is_default, created_at, updated_at
            FROM custom_indicators WHERE user_id = $1
           ORDER BY is_default DESC, name",
-    ).bind(user_id).fetch_all(pool).await?)
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?)
 }
 
-pub async fn create(pool: &PgPool, user_id: Uuid, dto: &IndicatorInput)
-    -> anyhow::Result<CustomIndicator>
-{
+pub async fn create(
+    pool: &PgPool,
+    user_id: Uuid,
+    dto: &IndicatorInput,
+) -> anyhow::Result<CustomIndicator> {
     validate(&dto.definition)?;
     Ok(sqlx::query_as(
         "INSERT INTO custom_indicators (user_id, name, definition, color, is_default)
@@ -72,34 +81,59 @@ pub async fn create(pool: &PgPool, user_id: Uuid, dto: &IndicatorInput)
             updated_at = now()
           RETURNING id, user_id, name, definition, color, is_default, created_at, updated_at",
     )
-    .bind(user_id).bind(&dto.name).bind(&dto.definition)
-    .bind(&dto.color).bind(dto.is_default)
-    .fetch_one(pool).await?)
+    .bind(user_id)
+    .bind(&dto.name)
+    .bind(&dto.definition)
+    .bind(&dto.color)
+    .bind(dto.is_default)
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
-    Ok(sqlx::query("DELETE FROM custom_indicators WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?.rows_affected() > 0)
+    Ok(
+        sqlx::query("DELETE FROM custom_indicators WHERE id = $1 AND user_id = $2")
+            .bind(id)
+            .bind(user_id)
+            .execute(pool)
+            .await?
+            .rows_affected()
+            > 0,
+    )
 }
 
 /// Evaluate a list of indicator-ids against (symbol, interval, [from, to]).
 pub async fn evaluate(
-    pool: &PgPool, user_id: Uuid, symbol: &str, interval: BarInterval,
-    from: DateTime<Utc>, to: DateTime<Utc>, indicator_ids: &[Uuid],
+    pool: &PgPool,
+    user_id: Uuid,
+    symbol: &str,
+    interval: BarInterval,
+    from: DateTime<Utc>,
+    to: DateTime<Utc>,
+    indicator_ids: &[Uuid],
 ) -> anyhow::Result<EvalResult> {
     let indicators: Vec<CustomIndicator> = sqlx::query_as(
         "SELECT id, user_id, name, definition, color, is_default, created_at, updated_at
            FROM custom_indicators WHERE user_id = $1 AND id = ANY($2)",
-    ).bind(user_id).bind(indicator_ids).fetch_all(pool).await.unwrap_or_default();
+    )
+    .bind(user_id)
+    .bind(indicator_ids)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
 
     let bars = crate::prices::get_bars(pool, symbol, interval, from, to)
-        .await.unwrap_or_default();
+        .await
+        .unwrap_or_default();
     let times: Vec<DateTime<Utc>> = bars.iter().map(|b| b.bar_time).collect();
     let closes: Vec<f64> = bars.iter().map(|b| dec(b.close)).collect();
     let interval_str = match interval {
-        BarInterval::M1 => "1m", BarInterval::M5 => "5m",
-        BarInterval::M15 => "15m", BarInterval::H1 => "1h",
-        BarInterval::D1 => "1d", BarInterval::W1 => "1w",
+        BarInterval::M1 => "1m",
+        BarInterval::M5 => "5m",
+        BarInterval::M15 => "15m",
+        BarInterval::H1 => "1h",
+        BarInterval::D1 => "1d",
+        BarInterval::W1 => "1w",
     };
 
     let mut series_out: Vec<EvalSeries> = Vec::new();
@@ -111,7 +145,9 @@ pub async fn evaluate(
     Ok(EvalResult {
         symbol: symbol.to_string(),
         interval: interval_str.into(),
-        times, closes, series: series_out,
+        times,
+        closes,
+        series: series_out,
     })
 }
 
@@ -119,7 +155,7 @@ fn compute_one(base_name: &str, color: &str, def: &Value, closes: &[f64]) -> Vec
     let kind = def["kind"].as_str().unwrap_or("");
     let p = &def["params"];
     let p_usize = |k: &str, default: usize| p[k].as_u64().map(|x| x as usize).unwrap_or(default);
-    let p_f64   = |k: &str, default: f64|  p[k].as_f64().unwrap_or(default);
+    let p_f64 = |k: &str, default: f64| p[k].as_f64().unwrap_or(default);
     match kind {
         "sma" => vec![EvalSeries {
             name: format!("{} SMA({})", base_name, p_usize("period", 20)),
@@ -139,18 +175,46 @@ fn compute_one(base_name: &str, color: &str, def: &Value, closes: &[f64]) -> Vec
         "bollinger" => {
             let b = bollinger(closes, p_usize("period", 20), p_f64("k", 2.0));
             vec![
-                EvalSeries { name: format!("{} mid",   base_name), color: color.into(), values: b.middle },
-                EvalSeries { name: format!("{} upper", base_name), color: color.into(), values: b.upper },
-                EvalSeries { name: format!("{} lower", base_name), color: color.into(), values: b.lower },
+                EvalSeries {
+                    name: format!("{} mid", base_name),
+                    color: color.into(),
+                    values: b.middle,
+                },
+                EvalSeries {
+                    name: format!("{} upper", base_name),
+                    color: color.into(),
+                    values: b.upper,
+                },
+                EvalSeries {
+                    name: format!("{} lower", base_name),
+                    color: color.into(),
+                    values: b.lower,
+                },
             ]
         }
         "macd" => {
-            let m = macd(closes,
-                p_usize("fast", 12), p_usize("slow", 26), p_usize("signal", 9));
+            let m = macd(
+                closes,
+                p_usize("fast", 12),
+                p_usize("slow", 26),
+                p_usize("signal", 9),
+            );
             vec![
-                EvalSeries { name: format!("{} MACD",   base_name), color: color.into(), values: m.line },
-                EvalSeries { name: format!("{} signal", base_name), color: color.into(), values: m.signal },
-                EvalSeries { name: format!("{} hist",   base_name), color: color.into(), values: m.histogram },
+                EvalSeries {
+                    name: format!("{} MACD", base_name),
+                    color: color.into(),
+                    values: m.line,
+                },
+                EvalSeries {
+                    name: format!("{} signal", base_name),
+                    color: color.into(),
+                    values: m.signal,
+                },
+                EvalSeries {
+                    name: format!("{} hist", base_name),
+                    color: color.into(),
+                    values: m.histogram,
+                },
             ]
         }
         _ => Vec::new(),
@@ -158,7 +222,9 @@ fn compute_one(base_name: &str, color: &str, def: &Value, closes: &[f64]) -> Vec
 }
 
 pub fn validate(def: &Value) -> anyhow::Result<()> {
-    let kind = def["kind"].as_str().ok_or_else(|| anyhow::anyhow!("kind required"))?;
+    let kind = def["kind"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("kind required"))?;
     match kind {
         "sma" | "ema" | "rsi" => {
             let p = def["params"]["period"].as_u64().unwrap_or(0);
@@ -169,8 +235,12 @@ pub fn validate(def: &Value) -> anyhow::Result<()> {
         "bollinger" => {
             let p = def["params"]["period"].as_u64().unwrap_or(0);
             let k = def["params"]["k"].as_f64().unwrap_or(0.0);
-            if !(2..=400).contains(&(p as i64)) { anyhow::bail!("period must be 2..=400"); }
-            if !(0.1..=5.0).contains(&k)        { anyhow::bail!("k must be 0.1..=5.0"); }
+            if !(2..=400).contains(&(p as i64)) {
+                anyhow::bail!("period must be 2..=400");
+            }
+            if !(0.1..=5.0).contains(&k) {
+                anyhow::bail!("k must be 0.1..=5.0");
+            }
         }
         "macd" => {
             for k in ["fast", "slow", "signal"] {
@@ -185,4 +255,6 @@ pub fn validate(def: &Value) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

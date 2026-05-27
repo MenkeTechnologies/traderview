@@ -69,15 +69,29 @@ pub fn simulate(historical_r: &[f64], cfg: &McConfig) -> Option<McReport> {
             let idx = rng.next_bounded(len as u64) as usize;
             let r = historical_r[idx];
             equity += r;
-            if equity > peak { peak = equity; }
-            if equity <= cfg.ruin_threshold { hit_ruin = true; }
-            let dd_pct = if peak > 0.0 { (peak - equity) / peak } else { 0.0 };
-            if dd_pct > max_dd_pct { max_dd_pct = dd_pct; }
+            if equity > peak {
+                peak = equity;
+            }
+            if equity <= cfg.ruin_threshold {
+                hit_ruin = true;
+            }
+            let dd_pct = if peak > 0.0 {
+                (peak - equity) / peak
+            } else {
+                0.0
+            };
+            if dd_pct > max_dd_pct {
+                max_dd_pct = dd_pct;
+            }
         }
         ending.push(equity);
         max_dds.push(max_dd_pct);
-        if hit_ruin { ruin_count += 1; }
-        if equity > cfg.start_equity { profitable_count += 1; }
+        if hit_ruin {
+            ruin_count += 1;
+        }
+        if equity > cfg.start_equity {
+            profitable_count += 1;
+        }
     }
     ending.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     max_dds.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -102,21 +116,28 @@ pub fn simulate(historical_r: &[f64], cfg: &McConfig) -> Option<McReport> {
 }
 
 fn pct(sorted: &[f64], q: f64) -> f64 {
-    if sorted.is_empty() { return 0.0; }
+    if sorted.is_empty() {
+        return 0.0;
+    }
     let idx = ((sorted.len() as f64 - 1.0) * q).round() as usize;
     sorted[idx.min(sorted.len() - 1)]
 }
 
 /// Minimal Linear Congruential Generator. Standard MMIX constants — fast,
 /// deterministic, suitable for Monte Carlo (NOT for crypto).
-struct Lcg { state: u64 }
+struct Lcg {
+    state: u64,
+}
 impl Lcg {
     fn new(seed: u64) -> Self {
         // Ensure non-zero state so even seed=0 produces a stream.
-        Self { state: seed.wrapping_add(0x9E3779B97F4A7C15) }
+        Self {
+            state: seed.wrapping_add(0x9E3779B97F4A7C15),
+        }
     }
     fn next_u64(&mut self) -> u64 {
-        self.state = self.state
+        self.state = self
+            .state
             .wrapping_mul(6364136223846793005)
             .wrapping_add(1442695040888963407);
         self.state
@@ -167,8 +188,10 @@ mod tests {
         let h = vec![100.0, -50.0, 200.0, -150.0];
         let a = simulate(&h, &cfg(500, 100, 12345)).unwrap();
         let b = simulate(&h, &cfg(500, 100, 12345)).unwrap();
-        assert_eq!(a.mean_ending_equity, b.mean_ending_equity,
-            "same seed must produce identical results");
+        assert_eq!(
+            a.mean_ending_equity, b.mean_ending_equity,
+            "same seed must produce identical results"
+        );
         assert_eq!(a.probability_of_ruin, b.probability_of_ruin);
     }
 
@@ -186,8 +209,10 @@ mod tests {
         let h = vec![100.0, 200.0, 50.0];
         let r = simulate(&h, &cfg(200, 50, 42)).unwrap();
         assert_eq!(r.probability_of_ruin, 0.0);
-        assert_eq!(r.probability_profitable, 1.0,
-            "ALL drawn curves must end > start when every R > 0");
+        assert_eq!(
+            r.probability_profitable, 1.0,
+            "ALL drawn curves must end > start when every R > 0"
+        );
     }
 
     #[test]
@@ -220,8 +245,11 @@ mod tests {
         let r = simulate(&h, &cfg(2000, 100, 42)).unwrap();
         let expected = 10_000.0 + 25.0 * 100.0;
         let err = (r.mean_ending_equity - expected).abs() / expected;
-        assert!(err < 0.03,
+        assert!(
+            err < 0.03,
             "Monte Carlo mean should converge to expectancy: got {} expected {}",
-            r.mean_ending_equity, expected);
+            r.mean_ending_equity,
+            expected
+        );
     }
 }

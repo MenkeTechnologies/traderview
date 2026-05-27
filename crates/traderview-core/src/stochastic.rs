@@ -32,16 +32,23 @@ pub struct StochPoint {
 pub fn compute(bars: &[Bar], k_period: usize, d_period: usize) -> Vec<StochPoint> {
     let n = bars.len();
     let mut out = vec![StochPoint::default(); n];
-    if n < k_period || k_period == 0 || d_period == 0 { return out; }
+    if n < k_period || k_period == 0 || d_period == 0 {
+        return out;
+    }
     let mut fast_k_series = vec![0.0; n];
     for i in (k_period - 1)..n {
         let window = &bars[(i + 1 - k_period)..=i];
         let lowest = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
-        let highest = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
+        let highest = window
+            .iter()
+            .map(|b| b.high)
+            .fold(f64::NEG_INFINITY, f64::max);
         let range = highest - lowest;
         fast_k_series[i] = if range > 0.0 {
             (bars[i].close - lowest) / range * 100.0
-        } else { 50.0 };
+        } else {
+            50.0
+        };
         out[i].fast_k = fast_k_series[i];
     }
     // Fast %D = SMA(fast_k, d_period).
@@ -64,19 +71,33 @@ pub fn compute(bars: &[Bar], k_period: usize, d_period: usize) -> Vec<StochPoint
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum StochZone { Oversold, Neutral, Overbought }
+pub enum StochZone {
+    Oversold,
+    Neutral,
+    Overbought,
+}
 
 pub fn classify(k: f64) -> StochZone {
-    if k > 80.0 { StochZone::Overbought }
-    else if k < 20.0 { StochZone::Oversold }
-    else { StochZone::Neutral }
+    if k > 80.0 {
+        StochZone::Overbought
+    } else if k < 20.0 {
+        StochZone::Oversold
+    } else {
+        StochZone::Neutral
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -100,7 +121,7 @@ mod tests {
             b(106.0, 101.0, 103.0),
             b(107.0, 102.0, 104.0),
             b(108.0, 103.0, 105.0),
-            b(110.0, 100.0, 110.0),    // close at high of window
+            b(110.0, 100.0, 110.0), // close at high of window
         ];
         let out = compute(&bars, 5, 3);
         assert_eq!(out[4].fast_k, 100.0);
@@ -113,7 +134,7 @@ mod tests {
             b(106.0, 101.0, 103.0),
             b(107.0, 102.0, 104.0),
             b(108.0, 103.0, 105.0),
-            b(110.0, 100.0, 100.0),    // close at low
+            b(110.0, 100.0, 100.0), // close at low
         ];
         let out = compute(&bars, 5, 3);
         assert_eq!(out[4].fast_k, 0.0);
@@ -132,9 +153,9 @@ mod tests {
         // Construct bars so fast_k values are deterministic.
         let bars: Vec<Bar> = vec![
             b(110.0, 100.0, 105.0),
-            b(110.0, 100.0, 100.0),    // fast_k = 0
-            b(110.0, 100.0, 110.0),    // fast_k = 100
-            b(110.0, 100.0, 105.0),    // fast_k = 50
+            b(110.0, 100.0, 100.0), // fast_k = 0
+            b(110.0, 100.0, 110.0), // fast_k = 100
+            b(110.0, 100.0, 105.0), // fast_k = 50
         ];
         let out = compute(&bars, 1, 3);
         // After k_period=1 + d_period=3 - 1 = 3 bars warm-up, fast_d available.

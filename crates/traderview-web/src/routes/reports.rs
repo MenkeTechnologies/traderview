@@ -76,49 +76,63 @@ async fn by_symbol(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_symbol(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_symbol(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_side(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_side(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_side(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_asset_class(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_asset_class(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_asset_class(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_dow(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_day_of_week(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_day_of_week(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_hour(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_hour_of_day(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_hour_of_day(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_hold(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_hold_bucket(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_hold_bucket(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn by_month(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
-    Ok(Json(stats::by_month(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::by_month(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 
 async fn r_distribution(
@@ -126,35 +140,45 @@ async fn r_distribution(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::RMultipleDistribution>, ApiError> {
-    Ok(Json(stats::r_distribution(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::r_distribution(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn streaks(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Streak>>, ApiError> {
-    Ok(Json(stats::streaks(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::streaks(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn comparison(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::Comparison>, ApiError> {
-    Ok(Json(stats::comparison(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::comparison(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn exit_eff(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::ExitEfficiency>, ApiError> {
-    Ok(Json(stats::exit_efficiency(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::exit_efficiency(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 async fn commissions(
     State(s): State<AppState>,
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::CommissionReport>, ApiError> {
-    Ok(Json(stats::commissions(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::commissions(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 
 async fn calendar(
@@ -162,7 +186,9 @@ async fn calendar(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::CalendarCell>>, ApiError> {
-    Ok(Json(stats::calendar(&load(&s, user.id, q.account_id).await?)))
+    Ok(Json(stats::calendar(
+        &load(&s, user.id, q.account_id).await?,
+    )))
 }
 
 async fn equity(
@@ -202,7 +228,9 @@ async fn risk_report(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<risk::RiskSummary>, ApiError> {
-    Ok(Json(risk::risk_summary(load(&s, user.id, q.account_id).await?.iter())))
+    Ok(Json(risk::risk_summary(
+        load(&s, user.id, q.account_id).await?.iter(),
+    )))
 }
 
 #[derive(Deserialize)]

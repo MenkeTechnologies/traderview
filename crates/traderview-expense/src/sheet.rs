@@ -21,7 +21,12 @@ pub enum SheetKind {
 
 pub fn detect_kind(bytes: &[u8]) -> SheetKind {
     // ZIP magic — xlsx, xlsm, xlsb, ods all start with 'PK\x03\x04'.
-    if bytes.len() >= 4 && bytes[0] == 0x50 && bytes[1] == 0x4B && bytes[2] == 0x03 && bytes[3] == 0x04 {
+    if bytes.len() >= 4
+        && bytes[0] == 0x50
+        && bytes[1] == 0x4B
+        && bytes[2] == 0x03
+        && bytes[3] == 0x04
+    {
         SheetKind::Spreadsheet
     } else {
         SheetKind::Csv

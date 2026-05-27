@@ -36,23 +36,37 @@ pub struct AsymmetryReport {
 
 pub fn analyze(pnls: &[f64]) -> AsymmetryReport {
     let mut r = AsymmetryReport::default();
-    if pnls.is_empty() { return r; }
+    if pnls.is_empty() {
+        return r;
+    }
     let wins: Vec<f64> = pnls.iter().filter(|p| **p > 0.0).cloned().collect();
     let losses: Vec<f64> = pnls.iter().filter(|p| **p < 0.0).map(|p| -p).collect();
     r.trade_count = pnls.len();
     r.win_count = wins.len();
     r.loss_count = losses.len();
     r.win_rate = wins.len() as f64 / pnls.len() as f64;
-    r.avg_win = if wins.is_empty() { 0.0 }
-        else { wins.iter().sum::<f64>() / wins.len() as f64 };
-    r.avg_loss = if losses.is_empty() { 0.0 }
-        else { losses.iter().sum::<f64>() / losses.len() as f64 };
-    r.payoff_ratio = if r.avg_loss > 0.0 { Some(r.avg_win / r.avg_loss) } else { None };
+    r.avg_win = if wins.is_empty() {
+        0.0
+    } else {
+        wins.iter().sum::<f64>() / wins.len() as f64
+    };
+    r.avg_loss = if losses.is_empty() {
+        0.0
+    } else {
+        losses.iter().sum::<f64>() / losses.len() as f64
+    };
+    r.payoff_ratio = if r.avg_loss > 0.0 {
+        Some(r.avg_win / r.avg_loss)
+    } else {
+        None
+    };
     r.expectancy_per_trade = r.win_rate * r.avg_win - (1.0 - r.win_rate) * r.avg_loss;
     r.break_even_win_rate = r.payoff_ratio.map(|p| 1.0 / (1.0 + p));
     r.asymmetry_warning = if let (Some(p), Some(bewr)) = (r.payoff_ratio, r.break_even_win_rate) {
         p < 1.0 && r.win_rate < bewr
-    } else { false };
+    } else {
+        false
+    };
     r
 }
 

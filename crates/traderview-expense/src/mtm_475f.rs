@@ -66,8 +66,12 @@ pub fn report(positions: &[OpenPositionAtYearEnd]) -> Mtm475fReport {
             year_end_price: p.year_end_price,
             deemed_gain: gain,
         };
-        if gain >= Decimal::ZERO { winners.push(sale); }
-        else { total_loss += -gain; losers.push(sale); }
+        if gain >= Decimal::ZERO {
+            winners.push(sale);
+        } else {
+            total_loss += -gain;
+            losers.push(sale);
+        }
         total += gain;
     }
     winners.sort_by_key(|a| std::cmp::Reverse(a.deemed_gain));
@@ -118,7 +122,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn pos(symbol: &str, qty: &str, cost: &str, yep: &str) -> OpenPositionAtYearEnd {
         OpenPositionAtYearEnd {
@@ -144,9 +150,9 @@ mod tests {
     #[test]
     fn report_aggregates_winners_and_losers() {
         let positions = vec![
-            pos("AAPL", "100", "150", "160"),   // +1000
-            pos("TSLA", "50",  "300", "280"),   // -1000
-            pos("GME",  "200", "20",  "30"),    // +2000
+            pos("AAPL", "100", "150", "160"), // +1000
+            pos("TSLA", "50", "300", "280"),  // -1000
+            pos("GME", "200", "20", "30"),    // +2000
         ];
         let r = report(&positions);
         assert_eq!(r.total_deemed_gain, d("2000"));
@@ -169,7 +175,8 @@ mod tests {
     fn election_on_time_before_april_15() {
         let status = election_deadline_status(
             chrono::NaiveDate::from_ymd_opt(2026, 3, 1).unwrap(),
-            2025, false,
+            2025,
+            false,
         );
         assert_eq!(status, ElectionStatus::OnTime);
     }
@@ -178,7 +185,8 @@ mod tests {
     fn election_on_april_15_inclusive() {
         let status = election_deadline_status(
             chrono::NaiveDate::from_ymd_opt(2026, 4, 15).unwrap(),
-            2025, false,
+            2025,
+            false,
         );
         assert_eq!(status, ElectionStatus::OnTime, "Apr 15 must be inclusive");
     }
@@ -187,7 +195,8 @@ mod tests {
     fn election_missed_after_april_15_no_extension() {
         let status = election_deadline_status(
             chrono::NaiveDate::from_ymd_opt(2026, 4, 16).unwrap(),
-            2025, false,
+            2025,
+            false,
         );
         assert_eq!(status, ElectionStatus::Missed);
     }
@@ -196,7 +205,8 @@ mod tests {
     fn election_allowed_via_extension() {
         let status = election_deadline_status(
             chrono::NaiveDate::from_ymd_opt(2026, 9, 1).unwrap(),
-            2025, true,
+            2025,
+            true,
         );
         assert_eq!(status, ElectionStatus::AllowedViaExtension);
     }

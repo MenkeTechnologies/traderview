@@ -56,15 +56,20 @@ pub fn liquidity(trades: &[Trade], adv: &HashMap<String, Decimal>) -> LiquidityR
         }
         if let Some(adv) = row.avg_daily_volume {
             if !adv.is_zero() {
-                row.avg_pct_of_adv = Some(
-                    decimal_to_f64(row.avg_qty_per_trade) / decimal_to_f64(adv),
-                );
+                row.avg_pct_of_adv =
+                    Some(decimal_to_f64(row.avg_qty_per_trade) / decimal_to_f64(adv));
             }
         }
     }
 
     // Bucket trades by their pct-of-ADV.
-    let bucket_edges = [(0.0, 0.001), (0.001, 0.01), (0.01, 0.05), (0.05, 0.20), (0.20, f64::INFINITY)];
+    let bucket_edges = [
+        (0.0, 0.001),
+        (0.001, 0.01),
+        (0.01, 0.05),
+        (0.05, 0.20),
+        (0.20, f64::INFINITY),
+    ];
     let bucket_labels = [
         "< 0.1% ADV",
         "0.1–1% ADV",
@@ -127,7 +132,9 @@ mod tests {
     use std::str::FromStr;
     use uuid::Uuid;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn tr(symbol: &str, qty: &str, net: &str) -> Trade {
         Trade {
@@ -145,12 +152,22 @@ mod tests {
             fees: Decimal::ZERO,
             net_pnl: Some(d(net)),
             asset_class: AssetClass::Stock,
-            option_type: None, strike: None, expiration: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
-            base_ccy: None, quote_ccy: None, pip_size: None,
-            stop_loss: None, risk_amount: None, initial_target: None,
-            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+            stop_loss: None,
+            risk_amount: None,
+            initial_target: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
         }
     }
 
@@ -168,7 +185,7 @@ mod tests {
         let trades = vec![
             tr("AAPL", "100", "200"),
             tr("AAPL", "200", "300"),
-            tr("TSLA", "50",  "-100"),
+            tr("TSLA", "50", "-100"),
         ];
         let r = liquidity(&trades, &HashMap::new());
         assert_eq!(r.rows.len(), 2);
@@ -203,9 +220,9 @@ mod tests {
     fn buckets_classify_by_pct_of_adv() {
         let mut adv = HashMap::new();
         adv.insert("AAPL".to_string(), d("100000")); // 100k ADV
-        // 50 shares = 0.05% ADV → bucket 0 (< 0.1%)
-        // 5,000 shares = 5% → bucket 3 (5-20%)
-        // 25,000 shares = 25% → bucket 4 (> 20%)
+                                                     // 50 shares = 0.05% ADV → bucket 0 (< 0.1%)
+                                                     // 5,000 shares = 5% → bucket 3 (5-20%)
+                                                     // 25,000 shares = 25% → bucket 4 (> 20%)
         let trades = vec![
             tr("AAPL", "50", "10"),
             tr("AAPL", "5000", "100"),
@@ -231,6 +248,6 @@ mod tests {
         ];
         let r = liquidity(&trades, &adv);
         assert_eq!(r.buckets[0].trades, 3);
-        assert!((r.buckets[0].win_rate - 2.0/3.0).abs() < 1e-9);
+        assert!((r.buckets[0].win_rate - 2.0 / 3.0).abs() < 1e-9);
     }
 }

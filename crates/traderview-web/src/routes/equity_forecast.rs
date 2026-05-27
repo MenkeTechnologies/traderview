@@ -37,12 +37,20 @@ async fn run(
           WHERE account_id = $1 AND status = 'closed'
             AND net_pnl IS NOT NULL
             AND risk_amount IS NOT NULL AND risk_amount > 0",
-    ).bind(b.account_id).fetch_all(&s.pool).await.map_err(ApiError::Db)?;
+    )
+    .bind(b.account_id)
+    .fetch_all(&s.pool)
+    .await
+    .map_err(ApiError::Db)?;
     if rows.is_empty() {
         return Err(ApiError::BadRequest(
-            "no closed trades with risk_amount set on this account".into()));
+            "no closed trades with risk_amount set on this account".into(),
+        ));
     }
-    let r_samples: Vec<f64> = rows.iter().map(|(pnl, risk)| dec(*pnl) / dec(*risk)).collect();
+    let r_samples: Vec<f64> = rows
+        .iter()
+        .map(|(pnl, risk)| dec(*pnl) / dec(*risk))
+        .collect();
     let input = ForecastInput {
         r_samples,
         starting_equity: b.starting_equity,
@@ -55,4 +63,6 @@ async fn run(
     Ok(Json(forecast(&input)))
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

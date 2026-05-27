@@ -35,21 +35,33 @@ pub struct SkewReport {
 /// (default 5% in each direction). Caller can override.
 pub fn analyze(chain: &[IvByStrike], spot: f64, pct_distance: f64) -> SkewReport {
     let mut report = SkewReport::default();
-    if chain.is_empty() || spot <= 0.0 { return report; }
+    if chain.is_empty() || spot <= 0.0 {
+        return report;
+    }
     // Find ATM strike (closest to spot).
-    let atm = chain.iter().min_by(|a, b| {
-        (a.strike - spot).abs().partial_cmp(&(b.strike - spot).abs())
-            .unwrap_or(std::cmp::Ordering::Equal)
-    }).unwrap();
+    let atm = chain
+        .iter()
+        .min_by(|a, b| {
+            (a.strike - spot)
+                .abs()
+                .partial_cmp(&(b.strike - spot).abs())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .unwrap();
     report.atm_iv = (atm.call_iv + atm.put_iv) / 2.0;
     // OTM put target = spot × (1 - pct_distance). OTM call target = spot × (1 + pct_distance).
     let put_target = spot * (1.0 - pct_distance);
     let call_target = spot * (1.0 + pct_distance);
     let nearest = |target: f64| -> &IvByStrike {
-        chain.iter().min_by(|a, b| {
-            (a.strike - target).abs().partial_cmp(&(b.strike - target).abs())
-                .unwrap_or(std::cmp::Ordering::Equal)
-        }).unwrap()
+        chain
+            .iter()
+            .min_by(|a, b| {
+                (a.strike - target)
+                    .abs()
+                    .partial_cmp(&(b.strike - target).abs())
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .unwrap()
     };
     let otm_put = nearest(put_target);
     let otm_call = nearest(call_target);
@@ -72,7 +84,11 @@ mod tests {
     use super::*;
 
     fn iv(strike: f64, c: f64, p: f64) -> IvByStrike {
-        IvByStrike { strike, call_iv: c, put_iv: p }
+        IvByStrike {
+            strike,
+            call_iv: c,
+            put_iv: p,
+        }
     }
 
     #[test]
@@ -98,13 +114,15 @@ mod tests {
     fn put_call_skew_positive_when_otm_put_iv_higher() {
         // Classic equity-index skew: lower strikes have higher IV.
         let chain = vec![
-            iv(95.0,  0.35, 0.45),    // OTM put
-            iv(100.0, 0.30, 0.30),    // ATM
-            iv(105.0, 0.25, 0.20),    // OTM call
+            iv(95.0, 0.35, 0.45),  // OTM put
+            iv(100.0, 0.30, 0.30), // ATM
+            iv(105.0, 0.25, 0.20), // OTM call
         ];
         let r = analyze(&chain, 100.0, 0.05);
-        assert!(r.put_call_skew > 0.0,
-            "put IV (45%) > call IV (25%) at equidistant 5% OTM → positive skew");
+        assert!(
+            r.put_call_skew > 0.0,
+            "put IV (45%) > call IV (25%) at equidistant 5% OTM → positive skew"
+        );
         assert!(r.note.contains("fear"));
     }
 
@@ -112,9 +130,9 @@ mod tests {
     fn put_call_skew_negative_when_call_iv_higher() {
         // Takeover speculation: calls bid over puts.
         let chain = vec![
-            iv(95.0,  0.20, 0.20),
+            iv(95.0, 0.20, 0.20),
             iv(100.0, 0.25, 0.25),
-            iv(105.0, 0.45, 0.20),    // call bid
+            iv(105.0, 0.45, 0.20), // call bid
         ];
         let r = analyze(&chain, 100.0, 0.05);
         assert!(r.put_call_skew < 0.0);
@@ -124,7 +142,7 @@ mod tests {
     #[test]
     fn neutral_skew_when_put_call_iv_match() {
         let chain = vec![
-            iv(95.0,  0.30, 0.30),
+            iv(95.0, 0.30, 0.30),
             iv(100.0, 0.30, 0.30),
             iv(105.0, 0.30, 0.30),
         ];
@@ -136,9 +154,9 @@ mod tests {
     #[test]
     fn smile_positive_when_otm_wings_higher_than_atm() {
         let chain = vec![
-            iv(95.0,  0.40, 0.40),    // OTM put wing
-            iv(100.0, 0.25, 0.25),    // ATM
-            iv(105.0, 0.40, 0.40),    // OTM call wing
+            iv(95.0, 0.40, 0.40),  // OTM put wing
+            iv(100.0, 0.25, 0.25), // ATM
+            iv(105.0, 0.40, 0.40), // OTM call wing
         ];
         let r = analyze(&chain, 100.0, 0.05);
         // (call + put) / 2 - ATM = 40% - 25% = 15% smile.
@@ -148,8 +166,8 @@ mod tests {
     #[test]
     fn smile_negative_when_wings_below_atm() {
         let chain = vec![
-            iv(95.0,  0.20, 0.20),
-            iv(100.0, 0.30, 0.30),    // ATM higher than wings
+            iv(95.0, 0.20, 0.20),
+            iv(100.0, 0.30, 0.30), // ATM higher than wings
             iv(105.0, 0.20, 0.20),
         ];
         let r = analyze(&chain, 100.0, 0.05);
@@ -160,7 +178,7 @@ mod tests {
     fn nearest_strike_picked_when_exact_match_absent() {
         // No strike at exactly 95 — uses nearest (95 not in chain, 90 is).
         let chain = vec![
-            iv(90.0,  0.40, 0.40),
+            iv(90.0, 0.40, 0.40),
             iv(100.0, 0.30, 0.30),
             iv(110.0, 0.20, 0.20),
         ];

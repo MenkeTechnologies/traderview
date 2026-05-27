@@ -19,8 +19,12 @@ struct SearchQ {
     #[serde(default = "default_limit")]
     limit: i64,
 }
-fn default_scope() -> String { "all".into() }
-fn default_limit() -> i64 { 50 }
+fn default_scope() -> String {
+    "all".into()
+}
+fn default_limit() -> i64 {
+    50
+}
 
 async fn search(
     State(s): State<AppState>,

@@ -19,10 +19,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 #[derive(Default)]
 pub enum PairSignal {
-    LongSpread,    // |z| > entry AND z < 0 (spread cheap)
-    ShortSpread,   // |z| > entry AND z > 0 (spread expensive)
-    ExitSpread,    // |z| < exit (mean-reverted)
-    StopOut,       // |z| > stop (blown out)
+    LongSpread,  // |z| > entry AND z < 0 (spread cheap)
+    ShortSpread, // |z| > entry AND z > 0 (spread expensive)
+    ExitSpread,  // |z| < exit (mean-reverted)
+    StopOut,     // |z| > stop (blown out)
     #[default]
     Hold,
 }
@@ -35,7 +35,13 @@ pub struct PairConfig {
 }
 
 impl Default for PairConfig {
-    fn default() -> Self { Self { entry_z: 2.0, exit_z: 0.5, stop_z: 3.5 } }
+    fn default() -> Self {
+        Self {
+            entry_z: 2.0,
+            exit_z: 0.5,
+            stop_z: 3.5,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -48,9 +54,10 @@ pub struct PairReport {
     pub signal: PairSignal,
 }
 
-
 pub fn analyze(y: &[f64], x: &[f64], cfg: &PairConfig) -> Option<PairReport> {
-    if y.len() != x.len() || y.len() < 3 { return None; }
+    if y.len() != x.len() || y.len() < 3 {
+        return None;
+    }
     let n = y.len() as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
@@ -61,14 +68,20 @@ pub fn analyze(y: &[f64], x: &[f64], cfg: &PairConfig) -> Option<PairReport> {
         num += dx * (y[i] - mean_y);
         den += dx * dx;
     }
-    if den == 0.0 { return None; }
+    if den == 0.0 {
+        return None;
+    }
     let beta = num / den;
     let spread: Vec<f64> = y.iter().zip(x).map(|(yi, xi)| yi - beta * xi).collect();
     let mean_s: f64 = spread.iter().sum::<f64>() / n;
     let var_s: f64 = spread.iter().map(|s| (s - mean_s).powi(2)).sum::<f64>() / n;
     let std_s = var_s.sqrt();
     let current = *spread.last().unwrap();
-    let z = if std_s > 0.0 { (current - mean_s) / std_s } else { 0.0 };
+    let z = if std_s > 0.0 {
+        (current - mean_s) / std_s
+    } else {
+        0.0
+    };
     let signal = if z.abs() > cfg.stop_z {
         PairSignal::StopOut
     } else if z.abs() < cfg.exit_z {
@@ -127,14 +140,19 @@ mod tests {
         // Construct spread with mean ~ 0, latest near 0.
         let x: Vec<f64> = (1..=20).map(|i| i as f64).collect();
         // y = 2x + noise, but ending right on the line → z near 0.
-        let mut y: Vec<f64> = x.iter().enumerate().map(|(i, v)| {
-            v * 2.0 + if i % 2 == 0 { 1.0 } else { -1.0 }
-        }).collect();
+        let mut y: Vec<f64> = x
+            .iter()
+            .enumerate()
+            .map(|(i, v)| v * 2.0 + if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         // Force the last spread to be near mean.
         *y.last_mut().unwrap() = (*x.last().unwrap()) * 2.0;
         let r = analyze(&y, &x, &PairConfig::default()).unwrap();
-        assert!(r.current_z.abs() < 0.5,
-            "constructed: current_z should be near 0, got {}", r.current_z);
+        assert!(
+            r.current_z.abs() < 0.5,
+            "constructed: current_z should be near 0, got {}",
+            r.current_z
+        );
         assert_eq!(r.signal, PairSignal::ExitSpread);
     }
 
@@ -148,22 +166,34 @@ mod tests {
         let r = analyze(&y, &x, &PairConfig::default()).unwrap();
         // Will likely be Hold/ShortSpread/StopOut depending on math — assert at least
         // a non-Hold signal fires.
-        assert_ne!(r.signal, PairSignal::Hold,
-            "huge outlier should fire some signal — got Hold with z={}", r.current_z);
+        assert_ne!(
+            r.signal,
+            PairSignal::Hold,
+            "huge outlier should fire some signal — got Hold with z={}",
+            r.current_z
+        );
     }
 
     #[test]
     fn custom_config_changes_thresholds() {
         // Lax config — small z still triggers entry.
-        let lax = PairConfig { entry_z: 0.001, exit_z: 0.0, stop_z: 999.0 };
+        let lax = PairConfig {
+            entry_z: 0.001,
+            exit_z: 0.0,
+            stop_z: 999.0,
+        };
         let x: Vec<f64> = (1..=20).map(|i| i as f64).collect();
-        let mut y: Vec<f64> = x.iter().enumerate().map(|(i, v)| {
-            v * 2.0 + if i % 2 == 0 { 0.5 } else { -0.5 }
-        }).collect();
+        let mut y: Vec<f64> = x
+            .iter()
+            .enumerate()
+            .map(|(i, v)| v * 2.0 + if i % 2 == 0 { 0.5 } else { -0.5 })
+            .collect();
         // Push last value off-spread.
         *y.last_mut().unwrap() = (*x.last().unwrap()) * 2.0 + 1.0;
         let r = analyze(&y, &x, &lax).unwrap();
-        assert!(matches!(r.signal, PairSignal::ShortSpread | PairSignal::LongSpread),
-            "lax config should fire entry on small deviation");
+        assert!(
+            matches!(r.signal, PairSignal::ShortSpread | PairSignal::LongSpread),
+            "lax config should fire entry on small deviation"
+        );
     }
 }

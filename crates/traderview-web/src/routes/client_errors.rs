@@ -24,7 +24,7 @@ pub fn router() -> Router<AppState> {
 #[derive(Debug, Deserialize)]
 struct ClientErr {
     #[serde(default)]
-    kind: Option<String>,         // "error" | "unhandledrejection" | "api-fail" | "log"
+    kind: Option<String>, // "error" | "unhandledrejection" | "api-fail" | "log"
     #[serde(default)]
     message: Option<String>,
     #[serde(default)]

@@ -66,19 +66,22 @@ pub fn evaluate(snap: &AccountSnapshot) -> MarginCallReport {
     let cushion_f = to_f64(r.dollar_cushion);
     let lmv_f = to_f64(snap.long_market_value);
     r.pct_cushion = if lmv_f > 0.0 { cushion_f / lmv_f } else { 0.0 };
-    r.current_equity_pct =
-        to_f64(r.current_equity) / lmv_f;
+    r.current_equity_pct = to_f64(r.current_equity) / lmv_f;
     r.in_call = r.dollar_cushion < Decimal::ZERO;
     r
 }
 
-fn to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn fully_cash_account_has_no_margin_call() {

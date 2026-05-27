@@ -37,15 +37,20 @@ pub async fn create(pool: &PgPool, user_id: Uuid, name: &str) -> anyhow::Result<
 
 pub async fn rename(pool: &PgPool, user_id: Uuid, id: Uuid, name: &str) -> anyhow::Result<bool> {
     let r = sqlx::query("UPDATE watchlists SET name = $3 WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).bind(name)
-        .execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .bind(name)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM watchlists WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id)
-        .execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
@@ -55,7 +60,9 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Watc
     }
     let w = create(pool, user_id, "Main").await?;
     sqlx::query("UPDATE watchlists SET is_default = TRUE WHERE id = $1")
-        .bind(w.id).execute(pool).await?;
+        .bind(w.id)
+        .execute(pool)
+        .await?;
     Ok(w)
 }
 
@@ -83,21 +90,27 @@ pub async fn add_symbol(pool: &PgPool, watchlist_id: Uuid, symbol: &str) -> anyh
     Ok(())
 }
 
-pub async fn remove_symbol(pool: &PgPool, watchlist_id: Uuid, symbol: &str) -> anyhow::Result<bool> {
-    let r = sqlx::query(
-        "DELETE FROM watchlist_symbols WHERE watchlist_id = $1 AND symbol = $2",
-    )
-    .bind(watchlist_id).bind(symbol.to_uppercase())
-    .execute(pool).await?;
+pub async fn remove_symbol(
+    pool: &PgPool,
+    watchlist_id: Uuid,
+    symbol: &str,
+) -> anyhow::Result<bool> {
+    let r = sqlx::query("DELETE FROM watchlist_symbols WHERE watchlist_id = $1 AND symbol = $2")
+        .bind(watchlist_id)
+        .bind(symbol.to_uppercase())
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
-pub async fn ensure_owner(pool: &PgPool, user_id: Uuid, watchlist_id: Uuid) -> anyhow::Result<bool> {
-    let row: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT user_id FROM watchlists WHERE id = $1",
-    )
-    .bind(watchlist_id)
-    .fetch_optional(pool)
-    .await?;
+pub async fn ensure_owner(
+    pool: &PgPool,
+    user_id: Uuid,
+    watchlist_id: Uuid,
+) -> anyhow::Result<bool> {
+    let row: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM watchlists WHERE id = $1")
+        .bind(watchlist_id)
+        .fetch_optional(pool)
+        .await?;
     Ok(matches!(row, Some((u,)) if u == user_id))
 }

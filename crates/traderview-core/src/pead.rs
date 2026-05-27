@@ -39,7 +39,12 @@ pub struct PeadReport {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum Direction { Up, Down, #[default] Neutral }
+pub enum Direction {
+    Up,
+    Down,
+    #[default]
+    Neutral,
+}
 
 pub fn analyze(input: &PeadInput) -> PeadReport {
     if input.forecast_stdev <= 0.0 {
@@ -50,32 +55,52 @@ pub fn analyze(input: &PeadInput) -> PeadReport {
     //   |SUE| < 0.5 → middle deciles 4-7 (no drift)
     //   0.5 ≤ |SUE| < 1.5 → outer deciles 2-3, 8-9
     //   |SUE| ≥ 1.5 → extreme deciles 1, 10
-    let decile = if sue >= 2.0 { 10 }
-        else if sue >= 1.0 { 9 }
-        else if sue >= 0.5 { 8 }
-        else if sue >  0.0 { 7 }
-        else if sue >= -0.5 { 4 }
-        else if sue >= -1.0 { 3 }
-        else if sue >= -2.0 { 2 }
-        else { 1 };
+    let decile = if sue >= 2.0 {
+        10
+    } else if sue >= 1.0 {
+        9
+    } else if sue >= 0.5 {
+        8
+    } else if sue > 0.0 {
+        7
+    } else if sue >= -0.5 {
+        4
+    } else if sue >= -1.0 {
+        3
+    } else if sue >= -2.0 {
+        2
+    } else {
+        1
+    };
     // Drift magnitude proportional to extremity, decaying to 0 over window.
     let extremity = (sue.abs() / 2.0).min(1.0);
     let progress = if input.drift_window_days > 0 {
         (input.days_since_announcement as f64 / input.drift_window_days as f64).min(1.0)
-    } else { 1.0 };
+    } else {
+        1.0
+    };
     let remaining_fraction = (1.0 - progress).max(0.0);
     let mag = input.max_drift_pct * extremity * remaining_fraction;
-    let direction = if sue > 0.0 { Direction::Up }
-        else if sue < 0.0 { Direction::Down }
-        else { Direction::Neutral };
-    let signed_drift = if matches!(direction, Direction::Down) { -mag } else { mag };
+    let direction = if sue > 0.0 {
+        Direction::Up
+    } else if sue < 0.0 {
+        Direction::Down
+    } else {
+        Direction::Neutral
+    };
+    let signed_drift = if matches!(direction, Direction::Down) {
+        -mag
+    } else {
+        mag
+    };
     PeadReport {
         sue,
         sue_decile: decile,
         expected_drift_pct: signed_drift,
         direction,
-        days_remaining_in_window:
-            input.drift_window_days.saturating_sub(input.days_since_announcement),
+        days_remaining_in_window: input
+            .drift_window_days
+            .saturating_sub(input.days_since_announcement),
     }
 }
 
@@ -127,7 +152,7 @@ mod tests {
 
     #[test]
     fn drift_decays_to_zero_at_window_end() {
-        let r = analyze(&input(2.0, 1.5, 0.2, 60));    // exactly at window end
+        let r = analyze(&input(2.0, 1.5, 0.2, 60)); // exactly at window end
         assert_eq!(r.expected_drift_pct, 0.0);
         assert_eq!(r.days_remaining_in_window, 0);
     }

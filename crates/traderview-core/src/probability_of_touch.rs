@@ -27,11 +27,20 @@ pub struct PotReport {
     pub d2: f64,
 }
 
-pub fn compute(spot: f64, strike: f64, sigma: f64, days_to_expiry: f64, r: f64, q: f64)
-    -> PotReport
-{
+pub fn compute(
+    spot: f64,
+    strike: f64,
+    sigma: f64,
+    days_to_expiry: f64,
+    r: f64,
+    q: f64,
+) -> PotReport {
     if spot <= 0.0 || strike <= 0.0 || days_to_expiry <= 0.0 || sigma <= 0.0 {
-        return PotReport { spot, strike, ..Default::default() };
+        return PotReport {
+            spot,
+            strike,
+            ..Default::default()
+        };
     }
     let t = days_to_expiry / 365.0;
     let denom = sigma * t.sqrt();
@@ -46,7 +55,11 @@ pub fn compute(spot: f64, strike: f64, sigma: f64, days_to_expiry: f64, r: f64, 
     };
     let p_touch = (2.0 * p_expire).min(1.0);
     PotReport {
-        spot, strike, p_expire_beyond: p_expire, p_touch, d2,
+        spot,
+        strike,
+        p_expire_beyond: p_expire,
+        p_touch,
+        d2,
     }
 }
 
@@ -55,12 +68,12 @@ fn norm_cdf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     // erf approximation
-    let a1 =  0.254829592;
+    let a1 = 0.254829592;
     let a2 = -0.284496736;
-    let a3 =  1.421413741;
+    let a3 = 1.421413741;
     let a4 = -1.453152027;
-    let a5 =  1.061405429;
-    let p  =  0.3275911;
+    let a5 = 1.061405429;
+    let p = 0.3275911;
     let t = 1.0 / (1.0 + p * xa);
     let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-xa * xa).exp();
     0.5 * (1.0 + sign * y)
@@ -116,7 +129,7 @@ mod tests {
     #[test]
     fn touch_probability_higher_for_longer_expiry() {
         let short = compute(100.0, 110.0, 0.30, 7.0, 0.05, 0.0);
-        let long  = compute(100.0, 110.0, 0.30, 60.0, 0.05, 0.0);
+        let long = compute(100.0, 110.0, 0.30, 60.0, 0.05, 0.0);
         assert!(long.p_touch > short.p_touch);
     }
 

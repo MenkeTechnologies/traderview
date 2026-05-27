@@ -33,7 +33,9 @@ pub struct AdxPoint {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<AdxPoint> {
     let n = bars.len();
     let mut out = vec![AdxPoint::default(); n];
-    if n < 2 || period == 0 { return out; }
+    if n < 2 || period == 0 {
+        return out;
+    }
     let p = period as f64;
     let mut atr = 0.0;
     let mut plus_dm_smoothed = 0.0;
@@ -41,16 +43,26 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<AdxPoint> {
     let mut dx_history: Vec<f64> = Vec::with_capacity(period);
     let mut adx_smoothed = 0.0;
     for i in 1..n {
-        let prev_close = bars[i-1].close;
+        let prev_close = bars[i - 1].close;
         let h = bars[i].high;
         let l = bars[i].low;
-        let prev_h = bars[i-1].high;
-        let prev_l = bars[i-1].low;
-        let tr = (h - l).max((h - prev_close).abs()).max((l - prev_close).abs());
+        let prev_h = bars[i - 1].high;
+        let prev_l = bars[i - 1].low;
+        let tr = (h - l)
+            .max((h - prev_close).abs())
+            .max((l - prev_close).abs());
         let up_move = h - prev_h;
         let down_move = prev_l - l;
-        let plus_dm = if up_move > down_move && up_move > 0.0 { up_move } else { 0.0 };
-        let minus_dm = if down_move > up_move && down_move > 0.0 { down_move } else { 0.0 };
+        let plus_dm = if up_move > down_move && up_move > 0.0 {
+            up_move
+        } else {
+            0.0
+        };
+        let minus_dm = if down_move > up_move && down_move > 0.0 {
+            down_move
+        } else {
+            0.0
+        };
         if i <= period {
             atr += tr;
             plus_dm_smoothed += plus_dm;
@@ -62,12 +74,24 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<AdxPoint> {
         }
         // Wilder smoothing.
         atr = atr - atr / p + tr;
-        plus_dm_smoothed  = plus_dm_smoothed  - plus_dm_smoothed  / p + plus_dm;
+        plus_dm_smoothed = plus_dm_smoothed - plus_dm_smoothed / p + plus_dm;
         minus_dm_smoothed = minus_dm_smoothed - minus_dm_smoothed / p + minus_dm;
-        let plus_di = if atr > 0.0 { 100.0 * plus_dm_smoothed / atr } else { 0.0 };
-        let minus_di = if atr > 0.0 { 100.0 * minus_dm_smoothed / atr } else { 0.0 };
+        let plus_di = if atr > 0.0 {
+            100.0 * plus_dm_smoothed / atr
+        } else {
+            0.0
+        };
+        let minus_di = if atr > 0.0 {
+            100.0 * minus_dm_smoothed / atr
+        } else {
+            0.0
+        };
         let di_sum = plus_di + minus_di;
-        let dx = if di_sum > 0.0 { 100.0 * (plus_di - minus_di).abs() / di_sum } else { 0.0 };
+        let dx = if di_sum > 0.0 {
+            100.0 * (plus_di - minus_di).abs() / di_sum
+        } else {
+            0.0
+        };
         dx_history.push(dx);
         if dx_history.len() >= period {
             if dx_history.len() == period {
@@ -94,21 +118,37 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<AdxPoint> {
 
 /// Classify ADX into trend-strength tiers for the UI badge.
 pub fn classify_adx(adx: f64) -> TrendStrength {
-    if adx >= 50.0 { TrendStrength::Strong }
-    else if adx >= 25.0 { TrendStrength::Trending }
-    else if adx >= 20.0 { TrendStrength::Weak }
-    else { TrendStrength::None }
+    if adx >= 50.0 {
+        TrendStrength::Strong
+    } else if adx >= 25.0 {
+        TrendStrength::Trending
+    } else if adx >= 20.0 {
+        TrendStrength::Weak
+    } else {
+        TrendStrength::None
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum TrendStrength { None, Weak, Trending, Strong }
+pub enum TrendStrength {
+    None,
+    Weak,
+    Trending,
+    Strong,
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -128,24 +168,30 @@ mod tests {
     #[test]
     fn strong_uptrend_yields_high_plus_di_and_rising_adx() {
         // 50 bars of steady uptrend.
-        let bars: Vec<Bar> = (1..=50).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=50)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let out = compute(&bars, 14);
         let last = out.last().unwrap();
-        assert!(last.plus_di > last.minus_di,
-            "uptrend → +DI > -DI");
-        assert!(last.adx > 25.0,
-            "strong uptrend should produce ADX > 25, got {}", last.adx);
+        assert!(last.plus_di > last.minus_di, "uptrend → +DI > -DI");
+        assert!(
+            last.adx > 25.0,
+            "strong uptrend should produce ADX > 25, got {}",
+            last.adx
+        );
     }
 
     #[test]
     fn strong_downtrend_yields_high_minus_di() {
-        let bars: Vec<Bar> = (1..=50).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 0.5, c - 0.5, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=50)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let out = compute(&bars, 14);
         let last = out.last().unwrap();
         assert!(last.minus_di > last.plus_di, "downtrend → -DI > +DI");
@@ -155,14 +201,19 @@ mod tests {
     #[test]
     fn choppy_series_yields_low_adx() {
         // Oscillating series — no trend.
-        let bars: Vec<Bar> = (1..=50).map(|i| {
-            let base = 100.0 + (i % 3) as f64;    // 100, 101, 102, 100, 101, ...
-            b(base + 0.5, base - 0.5, base)
-        }).collect();
+        let bars: Vec<Bar> = (1..=50)
+            .map(|i| {
+                let base = 100.0 + (i % 3) as f64; // 100, 101, 102, 100, 101, ...
+                b(base + 0.5, base - 0.5, base)
+            })
+            .collect();
         let out = compute(&bars, 14);
         let last = out.last().unwrap();
-        assert!(last.adx < 25.0,
-            "choppy series should produce low ADX, got {}", last.adx);
+        assert!(
+            last.adx < 25.0,
+            "choppy series should produce low ADX, got {}",
+            last.adx
+        );
     }
 
     // ─── classify ────────────────────────────────────────────────────

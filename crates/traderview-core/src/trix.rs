@@ -14,7 +14,9 @@
 
 fn ema(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
-    if n == 0 || period == 0 { return vec![]; }
+    if n == 0 || period == 0 {
+        return vec![];
+    }
     let k = 2.0 / (period as f64 + 1.0);
     let mut out = Vec::with_capacity(n);
     let mut prev = values[0];
@@ -30,7 +32,9 @@ fn ema(values: &[f64], period: usize) -> Vec<f64> {
 pub fn compute(closes: &[f64], period: usize) -> Vec<f64> {
     let n = closes.len();
     let mut out = vec![0.0; n];
-    if n < 2 || period == 0 { return out; }
+    if n < 2 || period == 0 {
+        return out;
+    }
     let e1 = ema(closes, period);
     let e2 = ema(&e1, period);
     let e3 = ema(&e2, period);

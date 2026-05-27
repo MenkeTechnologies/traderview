@@ -224,9 +224,8 @@ async fn upload_receipt(
     let receipt_id = row.id;
     let mime_owned = mime.clone();
     tokio::spawn(async move {
-        let result = std::panic::AssertUnwindSafe(
-            run_ocr(bg_state.clone(), receipt_id, bytes, mime_owned)
-        );
+        let result =
+            std::panic::AssertUnwindSafe(run_ocr(bg_state.clone(), receipt_id, bytes, mime_owned));
         match futures_util::FutureExt::catch_unwind(result).await {
             Ok(Ok(())) => {}
             Ok(Err(e)) => {
@@ -234,9 +233,13 @@ async fn upload_receipt(
                 mark_ocr_failed(&bg_state, receipt_id, &e.to_string()).await;
             }
             Err(panic) => {
-                let msg = if let Some(s) = panic.downcast_ref::<&str>() { (*s).to_string() }
-                    else if let Some(s) = panic.downcast_ref::<String>() { s.clone() }
-                    else { "OCR engine panicked".into() };
+                let msg = if let Some(s) = panic.downcast_ref::<&str>() {
+                    (*s).to_string()
+                } else if let Some(s) = panic.downcast_ref::<String>() {
+                    s.clone()
+                } else {
+                    "OCR engine panicked".into()
+                };
                 tracing::error!(receipt = %receipt_id, panic = %msg, "ocr task panicked");
                 mark_ocr_failed(&bg_state, receipt_id, &format!("OCR panic: {msg}")).await;
             }
@@ -329,12 +332,11 @@ async fn get_receipt_blob(
     user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Response, ApiError> {
-    let row: Option<(Uuid, String, String, String)> = sqlx::query_as(
-        "SELECT user_id, storage_path, mime, filename FROM receipts WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, String, String, String)> =
+        sqlx::query_as("SELECT user_id, storage_path, mime, filename FROM receipts WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&s.pool)
+            .await?;
     let (owner, rel_path, mime, filename) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -359,7 +361,7 @@ fn sanitize_disposition(s: &str) -> String {
     s.chars()
         .map(|c| match c {
             '"' | '\\' => '_',
-            c if c.is_control() => '_',     // strips \r, \n, \t, NUL, etc.
+            c if c.is_control() => '_', // strips \r, \n, \t, NUL, etc.
             c => c,
         })
         .collect()
@@ -477,17 +479,19 @@ async fn receipt_matches(
         candidates.into_iter().map(|c| (c.id, c)).collect();
     let out: Vec<CandidateMatch> = scored
         .into_iter()
-        .filter_map(|m| by_id.get(&m.id).map(|brief| CandidateMatch {
-            transaction: TxBrief {
-                id: brief.id,
-                account_id: brief.account_id,
-                posted_at: brief.posted_at,
-                amount: brief.amount,
-                merchant_raw: brief.merchant_raw.clone(),
-                merchant_normalized: brief.merchant_normalized.clone(),
-            },
-            score: m.score,
-        }))
+        .filter_map(|m| {
+            by_id.get(&m.id).map(|brief| CandidateMatch {
+                transaction: TxBrief {
+                    id: brief.id,
+                    account_id: brief.account_id,
+                    posted_at: brief.posted_at,
+                    amount: brief.amount,
+                    merchant_raw: brief.merchant_raw.clone(),
+                    merchant_normalized: brief.merchant_normalized.clone(),
+                },
+                score: m.score,
+            })
+        })
         .take(10)
         .collect();
     Ok(Json(out))
@@ -507,11 +511,10 @@ async fn attach_receipt(
     Json(body): Json<AttachBody>,
 ) -> Result<Json<Receipt>, ApiError> {
     // Verify receipt + tx both belong to user.
-    let owner_check: Option<(Uuid,)> =
-        sqlx::query_as("SELECT user_id FROM receipts WHERE id = $1")
-            .bind(id)
-            .fetch_optional(&s.pool)
-            .await?;
+    let owner_check: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM receipts WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&s.pool)
+        .await?;
     match owner_check {
         Some((o,)) if o == user.id => {}
         Some(_) => return Err(ApiError::Forbidden),
@@ -568,12 +571,19 @@ fn guess_mime(filename: &str) -> String {
 
 fn ext_from_mime(mime: &str) -> Option<String> {
     let m = mime.to_ascii_lowercase();
-    if m.starts_with("image/jpeg") { Some("jpg".into()) }
-    else if m.starts_with("image/png") { Some("png".into()) }
-    else if m.starts_with("image/webp") { Some("webp".into()) }
-    else if m.starts_with("image/bmp") { Some("bmp".into()) }
-    else if m.starts_with("application/pdf") { Some("pdf".into()) }
-    else { None }
+    if m.starts_with("image/jpeg") {
+        Some("jpg".into())
+    } else if m.starts_with("image/png") {
+        Some("png".into())
+    } else if m.starts_with("image/webp") {
+        Some("webp".into())
+    } else if m.starts_with("image/bmp") {
+        Some("bmp".into())
+    } else if m.starts_with("application/pdf") {
+        Some("pdf".into())
+    } else {
+        None
+    }
 }
 
 fn extension_of(filename: &str) -> String {
@@ -610,8 +620,11 @@ mod tests {
         // The bug we just fixed: pre-fix this returned the full filename
         // because rsplit('.').next() returns the whole string when no
         // separator is present.
-        assert_eq!(extension_of("noext"), "bin",
-            "extensionless filenames must fall back to bin");
+        assert_eq!(
+            extension_of("noext"),
+            "bin",
+            "extensionless filenames must fall back to bin"
+        );
         assert_eq!(extension_of("scan"), "bin");
     }
 
@@ -630,7 +643,13 @@ mod tests {
 
     #[test]
     fn accepts_image_jpeg_png_webp_bmp_and_pdf() {
-        for m in ["image/jpeg", "image/png", "image/webp", "image/bmp", "application/pdf"] {
+        for m in [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/bmp",
+            "application/pdf",
+        ] {
             assert!(is_acceptable_mime(m), "must accept {m}");
         }
     }
@@ -649,7 +668,14 @@ mod tests {
 
     #[test]
     fn rejects_unsupported_mimes() {
-        for m in ["text/plain", "image/gif", "image/tiff", "application/zip", "", "video/mp4"] {
+        for m in [
+            "text/plain",
+            "image/gif",
+            "image/tiff",
+            "application/zip",
+            "",
+            "video/mp4",
+        ] {
             assert!(!is_acceptable_mime(m), "must reject {m}");
         }
     }
@@ -658,18 +684,18 @@ mod tests {
 
     #[test]
     fn guess_mime_handles_known_extensions() {
-        assert_eq!(guess_mime("a.jpg"),  "image/jpeg");
+        assert_eq!(guess_mime("a.jpg"), "image/jpeg");
         assert_eq!(guess_mime("a.jpeg"), "image/jpeg");
-        assert_eq!(guess_mime("a.png"),  "image/png");
+        assert_eq!(guess_mime("a.png"), "image/png");
         assert_eq!(guess_mime("a.webp"), "image/webp");
-        assert_eq!(guess_mime("a.bmp"),  "image/bmp");
-        assert_eq!(guess_mime("a.pdf"),  "application/pdf");
+        assert_eq!(guess_mime("a.bmp"), "image/bmp");
+        assert_eq!(guess_mime("a.pdf"), "application/pdf");
     }
 
     #[test]
     fn guess_mime_unknown_falls_back_to_octet_stream() {
         assert_eq!(guess_mime("notes.txt"), "application/octet-stream");
-        assert_eq!(guess_mime("noext"),     "application/octet-stream");
+        assert_eq!(guess_mime("noext"), "application/octet-stream");
     }
 
     // ─── sanitize_disposition ─────────────────────────────────────────────
@@ -701,10 +727,14 @@ mod tests {
     #[test]
     fn sanitize_disposition_preserves_normal_filenames() {
         // Don't mangle legitimate filenames.
-        assert_eq!(sanitize_disposition("receipt-2026-05-27.jpg"),
-                   "receipt-2026-05-27.jpg");
-        assert_eq!(sanitize_disposition("Café Latté.pdf"),
-                   "Café Latté.pdf",
-            "Unicode letters/spaces must survive — only controls + quotes are sanitized");
+        assert_eq!(
+            sanitize_disposition("receipt-2026-05-27.jpg"),
+            "receipt-2026-05-27.jpg"
+        );
+        assert_eq!(
+            sanitize_disposition("Café Latté.pdf"),
+            "Café Latté.pdf",
+            "Unicode letters/spaces must survive — only controls + quotes are sanitized"
+        );
     }
 }

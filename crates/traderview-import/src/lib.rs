@@ -197,7 +197,8 @@ mod tests {
         assert_eq!(a, b, "identical bytes must hash to identical keys");
         assert_eq!(a.len(), 64, "sha256 hex digest must be 64 chars");
 
-        let mutated = b"Symbol,Side,Qty,Price,Fee,Date\nAAPL,buy,101,150.50,1.00,2026-01-15 09:30:00\n";
+        let mutated =
+            b"Symbol,Side,Qty,Price,Fee,Date\nAAPL,buy,101,150.50,1.00,2026-01-15 09:30:00\n";
         assert_ne!(
             a,
             sha256_hex(mutated),

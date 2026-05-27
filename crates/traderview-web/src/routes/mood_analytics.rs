@@ -18,6 +18,9 @@ async fn report(
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<MoodReport>, ApiError> {
     ensure_account_owner(&s, u.id, account_id).await?;
-    Ok(Json(traderview_db::mood_analytics::report(&s.pool, u.id, account_id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::mood_analytics::report(&s.pool, u.id, account_id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

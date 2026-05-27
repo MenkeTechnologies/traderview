@@ -29,7 +29,9 @@ pub struct BetaReport {
 }
 
 pub fn estimate(asset: &[f64], benchmark: &[f64]) -> Option<BetaReport> {
-    if asset.len() != benchmark.len() || asset.len() < 2 { return None; }
+    if asset.len() != benchmark.len() || asset.len() < 2 {
+        return None;
+    }
     let n = asset.len() as f64;
     let mean_a = asset.iter().sum::<f64>() / n;
     let mean_b = benchmark.iter().sum::<f64>() / n;
@@ -43,15 +45,22 @@ pub fn estimate(asset: &[f64], benchmark: &[f64]) -> Option<BetaReport> {
         var_b += db * db;
         var_a += da * da;
     }
-    if var_b == 0.0 { return None; }
+    if var_b == 0.0 {
+        return None;
+    }
     let beta = cov / var_b;
     let alpha = mean_a - beta * mean_b;
     let correlation = if var_a > 0.0 && var_b > 0.0 {
         cov / (var_a.sqrt() * var_b.sqrt())
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let r_squared = correlation * correlation;
     Some(BetaReport {
-        beta, alpha, r_squared, correlation,
+        beta,
+        alpha,
+        r_squared,
+        correlation,
         n: asset.len(),
     })
 }
@@ -118,7 +127,7 @@ mod tests {
     fn r_squared_zero_for_independent_series() {
         // Construct two truly independent-looking series.
         let bench = vec![1.0, -1.0, 1.0, -1.0, 1.0, -1.0];
-        let asset = vec![1.0,  1.0, 1.0,  1.0, 1.0,  1.0];
+        let asset = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         // Asset variance = 0 → correlation = 0 by our formula.
         let r = estimate(&asset, &bench).unwrap();
         assert_eq!(r.r_squared, 0.0);
@@ -129,7 +138,10 @@ mod tests {
     fn low_beta_stock_significantly_under_one() {
         // Asset moves about 30% as much as bench.
         let bench = vec![10.0, 11.0, 9.0, 12.0, 8.0];
-        let asset = bench.iter().map(|x| 10.0 + (x - 10.0) * 0.3).collect::<Vec<_>>();
+        let asset = bench
+            .iter()
+            .map(|x| 10.0 + (x - 10.0) * 0.3)
+            .collect::<Vec<_>>();
         let r = estimate(&asset, &bench).unwrap();
         assert!((r.beta - 0.3).abs() < 1e-9);
     }

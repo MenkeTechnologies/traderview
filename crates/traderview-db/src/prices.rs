@@ -16,7 +16,8 @@ use std::str::FromStr;
 use traderview_core::{BarInterval, PriceBar};
 
 const YAHOO_BASE: &str = "https://query1.finance.yahoo.com/v8/finance/chart/";
-const USER_AGENT: &str = "Mozilla/5.0 (compatible; traderview/0.1; +https://github.com/MenkeTechnologies/traderview)";
+const USER_AGENT: &str =
+    "Mozilla/5.0 (compatible; traderview/0.1; +https://github.com/MenkeTechnologies/traderview)";
 
 pub async fn get_bars(
     pool: &PgPool,
@@ -32,7 +33,12 @@ pub async fn get_bars(
                 log_fetch(pool, symbol, interval, from, to, bars.len() as i32).await?;
             }
             Err(e) => {
-                tracing::warn!(?e, symbol, ?interval, "yahoo fetch failed; serving cached only");
+                tracing::warn!(
+                    ?e,
+                    symbol,
+                    ?interval,
+                    "yahoo fetch failed; serving cached only"
+                );
             }
         }
     }
@@ -46,34 +52,45 @@ async fn read_bars(
     from: DateTime<Utc>,
     to: DateTime<Utc>,
 ) -> anyhow::Result<Vec<PriceBar>> {
-    type PriceBarRow = (String, String, DateTime<Utc>, Decimal, Decimal, Decimal, Decimal, Decimal, String);
-    let rows: Vec<PriceBarRow> =
-        sqlx::query_as(
-            "SELECT symbol, interval::text, bar_time, open, high, low, close, volume, source
+    type PriceBarRow = (
+        String,
+        String,
+        DateTime<Utc>,
+        Decimal,
+        Decimal,
+        Decimal,
+        Decimal,
+        Decimal,
+        String,
+    );
+    let rows: Vec<PriceBarRow> = sqlx::query_as(
+        "SELECT symbol, interval::text, bar_time, open, high, low, close, volume, source
                FROM price_bars
               WHERE symbol = $1 AND interval = $2::bar_interval_t
                 AND bar_time BETWEEN $3 AND $4
               ORDER BY bar_time ASC",
-        )
-        .bind(symbol)
-        .bind(interval.label())
-        .bind(from)
-        .bind(to)
-        .fetch_all(pool)
-        .await?;
+    )
+    .bind(symbol)
+    .bind(interval.label())
+    .bind(from)
+    .bind(to)
+    .fetch_all(pool)
+    .await?;
     Ok(rows
         .into_iter()
-        .map(|(symbol, iv, bar_time, open, high, low, close, volume, source)| PriceBar {
-            symbol,
-            interval: parse_interval(&iv),
-            bar_time,
-            open,
-            high,
-            low,
-            close,
-            volume,
-            source,
-        })
+        .map(
+            |(symbol, iv, bar_time, open, high, low, close, volume, source)| PriceBar {
+                symbol,
+                interval: parse_interval(&iv),
+                bar_time,
+                open,
+                high,
+                low,
+                close,
+                volume,
+                source,
+            },
+        )
         .collect())
 }
 
@@ -213,12 +230,36 @@ async fn fetch_yahoo(
 
     let mut out = Vec::with_capacity(timestamps.len());
     for (i, ts) in timestamps.iter().enumerate() {
-        let bar_time = Utc.timestamp_opt(*ts, 0).single().ok_or_else(|| anyhow::anyhow!("bad ts"))?;
-        let open = quote.open.get(i).and_then(|x| *x).and_then(|x| Decimal::from_str(&x.to_string()).ok());
-        let high = quote.high.get(i).and_then(|x| *x).and_then(|x| Decimal::from_str(&x.to_string()).ok());
-        let low = quote.low.get(i).and_then(|x| *x).and_then(|x| Decimal::from_str(&x.to_string()).ok());
-        let close = quote.close.get(i).and_then(|x| *x).and_then(|x| Decimal::from_str(&x.to_string()).ok());
-        let volume = quote.volume.get(i).and_then(|x| *x).map(Decimal::from).unwrap_or(Decimal::ZERO);
+        let bar_time = Utc
+            .timestamp_opt(*ts, 0)
+            .single()
+            .ok_or_else(|| anyhow::anyhow!("bad ts"))?;
+        let open = quote
+            .open
+            .get(i)
+            .and_then(|x| *x)
+            .and_then(|x| Decimal::from_str(&x.to_string()).ok());
+        let high = quote
+            .high
+            .get(i)
+            .and_then(|x| *x)
+            .and_then(|x| Decimal::from_str(&x.to_string()).ok());
+        let low = quote
+            .low
+            .get(i)
+            .and_then(|x| *x)
+            .and_then(|x| Decimal::from_str(&x.to_string()).ok());
+        let close = quote
+            .close
+            .get(i)
+            .and_then(|x| *x)
+            .and_then(|x| Decimal::from_str(&x.to_string()).ok());
+        let volume = quote
+            .volume
+            .get(i)
+            .and_then(|x| *x)
+            .map(Decimal::from)
+            .unwrap_or(Decimal::ZERO);
         if let (Some(open), Some(high), Some(low), Some(close)) = (open, high, low, close) {
             out.push(PriceBar {
                 symbol: symbol.into(),

@@ -23,7 +23,9 @@ struct RequestBody {
     #[serde(default = "default_scope")]
     scope: String,
 }
-fn default_scope() -> String { "read".into() }
+fn default_scope() -> String {
+    "read".into()
+}
 
 async fn request(
     State(s): State<AppState>,

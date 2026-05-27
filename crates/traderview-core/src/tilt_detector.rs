@@ -34,7 +34,10 @@ pub struct TiltConfig {
 
 impl Default for TiltConfig {
     fn default() -> Self {
-        Self { min_losing_streak: 3, cooloff_minutes: 15 }
+        Self {
+            min_losing_streak: 3,
+            cooloff_minutes: 15,
+        }
     }
 }
 
@@ -58,9 +61,11 @@ pub enum IncidentKind {
 
 pub fn scan(events: &[TradeEvent], cfg: &TiltConfig) -> Vec<TiltIncident> {
     let mut incidents = Vec::new();
-    if events.is_empty() { return incidents; }
+    if events.is_empty() {
+        return incidents;
+    }
     let mut streak_start: Option<usize> = None;
-    let mut streak_sizes_increasing = true;   // assume true until proven false
+    let mut streak_sizes_increasing = true; // assume true until proven false
     let mut rapid_reentry_in_streak = false;
     let mut last_size = 0.0;
     let mut last_time: Option<DateTime<Utc>> = None;
@@ -77,10 +82,14 @@ pub fn scan(events: &[TradeEvent], cfg: &TiltConfig) -> Vec<TiltIncident> {
                 continue;
             }
             // Continue an existing streak — evaluate size escalation + rapid re-entry.
-            if e.abs_size <= last_size { streak_sizes_increasing = false; }
+            if e.abs_size <= last_size {
+                streak_sizes_increasing = false;
+            }
             if let Some(prev) = last_time {
                 let gap_min = (e.closed_at - prev).num_minutes();
-                if gap_min < cfg.cooloff_minutes { rapid_reentry_in_streak = true; }
+                if gap_min < cfg.cooloff_minutes {
+                    rapid_reentry_in_streak = true;
+                }
             }
             last_size = e.abs_size;
             last_time = Some(e.closed_at);
@@ -89,8 +98,14 @@ pub fn scan(events: &[TradeEvent], cfg: &TiltConfig) -> Vec<TiltIncident> {
             if let Some(start) = streak_start {
                 let len = i - start;
                 if len >= cfg.min_losing_streak {
-                    emit_streak(events, start, i - 1, streak_sizes_increasing,
-                        rapid_reentry_in_streak, &mut incidents);
+                    emit_streak(
+                        events,
+                        start,
+                        i - 1,
+                        streak_sizes_increasing,
+                        rapid_reentry_in_streak,
+                        &mut incidents,
+                    );
                 }
             }
             streak_start = None;
@@ -100,16 +115,25 @@ pub fn scan(events: &[TradeEvent], cfg: &TiltConfig) -> Vec<TiltIncident> {
     if let Some(start) = streak_start {
         let len = events.len() - start;
         if len >= cfg.min_losing_streak {
-            emit_streak(events, start, events.len() - 1, streak_sizes_increasing,
-                rapid_reentry_in_streak, &mut incidents);
+            emit_streak(
+                events,
+                start,
+                events.len() - 1,
+                streak_sizes_increasing,
+                rapid_reentry_in_streak,
+                &mut incidents,
+            );
         }
     }
     incidents
 }
 
 fn emit_streak(
-    events: &[TradeEvent], start: usize, end: usize,
-    sizes_increasing: bool, rapid: bool,
+    events: &[TradeEvent],
+    start: usize,
+    end: usize,
+    sizes_increasing: bool,
+    rapid: bool,
     out: &mut Vec<TiltIncident>,
 ) {
     let trade_count = end - start + 1;
@@ -149,13 +173,18 @@ fn emit_streak(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{TimeZone, Duration};
+    use chrono::{Duration, TimeZone};
 
     fn at(min: i64) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(2026, 5, 27, 14, 0, 0).unwrap() + Duration::minutes(min)
     }
     fn ev(id: &str, t_min: i64, pnl: f64, size: f64) -> TradeEvent {
-        TradeEvent { trade_id: id.into(), closed_at: at(t_min), pnl, abs_size: size }
+        TradeEvent {
+            trade_id: id.into(),
+            closed_at: at(t_min),
+            pnl,
+            abs_size: size,
+        }
     }
 
     #[test]
@@ -167,8 +196,8 @@ mod tests {
     #[test]
     fn all_winners_no_incidents() {
         let events = vec![
-            ev("1", 0,   100.0, 1000.0),
-            ev("2", 60,  100.0, 1000.0),
+            ev("1", 0, 100.0, 1000.0),
+            ev("2", 60, 100.0, 1000.0),
             ev("3", 120, 100.0, 1000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
@@ -177,10 +206,7 @@ mod tests {
 
     #[test]
     fn two_consecutive_losses_below_threshold() {
-        let events = vec![
-            ev("1", 0,  -100.0, 1000.0),
-            ev("2", 60, -100.0, 1000.0),
-        ];
+        let events = vec![ev("1", 0, -100.0, 1000.0), ev("2", 60, -100.0, 1000.0)];
         let out = scan(&events, &TiltConfig::default());
         assert!(out.is_empty(), "threshold is 3 — 2 losses doesn't trigger");
     }
@@ -188,12 +214,16 @@ mod tests {
     #[test]
     fn three_consecutive_losses_emits_streak_incident() {
         let events = vec![
-            ev("1", 0,   -100.0, 1000.0),
-            ev("2", 60,  -100.0, 1000.0),
+            ev("1", 0, -100.0, 1000.0),
+            ev("2", 60, -100.0, 1000.0),
             ev("3", 120, -100.0, 1000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
-        assert_eq!(out.len(), 1, "size-flat streak only emits ConsecutiveLosses");
+        assert_eq!(
+            out.len(),
+            1,
+            "size-flat streak only emits ConsecutiveLosses"
+        );
         assert_eq!(out[0].kind, IncidentKind::ConsecutiveLosses);
         assert_eq!(out[0].trade_count, 3);
         assert_eq!(out[0].total_pnl, -300.0);
@@ -202,21 +232,25 @@ mod tests {
     #[test]
     fn streak_with_increasing_size_also_emits_size_incident() {
         let events = vec![
-            ev("1", 0,   -100.0, 1000.0),
-            ev("2", 60,  -100.0, 2000.0),
+            ev("1", 0, -100.0, 1000.0),
+            ev("2", 60, -100.0, 2000.0),
             ev("3", 120, -100.0, 3000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
-        assert!(out.iter().any(|i| i.kind == IncidentKind::ConsecutiveLosses));
-        assert!(out.iter().any(|i| i.kind == IncidentKind::SizeIncreaseInDrawdown));
+        assert!(out
+            .iter()
+            .any(|i| i.kind == IncidentKind::ConsecutiveLosses));
+        assert!(out
+            .iter()
+            .any(|i| i.kind == IncidentKind::SizeIncreaseInDrawdown));
     }
 
     #[test]
     fn streak_with_rapid_reentry_emits_rapid_incident() {
         // 5 minutes between entries, default cooloff = 15.
         let events = vec![
-            ev("1", 0,  -100.0, 1000.0),
-            ev("2", 5,  -100.0, 1000.0),
+            ev("1", 0, -100.0, 1000.0),
+            ev("2", 5, -100.0, 1000.0),
             ev("3", 10, -100.0, 1000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
@@ -226,14 +260,17 @@ mod tests {
     #[test]
     fn winner_after_losers_ends_the_streak() {
         let events = vec![
-            ev("1", 0,    -100.0, 1000.0),
-            ev("2", 60,   -100.0, 1000.0),
-            ev("3", 120,  -100.0, 1000.0),    // streak of 3 ends here
-            ev("4", 180,   200.0, 1000.0),    // winner breaks it
-            ev("5", 240,  -100.0, 1000.0),    // new streak of 1 — below threshold
+            ev("1", 0, -100.0, 1000.0),
+            ev("2", 60, -100.0, 1000.0),
+            ev("3", 120, -100.0, 1000.0), // streak of 3 ends here
+            ev("4", 180, 200.0, 1000.0),  // winner breaks it
+            ev("5", 240, -100.0, 1000.0), // new streak of 1 — below threshold
         ];
         let out = scan(&events, &TiltConfig::default());
-        let streaks: Vec<_> = out.iter().filter(|i| i.kind == IncidentKind::ConsecutiveLosses).collect();
+        let streaks: Vec<_> = out
+            .iter()
+            .filter(|i| i.kind == IncidentKind::ConsecutiveLosses)
+            .collect();
         assert_eq!(streaks.len(), 1);
         assert_eq!(streaks[0].trade_count, 3);
     }
@@ -242,8 +279,8 @@ mod tests {
     fn final_streak_running_to_end_of_input_still_emits() {
         // No winner at end — streak runs to last event.
         let events = vec![
-            ev("1", 0,   -100.0, 1000.0),
-            ev("2", 60,  -100.0, 1000.0),
+            ev("1", 0, -100.0, 1000.0),
+            ev("2", 60, -100.0, 1000.0),
             ev("3", 120, -100.0, 1000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
@@ -254,9 +291,9 @@ mod tests {
     fn breakeven_zero_pnl_not_a_loss() {
         // pnl == 0 is NOT a loss (no incident).
         let events = vec![
-            ev("1", 0,    0.0, 1000.0),
-            ev("2", 60,   0.0, 1000.0),
-            ev("3", 120,  0.0, 1000.0),
+            ev("1", 0, 0.0, 1000.0),
+            ev("2", 60, 0.0, 1000.0),
+            ev("3", 120, 0.0, 1000.0),
         ];
         let out = scan(&events, &TiltConfig::default());
         assert!(out.is_empty());

@@ -10,7 +10,13 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/heatmap", get(heatmap))
 }
 
-async fn heatmap(State(s): State<AppState>, user: AuthUser) -> Result<Json<HeatmapResponse>, ApiError> {
-    Ok(Json(traderview_db::heatmap::build(&s.pool, user.id)
-        .await.map_err(ApiError::Internal)?))
+async fn heatmap(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<HeatmapResponse>, ApiError> {
+    Ok(Json(
+        traderview_db::heatmap::build(&s.pool, user.id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

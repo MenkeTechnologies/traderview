@@ -36,8 +36,8 @@ pub struct ScoreInputs {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DisciplineScore {
-    pub score: u8,                  // 0..=100
-    pub grade: String,              // "A+" .. "F"
+    pub score: u8,     // 0..=100
+    pub grade: String, // "A+" .. "F"
     /// 0..=1, fraction of trades with a stop set on entry.
     pub stop_set_rate: f64,
     /// 0..=1, fraction of stopped trades where the stop wasn't violated.
@@ -54,8 +54,8 @@ pub struct DisciplineScore {
     pub component_gate_restraint: u8,
 }
 
-const COMPONENT_WEIGHT_STOP_SET: f64       = 0.20;
-const COMPONENT_WEIGHT_STOP_HONORED: f64   = 0.30;
+const COMPONENT_WEIGHT_STOP_SET: f64 = 0.20;
+const COMPONENT_WEIGHT_STOP_HONORED: f64 = 0.30;
 const COMPONENT_WEIGHT_PLAN_ADHERENCE: f64 = 0.25;
 const COMPONENT_WEIGHT_GATE_RESTRAINT: f64 = 0.25;
 
@@ -65,7 +65,8 @@ pub fn score(inputs: &ScoreInputs) -> DisciplineScore {
     // tank the running average.
     if inputs.trades == 0 && inputs.gate_blocks == 0 && inputs.gate_warnings == 0 {
         return DisciplineScore {
-            score: 100, grade: "A+".into(),
+            score: 100,
+            grade: "A+".into(),
             stop_set_rate: 0.0,
             stop_honored_rate: 0.0,
             plan_adherence_rate: 0.0,
@@ -93,15 +94,13 @@ pub fn score(inputs: &ScoreInputs) -> DisciplineScore {
     // Gate restraint: blocks weigh 5× warnings (you actively tried to
     // break a rule vs just edged near one). 0 fires → perfect 1.0; the
     // more you tried, the lower it goes. Tuned so 4 blocks → ~0.0.
-    let weighted_misbehavior = (inputs.gate_blocks as f64) * 5.0
-        + (inputs.gate_warnings as f64);
+    let weighted_misbehavior = (inputs.gate_blocks as f64) * 5.0 + (inputs.gate_warnings as f64);
     let gate_restraint = (1.0 - weighted_misbehavior / 20.0).clamp(0.0, 1.0);
 
-    let final_pct =
-        COMPONENT_WEIGHT_STOP_SET       * stop_set_rate +
-        COMPONENT_WEIGHT_STOP_HONORED   * stop_honored_rate +
-        COMPONENT_WEIGHT_PLAN_ADHERENCE * plan_adherence_rate +
-        COMPONENT_WEIGHT_GATE_RESTRAINT * gate_restraint;
+    let final_pct = COMPONENT_WEIGHT_STOP_SET * stop_set_rate
+        + COMPONENT_WEIGHT_STOP_HONORED * stop_honored_rate
+        + COMPONENT_WEIGHT_PLAN_ADHERENCE * plan_adherence_rate
+        + COMPONENT_WEIGHT_GATE_RESTRAINT * gate_restraint;
     let score_u8 = (final_pct * 100.0).round().clamp(0.0, 100.0) as u8;
 
     DisciplineScore {
@@ -122,17 +121,18 @@ pub fn score(inputs: &ScoreInputs) -> DisciplineScore {
 fn grade_letter(score: u8) -> String {
     match score {
         97..=100 => "A+",
-        93..=96  => "A",
-        90..=92  => "A-",
-        87..=89  => "B+",
-        83..=86  => "B",
-        80..=82  => "B-",
-        77..=79  => "C+",
-        73..=76  => "C",
-        70..=72  => "C-",
-        60..=69  => "D",
-        _        => "F",
-    }.into()
+        93..=96 => "A",
+        90..=92 => "A-",
+        87..=89 => "B+",
+        83..=86 => "B",
+        80..=82 => "B-",
+        77..=79 => "C+",
+        73..=76 => "C",
+        70..=72 => "C-",
+        60..=69 => "D",
+        _ => "F",
+    }
+    .into()
 }
 
 #[cfg(test)]
@@ -172,7 +172,11 @@ mod tests {
         i.trades_stop_honored = 0;
         let s = score(&i);
         // Losing stop_set (0.20) + stop_honored (0.30) drops by 50pts.
-        assert!(s.score < 60, "stop-less trading must heavily punish, got {}", s.score);
+        assert!(
+            s.score < 60,
+            "stop-less trading must heavily punish, got {}",
+            s.score
+        );
     }
 
     #[test]
@@ -181,8 +185,11 @@ mod tests {
         let mut i = perfect_trader();
         i.gate_blocks = 1;
         let s = score(&i);
-        assert!((90..=95).contains(&s.score),
-            "one block should pull a perfect score down to ~94, got {}", s.score);
+        assert!(
+            (90..=95).contains(&s.score),
+            "one block should pull a perfect score down to ~94, got {}",
+            s.score
+        );
     }
 
     #[test]
@@ -190,14 +197,16 @@ mod tests {
         let mut i = perfect_trader();
         i.gate_blocks = 4;
         let s = score(&i);
-        assert_eq!(s.component_gate_restraint, 0,
-            "4 blocks must zero the restraint component (20pts × blocks ≥ 20 cap)");
+        assert_eq!(
+            s.component_gate_restraint, 0,
+            "4 blocks must zero the restraint component (20pts × blocks ≥ 20 cap)"
+        );
     }
 
     #[test]
     fn many_warnings_alone_dont_zero_the_score() {
         let mut i = perfect_trader();
-        i.gate_warnings = 20;       // a lot of warnings — gate component → 0
+        i.gate_warnings = 20; // a lot of warnings — gate component → 0
         let s = score(&i);
         // 75 from the other three components (20+30+25), gate → 0.
         assert_eq!(s.score, 75);
@@ -206,8 +215,8 @@ mod tests {
     #[test]
     fn plan_adherence_is_qty_and_direction_avg() {
         let mut i = perfect_trader();
-        i.trades_qty_within_plan = 5;       // 50%
-        i.trades_direction_matched = 10;    // 100%
+        i.trades_qty_within_plan = 5; // 50%
+        i.trades_direction_matched = 10; // 100%
         let s = score(&i);
         // plan_adherence = (0.5 + 1.0) / 2 = 0.75 → 25 × 0.75 = 18.75 component
         // Other three perfect: 20 + 30 + 25 = 75. Total = 93.75 → 94.
@@ -222,8 +231,10 @@ mod tests {
         i.trades_with_stop = 5;
         i.trades_stop_honored = 5;
         let s = score(&i);
-        assert_eq!(s.component_stop_honored, 100,
-            "honored rate must be over the STOPPED subset, not all trades");
+        assert_eq!(
+            s.component_stop_honored, 100,
+            "honored rate must be over the STOPPED subset, not all trades"
+        );
         // stop_set component drops to 50; the rest stay 100.
         assert_eq!(s.component_stop_set, 50);
     }
@@ -231,12 +242,25 @@ mod tests {
     #[test]
     fn grade_letter_boundaries() {
         for (score_val, expected_grade) in [
-            (100, "A+"), (97, "A+"), (96, "A"), (93, "A"),
-            (92, "A-"), (90, "A-"), (89, "B+"), (87, "B+"),
-            (80, "B-"), (75, "C"), (62, "D"), (50, "F"), (0, "F"),
+            (100, "A+"),
+            (97, "A+"),
+            (96, "A"),
+            (93, "A"),
+            (92, "A-"),
+            (90, "A-"),
+            (89, "B+"),
+            (87, "B+"),
+            (80, "B-"),
+            (75, "C"),
+            (62, "D"),
+            (50, "F"),
+            (0, "F"),
         ] {
-            assert_eq!(grade_letter(score_val), expected_grade,
-                "score {score_val} should map to {expected_grade}");
+            assert_eq!(
+                grade_letter(score_val),
+                expected_grade,
+                "score {score_val} should map to {expected_grade}"
+            );
         }
     }
 

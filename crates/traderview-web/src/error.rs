@@ -33,7 +33,13 @@ pub enum ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        if let ApiError::RateLimited { limit, remaining, retry_after_secs, reset_epoch } = self {
+        if let ApiError::RateLimited {
+            limit,
+            remaining,
+            retry_after_secs,
+            reset_epoch,
+        } = self
+        {
             let body = Json(json!({
                 "error": "rate limited",
                 "limit": limit,

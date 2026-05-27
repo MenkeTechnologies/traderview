@@ -40,7 +40,9 @@ pub struct Streak {
 
 pub fn analyze(pnls: &[f64]) -> StreaksReport {
     let mut report = StreaksReport::default();
-    if pnls.is_empty() { return report; }
+    if pnls.is_empty() {
+        return report;
+    }
     let n = pnls.len();
     let wins = pnls.iter().filter(|p| **p > 0.0).count();
     report.win_rate = wins as f64 / n as f64;
@@ -69,14 +71,17 @@ pub fn analyze(pnls: &[f64]) -> StreaksReport {
     report.current_streak_is_winning = current_is_winning;
 
     for s in &report.all_streaks {
-        if s.is_winning { report.max_winning_streak = report.max_winning_streak.max(s.length); }
-        else            { report.max_losing_streak  = report.max_losing_streak.max(s.length); }
+        if s.is_winning {
+            report.max_winning_streak = report.max_winning_streak.max(s.length);
+        } else {
+            report.max_losing_streak = report.max_losing_streak.max(s.length);
+        }
     }
 
     let p = report.win_rate.clamp(0.0001, 0.9999);
     let n_f = n as f64;
     report.expected_max_winning_streak = (n_f * (1.0 - p)).ln() / -p.ln();
-    report.expected_max_losing_streak  = (n_f * p).ln()       / -(1.0 - p).ln();
+    report.expected_max_losing_streak = (n_f * p).ln() / -(1.0 - p).ln();
 
     report
 }
@@ -87,7 +92,9 @@ pub fn analyze(pnls: &[f64]) -> StreaksReport {
 /// Uses the Feller approximation (good for large m, small q^k):
 ///   P(at least one run of k losses) ≈ 1 - exp(-(m - k + 1) × q^k × (1 - q))
 pub fn probability_of_losing_streak(q: f64, k: usize, m: usize) -> f64 {
-    if m < k { return 0.0; }
+    if m < k {
+        return 0.0;
+    }
     let q = q.clamp(0.0001, 0.9999);
     let lhs = (m - k + 1) as f64 * q.powi(k as i32) * (1.0 - q);
     1.0 - (-lhs).exp()
@@ -159,7 +166,9 @@ mod tests {
     #[test]
     fn expected_max_streaks_finite_for_50_50_system() {
         // 50% win rate over 100 trades — both expected maxes should be finite.
-        let pnls: Vec<f64> = (0..100).map(|i| if i % 2 == 0 { 100.0 } else { -50.0 }).collect();
+        let pnls: Vec<f64> = (0..100)
+            .map(|i| if i % 2 == 0 { 100.0 } else { -50.0 })
+            .collect();
         let r = analyze(&pnls);
         assert!(r.expected_max_winning_streak.is_finite());
         assert!(r.expected_max_losing_streak.is_finite());

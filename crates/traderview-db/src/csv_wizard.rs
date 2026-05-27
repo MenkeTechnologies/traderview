@@ -28,14 +28,14 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize)]
 pub struct ParsePreview {
     pub headers: Vec<String>,
-    pub rows: Vec<Vec<String>>,        // first 1000 rows verbatim
+    pub rows: Vec<Vec<String>>, // first 1000 rows verbatim
     pub total_rows: usize,
     pub sha256: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ColumnMapping {
-    pub symbol: String,                // header name
+    pub symbol: String, // header name
     pub side: String,
     pub qty: String,
     pub price: String,
@@ -63,16 +63,27 @@ pub fn parse_csv(bytes: &[u8]) -> anyhow::Result<ParsePreview> {
         .has_headers(true)
         .flexible(true)
         .from_reader(bytes);
-    let headers: Vec<String> = rdr.headers()?.iter().map(|s| s.trim().to_string()).collect();
+    let headers: Vec<String> = rdr
+        .headers()?
+        .iter()
+        .map(|s| s.trim().to_string())
+        .collect();
     let mut all_rows: Vec<Vec<String>> = Vec::new();
     for rec in rdr.records() {
         let r = rec?;
         all_rows.push(r.iter().map(|s| s.to_string()).collect());
     }
     let total = all_rows.len();
-    let preview = if all_rows.len() > 1000 { all_rows[..1000].to_vec() } else { all_rows.clone() };
+    let preview = if all_rows.len() > 1000 {
+        all_rows[..1000].to_vec()
+    } else {
+        all_rows.clone()
+    };
     Ok(ParsePreview {
-        headers, rows: preview, total_rows: total, sha256: sha256_hex(bytes),
+        headers,
+        rows: preview,
+        total_rows: total,
+        sha256: sha256_hex(bytes),
     })
 }
 
@@ -88,16 +99,24 @@ pub async fn commit(
         header_idx.insert(h.as_str(), i);
     }
     let need = |name: &str| -> anyhow::Result<usize> {
-        header_idx.get(name).copied()
+        header_idx
+            .get(name)
+            .copied()
             .ok_or_else(|| anyhow::anyhow!("column not in CSV: {}", name))
     };
-    let i_sym  = need(&mapping.symbol)?;
+    let i_sym = need(&mapping.symbol)?;
     let i_side = need(&mapping.side)?;
-    let i_qty  = need(&mapping.qty)?;
-    let i_pri  = need(&mapping.price)?;
-    let i_ts   = need(&mapping.executed_at)?;
-    let i_fee  = mapping.fee.as_deref().and_then(|n| header_idx.get(n).copied());
-    let i_oid  = mapping.broker_order_id.as_deref().and_then(|n| header_idx.get(n).copied());
+    let i_qty = need(&mapping.qty)?;
+    let i_pri = need(&mapping.price)?;
+    let i_ts = need(&mapping.executed_at)?;
+    let i_fee = mapping
+        .fee
+        .as_deref()
+        .and_then(|n| header_idx.get(n).copied());
+    let i_oid = mapping
+        .broker_order_id
+        .as_deref()
+        .and_then(|n| header_idx.get(n).copied());
 
     // Audit/dedupe at the import level: insert one imports row with the
     // sha256 of the raw bytes. If we've already imported this exact file
@@ -107,11 +126,16 @@ pub async fn commit(
               VALUES ($1, 'csv_wizard', $2, $3, 'processed')
           RETURNING id",
     )
-    .bind(account_id).bind(&preview.sha256).bind(bytes)
-    .fetch_one(pool).await?;
+    .bind(account_id)
+    .bind(&preview.sha256)
+    .bind(bytes)
+    .fetch_one(pool)
+    .await?;
 
     // Re-walk the full row set (not just the preview slice).
-    let mut rdr = csv::ReaderBuilder::new().has_headers(true).flexible(true)
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .flexible(true)
         .from_reader(bytes);
     let _headers = rdr.headers()?.clone();
     let mut inserted = 0u64;
@@ -121,29 +145,59 @@ pub async fn commit(
     for (row_idx, rec) in rdr.records().enumerate() {
         let r = match rec {
             Ok(r) => r,
-            Err(e) => { failures.push(RowError { row_index: row_idx, reason: e.to_string() }); continue; }
+            Err(e) => {
+                failures.push(RowError {
+                    row_index: row_idx,
+                    reason: e.to_string(),
+                });
+                continue;
+            }
         };
-        match build_exec(&r, ColIdx { sym: i_sym, side: i_side, qty: i_qty, pri: i_pri, ts: i_ts, fee: i_fee, oid: i_oid }) {
+        match build_exec(
+            &r,
+            ColIdx {
+                sym: i_sym,
+                side: i_side,
+                qty: i_qty,
+                pri: i_pri,
+                ts: i_ts,
+                fee: i_fee,
+                oid: i_oid,
+            },
+        ) {
             Ok(p) => {
-                match traderview_db_executions_insert_parsed(pool, account_id, import_id, &p).await {
-                    Ok(true)  => inserted += 1,
-                    Ok(false) => skipped  += 1,
-                    Err(e)    => failures.push(RowError {
-                        row_index: row_idx, reason: e.to_string(),
+                match traderview_db_executions_insert_parsed(pool, account_id, import_id, &p).await
+                {
+                    Ok(true) => inserted += 1,
+                    Ok(false) => skipped += 1,
+                    Err(e) => failures.push(RowError {
+                        row_index: row_idx,
+                        reason: e.to_string(),
                     }),
                 }
             }
-            Err(e) => failures.push(RowError { row_index: row_idx, reason: e.to_string() }),
+            Err(e) => failures.push(RowError {
+                row_index: row_idx,
+                reason: e.to_string(),
+            }),
         }
     }
 
-    Ok(CommitResult { inserted, skipped_dedupe: skipped, failed_rows: failures, import_id })
+    Ok(CommitResult {
+        inserted,
+        skipped_dedupe: skipped,
+        failed_rows: failures,
+        import_id,
+    })
 }
 
 // Thin trampoline so we don't shadow the existing executions module
 // name in scope while still using its insert_parsed.
 async fn traderview_db_executions_insert_parsed(
-    pool: &PgPool, account_id: Uuid, import_id: Uuid, p: &ParsedExecution,
+    pool: &PgPool,
+    account_id: Uuid,
+    import_id: Uuid,
+    p: &ParsedExecution,
 ) -> anyhow::Result<bool> {
     crate::executions::insert_parsed(pool, account_id, import_id, p).await
 }
@@ -162,15 +216,24 @@ struct ColIdx {
 fn build_exec(r: &csv::StringRecord, c: ColIdx) -> anyhow::Result<ParsedExecution> {
     let get = |i: usize| r.get(i).map(|s| s.trim()).unwrap_or("");
     let symbol = get(c.sym).to_uppercase();
-    if symbol.is_empty() { anyhow::bail!("empty symbol"); }
+    if symbol.is_empty() {
+        anyhow::bail!("empty symbol");
+    }
     let side = parse_side(get(c.side))?;
     let qty = parse_decimal(get(c.qty), "qty")?;
     let price = parse_decimal(get(c.pri), "price")?;
-    let fee = c.fee.map(|i| parse_decimal(get(i), "fee").unwrap_or(Decimal::ZERO))
+    let fee = c
+        .fee
+        .map(|i| parse_decimal(get(i), "fee").unwrap_or(Decimal::ZERO))
         .unwrap_or(Decimal::ZERO);
     let executed_at = parse_dt(get(c.ts))?;
     let broker_order_id = c.oid.and_then(|i| {
-        let v = get(i); if v.is_empty() { None } else { Some(v.to_string()) }
+        let v = get(i);
+        if v.is_empty() {
+            None
+        } else {
+            Some(v.to_string())
+        }
     });
     // Stash the entire row as the audit blob so re-parse / debugging is
     // possible without the original file.
@@ -185,20 +248,20 @@ fn build_exec(r: &csv::StringRecord, c: ColIdx) -> anyhow::Result<ParsedExecutio
 
 fn parse_side(s: &str) -> anyhow::Result<Side> {
     match s.to_lowercase().as_str() {
-        "buy"   | "b" | "long"  => Ok(Side::Buy),
-        "sell"  | "s"           => Ok(Side::Sell),
-        "short" | "sh"          => Ok(Side::Short),
-        "cover" | "btc" | "cv"  => Ok(Side::Cover),
+        "buy" | "b" | "long" => Ok(Side::Buy),
+        "sell" | "s" => Ok(Side::Sell),
+        "short" | "sh" => Ok(Side::Short),
+        "cover" | "btc" | "cv" => Ok(Side::Cover),
         other => anyhow::bail!("unknown side: '{}'", other),
     }
 }
 
 fn parse_decimal(s: &str, field: &str) -> anyhow::Result<Decimal> {
-    let cleaned: String = s.chars()
+    let cleaned: String = s
+        .chars()
         .filter(|c| !matches!(c, '$' | ',' | ' '))
         .collect();
-    Decimal::from_str(&cleaned)
-        .map_err(|e| anyhow::anyhow!("invalid {}: '{}': {}", field, s, e))
+    Decimal::from_str(&cleaned).map_err(|e| anyhow::anyhow!("invalid {}: '{}': {}", field, s, e))
 }
 
 fn parse_dt(s: &str) -> anyhow::Result<DateTime<Utc>> {
@@ -233,7 +296,10 @@ mod tests {
     fn parses_basic_csv_headers() {
         let csv = b"Ticker,Action,Quantity,Price,Time\nAAPL,buy,100,150.25,2025-01-15 09:30:00\nMSFT,sell,50,400.00,2025-01-15 10:15:00\n";
         let p = parse_csv(csv).unwrap();
-        assert_eq!(p.headers, vec!["Ticker", "Action", "Quantity", "Price", "Time"]);
+        assert_eq!(
+            p.headers,
+            vec!["Ticker", "Action", "Quantity", "Price", "Time"]
+        );
         assert_eq!(p.rows.len(), 2);
         assert_eq!(p.total_rows, 2);
     }

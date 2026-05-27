@@ -3,7 +3,11 @@ use sqlx::PgPool;
 use traderview_core::NoteTemplate;
 use uuid::Uuid;
 
-pub async fn list(pool: &PgPool, user_id: Uuid, scope: Option<&str>) -> anyhow::Result<Vec<NoteTemplate>> {
+pub async fn list(
+    pool: &PgPool,
+    user_id: Uuid,
+    scope: Option<&str>,
+) -> anyhow::Result<Vec<NoteTemplate>> {
     let rows: Vec<Row> = if let Some(sc) = scope {
         sqlx::query_as(
             "SELECT id, user_id, name, scope, body_md, is_default, created_at, updated_at

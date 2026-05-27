@@ -48,11 +48,18 @@ async fn upsert(
     Json(body): Json<UpsertBody>,
 ) -> Result<Json<NoteTemplate>, ApiError> {
     if body.scope != "trade" && body.scope != "journal" {
-        return Err(ApiError::BadRequest("scope must be 'trade' or 'journal'".into()));
+        return Err(ApiError::BadRequest(
+            "scope must be 'trade' or 'journal'".into(),
+        ));
     }
     Ok(Json(
         traderview_db::note_templates::upsert(
-            &s.pool, user.id, &body.name, &body.scope, &body.body_md, body.is_default,
+            &s.pool,
+            user.id,
+            &body.name,
+            &body.scope,
+            &body.body_md,
+            body.is_default,
         )
         .await
         .map_err(ApiError::Internal)?,

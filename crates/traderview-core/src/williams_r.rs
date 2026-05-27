@@ -24,34 +24,55 @@ pub struct Bar {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<f64> {
     let n = bars.len();
     let mut out = vec![0.0; n];
-    if n < period || period == 0 { return out; }
+    if n < period || period == 0 {
+        return out;
+    }
     for i in (period - 1)..n {
         let window = &bars[(i + 1 - period)..=i];
-        let highest = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-        let lowest  = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+        let highest = window
+            .iter()
+            .map(|b| b.high)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let lowest = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
         let range = highest - lowest;
         out[i] = if range > 0.0 {
             (highest - bars[i].close) / range * -100.0
-        } else { -50.0 };    // flat range convention
+        } else {
+            -50.0
+        }; // flat range convention
     }
     out
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum WilliamsRZone { Oversold, Neutral, Overbought }
+pub enum WilliamsRZone {
+    Oversold,
+    Neutral,
+    Overbought,
+}
 
 pub fn classify(wr: f64) -> WilliamsRZone {
-    if wr > -20.0 { WilliamsRZone::Overbought }
-    else if wr < -80.0 { WilliamsRZone::Oversold }
-    else { WilliamsRZone::Neutral }
+    if wr > -20.0 {
+        WilliamsRZone::Overbought
+    } else if wr < -80.0 {
+        WilliamsRZone::Oversold
+    } else {
+        WilliamsRZone::Neutral
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -64,7 +85,7 @@ mod tests {
         let bars: Vec<Bar> = vec![
             b(105.0, 100.0, 102.0),
             b(106.0, 101.0, 103.0),
-            b(110.0, 100.0, 110.0),    // close at high
+            b(110.0, 100.0, 110.0), // close at high
         ];
         let out = compute(&bars, 3);
         assert_eq!(out[2], 0.0);
@@ -86,7 +107,7 @@ mod tests {
         let bars: Vec<Bar> = vec![
             b(110.0, 100.0, 102.0),
             b(110.0, 100.0, 103.0),
-            b(110.0, 100.0, 105.0),    // exact midpoint of 100-110
+            b(110.0, 100.0, 105.0), // exact midpoint of 100-110
         ];
         let out = compute(&bars, 3);
         assert_eq!(out[2], -50.0);

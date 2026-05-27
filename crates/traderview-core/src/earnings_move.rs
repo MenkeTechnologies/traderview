@@ -30,7 +30,11 @@ pub fn from_straddle(underlying: f64, atm_call: f64, atm_put: f64) -> ExpectedMo
     let straddle = atm_call + atm_put;
     ExpectedMove {
         dollar_move: straddle,
-        pct_move: if underlying > 0.0 { straddle / underlying * 100.0 } else { 0.0 },
+        pct_move: if underlying > 0.0 {
+            straddle / underlying * 100.0
+        } else {
+            0.0
+        },
         upper_target: underlying + straddle,
         lower_target: underlying - straddle,
     }
@@ -91,7 +95,7 @@ mod tests {
     fn iv_method_one_day_yields_small_move() {
         // S=100, IV=30%, T=1day → move = 100 × 0.30 × √(1/365) ≈ 1.57.
         let m = from_iv(100.0, 0.30, 1.0);
-        assert!((m.dollar_move - 100.0 * 0.30 * (1.0_f64/365.0).sqrt()).abs() < 1e-9);
+        assert!((m.dollar_move - 100.0 * 0.30 * (1.0_f64 / 365.0).sqrt()).abs() < 1e-9);
     }
 
     #[test]

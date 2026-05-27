@@ -19,20 +19,20 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bucket {
-    pub capacity:    f64,    // max tokens
-    pub tokens:      f64,    // current
+    pub capacity: f64, // max tokens
+    pub tokens: f64,   // current
     pub last_refill: Instant,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct RateLimitResult {
-    pub limit:     u32,
+    pub limit: u32,
     pub remaining: u32,
     /// Seconds until the bucket regains the next token (0 if not throttled).
     pub retry_after_secs: u64,
     /// Unix epoch seconds when the bucket next refills to full.
-    pub reset_epoch:      i64,
-    pub allowed:   bool,
+    pub reset_epoch: i64,
+    pub allowed: bool,
 }
 
 static BUCKETS: Lazy<DashMap<Uuid, Bucket>> = Lazy::new(DashMap::new);
@@ -45,7 +45,9 @@ pub fn check_and_consume(id: Uuid, capacity_per_min: u32) -> RateLimitResult {
     let now = Instant::now();
 
     let mut entry = BUCKETS.entry(id).or_insert(Bucket {
-        capacity: cap, tokens: cap, last_refill: now,
+        capacity: cap,
+        tokens: cap,
+        last_refill: now,
     });
     // Keep capacity in sync if the user changed it.
     entry.capacity = cap;
@@ -60,7 +62,9 @@ pub fn check_and_consume(id: Uuid, capacity_per_min: u32) -> RateLimitResult {
     let remaining = entry.tokens.floor().max(0.0) as u32;
 
     // Time-to-next-token if throttled.
-    let retry_after_secs = if allowed { 0 } else {
+    let retry_after_secs = if allowed {
+        0
+    } else {
         let need = 1.0 - entry.tokens;
         (need / refill_per_sec).ceil().max(1.0) as u64
     };
@@ -69,7 +73,11 @@ pub fn check_and_consume(id: Uuid, capacity_per_min: u32) -> RateLimitResult {
     let reset_epoch = chrono::Utc::now().timestamp() + to_full;
 
     RateLimitResult {
-        limit: capacity_per_min, remaining, retry_after_secs, reset_epoch, allowed,
+        limit: capacity_per_min,
+        remaining,
+        retry_after_secs,
+        reset_epoch,
+        allowed,
     }
 }
 
@@ -90,7 +98,11 @@ mod tests {
         // 6th request is throttled with a positive retry_after.
         let r = check_and_consume(id, cap);
         assert!(!r.allowed, "expected throttle at request {}", cap + 1);
-        assert!(r.retry_after_secs >= 1, "retry_after_secs must be >= 1, got {}", r.retry_after_secs);
+        assert!(
+            r.retry_after_secs >= 1,
+            "retry_after_secs must be >= 1, got {}",
+            r.retry_after_secs
+        );
         assert_eq!(r.limit, cap);
         assert_eq!(r.remaining, 0);
     }

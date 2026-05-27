@@ -12,7 +12,9 @@
 use serde::{Deserialize, Serialize};
 
 pub fn simple(beginning: f64, ending: f64, years: f64) -> Option<f64> {
-    if beginning <= 0.0 || ending <= 0.0 || years <= 0.0 { return None; }
+    if beginning <= 0.0 || ending <= 0.0 || years <= 0.0 {
+        return None;
+    }
     Some((ending / beginning).powf(1.0 / years) - 1.0)
 }
 
@@ -36,22 +38,30 @@ pub struct RollingReport {
 /// Compute CAGR over every rolling `period_years` window in the series.
 pub fn rolling(equity: &[EquityPoint], period_years: f64) -> RollingReport {
     let mut report = RollingReport::default();
-    if equity.len() < 2 || period_years <= 0.0 { return report; }
+    if equity.len() < 2 || period_years <= 0.0 {
+        return report;
+    }
     let mut cagrs = Vec::new();
     let mut j = 0;
     for i in 0..equity.len() {
         // Find smallest j > i where years_diff >= period_years.
-        if j <= i { j = i + 1; }
+        if j <= i {
+            j = i + 1;
+        }
         while j < equity.len() && equity[j].years - equity[i].years < period_years {
             j += 1;
         }
-        if j >= equity.len() { break; }
+        if j >= equity.len() {
+            break;
+        }
         let years = equity[j].years - equity[i].years;
         if let Some(c) = simple(equity[i].equity, equity[j].equity, years) {
             cagrs.push(c);
         }
     }
-    if cagrs.is_empty() { return report; }
+    if cagrs.is_empty() {
+        return report;
+    }
     let mut sorted = cagrs.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let mean = cagrs.iter().sum::<f64>() / cagrs.len() as f64;
@@ -69,7 +79,10 @@ mod tests {
     use super::*;
 
     fn pt(y: f64, e: f64) -> EquityPoint {
-        EquityPoint { years: y, equity: e }
+        EquityPoint {
+            years: y,
+            equity: e,
+        }
     }
 
     // ─── simple ────────────────────────────────────────────────────────
@@ -143,22 +156,22 @@ mod tests {
     fn rolling_best_and_worst_extracted() {
         let equity = vec![
             pt(0.0, 100.0),
-            pt(1.0, 110.0),     // +10%
-            pt(2.0, 88.0),      // -20% from prior
-            pt(3.0, 132.0),     // +50% from prior
+            pt(1.0, 110.0), // +10%
+            pt(2.0, 88.0),  // -20% from prior
+            pt(3.0, 132.0), // +50% from prior
         ];
         let r = rolling(&equity, 1.0);
-        assert!(r.best_cagr > 0.40, "best 1yr should be ~50% got {}", r.best_cagr);
+        assert!(
+            r.best_cagr > 0.40,
+            "best 1yr should be ~50% got {}",
+            r.best_cagr
+        );
         assert!(r.worst_cagr < -0.10);
     }
 
     #[test]
     fn rolling_mean_matches_arithmetic_average_of_cagrs() {
-        let equity = vec![
-            pt(0.0, 100.0),
-            pt(1.0, 110.0),
-            pt(2.0, 121.0),
-        ];
+        let equity = vec![pt(0.0, 100.0), pt(1.0, 110.0), pt(2.0, 121.0)];
         let r = rolling(&equity, 1.0);
         let expected = r.all_cagrs.iter().sum::<f64>() / r.all_cagrs.len() as f64;
         assert!((r.mean_cagr - expected).abs() < 1e-12);

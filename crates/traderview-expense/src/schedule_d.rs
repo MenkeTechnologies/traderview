@@ -100,10 +100,19 @@ pub fn summarize(lots: &[ClosedLot], status: FilingStatus) -> ScheduleDReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
-    fn day(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
+    fn day(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
     fn lot(opened: NaiveDate, closed: NaiveDate, pnl: &str) -> ClosedLot {
-        ClosedLot { symbol: "X".into(), opened, closed, realized_pnl: d(pnl) }
+        ClosedLot {
+            symbol: "X".into(),
+            opened,
+            closed,
+            realized_pnl: d(pnl),
+        }
     }
 
     #[test]
@@ -145,8 +154,11 @@ mod tests {
         // calendar-date: exactly one year held → short-term.
         let lots = vec![lot(day(2024, 1, 15), day(2025, 1, 15), "1000")];
         let r = summarize(&lots, FilingStatus::Single);
-        assert_eq!(r.short_term_pnl, d("1000"),
-            "exactly-1-calendar-year hold must be short-term even across leap year");
+        assert_eq!(
+            r.short_term_pnl,
+            d("1000"),
+            "exactly-1-calendar-year hold must be short-term even across leap year"
+        );
     }
 
     #[test]
@@ -218,8 +230,8 @@ mod tests {
     #[test]
     fn st_loss_offset_by_lt_gain_nets_to_zero() {
         let lots = vec![
-            lot(day(2026, 1, 1), day(2026, 3, 1), "-5000"),    // ST loss
-            lot(day(2024, 1, 1), day(2026, 6, 1), "5000"),     // LT gain
+            lot(day(2026, 1, 1), day(2026, 3, 1), "-5000"), // ST loss
+            lot(day(2024, 1, 1), day(2026, 6, 1), "5000"),  // LT gain
         ];
         let r = summarize(&lots, FilingStatus::Single);
         assert_eq!(r.short_term_pnl, d("-5000"));
@@ -239,9 +251,9 @@ mod tests {
     #[test]
     fn lot_counts_independently_tracked() {
         let lots = vec![
-            lot(day(2026, 1, 1), day(2026, 3, 1), "100"),    // ST
-            lot(day(2026, 1, 1), day(2026, 3, 1), "200"),    // ST
-            lot(day(2024, 1, 1), day(2026, 6, 1), "300"),    // LT
+            lot(day(2026, 1, 1), day(2026, 3, 1), "100"), // ST
+            lot(day(2026, 1, 1), day(2026, 3, 1), "200"), // ST
+            lot(day(2024, 1, 1), day(2026, 6, 1), "300"), // LT
         ];
         let r = summarize(&lots, FilingStatus::Single);
         assert_eq!(r.st_lot_count, 2);

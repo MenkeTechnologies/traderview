@@ -24,24 +24,34 @@ pub struct ObiReport {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ObiBias {
-    StronglyBid,    // > 0.3
-    Bid,            // 0.1 to 0.3
+    StronglyBid, // > 0.3
+    Bid,         // 0.1 to 0.3
     #[default]
-    Balanced,       // -0.1 to 0.1
-    Ask,            // -0.3 to -0.1
-    StronglyAsk,    // < -0.3
+    Balanced, // -0.1 to 0.1
+    Ask,         // -0.3 to -0.1
+    StronglyAsk, // < -0.3
 }
 
 pub fn compute(bid_sizes: &[f64], ask_sizes: &[f64], levels: usize) -> ObiReport {
     let bid_total: f64 = bid_sizes.iter().take(levels).sum();
     let ask_total: f64 = ask_sizes.iter().take(levels).sum();
     let total = bid_total + ask_total;
-    let imbalance = if total > 0.0 { (bid_total - ask_total) / total } else { 0.0 };
-    let bias = if imbalance > 0.3 { ObiBias::StronglyBid }
-        else if imbalance > 0.1 { ObiBias::Bid }
-        else if imbalance < -0.3 { ObiBias::StronglyAsk }
-        else if imbalance < -0.1 { ObiBias::Ask }
-        else { ObiBias::Balanced };
+    let imbalance = if total > 0.0 {
+        (bid_total - ask_total) / total
+    } else {
+        0.0
+    };
+    let bias = if imbalance > 0.3 {
+        ObiBias::StronglyBid
+    } else if imbalance > 0.1 {
+        ObiBias::Bid
+    } else if imbalance < -0.3 {
+        ObiBias::StronglyAsk
+    } else if imbalance < -0.1 {
+        ObiBias::Ask
+    } else {
+        ObiBias::Balanced
+    };
     ObiReport {
         total_bid_size: bid_total,
         total_ask_size: ask_total,
@@ -120,7 +130,7 @@ mod tests {
         // 65/35 = 0.3 imbalance exact: (65-35)/100 = 0.3.
         let r = compute(&[65.0], &[35.0], 5);
         assert!((r.imbalance - 0.3).abs() < 1e-12);
-        assert_eq!(r.bias, ObiBias::Bid);    // 0.3 == 0.3 → Bid (strict >)
+        assert_eq!(r.bias, ObiBias::Bid); // 0.3 == 0.3 → Bid (strict >)
     }
 
     #[test]

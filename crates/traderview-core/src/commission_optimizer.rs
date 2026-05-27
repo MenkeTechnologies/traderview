@@ -36,10 +36,8 @@ pub struct Tier {
 
 impl Tier {
     pub fn fee_for(&self, ex: &Execution) -> Decimal {
-        let raw = self.per_trade_flat
-            + self.per_share * ex.qty
-            + self.per_dollar * ex.notional;
-        
+        let raw = self.per_trade_flat + self.per_share * ex.qty + self.per_dollar * ex.notional;
+
         if self.min_per_trade > Decimal::ZERO && raw < self.min_per_trade {
             self.min_per_trade
         } else if self.max_per_trade > Decimal::ZERO && raw > self.max_per_trade {
@@ -87,34 +85,40 @@ pub fn evaluate(execs: &[Execution], tiers: &[Tier]) -> OptimizerReport {
     let total_notional: Decimal = execs.iter().map(|e| e.notional).sum();
     let actual_total: Decimal = execs.iter().map(|e| e.actual_fee).sum();
 
-    let mut results: Vec<TierResult> = tiers.iter().map(|t| {
-        let total: Decimal = execs.iter().map(|e| t.fee_for(e)).sum();
-        let per_trade = total / Decimal::from(trade_count as u64);
-        let per_share = if total_shares.is_zero() {
-            Decimal::ZERO
-        } else {
-            total / total_shares
-        };
-        let pct = if total_notional.is_zero() {
-            0.0
-        } else {
-            to_f64(total) / to_f64(total_notional) * 100.0
-        };
-        TierResult {
-            tier: t.name.clone(),
-            total_fee: total,
-            fee_per_trade: per_trade,
-            fee_per_share: per_share,
-            fee_pct_of_notional: pct,
-            delta_vs_actual: total - actual_total,
-        }
-    }).collect();
+    let mut results: Vec<TierResult> = tiers
+        .iter()
+        .map(|t| {
+            let total: Decimal = execs.iter().map(|e| t.fee_for(e)).sum();
+            let per_trade = total / Decimal::from(trade_count as u64);
+            let per_share = if total_shares.is_zero() {
+                Decimal::ZERO
+            } else {
+                total / total_shares
+            };
+            let pct = if total_notional.is_zero() {
+                0.0
+            } else {
+                to_f64(total) / to_f64(total_notional) * 100.0
+            };
+            TierResult {
+                tier: t.name.clone(),
+                total_fee: total,
+                fee_per_trade: per_trade,
+                fee_per_share: per_share,
+                fee_pct_of_notional: pct,
+                delta_vs_actual: total - actual_total,
+            }
+        })
+        .collect();
     results.sort_by_key(|a| a.total_fee);
 
     let (best_alternative, annual_savings) = if let Some(best) = results.first() {
         if best.delta_vs_actual < Decimal::ZERO {
             // Negative delta = savings. Project annual.
-            (Some(best.tier.clone()), -best.delta_vs_actual * Decimal::from(12))
+            (
+                Some(best.tier.clone()),
+                -best.delta_vs_actual * Decimal::from(12),
+            )
         } else {
             (None, Decimal::ZERO)
         }
@@ -133,7 +137,9 @@ pub fn evaluate(execs: &[Execution], tiers: &[Tier]) -> OptimizerReport {
     }
 }
 
-fn to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 /// Common shipped tiers for the calculator UI to pre-populate.
 pub fn default_tiers() -> Vec<Tier> {
@@ -175,10 +181,16 @@ pub fn default_tiers() -> Vec<Tier> {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn ex(qty: &str, notional: &str, fee: &str) -> Execution {
-        Execution { qty: d(qty), notional: d(notional), actual_fee: d(fee) }
+        Execution {
+            qty: d(qty),
+            notional: d(notional),
+            actual_fee: d(fee),
+        }
     }
 
     #[test]
@@ -191,23 +203,24 @@ mod tests {
     #[test]
     fn zero_commission_tier_beats_paid_actual() {
         // 100 trades, 100 sh each at $1 fee. Webull zero would save $100/mo.
-        let execs: Vec<_> = (0..100)
-            .map(|_| ex("100", "5000", "1.00"))
-            .collect();
+        let execs: Vec<_> = (0..100).map(|_| ex("100", "5000", "1.00")).collect();
         let r = evaluate(&execs, &default_tiers());
         assert_eq!(r.actual_total_fee, d("100.00"));
         // Webull tier should win — total fee = 0.
         let webull = r.tiers.iter().find(|t| t.tier.contains("Webull")).unwrap();
         assert_eq!(webull.total_fee, Decimal::ZERO);
         assert_eq!(webull.delta_vs_actual, d("-100.00"));
-        assert_eq!(r.best_alternative.as_deref(), Some("Webull (zero-commission)"));
+        assert_eq!(
+            r.best_alternative.as_deref(),
+            Some("Webull (zero-commission)")
+        );
         assert_eq!(r.projected_annual_savings, d("1200.00"));
     }
 
     #[test]
     fn ibkr_floor_kicks_in_for_tiny_orders() {
         // 10 shares × $0.0035 = $0.035 raw — floor at $0.35.
-        let t = &default_tiers()[0];   // IBKR Pro
+        let t = &default_tiers()[0]; // IBKR Pro
         let fee = t.fee_for(&ex("10", "500", "0"));
         assert_eq!(fee, d("0.35"));
     }
@@ -252,14 +265,17 @@ mod tests {
     fn fee_pct_of_notional_computed_correctly() {
         // $1 fee on $1000 notional = 0.1%.
         let execs = vec![ex("10", "1000", "1.00")];
-        let r = evaluate(&execs, &[Tier {
-            name: "test".into(),
-            per_trade_flat: d("1.00"),
-            per_share: Decimal::ZERO,
-            per_dollar: Decimal::ZERO,
-            min_per_trade: Decimal::ZERO,
-            max_per_trade: Decimal::ZERO,
-        }]);
+        let r = evaluate(
+            &execs,
+            &[Tier {
+                name: "test".into(),
+                per_trade_flat: d("1.00"),
+                per_share: Decimal::ZERO,
+                per_dollar: Decimal::ZERO,
+                min_per_trade: Decimal::ZERO,
+                max_per_trade: Decimal::ZERO,
+            }],
+        );
         assert!((r.tiers[0].fee_pct_of_notional - 0.1).abs() < 1e-9);
     }
 }

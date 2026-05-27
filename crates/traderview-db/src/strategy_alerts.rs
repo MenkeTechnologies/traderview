@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
 use std::collections::HashMap;
-use traderview_core::strategy_alert::{collect_symbols, evaluate, LeafEval, Metric, MetricInput, Node};
+use traderview_core::strategy_alert::{
+    collect_symbols, evaluate, LeafEval, Metric, MetricInput, Node,
+};
 use traderview_core::BarInterval;
 use uuid::Uuid;
 
@@ -33,11 +35,15 @@ pub struct StrategyAlert {
 #[derive(Debug, Clone, Deserialize)]
 pub struct StrategyAlertInput {
     pub name: String,
-    #[serde(default = "default_enabled")] pub enabled: bool,
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
     pub ast: Value,
-    #[serde(default)] pub webhook_ids: Vec<Uuid>,
+    #[serde(default)]
+    pub webhook_ids: Vec<Uuid>,
 }
-fn default_enabled() -> bool { true }
+fn default_enabled() -> bool {
+    true
+}
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct StrategyAlertFire {
@@ -60,12 +66,17 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<StrategyAl
                 last_evaluated_at, last_fired_at, fire_count, last_eval_error,
                 created_at, updated_at
            FROM strategy_alerts WHERE user_id = $1 ORDER BY created_at DESC",
-    ).bind(user_id).fetch_all(pool).await?)
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?)
 }
 
-pub async fn create(pool: &PgPool, user_id: Uuid, dto: &StrategyAlertInput)
-    -> anyhow::Result<StrategyAlert>
-{
+pub async fn create(
+    pool: &PgPool,
+    user_id: Uuid,
+    dto: &StrategyAlertInput,
+) -> anyhow::Result<StrategyAlert> {
     // Verify the ast parses as a Node so users get an immediate error rather
     // than a silent runtime failure later.
     let _node: Node = serde_json::from_value(dto.ast.clone())?;
@@ -76,14 +87,21 @@ pub async fn create(pool: &PgPool, user_id: Uuid, dto: &StrategyAlertInput)
                     last_evaluated_at, last_fired_at, fire_count, last_eval_error,
                     created_at, updated_at",
     )
-    .bind(user_id).bind(&dto.name).bind(dto.enabled)
-    .bind(&dto.ast).bind(&dto.webhook_ids)
-    .fetch_one(pool).await?)
+    .bind(user_id)
+    .bind(&dto.name)
+    .bind(dto.enabled)
+    .bind(&dto.ast)
+    .bind(&dto.webhook_ids)
+    .fetch_one(pool)
+    .await?)
 }
 
-pub async fn update(pool: &PgPool, user_id: Uuid, id: Uuid, dto: &StrategyAlertInput)
-    -> anyhow::Result<Option<StrategyAlert>>
-{
+pub async fn update(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+    dto: &StrategyAlertInput,
+) -> anyhow::Result<Option<StrategyAlert>> {
     let _node: Node = serde_json::from_value(dto.ast.clone())?;
     Ok(sqlx::query_as(
         "UPDATE strategy_alerts SET
@@ -94,19 +112,33 @@ pub async fn update(pool: &PgPool, user_id: Uuid, id: Uuid, dto: &StrategyAlertI
                     last_evaluated_at, last_fired_at, fire_count, last_eval_error,
                     created_at, updated_at",
     )
-    .bind(id).bind(user_id).bind(&dto.name).bind(dto.enabled)
-    .bind(&dto.ast).bind(&dto.webhook_ids)
-    .fetch_optional(pool).await?)
+    .bind(id)
+    .bind(user_id)
+    .bind(&dto.name)
+    .bind(dto.enabled)
+    .bind(&dto.ast)
+    .bind(&dto.webhook_ids)
+    .fetch_optional(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
-    Ok(sqlx::query("DELETE FROM strategy_alerts WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?.rows_affected() > 0)
+    Ok(
+        sqlx::query("DELETE FROM strategy_alerts WHERE id = $1 AND user_id = $2")
+            .bind(id)
+            .bind(user_id)
+            .execute(pool)
+            .await?
+            .rows_affected()
+            > 0,
+    )
 }
 
-pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
-    -> anyhow::Result<Vec<StrategyAlertFire>>
-{
+pub async fn recent_fires(
+    pool: &PgPool,
+    user_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<StrategyAlertFire>> {
     Ok(sqlx::query_as(
         "SELECT f.id, f.alert_id, f.fired_at, f.snapshot
            FROM strategy_alert_fires f
@@ -114,7 +146,11 @@ pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
           WHERE a.user_id = $1
           ORDER BY f.fired_at DESC
           LIMIT $2",
-    ).bind(user_id).bind(limit).fetch_all(pool).await?)
+    )
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn evaluate_all(pool: &PgPool) -> anyhow::Result<EvalStats> {
@@ -123,24 +159,39 @@ pub async fn evaluate_all(pool: &PgPool) -> anyhow::Result<EvalStats> {
                 last_evaluated_at, last_fired_at, fire_count, last_eval_error,
                 created_at, updated_at
            FROM strategy_alerts WHERE enabled = TRUE",
-    ).fetch_all(pool).await?;
+    )
+    .fetch_all(pool)
+    .await?;
 
     let mut evaluated = 0;
     let mut fired = 0;
     let mut errors = 0;
     for r in rows {
         match evaluate_one(pool, &r).await {
-            Ok(did_fire) => { evaluated += 1; if did_fire { fired += 1; } }
+            Ok(did_fire) => {
+                evaluated += 1;
+                if did_fire {
+                    fired += 1;
+                }
+            }
             Err(e) => {
                 errors += 1;
                 let _ = sqlx::query(
                     "UPDATE strategy_alerts SET last_eval_error = $2, last_evaluated_at = now()
                       WHERE id = $1",
-                ).bind(r.id).bind(e.to_string()).execute(pool).await;
+                )
+                .bind(r.id)
+                .bind(e.to_string())
+                .execute(pool)
+                .await;
             }
         }
     }
-    Ok(EvalStats { evaluated, fired, errors })
+    Ok(EvalStats {
+        evaluated,
+        fired,
+        errors,
+    })
 }
 
 async fn evaluate_one(pool: &PgPool, row: &StrategyAlert) -> anyhow::Result<bool> {
@@ -151,7 +202,10 @@ async fn evaluate_one(pool: &PgPool, row: &StrategyAlert) -> anyhow::Result<bool
     let mut metric_cache: HashMap<String, MetricInput> = HashMap::new();
     let now = Utc::now();
     for (sym, history) in &wants {
-        let mut input = MetricInput { latest_price: None, closes: vec![] };
+        let mut input = MetricInput {
+            latest_price: None,
+            closes: vec![],
+        };
         // Live price for any leaf that uses Price/Quote.
         if let Ok(q) = crate::market_data::quote(pool, sym).await {
             input.latest_price = Some(q.price);
@@ -166,11 +220,16 @@ async fn evaluate_one(pool: &PgPool, row: &StrategyAlert) -> anyhow::Result<bool
     }
 
     let mut trace: Vec<LeafEval> = Vec::new();
-    let truth = evaluate(&node, &mut |sym: &str, _m: &Metric| {
-        metric_cache.get(sym).cloned().unwrap_or(MetricInput {
-            latest_price: None, closes: vec![],
-        })
-    }, &mut trace);
+    let truth = evaluate(
+        &node,
+        &mut |sym: &str, _m: &Metric| {
+            metric_cache.get(sym).cloned().unwrap_or(MetricInput {
+                latest_price: None,
+                closes: vec![],
+            })
+        },
+        &mut trace,
+    );
 
     let did_fire = matches!(row.last_truth, Some(false) | None) && truth;
 
@@ -183,21 +242,28 @@ async fn evaluate_one(pool: &PgPool, row: &StrategyAlert) -> anyhow::Result<bool
         sqlx::query(
             "INSERT INTO strategy_alert_fires (alert_id, snapshot)
                   VALUES ($1, $2)",
-        ).bind(row.id).bind(&snapshot).execute(pool).await?;
+        )
+        .bind(row.id)
+        .bind(&snapshot)
+        .execute(pool)
+        .await?;
         sqlx::query(
             "UPDATE strategy_alerts SET
                 last_truth = TRUE, last_fired_at = now(), fire_count = fire_count + 1,
                 last_evaluated_at = now(), last_eval_error = NULL
               WHERE id = $1",
-        ).bind(row.id).execute(pool).await?;
+        )
+        .bind(row.id)
+        .execute(pool)
+        .await?;
         // Webhook fan-out (best-effort).
         if !row.webhook_ids.is_empty() {
             let payload = crate::webhooks::AlertPayload {
-                kind:    "strategy_alert".into(),
-                title:   row.name.clone(),
+                kind: "strategy_alert".into(),
+                title: row.name.clone(),
                 message: format!("strategy '{}' fired", row.name),
-                symbol:  None,
-                url:     None,
+                symbol: None,
+                url: None,
                 fired_at: now,
             };
             crate::webhooks::fan_out(pool, row.user_id, &row.webhook_ids, &payload).await;
@@ -207,9 +273,15 @@ async fn evaluate_one(pool: &PgPool, row: &StrategyAlert) -> anyhow::Result<bool
             "UPDATE strategy_alerts SET
                 last_truth = $2, last_evaluated_at = now(), last_eval_error = NULL
               WHERE id = $1",
-        ).bind(row.id).bind(truth).execute(pool).await?;
+        )
+        .bind(row.id)
+        .bind(truth)
+        .execute(pool)
+        .await?;
     }
     Ok(did_fire)
 }
 
-fn dec(d: rust_decimal::Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: rust_decimal::Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

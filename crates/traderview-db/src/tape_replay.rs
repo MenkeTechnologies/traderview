@@ -24,7 +24,10 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize)]
 pub struct ReplayBar {
     pub time: DateTime<Utc>,
-    pub open: f64, pub high: f64, pub low: f64, pub close: f64,
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
     pub volume: f64,
 }
 
@@ -32,7 +35,7 @@ pub struct ReplayBar {
 pub struct ReplayExec {
     pub id: Uuid,
     pub time: DateTime<Utc>,
-    pub side: String,            // buy / sell / short / cover
+    pub side: String, // buy / sell / short / cover
     pub qty: f64,
     pub price: f64,
     pub fee: f64,
@@ -52,20 +55,20 @@ pub struct TapeReplay {
     pub stop_loss: Option<f64>,
     pub initial_target: Option<f64>,
     pub net_pnl: Option<f64>,
-    pub interval: &'static str,         // "1m" | "5m" | "1h" | "1d"
+    pub interval: &'static str, // "1m" | "5m" | "1h" | "1d"
     pub bars: Vec<ReplayBar>,
     pub execs: Vec<ReplayExec>,
 }
 
-pub async fn build(pool: &PgPool, user_id: Uuid, trade_id: Uuid)
-    -> anyhow::Result<TapeReplay>
-{
-    let trade = crate::trades::get(pool, trade_id).await?
+pub async fn build(pool: &PgPool, user_id: Uuid, trade_id: Uuid) -> anyhow::Result<TapeReplay> {
+    let trade = crate::trades::get(pool, trade_id)
+        .await?
         .ok_or_else(|| anyhow::anyhow!("trade not found"))?;
     // Ownership check via account.
-    let owner: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT user_id FROM accounts WHERE id = $1",
-    ).bind(trade.account_id).fetch_optional(pool).await?;
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
+        .bind(trade.account_id)
+        .fetch_optional(pool)
+        .await?;
     match owner {
         Some((id,)) if id == user_id => {}
         Some(_) => anyhow::bail!("forbidden"),
@@ -89,27 +92,40 @@ pub async fn build(pool: &PgPool, user_id: Uuid, trade_id: Uuid)
         "1m" => Duration::hours(1),
         "5m" => Duration::hours(6),
         "1h" => Duration::days(1),
-        _    => Duration::days(3),
+        _ => Duration::days(3),
     };
     let from = opened - pad;
-    let to   = closed + pad;
+    let to = closed + pad;
 
     let raw_bars = crate::prices::get_bars(pool, &trade.symbol, interval, from, to)
-        .await.unwrap_or_default();
-    let bars: Vec<ReplayBar> = raw_bars.iter().map(|b| ReplayBar {
-        time: b.bar_time,
-        open: dec(b.open), high: dec(b.high),
-        low: dec(b.low),   close: dec(b.close),
-        volume: dec(b.volume),
-    }).collect();
+        .await
+        .unwrap_or_default();
+    let bars: Vec<ReplayBar> = raw_bars
+        .iter()
+        .map(|b| ReplayBar {
+            time: b.bar_time,
+            open: dec(b.open),
+            high: dec(b.high),
+            low: dec(b.low),
+            close: dec(b.close),
+            volume: dec(b.volume),
+        })
+        .collect();
 
-    let execs_raw = crate::executions::list_for_trade(pool, trade_id).await.unwrap_or_default();
-    let execs: Vec<ReplayExec> = execs_raw.iter().map(|e| ReplayExec {
-        id: e.id,
-        time: e.executed_at,
-        side: format!("{:?}", e.side).to_lowercase(),
-        qty: dec(e.qty), price: dec(e.price), fee: dec(e.fee),
-    }).collect();
+    let execs_raw = crate::executions::list_for_trade(pool, trade_id)
+        .await
+        .unwrap_or_default();
+    let execs: Vec<ReplayExec> = execs_raw
+        .iter()
+        .map(|e| ReplayExec {
+            id: e.id,
+            time: e.executed_at,
+            side: format!("{:?}", e.side).to_lowercase(),
+            qty: dec(e.qty),
+            price: dec(e.price),
+            fee: dec(e.fee),
+        })
+        .collect();
 
     Ok(TapeReplay {
         trade_id,
@@ -119,14 +135,17 @@ pub async fn build(pool: &PgPool, user_id: Uuid, trade_id: Uuid)
         opened_at: opened,
         closed_at: trade.closed_at,
         entry_avg: dec(trade.entry_avg),
-        exit_avg:  trade.exit_avg.map(dec),
-        qty:       dec(trade.qty),
+        exit_avg: trade.exit_avg.map(dec),
+        qty: dec(trade.qty),
         stop_loss: trade.stop_loss.map(dec),
         initial_target: trade.initial_target.map(dec),
         net_pnl: trade.net_pnl.map(dec),
         interval: interval_str,
-        bars, execs,
+        bars,
+        execs,
     })
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

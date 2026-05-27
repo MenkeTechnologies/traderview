@@ -7,9 +7,9 @@
 //!
 //! Pure compute.
 
-use chrono::{DateTime, Utc};
 #[cfg(test)]
 use chrono::Duration;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,16 +18,16 @@ pub struct RestingOrder {
     pub symbol: String,
     pub placed_at: DateTime<Utc>,
     pub last_modified_at: Option<DateTime<Utc>>,
-    pub side: String,    // "buy", "sell", "buy_stop", "sell_stop"
+    pub side: String, // "buy", "sell", "buy_stop", "sell_stop"
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StaleTier {
-    Fresh,        // < warn threshold
-    Aging,        // warn to stale
-    Stale,        // stale to forgotten
-    Forgotten,    // > forgotten threshold
+    Fresh,     // < warn threshold
+    Aging,     // warn to stale
+    Stale,     // stale to forgotten
+    Forgotten, // > forgotten threshold
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,7 +47,11 @@ pub struct StaleThresholds {
 
 impl Default for StaleThresholds {
     fn default() -> Self {
-        Self { warn_hours: 24.0, stale_hours: 72.0, forgotten_hours: 168.0 }
+        Self {
+            warn_hours: 24.0,
+            stale_hours: 72.0,
+            forgotten_hours: 168.0,
+        }
     }
 }
 
@@ -60,23 +64,30 @@ pub struct StaleReport {
     pub forgotten_count: usize,
 }
 
-pub fn evaluate(orders: &[RestingOrder], now: DateTime<Utc>, thresh: &StaleThresholds)
-    -> StaleReport
-{
+pub fn evaluate(
+    orders: &[RestingOrder],
+    now: DateTime<Utc>,
+    thresh: &StaleThresholds,
+) -> StaleReport {
     let mut report = StaleReport::default();
     for o in orders {
         // Use most-recent-touch (last_modified, or placed_at) as the
         // freshness clock — modifying counts as "re-confirming".
         let touched = o.last_modified_at.unwrap_or(o.placed_at);
         let age = (now - touched).num_seconds() as f64 / 3600.0;
-        let tier = if age < thresh.warn_hours { StaleTier::Fresh }
-            else if age < thresh.stale_hours { StaleTier::Aging }
-            else if age < thresh.forgotten_hours { StaleTier::Stale }
-            else { StaleTier::Forgotten };
+        let tier = if age < thresh.warn_hours {
+            StaleTier::Fresh
+        } else if age < thresh.stale_hours {
+            StaleTier::Aging
+        } else if age < thresh.forgotten_hours {
+            StaleTier::Stale
+        } else {
+            StaleTier::Forgotten
+        };
         match tier {
-            StaleTier::Fresh     => report.fresh_count += 1,
-            StaleTier::Aging     => report.aging_count += 1,
-            StaleTier::Stale     => report.stale_count += 1,
+            StaleTier::Fresh => report.fresh_count += 1,
+            StaleTier::Aging => report.aging_count += 1,
+            StaleTier::Stale => report.stale_count += 1,
             StaleTier::Forgotten => report.forgotten_count += 1,
         }
         report.rows.push(StaleOrderRow {
@@ -87,8 +98,11 @@ pub fn evaluate(orders: &[RestingOrder], now: DateTime<Utc>, thresh: &StaleThres
         });
     }
     // Most stale first.
-    report.rows.sort_by(|a, b| b.age_hours.partial_cmp(&a.age_hours)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    report.rows.sort_by(|a, b| {
+        b.age_hours
+            .partial_cmp(&a.age_hours)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report
 }
 
@@ -152,18 +166,14 @@ mod tests {
     #[test]
     fn modification_resets_freshness_clock() {
         let mut o = ord("o1", -200);
-        o.last_modified_at = Some(at(-2));    // touched 2h ago
+        o.last_modified_at = Some(at(-2)); // touched 2h ago
         let r = evaluate(&[o], at(0), &StaleThresholds::default());
         assert_eq!(r.rows[0].tier, StaleTier::Fresh);
     }
 
     #[test]
     fn rows_sorted_oldest_first() {
-        let orders = vec![
-            ord("young", -5),
-            ord("oldest", -100),
-            ord("medium", -50),
-        ];
+        let orders = vec![ord("young", -5), ord("oldest", -100), ord("medium", -50)];
         let r = evaluate(&orders, at(0), &StaleThresholds::default());
         assert_eq!(r.rows[0].order_id, "oldest");
         assert_eq!(r.rows[2].order_id, "young");
@@ -171,7 +181,11 @@ mod tests {
 
     #[test]
     fn custom_thresholds_change_classification() {
-        let lax = StaleThresholds { warn_hours: 200.0, stale_hours: 400.0, forgotten_hours: 1000.0 };
+        let lax = StaleThresholds {
+            warn_hours: 200.0,
+            stale_hours: 400.0,
+            forgotten_hours: 1000.0,
+        };
         // Place 100h ago — would normally be Stale, but with lax thresholds → Fresh.
         let orders = vec![ord("o1", -100)];
         let r = evaluate(&orders, at(0), &lax);

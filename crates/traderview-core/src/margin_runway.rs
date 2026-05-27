@@ -31,9 +31,11 @@ pub struct MarginRunwayReport {
     pub equity_buffer_dollars: f64,
 }
 
-pub fn compute(account_equity: f64, position_value: f64, maintenance_req_pct: f64)
-    -> MarginRunwayReport
-{
+pub fn compute(
+    account_equity: f64,
+    position_value: f64,
+    maintenance_req_pct: f64,
+) -> MarginRunwayReport {
     if position_value <= 0.0 || maintenance_req_pct >= 1.0 {
         return MarginRunwayReport {
             account_equity,
@@ -100,7 +102,7 @@ mod tests {
         // $50k equity, $100k position at 25% maint. Buffer = $50k - $25k = $25k.
         // Runway = 25k / (100k × 0.75) = 0.333 → 33% decline triggers call.
         let r = compute(50_000.0, 100_000.0, 0.25);
-        assert!((r.runway_pct - 1.0/3.0).abs() < 1e-9);
+        assert!((r.runway_pct - 1.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
@@ -121,7 +123,7 @@ mod tests {
     #[test]
     fn higher_maint_req_lower_runway() {
         // Same equity + position; higher maint = less runway.
-        let low_maint  = compute(50_000.0, 100_000.0, 0.25);
+        let low_maint = compute(50_000.0, 100_000.0, 0.25);
         let high_maint = compute(50_000.0, 100_000.0, 0.40);
         assert!(high_maint.runway_pct < low_maint.runway_pct);
     }

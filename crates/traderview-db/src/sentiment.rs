@@ -40,10 +40,15 @@ pub struct Mention {
     pub fetched_at: DateTime<Utc>,
 }
 
-pub async fn insert(pool: &PgPool, source: &str, external_id: &str,
-    sc: &Scored, author: Option<&str>, url: Option<&str>, posted_at: DateTime<Utc>)
-    -> anyhow::Result<usize>
-{
+pub async fn insert(
+    pool: &PgPool,
+    source: &str,
+    external_id: &str,
+    sc: &Scored,
+    author: Option<&str>,
+    url: Option<&str>,
+    posted_at: DateTime<Utc>,
+) -> anyhow::Result<usize> {
     let snippet: String = sc.text.chars().take(280).collect();
     let sent = Decimal::from_str(&format!("{:.4}", sc.score)).unwrap_or(Decimal::ZERO);
     let mut n = 0;
@@ -54,10 +59,19 @@ pub async fn insert(pool: &PgPool, source: &str, external_id: &str,
              VALUES ($1::sentiment_source_t, $2, $3, $4, $5, $6, $7, $8)
              ON CONFLICT (source, external_id, symbol) DO NOTHING",
         )
-        .bind(source).bind(external_id).bind(ticker).bind(sent).bind(&snippet)
-        .bind(author).bind(url).bind(posted_at)
-        .execute(pool).await?;
-        if r.rows_affected() > 0 { n += 1; }
+        .bind(source)
+        .bind(external_id)
+        .bind(ticker)
+        .bind(sent)
+        .bind(&snippet)
+        .bind(author)
+        .bind(url)
+        .bind(posted_at)
+        .execute(pool)
+        .await?;
+        if r.rows_affected() > 0 {
+            n += 1;
+        }
     }
     Ok(n)
 }
@@ -73,25 +87,42 @@ pub async fn poll_wsb(pool: &PgPool, whitelist: &HashSet<String>) -> anyhow::Res
         anyhow::bail!("wsb HTTP {}", resp.status());
     }
     let v: serde_json::Value = resp.json().await?;
-    let posts = v["data"]["children"].as_array().cloned().unwrap_or_default();
+    let posts = v["data"]["children"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
     let mut inserted = 0;
     for p in posts {
         let d = &p["data"];
         let id = d["id"].as_str().unwrap_or("").to_string();
-        if id.is_empty() { continue; }
+        if id.is_empty() {
+            continue;
+        }
         let title = d["title"].as_str().unwrap_or("");
-        let body  = d["selftext"].as_str().unwrap_or("");
+        let body = d["selftext"].as_str().unwrap_or("");
         let combined = format!("{title} {body}");
         let author = d["author"].as_str().map(|s| s.to_string());
         let permalink = d["permalink"].as_str().unwrap_or("");
         let url = format!("https://www.reddit.com{}", permalink);
-        let created = d["created_utc"].as_f64()
+        let created = d["created_utc"]
+            .as_f64()
             .and_then(|ts| chrono::DateTime::from_timestamp(ts as i64, 0))
             .unwrap_or_else(Utc::now);
         let scored = score_post(&combined, whitelist);
-        if scored.tickers.is_empty() { continue; }
-        inserted += insert(pool, "wsb", &id, &scored, author.as_deref(), Some(&url), created)
-            .await.unwrap_or(0);
+        if scored.tickers.is_empty() {
+            continue;
+        }
+        inserted += insert(
+            pool,
+            "wsb",
+            &id,
+            &scored,
+            author.as_deref(),
+            Some(&url),
+            created,
+        )
+        .await
+        .unwrap_or(0);
     }
     Ok(inserted)
 }
@@ -100,9 +131,11 @@ pub async fn poll_wsb(pool: &PgPool, whitelist: &HashSet<String>) -> anyhow::Res
 // StockTwits symbol stream poller
 // ===========================================================================
 
-pub async fn poll_stocktwits(pool: &PgPool, symbols: &[String], whitelist: &HashSet<String>)
-    -> anyhow::Result<usize>
-{
+pub async fn poll_stocktwits(
+    pool: &PgPool,
+    symbols: &[String],
+    whitelist: &HashSet<String>,
+) -> anyhow::Result<usize> {
     let mut inserted = 0;
     for sym in symbols {
         let url = format!(
@@ -111,8 +144,14 @@ pub async fn poll_stocktwits(pool: &PgPool, symbols: &[String], whitelist: &Hash
         );
         let resp = match client().get(&url).send().await {
             Ok(r) if r.status().is_success() => r,
-            Ok(r) => { tracing::debug!(sym = %sym, status = ?r.status(), "stocktwits skip"); continue; }
-            Err(e) => { tracing::debug!(sym = %sym, error = ?e, "stocktwits err"); continue; }
+            Ok(r) => {
+                tracing::debug!(sym = %sym, status = ?r.status(), "stocktwits skip");
+                continue;
+            }
+            Err(e) => {
+                tracing::debug!(sym = %sym, error = ?e, "stocktwits err");
+                continue;
+            }
         };
         let v: serde_json::Value = match resp.json().await {
             Ok(v) => v,
@@ -121,10 +160,13 @@ pub async fn poll_stocktwits(pool: &PgPool, symbols: &[String], whitelist: &Hash
         let msgs = v["messages"].as_array().cloned().unwrap_or_default();
         for m in msgs {
             let id = m["id"].as_i64().map(|x| x.to_string()).unwrap_or_default();
-            if id.is_empty() { continue; }
+            if id.is_empty() {
+                continue;
+            }
             let body = m["body"].as_str().unwrap_or("");
             let author = m["user"]["username"].as_str().map(|s| s.to_string());
-            let created = m["created_at"].as_str()
+            let created = m["created_at"]
+                .as_str()
                 .and_then(|s| DateTime::parse_from_rfc3339(s).ok())
                 .map(|d| d.with_timezone(&Utc))
                 .unwrap_or_else(Utc::now);
@@ -143,15 +185,25 @@ pub async fn poll_stocktwits(pool: &PgPool, symbols: &[String], whitelist: &Hash
                 }
             }
             let url = format!("https://stocktwits.com/message/{}", id);
-            inserted += insert(pool, "stocktwits", &id, &scored,
-                author.as_deref(), Some(&url), created)
-                .await.unwrap_or(0);
+            inserted += insert(
+                pool,
+                "stocktwits",
+                &id,
+                &scored,
+                author.as_deref(),
+                Some(&url),
+                created,
+            )
+            .await
+            .unwrap_or(0);
         }
     }
     Ok(inserted)
 }
 
-fn urlencoding(s: &str) -> String { s.replace('^', "%5E").replace('=', "%3D") }
+fn urlencoding(s: &str) -> String {
+    s.replace('^', "%5E").replace('=', "%3D")
+}
 
 // ===========================================================================
 // Rankings + queries
@@ -209,12 +261,16 @@ pub async fn feed(pool: &PgPool, limit: i64) -> anyhow::Result<Vec<Mention>> {
            FROM mentions ORDER BY posted_at DESC LIMIT $1",
     )
     .bind(limit)
-    .fetch_all(pool).await?)
+    .fetch_all(pool)
+    .await?)
 }
 
-pub async fn for_symbol(pool: &PgPool, symbol: &str, hours: i64, limit: i64)
-    -> anyhow::Result<Vec<Mention>>
-{
+pub async fn for_symbol(
+    pool: &PgPool,
+    symbol: &str,
+    hours: i64,
+    limit: i64,
+) -> anyhow::Result<Vec<Mention>> {
     let from = Utc::now() - Duration::hours(hours);
     Ok(sqlx::query_as::<_, Mention>(
         "SELECT id, source::text, external_id, symbol, sentiment, snippet,
@@ -222,8 +278,11 @@ pub async fn for_symbol(pool: &PgPool, symbol: &str, hours: i64, limit: i64)
            FROM mentions WHERE symbol = $1 AND posted_at >= $2
           ORDER BY posted_at DESC LIMIT $3",
     )
-    .bind(symbol).bind(from).bind(limit)
-    .fetch_all(pool).await?)
+    .bind(symbol)
+    .bind(from)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
 }
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
@@ -234,7 +293,11 @@ pub struct HourlyBucket {
     pub avg_sentiment: Decimal,
 }
 
-pub async fn timeseries(pool: &PgPool, symbol: &str, hours: i64) -> anyhow::Result<Vec<HourlyBucket>> {
+pub async fn timeseries(
+    pool: &PgPool,
+    symbol: &str,
+    hours: i64,
+) -> anyhow::Result<Vec<HourlyBucket>> {
     let from = Utc::now() - Duration::hours(hours);
     Ok(sqlx::query_as::<_, HourlyBucket>(
         "SELECT date_trunc('hour', posted_at) AS bucket_hour,
@@ -246,8 +309,10 @@ pub async fn timeseries(pool: &PgPool, symbol: &str, hours: i64) -> anyhow::Resu
           GROUP BY bucket_hour, source
           ORDER BY bucket_hour",
     )
-    .bind(symbol).bind(from)
-    .fetch_all(pool).await?)
+    .bind(symbol)
+    .bind(from)
+    .fetch_all(pool)
+    .await?)
 }
 
 // ===========================================================================
@@ -257,17 +322,21 @@ pub async fn timeseries(pool: &PgPool, symbol: &str, hours: i64) -> anyhow::Resu
 pub async fn poll_all(pool: &PgPool) -> (usize, usize) {
     // Build whitelist of known tickers — symbols any user has on a watchlist
     // (cheap; falls back to empty so the WSB cashtag detector still works).
-    let symbols: Vec<String> = sqlx::query_scalar(
-        "SELECT DISTINCT symbol FROM watchlist_symbols",
-    )
-    .fetch_all(pool).await.unwrap_or_default();
+    let symbols: Vec<String> = sqlx::query_scalar("SELECT DISTINCT symbol FROM watchlist_symbols")
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default();
     let whitelist: HashSet<String> = symbols.iter().cloned().collect();
 
     let wsb = poll_wsb(pool, &whitelist).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "wsb poll failed"); 0
+        tracing::warn!(error = ?e, "wsb poll failed");
+        0
     });
-    let st = poll_stocktwits(pool, &symbols, &whitelist).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "stocktwits poll failed"); 0
-    });
+    let st = poll_stocktwits(pool, &symbols, &whitelist)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "stocktwits poll failed");
+            0
+        });
     (wsb, st)
 }

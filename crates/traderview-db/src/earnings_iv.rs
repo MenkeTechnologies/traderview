@@ -47,7 +47,10 @@ pub async fn report(pool: &PgPool, symbol: &str) -> anyhow::Result<EarningsIvRep
 
     let chain = options::chain(&symbol, None).await?;
     // First expiration strictly after the earnings announcement.
-    let exp = chain.expirations.iter().copied()
+    let exp = chain
+        .expirations
+        .iter()
+        .copied()
         .find(|d| *d > earnings_date)
         .ok_or_else(|| anyhow::anyhow!("no post-earnings expiration found"))?;
     let exp_chain = options::chain(&symbol, Some(exp)).await?;
@@ -57,16 +60,22 @@ pub async fn report(pool: &PgPool, symbol: &str) -> anyhow::Result<EarningsIvRep
 
     // Historical earnings — Yahoo earningsHistory returns up to ~4 quarters;
     // some symbols expose more. We then derive realized moves from price_bars.
-    let v = market_data::earnings(&symbol).await.unwrap_or(serde_json::Value::Null);
+    let v = market_data::earnings(&symbol)
+        .await
+        .unwrap_or(serde_json::Value::Null);
     let hist_entries = v["earningsHistory"]["history"]
-        .as_array().cloned().unwrap_or_default();
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
     let mut historical = Vec::new();
     for h in hist_entries.iter().take(8) {
-        let d_raw = h["quarter"]["fmt"].as_str()
+        let d_raw = h["quarter"]["fmt"]
+            .as_str()
             .or_else(|| h["quarter"]["raw"].as_str());
         let d = match d_raw {
             Some(s) => NaiveDate::parse_from_str(s, "%Y-%m-%d").ok(),
-            None => h["quarter"]["raw"].as_i64()
+            None => h["quarter"]["raw"]
+                .as_i64()
                 .and_then(|t| chrono::DateTime::from_timestamp(t, 0))
                 .map(|d| d.date_naive()),
         };
@@ -104,7 +113,9 @@ pub async fn report(pool: &PgPool, symbol: &str) -> anyhow::Result<EarningsIvRep
             short_straddle_winrate = EXCLUDED.short_straddle_winrate,
             computed_at = now()",
     )
-    .bind(&symbol).bind(earnings_date).bind(exp)
+    .bind(&symbol)
+    .bind(earnings_date)
+    .bind(exp)
     .bind(rust_decimal::Decimal::try_from(exp_chain.spot)?)
     .bind(rust_decimal::Decimal::try_from(atm)?)
     .bind(rust_decimal::Decimal::try_from(call_mid)?)
@@ -118,7 +129,8 @@ pub async fn report(pool: &PgPool, symbol: &str) -> anyhow::Result<EarningsIvRep
     .bind(rust_decimal::Decimal::try_from(bt.short_avg_pnl).ok())
     .bind(rust_decimal::Decimal::try_from(bt.long_win_rate).ok())
     .bind(rust_decimal::Decimal::try_from(bt.short_win_rate).ok())
-    .execute(pool).await;
+    .execute(pool)
+    .await;
 
     let _ = (call, put); // future: surface contract greeks/OI in detail page
 
@@ -160,12 +172,19 @@ async fn realized_move(
 ) -> anyhow::Result<Option<HistoricalMove>> {
     // Use a ±10-day window around the earnings date to find the immediate
     // pre and post closes from price_bars.
-    let to_ts   = earnings_date.and_hms_opt(0, 0, 0).unwrap().and_utc() + Duration::days(10);
+    let to_ts = earnings_date.and_hms_opt(0, 0, 0).unwrap().and_utc() + Duration::days(10);
     let from_ts = earnings_date.and_hms_opt(0, 0, 0).unwrap().and_utc() - Duration::days(10);
     let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from_ts, to_ts).await?;
-    if bars.len() < 2 { return Ok(None); }
-    let pre  = bars.iter().rev().find(|b| b.bar_time.date_naive() < earnings_date);
-    let post = bars.iter().find(|b| b.bar_time.date_naive() > earnings_date);
+    if bars.len() < 2 {
+        return Ok(None);
+    }
+    let pre = bars
+        .iter()
+        .rev()
+        .find(|b| b.bar_time.date_naive() < earnings_date);
+    let post = bars
+        .iter()
+        .find(|b| b.bar_time.date_naive() > earnings_date);
     if let (Some(p), Some(n)) = (pre, post) {
         let cb = dec(p.close);
         let ca = dec(n.close);
@@ -181,12 +200,14 @@ async fn realized_move(
                     close_before = EXCLUDED.close_before, close_after = EXCLUDED.close_after,
                     abs_move_pct = EXCLUDED.abs_move_pct, direction = EXCLUDED.direction",
             )
-            .bind(symbol).bind(earnings_date)
+            .bind(symbol)
+            .bind(earnings_date)
             .bind(rust_decimal::Decimal::try_from(cb).ok())
             .bind(rust_decimal::Decimal::try_from(ca).ok())
             .bind(rust_decimal::Decimal::try_from(abs_pct).ok())
             .bind(if mv >= 0.0 { "up" } else { "down" })
-            .execute(pool).await;
+            .execute(pool)
+            .await;
             return Ok(Some(HistoricalMove {
                 earnings_date,
                 close_before: cb,
@@ -199,7 +220,9 @@ async fn realized_move(
     Ok(None)
 }
 
-fn dec(d: rust_decimal::Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: rust_decimal::Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 // ===========================================================================
 // Scanner: rank all symbols in a universe by edge.
@@ -235,7 +258,9 @@ pub async fn scan(
     } else {
         let mut all = BTreeSet::new();
         for w in crate::watchlists::list(pool, user_id).await? {
-            for s in crate::watchlists::symbols(pool, w.id).await? { all.insert(s); }
+            for s in crate::watchlists::symbols(pool, w.id).await? {
+                all.insert(s);
+            }
         }
         all.into_iter().collect()
     };
@@ -246,7 +271,9 @@ pub async fn scan(
         match report(pool, &sym).await {
             Ok(r) => {
                 let du = (r.earnings_date - today).num_days();
-                if du < 0 || du > horizon_days { continue; }
+                if du < 0 || du > horizon_days {
+                    continue;
+                }
                 hits.push(EarningsIvHit {
                     symbol: r.symbol,
                     earnings_date: r.earnings_date,
@@ -263,8 +290,12 @@ pub async fn scan(
             Err(e) => tracing::debug!(symbol = %sym, error = %e, "iv-scan skip"),
         }
     }
-    hits.sort_by(|a, b| b.edge_pct.abs().partial_cmp(&a.edge_pct.abs())
-        .unwrap_or(std::cmp::Ordering::Equal));
+    hits.sort_by(|a, b| {
+        b.edge_pct
+            .abs()
+            .partial_cmp(&a.edge_pct.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits.truncate(limit);
     Ok(hits)
 }

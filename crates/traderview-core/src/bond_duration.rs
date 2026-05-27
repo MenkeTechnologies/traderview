@@ -29,16 +29,14 @@ pub struct DurationReport {
 
 /// Computes both Macaulay and Modified duration given cash flows + YTM.
 /// `compounding_per_year` is typically 2 for US bonds (semi-annual).
-pub fn compute(
-    cash_flows: &[CashFlow],
-    ytm: f64,
-    compounding_per_year: usize,
-) -> DurationReport {
+pub fn compute(cash_flows: &[CashFlow], ytm: f64, compounding_per_year: usize) -> DurationReport {
     let mut report = DurationReport {
         yield_to_maturity: ytm,
         ..Default::default()
     };
-    if cash_flows.is_empty() { return report; }
+    if cash_flows.is_empty() {
+        return report;
+    }
     let m = compounding_per_year.max(1) as f64;
     let mut price = 0.0;
     let mut weighted_time = 0.0;
@@ -49,7 +47,9 @@ pub fn compute(
         price += pv;
         weighted_time += cf.time_years * pv;
     }
-    if price <= 0.0 { return report; }
+    if price <= 0.0 {
+        return report;
+    }
     report.price = price;
     report.macaulay_duration = weighted_time / price;
     report.modified_duration = report.macaulay_duration / (1.0 + ytm / m);
@@ -67,7 +67,10 @@ mod tests {
     use super::*;
 
     fn cf(t: f64, amount: f64) -> CashFlow {
-        CashFlow { time_years: t, amount }
+        CashFlow {
+            time_years: t,
+            amount,
+        }
     }
 
     #[test]
@@ -93,30 +96,46 @@ mod tests {
     fn coupon_bond_duration_less_than_maturity() {
         // 5-year 5% annual coupon bond, par 100. CFs: 5 at years 1-4, 105 at year 5.
         let cfs = vec![
-            cf(1.0, 5.0), cf(2.0, 5.0), cf(3.0, 5.0), cf(4.0, 5.0),
+            cf(1.0, 5.0),
+            cf(2.0, 5.0),
+            cf(3.0, 5.0),
+            cf(4.0, 5.0),
             cf(5.0, 105.0),
         ];
         let r = compute(&cfs, 0.05, 1);
-        assert!(r.macaulay_duration < 5.0,
-            "coupon bond has earlier cash flows → duration < maturity");
-        assert!(r.macaulay_duration > 4.0,
-            "but still close to maturity for low coupon");
+        assert!(
+            r.macaulay_duration < 5.0,
+            "coupon bond has earlier cash flows → duration < maturity"
+        );
+        assert!(
+            r.macaulay_duration > 4.0,
+            "but still close to maturity for low coupon"
+        );
     }
 
     #[test]
     fn price_at_par_when_ytm_equals_coupon() {
         let cfs = vec![
-            cf(1.0, 5.0), cf(2.0, 5.0), cf(3.0, 5.0), cf(4.0, 5.0),
+            cf(1.0, 5.0),
+            cf(2.0, 5.0),
+            cf(3.0, 5.0),
+            cf(4.0, 5.0),
             cf(5.0, 105.0),
         ];
         let r = compute(&cfs, 0.05, 1);
-        assert!((r.price - 100.0).abs() < 1e-9, "5% coupon at 5% YTM should price at par");
+        assert!(
+            (r.price - 100.0).abs() < 1e-9,
+            "5% coupon at 5% YTM should price at par"
+        );
     }
 
     #[test]
     fn higher_ytm_shorter_duration() {
         let cfs = vec![
-            cf(1.0, 5.0), cf(2.0, 5.0), cf(3.0, 5.0), cf(4.0, 5.0),
+            cf(1.0, 5.0),
+            cf(2.0, 5.0),
+            cf(3.0, 5.0),
+            cf(4.0, 5.0),
             cf(5.0, 105.0),
         ];
         let low_ytm = compute(&cfs, 0.03, 1);

@@ -21,8 +21,8 @@ pub struct StraddleBacktest {
     pub implied_move_pct: f64,
     pub avg_realized_pct: f64,
     pub median_realized_pct: f64,
-    pub edge_pct: f64,         // implied - median realized; positive = implied is "rich"
-    pub long_avg_pnl: f64,     // per-quarter avg, in units of $ per $1 of premium
+    pub edge_pct: f64, // implied - median realized; positive = implied is "rich"
+    pub long_avg_pnl: f64, // per-quarter avg, in units of $ per $1 of premium
     pub long_win_rate: f64,
     pub short_avg_pnl: f64,
     pub short_win_rate: f64,
@@ -62,8 +62,12 @@ pub fn backtest(implied_move_pct: f64, realized_pcts: &[f64]) -> StraddleBacktes
         // Long: pays implied_pct, receives |realized_pct|.
         let pnl = if implied_move_pct > 0.0 {
             r / implied_move_pct - 1.0
-        } else { 0.0 };
-        if pnl > 0.0 { long_wins += 1; }
+        } else {
+            0.0
+        };
+        if pnl > 0.0 {
+            long_wins += 1;
+        }
         long_pnls.push(pnl);
     }
     let long_avg = long_pnls.iter().sum::<f64>() / n as f64;
@@ -75,7 +79,7 @@ pub fn backtest(implied_move_pct: f64, realized_pcts: &[f64]) -> StraddleBacktes
     let recommendation = if edge >= 1.5 {
         "short" // implied premium is rich; sell
     } else if edge <= -1.5 {
-        "long"  // implied premium is cheap; buy
+        "long" // implied premium is cheap; buy
     } else {
         "neutral"
     };

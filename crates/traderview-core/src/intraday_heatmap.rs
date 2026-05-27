@@ -40,7 +40,7 @@ pub struct IntradayHeatmapReport {
 }
 
 pub fn build(trades: &[IntradayTrade]) -> IntradayHeatmapReport {
-    let mut buckets: [(usize, f64, usize); 96] = [(0, 0.0, 0); 96];    // (count, total_pnl, wins)
+    let mut buckets: [(usize, f64, usize); 96] = [(0, 0.0, 0); 96]; // (count, total_pnl, wins)
     for t in trades {
         let h = t.when.hour();
         let q = t.when.minute() / 15;
@@ -48,7 +48,9 @@ pub fn build(trades: &[IntradayTrade]) -> IntradayHeatmapReport {
         if idx < 96 {
             buckets[idx].0 += 1;
             buckets[idx].1 += t.pnl;
-            if t.pnl > 0.0 { buckets[idx].2 += 1; }
+            if t.pnl > 0.0 {
+                buckets[idx].2 += 1;
+            }
         }
     }
     let mut report = IntradayHeatmapReport::default();
@@ -59,7 +61,11 @@ pub fn build(trades: &[IntradayTrade]) -> IntradayHeatmapReport {
         let q = idx as u32 % 4;
         let label = format!("{:02}:{:02}", h, q * 15);
         let avg = if *count > 0 { pnl / *count as f64 } else { 0.0 };
-        let wr = if *count > 0 { *wins as f64 / *count as f64 } else { 0.0 };
+        let wr = if *count > 0 {
+            *wins as f64 / *count as f64
+        } else {
+            0.0
+        };
         if *count > 0 {
             if best.as_ref().is_none_or(|(_, p)| *pnl > *p) {
                 best = Some((label.clone(), *pnl));
@@ -110,8 +116,8 @@ mod tests {
     fn trades_bucket_into_quarter_hour_slots() {
         let trades = vec![
             t(9, 30, 100.0),
-            t(9, 35, 50.0),    // same bucket as 9:30
-            t(9, 50, -25.0),    // 9:45 bucket
+            t(9, 35, 50.0),  // same bucket as 9:30
+            t(9, 50, -25.0), // 9:45 bucket
         ];
         let r = build(&trades);
         let nine_thirty = r.buckets.iter().find(|b| b.label == "09:30").unwrap();
@@ -123,21 +129,17 @@ mod tests {
 
     #[test]
     fn win_rate_computed_per_bucket() {
-        let trades = vec![
-            t(10, 0, 100.0),
-            t(10, 5, -50.0),
-            t(10, 10, 100.0),
-        ];
+        let trades = vec![t(10, 0, 100.0), t(10, 5, -50.0), t(10, 10, 100.0)];
         let r = build(&trades);
         let bucket = r.buckets.iter().find(|b| b.label == "10:00").unwrap();
         assert_eq!(bucket.trade_count, 3);
-        assert!((bucket.win_rate - 2.0/3.0).abs() < 1e-9);
+        assert!((bucket.win_rate - 2.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
     fn best_bucket_identified_by_total_pnl() {
         let trades = vec![
-            t(9, 30, 500.0),     // best bucket
+            t(9, 30, 500.0), // best bucket
             t(10, 0, 100.0),
             t(15, 0, 50.0),
         ];
@@ -149,7 +151,7 @@ mod tests {
     fn worst_bucket_identified_by_lowest_pnl() {
         let trades = vec![
             t(9, 30, 100.0),
-            t(10, 0, -500.0),    // worst
+            t(10, 0, -500.0), // worst
             t(15, 0, 50.0),
         ];
         let r = build(&trades);
@@ -167,10 +169,7 @@ mod tests {
     #[test]
     fn minute_rounding_into_15min_buckets() {
         // 9:14 → 9:00 bucket. 9:15 → 9:15 bucket.
-        let trades = vec![
-            t(9, 14, 100.0),
-            t(9, 15, 200.0),
-        ];
+        let trades = vec![t(9, 14, 100.0), t(9, 15, 200.0)];
         let r = build(&trades);
         let nine_zero = r.buckets.iter().find(|b| b.label == "09:00").unwrap();
         let nine_fifteen = r.buckets.iter().find(|b| b.label == "09:15").unwrap();

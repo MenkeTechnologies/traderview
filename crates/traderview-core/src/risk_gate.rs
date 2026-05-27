@@ -13,8 +13,8 @@
 //! Each rule type below has its own variant + handler. Adding a new rule
 //! type is one match arm + one test.
 
-use crate::risk;
 use crate::models::{AssetClass, TradeSide};
+use crate::risk;
 use chrono::{DateTime, Duration, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -134,10 +134,14 @@ pub struct GateDecision {
 
 impl GateDecision {
     pub fn warnings(&self) -> impl Iterator<Item = &Violation> {
-        self.violations.iter().filter(|v| v.severity == Severity::Warning)
+        self.violations
+            .iter()
+            .filter(|v| v.severity == Severity::Warning)
     }
     pub fn blocks(&self) -> impl Iterator<Item = &Violation> {
-        self.violations.iter().filter(|v| v.severity == Severity::Block)
+        self.violations
+            .iter()
+            .filter(|v| v.severity == Severity::Block)
     }
 }
 
@@ -158,7 +162,10 @@ pub fn evaluate(
         }
     }
     let blocked = violations.iter().any(|v| v.severity == Severity::Block);
-    GateDecision { allow: !blocked, violations }
+    GateDecision {
+        allow: !blocked,
+        violations,
+    }
 }
 
 fn check_rule(
@@ -171,8 +178,13 @@ fn check_rule(
         RiskRule::MaxLossPerTradePct { pct } => {
             let stop = p.stop_loss?;
             let risk_dollars = risk::risk_amount(
-                p.asset_class, p.qty, p.entry_price, stop,
-                p.multiplier, p.tick_size, p.tick_value,
+                p.asset_class,
+                p.qty,
+                p.entry_price,
+                stop,
+                p.multiplier,
+                p.tick_size,
+                p.tick_value,
             );
             let cap = ctx.account_equity * (*pct / Decimal::from(100));
             if risk_dollars > cap {
@@ -184,11 +196,15 @@ fn check_rule(
                         risk_dollars, pct, cap,
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::MaxLossPerDayPct { pct } => {
             // Use absolute value of today's loss; positive P&L can't trigger.
-            if ctx.today_realized_pnl >= Decimal::ZERO { return None; }
+            if ctx.today_realized_pnl >= Decimal::ZERO {
+                return None;
+            }
             let lost = -ctx.today_realized_pnl;
             let cap = ctx.account_equity * (*pct / Decimal::from(100));
             if lost >= cap {
@@ -200,13 +216,19 @@ fn check_rule(
                         lost, pct, cap,
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::MaxConsecutiveLossesToday { n } => {
             // Walk today's trades backwards counting losses; stop at first non-loss.
             let mut streak = 0usize;
             for t in ctx.today_closed_trades.iter().rev() {
-                if t.net_pnl < Decimal::ZERO { streak += 1; } else { break; }
+                if t.net_pnl < Decimal::ZERO {
+                    streak += 1;
+                } else {
+                    break;
+                }
             }
             if streak >= *n {
                 Some(Violation {
@@ -216,16 +238,22 @@ fn check_rule(
                         "{streak} consecutive losses today — cool off; rule caps at {n}",
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::CoolDownAfterLossMinutes { minutes } => {
             let cutoff = now - Duration::minutes(*minutes);
-            let last_loss = ctx.today_closed_trades.iter().rev()
+            let last_loss = ctx
+                .today_closed_trades
+                .iter()
+                .rev()
                 .find(|t| t.net_pnl < Decimal::ZERO);
             if let Some(loss) = last_loss {
                 if loss.closed_at > cutoff {
                     let remaining = (loss.closed_at + Duration::minutes(*minutes) - now)
-                        .num_seconds().max(0);
+                        .num_seconds()
+                        .max(0);
                     return Some(Violation {
                         rule: "cool_down_after_loss".into(),
                         severity: Severity::Block,
@@ -247,7 +275,9 @@ fn check_rule(
                         ctx.open_position_count,
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::MaxPositionSizePct { pct } => {
             let notional = p.qty * p.entry_price * p.multiplier;
@@ -261,7 +291,9 @@ fn check_rule(
                         notional, pct, cap,
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::BlockedSymbols { symbols } => {
             let needle = p.symbol.to_ascii_uppercase();
@@ -271,7 +303,9 @@ fn check_rule(
                     severity: Severity::Block,
                     message: format!("{} is on your self-imposed block list", p.symbol),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::RequirePlanBeforeTrade => {
             if !p.has_attached_plan {
@@ -280,7 +314,9 @@ fn check_rule(
                     severity: Severity::Block,
                     message: "no pre-trade plan attached — write the setup first".into(),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::RequireStopLoss => {
             if p.stop_loss.is_none() {
@@ -289,7 +325,9 @@ fn check_rule(
                     severity: Severity::Warning,
                     message: "no stop loss set — you're trading without a defined exit".into(),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::RegularTradingHoursOnly => {
             if !is_us_rth(now) {
@@ -298,7 +336,9 @@ fn check_rule(
                     severity: Severity::Block,
                     message: "outside US regular trading hours (09:30-16:00 ET, Mon-Fri)".into(),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::MinPositionSizeDollars { min_dollars } => {
             let notional = p.qty * p.entry_price * p.multiplier;
@@ -311,7 +351,9 @@ fn check_rule(
                         notional, min_dollars,
                     ),
                 })
-            } else { None }
+            } else {
+                None
+            }
         }
         RiskRule::KillSwitch => Some(Violation {
             rule: "kill_switch".into(),
@@ -333,7 +375,7 @@ fn is_us_rth(now: DateTime<Utc>) -> bool {
     // window is at most one hour twice a year — acceptable for a gate
     // rule users can override.
     let month = now.month();
-    let day   = now.day();
+    let day = now.day();
     let in_dst = match month {
         1 | 2 | 12 => false,
         3 => {
@@ -391,22 +433,22 @@ pub fn preset_rules(preset: Preset) -> Vec<RiskRule> {
     match preset {
         Preset::Beginner => vec![
             RiskRule::MaxLossPerTradePct { pct: d("1.0") },
-            RiskRule::MaxLossPerDayPct   { pct: d("3.0") },
+            RiskRule::MaxLossPerDayPct { pct: d("3.0") },
             RiskRule::MaxConsecutiveLossesToday { n: 3 },
-            RiskRule::CoolDownAfterLossMinutes  { minutes: 15 },
+            RiskRule::CoolDownAfterLossMinutes { minutes: 15 },
             RiskRule::MaxPositionSizePct { pct: d("25") },
             RiskRule::RequirePlanBeforeTrade,
             RiskRule::RequireStopLoss,
         ],
         Preset::Intermediate => vec![
             RiskRule::MaxLossPerTradePct { pct: d("1.0") },
-            RiskRule::MaxLossPerDayPct   { pct: d("5.0") },
+            RiskRule::MaxLossPerDayPct { pct: d("5.0") },
             RiskRule::MaxConsecutiveLossesToday { n: 4 },
-            RiskRule::CoolDownAfterLossMinutes  { minutes: 5 },
+            RiskRule::CoolDownAfterLossMinutes { minutes: 5 },
             RiskRule::RequireStopLoss,
         ],
         Preset::Aggressive => vec![
-            RiskRule::MaxLossPerDayPct  { pct: d("8.0") },
+            RiskRule::MaxLossPerDayPct { pct: d("8.0") },
             RiskRule::CoolDownAfterLossMinutes { minutes: 2 },
         ],
     }
@@ -422,7 +464,9 @@ mod tests {
     use chrono::TimeZone;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn proposed() -> ProposedTrade {
         ProposedTrade {
@@ -430,7 +474,7 @@ mod tests {
             side: TradeSide::Long,
             qty: d("100"),
             entry_price: d("150"),
-            stop_loss: Some(d("149")),    // $1 stop × 100 sh = $100 risk
+            stop_loss: Some(d("149")), // $1 stop × 100 sh = $100 risk
             asset_class: AssetClass::Stock,
             multiplier: Decimal::ONE,
             tick_size: None,
@@ -441,7 +485,7 @@ mod tests {
 
     fn ctx() -> GateContext {
         GateContext {
-            account_equity: d("100000"),     // $100k
+            account_equity: d("100000"), // $100k
             today_realized_pnl: Decimal::ZERO,
             open_position_count: 0,
             today_closed_trades: vec![],
@@ -493,7 +537,7 @@ mod tests {
     #[test]
     fn max_loss_per_day_blocks_after_cap_hit() {
         let mut c = ctx();
-        c.today_realized_pnl = d("-2500");  // already down $2,500
+        c.today_realized_pnl = d("-2500"); // already down $2,500
         let rules = vec![RiskRule::MaxLossPerDayPct { pct: d("2") }]; // 2% × 100k = 2k cap
         let dec = evaluate(&proposed(), &c, &rules, now());
         assert!(!dec.allow);
@@ -503,7 +547,7 @@ mod tests {
     #[test]
     fn max_loss_per_day_ignores_positive_pnl() {
         let mut c = ctx();
-        c.today_realized_pnl = d("5000");  // up $5k
+        c.today_realized_pnl = d("5000"); // up $5k
         let rules = vec![RiskRule::MaxLossPerDayPct { pct: d("2") }];
         let dec = evaluate(&proposed(), &c, &rules, now());
         assert!(dec.allow, "positive P&L must never trigger a loss-cap rule");
@@ -515,9 +559,18 @@ mod tests {
     fn consec_losses_blocks_at_threshold() {
         let mut c = ctx();
         c.today_closed_trades = vec![
-            RecentTrade { closed_at: now(), net_pnl: d("-100") },
-            RecentTrade { closed_at: now(), net_pnl: d("-50") },
-            RecentTrade { closed_at: now(), net_pnl: d("-200") },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-100"),
+            },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-50"),
+            },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-200"),
+            },
         ];
         let rules = vec![RiskRule::MaxConsecutiveLossesToday { n: 3 }];
         let dec = evaluate(&proposed(), &c, &rules, now());
@@ -528,10 +581,22 @@ mod tests {
     fn consec_losses_resets_on_a_win() {
         let mut c = ctx();
         c.today_closed_trades = vec![
-            RecentTrade { closed_at: now(), net_pnl: d("-100") },
-            RecentTrade { closed_at: now(), net_pnl: d("-50") },
-            RecentTrade { closed_at: now(), net_pnl: d("200") },   // win breaks streak
-            RecentTrade { closed_at: now(), net_pnl: d("-25") },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-100"),
+            },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-50"),
+            },
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("200"),
+            }, // win breaks streak
+            RecentTrade {
+                closed_at: now(),
+                net_pnl: d("-25"),
+            },
         ];
         let rules = vec![RiskRule::MaxConsecutiveLossesToday { n: 3 }];
         let dec = evaluate(&proposed(), &c, &rules, now());
@@ -544,12 +609,10 @@ mod tests {
     fn cool_down_blocks_within_window() {
         let now_ = now();
         let mut c = ctx();
-        c.today_closed_trades = vec![
-            RecentTrade {
-                closed_at: now_ - Duration::minutes(3),    // 3 min ago
-                net_pnl: d("-50"),
-            },
-        ];
+        c.today_closed_trades = vec![RecentTrade {
+            closed_at: now_ - Duration::minutes(3), // 3 min ago
+            net_pnl: d("-50"),
+        }];
         let rules = vec![RiskRule::CoolDownAfterLossMinutes { minutes: 10 }];
         let dec = evaluate(&proposed(), &c, &rules, now_);
         assert!(!dec.allow);
@@ -559,12 +622,10 @@ mod tests {
     fn cool_down_allows_after_window() {
         let now_ = now();
         let mut c = ctx();
-        c.today_closed_trades = vec![
-            RecentTrade {
-                closed_at: now_ - Duration::minutes(15),   // 15 min ago — past
-                net_pnl: d("-50"),
-            },
-        ];
+        c.today_closed_trades = vec![RecentTrade {
+            closed_at: now_ - Duration::minutes(15), // 15 min ago — past
+            net_pnl: d("-50"),
+        }];
         let rules = vec![RiskRule::CoolDownAfterLossMinutes { minutes: 10 }];
         let dec = evaluate(&proposed(), &c, &rules, now_);
         assert!(dec.allow);
@@ -574,12 +635,10 @@ mod tests {
     fn cool_down_ignores_winning_trades_inside_window() {
         let now_ = now();
         let mut c = ctx();
-        c.today_closed_trades = vec![
-            RecentTrade {
-                closed_at: now_ - Duration::minutes(1),
-                net_pnl: d("500"),   // win — should NOT trigger cool-down
-            },
-        ];
+        c.today_closed_trades = vec![RecentTrade {
+            closed_at: now_ - Duration::minutes(1),
+            net_pnl: d("500"), // win — should NOT trigger cool-down
+        }];
         let rules = vec![RiskRule::CoolDownAfterLossMinutes { minutes: 10 }];
         let dec = evaluate(&proposed(), &c, &rules, now_);
         assert!(dec.allow, "cool-down must only apply after a LOSING trade");
@@ -610,14 +669,18 @@ mod tests {
 
     #[test]
     fn blocked_symbols_are_case_insensitive() {
-        let rules = vec![RiskRule::BlockedSymbols { symbols: vec!["aapl".into()] }];
-        let dec = evaluate(&proposed(), &ctx(), &rules, now());  // proposed.symbol = "AAPL"
+        let rules = vec![RiskRule::BlockedSymbols {
+            symbols: vec!["aapl".into()],
+        }];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now()); // proposed.symbol = "AAPL"
         assert!(!dec.allow);
     }
 
     #[test]
     fn blocked_symbols_pass_through_non_matches() {
-        let rules = vec![RiskRule::BlockedSymbols { symbols: vec!["GME".into(), "AMC".into()] }];
+        let rules = vec![RiskRule::BlockedSymbols {
+            symbols: vec!["GME".into(), "AMC".into()],
+        }];
         let dec = evaluate(&proposed(), &ctx(), &rules, now());
         assert!(dec.allow);
     }
@@ -652,12 +715,9 @@ mod tests {
     #[test]
     fn multiple_violations_stack_and_block_wins() {
         let mut p = proposed();
-        p.stop_loss = None;          // warning from RequireStopLoss
+        p.stop_loss = None; // warning from RequireStopLoss
         p.has_attached_plan = false; // block from RequirePlanBeforeTrade
-        let rules = vec![
-            RiskRule::RequireStopLoss,
-            RiskRule::RequirePlanBeforeTrade,
-        ];
+        let rules = vec![RiskRule::RequireStopLoss, RiskRule::RequirePlanBeforeTrade];
         let dec = evaluate(&p, &ctx(), &rules, now());
         assert!(!dec.allow, "any Block severity must veto the trade");
         assert_eq!(dec.violations.len(), 2);
@@ -677,16 +737,20 @@ mod tests {
             RiskRule::CoolDownAfterLossMinutes { minutes: 15 },
             RiskRule::MaxOpenPositions { n: 5 },
             RiskRule::MaxPositionSizePct { pct: d("10") },
-            RiskRule::BlockedSymbols { symbols: vec!["GME".into()] },
+            RiskRule::BlockedSymbols {
+                symbols: vec!["GME".into()],
+            },
             RiskRule::RequirePlanBeforeTrade,
             RiskRule::RequireStopLoss,
             RiskRule::RegularTradingHoursOnly,
-            RiskRule::MinPositionSizeDollars { min_dollars: d("100") },
+            RiskRule::MinPositionSizeDollars {
+                min_dollars: d("100"),
+            },
             RiskRule::KillSwitch,
         ] {
             let s = serde_json::to_string(&rule).unwrap();
-            let back: RiskRule = serde_json::from_str(&s)
-                .unwrap_or_else(|e| panic!("failed to roundtrip {s}: {e}"));
+            let back: RiskRule =
+                serde_json::from_str(&s).unwrap_or_else(|e| panic!("failed to roundtrip {s}: {e}"));
             // Re-serialize and compare — gives us value-equality without
             // implementing PartialEq on the enum.
             assert_eq!(serde_json::to_string(&back).unwrap(), s);
@@ -704,13 +768,15 @@ mod tests {
             1 | 2 | 12 => false,
             3 => {
                 let mar = chrono::NaiveDate::from_ymd_opt(year, 3, 1).unwrap();
-                let first_sun = (8 - (mar.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+                let first_sun =
+                    (8 - (mar.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
                 let second_sun = first_sun + 7;
                 day as i32 >= second_sun
             }
             11 => {
                 let nov = chrono::NaiveDate::from_ymd_opt(year, 11, 1).unwrap();
-                let first_sun = (8 - (nov.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+                let first_sun =
+                    (8 - (nov.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
                 (day as i32) < first_sun
             }
             4..=10 => true,
@@ -718,7 +784,8 @@ mod tests {
         };
         let _ = Weekday::Mon; // silence unused-import warning if any
         let offset_hours: i64 = if in_dst { -4 } else { -5 };
-        Utc.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap()
+        Utc.with_ymd_and_hms(year, month, day, hour, minute, 0)
+            .unwrap()
             - chrono::Duration::hours(offset_hours)
     }
 
@@ -772,7 +839,9 @@ mod tests {
     #[test]
     fn min_position_size_blocks_tiny_notional() {
         // Notional = 100 × $150 = $15,000. Min $100k → block.
-        let rules = vec![RiskRule::MinPositionSizeDollars { min_dollars: d("100000") }];
+        let rules = vec![RiskRule::MinPositionSizeDollars {
+            min_dollars: d("100000"),
+        }];
         let dec = evaluate(&proposed(), &ctx(), &rules, now());
         assert!(!dec.allow);
         assert!(dec.violations[0].message.contains("fat-finger"));
@@ -780,9 +849,14 @@ mod tests {
 
     #[test]
     fn min_position_size_allows_at_or_above_minimum() {
-        let rules = vec![RiskRule::MinPositionSizeDollars { min_dollars: d("15000") }];
+        let rules = vec![RiskRule::MinPositionSizeDollars {
+            min_dollars: d("15000"),
+        }];
         let dec = evaluate(&proposed(), &ctx(), &rules, now());
-        assert!(dec.allow, "$15,000 notional at $15,000 floor should allow (>=)");
+        assert!(
+            dec.allow,
+            "$15,000 notional at $15,000 floor should allow (>=)"
+        );
     }
 
     // ─── KillSwitch ──────────────────────────────────────────────────────
@@ -802,16 +876,19 @@ mod tests {
         // under every cap — must still be blocked by the kill switch.
         let mut p = proposed();
         p.has_attached_plan = true;
-        p.stop_loss = Some(d("149.95"));   // tiny $5 risk
+        p.stop_loss = Some(d("149.95")); // tiny $5 risk
         let rules = vec![
             RiskRule::MaxLossPerTradePct { pct: d("10") },
-            RiskRule::MaxLossPerDayPct   { pct: d("10") },
+            RiskRule::MaxLossPerDayPct { pct: d("10") },
             RiskRule::RequirePlanBeforeTrade,
             RiskRule::RequireStopLoss,
             RiskRule::KillSwitch,
         ];
         let dec = evaluate(&p, &ctx(), &rules, now());
-        assert!(!dec.allow, "kill switch must veto regardless of other rules");
+        assert!(
+            !dec.allow,
+            "kill switch must veto regardless of other rules"
+        );
     }
 
     // ─── Presets ─────────────────────────────────────────────────────────
@@ -822,14 +899,26 @@ mod tests {
         let i = preset_rules(Preset::Intermediate);
         let a = preset_rules(Preset::Aggressive);
         // More rules = more restrictions in this ruleset family.
-        assert!(b.len() > i.len(),  "beginner ({}) should restrict more than intermediate ({})", b.len(), i.len());
-        assert!(i.len() > a.len(), "intermediate ({}) should restrict more than aggressive ({})", i.len(), a.len());
+        assert!(
+            b.len() > i.len(),
+            "beginner ({}) should restrict more than intermediate ({})",
+            b.len(),
+            i.len()
+        );
+        assert!(
+            i.len() > a.len(),
+            "intermediate ({}) should restrict more than aggressive ({})",
+            i.len(),
+            a.len()
+        );
     }
 
     #[test]
     fn beginner_preset_includes_plan_and_stop_requirements() {
         let rules = preset_rules(Preset::Beginner);
-        let has_plan = rules.iter().any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade));
+        let has_plan = rules
+            .iter()
+            .any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade));
         let has_stop = rules.iter().any(|r| matches!(r, RiskRule::RequireStopLoss));
         assert!(has_plan, "beginner must require a written plan");
         assert!(has_stop, "beginner must require a stop loss");
@@ -838,17 +927,26 @@ mod tests {
     #[test]
     fn intermediate_preset_drops_plan_requirement_but_keeps_stop() {
         let rules = preset_rules(Preset::Intermediate);
-        assert!(!rules.iter().any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade)));
-        assert!( rules.iter().any(|r| matches!(r, RiskRule::RequireStopLoss)));
+        assert!(!rules
+            .iter()
+            .any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade)));
+        assert!(rules.iter().any(|r| matches!(r, RiskRule::RequireStopLoss)));
     }
 
     #[test]
     fn aggressive_preset_is_daily_cap_plus_cool_down_only() {
         let rules = preset_rules(Preset::Aggressive);
-        assert_eq!(rules.len(), 2,
-            "aggressive must stay minimal — adding more defeats the purpose");
-        assert!(rules.iter().any(|r| matches!(r, RiskRule::MaxLossPerDayPct { .. })));
-        assert!(rules.iter().any(|r| matches!(r, RiskRule::CoolDownAfterLossMinutes { .. })));
+        assert_eq!(
+            rules.len(),
+            2,
+            "aggressive must stay minimal — adding more defeats the purpose"
+        );
+        assert!(rules
+            .iter()
+            .any(|r| matches!(r, RiskRule::MaxLossPerDayPct { .. })));
+        assert!(rules
+            .iter()
+            .any(|r| matches!(r, RiskRule::CoolDownAfterLossMinutes { .. })));
     }
 
     #[test]
@@ -872,7 +970,13 @@ mod tests {
         let b = extract_daily(Preset::Beginner).expect("beginner has daily cap");
         let i = extract_daily(Preset::Intermediate).expect("intermediate has daily cap");
         let a = extract_daily(Preset::Aggressive).expect("aggressive has daily cap");
-        assert!(b < i, "beginner daily cap ({b}) must be tighter than intermediate ({i})");
-        assert!(i < a, "intermediate cap ({i}) must be tighter than aggressive ({a})");
+        assert!(
+            b < i,
+            "beginner daily cap ({b}) must be tighter than intermediate ({i})"
+        );
+        assert!(
+            i < a,
+            "intermediate cap ({i}) must be tighter than aggressive ({a})"
+        );
     }
 }

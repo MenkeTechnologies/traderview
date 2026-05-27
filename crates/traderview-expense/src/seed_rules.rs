@@ -28,7 +28,6 @@ pub fn seed() -> Vec<Rule> {
         s("starbucks", "meals_50"),
         s("blue bottle", "meals_50"),
         s("chipotle", "meals_50"),
-
         // --- travel ---
         s("uber", "travel"),
         s("lyft", "travel"),
@@ -43,7 +42,6 @@ pub fn seed() -> Vec<Rule> {
         s("marriott", "travel"),
         s("hilton", "travel"),
         s("hyatt", "travel"),
-
         // --- car / fuel ---
         s("chevron", "car_truck"),
         s("shell oil", "car_truck"),
@@ -54,7 +52,6 @@ pub fn seed() -> Vec<Rule> {
         s("bp gas", "car_truck"),
         s("valero", "car_truck"),
         s("arco", "car_truck"),
-
         // --- office / software ---
         s("amzn mktp", "office"),
         s("amazon mktp", "office"),
@@ -75,12 +72,10 @@ pub fn seed() -> Vec<Rule> {
         s("google cloud", "office"),
         s("cursor.com", "office"),
         s("notion", "office"),
-
         // --- shipping (office expense per Schedule C; UPS/FedEx of business pkgs) ---
         s("usps", "office"),
         s("ups ", "office"),
         s("fedex", "office"),
-
         // --- utilities ---
         s("comcast", "utilities"),
         s("xfinity", "utilities"),
@@ -90,17 +85,14 @@ pub fn seed() -> Vec<Rule> {
         s("pg&e", "utilities"),
         s("sce ", "utilities"),
         s("sdg&e", "utilities"),
-
         // --- legal / professional ---
         s("legalzoom", "legal"),
         s("rocketlawyer", "legal"),
-
         // --- advertising ---
         s("google ads", "advertising"),
         s("facebook ads", "advertising"),
         s("meta platforms", "advertising"),
         s("linkedin", "advertising"),
-
         // --- insurance ---
         s("geico", "insurance"),
         s("state farm", "insurance"),
@@ -118,8 +110,14 @@ mod tests {
     /// here is fine; emitting one not in this set fails the test so the
     /// frontend's category picker doesn't quietly desync.
     const KNOWN_CATEGORIES: &[&str] = &[
-        "meals_50", "travel", "car_truck", "office", "utilities",
-        "legal", "advertising", "insurance",
+        "meals_50",
+        "travel",
+        "car_truck",
+        "office",
+        "utilities",
+        "legal",
+        "advertising",
+        "insurance",
     ];
 
     #[test]
@@ -139,9 +137,11 @@ mod tests {
         // The seed is a *business* expense ruleset; nothing personal should
         // ship by default.
         for r in seed() {
-            assert!(r.is_business,
+            assert!(
+                r.is_business,
                 "non-business default rule slipped in: `{}` → `{}`",
-                r.pattern, r.category_code);
+                r.pattern, r.category_code
+            );
         }
     }
 
@@ -150,9 +150,11 @@ mod tests {
         // First-match-wins; a duplicate is dead code and a confusion source.
         let mut seen: HashSet<String> = HashSet::new();
         for r in seed() {
-            assert!(seen.insert(r.pattern.clone()),
+            assert!(
+                seen.insert(r.pattern.clone()),
                 "duplicate pattern `{}` — second occurrence is unreachable",
-                r.pattern);
+                r.pattern
+            );
         }
     }
 
@@ -161,12 +163,18 @@ mod tests {
         // "uber eats" → meals_50 must be encountered BEFORE bare "uber" →
         // travel, or every Uber Eats charge gets misclassified as travel.
         let rules = seed();
-        let eats_idx = rules.iter().position(|r| r.pattern == "uber eats")
+        let eats_idx = rules
+            .iter()
+            .position(|r| r.pattern == "uber eats")
             .expect("`uber eats` rule missing");
-        let uber_idx = rules.iter().position(|r| r.pattern == "uber")
+        let uber_idx = rules
+            .iter()
+            .position(|r| r.pattern == "uber")
             .expect("`uber` rule missing");
-        assert!(eats_idx < uber_idx,
-            "rule order broken: `uber eats` must precede `uber`");
+        assert!(
+            eats_idx < uber_idx,
+            "rule order broken: `uber eats` must precede `uber`"
+        );
     }
 
     #[test]
@@ -176,9 +184,11 @@ mod tests {
         // compilation paths — call it out explicitly so it's a conscious
         // decision.
         for r in seed() {
-            assert!(matches!(r.pattern_kind, PatternKind::Substring),
+            assert!(
+                matches!(r.pattern_kind, PatternKind::Substring),
                 "rule `{}` uses non-Substring kind — verify intentional",
-                r.pattern);
+                r.pattern
+            );
         }
     }
 
@@ -187,8 +197,12 @@ mod tests {
         // Patterns are matched against merchant_normalized which is already
         // lowercased; an uppercase pattern would silently never match.
         for r in seed() {
-            assert_eq!(r.pattern, r.pattern.to_lowercase(),
-                "uppercase chars in pattern `{}` would never match", r.pattern);
+            assert_eq!(
+                r.pattern,
+                r.pattern.to_lowercase(),
+                "uppercase chars in pattern `{}` would never match",
+                r.pattern
+            );
         }
     }
 

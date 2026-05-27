@@ -48,11 +48,26 @@ pub struct YearTable {
 }
 
 const YEAR_TABLE: &[YearTable] = &[
-    YearTable { year: 2022, ss_wage_base: 147_000 },
-    YearTable { year: 2023, ss_wage_base: 160_200 },
-    YearTable { year: 2024, ss_wage_base: 168_600 },
-    YearTable { year: 2025, ss_wage_base: 176_100 },
-    YearTable { year: 2026, ss_wage_base: 181_800 },
+    YearTable {
+        year: 2022,
+        ss_wage_base: 147_000,
+    },
+    YearTable {
+        year: 2023,
+        ss_wage_base: 160_200,
+    },
+    YearTable {
+        year: 2024,
+        ss_wage_base: 168_600,
+    },
+    YearTable {
+        year: 2025,
+        ss_wage_base: 176_100,
+    },
+    YearTable {
+        year: 2026,
+        ss_wage_base: 181_800,
+    },
 ];
 
 pub fn lookup(year: u16) -> Option<YearTable> {
@@ -94,7 +109,10 @@ const MEDICARE_RATE: &str = "0.029";
 const ADDITIONAL_MEDICARE_RATE: &str = "0.009";
 
 pub fn compute(input: &ScheduleSeInput) -> ScheduleSeReport {
-    let mut out = ScheduleSeReport { year: input.year, ..Default::default() };
+    let mut out = ScheduleSeReport {
+        year: input.year,
+        ..Default::default()
+    };
 
     // Negative or trivially small net profit → no SE tax. IRS threshold is $400.
     if input.net_profit_schedule_c < Decimal::from(400) {
@@ -115,10 +133,8 @@ pub fn compute(input: &ScheduleSeInput) -> ScheduleSeReport {
     let ss_room = (wage_base - input.w2_ss_wages).max(Decimal::ZERO);
     let ss_taxable = net_se.min(ss_room);
 
-    out.social_security_tax =
-        ss_taxable * Decimal::from_str(SS_RATE).unwrap();
-    out.medicare_tax =
-        net_se * Decimal::from_str(MEDICARE_RATE).unwrap();
+    out.social_security_tax = ss_taxable * Decimal::from_str(SS_RATE).unwrap();
+    out.medicare_tax = net_se * Decimal::from_str(MEDICARE_RATE).unwrap();
 
     // Additional Medicare uses combined wages + SE earnings; threshold is
     // not the SS wage base but the filing-status threshold.
@@ -126,17 +142,13 @@ pub fn compute(input: &ScheduleSeInput) -> ScheduleSeReport {
     let addl_threshold = input.filing_status.additional_medicare_threshold();
     if combined > addl_threshold {
         let excess = combined - addl_threshold;
-        out.additional_medicare_tax =
-            excess * Decimal::from_str(ADDITIONAL_MEDICARE_RATE).unwrap();
+        out.additional_medicare_tax = excess * Decimal::from_str(ADDITIONAL_MEDICARE_RATE).unwrap();
     }
 
-    out.total_se_tax = out.social_security_tax
-        + out.medicare_tax
-        + out.additional_medicare_tax;
+    out.total_se_tax = out.social_security_tax + out.medicare_tax + out.additional_medicare_tax;
 
     // Half-deduction excludes the additional Medicare surtax (IRS quirk).
-    out.deductible_half =
-        (out.social_security_tax + out.medicare_tax) / Decimal::from(2);
+    out.deductible_half = (out.social_security_tax + out.medicare_tax) / Decimal::from(2);
 
     out
 }
@@ -145,7 +157,9 @@ pub fn compute(input: &ScheduleSeInput) -> ScheduleSeReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn no_se_tax_below_400_threshold() {
@@ -204,7 +218,7 @@ mod tests {
         // $100k W-2 already collected SS. Wage base $168,600 leaves $68,600
         // room for SE earnings to be SS-taxed.
         let r = compute(&ScheduleSeInput {
-            net_profit_schedule_c: d("200000"),  // net_se = 184,700
+            net_profit_schedule_c: d("200000"), // net_se = 184,700
             w2_ss_wages: d("100000"),
             filing_status: FilingStatus::Single,
             year: 2024,
@@ -217,7 +231,7 @@ mod tests {
     fn w2_already_at_wage_base_yields_no_ss_se_tax() {
         let r = compute(&ScheduleSeInput {
             net_profit_schedule_c: d("50000"),
-            w2_ss_wages: d("200000"),   // already over cap
+            w2_ss_wages: d("200000"), // already over cap
             filing_status: FilingStatus::Single,
             year: 2024,
         });
@@ -243,7 +257,7 @@ mod tests {
     fn additional_medicare_threshold_for_married_joint_is_250k() {
         // MFJ threshold is $250k, not $200k.
         let r = compute(&ScheduleSeInput {
-            net_profit_schedule_c: d("250000"),  // net_se = 230,875
+            net_profit_schedule_c: d("250000"), // net_se = 230,875
             w2_ss_wages: Decimal::ZERO,
             filing_status: FilingStatus::MarriedJoint,
             year: 2024,
@@ -263,10 +277,14 @@ mod tests {
         // Half of (SS + Medicare) only — the 0.9% surtax is NOT deductible.
         let expected = (r.social_security_tax + r.medicare_tax) / Decimal::from(2);
         assert_eq!(r.deductible_half, expected);
-        assert!(r.additional_medicare_tax > Decimal::ZERO,
-            "test setup: should have triggered surtax");
-        assert!(r.deductible_half < r.total_se_tax / Decimal::from(2),
-            "deductible half must be less than half of total when surtax applies");
+        assert!(
+            r.additional_medicare_tax > Decimal::ZERO,
+            "test setup: should have triggered surtax"
+        );
+        assert!(
+            r.deductible_half < r.total_se_tax / Decimal::from(2),
+            "deductible half must be less than half of total when surtax applies"
+        );
     }
 
     #[test]

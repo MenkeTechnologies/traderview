@@ -16,7 +16,10 @@ pub struct PriceTick {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum BrickDirection { Up, Down }
+pub enum BrickDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Brick {
@@ -27,7 +30,9 @@ pub struct Brick {
 
 pub fn build(ticks: &[PriceTick], brick_size: f64) -> Vec<Brick> {
     let mut out = Vec::new();
-    if ticks.is_empty() || brick_size <= 0.0 { return out; }
+    if ticks.is_empty() || brick_size <= 0.0 {
+        return out;
+    }
     let mut last_close = ticks[0].price;
     let mut last_dir: Option<BrickDirection> = None;
     for t in &ticks[1..] {
@@ -37,13 +42,21 @@ pub fn build(ticks: &[PriceTick], brick_size: f64) -> Vec<Brick> {
                     if t.price - last_close >= brick_size {
                         let open = last_close;
                         let close = open + brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Up });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Up,
+                        });
                         last_close = close;
                         last_dir = Some(BrickDirection::Up);
                     } else if last_close - t.price >= brick_size {
                         let open = last_close;
                         let close = open - brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Down });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Down,
+                        });
                         last_close = close;
                         last_dir = Some(BrickDirection::Down);
                     } else {
@@ -54,13 +67,21 @@ pub fn build(ticks: &[PriceTick], brick_size: f64) -> Vec<Brick> {
                     if t.price - last_close >= brick_size {
                         let open = last_close;
                         let close = open + brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Up });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Up,
+                        });
                         last_close = close;
                     } else if last_close - t.price >= 2.0 * brick_size {
                         // Reversal requires 2× brick.
                         let open = last_close - brick_size;
                         let close = open - brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Down });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Down,
+                        });
                         last_close = close;
                         last_dir = Some(BrickDirection::Down);
                     } else {
@@ -71,12 +92,20 @@ pub fn build(ticks: &[PriceTick], brick_size: f64) -> Vec<Brick> {
                     if last_close - t.price >= brick_size {
                         let open = last_close;
                         let close = open - brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Down });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Down,
+                        });
                         last_close = close;
                     } else if t.price - last_close >= 2.0 * brick_size {
                         let open = last_close + brick_size;
                         let close = open + brick_size;
-                        out.push(Brick { open, close, direction: BrickDirection::Up });
+                        out.push(Brick {
+                            open,
+                            close,
+                            direction: BrickDirection::Up,
+                        });
                         last_close = close;
                         last_dir = Some(BrickDirection::Up);
                     } else {
@@ -93,7 +122,9 @@ pub fn build(ticks: &[PriceTick], brick_size: f64) -> Vec<Brick> {
 mod tests {
     use super::*;
 
-    fn t(price: f64) -> PriceTick { PriceTick { price } }
+    fn t(price: f64) -> PriceTick {
+        PriceTick { price }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -158,9 +189,7 @@ mod tests {
     #[test]
     fn small_oscillations_filter_out() {
         // Tiny moves around 100 with brick=1 → no bricks.
-        let out = build(&[
-            t(100.0), t(100.5), t(99.5), t(100.3), t(99.8),
-        ], 1.0);
+        let out = build(&[t(100.0), t(100.5), t(99.5), t(100.3), t(99.8)], 1.0);
         assert!(out.is_empty());
     }
 

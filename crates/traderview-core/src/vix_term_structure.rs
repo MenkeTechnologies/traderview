@@ -18,22 +18,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct VixTermStructure {
     pub vix9d: f64,
-    pub vix:   f64,    // 30-day
-    pub vix3m: f64,    // 90-day
-    pub vix6m: f64,    // 180-day
-    pub vix1y: f64,    // 365-day (VXM1Y)
+    pub vix: f64,   // 30-day
+    pub vix3m: f64, // 90-day
+    pub vix6m: f64, // 180-day
+    pub vix1y: f64, // 365-day (VXM1Y)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[derive(Default)]
 pub enum CurveState {
-    SteepContango,    // vix/vix3m < 0.80
-    Contango,         // 0.80 ≤ vix/vix3m < 1.00
+    SteepContango, // vix/vix3m < 0.80
+    Contango,      // 0.80 ≤ vix/vix3m < 1.00
     #[default]
-    Flat,             // 1.00 ≤ vix/vix3m < 1.05
-    Backwardation,    // 1.05 ≤ vix/vix3m < 1.20
-    SevereBackwardation,    // ≥ 1.20
+    Flat, // 1.00 ≤ vix/vix3m < 1.05
+    Backwardation, // 1.05 ≤ vix/vix3m < 1.20
+    SevereBackwardation, // ≥ 1.20
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -44,19 +44,26 @@ pub struct TermStructureReport {
     pub note: String,
 }
 
-
 pub fn analyze(ts: &VixTermStructure) -> TermStructureReport {
     let mut report = TermStructureReport::default();
-    if ts.vix3m <= 0.0 { return report; }
+    if ts.vix3m <= 0.0 {
+        return report;
+    }
     let ratio = ts.vix / ts.vix3m;
     report.vix_to_vix3m_ratio = ratio;
-    report.slope = (ts.vix - ts.vix9d) + (ts.vix3m - ts.vix) + (ts.vix6m - ts.vix3m)
-        + (ts.vix1y - ts.vix6m);
-    report.state = if ratio < 0.80 { CurveState::SteepContango }
-        else if ratio < 1.00 { CurveState::Contango }
-        else if ratio < 1.05 { CurveState::Flat }
-        else if ratio < 1.20 { CurveState::Backwardation }
-        else { CurveState::SevereBackwardation };
+    report.slope =
+        (ts.vix - ts.vix9d) + (ts.vix3m - ts.vix) + (ts.vix6m - ts.vix3m) + (ts.vix1y - ts.vix6m);
+    report.state = if ratio < 0.80 {
+        CurveState::SteepContango
+    } else if ratio < 1.00 {
+        CurveState::Contango
+    } else if ratio < 1.05 {
+        CurveState::Flat
+    } else if ratio < 1.20 {
+        CurveState::Backwardation
+    } else {
+        CurveState::SevereBackwardation
+    };
     report.note = match report.state {
         CurveState::SteepContango       => "very calm market — short vol favored".into(),
         CurveState::Contango            => "normal market structure".into(),
@@ -72,7 +79,13 @@ mod tests {
     use super::*;
 
     fn ts(vix9d: f64, vix: f64, vix3m: f64, vix6m: f64, vix1y: f64) -> VixTermStructure {
-        VixTermStructure { vix9d, vix, vix3m, vix6m, vix1y }
+        VixTermStructure {
+            vix9d,
+            vix,
+            vix3m,
+            vix6m,
+            vix1y,
+        }
     }
 
     #[test]
@@ -131,6 +144,8 @@ mod tests {
     #[test]
     fn note_explains_state() {
         let r = analyze(&ts(45.0, 40.0, 30.0, 28.0, 26.0));
-        assert!(r.note.contains("extreme") || r.note.contains("severe") || r.note.contains("stress"));
+        assert!(
+            r.note.contains("extreme") || r.note.contains("severe") || r.note.contains("stress")
+        );
     }
 }

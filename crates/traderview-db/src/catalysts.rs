@@ -36,7 +36,7 @@ pub enum CatalystKind {
 #[derive(Debug, Clone, Serialize)]
 pub struct Catalyst {
     pub kind: CatalystKind,
-    pub source: String,           // "EDGAR" | wire name
+    pub source: String,            // "EDGAR" | wire name
     pub form_type: Option<String>, // "8-K", "13D", "S-1", etc.
     pub title: String,
     pub summary: String,
@@ -61,7 +61,9 @@ impl CatalystStore {
         }
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<Catalyst> { self.tx.subscribe() }
+    pub fn subscribe(&self) -> broadcast::Receiver<Catalyst> {
+        self.tx.subscribe()
+    }
 
     /// Newest first.
     pub fn latest(&self, limit: usize) -> Vec<Catalyst> {
@@ -99,9 +101,12 @@ impl CatalystStore {
     fn evict_if_full(&self) {
         const MAX_ENTRIES: usize = 10_000;
         const EVICT_FRACTION: usize = 4;
-        if self.seen.len() <= MAX_ENTRIES { return; }
+        if self.seen.len() <= MAX_ENTRIES {
+            return;
+        }
         let drop_n = self.seen.len() / EVICT_FRACTION;
-        let mut by_age: Vec<(String, DateTime<Utc>)> = self.seen
+        let mut by_age: Vec<(String, DateTime<Utc>)> = self
+            .seen
             .iter()
             .map(|e| (e.key().clone(), e.value().fetched_at))
             .collect();
@@ -112,7 +117,11 @@ impl CatalystStore {
     }
 }
 
-impl Default for CatalystStore { fn default() -> Self { Self::new() } }
+impl Default for CatalystStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub fn global() -> CatalystStore {
     static STORE: once_cell::sync::OnceCell<CatalystStore> = once_cell::sync::OnceCell::new();
@@ -132,7 +141,9 @@ pub fn global() -> CatalystStore {
 fn spawn_pollers(store: CatalystStore) {
     // EDGAR every 6s — they request you not hit it faster.
     let s = store.clone();
-    tokio::spawn(async move { run_poller(s, 6, fetch_edgar).await; });
+    tokio::spawn(async move {
+        run_poller(s, 6, fetch_edgar).await;
+    });
     // PR wires every 30s — they're rate-limited too.
     for (name, url) in PR_WIRES {
         let s = store.clone();
@@ -141,9 +152,10 @@ fn spawn_pollers(store: CatalystStore) {
         tokio::spawn(async move {
             run_poller(s, 30, move |store| {
                 let name = name.clone();
-                let url  = url.clone();
+                let url = url.clone();
                 async move { fetch_rss(&name, &url, &store).await }
-            }).await;
+            })
+            .await;
         });
     }
 }
@@ -182,9 +194,15 @@ async fn fetch_edgar(store: CatalystStore) {
         tracing::warn!(status = ?resp.status(), "EDGAR HTTP error");
         return;
     }
-    let body = match resp.text().await { Ok(b) => b, Err(_) => return };
+    let body = match resp.text().await {
+        Ok(b) => b,
+        Err(_) => return,
+    };
     for c in parse_atom(&body, "EDGAR", CatalystKind::SecFiling) {
-        let key = format!("edgar|{}", c.link.clone().unwrap_or_else(|| c.title.clone()));
+        let key = format!(
+            "edgar|{}",
+            c.link.clone().unwrap_or_else(|| c.title.clone())
+        );
         store.observe(key, c);
     }
 }
@@ -193,15 +211,24 @@ async fn fetch_rss(name: &str, url: &str, store: &CatalystStore) {
     let client = http_client();
     let resp = match client.get(url).send().await {
         Ok(r) => r,
-        Err(e) => { tracing::warn!(?e, source=name, "PR fetch failed"); return; }
+        Err(e) => {
+            tracing::warn!(?e, source = name, "PR fetch failed");
+            return;
+        }
     };
     if !resp.status().is_success() {
         tracing::warn!(status=?resp.status(), source=name, "PR HTTP error");
         return;
     }
-    let body = match resp.text().await { Ok(b) => b, Err(_) => return };
+    let body = match resp.text().await {
+        Ok(b) => b,
+        Err(_) => return,
+    };
     for c in parse_rss_or_atom(&body, name, CatalystKind::PressRelease) {
-        let key = format!("{name}|{}", c.link.clone().unwrap_or_else(|| c.title.clone()));
+        let key = format!(
+            "{name}|{}",
+            c.link.clone().unwrap_or_else(|| c.title.clone())
+        );
         store.observe(key, c);
     }
 }
@@ -211,7 +238,9 @@ async fn fetch_rss(name: &str, url: &str, store: &CatalystStore) {
 // ===========================================================================
 
 fn parse_atom(body: &str, source: &str, kind: CatalystKind) -> Vec<Catalyst> {
-    parse_feed(body, source, kind, /*entry=*/"entry", /*summary=*/"summary")
+    parse_feed(
+        body, source, kind, /*entry=*/ "entry", /*summary=*/ "summary",
+    )
 }
 
 fn parse_rss_or_atom(body: &str, source: &str, kind: CatalystKind) -> Vec<Catalyst> {
@@ -251,7 +280,10 @@ fn parse_feed(
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 if name == entry_tag {
                     in_entry = true;
-                    title.clear(); summary.clear(); link.clear(); published.clear();
+                    title.clear();
+                    summary.clear();
+                    link.clear();
+                    published.clear();
                 }
                 current_tag = Some(name.clone());
                 if in_entry && name == "link" {
@@ -282,7 +314,9 @@ fn parse_feed(
                             // EDGAR title looks like: "8-K - ACME CORP (0000012345) (Filer)"
                             if let Some(dash) = title.find('-') {
                                 let t = title[..dash].trim().to_string();
-                                if !t.is_empty() { form_type = Some(t); }
+                                if !t.is_empty() {
+                                    form_type = Some(t);
+                                }
                             }
                         }
                         let body_text = format!("{title} {summary}");
@@ -330,7 +364,10 @@ fn parse_feed(
                 }
             }
             Ok(Event::Eof) => break,
-            Err(e) => { tracing::warn!(?e, "feed parse error"); break; }
+            Err(e) => {
+                tracing::warn!(?e, "feed parse error");
+                break;
+            }
             _ => {}
         }
         buf.clear();
@@ -339,7 +376,9 @@ fn parse_feed(
 }
 
 fn parse_pub_date(s: &str) -> Option<DateTime<Utc>> {
-    if s.is_empty() { return None; }
+    if s.is_empty() {
+        return None;
+    }
     if let Ok(d) = chrono::DateTime::parse_from_rfc2822(s) {
         return Some(d.with_timezone(&Utc));
     }
@@ -364,7 +403,9 @@ pub fn extract_tickers(text: &str) -> Vec<String> {
                 if p.is_ascii_uppercase() || p.is_ascii_digit() || p == '.' || p == '-' {
                     s.push(p);
                     chars.next();
-                } else { break; }
+                } else {
+                    break;
+                }
             }
             if (1..=8).contains(&s.len()) {
                 out.insert(s);
@@ -376,15 +417,22 @@ pub fn extract_tickers(text: &str) -> Vec<String> {
     let mut buf = String::new();
     for c in text.chars() {
         match c {
-            '(' => { in_paren = true; buf.clear(); }
+            '(' => {
+                in_paren = true;
+                buf.clear();
+            }
             ')' => {
-                if in_paren && (1..=8).contains(&buf.len())
-                    && buf.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '.' || c == '-')
+                if in_paren
+                    && (1..=8).contains(&buf.len())
+                    && buf.chars().all(|c| {
+                        c.is_ascii_uppercase() || c.is_ascii_digit() || c == '.' || c == '-'
+                    })
                     && !STOP_WORDS.contains(&buf.as_str())
                 {
                     out.insert(std::mem::take(&mut buf));
                 }
-                in_paren = false; buf.clear();
+                in_paren = false;
+                buf.clear();
             }
             _ if in_paren => buf.push(c),
             _ => {}
@@ -409,16 +457,14 @@ pub fn extract_tickers(text: &str) -> Vec<String> {
 }
 
 const STOP_WORDS: &[&str] = &[
-    "I", "A", "AT", "BE", "DO", "GO", "IF", "IN", "IS", "IT", "MY", "NO", "OF", "ON", "OR",
-    "SO", "TO", "UP", "US", "WE", "AM", "AN", "AS", "BY", "HE", "HI",
-    "AND", "ARE", "BUT", "FOR", "GET", "HAS", "HER", "HIM", "HIS", "HOW", "NOT", "NOW",
-    "OUR", "OUT", "PUT", "SHE", "THE", "TOP", "TWO", "WAS", "WHO", "WHY", "YOU",
-    "ABOUT", "AFTER", "AGAIN", "ALSO", "BEFORE", "BEEN", "BEING", "BELOW", "BOTH",
-    "CEO", "CFO", "COO", "CIO", "CTO", "CMO", "CRO",
-    "USA", "UK", "EU", "EUR", "GBP", "JPY", "CAD", "USD", "AUD", "CHF",
-    "AI", "API", "ETF", "IPO", "LLC", "INC", "LTD", "COM", "CORP", "PLC", "AG", "SA",
-    "Q1", "Q2", "Q3", "Q4", "YOY", "QOQ", "FY", "TBD", "PR", "FYI", "ESG",
-    "NEWS", "BREAKING",
+    "I", "A", "AT", "BE", "DO", "GO", "IF", "IN", "IS", "IT", "MY", "NO", "OF", "ON", "OR", "SO",
+    "TO", "UP", "US", "WE", "AM", "AN", "AS", "BY", "HE", "HI", "AND", "ARE", "BUT", "FOR", "GET",
+    "HAS", "HER", "HIM", "HIS", "HOW", "NOT", "NOW", "OUR", "OUT", "PUT", "SHE", "THE", "TOP",
+    "TWO", "WAS", "WHO", "WHY", "YOU", "ABOUT", "AFTER", "AGAIN", "ALSO", "BEFORE", "BEEN",
+    "BEING", "BELOW", "BOTH", "CEO", "CFO", "COO", "CIO", "CTO", "CMO", "CRO", "USA", "UK", "EU",
+    "EUR", "GBP", "JPY", "CAD", "USD", "AUD", "CHF", "AI", "API", "ETF", "IPO", "LLC", "INC",
+    "LTD", "COM", "CORP", "PLC", "AG", "SA", "Q1", "Q2", "Q3", "Q4", "YOY", "QOQ", "FY", "TBD",
+    "PR", "FYI", "ESG", "NEWS", "BREAKING",
 ];
 
 #[cfg(test)]
@@ -469,12 +515,17 @@ mod tests {
             store.observe(format!("key-{i}"), cat(i));
             assert!(
                 store.seen.len() <= 10_000,
-                "store grew past cap: {} after {} inserts", store.seen.len(), i + 1
+                "store grew past cap: {} after {} inserts",
+                store.seen.len(),
+                i + 1
             );
         }
         assert!(store.seen.len() <= 10_000);
-        assert!(store.seen.len() >= 7_500,
-            "post-eviction floor breached: {}", store.seen.len());
+        assert!(
+            store.seen.len() >= 7_500,
+            "post-eviction floor breached: {}",
+            store.seen.len()
+        );
     }
 
     #[test]
@@ -483,10 +534,14 @@ mod tests {
         for i in 0..10_001 {
             store.observe(format!("key-{i}"), cat(i));
         }
-        assert!(!store.seen.contains_key("key-0"),
-            "oldest entry survived eviction");
-        assert!(store.seen.contains_key("key-10000"),
-            "newest entry was incorrectly evicted");
+        assert!(
+            !store.seen.contains_key("key-0"),
+            "oldest entry survived eviction"
+        );
+        assert!(
+            store.seen.contains_key("key-10000"),
+            "newest entry was incorrectly evicted"
+        );
     }
 
     #[test]
@@ -512,7 +567,7 @@ mod tests {
             c.tickers = vec!["TSLA".into()];
             store.observe(format!("tsla-{i}"), c);
         }
-        let aapl = store.latest_for("aapl", 10);  // case-insensitive
+        let aapl = store.latest_for("aapl", 10); // case-insensitive
         let tsla = store.latest_for("TSLA", 10);
         assert_eq!(aapl.len(), 5);
         assert_eq!(tsla.len(), 3);

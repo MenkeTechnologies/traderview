@@ -21,12 +21,17 @@ pub struct KeltnerPoint {
 }
 
 pub fn compute(ema: &[f64], atr: &[f64], multiplier: f64) -> Vec<KeltnerPoint> {
-    if ema.len() != atr.len() { return vec![]; }
-    ema.iter().zip(atr).map(|(&m, &a)| KeltnerPoint {
-        middle: m,
-        upper: m + multiplier * a,
-        lower: m - multiplier * a,
-    }).collect()
+    if ema.len() != atr.len() {
+        return vec![];
+    }
+    ema.iter()
+        .zip(atr)
+        .map(|(&m, &a)| KeltnerPoint {
+            middle: m,
+            upper: m + multiplier * a,
+            lower: m - multiplier * a,
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -76,9 +81,9 @@ mod tests {
     #[test]
     fn larger_multiplier_wider_bands() {
         let tight = compute(&[100.0], &[1.0], 1.0);
-        let wide  = compute(&[100.0], &[1.0], 3.0);
+        let wide = compute(&[100.0], &[1.0], 3.0);
         let tight_range = tight[0].upper - tight[0].lower;
-        let wide_range  = wide[0].upper  - wide[0].lower;
+        let wide_range = wide[0].upper - wide[0].lower;
         assert!(wide_range > tight_range);
         // Wide is exactly 3× tight here.
         assert!((wide_range - tight_range * 3.0).abs() < 1e-9);

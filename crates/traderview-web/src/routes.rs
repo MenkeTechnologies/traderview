@@ -29,8 +29,8 @@ mod corr_matrix;
 mod crypto;
 mod csv_wizard;
 mod custom_indicators;
-mod dashboards;
 mod darkpool;
+mod dashboards;
 mod discipline;
 mod disclosures;
 mod earnings_cal;
@@ -188,11 +188,10 @@ mod helpers {
         user_id: Uuid,
         account_id: Uuid,
     ) -> Result<(), ApiError> {
-        let row: Option<(Uuid,)> =
-            sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
-                .bind(account_id)
-                .fetch_optional(&s.pool)
-                .await?;
+        let row: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(&s.pool)
+            .await?;
         match row {
             Some((owner,)) if owner == user_id => Ok(()),
             Some(_) => Err(ApiError::Forbidden),

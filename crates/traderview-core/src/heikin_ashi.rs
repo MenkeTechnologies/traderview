@@ -33,8 +33,12 @@ pub struct HaBar {
 }
 
 impl HaBar {
-    pub fn is_bull(&self) -> bool { self.close > self.open }
-    pub fn is_bear(&self) -> bool { self.close < self.open }
+    pub fn is_bull(&self) -> bool {
+        self.close > self.open
+    }
+    pub fn is_bear(&self) -> bool {
+        self.close < self.open
+    }
 }
 
 pub fn compute(bars: &[Bar]) -> Vec<HaBar> {
@@ -44,11 +48,16 @@ pub fn compute(bars: &[Bar]) -> Vec<HaBar> {
         let ha_close = (b.open + b.high + b.low + b.close) / 4.0;
         let ha_open = match prev {
             Some(p) => (p.open + p.close) / 2.0,
-            None    => b.open,
+            None => b.open,
         };
         let ha_high = b.high.max(ha_open).max(ha_close);
         let ha_low = b.low.min(ha_open).min(ha_close);
-        let ha = HaBar { open: ha_open, high: ha_high, low: ha_low, close: ha_close };
+        let ha = HaBar {
+            open: ha_open,
+            high: ha_high,
+            low: ha_low,
+            close: ha_close,
+        };
         out.push(ha);
         prev = Some(ha);
     }
@@ -60,7 +69,12 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -100,24 +114,31 @@ mod tests {
     #[test]
     fn second_bar_open_is_prior_ha_midpoint() {
         // bar 1: HA close=101.75, HA open=100. Midpoint = 100.875.
-        let bars = vec![
-            b(100.0, 105.0, 99.0, 103.0),
-            b(103.0, 108.0, 102.0, 106.0),
-        ];
+        let bars = vec![b(100.0, 105.0, 99.0, 103.0), b(103.0, 108.0, 102.0, 106.0)];
         let out = compute(&bars);
         assert_eq!(out[1].open, 100.875);
     }
 
     #[test]
     fn bull_helper_true_when_close_above_open() {
-        let h = HaBar { open: 100.0, close: 105.0, high: 105.0, low: 100.0 };
+        let h = HaBar {
+            open: 100.0,
+            close: 105.0,
+            high: 105.0,
+            low: 100.0,
+        };
         assert!(h.is_bull());
         assert!(!h.is_bear());
     }
 
     #[test]
     fn bear_helper_true_when_close_below_open() {
-        let h = HaBar { open: 105.0, close: 100.0, high: 105.0, low: 100.0 };
+        let h = HaBar {
+            open: 105.0,
+            close: 100.0,
+            high: 105.0,
+            low: 100.0,
+        };
         assert!(h.is_bear());
         assert!(!h.is_bull());
     }
@@ -125,10 +146,12 @@ mod tests {
     #[test]
     fn trending_market_produces_runs_of_same_color() {
         // 10 bars of clean uptrend → ALL HA bars should be bullish.
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let o = 100.0 + i as f64;
-            b(o, o + 1.0, o - 0.2, o + 0.8)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let o = 100.0 + i as f64;
+                b(o, o + 1.0, o - 0.2, o + 0.8)
+            })
+            .collect();
         let out = compute(&bars);
         // First bar might be neutral; later bars all bullish.
         for ha in &out[1..] {

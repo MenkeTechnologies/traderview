@@ -26,15 +26,22 @@ pub struct Bar {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<f64> {
     let n = bars.len();
     let mut out = vec![0.0; n];
-    if n < period || period == 0 { return out; }
-    let typical: Vec<f64> = bars.iter().map(|b| (b.high + b.low + b.close) / 3.0).collect();
+    if n < period || period == 0 {
+        return out;
+    }
+    let typical: Vec<f64> = bars
+        .iter()
+        .map(|b| (b.high + b.low + b.close) / 3.0)
+        .collect();
     for i in (period - 1)..n {
         let window = &typical[(i + 1 - period)..=i];
         let mean = window.iter().sum::<f64>() / period as f64;
         let mean_dev = window.iter().map(|v| (v - mean).abs()).sum::<f64>() / period as f64;
         out[i] = if mean_dev > 0.0 {
             (typical[i] - mean) / (0.015 * mean_dev)
-        } else { 0.0 };
+        } else {
+            0.0
+        };
     }
     out
 }
@@ -42,26 +49,38 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<f64> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CciZone {
-    ExtremelyOversold,    // < -200
-    Oversold,             // -200 to -100
-    Neutral,              // -100 to +100
-    Overbought,           // +100 to +200
-    ExtremelyOverbought,  // > +200
+    ExtremelyOversold,   // < -200
+    Oversold,            // -200 to -100
+    Neutral,             // -100 to +100
+    Overbought,          // +100 to +200
+    ExtremelyOverbought, // > +200
 }
 
 pub fn classify(cci: f64) -> CciZone {
-    if cci < -200.0 { CciZone::ExtremelyOversold }
-    else if cci < -100.0 { CciZone::Oversold }
-    else if cci <= 100.0 { CciZone::Neutral }
-    else if cci <= 200.0 { CciZone::Overbought }
-    else { CciZone::ExtremelyOverbought }
+    if cci < -200.0 {
+        CciZone::ExtremelyOversold
+    } else if cci < -100.0 {
+        CciZone::Oversold
+    } else if cci <= 100.0 {
+        CciZone::Neutral
+    } else if cci <= 200.0 {
+        CciZone::Overbought
+    } else {
+        CciZone::ExtremelyOverbought
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -78,20 +97,24 @@ mod tests {
 
     #[test]
     fn strong_uptrend_cci_positive() {
-        let bars: Vec<Bar> = (1..=25).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=25)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let out = compute(&bars, 14);
         assert!(out[24] > 100.0, "strong uptrend should yield CCI > +100");
     }
 
     #[test]
     fn strong_downtrend_cci_negative() {
-        let bars: Vec<Bar> = (1..=25).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 0.5, c - 0.5, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=25)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let out = compute(&bars, 14);
         assert!(out[24] < -100.0);
     }
@@ -99,8 +122,8 @@ mod tests {
     #[test]
     fn at_window_average_cci_zero() {
         // Construct bars so latest typical = window SMA → CCI = 0.
-        let mut bars = vec![b(10.0, 9.0, 9.5); 14];    // typical = 9.5 each
-        bars.push(b(10.0, 9.0, 9.5));    // latest same → SMA = 9.5, dev = 0 → 0.
+        let mut bars = vec![b(10.0, 9.0, 9.5); 14]; // typical = 9.5 each
+        bars.push(b(10.0, 9.0, 9.5)); // latest same → SMA = 9.5, dev = 0 → 0.
         let out = compute(&bars, 14);
         assert_eq!(out[14], 0.0);
     }

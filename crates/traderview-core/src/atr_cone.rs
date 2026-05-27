@@ -75,10 +75,14 @@ mod tests {
     fn cone_widens_monotonically() {
         let out = project(100.0, 2.0, 10);
         for i in 1..out.len() {
-            assert!(out[i].upper_2sd > out[i-1].upper_2sd,
-                "upper band must widen with horizon");
-            assert!(out[i].lower_2sd < out[i-1].lower_2sd,
-                "lower band must widen with horizon");
+            assert!(
+                out[i].upper_2sd > out[i - 1].upper_2sd,
+                "upper band must widen with horizon"
+            );
+            assert!(
+                out[i].lower_2sd < out[i - 1].lower_2sd,
+                "lower band must widen with horizon"
+            );
         }
     }
 
@@ -106,7 +110,7 @@ mod tests {
     fn larger_atr_widens_cone_proportionally() {
         // Same horizon, ATR doubled → band offset doubles.
         let small = project(100.0, 1.0, 10);
-        let big   = project(100.0, 2.0, 10);
+        let big = project(100.0, 2.0, 10);
         for d in 0..=10 {
             let small_offset = small[d].upper_1sd - 100.0;
             let big_offset = big[d].upper_1sd - 100.0;

@@ -25,10 +25,10 @@ pub struct FuturesPosition {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RollUrgency {
-    Now,          // expiry within `roll_window_days`
-    Soon,         // within 2× window
-    Comfortable,  // beyond 2× window
-    Expired,      // already past expiry — emergency
+    Now,         // expiry within `roll_window_days`
+    Soon,        // within 2× window
+    Comfortable, // beyond 2× window
+    Expired,     // already past expiry — emergency
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,9 +47,11 @@ pub struct RollReport {
     pub expired_count: usize,
 }
 
-pub fn schedule(positions: &[FuturesPosition], today: NaiveDate, roll_window_days: i64)
-    -> RollReport
-{
+pub fn schedule(
+    positions: &[FuturesPosition],
+    today: NaiveDate,
+    roll_window_days: i64,
+) -> RollReport {
     let mut report = RollReport::default();
     for p in positions {
         let days = (p.expiration - today).num_days();
@@ -70,8 +72,8 @@ pub fn schedule(positions: &[FuturesPosition], today: NaiveDate, roll_window_day
             urgency,
         });
         match urgency {
-            RollUrgency::Now      => report.now_count += 1,
-            RollUrgency::Expired  => report.expired_count += 1,
+            RollUrgency::Now => report.now_count += 1,
+            RollUrgency::Expired => report.expired_count += 1,
             _ => {}
         }
     }
@@ -88,7 +90,11 @@ mod tests {
         NaiveDate::from_ymd_opt(y, m, day).unwrap()
     }
     fn p(sym: &str, contracts: i64, exp: NaiveDate) -> FuturesPosition {
-        FuturesPosition { symbol: sym.into(), contracts, expiration: exp }
+        FuturesPosition {
+            symbol: sym.into(),
+            contracts,
+            expiration: exp,
+        }
     }
 
     #[test]
@@ -128,9 +134,9 @@ mod tests {
     #[test]
     fn rows_sorted_most_urgent_first() {
         let positions = vec![
-            p("/A", 1, d(2026, 7, 1)),     // comfortable
-            p("/B", 1, d(2026, 6, 1)),     // sooner
-            p("/C", 1, d(2026, 5, 28)),    // now
+            p("/A", 1, d(2026, 7, 1)),  // comfortable
+            p("/B", 1, d(2026, 6, 1)),  // sooner
+            p("/C", 1, d(2026, 5, 28)), // now
         ];
         let r = schedule(&positions, d(2026, 5, 27), 7);
         assert_eq!(r.rows[0].symbol, "/C");
@@ -147,10 +153,10 @@ mod tests {
     #[test]
     fn now_and_expired_counts_track_per_urgency() {
         let positions = vec![
-            p("/A", 1, d(2026, 5, 20)),    // expired
-            p("/B", 1, d(2026, 6, 1)),     // now (5d out, window 7)
-            p("/C", 1, d(2026, 5, 28)),    // now (1d)
-            p("/D", 1, d(2026, 7, 1)),     // comfortable
+            p("/A", 1, d(2026, 5, 20)), // expired
+            p("/B", 1, d(2026, 6, 1)),  // now (5d out, window 7)
+            p("/C", 1, d(2026, 5, 28)), // now (1d)
+            p("/D", 1, d(2026, 7, 1)),  // comfortable
         ];
         let r = schedule(&positions, d(2026, 5, 27), 7);
         assert_eq!(r.expired_count, 1);

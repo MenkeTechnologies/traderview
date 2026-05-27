@@ -25,7 +25,10 @@ pub struct PriceRsiPoint {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum DivergenceKind { Bullish, Bearish }
+pub enum DivergenceKind {
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Divergence {
@@ -43,13 +46,16 @@ pub struct Divergence {
 /// chronological order; `series` lookup is by bar_index.
 pub fn detect(swings: &[SwingPoint], series: &[PriceRsiPoint]) -> Vec<Divergence> {
     let mut out = Vec::new();
-    if swings.len() < 2 { return out; }
+    if swings.len() < 2 {
+        return out;
+    }
     // Lookup by bar_index.
     let lookup: std::collections::HashMap<usize, &PriceRsiPoint> =
         series.iter().map(|p| (p.bar_index, p)).collect();
 
     // Walk swing lows for bullish divergence.
-    let lows: Vec<&SwingPoint> = swings.iter()
+    let lows: Vec<&SwingPoint> = swings
+        .iter()
         .filter(|s| matches!(s.kind, crate::swing_points::SwingKind::Low))
         .collect();
     for w in lows.windows(2) {
@@ -70,7 +76,8 @@ pub fn detect(swings: &[SwingPoint], series: &[PriceRsiPoint]) -> Vec<Divergence
         }
     }
 
-    let highs: Vec<&SwingPoint> = swings.iter()
+    let highs: Vec<&SwingPoint> = swings
+        .iter()
         .filter(|s| matches!(s.kind, crate::swing_points::SwingKind::High))
         .collect();
     for w in highs.windows(2) {
@@ -99,13 +106,25 @@ mod tests {
     use crate::swing_points::{SwingKind, SwingPoint};
 
     fn sl(index: usize) -> SwingPoint {
-        SwingPoint { index, price: 0.0, kind: SwingKind::Low }
+        SwingPoint {
+            index,
+            price: 0.0,
+            kind: SwingKind::Low,
+        }
     }
     fn sh(index: usize) -> SwingPoint {
-        SwingPoint { index, price: 0.0, kind: SwingKind::High }
+        SwingPoint {
+            index,
+            price: 0.0,
+            kind: SwingKind::High,
+        }
     }
     fn p(bar_index: usize, price: f64, rsi: f64) -> PriceRsiPoint {
-        PriceRsiPoint { bar_index, price, rsi }
+        PriceRsiPoint {
+            bar_index,
+            price,
+            rsi,
+        }
     }
 
     #[test]
@@ -123,10 +142,7 @@ mod tests {
         // Two swing lows. First @ idx 10 (price 100, rsi 30). Second @ idx 20
         // (price 95 lower, rsi 35 higher) → bullish.
         let swings = vec![sl(10), sl(20)];
-        let series = vec![
-            p(10, 100.0, 30.0),
-            p(20,  95.0, 35.0),
-        ];
+        let series = vec![p(10, 100.0, 30.0), p(20, 95.0, 35.0)];
         let out = detect(&swings, &series);
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].kind, DivergenceKind::Bullish);
@@ -137,7 +153,7 @@ mod tests {
         let swings = vec![sh(10), sh(20)];
         let series = vec![
             p(10, 100.0, 70.0),
-            p(20, 105.0, 65.0),    // higher high, lower RSI
+            p(20, 105.0, 65.0), // higher high, lower RSI
         ];
         let out = detect(&swings, &series);
         assert_eq!(out.len(), 1);
@@ -148,10 +164,7 @@ mod tests {
     fn no_divergence_when_both_lower() {
         // Price lower, RSI ALSO lower → trend continuation, no divergence.
         let swings = vec![sl(10), sl(20)];
-        let series = vec![
-            p(10, 100.0, 30.0),
-            p(20,  95.0, 25.0),
-        ];
+        let series = vec![p(10, 100.0, 30.0), p(20, 95.0, 25.0)];
         assert!(detect(&swings, &series).is_empty());
     }
 
@@ -159,10 +172,7 @@ mod tests {
     fn no_divergence_when_both_higher() {
         // Price higher, RSI higher → trend continuation, no divergence.
         let swings = vec![sh(10), sh(20)];
-        let series = vec![
-            p(10, 100.0, 70.0),
-            p(20, 105.0, 75.0),
-        ];
+        let series = vec![p(10, 100.0, 70.0), p(20, 105.0, 75.0)];
         assert!(detect(&swings, &series).is_empty());
     }
 
@@ -180,8 +190,8 @@ mod tests {
         let swings = vec![sl(10), sl(20), sl(30)];
         let series = vec![
             p(10, 100.0, 30.0),
-            p(20,  95.0, 35.0),    // bull div with 10
-            p(30,  90.0, 40.0),    // bull div with 20
+            p(20, 95.0, 35.0), // bull div with 10
+            p(30, 90.0, 40.0), // bull div with 20
         ];
         let out = detect(&swings, &series);
         assert_eq!(out.len(), 2);
@@ -194,8 +204,8 @@ mod tests {
         let series = vec![
             p(10, 100.0, 30.0),
             p(15, 110.0, 70.0),
-            p(20,  95.0, 35.0),    // bullish vs sl(10)
-            p(25, 115.0, 65.0),    // bearish vs sh(15)
+            p(20, 95.0, 35.0),  // bullish vs sl(10)
+            p(25, 115.0, 65.0), // bearish vs sh(15)
         ];
         let out = detect(&swings, &series);
         assert_eq!(out.len(), 2);

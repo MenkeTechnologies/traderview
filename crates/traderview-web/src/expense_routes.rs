@@ -41,10 +41,10 @@ pub fn router() -> Router<AppState> {
         // the report shape exported by the corresponding traderview-expense
         // module, no DB state changes.
         .route("/calc/self-employment-tax", post(calc_self_employment_tax))
-        .route("/calc/home-office",         post(calc_home_office))
-        .route("/calc/mileage",             post(calc_mileage))
-        .route("/calc/quarterly-tax",       post(calc_quarterly_tax))
-        .route("/subscriptions/detect",     get(detect_subscriptions))
+        .route("/calc/home-office", post(calc_home_office))
+        .route("/calc/mileage", post(calc_mileage))
+        .route("/calc/quarterly-tax", post(calc_quarterly_tax))
+        .route("/subscriptions/detect", get(detect_subscriptions))
         // Bound the multipart upload on /import so import_csv can't fill
         // memory + disk on a runaway client. Receipts have their own,
         // smaller limit set in receipt_routes.
@@ -123,7 +123,9 @@ async fn create_account(
     Json(body): Json<CreateAccountBody>,
 ) -> Result<Json<FinancialAccount>, ApiError> {
     if !matches!(body.kind.as_str(), "bank" | "credit_card" | "marketplace") {
-        return Err(ApiError::BadRequest("kind must be bank|credit_card|marketplace".into()));
+        return Err(ApiError::BadRequest(
+            "kind must be bank|credit_card|marketplace".into(),
+        ));
     }
     let row: FinancialAccountRow = sqlx::query_as(
         "INSERT INTO financial_accounts (user_id, kind, source, name, base_currency)
@@ -378,11 +380,18 @@ async fn import_csv(
     {
         match field.name().unwrap_or("") {
             "account_id" => {
-                let v = field.text().await.map_err(|e| ApiError::BadRequest(e.to_string()))?;
-                account_id = Some(Uuid::parse_str(&v).map_err(|e| ApiError::BadRequest(e.to_string()))?);
+                let v = field
+                    .text()
+                    .await
+                    .map_err(|e| ApiError::BadRequest(e.to_string()))?;
+                account_id =
+                    Some(Uuid::parse_str(&v).map_err(|e| ApiError::BadRequest(e.to_string()))?);
             }
             "source" => {
-                let v = field.text().await.map_err(|e| ApiError::BadRequest(e.to_string()))?;
+                let v = field
+                    .text()
+                    .await
+                    .map_err(|e| ApiError::BadRequest(e.to_string()))?;
                 source = ExpenseSource::parse_str(&v);
                 if source.is_none() {
                     return Err(ApiError::BadRequest(format!("unknown source: {v}")));
@@ -413,13 +422,12 @@ async fn import_csv(
     let sha = hex::encode(h.finalize());
 
     // Dedupe at the file level: same sha already imported into this account.
-    let existing: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT id FROM expense_imports WHERE account_id = $1 AND sha256 = $2",
-    )
-    .bind(account_id)
-    .bind(&sha)
-    .fetch_optional(&s.pool)
-    .await?;
+    let existing: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM expense_imports WHERE account_id = $1 AND sha256 = $2")
+            .bind(account_id)
+            .bind(&sha)
+            .fetch_optional(&s.pool)
+            .await?;
     if let Some((existing_id,)) = existing {
         return Ok(Json(ImportResult {
             import_id: existing_id,
@@ -699,7 +707,9 @@ async fn create_rule(
     Json(body): Json<CreateRuleBody>,
 ) -> Result<Json<RuleApplyResult>, ApiError> {
     if !matches!(body.pattern_kind.as_str(), "substring" | "regex") {
-        return Err(ApiError::BadRequest("pattern_kind must be substring|regex".into()));
+        return Err(ApiError::BadRequest(
+            "pattern_kind must be substring|regex".into(),
+        ));
     }
     if body.pattern_kind == "regex" {
         regex::Regex::new(&body.pattern)
@@ -803,7 +813,10 @@ async fn seed_default_rules(
         .fetch_one(&s.pool)
         .await?;
     if existing.0 > 0 {
-        return Ok(Json(SeedResult { inserted: 0, skipped_existing: existing.0 as usize }));
+        return Ok(Json(SeedResult {
+            inserted: 0,
+            skipped_existing: existing.0 as usize,
+        }));
     }
     let rules = seed_rules::seed();
     let mut inserted = 0usize;
@@ -827,7 +840,10 @@ async fn seed_default_rules(
         .await?;
         inserted += res.rows_affected() as usize;
     }
-    Ok(Json(SeedResult { inserted, skipped_existing: 0 }))
+    Ok(Json(SeedResult {
+        inserted,
+        skipped_existing: 0,
+    }))
 }
 
 #[derive(Serialize)]
@@ -893,7 +909,14 @@ async fn schedule_c_report(
     user: AuthUser,
     Query(q): Query<ReportQuery>,
 ) -> Result<Json<ScheduleCReport>, ApiError> {
-    let year = q.year.unwrap_or_else(|| chrono::Utc::now().date_naive().format("%Y").to_string().parse().unwrap_or(2026));
+    let year = q.year.unwrap_or_else(|| {
+        chrono::Utc::now()
+            .date_naive()
+            .format("%Y")
+            .to_string()
+            .parse()
+            .unwrap_or(2026)
+    });
     let from = NaiveDate::from_ymd_opt(year, 1, 1)
         .ok_or_else(|| ApiError::BadRequest("invalid year".into()))?;
     let to = NaiveDate::from_ymd_opt(year + 1, 1, 1)
@@ -993,7 +1016,11 @@ async fn schedule_c_report(
 
 // --- helpers -------------------------------------------------------------
 
-async fn ensure_account_owner(s: &AppState, user_id: Uuid, account_id: Uuid) -> Result<(), ApiError> {
+async fn ensure_account_owner(
+    s: &AppState,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> Result<(), ApiError> {
     let row: Option<(Uuid,)> =
         sqlx::query_as("SELECT user_id FROM financial_accounts WHERE id = $1")
             .bind(account_id)
@@ -1006,7 +1033,11 @@ async fn ensure_account_owner(s: &AppState, user_id: Uuid, account_id: Uuid) -> 
     }
 }
 
-async fn ensure_transaction_owner(s: &AppState, user_id: Uuid, tx_id: Uuid) -> Result<(), ApiError> {
+async fn ensure_transaction_owner(
+    s: &AppState,
+    user_id: Uuid,
+    tx_id: Uuid,
+) -> Result<(), ApiError> {
     let row: Option<(Uuid,)> = sqlx::query_as(
         "SELECT a.user_id FROM transactions t
            JOIN financial_accounts a ON a.id = t.account_id
@@ -1146,9 +1177,10 @@ async fn detect_subscriptions(
     .fetch_all(&s.pool)
     .await?;
 
-    let txns: Vec<ParsedTransaction> = rows.into_iter()
-        .map(|(posted_at, amount, currency, merchant_raw, merchant_normalized)| {
-            ParsedTransaction {
+    let txns: Vec<ParsedTransaction> = rows
+        .into_iter()
+        .map(
+            |(posted_at, amount, currency, merchant_raw, merchant_normalized)| ParsedTransaction {
                 posted_at,
                 amount,
                 currency,
@@ -1156,8 +1188,8 @@ async fn detect_subscriptions(
                 merchant_normalized,
                 description: String::new(),
                 raw: serde_json::Value::Null,
-            }
-        })
+            },
+        )
         .collect();
 
     Ok(Json(detect(&txns, DetectOptions::default())))
@@ -1210,8 +1242,8 @@ mod tests {
 
     #[test]
     fn clamp_pagination_passes_through_normal_values() {
-        assert_eq!(clamp_pagination(200, 0),  (200, 0));
-        assert_eq!(clamp_pagination(50,  100), (50, 100));
+        assert_eq!(clamp_pagination(200, 0), (200, 0));
+        assert_eq!(clamp_pagination(50, 100), (50, 100));
         assert_eq!(clamp_pagination(MAX_TX_LIMIT, 0), (MAX_TX_LIMIT, 0));
     }
 
@@ -1220,15 +1252,15 @@ mod tests {
         // A client passing ?limit=1000000 must NOT force the server to
         // materialize a multi-million row Vec.
         assert_eq!(clamp_pagination(1_000_000, 0), (MAX_TX_LIMIT, 0));
-        assert_eq!(clamp_pagination(i64::MAX, 0),   (MAX_TX_LIMIT, 0));
+        assert_eq!(clamp_pagination(i64::MAX, 0), (MAX_TX_LIMIT, 0));
     }
 
     #[test]
     fn clamp_pagination_floors_limit_at_1() {
         // Zero / negative would yield empty/error SQL — always serve at
         // least one row.
-        assert_eq!(clamp_pagination(0,  0),  (1, 0));
-        assert_eq!(clamp_pagination(-1, 0),  (1, 0));
+        assert_eq!(clamp_pagination(0, 0), (1, 0));
+        assert_eq!(clamp_pagination(-1, 0), (1, 0));
         assert_eq!(clamp_pagination(i64::MIN, 0), (1, 0));
     }
 

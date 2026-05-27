@@ -81,7 +81,10 @@ impl CompiledRules {
     }
 
     /// Batch-apply: returns parallel vec of `Option<Match>` for each merchant.
-    pub fn match_all<'a, I: IntoIterator<Item = &'a str>>(&self, merchants: I) -> Vec<Option<Match>> {
+    pub fn match_all<'a, I: IntoIterator<Item = &'a str>>(
+        &self,
+        merchants: I,
+    ) -> Vec<Option<Match>> {
         merchants.into_iter().map(|m| self.match_one(m)).collect()
     }
 
@@ -116,8 +119,8 @@ mod tests {
 
     #[test]
     fn substring_first_match_wins() {
-        let rules = CompiledRules::compile(&[r("uber", "travel"), r("uber eats", "meals_50")])
-            .unwrap();
+        let rules =
+            CompiledRules::compile(&[r("uber", "travel"), r("uber eats", "meals_50")]).unwrap();
         // Caller is responsible for ordering. "uber" comes first so it fires
         // on "uber eats" too — caller's job to put more-specific patterns first.
         let hit = rules.match_one("uber eats").unwrap();
@@ -133,8 +136,14 @@ mod tests {
             is_business: true,
         }])
         .unwrap();
-        assert_eq!(rules.match_one("chevron 12345").unwrap().category_code, "car_truck");
-        assert_eq!(rules.match_one("shell oil").unwrap().category_code, "car_truck");
+        assert_eq!(
+            rules.match_one("chevron 12345").unwrap().category_code,
+            "car_truck"
+        );
+        assert_eq!(
+            rules.match_one("shell oil").unwrap().category_code,
+            "car_truck"
+        );
         assert!(rules.match_one("seashell store").is_none());
     }
 

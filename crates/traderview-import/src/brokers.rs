@@ -20,7 +20,9 @@ use crate::{ImportError, ParsedExecution, Parser};
 // ===========================================================================
 pub struct WebullParser;
 impl Parser for WebullParser {
-    fn source(&self) -> &'static str { "webull" }
+    fn source(&self) -> &'static str {
+        "webull"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_WEBULL)
     }
@@ -30,11 +32,7 @@ const MAP_WEBULL: ColumnMap = ColumnMap {
     source: "webull",
     has_header: true,
     delimiter: b',',
-    date_formats: &[
-        "%m/%d/%Y %H:%M:%S",
-        "%Y-%m-%d %H:%M:%S",
-        "%m/%d/%Y %H:%M",
-    ],
+    date_formats: &["%m/%d/%Y %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M"],
     utc_assumed: false, // Webull exports are usually local; user can override later via tz
     side_lookup: SideLookup::DEFAULT,
     symbol: ColSpec::HeaderAny(&["symbol", "ticker"]),
@@ -45,7 +43,11 @@ const MAP_WEBULL: ColumnMap = ColumnMap {
     // only when the broker's export omits them.
     qty: ColSpec::HeaderAny(&["total qty", "quantity", "qty", "filled qty", "filled"]),
     price: ColSpec::HeaderAny(&["avg price", "price", "filled price", "avgprice"]),
-    fee: Some(ColSpec::HeaderAny(&["commission", "fees", "commission & fees"])),
+    fee: Some(ColSpec::HeaderAny(&[
+        "commission",
+        "fees",
+        "commission & fees",
+    ])),
     executed_at: ColSpec::HeaderAny(&["filled time", "executed", "executed time", "time"]),
     broker_order_id: Some(ColSpec::HeaderAny(&["order id", "order number", "id"])),
     asset_class: None,
@@ -62,7 +64,9 @@ const MAP_WEBULL: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct IbkrFlexParser;
 impl Parser for IbkrFlexParser {
-    fn source(&self) -> &'static str { "ibkr" }
+    fn source(&self) -> &'static str {
+        "ibkr"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_IBKR)
     }
@@ -105,7 +109,9 @@ const MAP_IBKR: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct TdAmeritradeParser;
 impl Parser for TdAmeritradeParser {
-    fn source(&self) -> &'static str { "tdameritrade" }
+    fn source(&self) -> &'static str {
+        "tdameritrade"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_TD)
     }
@@ -138,7 +144,9 @@ const MAP_TD: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct SchwabParser;
 impl Parser for SchwabParser {
-    fn source(&self) -> &'static str { "schwab" }
+    fn source(&self) -> &'static str {
+        "schwab"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_SCHWAB)
     }
@@ -171,7 +179,9 @@ const MAP_SCHWAB: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct TradeStationParser;
 impl Parser for TradeStationParser {
-    fn source(&self) -> &'static str { "tradestation" }
+    fn source(&self) -> &'static str {
+        "tradestation"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_TS)
     }
@@ -204,7 +214,9 @@ const MAP_TS: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct LightspeedParser;
 impl Parser for LightspeedParser {
-    fn source(&self) -> &'static str { "lightspeed" }
+    fn source(&self) -> &'static str {
+        "lightspeed"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_LIGHTSPEED)
     }
@@ -237,7 +249,9 @@ const MAP_LIGHTSPEED: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct DasParser;
 impl Parser for DasParser {
-    fn source(&self) -> &'static str { "das" }
+    fn source(&self) -> &'static str {
+        "das"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_DAS)
     }
@@ -275,7 +289,9 @@ const MAP_DAS: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct ThinkOrSwimParser;
 impl Parser for ThinkOrSwimParser {
-    fn source(&self) -> &'static str { "tos" }
+    fn source(&self) -> &'static str {
+        "tos"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_TOS)
     }
@@ -316,7 +332,9 @@ const MAP_TOS: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct ETradeParser;
 impl Parser for ETradeParser {
-    fn source(&self) -> &'static str { "etrade" }
+    fn source(&self) -> &'static str {
+        "etrade"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_ETRADE)
     }
@@ -349,7 +367,9 @@ const MAP_ETRADE: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct FidelityParser;
 impl Parser for FidelityParser {
-    fn source(&self) -> &'static str { "fidelity" }
+    fn source(&self) -> &'static str {
+        "fidelity"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_FIDELITY)
     }
@@ -391,7 +411,9 @@ const MAP_FIDELITY: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct TradeZeroParser;
 impl Parser for TradeZeroParser {
-    fn source(&self) -> &'static str { "tradezero" }
+    fn source(&self) -> &'static str {
+        "tradezero"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_TZ)
     }
@@ -424,7 +446,9 @@ const MAP_TZ: ColumnMap = ColumnMap {
 // ===========================================================================
 pub struct RobinhoodParser;
 impl Parser for RobinhoodParser {
-    fn source(&self) -> &'static str { "robinhood" }
+    fn source(&self) -> &'static str {
+        "robinhood"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_RH)
     }
@@ -462,7 +486,9 @@ const MAP_RH: ColumnMap = ColumnMap {
 #[derive(Default)]
 pub struct GenericCsvParser;
 impl Parser for GenericCsvParser {
-    fn source(&self) -> &'static str { "generic" }
+    fn source(&self) -> &'static str {
+        "generic"
+    }
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
         parse_with(bytes, &MAP_GENERIC)
     }
@@ -485,7 +511,12 @@ const MAP_GENERIC: ColumnMap = ColumnMap {
     side: ColSpec::HeaderAny(&["side", "action", "buy/sell", "transaction type"]),
     qty: ColSpec::HeaderAny(&["qty", "quantity", "shares", "filled", "size"]),
     price: ColSpec::HeaderAny(&["price", "avg price", "fill price"]),
-    fee: Some(ColSpec::HeaderAny(&["fee", "fees", "commission", "commissions"])),
+    fee: Some(ColSpec::HeaderAny(&[
+        "fee",
+        "fees",
+        "commission",
+        "commissions",
+    ])),
     executed_at: ColSpec::HeaderAny(&[
         "executed_at",
         "exec time",
@@ -609,10 +640,7 @@ mod tests {
         assert_eq!(out[0].fee.to_string(), "0.45");
         assert_eq!(out[0].broker_order_id.as_deref(), Some("LS-77"));
         // Lightspeed map sets utc_assumed=true, so the timestamp is stable.
-        assert_eq!(
-            out[0].executed_at.to_rfc3339(),
-            "2026-03-04T10:02:15+00:00"
-        );
+        assert_eq!(out[0].executed_at.to_rfc3339(), "2026-03-04T10:02:15+00:00");
         assert_eq!(out[1].side, Side::Sell);
     }
 
@@ -634,14 +662,8 @@ mod tests {
         assert_eq!(r.broker_order_id.as_deref(), Some("IB-9000"));
         // IBKR map sets utc_assumed=true so the executed_at is deterministic.
         assert_eq!(r.executed_at.to_rfc3339(), "2026-03-04T10:02:15+00:00");
-        assert_eq!(
-            r.asset_class,
-            traderview_core::AssetClass::Option
-        );
-        assert_eq!(
-            r.option_type,
-            Some(traderview_core::OptionType::Call)
-        );
+        assert_eq!(r.asset_class, traderview_core::AssetClass::Option);
+        assert_eq!(r.option_type, Some(traderview_core::OptionType::Call));
         assert_eq!(r.strike.as_ref().unwrap().to_string(), "520");
         assert_eq!(r.multiplier.to_string(), "100");
     }
@@ -720,10 +742,7 @@ mod tests {
         assert_eq!(out[0].price.to_string(), "175.00");
         assert_eq!(out[0].broker_order_id.as_deref(), Some("RH-A1"));
         // Date-only falls through parse_date → midnight UTC.
-        assert_eq!(
-            out[0].executed_at.to_rfc3339(),
-            "2026-03-04T00:00:00+00:00"
-        );
+        assert_eq!(out[0].executed_at.to_rfc3339(), "2026-03-04T00:00:00+00:00");
     }
 
     #[test]
@@ -785,8 +804,11 @@ mod tests {
                    AAPL,buy,100,40,150,2026-01-15 09:30:00\n";
         let out = WebullParser.parse(csv.as_bytes()).unwrap();
         assert_eq!(out.len(), 1);
-        assert_eq!(out[0].qty.to_string(), "100",
-            "Webull must use Total Qty (order size), not Filled (partial)");
+        assert_eq!(
+            out[0].qty.to_string(),
+            "100",
+            "Webull must use Total Qty (order size), not Filled (partial)"
+        );
     }
 
     /// TOS: "type" was previously aliased for BOTH `side` and `asset_class`.
@@ -799,7 +821,7 @@ mod tests {
                    AAPL,SOLD,STOCK,100,160,01/15/26 14:30:00\n";
         let out = ThinkOrSwimParser.parse(csv.as_bytes()).unwrap();
         assert_eq!(out.len(), 2);
-        assert_eq!(out[0].side, Side::Buy,  "BOT must decode as Buy");
+        assert_eq!(out[0].side, Side::Buy, "BOT must decode as Buy");
         assert_eq!(out[1].side, Side::Sell, "SOLD must decode as Sell");
     }
 
@@ -812,8 +834,10 @@ mod tests {
                    https://api.robinhood.com/instruments/abcd/,AAPL,buy,100,150,2026-01-15\n";
         let out = RobinhoodParser.parse(csv.as_bytes()).unwrap();
         assert_eq!(out.len(), 1);
-        assert_eq!(out[0].symbol, "AAPL",
-            "Robinhood must prefer Symbol column over Instrument URL");
+        assert_eq!(
+            out[0].symbol, "AAPL",
+            "Robinhood must prefer Symbol column over Instrument URL"
+        );
     }
 
     /// Fidelity: pre-fix the parser preferred `run date` (settlement-batch,

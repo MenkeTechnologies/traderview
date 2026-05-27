@@ -21,15 +21,18 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionRight { Call, Put }
+pub enum OptionRight {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NakedShortOption {
     pub right: OptionRight,
     pub underlying_price: Decimal,
     pub strike: Decimal,
-    pub premium: Decimal,    // received credit per share
-    pub contracts: i64,      // short qty (positive)
+    pub premium: Decimal, // received credit per share
+    pub contracts: i64,   // short qty (positive)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +40,7 @@ pub struct VerticalSpread {
     pub right: OptionRight,
     /// Strike width × multiplier (typically 100). Caller multiplies.
     pub strike_width: Decimal,
-    pub net_premium: Decimal,    // positive = credit, negative = debit
+    pub net_premium: Decimal, // positive = credit, negative = debit
     pub contracts: i64,
 }
 
@@ -61,13 +64,13 @@ pub fn naked_short(opt: &NakedShortOption) -> MarginReport {
         // Calls OTM amount: max(strike - underlying, 0).
         OptionRight::Call => (opt.strike - opt.underlying_price).max(Decimal::ZERO),
         // Puts OTM amount: max(underlying - strike, 0).
-        OptionRight::Put  => (opt.underlying_price - opt.strike).max(Decimal::ZERO),
+        OptionRight::Put => (opt.underlying_price - opt.strike).max(Decimal::ZERO),
     };
 
     let twenty_minus_otm = (opt.underlying_price * twenty_pct - otm).max(Decimal::ZERO);
     let floor = match opt.right {
         OptionRight::Call => opt.underlying_price * ten_pct,
-        OptionRight::Put  => opt.strike * ten_pct,
+        OptionRight::Put => opt.strike * ten_pct,
     };
     let per_share = twenty_minus_otm.max(floor);
     let per_contract = per_share * mult + opt.premium * mult;
@@ -76,7 +79,7 @@ pub fn naked_short(opt: &NakedShortOption) -> MarginReport {
     // Max loss: undefined for naked calls (∞), strike×100 for naked puts.
     let max_loss = match opt.right {
         OptionRight::Call => None,
-        OptionRight::Put  => Some((opt.strike - opt.premium) * mult * contracts_d),
+        OptionRight::Put => Some((opt.strike - opt.premium) * mult * contracts_d),
     };
     let max_gain = Some(opt.premium * mult * contracts_d);
 
@@ -115,7 +118,8 @@ pub fn vertical(spread: &VerticalSpread) -> MarginReport {
         // Debit spread — margin = max loss = net debit paid (absolute value).
         let debit_per = -spread.net_premium * mult;
         let total = debit_per * contracts_d;
-        let max_gain = spread.strike_width * mult * contracts_d + spread.net_premium * mult * contracts_d;
+        let max_gain =
+            spread.strike_width * mult * contracts_d + spread.net_premium * mult * contracts_d;
         MarginReport {
             initial_requirement: total,
             max_loss: Some(total),
@@ -128,13 +132,17 @@ pub fn vertical(spread: &VerticalSpread) -> MarginReport {
     }
 }
 
-fn pct(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+fn pct(s: &str) -> Decimal {
+    Decimal::from_str(s).unwrap()
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     // ─── naked options ────────────────────────────────────────────────
 
@@ -220,7 +228,7 @@ mod tests {
         let r = vertical(&VerticalSpread {
             right: OptionRight::Put,
             strike_width: d("5"),
-            net_premium: d("1"),    // credit
+            net_premium: d("1"), // credit
             contracts: 1,
         });
         assert_eq!(r.initial_requirement, d("400"));

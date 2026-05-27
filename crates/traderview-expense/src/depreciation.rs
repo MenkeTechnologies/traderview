@@ -80,8 +80,8 @@ fn section_179_limit(year: i32) -> Decimal {
     match year {
         2024 => d("1160000"),
         2025 => d("1220000"),
-        2026 => d("1280000"),     // estimate; IRS publishes in fall
-        _    => d("1280000"),
+        2026 => d("1280000"), // estimate; IRS publishes in fall
+        _ => d("1280000"),
     }
 }
 
@@ -92,7 +92,7 @@ fn bonus_pct(year: i32) -> Decimal {
         2025 => d("0.40"),
         2026 => d("0.20"),
         2027 => Decimal::ZERO,
-        _    => Decimal::ZERO,
+        _ => Decimal::ZERO,
     }
 }
 
@@ -149,7 +149,9 @@ pub fn compute(asset: &AssetPurchase, net_se_income: Decimal) -> DepreciationRep
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn monitor() -> AssetPurchase {
         AssetPurchase {
@@ -194,9 +196,11 @@ mod tests {
         // Asset cost $5k but net SE income only $1k → §179 capped at $1k,
         // remaining $4k gets bonus or MACRS.
         let a = AssetPurchase {
-            cost: d("5000"), class: AssetClass::Computers,
+            cost: d("5000"),
+            class: AssetClass::Computers,
             place_in_service_year: 2025,
-            elect_section_179: true, elect_bonus: true,
+            elect_section_179: true,
+            elect_bonus: true,
             business_use_pct: Decimal::ONE,
         };
         let r = compute(&a, d("1000"));
@@ -218,14 +222,12 @@ mod tests {
 
     #[test]
     fn bonus_phase_down_2024_through_2027() {
-        for (year, expected) in [
-            (2024, "0.60"),
-            (2025, "0.40"),
-            (2026, "0.20"),
-            (2027, "0"),
-        ] {
-            assert_eq!(bonus_pct(year), d(expected),
-                "bonus pct for {year} must match TCJA phase-down");
+        for (year, expected) in [(2024, "0.60"), (2025, "0.40"), (2026, "0.20"), (2027, "0")] {
+            assert_eq!(
+                bonus_pct(year),
+                d(expected),
+                "bonus pct for {year} must match TCJA phase-down"
+            );
         }
     }
 
@@ -236,8 +238,11 @@ mod tests {
         a.elect_section_179 = true;
         a.elect_bonus = true;
         let r = compute(&a, d("100000"));
-        assert_eq!(r.bonus_deduction, Decimal::ZERO,
-            "§179 fully expensed the asset, bonus has zero basis left");
+        assert_eq!(
+            r.bonus_deduction,
+            Decimal::ZERO,
+            "§179 fully expensed the asset, bonus has zero basis left"
+        );
     }
 
     #[test]

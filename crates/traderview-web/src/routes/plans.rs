@@ -17,10 +17,7 @@ pub fn router() -> Router<AppState> {
         .route("/plans/:id", delete(abandon))
 }
 
-async fn list(
-    State(s): State<AppState>,
-    user: AuthUser,
-) -> Result<Json<Vec<TradePlan>>, ApiError> {
+async fn list(State(s): State<AppState>, user: AuthUser) -> Result<Json<Vec<TradePlan>>, ApiError> {
     Ok(Json(
         traderview_db::plans::list_pending(&s.pool, user.id)
             .await

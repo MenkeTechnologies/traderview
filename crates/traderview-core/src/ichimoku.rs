@@ -33,7 +33,9 @@ pub struct IchimokuPoint {
 pub fn compute(bars: &[Bar]) -> Vec<IchimokuPoint> {
     let n = bars.len();
     let mut out = vec![IchimokuPoint::default(); n];
-    if n == 0 { return out; }
+    if n == 0 {
+        return out;
+    }
     for i in 0..n {
         let tenkan = midpoint_window(bars, i, 9);
         let kijun = midpoint_window(bars, i, 26);
@@ -44,7 +46,9 @@ pub fn compute(bars: &[Bar]) -> Vec<IchimokuPoint> {
         // applies the shift in display.
         out[i].senkou_a = if tenkan != 0.0 && kijun != 0.0 {
             (tenkan + kijun) / 2.0
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         out[i].senkou_b = midpoint_window(bars, i, 52);
         // Chikou is the close, plotted at i-26.
         out[i].chikou = bars[i].close;
@@ -53,32 +57,53 @@ pub fn compute(bars: &[Bar]) -> Vec<IchimokuPoint> {
 }
 
 fn midpoint_window(bars: &[Bar], end: usize, period: usize) -> f64 {
-    if period == 0 || end + 1 < period { return 0.0; }
+    if period == 0 || end + 1 < period {
+        return 0.0;
+    }
     let start = end + 1 - period;
     let window = &bars[start..=end];
-    let high = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-    let low  = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+    let high = window
+        .iter()
+        .map(|b| b.high)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let low = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
     (high + low) / 2.0
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum CloudBias { Bullish, Bearish, Neutral }
+pub enum CloudBias {
+    Bullish,
+    Bearish,
+    Neutral,
+}
 
 pub fn cloud_bias_at(point: IchimokuPoint, close: f64) -> CloudBias {
-    if point.senkou_a == 0.0 || point.senkou_b == 0.0 { return CloudBias::Neutral; }
+    if point.senkou_a == 0.0 || point.senkou_b == 0.0 {
+        return CloudBias::Neutral;
+    }
     let upper = point.senkou_a.max(point.senkou_b);
     let lower = point.senkou_a.min(point.senkou_b);
-    if close > upper && point.senkou_a > point.senkou_b { CloudBias::Bullish }
-    else if close < lower && point.senkou_a < point.senkou_b { CloudBias::Bearish }
-    else { CloudBias::Neutral }
+    if close > upper && point.senkou_a > point.senkou_b {
+        CloudBias::Bullish
+    } else if close < lower && point.senkou_a < point.senkou_b {
+        CloudBias::Bearish
+    } else {
+        CloudBias::Neutral
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -88,14 +113,16 @@ mod tests {
     #[test]
     fn warmup_bars_have_zero_values_for_long_windows() {
         // 30 bars — kijun (26) and tenkan (9) computable, senkou_b (52) not.
-        let bars: Vec<Bar> = (1..=30).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=30)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let out = compute(&bars);
         let last = out.last().unwrap();
         assert!(last.tenkan > 0.0, "tenkan should be computable at bar 30");
-        assert!(last.kijun  > 0.0, "kijun should be computable at bar 30");
+        assert!(last.kijun > 0.0, "kijun should be computable at bar 30");
         assert_eq!(last.senkou_b, 0.0, "senkou_b needs 52 bars");
     }
 
@@ -103,12 +130,14 @@ mod tests {
     fn tenkan_is_9_bar_midpoint() {
         // 10 bars with known range. Bar 9 (index 8): 9-bar window covers
         // bars 0..=8, lowest low + highest high over those.
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let h = i as f64 * 10.0;
-            let l = i as f64 * 10.0 - 5.0;
-            let c = (h + l) / 2.0;
-            b(h, l, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let h = i as f64 * 10.0;
+                let l = i as f64 * 10.0 - 5.0;
+                let c = (h + l) / 2.0;
+                b(h, l, c)
+            })
+            .collect();
         let out = compute(&bars);
         // Bar 8 (9th bar): high = 90, low = 5 (from bar 1) → midpoint 47.5.
         assert_eq!(out[8].tenkan, 47.5);
@@ -116,10 +145,12 @@ mod tests {
 
     #[test]
     fn senkou_a_is_average_of_tenkan_kijun() {
-        let bars: Vec<Bar> = (1..=60).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=60)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let out = compute(&bars);
         let last = out.last().unwrap();
         let expected = (last.tenkan + last.kijun) / 2.0;
@@ -136,8 +167,10 @@ mod tests {
     #[test]
     fn cloud_bias_bullish_when_close_above_cloud_and_a_above_b() {
         let pt = IchimokuPoint {
-            tenkan: 105.0, kijun: 100.0,
-            senkou_a: 102.5, senkou_b: 100.0,
+            tenkan: 105.0,
+            kijun: 100.0,
+            senkou_a: 102.5,
+            senkou_b: 100.0,
             chikou: 0.0,
         };
         assert_eq!(cloud_bias_at(pt, 110.0), CloudBias::Bullish);
@@ -146,8 +179,10 @@ mod tests {
     #[test]
     fn cloud_bias_bearish_when_close_below_cloud_and_a_below_b() {
         let pt = IchimokuPoint {
-            tenkan: 95.0, kijun: 100.0,
-            senkou_a: 97.5, senkou_b: 100.0,
+            tenkan: 95.0,
+            kijun: 100.0,
+            senkou_a: 97.5,
+            senkou_b: 100.0,
             chikou: 0.0,
         };
         assert_eq!(cloud_bias_at(pt, 90.0), CloudBias::Bearish);
@@ -156,8 +191,10 @@ mod tests {
     #[test]
     fn cloud_bias_neutral_when_close_inside_cloud() {
         let pt = IchimokuPoint {
-            tenkan: 105.0, kijun: 100.0,
-            senkou_a: 102.5, senkou_b: 100.0,
+            tenkan: 105.0,
+            kijun: 100.0,
+            senkou_a: 102.5,
+            senkou_b: 100.0,
             chikou: 0.0,
         };
         // Close inside the cloud (100..102.5) → neutral.

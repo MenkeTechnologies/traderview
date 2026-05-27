@@ -41,24 +41,33 @@ pub struct PriorBar {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FloorPivots {
     pub pivot: f64,
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
-    pub r3: f64, pub s3: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
+    pub r3: f64,
+    pub s3: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CamarillaPivots {
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
-    pub r3: f64, pub s3: f64,
-    pub r4: f64, pub s4: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
+    pub r3: f64,
+    pub s3: f64,
+    pub r4: f64,
+    pub s4: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WoodiePivots {
     pub pivot: f64,
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -121,7 +130,7 @@ pub fn demark(b: PriorBar) -> DemarkPivots {
     };
     DemarkPivots {
         new_high: x / 2.0 - b.low,
-        new_low:  x / 2.0 - b.high,
+        new_low: x / 2.0 - b.high,
     }
 }
 
@@ -130,7 +139,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, o: f64) -> PriorBar {
-        PriorBar { high: h, low: l, close: c, open: o }
+        PriorBar {
+            high: h,
+            low: l,
+            close: c,
+            open: o,
+        }
     }
 
     // ─── floor ────────────────────────────────────────────────────────
@@ -186,8 +200,10 @@ mod tests {
         // Close = 108 (above midpoint of 105) → woodie pivot pulled higher.
         let f = floor(b(110.0, 100.0, 108.0, 102.0));
         let w = woodie(b(110.0, 100.0, 108.0, 102.0));
-        assert!(w.pivot > f.pivot,
-            "Woodie weights close more → pivot above floor pivot when close > midpoint");
+        assert!(
+            w.pivot > f.pivot,
+            "Woodie weights close more → pivot above floor pivot when close > midpoint"
+        );
     }
 
     // ─── demark ───────────────────────────────────────────────────────
@@ -198,7 +214,7 @@ mod tests {
         // new_high = 205 - 100 = 105. new_low = 205 - 110 = 95.
         let p = demark(b(110.0, 100.0, 100.0, 105.0));
         assert!((p.new_high - 105.0).abs() < 1e-12);
-        assert!((p.new_low  -  95.0).abs() < 1e-12);
+        assert!((p.new_low - 95.0).abs() < 1e-12);
     }
 
     #[test]
@@ -207,7 +223,7 @@ mod tests {
         // new_high = 214 - 100 = 114. new_low = 214 - 110 = 104.
         let p = demark(b(110.0, 100.0, 108.0, 102.0));
         assert!((p.new_high - 114.0).abs() < 1e-12);
-        assert!((p.new_low  - 104.0).abs() < 1e-12);
+        assert!((p.new_low - 104.0).abs() < 1e-12);
     }
 
     #[test]
@@ -215,7 +231,7 @@ mod tests {
         // close == open → X = H + L + 2C = 110 + 100 + 200 = 410.
         let p = demark(b(110.0, 100.0, 100.0, 100.0));
         assert!((p.new_high - 105.0).abs() < 1e-12);
-        assert!((p.new_low  -  95.0).abs() < 1e-12);
+        assert!((p.new_low - 95.0).abs() < 1e-12);
     }
 
     #[test]

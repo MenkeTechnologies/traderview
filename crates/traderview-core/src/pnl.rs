@@ -65,44 +65,69 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn pp(entry: &str, exit: &str) -> PricePoint {
         PricePoint {
-            entry: d(entry), exit: d(exit),
+            entry: d(entry),
+            exit: d(exit),
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
+            tick_size: None,
+            tick_value: None,
         }
     }
 
     #[test]
     fn stock_long_gain() {
         // 100 sh × ($110 - $100) × +1 = $1000.
-        let p = gross_pnl(AssetClass::Stock, TradeSide::Long, d("100"), pp("100", "110"));
+        let p = gross_pnl(
+            AssetClass::Stock,
+            TradeSide::Long,
+            d("100"),
+            pp("100", "110"),
+        );
         assert_eq!(p, d("1000"));
     }
 
     #[test]
     fn stock_long_loss() {
         // 100 sh × ($95 - $100) × +1 = -$500.
-        let p = gross_pnl(AssetClass::Stock, TradeSide::Long, d("100"), pp("100", "95"));
+        let p = gross_pnl(
+            AssetClass::Stock,
+            TradeSide::Long,
+            d("100"),
+            pp("100", "95"),
+        );
         assert_eq!(p, d("-500"));
     }
 
     #[test]
     fn stock_short_inverts_sign() {
         // Short 100 sh from $100 down to $90 → +$1000 (profit on short).
-        let p = gross_pnl(AssetClass::Stock, TradeSide::Short, d("100"), pp("100", "90"));
+        let p = gross_pnl(
+            AssetClass::Stock,
+            TradeSide::Short,
+            d("100"),
+            pp("100", "90"),
+        );
         assert_eq!(p, d("1000"));
         // Short 100 sh from $100 up to $110 → -$1000 (loss on short).
-        let p2 = gross_pnl(AssetClass::Stock, TradeSide::Short, d("100"), pp("100", "110"));
+        let p2 = gross_pnl(
+            AssetClass::Stock,
+            TradeSide::Short,
+            d("100"),
+            pp("100", "110"),
+        );
         assert_eq!(p2, d("-1000"));
     }
 
     #[test]
     fn option_uses_multiplier() {
         // 1 contract × ($7 - $5) × 100 mult × +1 = $200.
-        let mut p = pp("5", "7"); p.multiplier = d("100");
+        let mut p = pp("5", "7");
+        p.multiplier = d("100");
         let v = gross_pnl(AssetClass::Option, TradeSide::Long, d("1"), p);
         assert_eq!(v, d("200"));
     }
@@ -121,7 +146,8 @@ mod tests {
     #[test]
     fn future_without_tick_spec_falls_back_to_multiplier() {
         // 1 ES at $50/pt × +2 pts = $100. No tick spec → use multiplier as $/pt.
-        let mut p = pp("4000", "4002"); p.multiplier = d("50");
+        let mut p = pp("4000", "4002");
+        p.multiplier = d("50");
         let v = gross_pnl(AssetClass::Future, TradeSide::Long, d("1"), p);
         assert_eq!(v, d("100"));
     }
@@ -141,7 +167,12 @@ mod tests {
     #[test]
     fn forex_uses_per_unit_delta_times_qty() {
         // 10,000 units EUR/USD from 1.0800 to 1.0850 = 10000 × 0.005 = $50.
-        let p = gross_pnl(AssetClass::Forex, TradeSide::Long, d("10000"), pp("1.0800", "1.0850"));
+        let p = gross_pnl(
+            AssetClass::Forex,
+            TradeSide::Long,
+            d("10000"),
+            pp("1.0800", "1.0850"),
+        );
         assert_eq!(p, d("50.0000"));
     }
 

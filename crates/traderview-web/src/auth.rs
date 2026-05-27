@@ -42,8 +42,12 @@ pub fn issue_token(secret: &[u8], user_id: Uuid, ttl_hours: i64) -> Result<Strin
         iat: now.timestamp(),
         exp: (now + Duration::hours(ttl_hours)).timestamp(),
     };
-    encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(secret))
-        .map_err(|e| ApiError::Internal(anyhow::anyhow!("jwt encode: {e}")))
+    encode(
+        &Header::new(Algorithm::HS256),
+        &claims,
+        &EncodingKey::from_secret(secret),
+    )
+    .map_err(|e| ApiError::Internal(anyhow::anyhow!("jwt encode: {e}")))
 }
 
 pub fn decode_token(secret: &[u8], token: &str) -> Result<Claims, ApiError> {
@@ -74,8 +78,9 @@ where
     type Rejection = ApiError;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let State(app): State<AppState> =
-            State::from_request_parts(parts, state).await.map_err(|_| ApiError::Unauthorized)?;
+        let State(app): State<AppState> = State::from_request_parts(parts, state)
+            .await
+            .map_err(|_| ApiError::Unauthorized)?;
 
         if let Some(header) = parts.headers.get(axum::http::header::AUTHORIZATION) {
             if let Ok(s) = header.to_str() {
@@ -115,8 +120,16 @@ pub fn generate_pat() -> Result<(String, String, String, String), ApiError> {
     use rand::distributions::Alphanumeric;
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    let prefix: String = (&mut rng).sample_iter(Alphanumeric).take(PAT_PREFIX_LEN).map(char::from).collect();
-    let secret: String = (&mut rng).sample_iter(Alphanumeric).take(PAT_SECRET_LEN).map(char::from).collect();
+    let prefix: String = (&mut rng)
+        .sample_iter(Alphanumeric)
+        .take(PAT_PREFIX_LEN)
+        .map(char::from)
+        .collect();
+    let secret: String = (&mut rng)
+        .sample_iter(Alphanumeric)
+        .take(PAT_SECRET_LEN)
+        .map(char::from)
+        .collect();
     let wire = format!("pat_{}_{}", prefix, secret);
     let hash = hash_password(&format!("{}_{}", prefix, secret))?;
     Ok((prefix, secret, wire, hash))
@@ -133,11 +146,14 @@ pub async fn verify_pat(app: &AppState, rest: &str) -> Result<Uuid, ApiError> {
         return Err(ApiError::Unauthorized);
     }
     let row = traderview_db::api_tokens::find_active_by_prefix(&app.pool, prefix)
-        .await.map_err(ApiError::Internal)?
+        .await
+        .map_err(ApiError::Internal)?
         .ok_or(ApiError::Unauthorized)?;
     let candidate = format!("{}_{}", prefix, secret);
     let ok = verify_password(&candidate, &row.hash)?;
-    if !ok { return Err(ApiError::Unauthorized); }
+    if !ok {
+        return Err(ApiError::Unauthorized);
+    }
     // Rate-limit enforcement BEFORE bumping usage — throttled requests
     // shouldn't count against the visible use_count.
     let cap = row.rate_limit_per_min.max(1) as u32;

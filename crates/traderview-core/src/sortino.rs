@@ -39,16 +39,25 @@ pub fn compute(returns: &[f64], mar: f64, annualization: f64) -> SortinoReport {
     }
     let sum: f64 = returns.iter().sum();
     let mean = sum / n as f64;
-    let downside_sum: f64 = returns.iter()
+    let downside_sum: f64 = returns
+        .iter()
         .map(|r| {
             let d = r - mar;
-            if d < 0.0 { d * d } else { 0.0 }
+            if d < 0.0 {
+                d * d
+            } else {
+                0.0
+            }
         })
         .sum();
     let downside_dev = (downside_sum / n as f64).sqrt();
     let downside_obs = returns.iter().filter(|r| **r < mar).count();
     let sortino = if downside_dev == 0.0 {
-        if mean > mar { f64::INFINITY } else { 0.0 }
+        if mean > mar {
+            f64::INFINITY
+        } else {
+            0.0
+        }
     } else {
         (mean - mar) / downside_dev * annualization.sqrt()
     };
@@ -77,8 +86,10 @@ mod tests {
     fn single_observation_returns_default() {
         let r = compute(&[1.0], 0.0, 252.0);
         assert_eq!(r.n, 1);
-        assert_eq!(r.sortino_ratio, 0.0,
-            "need at least 2 obs for a meaningful sortino");
+        assert_eq!(
+            r.sortino_ratio, 0.0,
+            "need at least 2 obs for a meaningful sortino"
+        );
     }
 
     #[test]
@@ -136,7 +147,8 @@ mod tests {
         let sortino = compute(&returns, 0.0, 1.0).sortino_ratio;
         // Naive sharpe with stdev based on full distribution:
         let mean = returns.iter().sum::<f64>() / returns.len() as f64;
-        let var: f64 = returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / returns.len() as f64;
+        let var: f64 =
+            returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / returns.len() as f64;
         let stdev = var.sqrt();
         let sharpe = mean / stdev;
         assert!(sortino > sharpe,
@@ -149,7 +161,7 @@ mod tests {
         // Same series at 4 vs 16 annualization → sortino at 16 = 2× at 4
         // (sqrt(16)/sqrt(4) = 2).
         let returns = vec![1.0, 2.0, -1.0, 3.0];
-        let r4  = compute(&returns, 0.0, 4.0).sortino_ratio;
+        let r4 = compute(&returns, 0.0, 4.0).sortino_ratio;
         let r16 = compute(&returns, 0.0, 16.0).sortino_ratio;
         assert!((r16 / r4 - 2.0).abs() < 1e-9);
     }

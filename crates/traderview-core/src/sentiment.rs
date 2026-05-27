@@ -19,8 +19,8 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug, Clone, Serialize)]
 pub struct Scored {
     pub text: String,
-    pub score: f64,            // [-1.0, +1.0]
-    pub tickers: Vec<String>,  // unique uppercase tickers found
+    pub score: f64,           // [-1.0, +1.0]
+    pub tickers: Vec<String>, // unique uppercase tickers found
 }
 
 // ---- Lexicon ---------------------------------------------------------------
@@ -29,41 +29,94 @@ fn lexicon() -> HashMap<&'static str, f64> {
     let mut m = HashMap::new();
     // ---- WSB / retail-trader slang (high weight, captures the vibe) ----
     let pos = &[
-        ("moon", 2.5), ("mooning", 2.5), ("moonshot", 2.5),
-        ("rocket", 2.5), ("🚀", 2.5),
-        ("yolo", 2.0), ("tendies", 2.0), ("printing", 2.0),
-        ("diamond", 2.0), ("hodl", 2.0),
-        ("squeeze", 2.0), ("breakout", 1.8), ("ripping", 2.0),
-        ("ath", 1.5), ("rally", 1.5), ("pump", 1.5), ("pumping", 1.7),
-        ("bullish", 2.0), ("calls", 1.4), ("long", 1.2),
-        ("undervalued", 1.5), ("upgrade", 1.5), ("beat", 1.5),
-        ("crushed", 1.6), ("buy", 1.0), ("buying", 1.0),
-        ("ripped", 1.8), ("ripped", 1.8), ("green", 1.0),
-        ("strong", 1.0), ("up", 0.6),
+        ("moon", 2.5),
+        ("mooning", 2.5),
+        ("moonshot", 2.5),
+        ("rocket", 2.5),
+        ("🚀", 2.5),
+        ("yolo", 2.0),
+        ("tendies", 2.0),
+        ("printing", 2.0),
+        ("diamond", 2.0),
+        ("hodl", 2.0),
+        ("squeeze", 2.0),
+        ("breakout", 1.8),
+        ("ripping", 2.0),
+        ("ath", 1.5),
+        ("rally", 1.5),
+        ("pump", 1.5),
+        ("pumping", 1.7),
+        ("bullish", 2.0),
+        ("calls", 1.4),
+        ("long", 1.2),
+        ("undervalued", 1.5),
+        ("upgrade", 1.5),
+        ("beat", 1.5),
+        ("crushed", 1.6),
+        ("buy", 1.0),
+        ("buying", 1.0),
+        ("ripped", 1.8),
+        ("ripped", 1.8),
+        ("green", 1.0),
+        ("strong", 1.0),
+        ("up", 0.6),
     ];
     let neg = &[
-        ("bagholder", -2.5), ("bagholding", -2.5),
-        ("rugpull", -2.5), ("rug", -2.0),
-        ("rekt", -2.5), ("dumped", -2.0), ("dumping", -2.0),
-        ("crash", -2.5), ("crashing", -2.5), ("tank", -2.0), ("tanking", -2.0),
-        ("plunge", -2.0), ("plunging", -2.0),
-        ("puts", -1.5), ("short", -1.2),
-        ("bearish", -2.0), ("downgrade", -1.5),
-        ("miss", -1.5), ("missed", -1.5), ("missing", -1.2),
-        ("guh", -2.5), ("fucked", -2.0), ("destroyed", -2.0),
-        ("loss", -1.2), ("losses", -1.2), ("losing", -1.2),
-        ("red", -1.0), ("sell", -1.0), ("dump", -1.5),
-        ("overvalued", -1.5), ("bubble", -1.5),
-        ("worthless", -2.0), ("collapse", -2.5),
+        ("bagholder", -2.5),
+        ("bagholding", -2.5),
+        ("rugpull", -2.5),
+        ("rug", -2.0),
+        ("rekt", -2.5),
+        ("dumped", -2.0),
+        ("dumping", -2.0),
+        ("crash", -2.5),
+        ("crashing", -2.5),
+        ("tank", -2.0),
+        ("tanking", -2.0),
+        ("plunge", -2.0),
+        ("plunging", -2.0),
+        ("puts", -1.5),
+        ("short", -1.2),
+        ("bearish", -2.0),
+        ("downgrade", -1.5),
+        ("miss", -1.5),
+        ("missed", -1.5),
+        ("missing", -1.2),
+        ("guh", -2.5),
+        ("fucked", -2.0),
+        ("destroyed", -2.0),
+        ("loss", -1.2),
+        ("losses", -1.2),
+        ("losing", -1.2),
+        ("red", -1.0),
+        ("sell", -1.0),
+        ("dump", -1.5),
+        ("overvalued", -1.5),
+        ("bubble", -1.5),
+        ("worthless", -2.0),
+        ("collapse", -2.5),
     ];
-    for (w, s) in pos { m.insert(*w, *s); }
-    for (w, s) in neg { m.insert(*w, *s); }
+    for (w, s) in pos {
+        m.insert(*w, *s);
+    }
+    for (w, s) in neg {
+        m.insert(*w, *s);
+    }
     m
 }
 
 fn intensifiers() -> HashMap<&'static str, f64> {
     let mut m = HashMap::new();
-    for w in &["very", "extremely", "super", "absolutely", "incredibly", "massively", "huge", "literally"] {
+    for w in &[
+        "very",
+        "extremely",
+        "super",
+        "absolutely",
+        "incredibly",
+        "massively",
+        "huge",
+        "literally",
+    ] {
         m.insert(*w, 1.5);
     }
     for w in &["slightly", "somewhat", "kinda", "kind"] {
@@ -73,8 +126,12 @@ fn intensifiers() -> HashMap<&'static str, f64> {
 }
 
 fn negations() -> HashSet<&'static str> {
-    ["not", "no", "never", "n't", "without", "ain't", "isn't", "wasn't", "won't"]
-        .iter().copied().collect()
+    [
+        "not", "no", "never", "n't", "without", "ain't", "isn't", "wasn't", "won't",
+    ]
+    .iter()
+    .copied()
+    .collect()
 }
 
 // ---- Tokenizer -------------------------------------------------------------
@@ -129,12 +186,16 @@ pub fn score(text: &str) -> f64 {
         }
         if let Some(weight) = lex.get(tok.as_str()) {
             let mut s = weight * intensifier;
-            if negated_window > 0 { s = -s; }
+            if negated_window > 0 {
+                s = -s;
+            }
             sum += s;
         }
         negated_window = negated_window.saturating_sub(1);
         // Reset intensifier after applying.
-        if intensifier != 1.0 { intensifier = 1.0; }
+        if intensifier != 1.0 {
+            intensifier = 1.0;
+        }
     }
 
     // Normalize.
@@ -148,14 +209,17 @@ pub fn extract_tickers(text: &str, whitelist: &HashSet<String>) -> Vec<String> {
     let mut out = Vec::new();
     for raw in text.split(|c: char| !c.is_ascii_alphanumeric() && c != '$') {
         let token = raw.trim_start_matches('$').trim();
-        if token.is_empty() || token.len() > 5 { continue; }
-        if !token.chars().all(|c| c.is_ascii_uppercase()) { continue; }
+        if token.is_empty() || token.len() > 5 {
+            continue;
+        }
+        if !token.chars().all(|c| c.is_ascii_uppercase()) {
+            continue;
+        }
         // Cashtag ($AAPL) always wins; bare-uppercase only if in whitelist.
         let is_cash = raw.starts_with('$');
-        if (is_cash || whitelist.contains(token))
-            && seen.insert(token.to_string()) {
-                out.push(token.to_string());
-            }
+        if (is_cash || whitelist.contains(token)) && seen.insert(token.to_string()) {
+            out.push(token.to_string());
+        }
     }
     out
 }

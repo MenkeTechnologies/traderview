@@ -84,4 +84,3 @@ pub fn compute_excursion(trade: &Trade, bars: &[PriceBar]) -> Excursion {
         best_exit_pnl,
     }
 }
-

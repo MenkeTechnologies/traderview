@@ -19,7 +19,9 @@ struct LatestQ {
     #[serde(default = "default_limit")]
     limit: usize,
 }
-fn default_limit() -> usize { 100 }
+fn default_limit() -> usize {
+    100
+}
 
 async fn latest(
     State(_s): State<AppState>,
@@ -29,10 +31,7 @@ async fn latest(
     Ok(Json(halts::global().latest(q.limit)))
 }
 
-async fn ws(
-    State(_s): State<AppState>,
-    upgrade: WebSocketUpgrade,
-) -> Response {
+async fn ws(State(_s): State<AppState>, upgrade: WebSocketUpgrade) -> Response {
     upgrade.on_upgrade(handle_ws)
 }
 
@@ -40,8 +39,15 @@ async fn handle_ws(mut socket: WebSocket) {
     let store = halts::global();
     // Send snapshot first.
     if let Ok(snap) = serde_json::to_string(&store.latest(50)) {
-        if socket.send(Message::Text(format!("{{\"type\":\"snapshot\",\"halts\":{snap}}}")))
-            .await.is_err() { return; }
+        if socket
+            .send(Message::Text(format!(
+                "{{\"type\":\"snapshot\",\"halts\":{snap}}}"
+            )))
+            .await
+            .is_err()
+        {
+            return;
+        }
     }
     // Then stream updates.
     let mut rx = store.subscribe();

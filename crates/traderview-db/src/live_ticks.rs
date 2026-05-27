@@ -43,9 +43,9 @@ pub struct SymbolState {
     pub prev_close: Option<f64>,
     pub session_open: Option<f64>,
     pub gap_pct: f64,
-    pub change_pct: f64,         // last vs prev_close
-    pub day_pct: f64,            // last vs session_open
-    pub hod_dist_pct: f64,       // distance from HOD
+    pub change_pct: f64,   // last vs prev_close
+    pub day_pct: f64,      // last vs session_open
+    pub hod_dist_pct: f64, // distance from HOD
     pub last_trade_at: DateTime<Utc>,
     pub trade_count: u64,
 }
@@ -74,12 +74,16 @@ impl SymbolState {
             self.session_open = Some(t.price);
         }
         self.last = t.price;
-        if t.price > self.day_high { self.day_high = t.price; }
-        if t.price < self.day_low  { self.day_low  = t.price; }
+        if t.price > self.day_high {
+            self.day_high = t.price;
+        }
+        if t.price < self.day_low {
+            self.day_low = t.price;
+        }
         self.day_volume += t.volume;
         self.trade_count += 1;
-        self.last_trade_at = chrono::DateTime::<Utc>::from_timestamp_millis(t.ts_ms)
-            .unwrap_or_else(Utc::now);
+        self.last_trade_at =
+            chrono::DateTime::<Utc>::from_timestamp_millis(t.ts_ms).unwrap_or_else(Utc::now);
 
         let pct = |a: f64, b: f64| if b > 0.0 { (a - b) / b * 100.0 } else { 0.0 };
         if let Some(pc) = self.prev_close {
@@ -124,7 +128,9 @@ impl LiveTickStore {
         self.api_key.read().await.is_some()
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<SymbolState> { self.tx.subscribe() }
+    pub fn subscribe(&self) -> broadcast::Receiver<SymbolState> {
+        self.tx.subscribe()
+    }
 
     pub fn snapshot(&self) -> Vec<SymbolState> {
         self.state.iter().map(|e| e.value().clone()).collect()
@@ -210,7 +216,9 @@ impl LiveTickStore {
                         }
                     }
                 }
-                WsMessage::Ping(p) => { tx.send(WsMessage::Pong(p)).await.ok(); }
+                WsMessage::Ping(p) => {
+                    tx.send(WsMessage::Pong(p)).await.ok();
+                }
                 WsMessage::Close(_) => break,
                 _ => {}
             }
@@ -220,7 +228,9 @@ impl LiveTickStore {
 }
 
 impl Default for LiveTickStore {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -229,7 +239,12 @@ struct TradeEnvelope {
     data: Option<Vec<RawTrade>>,
 }
 #[derive(serde::Deserialize)]
-struct RawTrade { p: f64, s: String, t: i64, v: f64 }
+struct RawTrade {
+    p: f64,
+    s: String,
+    t: i64,
+    v: f64,
+}
 
 /// Process-wide singleton.
 pub fn global() -> LiveTickStore {

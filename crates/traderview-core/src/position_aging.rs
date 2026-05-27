@@ -10,9 +10,9 @@
 //! Pure compute. Input: list of open positions with entry timestamps;
 //! caller passes "now".
 
-use chrono::{DateTime, Utc};
 #[cfg(test)]
 use chrono::Duration;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,12 +46,12 @@ pub struct AgingRow {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgeBucket {
-    Intraday,    // < 1 day
-    Days,        // 1-7 days
-    Weeks,       // 7-30 days
-    Months,      // 30-90 days
-    Quarters,    // 90-365 days
-    Years,       // ≥ 365 days
+    Intraday, // < 1 day
+    Days,     // 1-7 days
+    Weeks,    // 7-30 days
+    Months,   // 30-90 days
+    Quarters, // 90-365 days
+    Years,    // ≥ 365 days
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -65,9 +65,11 @@ pub struct AgingReport {
     pub stale_positions: Vec<String>,
 }
 
-pub fn evaluate(positions: &[OpenPosition], now: DateTime<Utc>, stale_threshold_days: i64)
-    -> AgingReport
-{
+pub fn evaluate(
+    positions: &[OpenPosition],
+    now: DateTime<Utc>,
+    stale_threshold_days: i64,
+) -> AgingReport {
     let mut report = AgingReport::default();
     for p in positions {
         let age_days = (now - p.opened_at).num_days();
@@ -97,19 +99,26 @@ pub fn evaluate(positions: &[OpenPosition], now: DateTime<Utc>, stale_threshold_
 }
 
 fn bucket_for(days: i64) -> AgeBucket {
-    if days < 1 { AgeBucket::Intraday }
-    else if days < 7 { AgeBucket::Days }
-    else if days < 30 { AgeBucket::Weeks }
-    else if days < 90 { AgeBucket::Months }
-    else if days < 365 { AgeBucket::Quarters }
-    else { AgeBucket::Years }
+    if days < 1 {
+        AgeBucket::Intraday
+    } else if days < 7 {
+        AgeBucket::Days
+    } else if days < 30 {
+        AgeBucket::Weeks
+    } else if days < 90 {
+        AgeBucket::Months
+    } else if days < 365 {
+        AgeBucket::Quarters
+    } else {
+        AgeBucket::Years
+    }
 }
 
 fn drift(intent: TradeIntent, age_days: i64) -> bool {
     match intent {
-        TradeIntent::DayTrade   => age_days >= 1,
-        TradeIntent::Swing      => age_days > 30,
-        TradeIntent::Investment => false,    // investments never drift by age
+        TradeIntent::DayTrade => age_days >= 1,
+        TradeIntent::Swing => age_days > 30,
+        TradeIntent::Investment => false, // investments never drift by age
     }
 }
 
@@ -144,7 +153,10 @@ mod tests {
         let positions = vec![pos("AAPL", 0, TradeIntent::DayTrade)];
         let r = evaluate(&positions, now(), 90);
         assert_eq!(r.rows[0].bucket, AgeBucket::Intraday);
-        assert!(!r.rows[0].drift_flag, "0-day-old daytrade hasn't drifted yet");
+        assert!(
+            !r.rows[0].drift_flag,
+            "0-day-old daytrade hasn't drifted yet"
+        );
         assert!(r.day_trade_aging_to_swing.is_empty());
     }
 
@@ -193,12 +205,12 @@ mod tests {
     #[test]
     fn buckets_cover_full_range() {
         let positions = vec![
-            pos("INTRA",   0,   TradeIntent::DayTrade),
-            pos("DAYS",    3,   TradeIntent::DayTrade),
-            pos("WEEKS",   15,  TradeIntent::Swing),
-            pos("MONTHS",  60,  TradeIntent::Swing),
-            pos("QTRS",    180, TradeIntent::Investment),
-            pos("YEARS",   730, TradeIntent::Investment),
+            pos("INTRA", 0, TradeIntent::DayTrade),
+            pos("DAYS", 3, TradeIntent::DayTrade),
+            pos("WEEKS", 15, TradeIntent::Swing),
+            pos("MONTHS", 60, TradeIntent::Swing),
+            pos("QTRS", 180, TradeIntent::Investment),
+            pos("YEARS", 730, TradeIntent::Investment),
         ];
         let r = evaluate(&positions, now(), 90);
         // After oldest-first sort.

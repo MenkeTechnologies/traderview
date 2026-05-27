@@ -85,16 +85,22 @@ pub fn build(input: &PlanInput) -> PlanReport {
     for (i, t) in input.tranches.iter().enumerate() {
         // Direction check.
         let direction_ok = match (input.kind, input.side) {
-            (PlanKind::PyramidUp,  TradeSide::Long)  => t.trigger_price > input.initial_entry,
-            (PlanKind::PyramidUp,  TradeSide::Short) => t.trigger_price < input.initial_entry,
-            (PlanKind::ScaleIn,    TradeSide::Long)  => t.trigger_price < input.initial_entry,
-            (PlanKind::ScaleIn,    TradeSide::Short) => t.trigger_price > input.initial_entry,
+            (PlanKind::PyramidUp, TradeSide::Long) => t.trigger_price > input.initial_entry,
+            (PlanKind::PyramidUp, TradeSide::Short) => t.trigger_price < input.initial_entry,
+            (PlanKind::ScaleIn, TradeSide::Long) => t.trigger_price < input.initial_entry,
+            (PlanKind::ScaleIn, TradeSide::Short) => t.trigger_price > input.initial_entry,
         };
-        if !direction_ok { misordered = true; }
+        if !direction_ok {
+            misordered = true;
+        }
 
         total_qty += t.qty;
         total_cost += t.trigger_price * t.qty;
-        let avg = if total_qty.is_zero() { Decimal::ZERO } else { total_cost / total_qty };
+        let avg = if total_qty.is_zero() {
+            Decimal::ZERO
+        } else {
+            total_cost / total_qty
+        };
         states.push(CumulativeState {
             label: format!("add {}", i + 1),
             trigger_price: t.trigger_price,
@@ -104,7 +110,11 @@ pub fn build(input: &PlanInput) -> PlanReport {
             notional: avg * total_qty,
         });
     }
-    let final_avg = if total_qty.is_zero() { Decimal::ZERO } else { total_cost / total_qty };
+    let final_avg = if total_qty.is_zero() {
+        Decimal::ZERO
+    } else {
+        total_cost / total_qty
+    };
     PlanReport {
         final_qty: total_qty,
         final_avg_cost: final_avg,
@@ -119,7 +129,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn pyramid_long() -> PlanInput {
         PlanInput {
@@ -128,8 +140,14 @@ mod tests {
             initial_qty: d("100"),
             initial_entry: d("100"),
             tranches: vec![
-                Tranche { trigger_price: d("105"), qty: d("50") },
-                Tranche { trigger_price: d("110"), qty: d("25") },
+                Tranche {
+                    trigger_price: d("105"),
+                    qty: d("50"),
+                },
+                Tranche {
+                    trigger_price: d("110"),
+                    qty: d("25"),
+                },
             ],
         }
     }
@@ -153,8 +171,14 @@ mod tests {
             initial_qty: d("100"),
             initial_entry: d("100"),
             tranches: vec![
-                Tranche { trigger_price: d("95"), qty: d("50") },
-                Tranche { trigger_price: d("90"), qty: d("25") },
+                Tranche {
+                    trigger_price: d("95"),
+                    qty: d("50"),
+                },
+                Tranche {
+                    trigger_price: d("90"),
+                    qty: d("25"),
+                },
             ],
         };
         let r = build(&p);
@@ -170,7 +194,10 @@ mod tests {
             side: TradeSide::Short,
             initial_qty: d("100"),
             initial_entry: d("100"),
-            tranches: vec![Tranche { trigger_price: d("95"), qty: d("50") }],
+            tranches: vec![Tranche {
+                trigger_price: d("95"),
+                qty: d("50"),
+            }],
         };
         let r = build(&p);
         assert!(!r.plan_misordered);
@@ -179,10 +206,15 @@ mod tests {
     #[test]
     fn misorder_flagged_when_pyramid_long_tranche_is_below_entry() {
         let mut p = pyramid_long();
-        p.tranches.push(Tranche { trigger_price: d("90"), qty: d("10") });
+        p.tranches.push(Tranche {
+            trigger_price: d("90"),
+            qty: d("10"),
+        });
         let r = build(&p);
-        assert!(r.plan_misordered,
-            "pyramid-up long add at a lower price violates direction");
+        assert!(
+            r.plan_misordered,
+            "pyramid-up long add at a lower price violates direction"
+        );
     }
 
     #[test]
@@ -192,7 +224,10 @@ mod tests {
             side: TradeSide::Long,
             initial_qty: d("100"),
             initial_entry: d("100"),
-            tranches: vec![Tranche { trigger_price: d("110"), qty: d("50") }],
+            tranches: vec![Tranche {
+                trigger_price: d("110"),
+                qty: d("50"),
+            }],
         };
         let r = build(&p);
         assert!(r.plan_misordered);
@@ -201,8 +236,8 @@ mod tests {
     #[test]
     fn states_capture_running_avg_at_each_tranche() {
         let r = build(&pyramid_long());
-        assert_eq!(r.states.len(), 3);   // initial + 2 tranches
-        // State 0: entry only — avg cost = entry.
+        assert_eq!(r.states.len(), 3); // initial + 2 tranches
+                                       // State 0: entry only — avg cost = entry.
         assert_eq!(r.states[0].avg_cost, d("100"));
         // State 1: after first add.
         assert_eq!(r.states[1].total_qty, d("150"));
@@ -228,7 +263,10 @@ mod tests {
     #[test]
     fn zero_qty_tranche_does_not_change_avg_cost() {
         let mut p = pyramid_long();
-        p.tranches.push(Tranche { trigger_price: d("200"), qty: Decimal::ZERO });
+        p.tranches.push(Tranche {
+            trigger_price: d("200"),
+            qty: Decimal::ZERO,
+        });
         let r = build(&p);
         // Last tranche added 0 qty — avg cost shouldn't move.
         let prev_avg = r.states[r.states.len() - 2].avg_cost;

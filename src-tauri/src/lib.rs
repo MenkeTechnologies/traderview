@@ -277,7 +277,12 @@ async fn bring_up_backend(
     let base_url = format!("http://{addr}");
     tracing::info!(%base_url, "axum bound");
 
-    Ok((ApiConfig { base_url, token }, listener, app_router, embedded))
+    Ok((
+        ApiConfig { base_url, token },
+        listener,
+        app_router,
+        embedded,
+    ))
 }
 
 fn load_or_create_secret(path: &std::path::Path) -> anyhow::Result<Vec<u8>> {

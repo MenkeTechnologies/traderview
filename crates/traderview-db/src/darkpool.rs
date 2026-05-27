@@ -17,7 +17,7 @@ pub struct DarkDay {
     pub date: NaiveDate,
     pub off_exchange_volume: u64,
     pub total_volume: u64,
-    pub off_exchange_pct: f64,    // 0..1
+    pub off_exchange_pct: f64, // 0..1
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -32,12 +32,14 @@ pub async fn series(pool: &PgPool, symbol: &str, days_back: i64) -> anyhow::Resu
     let symbol = symbol.to_uppercase();
     // Pull FINRA short-vol (gives TRF off-exchange totals) and Yahoo bars
     // (consolidated total) over the same window.
-    let finra = crate::short_interest::finra_daily(&symbol, days_back).await
+    let finra = crate::short_interest::finra_daily(&symbol, days_back)
+        .await
         .unwrap_or_default();
     let to = Utc::now();
     let from = to - Duration::days(days_back + 5);
     let bars = crate::prices::get_bars(pool, &symbol, BarInterval::D1, from, to)
-        .await.unwrap_or_default();
+        .await
+        .unwrap_or_default();
 
     let mut by_day: std::collections::BTreeMap<NaiveDate, (u64, u64)> =
         std::collections::BTreeMap::new();
@@ -53,10 +55,15 @@ pub async fn series(pool: &PgPool, symbol: &str, days_back: i64) -> anyhow::Resu
     let mut sum_pct = 0.0;
     let mut n = 0usize;
     for (date, (off, tot)) in by_day {
-        if off == 0 || tot == 0 { continue; }
+        if off == 0 || tot == 0 {
+            continue;
+        }
         let pct = (off as f64 / tot as f64).min(1.0);
         out.push(DarkDay {
-            date, off_exchange_volume: off, total_volume: tot, off_exchange_pct: pct,
+            date,
+            off_exchange_volume: off,
+            total_volume: tot,
+            off_exchange_pct: pct,
         });
         sum_pct += pct;
         n += 1;
@@ -69,7 +76,9 @@ pub async fn series(pool: &PgPool, symbol: &str, days_back: i64) -> anyhow::Resu
     })
 }
 
-fn dec(d: rust_decimal::Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: rust_decimal::Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DarkRanked {
@@ -93,7 +102,10 @@ pub async fn ranked(pool: &PgPool, symbols: &[String], days_back: i64) -> Vec<Da
             }
         }
     }
-    out.sort_by(|a, b| b.avg_off_exchange_pct.partial_cmp(&a.avg_off_exchange_pct)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    out.sort_by(|a, b| {
+        b.avg_off_exchange_pct
+            .partial_cmp(&a.avg_off_exchange_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     out
 }

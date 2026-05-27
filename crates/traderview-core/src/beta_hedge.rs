@@ -24,15 +24,24 @@ pub struct HedgeReport {
 }
 
 /// `partial_pct` = 1.0 for full hedge, 0.5 for half-hedge, 0.0 for none.
-pub fn compute(position_notional: f64, beta: f64, benchmark_price: f64, partial_pct: f64)
-    -> HedgeReport
-{
+pub fn compute(
+    position_notional: f64,
+    beta: f64,
+    benchmark_price: f64,
+    partial_pct: f64,
+) -> HedgeReport {
     if benchmark_price <= 0.0 {
-        return HedgeReport { position_notional, beta, benchmark_price, partial_pct, ..Default::default() };
+        return HedgeReport {
+            position_notional,
+            beta,
+            benchmark_price,
+            partial_pct,
+            ..Default::default()
+        };
     }
     let full_hedge_notional = position_notional * beta;
     let scaled = full_hedge_notional * partial_pct;
-    let shares = -scaled / benchmark_price;    // negative = short
+    let shares = -scaled / benchmark_price; // negative = short
     HedgeReport {
         position_notional,
         beta,

@@ -64,8 +64,11 @@ pub fn analyze(trades: &[TaggedTrade]) -> EmotionReport {
     }
     // Most profitable first.
     let mut sorted_by_total = report.by_tag.clone();
-    sorted_by_total.sort_by(|a, b|
-        b.total_pnl.partial_cmp(&a.total_pnl).unwrap_or(std::cmp::Ordering::Equal));
+    sorted_by_total.sort_by(|a, b| {
+        b.total_pnl
+            .partial_cmp(&a.total_pnl)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report.most_profitable = sorted_by_total.iter().map(|t| t.tag.clone()).collect();
     for t in &report.by_tag {
         if t.trade_count >= 5 && t.avg_pnl < 0.0 {
@@ -133,8 +136,22 @@ mod tests {
         let trades = vec![t(&["calm", "confident"], 100.0)];
         let r = analyze(&trades);
         // Both "calm" and "confident" should have a single trade.
-        assert_eq!(r.by_tag.iter().find(|t| t.tag == "calm").unwrap().trade_count, 1);
-        assert_eq!(r.by_tag.iter().find(|t| t.tag == "confident").unwrap().trade_count, 1);
+        assert_eq!(
+            r.by_tag
+                .iter()
+                .find(|t| t.tag == "calm")
+                .unwrap()
+                .trade_count,
+            1
+        );
+        assert_eq!(
+            r.by_tag
+                .iter()
+                .find(|t| t.tag == "confident")
+                .unwrap()
+                .trade_count,
+            1
+        );
     }
 
     #[test]

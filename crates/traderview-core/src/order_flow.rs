@@ -24,7 +24,11 @@ pub struct Tick {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Side { Buy, Sell, Uncertain }
+pub enum Side {
+    Buy,
+    Sell,
+    Uncertain,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ClassifiedTick {
@@ -42,13 +46,20 @@ pub fn classify(ticks: &[Tick]) -> Vec<ClassifiedTick> {
             Side::Sell
         } else if let Some(prev) = prev_price {
             // Inside spread — use tick rule against previous trade.
-            if t.price > prev      { Side::Buy }
-            else if t.price < prev { Side::Sell }
-            else                    { Side::Uncertain }
+            if t.price > prev {
+                Side::Buy
+            } else if t.price < prev {
+                Side::Sell
+            } else {
+                Side::Uncertain
+            }
         } else {
             Side::Uncertain
         };
-        out.push(ClassifiedTick { volume: t.volume, side });
+        out.push(ClassifiedTick {
+            volume: t.volume,
+            side,
+        });
         prev_price = Some(t.price);
     }
     out
@@ -68,8 +79,8 @@ pub fn aggregate(classified: &[ClassifiedTick]) -> ImbalanceReport {
     let mut report = ImbalanceReport::default();
     for c in classified {
         match c.side {
-            Side::Buy       => report.buy_volume += c.volume,
-            Side::Sell      => report.sell_volume += c.volume,
+            Side::Buy => report.buy_volume += c.volume,
+            Side::Sell => report.sell_volume += c.volume,
             Side::Uncertain => report.uncertain_volume += c.volume,
         }
     }
@@ -77,7 +88,9 @@ pub fn aggregate(classified: &[ClassifiedTick]) -> ImbalanceReport {
     let directional = report.buy_volume + report.sell_volume;
     report.imbalance_ratio = if directional > 0.0 {
         report.net_volume / directional
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     report
 }
 
@@ -86,7 +99,12 @@ mod tests {
     use super::*;
 
     fn t(price: f64, vol: f64, bid: f64, ask: f64) -> Tick {
-        Tick { price, volume: vol, bid, ask }
+        Tick {
+            price,
+            volume: vol,
+            bid,
+            ask,
+        }
     }
 
     #[test]
@@ -128,8 +146,8 @@ mod tests {
     #[test]
     fn inside_spread_uses_uptick_rule_for_buy() {
         let ticks = vec![
-            t(100.00, 100.0, 100.00, 100.01),    // sell (at bid)
-            t(100.005, 100.0, 100.00, 100.01),    // uptick from .00 → buy
+            t(100.00, 100.0, 100.00, 100.01),  // sell (at bid)
+            t(100.005, 100.0, 100.00, 100.01), // uptick from .00 → buy
         ];
         let out = classify(&ticks);
         assert_eq!(out[0].side, Side::Sell);
@@ -139,8 +157,8 @@ mod tests {
     #[test]
     fn inside_spread_uses_downtick_rule_for_sell() {
         let ticks = vec![
-            t(100.01, 100.0, 100.00, 100.01),    // buy (at ask)
-            t(100.005, 100.0, 100.00, 100.01),    // downtick → sell
+            t(100.01, 100.0, 100.00, 100.01),  // buy (at ask)
+            t(100.005, 100.0, 100.00, 100.01), // downtick → sell
         ];
         let out = classify(&ticks);
         assert_eq!(out[0].side, Side::Buy);
@@ -157,8 +175,14 @@ mod tests {
     #[test]
     fn aggregate_balanced_zero_imbalance() {
         let cl = vec![
-            ClassifiedTick { volume: 100.0, side: Side::Buy },
-            ClassifiedTick { volume: 100.0, side: Side::Sell },
+            ClassifiedTick {
+                volume: 100.0,
+                side: Side::Buy,
+            },
+            ClassifiedTick {
+                volume: 100.0,
+                side: Side::Sell,
+            },
         ];
         let r = aggregate(&cl);
         assert_eq!(r.net_volume, 0.0);
@@ -167,7 +191,10 @@ mod tests {
 
     #[test]
     fn aggregate_pure_buy_yields_imbalance_one() {
-        let cl = vec![ClassifiedTick { volume: 500.0, side: Side::Buy }];
+        let cl = vec![ClassifiedTick {
+            volume: 500.0,
+            side: Side::Buy,
+        }];
         let r = aggregate(&cl);
         assert_eq!(r.imbalance_ratio, 1.0);
         assert_eq!(r.buy_volume, 500.0);
@@ -176,8 +203,14 @@ mod tests {
     #[test]
     fn aggregate_uncertain_excluded_from_imbalance_ratio() {
         let cl = vec![
-            ClassifiedTick { volume: 100.0, side: Side::Buy },
-            ClassifiedTick { volume: 999.0, side: Side::Uncertain },
+            ClassifiedTick {
+                volume: 100.0,
+                side: Side::Buy,
+            },
+            ClassifiedTick {
+                volume: 999.0,
+                side: Side::Uncertain,
+            },
         ];
         let r = aggregate(&cl);
         // Uncertain doesn't go in numerator or denominator.

@@ -9,7 +9,10 @@ use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/chart-drawings/:symbol", get(list).post(create).delete(delete_all))
+        .route(
+            "/chart-drawings/:symbol",
+            get(list).post(create).delete(delete_all),
+        )
         .route("/chart-drawings/by-id/:id", delete(delete_one))
 }
 
@@ -19,8 +22,11 @@ async fn list(
     Path(symbol): Path<String>,
 ) -> Result<Json<Vec<ChartDrawing>>, ApiError> {
     let sym = symbol.to_uppercase();
-    Ok(Json(traderview_db::chart_drawings::list_for_symbol(&s.pool, u.id, &sym)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::chart_drawings::list_for_symbol(&s.pool, u.id, &sym)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 async fn create(
@@ -30,8 +36,11 @@ async fn create(
     Json(body): Json<DrawingInput>,
 ) -> Result<Json<ChartDrawing>, ApiError> {
     let sym = symbol.to_uppercase();
-    Ok(Json(traderview_db::chart_drawings::create(&s.pool, u.id, &sym, &body)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::chart_drawings::create(&s.pool, u.id, &sym, &body)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 async fn delete_one(
@@ -40,7 +49,8 @@ async fn delete_one(
     Path(id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let ok = traderview_db::chart_drawings::delete(&s.pool, u.id, id)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(serde_json::json!({ "deleted": ok })))
 }
 
@@ -51,6 +61,7 @@ async fn delete_all(
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let sym = symbol.to_uppercase();
     let n = traderview_db::chart_drawings::delete_all_for_symbol(&s.pool, u.id, &sym)
-        .await.map_err(ApiError::Internal)?;
+        .await
+        .map_err(ApiError::Internal)?;
     Ok(Json(serde_json::json!({ "deleted_count": n })))
 }

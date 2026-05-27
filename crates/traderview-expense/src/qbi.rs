@@ -53,22 +53,22 @@ pub struct QbiReport {
 fn threshold(year: i32, status: FilingStatus) -> Decimal {
     let d = |s: &str| Decimal::from_str(s).unwrap();
     match (year, status) {
-        (2024, FilingStatus::Single)       => d("191950"),
+        (2024, FilingStatus::Single) => d("191950"),
         (2024, FilingStatus::MarriedJoint) => d("383900"),
-        (2025, FilingStatus::Single)       => d("197300"),
+        (2025, FilingStatus::Single) => d("197300"),
         (2025, FilingStatus::MarriedJoint) => d("394600"),
-        (2026, FilingStatus::Single)       => d("203500"),     // estimate
-        (2026, FilingStatus::MarriedJoint) => d("407000"),     // estimate
+        (2026, FilingStatus::Single) => d("203500"), // estimate
+        (2026, FilingStatus::MarriedJoint) => d("407000"), // estimate
         // Default: use 2026 estimate. Don't panic on future years.
-        (_,    FilingStatus::Single)       => d("203500"),
-        (_,    FilingStatus::MarriedJoint) => d("407000"),
+        (_, FilingStatus::Single) => d("203500"),
+        (_, FilingStatus::MarriedJoint) => d("407000"),
     }
 }
 
 /// Phase-out range width above the threshold.
 fn phase_out_range(status: FilingStatus) -> Decimal {
     match status {
-        FilingStatus::Single       => Decimal::from(50_000),
+        FilingStatus::Single => Decimal::from(50_000),
         FilingStatus::MarriedJoint => Decimal::from(100_000),
     }
 }
@@ -106,8 +106,10 @@ pub fn compute(input: &QbiInput) -> QbiReport {
         let raw = r.component_pct_qbi.min(r.component_pct_taxable);
         r.deduction = (raw * frac_remaining).max(Decimal::ZERO);
         r.phase_out_fraction = frac_phased_out.to_string().parse().unwrap_or(0.0);
-        r.note = format!("SSTB phase-out: {} remaining",
-            (Decimal::ONE - frac_phased_out));
+        r.note = format!(
+            "SSTB phase-out: {} remaining",
+            (Decimal::ONE - frac_phased_out)
+        );
         return r;
     }
 
@@ -124,13 +126,15 @@ pub fn compute(input: &QbiInput) -> QbiReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn under_threshold_full_20_percent_qbi() {
         let r = compute(&QbiInput {
             qbi: d("100000"),
-            taxable_income: d("150000"),    // well under 2024 single threshold
+            taxable_income: d("150000"), // well under 2024 single threshold
             filing_status: FilingStatus::Single,
             is_sstb: true,
             tax_year: 2024,
@@ -240,7 +244,7 @@ mod tests {
     fn boundary_at_threshold_exactly_grants_full() {
         let r = compute(&QbiInput {
             qbi: d("100000"),
-            taxable_income: d("191950"),      // exactly at 2024 single
+            taxable_income: d("191950"), // exactly at 2024 single
             filing_status: FilingStatus::Single,
             is_sstb: true,
             tax_year: 2024,

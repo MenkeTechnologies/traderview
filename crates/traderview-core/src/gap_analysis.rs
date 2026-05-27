@@ -41,7 +41,9 @@ pub struct GapReport {
 pub fn classify(prior_close: f64, today_open: f64) -> GapReport {
     if prior_close <= 0.0 {
         return GapReport {
-            prior_close, open: today_open, gap_pct: 0.0,
+            prior_close,
+            open: today_open,
+            gap_pct: 0.0,
             kind: GapKind::NoGap,
             same_session_fill_probability: 0.0,
         };
@@ -49,25 +51,43 @@ pub fn classify(prior_close: f64, today_open: f64) -> GapReport {
     let gap_pct = (today_open - prior_close) / prior_close;
     let abs_pct = gap_pct.abs();
     let kind = if abs_pct < 0.005 {
-        if gap_pct.abs() < 0.001 { GapKind::NoGap }
-        else if gap_pct > 0.0 { GapKind::CommonUp }
-        else { GapKind::CommonDown }
+        if gap_pct.abs() < 0.001 {
+            GapKind::NoGap
+        } else if gap_pct > 0.0 {
+            GapKind::CommonUp
+        } else {
+            GapKind::CommonDown
+        }
     } else if abs_pct < 0.02 {
-        if gap_pct > 0.0 { GapKind::BreakawayUp } else { GapKind::BreakawayDown }
+        if gap_pct > 0.0 {
+            GapKind::BreakawayUp
+        } else {
+            GapKind::BreakawayDown
+        }
     } else if abs_pct < 0.04 {
-        if gap_pct > 0.0 { GapKind::RunawayUp } else { GapKind::RunawayDown }
+        if gap_pct > 0.0 {
+            GapKind::RunawayUp
+        } else {
+            GapKind::RunawayDown
+        }
     } else {
-        if gap_pct > 0.0 { GapKind::ExhaustionUp } else { GapKind::ExhaustionDown }
+        if gap_pct > 0.0 {
+            GapKind::ExhaustionUp
+        } else {
+            GapKind::ExhaustionDown
+        }
     };
     let fill_prob = match kind {
-        GapKind::NoGap                                  => 1.0,
-        GapKind::CommonUp | GapKind::CommonDown         => 0.80,
-        GapKind::BreakawayUp | GapKind::BreakawayDown   => 0.50,
-        GapKind::RunawayUp | GapKind::RunawayDown       => 0.30,
+        GapKind::NoGap => 1.0,
+        GapKind::CommonUp | GapKind::CommonDown => 0.80,
+        GapKind::BreakawayUp | GapKind::BreakawayDown => 0.50,
+        GapKind::RunawayUp | GapKind::RunawayDown => 0.30,
         GapKind::ExhaustionUp | GapKind::ExhaustionDown => 0.15,
     };
     GapReport {
-        prior_close, open: today_open, gap_pct,
+        prior_close,
+        open: today_open,
+        gap_pct,
         kind,
         same_session_fill_probability: fill_prob,
     }
@@ -133,9 +153,7 @@ mod tests {
         let common = classify(100.0, 100.3);
         let runaway = classify(100.0, 103.0);
         let exhaustion = classify(100.0, 110.0);
-        assert!(common.same_session_fill_probability >
-            runaway.same_session_fill_probability);
-        assert!(runaway.same_session_fill_probability >
-            exhaustion.same_session_fill_probability);
+        assert!(common.same_session_fill_probability > runaway.same_session_fill_probability);
+        assert!(runaway.same_session_fill_probability > exhaustion.same_session_fill_probability);
     }
 }

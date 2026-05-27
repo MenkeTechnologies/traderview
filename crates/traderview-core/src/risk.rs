@@ -107,7 +107,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     // ─── risk_amount ──────────────────────────────────────────────────────
 
@@ -116,8 +118,12 @@ mod tests {
         // 100 shares, entry 50, stop 49 → $1 stop × 100 = $100 risk.
         let r = risk_amount(
             AssetClass::Stock,
-            d("100"), d("50"), d("49"),
-            Decimal::ONE, None, None,
+            d("100"),
+            d("50"),
+            d("49"),
+            Decimal::ONE,
+            None,
+            None,
         );
         assert_eq!(r, d("100"));
     }
@@ -128,8 +134,12 @@ mod tests {
         // doesn't change the dollar risk.
         let r = risk_amount(
             AssetClass::Stock,
-            d("100"), d("50"), d("51"),
-            Decimal::ONE, None, None,
+            d("100"),
+            d("50"),
+            d("51"),
+            Decimal::ONE,
+            None,
+            None,
         );
         assert_eq!(r, d("100"));
     }
@@ -139,8 +149,12 @@ mod tests {
         // 1 contract, entry $5, stop $4 → $1 × 1 × 100 = $100.
         let r = risk_amount(
             AssetClass::Option,
-            d("1"), d("5"), d("4"),
-            d("100"), None, None,
+            d("1"),
+            d("5"),
+            d("4"),
+            d("100"),
+            None,
+            None,
         );
         assert_eq!(r, d("100"));
     }
@@ -150,10 +164,12 @@ mod tests {
         // ES futures: 4 ticks risk × $12.50/tick × 1 contract = $50.
         let r = risk_amount(
             AssetClass::Future,
-            d("1"), d("4000"), d("3999"),
+            d("1"),
+            d("4000"),
+            d("3999"),
             Decimal::ONE,
-            Some(d("0.25")),     // tick_size
-            Some(d("12.50")),    // tick_value
+            Some(d("0.25")),  // tick_size
+            Some(d("12.50")), // tick_value
         );
         assert_eq!(r, d("50.00"), "4 ticks × $12.50 × 1 = $50");
     }
@@ -163,9 +179,12 @@ mod tests {
         // No tick spec → delta × multiplier × qty.
         let r = risk_amount(
             AssetClass::Future,
-            d("1"), d("4000"), d("3990"),
-            d("50"),     // CME E-mini ES multiplier
-            None, None,
+            d("1"),
+            d("4000"),
+            d("3990"),
+            d("50"), // CME E-mini ES multiplier
+            None,
+            None,
         );
         assert_eq!(r, d("500"), "10 × 50 × 1");
     }
@@ -174,8 +193,12 @@ mod tests {
     fn risk_amount_zero_when_stop_equals_entry() {
         let r = risk_amount(
             AssetClass::Stock,
-            d("100"), d("50"), d("50"),
-            Decimal::ONE, None, None,
+            d("100"),
+            d("50"),
+            d("50"),
+            Decimal::ONE,
+            None,
+            None,
         );
         assert_eq!(r, Decimal::ZERO);
     }
@@ -186,16 +209,25 @@ mod tests {
     fn position_size_inverse_of_risk_amount() {
         // $200 risk, $1 stop on stock → 200 shares.
         let qty = position_size(
-            d("200"), AssetClass::Stock,
-            d("50"), d("49"),
-            Decimal::ONE, None, None,
-        ).unwrap();
+            d("200"),
+            AssetClass::Stock,
+            d("50"),
+            d("49"),
+            Decimal::ONE,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(qty, d("200"));
         // Round-trip: risk_amount(qty=200, $1 stop) → $200.
         let back = risk_amount(
             AssetClass::Stock,
-            qty, d("50"), d("49"),
-            Decimal::ONE, None, None,
+            qty,
+            d("50"),
+            d("49"),
+            Decimal::ONE,
+            None,
+            None,
         );
         assert_eq!(back, d("200"));
     }
@@ -204,9 +236,13 @@ mod tests {
     fn position_size_returns_none_when_stop_equals_entry() {
         // Zero-stop trade is unsizable.
         let qty = position_size(
-            d("200"), AssetClass::Stock,
-            d("50"), d("50"),
-            Decimal::ONE, None, None,
+            d("200"),
+            AssetClass::Stock,
+            d("50"),
+            d("50"),
+            Decimal::ONE,
+            None,
+            None,
         );
         assert!(qty.is_none(), "infinite shares for $0 stop is wrong");
     }
@@ -215,10 +251,15 @@ mod tests {
     fn position_size_option_accounts_for_multiplier() {
         // $500 risk, $1 stop on options with 100x multiplier → 5 contracts.
         let qty = position_size(
-            d("500"), AssetClass::Option,
-            d("5"), d("4"),
-            d("100"), None, None,
-        ).unwrap();
+            d("500"),
+            AssetClass::Option,
+            d("5"),
+            d("4"),
+            d("100"),
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(qty, d("5"));
     }
 
@@ -229,6 +270,6 @@ mod tests {
         let s = risk_summary(std::iter::empty());
         assert_eq!(s.trades_with_r, 0);
         assert_eq!(s.avg_r, 0.0);
-        assert_eq!(s.max_r, 0.0);   // default, not -Inf
+        assert_eq!(s.max_r, 0.0); // default, not -Inf
     }
 }

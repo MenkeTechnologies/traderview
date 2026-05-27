@@ -16,7 +16,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bar {
-    pub high: f64, pub low: f64, pub close: f64, pub volume: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
@@ -29,12 +32,20 @@ pub struct VwmacdPoint {
 fn vwma_series(bars: &[Bar], period: usize) -> Vec<f64> {
     let n = bars.len();
     let mut out = vec![0.0; n];
-    if n < period || period == 0 { return out; }
-    let typical: Vec<f64> = bars.iter().map(|b| (b.high + b.low + b.close) / 3.0).collect();
+    if n < period || period == 0 {
+        return out;
+    }
+    let typical: Vec<f64> = bars
+        .iter()
+        .map(|b| (b.high + b.low + b.close) / 3.0)
+        .collect();
     for i in (period - 1)..n {
         let w_v: f64 = bars[(i + 1 - period)..=i].iter().map(|b| b.volume).sum();
-        let w_pv: f64 = bars[(i + 1 - period)..=i].iter().enumerate()
-            .map(|(j, b)| typical[i + 1 - period + j] * b.volume).sum();
+        let w_pv: f64 = bars[(i + 1 - period)..=i]
+            .iter()
+            .enumerate()
+            .map(|(j, b)| typical[i + 1 - period + j] * b.volume)
+            .sum();
         out[i] = if w_v > 0.0 { w_pv / w_v } else { 0.0 };
     }
     out
@@ -43,7 +54,9 @@ fn vwma_series(bars: &[Bar], period: usize) -> Vec<f64> {
 fn ema(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
     let mut out = vec![0.0; n];
-    if n == 0 || period == 0 { return out; }
+    if n == 0 || period == 0 {
+        return out;
+    }
     let k = 2.0 / (period as f64 + 1.0);
     let mut prev = values[0];
     out[0] = prev;
@@ -55,12 +68,12 @@ fn ema(values: &[f64], period: usize) -> Vec<f64> {
     out
 }
 
-pub fn compute(bars: &[Bar], short: usize, long: usize, signal_period: usize)
-    -> Vec<VwmacdPoint>
-{
+pub fn compute(bars: &[Bar], short: usize, long: usize, signal_period: usize) -> Vec<VwmacdPoint> {
     let n = bars.len();
     let mut out = vec![VwmacdPoint::default(); n];
-    if n < long { return out; }
+    if n < long {
+        return out;
+    }
     let s_vwma = vwma_series(bars, short);
     let l_vwma = vwma_series(bars, long);
     let lines: Vec<f64> = s_vwma.iter().zip(&l_vwma).map(|(a, b)| a - b).collect();
@@ -69,7 +82,9 @@ pub fn compute(bars: &[Bar], short: usize, long: usize, signal_period: usize)
         let line = lines[i];
         let sig = signal[i];
         out[i] = VwmacdPoint {
-            line, signal: sig, histogram: line - sig,
+            line,
+            signal: sig,
+            histogram: line - sig,
         };
     }
     out
@@ -80,7 +95,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -92,35 +112,43 @@ mod tests {
     fn under_long_period_returns_zeros() {
         let bars = vec![b(10.0, 9.0, 9.5, 100.0); 10];
         let out = compute(&bars, 12, 26, 9);
-        for p in &out { assert_eq!(p.line, 0.0); }
+        for p in &out {
+            assert_eq!(p.line, 0.0);
+        }
     }
 
     #[test]
     fn strong_uptrend_macd_line_positive() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c, 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c, 1000.0)
+            })
+            .collect();
         let out = compute(&bars, 12, 26, 9);
         assert!(out[39].line > 0.0);
     }
 
     #[test]
     fn strong_downtrend_macd_line_negative() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 0.5, c - 0.5, c, 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 0.5, c - 0.5, c, 1000.0)
+            })
+            .collect();
         let out = compute(&bars, 12, 26, 9);
         assert!(out[39].line < 0.0);
     }
 
     #[test]
     fn histogram_is_line_minus_signal() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c, 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c, 1000.0)
+            })
+            .collect();
         let out = compute(&bars, 12, 26, 9);
         for p in &out[26..] {
             assert!((p.histogram - (p.line - p.signal)).abs() < 1e-9);

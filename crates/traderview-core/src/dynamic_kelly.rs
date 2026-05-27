@@ -34,15 +34,23 @@ pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
         let wins: Vec<f64> = w.iter().filter(|p| **p > 0.0).cloned().collect();
         let losses: Vec<f64> = w.iter().filter(|p| **p < 0.0).map(|p| -p).collect();
         let wr = wins.len() as f64 / window as f64;
-        let payoff = if losses.is_empty() { None }
-            else if wins.is_empty() { Some(0.0) }
-            else {
-                let avg_win = wins.iter().sum::<f64>() / wins.len() as f64;
-                let avg_loss = losses.iter().sum::<f64>() / losses.len() as f64;
-                if avg_loss > 0.0 { Some(avg_win / avg_loss) } else { None }
-            };
+        let payoff = if losses.is_empty() {
+            None
+        } else if wins.is_empty() {
+            Some(0.0)
+        } else {
+            let avg_win = wins.iter().sum::<f64>() / wins.len() as f64;
+            let avg_loss = losses.iter().sum::<f64>() / losses.len() as f64;
+            if avg_loss > 0.0 {
+                Some(avg_win / avg_loss)
+            } else {
+                None
+            }
+        };
         let kelly = payoff.map(|b| {
-            if b == 0.0 { return -1.0; }    // pure loss series — negative bet (don't trade)
+            if b == 0.0 {
+                return -1.0;
+            } // pure loss series — negative bet (don't trade)
             let q = 1.0 - wr;
             ((b * wr - q) / b).clamp(-1.0, 1.0)
         });
@@ -129,8 +137,8 @@ mod tests {
     #[test]
     fn rolling_window_advances_with_each_new_trade() {
         let trades = vec![
-            -100.0, -100.0, -100.0, -100.0, -100.0,    // first 5: bad
-            100.0, 100.0, 100.0, 100.0, 100.0,         // next 5: good
+            -100.0, -100.0, -100.0, -100.0, -100.0, // first 5: bad
+            100.0, 100.0, 100.0, 100.0, 100.0, // next 5: good
         ];
         let out = compute(&trades, 5);
         // Index 4: full bad window → negative kelly.

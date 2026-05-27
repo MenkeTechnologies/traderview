@@ -32,9 +32,11 @@ pub struct SystemQualityReport {
     pub gain_to_pain: Option<f64>,
 }
 
-pub fn analyze(trade_pnls: &[f64], monthly_pnls: &[f64], equity_curve: &[f64])
-    -> SystemQualityReport
-{
+pub fn analyze(
+    trade_pnls: &[f64],
+    monthly_pnls: &[f64],
+    equity_curve: &[f64],
+) -> SystemQualityReport {
     let mut report = SystemQualityReport::default();
     if !trade_pnls.is_empty() {
         let wins: f64 = trade_pnls.iter().filter(|p| **p > 0.0).sum();
@@ -42,15 +44,23 @@ pub fn analyze(trade_pnls: &[f64], monthly_pnls: &[f64], equity_curve: &[f64])
         report.gross_profit = wins;
         report.gross_loss = losses;
         report.net_profit = wins - losses;
-        report.profit_factor = if losses > 0.0 { Some(wins / losses) } else { None };
+        report.profit_factor = if losses > 0.0 {
+            Some(wins / losses)
+        } else {
+            None
+        };
     }
     if !equity_curve.is_empty() {
         let mut peak = equity_curve[0];
         let mut max_dd = 0.0_f64;
         for &v in equity_curve {
-            if v > peak { peak = v; }
+            if v > peak {
+                peak = v;
+            }
             let dd = peak - v;
-            if dd > max_dd { max_dd = dd; }
+            if dd > max_dd {
+                max_dd = dd;
+            }
         }
         report.max_drawdown_dollars = max_dd;
         if max_dd > 0.0 {
@@ -58,8 +68,7 @@ pub fn analyze(trade_pnls: &[f64], monthly_pnls: &[f64], equity_curve: &[f64])
         }
     }
     if !monthly_pnls.is_empty() {
-        let monthly_losses: f64 = monthly_pnls.iter()
-            .filter(|p| **p < 0.0).map(|p| -p).sum();
+        let monthly_losses: f64 = monthly_pnls.iter().filter(|p| **p < 0.0).map(|p| -p).sum();
         if monthly_losses > 0.0 {
             report.gain_to_pain = Some(report.net_profit / monthly_losses);
         }

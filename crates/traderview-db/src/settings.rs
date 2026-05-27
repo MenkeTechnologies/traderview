@@ -19,9 +19,8 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<UserSettings> {
     if let Some(r) = row {
         Ok(r.into())
     } else {
-        let q = format!(
-            "INSERT INTO user_settings (user_id) VALUES ($1) RETURNING {SETTINGS_COLS}",
-        );
+        let q =
+            format!("INSERT INTO user_settings (user_id) VALUES ($1) RETURNING {SETTINGS_COLS}",);
         let r: Row = sqlx::query_as(&q).bind(user_id).fetch_one(pool).await?;
         Ok(r.into())
     }

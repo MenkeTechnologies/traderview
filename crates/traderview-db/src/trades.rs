@@ -48,7 +48,9 @@ pub async fn list_for_account(
             TradeStatus::Open => "open",
             TradeStatus::Closed => "closed",
         };
-        q.push(" AND status = ").push_bind(s).push("::trade_status_t");
+        q.push(" AND status = ")
+            .push_bind(s)
+            .push("::trade_status_t");
     }
     if let Some(side) = f.side {
         let s = match side {
@@ -59,14 +61,22 @@ pub async fn list_for_account(
     }
     if let Some(ac) = f.asset_class {
         let s = ac_to_pg(ac);
-        q.push(" AND asset_class = ").push_bind(s).push("::asset_class_t");
+        q.push(" AND asset_class = ")
+            .push_bind(s)
+            .push("::asset_class_t");
     }
     if let Some(d) = f.date_from {
-        q.push(" AND opened_at >= ").push_bind(d.and_hms_opt(0, 0, 0).unwrap().and_utc());
+        q.push(" AND opened_at >= ")
+            .push_bind(d.and_hms_opt(0, 0, 0).unwrap().and_utc());
     }
     if let Some(d) = f.date_to {
-        q.push(" AND opened_at < ")
-            .push_bind(d.succ_opt().unwrap_or(d).and_hms_opt(0, 0, 0).unwrap().and_utc());
+        q.push(" AND opened_at < ").push_bind(
+            d.succ_opt()
+                .unwrap_or(d)
+                .and_hms_opt(0, 0, 0)
+                .unwrap()
+                .and_utc(),
+        );
     }
     if let Some(p) = f.min_pnl {
         q.push(" AND net_pnl >= ").push_bind(p);
@@ -271,11 +281,8 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
     // Sum legs into one new trade.
     let total_qty: Decimal = trades.iter().map(|t| t.qty).sum();
     let total_fees: Decimal = trades.iter().map(|t| t.fees).sum();
-    let weighted_entry: Decimal = trades
-        .iter()
-        .map(|t| t.entry_avg * t.qty)
-        .sum::<Decimal>()
-        / total_qty.max(Decimal::ONE);
+    let weighted_entry: Decimal =
+        trades.iter().map(|t| t.entry_avg * t.qty).sum::<Decimal>() / total_qty.max(Decimal::ONE);
     let weighted_exit: Option<Decimal> = {
         let parts: Vec<(Decimal, Decimal)> = trades
             .iter()
@@ -388,10 +395,7 @@ fn sum_opt<I: Iterator<Item = Option<Decimal>>>(iter: I) -> Option<Decimal> {
 
 /// Insert zero-priced closing executions for every option leg whose
 /// expiration date has passed and which still has an open trade open.
-pub async fn close_expired_options(
-    pool: &PgPool,
-    account_id: Uuid,
-) -> anyhow::Result<usize> {
+pub async fn close_expired_options(pool: &PgPool, account_id: Uuid) -> anyhow::Result<usize> {
     let open_options: Vec<(Uuid, String, Decimal, chrono::NaiveDate, String, Decimal)> =
         sqlx::query_as(
             "SELECT id, symbol, qty, expiration, side::text, multiplier
@@ -596,11 +600,14 @@ mod tests {
 
     #[test]
     fn sum_opt_all_some_returns_sum() {
-        let r = sum_opt(vec![
-            Some(Decimal::from(10)),
-            Some(Decimal::from(20)),
-            Some(Decimal::from(30)),
-        ].into_iter());
+        let r = sum_opt(
+            vec![
+                Some(Decimal::from(10)),
+                Some(Decimal::from(20)),
+                Some(Decimal::from(30)),
+            ]
+            .into_iter(),
+        );
         assert_eq!(r, Some(Decimal::from(60)));
     }
 
@@ -609,13 +616,11 @@ mod tests {
         // Critical contract: a single None POISONS the sum. Callers
         // depend on this for "if any leg's MFE is unknown, the whole
         // trade's MFE is unknown" semantics.
-        let r = sum_opt(vec![
-            Some(Decimal::from(10)),
-            None,
-            Some(Decimal::from(30)),
-        ].into_iter());
-        assert_eq!(r, None,
-            "ANY None must poison the entire sum — partial sums are forbidden");
+        let r = sum_opt(vec![Some(Decimal::from(10)), None, Some(Decimal::from(30))].into_iter());
+        assert_eq!(
+            r, None,
+            "ANY None must poison the entire sum — partial sums are forbidden"
+        );
     }
 
     #[test]
@@ -626,11 +631,14 @@ mod tests {
 
     #[test]
     fn sum_opt_handles_negative_and_zero() {
-        let r = sum_opt(vec![
-            Some(Decimal::from(-100)),
-            Some(Decimal::ZERO),
-            Some(Decimal::from(50)),
-        ].into_iter());
+        let r = sum_opt(
+            vec![
+                Some(Decimal::from(-100)),
+                Some(Decimal::ZERO),
+                Some(Decimal::from(50)),
+            ]
+            .into_iter(),
+        );
         assert_eq!(r, Some(Decimal::from(-50)));
     }
 
@@ -641,16 +649,21 @@ mod tests {
         // the None and asserting the counter wasn't incremented.
         use std::cell::Cell;
         let after_none_visits = Cell::new(0u32);
-        let r = sum_opt(vec![
-            Some(Decimal::from(1)),
-            None,
-        ].into_iter().chain(std::iter::from_fn(|| {
-            after_none_visits.set(after_none_visits.get() + 1);
-            Some(Some(Decimal::from(999)))
-        }).take(3)));
+        let r = sum_opt(
+            vec![Some(Decimal::from(1)), None].into_iter().chain(
+                std::iter::from_fn(|| {
+                    after_none_visits.set(after_none_visits.get() + 1);
+                    Some(Some(Decimal::from(999)))
+                })
+                .take(3),
+            ),
+        );
         assert_eq!(r, None);
-        assert_eq!(after_none_visits.get(), 0,
-            "must short-circuit at first None — no further iterator pulls");
+        assert_eq!(
+            after_none_visits.get(),
+            0,
+            "must short-circuit at first None — no further iterator pulls"
+        );
     }
 
     // ─── enum-to-pg-string converters (canonical schema column values) ──
@@ -689,10 +702,19 @@ mod tests {
         // The asset_class_t pg enum is lowercase. Drift to TitleCase or
         // SCREAMING would break the INSERT cast — pinned via lowercase
         // character predicate across every variant.
-        for ac in [AssetClass::Stock, AssetClass::Option, AssetClass::Future, AssetClass::Forex] {
+        for ac in [
+            AssetClass::Stock,
+            AssetClass::Option,
+            AssetClass::Future,
+            AssetClass::Forex,
+        ] {
             let s = ac_to_pg(ac);
-            assert!(s.chars().all(|c| c.is_ascii_lowercase()),
-                "{:?} -> {} must be all-lowercase to match pg enum", ac, s);
+            assert!(
+                s.chars().all(|c| c.is_ascii_lowercase()),
+                "{:?} -> {} must be all-lowercase to match pg enum",
+                ac,
+                s
+            );
         }
     }
 
@@ -700,8 +722,12 @@ mod tests {
     fn side_to_pg_lowercase_invariant() {
         for s in [TradeSide::Long, TradeSide::Short] {
             let v = side_to_pg(s);
-            assert!(v.chars().all(|c| c.is_ascii_lowercase()),
-                "{:?} -> {} must be all-lowercase", s, v);
+            assert!(
+                v.chars().all(|c| c.is_ascii_lowercase()),
+                "{:?} -> {} must be all-lowercase",
+                s,
+                v
+            );
         }
     }
 
@@ -722,8 +748,11 @@ mod tests {
         let mut sorted = ac_strings.clone();
         sorted.sort();
         sorted.dedup();
-        assert_eq!(sorted.len(), ac_strings.len(),
-            "ac_to_pg must yield unique strings — no two variants may collide");
+        assert_eq!(
+            sorted.len(),
+            ac_strings.len(),
+            "ac_to_pg must yield unique strings — no two variants may collide"
+        );
     }
 
     // Make sure the converters are stable across Decimal precision changes

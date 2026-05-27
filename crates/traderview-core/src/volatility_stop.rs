@@ -25,7 +25,12 @@ pub struct StopConfig {
 }
 
 impl Default for StopConfig {
-    fn default() -> Self { Self { lookback: 22, atr_multiplier: 3.0 } }
+    fn default() -> Self {
+        Self {
+            lookback: 22,
+            atr_multiplier: 3.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -35,17 +40,20 @@ pub struct StopPoint {
     pub triggered: bool,
 }
 
-pub fn chandelier(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConfig)
-    -> Vec<StopPoint>
-{
+pub fn chandelier(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConfig) -> Vec<StopPoint> {
     let n = bars.len();
     let mut out = vec![StopPoint::default(); n];
-    if n < cfg.lookback || cfg.lookback == 0 { return out; }
+    if n < cfg.lookback || cfg.lookback == 0 {
+        return out;
+    }
     for i in (cfg.lookback - 1)..n {
         let window = &bars[(i + 1 - cfg.lookback)..=i];
         let stop = match side {
-            TradeSide::Long  => {
-                let highest = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
+            TradeSide::Long => {
+                let highest = window
+                    .iter()
+                    .map(|b| b.high)
+                    .fold(f64::NEG_INFINITY, f64::max);
                 highest - cfg.atr_multiplier * atr[i]
             }
             TradeSide::Short => {
@@ -54,25 +62,36 @@ pub fn chandelier(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConfig)
             }
         };
         let triggered = match side {
-            TradeSide::Long  => bars[i].low <= stop,
+            TradeSide::Long => bars[i].low <= stop,
             TradeSide::Short => bars[i].high >= stop,
         };
-        out[i] = StopPoint { stop_price: stop, triggered };
+        out[i] = StopPoint {
+            stop_price: stop,
+            triggered,
+        };
     }
     out
 }
 
-pub fn vol_stop_close(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConfig)
-    -> Vec<StopPoint>
-{
+pub fn vol_stop_close(
+    bars: &[Bar],
+    atr: &[f64],
+    side: TradeSide,
+    cfg: &StopConfig,
+) -> Vec<StopPoint> {
     let n = bars.len();
     let mut out = vec![StopPoint::default(); n];
-    if n < cfg.lookback || cfg.lookback == 0 { return out; }
+    if n < cfg.lookback || cfg.lookback == 0 {
+        return out;
+    }
     for i in (cfg.lookback - 1)..n {
         let window = &bars[(i + 1 - cfg.lookback)..=i];
         let stop = match side {
-            TradeSide::Long  => {
-                let highest_close = window.iter().map(|b| b.close).fold(f64::NEG_INFINITY, f64::max);
+            TradeSide::Long => {
+                let highest_close = window
+                    .iter()
+                    .map(|b| b.close)
+                    .fold(f64::NEG_INFINITY, f64::max);
                 highest_close - cfg.atr_multiplier * atr[i]
             }
             TradeSide::Short => {
@@ -81,10 +100,13 @@ pub fn vol_stop_close(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConf
             }
         };
         let triggered = match side {
-            TradeSide::Long  => bars[i].close <= stop,
+            TradeSide::Long => bars[i].close <= stop,
             TradeSide::Short => bars[i].close >= stop,
         };
-        out[i] = StopPoint { stop_price: stop, triggered };
+        out[i] = StopPoint {
+            stop_price: stop,
+            triggered,
+        };
     }
     out
 }
@@ -93,7 +115,13 @@ pub fn vol_stop_close(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConf
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -118,12 +146,15 @@ mod tests {
         let bars = vec![
             b(101.0, 99.0, 100.0),
             b(102.0, 100.0, 101.0),
-            b(105.0, 102.0, 104.0),    // highest high
+            b(105.0, 102.0, 104.0), // highest high
             b(103.0, 100.0, 101.0),
             b(104.0, 101.0, 102.0),
         ];
         let atr = vec![1.0; 5];
-        let cfg = StopConfig { lookback: 5, atr_multiplier: 2.0 };
+        let cfg = StopConfig {
+            lookback: 5,
+            atr_multiplier: 2.0,
+        };
         let out = chandelier(&bars, &atr, TradeSide::Long, &cfg);
         assert_eq!(out[4].stop_price, 103.0);
     }
@@ -132,13 +163,16 @@ mod tests {
     fn short_chandelier_above_lowest_low_by_atr_multiple() {
         let bars = vec![
             b(100.0, 99.0, 99.5),
-            b(99.0,  98.0, 98.5),
-            b(98.0,  95.0, 96.0),    // lowest low
-            b(99.0,  96.0, 97.0),
+            b(99.0, 98.0, 98.5),
+            b(98.0, 95.0, 96.0), // lowest low
+            b(99.0, 96.0, 97.0),
             b(100.0, 97.0, 98.0),
         ];
         let atr = vec![1.0; 5];
-        let cfg = StopConfig { lookback: 5, atr_multiplier: 2.0 };
+        let cfg = StopConfig {
+            lookback: 5,
+            atr_multiplier: 2.0,
+        };
         let out = chandelier(&bars, &atr, TradeSide::Short, &cfg);
         // Stop = 95 + 2×1 = 97.
         assert_eq!(out[4].stop_price, 97.0);
@@ -150,11 +184,14 @@ mod tests {
             b(105.0, 104.0, 105.0),
             b(105.0, 104.0, 105.0),
             b(105.0, 104.0, 105.0),
-            b(105.0, 100.0, 102.0),    // wick down through stop
+            b(105.0, 100.0, 102.0), // wick down through stop
             b(105.0, 100.0, 102.0),
         ];
         let atr = vec![1.0; 5];
-        let cfg = StopConfig { lookback: 5, atr_multiplier: 2.0 };
+        let cfg = StopConfig {
+            lookback: 5,
+            atr_multiplier: 2.0,
+        };
         let out = chandelier(&bars, &atr, TradeSide::Long, &cfg);
         // Highest high = 105, stop = 103. Bar 4 low = 100 ≤ 103 → triggered.
         assert!(out[4].triggered);
@@ -164,14 +201,17 @@ mod tests {
     fn vol_stop_close_uses_closing_price_not_high() {
         // Same bars but use vol_stop_close — sensitivity is to closes.
         let bars = vec![
-            b(110.0, 99.0, 100.0),    // wick up to 110 but closed at 100
+            b(110.0, 99.0, 100.0), // wick up to 110 but closed at 100
             b(105.0, 99.0, 100.0),
             b(105.0, 99.0, 100.0),
             b(105.0, 99.0, 100.0),
             b(105.0, 99.0, 100.0),
         ];
         let atr = vec![1.0; 5];
-        let cfg = StopConfig { lookback: 5, atr_multiplier: 2.0 };
+        let cfg = StopConfig {
+            lookback: 5,
+            atr_multiplier: 2.0,
+        };
         let chand = chandelier(&bars, &atr, TradeSide::Long, &cfg);
         let close = vol_stop_close(&bars, &atr, TradeSide::Long, &cfg);
         // Chandelier uses high (110) → stop = 108.

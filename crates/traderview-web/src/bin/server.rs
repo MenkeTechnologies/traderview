@@ -50,7 +50,12 @@ async fn main() -> anyhow::Result<()> {
     traderview_db::migrate(&pool).await?;
 
     std::fs::create_dir_all(&args.data_dir)?;
-    let state = AppState::new(pool.clone(), AppMode::Web, jwt_secret, args.data_dir.clone());
+    let state = AppState::new(
+        pool.clone(),
+        AppMode::Web,
+        jwt_secret,
+        args.data_dir.clone(),
+    );
 
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
@@ -62,22 +67,27 @@ async fn main() -> anyhow::Result<()> {
                 let total = r.edgar_inserted + r.senate_inserted + r.house_inserted;
                 if total > 0 {
                     tracing::info!(
-                        edgar = r.edgar_inserted, senate = r.senate_inserted, house = r.house_inserted,
+                        edgar = r.edgar_inserted,
+                        senate = r.senate_inserted,
+                        house = r.house_inserted,
                         "disclosures polled",
                     );
                     if r.edgar_inserted > 0 {
                         hub.publish(traderview_web::realtime::Event::Disclosure {
-                            source: "edgar", inserted: r.edgar_inserted,
+                            source: "edgar",
+                            inserted: r.edgar_inserted,
                         });
                     }
                     if r.senate_inserted > 0 {
                         hub.publish(traderview_web::realtime::Event::Disclosure {
-                            source: "senate", inserted: r.senate_inserted,
+                            source: "senate",
+                            inserted: r.senate_inserted,
                         });
                     }
                     if r.house_inserted > 0 {
                         hub.publish(traderview_web::realtime::Event::Disclosure {
-                            source: "house", inserted: r.house_inserted,
+                            source: "house",
+                            inserted: r.house_inserted,
                         });
                     }
                 }
@@ -93,19 +103,23 @@ async fn main() -> anyhow::Result<()> {
         tokio::spawn(async move {
             loop {
                 match traderview_db::strategy_alerts::evaluate_all(&pool).await {
-                    Ok(s) => if s.fired > 0 || s.errors > 0 {
-                        tracing::info!(
-                            evaluated = s.evaluated, fired = s.fired, errors = s.errors,
-                            "strategy alerts evaluated",
-                        );
-                        if s.fired > 0 {
-                            hub.publish(traderview_web::realtime::Event::AlertFired {
-                                rule_id: "strategy".into(),
-                                symbol: String::new(),
-                                message: format!("{} strategy alert(s) fired", s.fired),
-                            });
+                    Ok(s) => {
+                        if s.fired > 0 || s.errors > 0 {
+                            tracing::info!(
+                                evaluated = s.evaluated,
+                                fired = s.fired,
+                                errors = s.errors,
+                                "strategy alerts evaluated",
+                            );
+                            if s.fired > 0 {
+                                hub.publish(traderview_web::realtime::Event::AlertFired {
+                                    rule_id: "strategy".into(),
+                                    symbol: String::new(),
+                                    message: format!("{} strategy alert(s) fired", s.fired),
+                                });
+                            }
                         }
-                    },
+                    }
                     Err(e) => tracing::warn!(error = %e, "strategy alert eval failed"),
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(60)).await;
@@ -119,14 +133,16 @@ async fn main() -> anyhow::Result<()> {
         tokio::spawn(async move {
             loop {
                 match traderview_db::earnings_cal::poll_watchlists(&pool).await {
-                    Ok(s) => if s.events_upserted > 0 || s.reactions_computed > 0 {
-                        tracing::info!(
-                            symbols = s.symbols_polled,
-                            events = s.events_upserted,
-                            reactions = s.reactions_computed,
-                            "earnings polled",
-                        );
-                    },
+                    Ok(s) => {
+                        if s.events_upserted > 0 || s.reactions_computed > 0 {
+                            tracing::info!(
+                                symbols = s.symbols_polled,
+                                events = s.events_upserted,
+                                reactions = s.reactions_computed,
+                                "earnings polled",
+                            );
+                        }
+                    }
                     Err(e) => tracing::warn!(error = %e, "earnings poll failed"),
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(6 * 3600)).await;
@@ -142,9 +158,14 @@ async fn main() -> anyhow::Result<()> {
             loop {
                 if let Ok(s) = traderview_db::news::poll_watchlists(&pool).await {
                     if s.inserted > 0 {
-                        tracing::info!(symbols = s.symbols_polled, inserted = s.inserted, "news polled");
+                        tracing::info!(
+                            symbols = s.symbols_polled,
+                            inserted = s.inserted,
+                            "news polled"
+                        );
                         hub.publish(traderview_web::realtime::Event::News {
-                            inserted: s.inserted, symbols: s.symbols_polled,
+                            inserted: s.inserted,
+                            symbols: s.symbols_polled,
                         });
                     }
                 }
@@ -163,7 +184,8 @@ async fn main() -> anyhow::Result<()> {
                 if wsb + st > 0 {
                     tracing::info!(wsb = wsb, stocktwits = st, "sentiment polled");
                     hub.publish(traderview_web::realtime::Event::Sentiment {
-                        wsb, stocktwits: st,
+                        wsb,
+                        stocktwits: st,
                     });
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(60)).await;

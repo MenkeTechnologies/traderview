@@ -26,8 +26,8 @@ pub struct ContractRow {
     pub price: f64,
     pub prev_close: Option<f64>,
     pub change_pct: Option<f64>,
-    pub atr_pct: Option<f64>,          // 20-day ATR as % of price
-    pub atr_multiple: Option<f64>,     // |change_pct| / atr_pct
+    pub atr_pct: Option<f64>,      // 20-day ATR as % of price
+    pub atr_multiple: Option<f64>, // |change_pct| / atr_pct
     pub day_high: Option<f64>,
     pub day_low: Option<f64>,
     pub market_state: Option<String>,
@@ -42,21 +42,21 @@ pub struct PremarketSnapshot {
 
 const UNIVERSE: &[(&str, &str, &str)] = &[
     // (group, symbol, label)
-    ("Index futures",  "ES=F",       "S&P 500 e-mini"),
-    ("Index futures",  "NQ=F",       "Nasdaq 100 e-mini"),
-    ("Index futures",  "YM=F",       "Dow e-mini"),
-    ("Index futures",  "RTY=F",      "Russell 2000 e-mini"),
-    ("Commodities",    "GC=F",       "Gold"),
-    ("Commodities",    "SI=F",       "Silver"),
-    ("Commodities",    "CL=F",       "Crude WTI"),
-    ("Commodities",    "NG=F",       "Natural Gas"),
-    ("Crypto",         "BTC-USD",    "Bitcoin"),
-    ("Crypto",         "ETH-USD",    "Ethereum"),
-    ("Crypto",         "SOL-USD",    "Solana"),
-    ("FX",             "DX-Y.NYB",   "Dollar Index"),
-    ("FX",             "EURUSD=X",   "EUR/USD"),
-    ("FX",             "USDJPY=X",   "USD/JPY"),
-    ("FX",             "GBPUSD=X",   "GBP/USD"),
+    ("Index futures", "ES=F", "S&P 500 e-mini"),
+    ("Index futures", "NQ=F", "Nasdaq 100 e-mini"),
+    ("Index futures", "YM=F", "Dow e-mini"),
+    ("Index futures", "RTY=F", "Russell 2000 e-mini"),
+    ("Commodities", "GC=F", "Gold"),
+    ("Commodities", "SI=F", "Silver"),
+    ("Commodities", "CL=F", "Crude WTI"),
+    ("Commodities", "NG=F", "Natural Gas"),
+    ("Crypto", "BTC-USD", "Bitcoin"),
+    ("Crypto", "ETH-USD", "Ethereum"),
+    ("Crypto", "SOL-USD", "Solana"),
+    ("FX", "DX-Y.NYB", "Dollar Index"),
+    ("FX", "EURUSD=X", "EUR/USD"),
+    ("FX", "USDJPY=X", "USD/JPY"),
+    ("FX", "GBPUSD=X", "GBP/USD"),
 ];
 
 pub async fn snapshot(pool: &PgPool) -> anyhow::Result<PremarketSnapshot> {
@@ -111,30 +111,43 @@ pub async fn snapshot(pool: &PgPool) -> anyhow::Result<PremarketSnapshot> {
         .filter(|e| e.when_et.date() == today)
         .collect();
 
-    Ok(PremarketSnapshot { contracts, today_events, fetched_at: Utc::now() })
+    Ok(PremarketSnapshot {
+        contracts,
+        today_events,
+        fetched_at: Utc::now(),
+    })
 }
 
 /// 20-day ATR (true range) expressed as a percentage of the latest close.
 async fn atr20_pct(pool: &PgPool, symbol: &str) -> Option<f64> {
     let to = Utc::now();
     let from = to - Duration::days(60);
-    let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to).await.ok()?;
+    let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
+        .await
+        .ok()?;
     let n = bars.len();
-    if n < 21 { return None; }
+    if n < 21 {
+        return None;
+    }
     let closes: Vec<f64> = bars.iter().map(|b| dec(b.close)).collect();
-    let highs:  Vec<f64> = bars.iter().map(|b| dec(b.high)).collect();
-    let lows:   Vec<f64> = bars.iter().map(|b| dec(b.low)).collect();
+    let highs: Vec<f64> = bars.iter().map(|b| dec(b.high)).collect();
+    let lows: Vec<f64> = bars.iter().map(|b| dec(b.low)).collect();
     let mut trs = Vec::with_capacity(20);
     for i in (n - 20)..n {
         let tr = (highs[i] - lows[i])
             .max((highs[i] - closes[i - 1]).abs())
-            .max((lows[i]  - closes[i - 1]).abs());
+            .max((lows[i] - closes[i - 1]).abs());
         trs.push(tr);
     }
     let atr = trs.iter().sum::<f64>() / 20.0;
     let last = closes[n - 1];
-    if last > 0.0 { Some(atr / last * 100.0) } else { None }
+    if last > 0.0 {
+        Some(atr / last * 100.0)
+    } else {
+        None
+    }
 }
 
-fn dec(d: rust_decimal::Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
-
+fn dec(d: rust_decimal::Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

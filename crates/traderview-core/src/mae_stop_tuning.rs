@@ -45,8 +45,16 @@ pub struct StopTuningReport {
 }
 
 pub fn analyze(trades: &[TradeMae]) -> StopTuningReport {
-    let winners: Vec<f64> = trades.iter().filter(|t| t.realized > 0.0).map(|t| t.mae).collect();
-    let losers: Vec<f64>  = trades.iter().filter(|t| t.realized <= 0.0).map(|t| t.mae).collect();
+    let winners: Vec<f64> = trades
+        .iter()
+        .filter(|t| t.realized > 0.0)
+        .map(|t| t.mae)
+        .collect();
+    let losers: Vec<f64> = trades
+        .iter()
+        .filter(|t| t.realized <= 0.0)
+        .map(|t| t.mae)
+        .collect();
     let mut w_sorted = winners.clone();
     let mut l_sorted = losers.clone();
     w_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -71,13 +79,19 @@ pub fn analyze(trades: &[TradeMae]) -> StopTuningReport {
         losers_mae_p50: pct(&l_sorted, 0.50),
         losers_mae_p90: pct(&l_sorted, 0.90),
         losers_cut_at_p90_stop: losers_cut,
-        losers_cut_pct_at_p90: if losers.is_empty() { 0.0 } else { losers_cut as f64 / losers.len() as f64 * 100.0 },
+        losers_cut_pct_at_p90: if losers.is_empty() {
+            0.0
+        } else {
+            losers_cut as f64 / losers.len() as f64 * 100.0
+        },
         winners_stopped_at_p90: winners_stopped,
     }
 }
 
 fn pct(sorted: &[f64], q: f64) -> f64 {
-    if sorted.is_empty() { return 0.0; }
+    if sorted.is_empty() {
+        return 0.0;
+    }
     let idx = ((sorted.len() as f64 - 1.0) * q).round() as usize;
     sorted[idx.min(sorted.len() - 1)]
 }
@@ -95,9 +109,12 @@ mod tests {
 
     #[test]
     fn all_winners_winners_mae_percentiles_populated() {
-        let trades: Vec<_> = (1..=10).map(|i|
-            TradeMae { realized: 100.0, mae: i as f64 }
-        ).collect();
+        let trades: Vec<_> = (1..=10)
+            .map(|i| TradeMae {
+                realized: 100.0,
+                mae: i as f64,
+            })
+            .collect();
         let r = analyze(&trades);
         assert_eq!(r.winner_count, 10);
         assert_eq!(r.loser_count, 0);
@@ -113,13 +130,28 @@ mod tests {
     fn losers_cut_at_p90_stop_counted_correctly() {
         // 10 winners with MAE 1..10 → p90 = 9.
         // 4 losers with MAE [3, 5, 10, 15] → 2 above 9 (10 and 15).
-        let mut trades: Vec<TradeMae> = (1..=10).map(|i|
-            TradeMae { realized: 100.0, mae: i as f64 }
-        ).collect();
-        trades.push(TradeMae { realized: -50.0, mae:  3.0 });
-        trades.push(TradeMae { realized: -50.0, mae:  5.0 });
-        trades.push(TradeMae { realized: -50.0, mae: 10.0 });
-        trades.push(TradeMae { realized: -50.0, mae: 15.0 });
+        let mut trades: Vec<TradeMae> = (1..=10)
+            .map(|i| TradeMae {
+                realized: 100.0,
+                mae: i as f64,
+            })
+            .collect();
+        trades.push(TradeMae {
+            realized: -50.0,
+            mae: 3.0,
+        });
+        trades.push(TradeMae {
+            realized: -50.0,
+            mae: 5.0,
+        });
+        trades.push(TradeMae {
+            realized: -50.0,
+            mae: 10.0,
+        });
+        trades.push(TradeMae {
+            realized: -50.0,
+            mae: 15.0,
+        });
         let r = analyze(&trades);
         assert_eq!(r.winners_mae_p90, 9.0);
         assert_eq!(r.losers_cut_at_p90_stop, 2);
@@ -129,9 +161,12 @@ mod tests {
     #[test]
     fn winners_stopped_at_p90_is_top_10pct() {
         // 10 winners → p90 = sorted[8] = 9. Strict-greater means just MAE=10.
-        let trades: Vec<_> = (1..=10).map(|i|
-            TradeMae { realized: 100.0, mae: i as f64 }
-        ).collect();
+        let trades: Vec<_> = (1..=10)
+            .map(|i| TradeMae {
+                realized: 100.0,
+                mae: i as f64,
+            })
+            .collect();
         let r = analyze(&trades);
         assert_eq!(r.winners_stopped_at_p90, 1);
     }
@@ -140,8 +175,14 @@ mod tests {
     fn zero_pnl_classified_as_loser() {
         // A breakeven trade should count toward losers (realized <= 0).
         let trades = vec![
-            TradeMae { realized: 100.0, mae: 1.0 },
-            TradeMae { realized:   0.0, mae: 2.0 },
+            TradeMae {
+                realized: 100.0,
+                mae: 1.0,
+            },
+            TradeMae {
+                realized: 0.0,
+                mae: 2.0,
+            },
         ];
         let r = analyze(&trades);
         assert_eq!(r.winner_count, 1);
@@ -150,9 +191,12 @@ mod tests {
 
     #[test]
     fn winners_mae_percentiles_monotonic() {
-        let trades: Vec<_> = (1..=100).map(|i|
-            TradeMae { realized: 1.0, mae: i as f64 }
-        ).collect();
+        let trades: Vec<_> = (1..=100)
+            .map(|i| TradeMae {
+                realized: 1.0,
+                mae: i as f64,
+            })
+            .collect();
         let r = analyze(&trades);
         assert!(r.winners_mae_p25 < r.winners_mae_p50);
         assert!(r.winners_mae_p50 < r.winners_mae_p75);
@@ -163,11 +207,17 @@ mod tests {
     #[test]
     fn losers_mae_percentiles_independent_of_winners() {
         // 5 winners with MAE 1..5, 5 losers with MAE 10..50.
-        let mut trades: Vec<TradeMae> = (1..=5).map(|i|
-            TradeMae { realized: 100.0, mae: i as f64 }
-        ).collect();
+        let mut trades: Vec<TradeMae> = (1..=5)
+            .map(|i| TradeMae {
+                realized: 100.0,
+                mae: i as f64,
+            })
+            .collect();
         for m in [10.0, 20.0, 30.0, 40.0, 50.0] {
-            trades.push(TradeMae { realized: -50.0, mae: m });
+            trades.push(TradeMae {
+                realized: -50.0,
+                mae: m,
+            });
         }
         let r = analyze(&trades);
         // Loser p50 = sorted[round(4*0.5)] = sorted[2] = 30.

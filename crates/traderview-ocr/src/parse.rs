@@ -76,7 +76,8 @@ fn extract_total(text: &str) -> Option<Decimal> {
     });
     let total_tag = TOTAL_TAG_RE.get_or_init(|| {
         // "total", "amount due", "grand total", "balance"
-        Regex::new(r"(?i)\b(grand\s*total|total\s*amount|amount\s*due|balance\s*due|total)\b").unwrap()
+        Regex::new(r"(?i)\b(grand\s*total|total\s*amount|amount\s*due|balance\s*due|total)\b")
+            .unwrap()
     });
 
     // Pass 1: look on every "total"-tagged line and take the max.
@@ -92,7 +93,13 @@ fn extract_total(text: &str) -> Option<Decimal> {
         for cap in amt.captures_iter(line) {
             if let Some(d) = parse_money(&cap[1]) {
                 tagged_max = Some(match tagged_max {
-                    Some(prev) => if d > prev { d } else { prev },
+                    Some(prev) => {
+                        if d > prev {
+                            d
+                        } else {
+                            prev
+                        }
+                    }
                     None => d,
                 });
             }
@@ -108,7 +115,13 @@ fn extract_total(text: &str) -> Option<Decimal> {
     for cap in amt.captures_iter(text) {
         if let Some(d) = parse_money(&cap[1]) {
             global_max = Some(match global_max {
-                Some(prev) => if d > prev { d } else { prev },
+                Some(prev) => {
+                    if d > prev {
+                        d
+                    } else {
+                        prev
+                    }
+                }
                 None => d,
             });
         }
@@ -117,7 +130,10 @@ fn extract_total(text: &str) -> Option<Decimal> {
 }
 
 fn parse_money(s: &str) -> Option<Decimal> {
-    let cleaned: String = s.chars().filter(|c| *c != ',' && *c != '$' && !c.is_whitespace()).collect();
+    let cleaned: String = s
+        .chars()
+        .filter(|c| *c != ',' && *c != '$' && !c.is_whitespace())
+        .collect();
     Decimal::from_str(&cleaned).ok()
 }
 
@@ -145,9 +161,18 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
     });
     if let Some(cap) = word.captures(text) {
         let m = match cap[1].to_ascii_lowercase().as_str() {
-            "jan" => 1, "feb" => 2, "mar" => 3, "apr" => 4, "may" => 5, "jun" => 6,
-            "jul" => 7, "aug" => 8, "sep" | "sept" => 9,
-            "oct" => 10, "nov" => 11, "dec" => 12,
+            "jan" => 1,
+            "feb" => 2,
+            "mar" => 3,
+            "apr" => 4,
+            "may" => 5,
+            "jun" => 6,
+            "jul" => 7,
+            "aug" => 8,
+            "sep" | "sept" => 9,
+            "oct" => 10,
+            "nov" => 11,
+            "dec" => 12,
             _ => return None,
         };
         let d: u32 = cap[2].parse().ok()?;

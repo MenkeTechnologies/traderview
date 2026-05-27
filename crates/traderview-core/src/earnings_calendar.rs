@@ -52,10 +52,15 @@ pub fn analyze(events: &[EarningsEvent], today: NaiveDate) -> EarningsReport {
     let mut report = EarningsReport::default();
     for e in events {
         let days = (e.date - today).num_days();
-        let proximity = if days < 0 { EarningsProximity::Past }
-            else if days <= 3 { EarningsProximity::Imminent }
-            else if days <= 14 { EarningsProximity::Soon }
-            else { EarningsProximity::Distant };
+        let proximity = if days < 0 {
+            EarningsProximity::Past
+        } else if days <= 3 {
+            EarningsProximity::Imminent
+        } else if days <= 14 {
+            EarningsProximity::Soon
+        } else {
+            EarningsProximity::Distant
+        };
         if proximity == EarningsProximity::Imminent {
             report.imminent_symbols.push(e.symbol.clone());
         }
@@ -70,7 +75,9 @@ pub fn analyze(events: &[EarningsEvent], today: NaiveDate) -> EarningsReport {
     // Sort by date (soonest first; past last).
     report.events.sort_by(|a, b| {
         let cmp_past = a.days_until.is_negative().cmp(&b.days_until.is_negative());
-        if cmp_past != std::cmp::Ordering::Equal { return cmp_past; }
+        if cmp_past != std::cmp::Ordering::Equal {
+            return cmp_past;
+        }
         a.days_until.cmp(&b.days_until)
     });
     report.imminent_symbols.sort();
@@ -79,11 +86,14 @@ pub fn analyze(events: &[EarningsEvent], today: NaiveDate) -> EarningsReport {
 
 /// Filter to symbols that have earnings inside the trader's intended
 /// hold window from today.
-pub fn earnings_within_window(events: &[EarningsEvent], today: NaiveDate, hold_days: i64)
-    -> Vec<String>
-{
+pub fn earnings_within_window(
+    events: &[EarningsEvent],
+    today: NaiveDate,
+    hold_days: i64,
+) -> Vec<String> {
     let end = today + Duration::days(hold_days);
-    events.iter()
+    events
+        .iter()
         .filter(|e| e.date >= today && e.date <= end)
         .map(|e| e.symbol.clone())
         .collect()
@@ -93,9 +103,15 @@ pub fn earnings_within_window(events: &[EarningsEvent], today: NaiveDate, hold_d
 mod tests {
     use super::*;
 
-    fn d(y: i32, m: u32, d: u32) -> NaiveDate { NaiveDate::from_ymd_opt(y, m, d).unwrap() }
+    fn d(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
     fn ev(sym: &str, date: NaiveDate) -> EarningsEvent {
-        EarningsEvent { symbol: sym.into(), date, timing: "AMC".into() }
+        EarningsEvent {
+            symbol: sym.into(),
+            date,
+            timing: "AMC".into(),
+        }
     }
 
     #[test]
@@ -133,12 +149,15 @@ mod tests {
 
     #[test]
     fn events_sorted_soonest_first_with_past_at_end() {
-        let r = analyze(&[
-            ev("FAR", d(2026, 8, 1)),
-            ev("PAST", d(2026, 4, 1)),
-            ev("SOON", d(2026, 6, 1)),
-            ev("NEAR", d(2026, 5, 30)),
-        ], d(2026, 5, 27));
+        let r = analyze(
+            &[
+                ev("FAR", d(2026, 8, 1)),
+                ev("PAST", d(2026, 4, 1)),
+                ev("SOON", d(2026, 6, 1)),
+                ev("NEAR", d(2026, 5, 30)),
+            ],
+            d(2026, 5, 27),
+        );
         // Future: NEAR, SOON, FAR; then Past: PAST.
         assert_eq!(r.events[0].symbol, "NEAR");
         assert_eq!(r.events[1].symbol, "SOON");
@@ -148,11 +167,14 @@ mod tests {
 
     #[test]
     fn imminent_only_includes_within_3_days() {
-        let r = analyze(&[
-            ev("AAPL", d(2026, 5, 28)),    // 1 day
-            ev("MSFT", d(2026, 6, 5)),      // 9 days
-            ev("TSLA", d(2026, 5, 30)),    // 3 days exact
-        ], d(2026, 5, 27));
+        let r = analyze(
+            &[
+                ev("AAPL", d(2026, 5, 28)), // 1 day
+                ev("MSFT", d(2026, 6, 5)),  // 9 days
+                ev("TSLA", d(2026, 5, 30)), // 3 days exact
+            ],
+            d(2026, 5, 27),
+        );
         // Imminent = AAPL + TSLA.
         assert_eq!(r.imminent_symbols, vec!["AAPL", "TSLA"]);
     }

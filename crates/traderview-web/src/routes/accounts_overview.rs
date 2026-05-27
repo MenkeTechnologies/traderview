@@ -14,6 +14,9 @@ async fn overview(
     State(s): State<AppState>,
     u: AuthUser,
 ) -> Result<Json<OverviewReport>, ApiError> {
-    Ok(Json(traderview_db::accounts_overview::report(&s.pool, u.id)
-        .await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::accounts_overview::report(&s.pool, u.id)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

@@ -52,8 +52,10 @@ pub fn analyze(
         home_currency: home_currency.into(),
         ..Default::default()
     };
-    if positions.is_empty() { return report; }
-    let mut by_ccy: BTreeMap<String, (f64, f64, usize)> = BTreeMap::new();    // (gross, net, count)
+    if positions.is_empty() {
+        return report;
+    }
+    let mut by_ccy: BTreeMap<String, (f64, f64, usize)> = BTreeMap::new(); // (gross, net, count)
     for p in positions {
         let entry = by_ccy.entry(p.currency.clone()).or_insert((0.0, 0.0, 0));
         entry.0 += p.notional_native.abs();
@@ -63,19 +65,29 @@ pub fn analyze(
     let mut total_gross_home = 0.0;
     let mut total_net_home = 0.0;
     for (ccy, (gross_n, net_n, _count)) in &by_ccy {
-        let rate = if ccy == home_currency { 1.0 }
-            else { *fx_to_home.get(ccy).unwrap_or(&0.0) };
+        let rate = if ccy == home_currency {
+            1.0
+        } else {
+            *fx_to_home.get(ccy).unwrap_or(&0.0)
+        };
         total_gross_home += gross_n * rate;
         total_net_home += net_n * rate;
     }
     report.total_gross_home = total_gross_home;
     report.total_net_home = total_net_home;
     for (ccy, (gross_n, net_n, count)) in by_ccy {
-        let rate = if ccy == home_currency { 1.0 }
-            else { *fx_to_home.get(&ccy).unwrap_or(&0.0) };
+        let rate = if ccy == home_currency {
+            1.0
+        } else {
+            *fx_to_home.get(&ccy).unwrap_or(&0.0)
+        };
         let gross_home = gross_n * rate;
         let net_home = net_n * rate;
-        let pct = if total_gross_home > 0.0 { gross_home / total_gross_home } else { 0.0 };
+        let pct = if total_gross_home > 0.0 {
+            gross_home / total_gross_home
+        } else {
+            0.0
+        };
         if pct > 0.25 && ccy != home_currency {
             report.overweight_currencies.push(ccy.clone());
         }
@@ -90,8 +102,11 @@ pub fn analyze(
         });
     }
     // Sort by home-gross descending.
-    report.buckets.sort_by(|a, b|
-        b.gross_home.partial_cmp(&a.gross_home).unwrap_or(std::cmp::Ordering::Equal));
+    report.buckets.sort_by(|a, b| {
+        b.gross_home
+            .partial_cmp(&a.gross_home)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report.overweight_currencies.sort();
     report
 }
@@ -101,7 +116,11 @@ mod tests {
     use super::*;
 
     fn p(sym: &str, ccy: &str, n: f64) -> ForeignPosition {
-        ForeignPosition { symbol: sym.into(), currency: ccy.into(), notional_native: n }
+        ForeignPosition {
+            symbol: sym.into(),
+            currency: ccy.into(),
+            notional_native: n,
+        }
     }
     fn rates() -> BTreeMap<String, f64> {
         // EUR = 1.10 USD, GBP = 1.27 USD, JPY = 0.0064 USD.
@@ -144,10 +163,7 @@ mod tests {
     #[test]
     fn overweight_flagged_above_25_pct() {
         // EUR position dominates total.
-        let positions = vec![
-            p("AAPL", "USD", 1_000.0),
-            p("SAP",  "EUR", 10_000.0),
-        ];
+        let positions = vec![p("AAPL", "USD", 1_000.0), p("SAP", "EUR", 10_000.0)];
         let r = analyze(&positions, "USD", &rates());
         assert!(r.overweight_currencies.contains(&"EUR".to_string()));
     }
@@ -161,10 +177,7 @@ mod tests {
 
     #[test]
     fn short_position_reduces_net_keeps_gross() {
-        let positions = vec![
-            p("AAPL", "USD", 10_000.0),
-            p("SHORT_BOND", "USD", -5_000.0),
-        ];
+        let positions = vec![p("AAPL", "USD", 10_000.0), p("SHORT_BOND", "USD", -5_000.0)];
         let r = analyze(&positions, "USD", &rates());
         let usd = r.buckets.iter().find(|b| b.currency == "USD").unwrap();
         assert_eq!(usd.gross_home, 15_000.0);

@@ -42,8 +42,10 @@ pub fn historical(daily_returns: &[f64], position_value: f64, confidence: f64) -
     let var_pct = -sorted[idx.min(sorted.len() - 1)];
     report.var_dollars = var_pct * position_value;
     // Expected Shortfall (CVaR) = mean of losses worse than VAR.
-    let tail: Vec<f64> = sorted[..=idx.min(sorted.len() - 1)].iter()
-        .map(|r| -r).collect();
+    let tail: Vec<f64> = sorted[..=idx.min(sorted.len() - 1)]
+        .iter()
+        .map(|r| -r)
+        .collect();
     if !tail.is_empty() {
         report.expected_shortfall_dollars =
             tail.iter().sum::<f64>() / tail.len() as f64 * position_value;
@@ -51,9 +53,11 @@ pub fn historical(daily_returns: &[f64], position_value: f64, confidence: f64) -
     report
 }
 
-pub fn parametric_gaussian(daily_returns: &[f64], position_value: f64, confidence: f64)
-    -> VarReport
-{
+pub fn parametric_gaussian(
+    daily_returns: &[f64],
+    position_value: f64,
+    confidence: f64,
+) -> VarReport {
     let mut report = VarReport {
         method: "parametric_gaussian".into(),
         confidence,
@@ -65,7 +69,11 @@ pub fn parametric_gaussian(daily_returns: &[f64], position_value: f64, confidenc
     }
     let n = daily_returns.len() as f64;
     let mean = daily_returns.iter().sum::<f64>() / n;
-    let var = daily_returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / n;
+    let var = daily_returns
+        .iter()
+        .map(|r| (r - mean).powi(2))
+        .sum::<f64>()
+        / n;
     let stdev = var.sqrt();
     // z-score for confidence (1.645 for 95%, 2.326 for 99%).
     let z = inverse_normal(confidence);
@@ -83,10 +91,18 @@ pub fn parametric_gaussian(daily_returns: &[f64], position_value: f64, confidenc
 fn inverse_normal(confidence: f64) -> f64 {
     // Quick lookup for common cases; for everything else use the
     // Beasley-Springer-Moro approximation.
-    if (confidence - 0.90).abs() < 1e-6 { return 1.282; }
-    if (confidence - 0.95).abs() < 1e-6 { return 1.645; }
-    if (confidence - 0.99).abs() < 1e-6 { return 2.326; }
-    if (confidence - 0.999).abs() < 1e-6 { return 3.090; }
+    if (confidence - 0.90).abs() < 1e-6 {
+        return 1.282;
+    }
+    if (confidence - 0.95).abs() < 1e-6 {
+        return 1.645;
+    }
+    if (confidence - 0.99).abs() < 1e-6 {
+        return 2.326;
+    }
+    if (confidence - 0.999).abs() < 1e-6 {
+        return 3.090;
+    }
     // Beasley-Springer-Moro for arbitrary confidence.
     let p = confidence;
     if p < 0.5 {
@@ -127,13 +143,17 @@ mod tests {
         // ES is always ≥ VAR (it's the mean of the worst tail).
         let returns: Vec<f64> = (0..100).map(|i| (i as f64 - 50.0) * 0.001).collect();
         let r = historical(&returns, 10_000.0, 0.95);
-        assert!(r.expected_shortfall_dollars >= r.var_dollars,
-            "ES ({}) must be >= VAR ({})", r.expected_shortfall_dollars, r.var_dollars);
+        assert!(
+            r.expected_shortfall_dollars >= r.var_dollars,
+            "ES ({}) must be >= VAR ({})",
+            r.expected_shortfall_dollars,
+            r.var_dollars
+        );
     }
 
     #[test]
     fn parametric_zero_volatility_zero_var() {
-        let returns = vec![0.01; 30];    // all same → stdev 0.
+        let returns = vec![0.01; 30]; // all same → stdev 0.
         let r = parametric_gaussian(&returns, 10_000.0, 0.95);
         assert_eq!(r.var_dollars, 0.0);
     }
@@ -141,9 +161,7 @@ mod tests {
     #[test]
     fn parametric_var_positive_and_uses_z_score() {
         // Generic positive-result check — exact scale depends on construction.
-        let returns: Vec<f64> = (0..50).map(|i| {
-            (i as f64 - 25.0) / 25.0 * 0.01
-        }).collect();
+        let returns: Vec<f64> = (0..50).map(|i| (i as f64 - 25.0) / 25.0 * 0.01).collect();
         let r = parametric_gaussian(&returns, 10_000.0, 0.95);
         // Just verify positive (mean 0, stdev > 0 → VAR > 0).
         assert!(r.var_dollars > 0.0);
@@ -151,9 +169,7 @@ mod tests {
 
     #[test]
     fn parametric_99_more_severe_than_95() {
-        let returns: Vec<f64> = (0..50).map(|i| {
-            (i as f64 - 25.0) / 25.0 * 0.01
-        }).collect();
+        let returns: Vec<f64> = (0..50).map(|i| (i as f64 - 25.0) / 25.0 * 0.01).collect();
         let r95 = parametric_gaussian(&returns, 10_000.0, 0.95);
         let r99 = parametric_gaussian(&returns, 10_000.0, 0.99);
         assert!(r99.var_dollars > r95.var_dollars);
@@ -177,13 +193,17 @@ mod tests {
 
     #[test]
     fn historical_99pct_more_severe_than_95pct() {
-        let returns: Vec<f64> = (0..1000).map(|i| {
-            -((i as f64).powi(2) / 1_000_000.0).min(0.10)
-        }).collect();
+        let returns: Vec<f64> = (0..1000)
+            .map(|i| -((i as f64).powi(2) / 1_000_000.0).min(0.10))
+            .collect();
         let r95 = historical(&returns, 10_000.0, 0.95);
         let r99 = historical(&returns, 10_000.0, 0.99);
-        assert!(r99.var_dollars >= r95.var_dollars,
-            "99% VAR ({}) should be ≥ 95% VAR ({})", r99.var_dollars, r95.var_dollars);
+        assert!(
+            r99.var_dollars >= r95.var_dollars,
+            "99% VAR ({}) should be ≥ 95% VAR ({})",
+            r99.var_dollars,
+            r95.var_dollars
+        );
     }
 
     #[test]

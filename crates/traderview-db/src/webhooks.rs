@@ -37,7 +37,8 @@ pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Webhook>> 
            FROM webhooks WHERE user_id = $1 ORDER BY created_at DESC",
     )
     .bind(user_id)
-    .fetch_all(pool).await?)
+    .fetch_all(pool)
+    .await?)
 }
 
 pub async fn create(
@@ -54,19 +55,31 @@ pub async fn create(
          RETURNING id, user_id, name, kind::text, url, secret, enabled,
                    last_fired_at, fire_count, last_status, created_at",
     )
-    .bind(user_id).bind(name).bind(kind).bind(url).bind(secret)
-    .fetch_one(pool).await?)
+    .bind(user_id)
+    .bind(name)
+    .bind(kind)
+    .bind(url)
+    .bind(secret)
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM webhooks WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
 pub async fn toggle(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool) -> anyhow::Result<bool> {
     let r = sqlx::query("UPDATE webhooks SET enabled = $3 WHERE id = $1 AND user_id = $2")
-        .bind(id).bind(user_id).bind(enabled).execute(pool).await?;
+        .bind(id)
+        .bind(user_id)
+        .bind(enabled)
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }
 
@@ -75,7 +88,7 @@ pub struct AlertPayload {
     pub title: String,
     pub message: String,
     pub symbol: Option<String>,
-    pub kind: String,           // "price_alert" | "disclosure" | "sentiment" | etc.
+    pub kind: String, // "price_alert" | "disclosure" | "sentiment" | etc.
     pub url: Option<String>,
     pub fired_at: DateTime<Utc>,
 }
@@ -90,15 +103,18 @@ pub async fn fire(pool: &PgPool, wh: &Webhook, payload: &AlertPayload) -> anyhow
         "UPDATE webhooks SET last_fired_at = now(), fire_count = fire_count + 1,
                               last_status = $2 WHERE id = $1",
     )
-    .bind(wh.id).bind(&status).execute(pool).await;
+    .bind(wh.id)
+    .bind(&status)
+    .execute(pool)
+    .await;
     Ok(())
 }
 
 async fn send(wh: &Webhook, p: &AlertPayload) -> anyhow::Result<String> {
     let body = match wh.kind.as_str() {
         "discord" => discord_body(p),
-        "slack"   => slack_body(p),
-        _         => serde_json::to_value(p)?,
+        "slack" => slack_body(p),
+        _ => serde_json::to_value(p)?,
     };
     let mut req = client().post(&wh.url).json(&body);
     if let Some(secret) = &wh.secret {
@@ -110,11 +126,11 @@ async fn send(wh: &Webhook, p: &AlertPayload) -> anyhow::Result<String> {
 
 fn discord_body(p: &AlertPayload) -> serde_json::Value {
     let color = match p.kind.as_str() {
-        "price_alert"   => 0x00e5ff,
-        "disclosure"    => 0xff2a6d,
-        "sentiment"     => 0xb86bff,
-        "earnings_iv"   => 0xffdd57,
-        _               => 0x23d160,
+        "price_alert" => 0x00e5ff,
+        "disclosure" => 0xff2a6d,
+        "sentiment" => 0xb86bff,
+        "earnings_iv" => 0xffdd57,
+        _ => 0x23d160,
     };
     serde_json::json!({
         "username": "TraderView",
@@ -160,7 +176,12 @@ pub async fn fan_out_all(pool: &PgPool, user_id: Uuid, payload: &AlertPayload) {
            FROM webhooks WHERE user_id = $1 AND enabled = TRUE",
     )
     .bind(user_id)
-    .fetch_all(pool).await { Ok(r) => r, Err(_) => return };
+    .fetch_all(pool)
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => return,
+    };
     for wh in rows {
         let _ = fire(pool, &wh, payload).await;
     }
@@ -168,14 +189,22 @@ pub async fn fan_out_all(pool: &PgPool, user_id: Uuid, payload: &AlertPayload) {
 
 /// Fan-out to all webhook IDs (called by alert engines).
 pub async fn fan_out(pool: &PgPool, user_id: Uuid, webhook_ids: &[Uuid], payload: &AlertPayload) {
-    if webhook_ids.is_empty() { return; }
+    if webhook_ids.is_empty() {
+        return;
+    }
     let rows: Vec<Webhook> = match sqlx::query_as::<_, Webhook>(
         "SELECT id, user_id, name, kind::text, url, secret, enabled,
                 last_fired_at, fire_count, last_status, created_at
            FROM webhooks WHERE user_id = $1 AND enabled = TRUE AND id = ANY($2)",
     )
-    .bind(user_id).bind(webhook_ids)
-    .fetch_all(pool).await { Ok(r) => r, Err(_) => return };
+    .bind(user_id)
+    .bind(webhook_ids)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => return,
+    };
     for wh in rows {
         let _ = fire(pool, &wh, payload).await;
     }
@@ -187,11 +216,11 @@ mod tests {
 
     fn sample_payload() -> AlertPayload {
         AlertPayload {
-            title:   "Risk Gate vetoed AAPL entry".into(),
+            title: "Risk Gate vetoed AAPL entry".into(),
             message: "[max_loss_per_day_pct] today's loss has hit the 3% daily cap".into(),
-            symbol:  Some("AAPL".into()),
-            kind:    "risk_gate_block".into(),
-            url:     None,
+            symbol: Some("AAPL".into()),
+            kind: "risk_gate_block".into(),
+            url: None,
             fired_at: Utc::now(),
         }
     }
@@ -218,7 +247,8 @@ mod tests {
         let mut p = sample_payload();
         p.symbol = None;
         let body = discord_body(&p);
-        let fields = body.get("embeds")
+        let fields = body
+            .get("embeds")
             .and_then(|e| e.get(0))
             .and_then(|e| e.get("fields"))
             .expect("embed has fields");

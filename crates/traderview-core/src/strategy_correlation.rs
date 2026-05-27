@@ -43,18 +43,28 @@ pub struct CorrReport {
 
 pub fn analyze(strategies: &[StrategyReturns], high_threshold: f64) -> CorrReport {
     let mut report = CorrReport::default();
-    if strategies.len() < 2 { return report; }
+    if strategies.len() < 2 {
+        return report;
+    }
     for s in strategies {
         report.matrix.insert(s.name.clone(), BTreeMap::new());
     }
     for i in 0..strategies.len() {
-        for j in (i+1)..strategies.len() {
+        for j in (i + 1)..strategies.len() {
             let a = &strategies[i];
             let b = &strategies[j];
             let rho = pearson(&a.returns, &b.returns).unwrap_or(0.0);
             // Symmetric matrix store.
-            report.matrix.get_mut(&a.name).unwrap().insert(b.name.clone(), rho);
-            report.matrix.get_mut(&b.name).unwrap().insert(a.name.clone(), rho);
+            report
+                .matrix
+                .get_mut(&a.name)
+                .unwrap()
+                .insert(b.name.clone(), rho);
+            report
+                .matrix
+                .get_mut(&b.name)
+                .unwrap()
+                .insert(a.name.clone(), rho);
             let entry = CorrEntry {
                 strategy_a: a.name.clone(),
                 strategy_b: b.name.clone(),
@@ -69,18 +79,25 @@ pub fn analyze(strategies: &[StrategyReturns], high_threshold: f64) -> CorrRepor
         }
     }
     // Sort high-corr desc by |rho| (most concerning first).
-    report.high_corr_pairs.sort_by(|a, b|
-        b.correlation.abs().partial_cmp(&a.correlation.abs())
-            .unwrap_or(std::cmp::Ordering::Equal));
+    report.high_corr_pairs.sort_by(|a, b| {
+        b.correlation
+            .abs()
+            .partial_cmp(&a.correlation.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     // Sort diversifying asc (most negative first).
-    report.diversifying_pairs.sort_by(|a, b|
-        a.correlation.partial_cmp(&b.correlation)
-            .unwrap_or(std::cmp::Ordering::Equal));
+    report.diversifying_pairs.sort_by(|a, b| {
+        a.correlation
+            .partial_cmp(&b.correlation)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report
 }
 
 fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
-    if a.len() != b.len() || a.len() < 2 { return None; }
+    if a.len() != b.len() || a.len() < 2 {
+        return None;
+    }
     let n = a.len() as f64;
     let mean_a = a.iter().sum::<f64>() / n;
     let mean_b = b.iter().sum::<f64>() / n;
@@ -95,7 +112,11 @@ fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
         db += xb * xb;
     }
     let denom = (da * db).sqrt();
-    if denom == 0.0 { None } else { Some(num / denom) }
+    if denom == 0.0 {
+        None
+    } else {
+        Some(num / denom)
+    }
 }
 
 #[cfg(test)]
@@ -103,7 +124,10 @@ mod tests {
     use super::*;
 
     fn s(name: &str, r: Vec<f64>) -> StrategyReturns {
-        StrategyReturns { name: name.into(), returns: r }
+        StrategyReturns {
+            name: name.into(),
+            returns: r,
+        }
     }
 
     #[test]
@@ -132,7 +156,11 @@ mod tests {
             s("B", vec![4.0, 3.0, 2.0, 1.0]),
         ];
         let r = analyze(&strats, 0.7);
-        assert_eq!(r.high_corr_pairs.len(), 1, "|rho|=1 still triggers high-corr");
+        assert_eq!(
+            r.high_corr_pairs.len(),
+            1,
+            "|rho|=1 still triggers high-corr"
+        );
         assert!((r.high_corr_pairs[0].correlation + 1.0).abs() < 1e-9);
     }
 
@@ -145,14 +173,16 @@ mod tests {
         // A=[1,2,3,4,5], B=[3,1,4,1,5] — small overlap; should land ≤ 0.2.
         let strats = vec![
             s("A", vec![1.0, 2.0, 3.0, 4.0, 5.0]),
-            s("B", vec![5.0, 4.0, 3.0, 2.0, 1.0]),    // rho = -1
+            s("B", vec![5.0, 4.0, 3.0, 2.0, 1.0]), // rho = -1
         ];
         let r = analyze(&strats, 0.7);
         // -1 abs > 0.7 → in high_corr.
         assert_eq!(r.high_corr_pairs.len(), 1);
         assert!((r.high_corr_pairs[0].correlation + 1.0).abs() < 1e-9);
-        assert!(r.diversifying_pairs.is_empty(),
-            "perfect anti-corr lands in high_corr, not diversifying");
+        assert!(
+            r.diversifying_pairs.is_empty(),
+            "perfect anti-corr lands in high_corr, not diversifying"
+        );
     }
 
     #[test]
@@ -162,8 +192,8 @@ mod tests {
             s("B", vec![2.0, 4.0, 6.0]),
             s("C", vec![3.0, 1.0, 2.0]),
         ];
-        let r = analyze(&strats, 0.99);   // very strict — only perfect matches
-        // 3 strategies → 3 names in matrix, 2 entries each (others).
+        let r = analyze(&strats, 0.99); // very strict — only perfect matches
+                                        // 3 strategies → 3 names in matrix, 2 entries each (others).
         assert_eq!(r.matrix.len(), 3);
         assert_eq!(r.matrix["A"].len(), 2);
         // Symmetric: A→B == B→A.
@@ -174,20 +204,23 @@ mod tests {
     fn high_corr_pairs_sorted_by_abs_descending() {
         let strats = vec![
             s("PERFECT", vec![1.0, 2.0, 3.0]),
-            s("DUP",     vec![2.0, 4.0, 6.0]),     // rho = 1
-            s("INVERT",  vec![3.0, 2.0, 1.0]),     // rho = -1 vs PERFECT
+            s("DUP", vec![2.0, 4.0, 6.0]),    // rho = 1
+            s("INVERT", vec![3.0, 2.0, 1.0]), // rho = -1 vs PERFECT
         ];
         let r = analyze(&strats, 0.5);
         assert!(!r.high_corr_pairs.is_empty());
         // First entry should be |1.0| pair.
-        assert!(r.high_corr_pairs[0].correlation.abs() >= r.high_corr_pairs.last().unwrap().correlation.abs());
+        assert!(
+            r.high_corr_pairs[0].correlation.abs()
+                >= r.high_corr_pairs.last().unwrap().correlation.abs()
+        );
     }
 
     #[test]
     fn length_mismatch_falls_back_to_zero_correlation() {
         let strats = vec![
             s("A", vec![1.0, 2.0, 3.0]),
-            s("B", vec![1.0, 2.0]),    // shorter — pearson returns None → 0
+            s("B", vec![1.0, 2.0]), // shorter — pearson returns None → 0
         ];
         let r = analyze(&strats, 0.7);
         // Pair recorded in matrix as 0.0.
@@ -199,7 +232,7 @@ mod tests {
     #[test]
     fn constant_series_falls_back_to_zero_correlation() {
         let strats = vec![
-            s("A", vec![1.0, 1.0, 1.0]),    // zero variance
+            s("A", vec![1.0, 1.0, 1.0]), // zero variance
             s("B", vec![2.0, 4.0, 6.0]),
         ];
         let r = analyze(&strats, 0.7);

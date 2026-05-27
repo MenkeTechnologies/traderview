@@ -16,15 +16,10 @@ use serde::{Deserialize, Serialize};
 
 /// Suggested stop loss price at `entry ± multiple × atr`.
 /// For longs the stop is BELOW entry; for shorts ABOVE entry.
-pub fn atr_stop(
-    side: TradeSide,
-    entry: Decimal,
-    atr: Decimal,
-    multiple: Decimal,
-) -> Decimal {
+pub fn atr_stop(side: TradeSide, entry: Decimal, atr: Decimal, multiple: Decimal) -> Decimal {
     let dist = atr * multiple;
     match side {
-        TradeSide::Long  => entry - dist,
+        TradeSide::Long => entry - dist,
         TradeSide::Short => entry + dist,
     }
 }
@@ -44,7 +39,7 @@ pub fn trailing_stop(
 ) -> Decimal {
     let dist = atr * multiple;
     match side {
-        TradeSide::Long  => extreme - dist,
+        TradeSide::Long => extreme - dist,
         TradeSide::Short => extreme + dist,
     }
 }
@@ -62,28 +57,34 @@ pub struct ChandelierStop {
 ///
 /// Convenience that wraps `trailing_stop` with the conventional 3×ATR
 /// multiple AND adds the % distance for UI display.
-pub fn chandelier(
-    side: TradeSide,
-    extreme: Decimal,
-    atr: Decimal,
-) -> ChandelierStop {
+pub fn chandelier(side: TradeSide, extreme: Decimal, atr: Decimal) -> ChandelierStop {
     let multiple = Decimal::from(3);
     let stop = trailing_stop(side, extreme, atr, multiple);
     let distance = (extreme - stop).abs();
-    let distance_pct = if extreme.is_zero() { 0.0 } else {
+    let distance_pct = if extreme.is_zero() {
+        0.0
+    } else {
         to_f64(distance) / to_f64(extreme.abs()) * 100.0
     };
-    ChandelierStop { stop, distance, distance_pct }
+    ChandelierStop {
+        stop,
+        distance,
+        distance_pct,
+    }
 }
 
-fn to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     // ─── atr_stop ──────────────────────────────────────────────────────
 

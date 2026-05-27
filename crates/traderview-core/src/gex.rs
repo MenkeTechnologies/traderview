@@ -49,12 +49,11 @@ pub struct GexReport {
 #[serde(rename_all = "snake_case")]
 #[derive(Default)]
 pub enum GexRegime {
-    Positive,    // dealer long gamma — vol suppression
-    Negative,    // dealer short gamma — vol amplification
+    Positive, // dealer long gamma — vol suppression
+    Negative, // dealer short gamma — vol amplification
     #[default]
-    Neutral,     // ~ zero
+    Neutral, // ~ zero
 }
-
 
 pub fn compute(chain: &[StrikeGreeks], spot: f64) -> GexReport {
     let spot2 = spot * spot;
@@ -62,12 +61,16 @@ pub fn compute(chain: &[StrikeGreeks], spot: f64) -> GexReport {
     let mut put_gex = 0.0;
     for k in chain {
         call_gex += k.call_gamma * k.call_oi as f64 * 100.0 * spot2;
-        put_gex  += k.put_gamma  * k.put_oi  as f64 * 100.0 * spot2;
+        put_gex += k.put_gamma * k.put_oi as f64 * 100.0 * spot2;
     }
-    let total = call_gex - put_gex;    // calls long, puts short (dealer side)
-    let regime = if total.abs() < 1.0 { GexRegime::Neutral }
-        else if total > 0.0 { GexRegime::Positive }
-        else { GexRegime::Negative };
+    let total = call_gex - put_gex; // calls long, puts short (dealer side)
+    let regime = if total.abs() < 1.0 {
+        GexRegime::Neutral
+    } else if total > 0.0 {
+        GexRegime::Positive
+    } else {
+        GexRegime::Negative
+    };
     GexReport {
         spot,
         total_gex: total,
@@ -82,7 +85,13 @@ mod tests {
     use super::*;
 
     fn k(strike: f64, cg: f64, coi: u64, pg: f64, poi: u64) -> StrikeGreeks {
-        StrikeGreeks { strike, call_gamma: cg, call_oi: coi, put_gamma: pg, put_oi: poi }
+        StrikeGreeks {
+            strike,
+            call_gamma: cg,
+            call_oi: coi,
+            put_gamma: pg,
+            put_oi: poi,
+        }
     }
 
     #[test]
@@ -147,7 +156,7 @@ mod tests {
     #[test]
     fn multi_strike_aggregates_correctly() {
         let chain = vec![
-            k(95.0,  0.01, 1_000, 0.01, 1_000),
+            k(95.0, 0.01, 1_000, 0.01, 1_000),
             k(100.0, 0.02, 2_000, 0.02, 2_000),
             k(105.0, 0.01, 1_000, 0.01, 1_000),
         ];

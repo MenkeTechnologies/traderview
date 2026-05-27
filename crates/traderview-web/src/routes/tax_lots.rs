@@ -29,5 +29,9 @@ async fn report(
     ensure_account_owner(&s, u.id, account_id).await?;
     let year = p.year.unwrap_or_else(|| Utc::now().year());
     let method = p.method.unwrap_or(LotMethod::Fifo);
-    Ok(Json(compute(&s.pool, account_id, year, method).await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        compute(&s.pool, account_id, year, method)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

@@ -163,11 +163,10 @@ pub async fn update(
 
 /// Look up the account that owns an execution. Returns None if not found.
 pub async fn account_for(pool: &PgPool, execution_id: Uuid) -> anyhow::Result<Option<Uuid>> {
-    let row: Option<(Uuid,)> =
-        sqlx::query_as("SELECT account_id FROM executions WHERE id = $1")
-            .bind(execution_id)
-            .fetch_optional(pool)
-            .await?;
+    let row: Option<(Uuid,)> = sqlx::query_as("SELECT account_id FROM executions WHERE id = $1")
+        .bind(execution_id)
+        .fetch_optional(pool)
+        .await?;
     Ok(row.map(|(a,)| a))
 }
 

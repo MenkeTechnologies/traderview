@@ -27,17 +27,24 @@ pub struct SymbolSlippage {
 }
 
 pub fn aggregate(records: &[(String, f64)]) -> Vec<SymbolSlippage> {
-    if records.is_empty() { return vec![]; }
+    if records.is_empty() {
+        return vec![];
+    }
     let mut groups: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     for (sym, bps) in records {
         groups.entry(sym.clone()).or_default().push(*bps);
     }
-    let mut out: Vec<SymbolSlippage> = groups.into_iter()
+    let mut out: Vec<SymbolSlippage> = groups
+        .into_iter()
         .map(|(sym, vals)| stats_for(sym, vals))
         .collect();
     // Sort by worst (most negative) mean_bps first — these are the
     // problem symbols the dashboard should highlight.
-    out.sort_by(|a, b| a.mean_bps.partial_cmp(&b.mean_bps).unwrap_or(std::cmp::Ordering::Equal));
+    out.sort_by(|a, b| {
+        a.mean_bps
+            .partial_cmp(&b.mean_bps)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     out
 }
 
@@ -73,10 +80,7 @@ mod tests {
 
     #[test]
     fn single_record_per_symbol_yields_one_entry() {
-        let recs = vec![
-            ("AAPL".into(), 10.0),
-            ("MSFT".into(), -5.0),
-        ];
+        let recs = vec![("AAPL".into(), 10.0), ("MSFT".into(), -5.0)];
         let out = aggregate(&recs);
         assert_eq!(out.len(), 2);
         // Worst-first sort → MSFT before AAPL.
@@ -88,9 +92,9 @@ mod tests {
     fn beat_rate_reflects_positive_count() {
         // 3 beats out of 4 fills for AAPL.
         let recs = vec![
-            ("AAPL".into(),  5.0),
-            ("AAPL".into(),  3.0),
-            ("AAPL".into(),  1.0),
+            ("AAPL".into(), 5.0),
+            ("AAPL".into(), 3.0),
+            ("AAPL".into(), 1.0),
             ("AAPL".into(), -2.0),
         ];
         let out = aggregate(&recs);
@@ -102,21 +106,17 @@ mod tests {
     fn worst_and_best_extracted_from_sorted_distribution() {
         let recs = vec![
             ("AAPL".into(), -10.0),
-            ("AAPL".into(),  20.0),
-            ("AAPL".into(),   0.0),
+            ("AAPL".into(), 20.0),
+            ("AAPL".into(), 0.0),
         ];
         let out = aggregate(&recs);
         assert_eq!(out[0].worst_bps, -10.0);
-        assert_eq!(out[0].best_bps,  20.0);
+        assert_eq!(out[0].best_bps, 20.0);
     }
 
     #[test]
     fn mean_matches_arithmetic_average() {
-        let recs = vec![
-            ("X".into(), 10.0),
-            ("X".into(), 20.0),
-            ("X".into(), 30.0),
-        ];
+        let recs = vec![("X".into(), 10.0), ("X".into(), 20.0), ("X".into(), 30.0)];
         let out = aggregate(&recs);
         assert_eq!(out[0].mean_bps, 20.0);
         assert_eq!(out[0].median_bps, 20.0);
@@ -130,18 +130,14 @@ mod tests {
             ("UGLY".into(), -100.0),
         ];
         let out = aggregate(&recs);
-        assert_eq!(out[0].symbol, "UGLY",   "worst mean must be first");
+        assert_eq!(out[0].symbol, "UGLY", "worst mean must be first");
         assert_eq!(out[1].symbol, "BAD");
         assert_eq!(out[2].symbol, "GOOD");
     }
 
     #[test]
     fn stdev_zero_for_constant_series() {
-        let recs = vec![
-            ("X".into(), 5.0),
-            ("X".into(), 5.0),
-            ("X".into(), 5.0),
-        ];
+        let recs = vec![("X".into(), 5.0), ("X".into(), 5.0), ("X".into(), 5.0)];
         let out = aggregate(&recs);
         assert_eq!(out[0].stdev_bps, 0.0);
         assert_eq!(out[0].mean_bps, 5.0);

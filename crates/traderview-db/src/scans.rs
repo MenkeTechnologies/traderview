@@ -38,7 +38,11 @@ pub async fn run_preset(
             }
         }
     }
-    hits.sort_by(|a, b| b.change_pct.partial_cmp(&a.change_pct).unwrap_or(std::cmp::Ordering::Equal));
+    hits.sort_by(|a, b| {
+        b.change_pct
+            .partial_cmp(&a.change_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits.truncate(limit);
     Ok(ScanRun {
         preset,

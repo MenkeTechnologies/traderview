@@ -13,7 +13,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct AlligatorPoint {
@@ -26,7 +29,9 @@ pub struct AlligatorPoint {
 fn smma(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
     let mut out = vec![0.0; n];
-    if n < period || period == 0 { return out; }
+    if n < period || period == 0 {
+        return out;
+    }
     let mut prev: f64 = values[..period].iter().sum::<f64>() / period as f64;
     out[period - 1] = prev;
     for i in period..n {
@@ -51,28 +56,49 @@ pub fn compute(bars: &[Bar]) -> Vec<AlligatorPoint> {
         // Sleeping = all three close to each other (within 0.5% range).
         let max = j.max(t).max(l);
         let min = j.min(t).min(l);
-        let sleeping = if max > 0.0 { (max - min) / max < 0.005 } else { false };
-        out.push(AlligatorPoint { jaw: j, teeth: t, lips: l, sleeping });
+        let sleeping = if max > 0.0 {
+            (max - min) / max < 0.005
+        } else {
+            false
+        };
+        out.push(AlligatorPoint {
+            jaw: j,
+            teeth: t,
+            lips: l,
+            sleeping,
+        });
     }
     out
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum AlligatorBias { Up, Down, Sleeping }
+pub enum AlligatorBias {
+    Up,
+    Down,
+    Sleeping,
+}
 
 pub fn classify(point: AlligatorPoint) -> AlligatorBias {
-    if point.sleeping { return AlligatorBias::Sleeping; }
-    if point.lips > point.teeth && point.teeth > point.jaw { AlligatorBias::Up }
-    else if point.lips < point.teeth && point.teeth < point.jaw { AlligatorBias::Down }
-    else { AlligatorBias::Sleeping }
+    if point.sleeping {
+        return AlligatorBias::Sleeping;
+    }
+    if point.lips > point.teeth && point.teeth > point.jaw {
+        AlligatorBias::Up
+    } else if point.lips < point.teeth && point.teeth < point.jaw {
+        AlligatorBias::Down
+    } else {
+        AlligatorBias::Sleeping
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -88,10 +114,12 @@ mod tests {
 
     #[test]
     fn uptrend_lips_above_teeth_above_jaw() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let p = 100.0 + i as f64;
-            b(p, p - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                b(p, p - 1.0)
+            })
+            .collect();
         let out = compute(&bars);
         let last = out[39];
         // Lips (5) fastest → tracks closest to current price → highest in uptrend.
@@ -102,10 +130,12 @@ mod tests {
 
     #[test]
     fn downtrend_lips_below_teeth_below_jaw() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let p = 200.0 - i as f64;
-            b(p, p - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let p = 200.0 - i as f64;
+                b(p, p - 1.0)
+            })
+            .collect();
         let out = compute(&bars);
         let last = out[39];
         assert!(last.lips < last.teeth);
@@ -115,14 +145,24 @@ mod tests {
 
     #[test]
     fn classify_returns_sleeping_when_intertwined() {
-        let p = AlligatorPoint { jaw: 100.0, teeth: 100.0, lips: 100.0, sleeping: true };
+        let p = AlligatorPoint {
+            jaw: 100.0,
+            teeth: 100.0,
+            lips: 100.0,
+            sleeping: true,
+        };
         assert_eq!(classify(p), AlligatorBias::Sleeping);
     }
 
     #[test]
     fn classify_returns_sleeping_when_lines_cross_disorderly() {
         // Not in pure ascending OR descending order → ambiguous → sleeping.
-        let p = AlligatorPoint { jaw: 100.0, teeth: 105.0, lips: 95.0, sleeping: false };
+        let p = AlligatorPoint {
+            jaw: 100.0,
+            teeth: 105.0,
+            lips: 95.0,
+            sleeping: false,
+        };
         assert_eq!(classify(p), AlligatorBias::Sleeping);
     }
 

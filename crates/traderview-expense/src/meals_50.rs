@@ -38,7 +38,7 @@ pub enum MealCategory {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MealExpense {
     pub date: NaiveDate,
-    pub amount: Decimal,        // positive, in account currency
+    pub amount: Decimal, // positive, in account currency
     pub category: MealCategory,
     pub note: String,
 }
@@ -64,14 +64,22 @@ pub fn deductible_fraction(category: MealCategory, tax_year: i32) -> Decimal {
         MealCategory::BusinessClient => half,
         MealCategory::OfficeSnacks => {
             // 50% through 2025, 0% starting 2026.
-            if tax_year <= 2025 { half } else { zero }
+            if tax_year <= 2025 {
+                half
+            } else {
+                zero
+            }
         }
         MealCategory::EmployerConvenience => {
             // 100% under TCJA 2018-2025, 50% from 2026.
-            if tax_year <= 2025 { one } else { half }
+            if tax_year <= 2025 {
+                one
+            } else {
+                half
+            }
         }
         MealCategory::Entertainment => zero,
-        MealCategory::Personal      => zero,
+        MealCategory::Personal => zero,
     }
 }
 
@@ -82,7 +90,10 @@ pub fn report(meals: &[MealExpense]) -> MealsReport {
     let mut total_gross = Decimal::ZERO;
     let mut total_deductible = Decimal::ZERO;
     for m in meals {
-        let frac = deductible_fraction(m.category, m.date.format("%Y").to_string().parse().unwrap_or(2026));
+        let frac = deductible_fraction(
+            m.category,
+            m.date.format("%Y").to_string().parse().unwrap_or(2026),
+        );
         let ded = m.amount * frac;
         *gross.entry(m.category).or_insert(Decimal::ZERO) += m.amount;
         *deductible.entry(m.category).or_insert(Decimal::ZERO) += ded;
@@ -107,7 +118,9 @@ pub fn report(meals: &[MealExpense]) -> MealsReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn date(y: i32, m: u32, day: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, day).unwrap()
     }
@@ -115,51 +128,93 @@ mod tests {
     #[test]
     fn business_meal_is_always_50_percent() {
         for year in [2018, 2025, 2026, 2030] {
-            assert_eq!(deductible_fraction(MealCategory::BusinessClient, year),
-                d("0.5"), "BusinessClient must be 50% in {year}");
+            assert_eq!(
+                deductible_fraction(MealCategory::BusinessClient, year),
+                d("0.5"),
+                "BusinessClient must be 50% in {year}"
+            );
         }
     }
 
     #[test]
     fn entertainment_is_zero_post_tcja() {
         for year in [2018, 2024, 2026] {
-            assert_eq!(deductible_fraction(MealCategory::Entertainment, year),
-                Decimal::ZERO);
+            assert_eq!(
+                deductible_fraction(MealCategory::Entertainment, year),
+                Decimal::ZERO
+            );
         }
     }
 
     #[test]
     fn personal_is_always_zero() {
-        assert_eq!(deductible_fraction(MealCategory::Personal, 2024), Decimal::ZERO);
+        assert_eq!(
+            deductible_fraction(MealCategory::Personal, 2024),
+            Decimal::ZERO
+        );
     }
 
     #[test]
     fn office_snacks_50_pct_through_2025_then_zero() {
-        assert_eq!(deductible_fraction(MealCategory::OfficeSnacks, 2024), d("0.5"));
-        assert_eq!(deductible_fraction(MealCategory::OfficeSnacks, 2025), d("0.5"));
-        assert_eq!(deductible_fraction(MealCategory::OfficeSnacks, 2026), Decimal::ZERO,
-            "TCJA sunset — office snacks lose deductibility in 2026");
+        assert_eq!(
+            deductible_fraction(MealCategory::OfficeSnacks, 2024),
+            d("0.5")
+        );
+        assert_eq!(
+            deductible_fraction(MealCategory::OfficeSnacks, 2025),
+            d("0.5")
+        );
+        assert_eq!(
+            deductible_fraction(MealCategory::OfficeSnacks, 2026),
+            Decimal::ZERO,
+            "TCJA sunset — office snacks lose deductibility in 2026"
+        );
     }
 
     #[test]
     fn employer_convenience_100_pct_through_2025_then_50() {
-        assert_eq!(deductible_fraction(MealCategory::EmployerConvenience, 2024), Decimal::ONE);
-        assert_eq!(deductible_fraction(MealCategory::EmployerConvenience, 2025), Decimal::ONE);
-        assert_eq!(deductible_fraction(MealCategory::EmployerConvenience, 2026), d("0.5"),
-            "TCJA sunset — employer-convenience drops from 100% to 50% in 2026");
+        assert_eq!(
+            deductible_fraction(MealCategory::EmployerConvenience, 2024),
+            Decimal::ONE
+        );
+        assert_eq!(
+            deductible_fraction(MealCategory::EmployerConvenience, 2025),
+            Decimal::ONE
+        );
+        assert_eq!(
+            deductible_fraction(MealCategory::EmployerConvenience, 2026),
+            d("0.5"),
+            "TCJA sunset — employer-convenience drops from 100% to 50% in 2026"
+        );
     }
 
     #[test]
     fn report_aggregates_and_splits_correctly() {
         let meals = vec![
-            MealExpense { date: date(2025, 6, 1), amount: d("100"),
-                          category: MealCategory::BusinessClient, note: "".into() },
-            MealExpense { date: date(2025, 6, 1), amount: d("50"),
-                          category: MealCategory::OfficeSnacks, note: "".into() },
-            MealExpense { date: date(2025, 6, 1), amount: d("200"),
-                          category: MealCategory::EmployerConvenience, note: "".into() },
-            MealExpense { date: date(2025, 6, 1), amount: d("80"),
-                          category: MealCategory::Entertainment, note: "".into() },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("100"),
+                category: MealCategory::BusinessClient,
+                note: "".into(),
+            },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("50"),
+                category: MealCategory::OfficeSnacks,
+                note: "".into(),
+            },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("200"),
+                category: MealCategory::EmployerConvenience,
+                note: "".into(),
+            },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("80"),
+                category: MealCategory::Entertainment,
+                note: "".into(),
+            },
         ];
         let r = report(&meals);
         // 100×0.5 + 50×0.5 + 200×1.0 + 80×0.0 = 50 + 25 + 200 + 0 = 275
@@ -180,10 +235,18 @@ mod tests {
     fn personal_share_of_split_bill_is_zero_deductible() {
         // "I paid $80, $40 of it was for me, $40 for the client mentor."
         let meals = vec![
-            MealExpense { date: date(2025, 6, 1), amount: d("40"),
-                          category: MealCategory::Personal, note: "my half".into() },
-            MealExpense { date: date(2025, 6, 1), amount: d("40"),
-                          category: MealCategory::BusinessClient, note: "client half".into() },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("40"),
+                category: MealCategory::Personal,
+                note: "my half".into(),
+            },
+            MealExpense {
+                date: date(2025, 6, 1),
+                amount: d("40"),
+                category: MealCategory::BusinessClient,
+                note: "client half".into(),
+            },
         ];
         let r = report(&meals);
         assert_eq!(r.total_gross, d("80"));
@@ -194,12 +257,24 @@ mod tests {
     #[test]
     fn report_categories_sort_by_gross_descending() {
         let meals = vec![
-            MealExpense { date: date(2025, 1, 1), amount: d("10"),
-                          category: MealCategory::Personal, note: "".into() },
-            MealExpense { date: date(2025, 1, 1), amount: d("100"),
-                          category: MealCategory::BusinessClient, note: "".into() },
-            MealExpense { date: date(2025, 1, 1), amount: d("50"),
-                          category: MealCategory::Entertainment, note: "".into() },
+            MealExpense {
+                date: date(2025, 1, 1),
+                amount: d("10"),
+                category: MealCategory::Personal,
+                note: "".into(),
+            },
+            MealExpense {
+                date: date(2025, 1, 1),
+                amount: d("100"),
+                category: MealCategory::BusinessClient,
+                note: "".into(),
+            },
+            MealExpense {
+                date: date(2025, 1, 1),
+                amount: d("50"),
+                category: MealCategory::Entertainment,
+                note: "".into(),
+            },
         ];
         let r = report(&meals);
         // First entry must be the biggest gross.

@@ -67,7 +67,10 @@ fn key(e: &Execution) -> GroupKey {
 
 /// Run a FIFO roll-up over the provided executions and return the resulting
 /// trades + leg links. Input may be unsorted; the function sorts internally.
-pub fn rollup(executions: &[Execution], method: LotMethod) -> Result<Vec<RolledTrade>, RollupError> {
+pub fn rollup(
+    executions: &[Execution],
+    method: LotMethod,
+) -> Result<Vec<RolledTrade>, RollupError> {
     // Validate qty (the DB CHECK already enforces this, but defensive).
     for e in executions {
         if e.qty <= Decimal::ZERO {
@@ -97,11 +100,7 @@ pub fn rollup(executions: &[Execution], method: LotMethod) -> Result<Vec<RolledT
     Ok(out)
 }
 
-fn rollup_one_group(
-    execs: &[&Execution],
-    method: LotMethod,
-    out: &mut Vec<RolledTrade>,
-) {
+fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<RolledTrade>) {
     // Two queues — only one is non-empty at a time in a non-pathological feed,
     // but we tolerate both being populated (which would indicate ambiguous flips).
     let mut long_lots: VecDeque<OpenLot> = VecDeque::new();
@@ -123,15 +122,18 @@ fn rollup_one_group(
                 // Either opening a long, OR covering an existing short.
                 let mut remaining = e.qty;
                 if !short_lots.is_empty() {
-                    remaining = close_against(CloseAgainst {
-                        lots: &mut short_lots,
-                        open_side: TradeSide::Short,
-                        closing_exec: e,
-                        closing_fee_per_unit: fee_per_unit,
-                        current_holder: &mut current_short,
-                        out,
-                        method,
-                    }, remaining);
+                    remaining = close_against(
+                        CloseAgainst {
+                            lots: &mut short_lots,
+                            open_side: TradeSide::Short,
+                            closing_exec: e,
+                            closing_fee_per_unit: fee_per_unit,
+                            current_holder: &mut current_short,
+                            out,
+                            method,
+                        },
+                        remaining,
+                    );
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
@@ -151,15 +153,18 @@ fn rollup_one_group(
             Side::Short => {
                 let mut remaining = e.qty;
                 if !long_lots.is_empty() {
-                    remaining = close_against(CloseAgainst {
-                        lots: &mut long_lots,
-                        open_side: TradeSide::Long,
-                        closing_exec: e,
-                        closing_fee_per_unit: fee_per_unit,
-                        current_holder: &mut current_long,
-                        out,
-                        method,
-                    }, remaining);
+                    remaining = close_against(
+                        CloseAgainst {
+                            lots: &mut long_lots,
+                            open_side: TradeSide::Long,
+                            closing_exec: e,
+                            closing_fee_per_unit: fee_per_unit,
+                            current_holder: &mut current_long,
+                            out,
+                            method,
+                        },
+                        remaining,
+                    );
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
@@ -180,15 +185,18 @@ fn rollup_one_group(
                 // Closes long; if it exceeds open longs, the excess starts a short.
                 let mut remaining = e.qty;
                 if !long_lots.is_empty() {
-                    remaining = close_against(CloseAgainst {
-                        lots: &mut long_lots,
-                        open_side: TradeSide::Long,
-                        closing_exec: e,
-                        closing_fee_per_unit: fee_per_unit,
-                        current_holder: &mut current_long,
-                        out,
-                        method,
-                    }, remaining);
+                    remaining = close_against(
+                        CloseAgainst {
+                            lots: &mut long_lots,
+                            open_side: TradeSide::Long,
+                            closing_exec: e,
+                            closing_fee_per_unit: fee_per_unit,
+                            current_holder: &mut current_long,
+                            out,
+                            method,
+                        },
+                        remaining,
+                    );
                 }
                 if remaining > Decimal::ZERO {
                     // Flipped short.
@@ -209,15 +217,18 @@ fn rollup_one_group(
             Side::Cover => {
                 let mut remaining = e.qty;
                 if !short_lots.is_empty() {
-                    remaining = close_against(CloseAgainst {
-                        lots: &mut short_lots,
-                        open_side: TradeSide::Short,
-                        closing_exec: e,
-                        closing_fee_per_unit: fee_per_unit,
-                        current_holder: &mut current_short,
-                        out,
-                        method,
-                    }, remaining);
+                    remaining = close_against(
+                        CloseAgainst {
+                            lots: &mut short_lots,
+                            open_side: TradeSide::Short,
+                            closing_exec: e,
+                            closing_fee_per_unit: fee_per_unit,
+                            current_holder: &mut current_short,
+                            out,
+                            method,
+                        },
+                        remaining,
+                    );
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
@@ -264,7 +275,15 @@ struct CloseAgainst<'a> {
 /// in `ca.open_side`). Returns any leftover qty that overflowed (i.e. closed more
 /// than was open — caller treats as a reversal).
 fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
-    let CloseAgainst { lots, open_side, closing_exec, closing_fee_per_unit, current_holder, out, method } = ca;
+    let CloseAgainst {
+        lots,
+        open_side,
+        closing_exec,
+        closing_fee_per_unit,
+        current_holder,
+        out,
+        method,
+    } = ca;
     while closing_qty > Decimal::ZERO {
         let lot = match method {
             LotMethod::Fifo => lots.front_mut(),
@@ -519,14 +538,7 @@ mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
 
-    fn exec(
-        symbol: &str,
-        side: Side,
-        qty: u64,
-        price: u64,
-        fee: u64,
-        ts: i64,
-    ) -> Execution {
+    fn exec(symbol: &str, side: Side, qty: u64, price: u64, fee: u64, ts: i64) -> Execution {
         Execution {
             id: Uuid::new_v4(),
             account_id: Uuid::nil(),
@@ -654,20 +666,20 @@ mod tests {
     fn fees_are_summed_into_net_pnl() {
         // Gross = 1000, fees = 5 + 5 → net = 990.
         let execs = vec![
-            exec("AAPL", Side::Buy,  100, 150, 5, 1_000),
+            exec("AAPL", Side::Buy, 100, 150, 5, 1_000),
             exec("AAPL", Side::Sell, 100, 160, 5, 2_000),
         ];
         let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
         assert_eq!(t.gross_pnl, Some(Decimal::from(1_000)));
-        assert_eq!(t.net_pnl,   Some(Decimal::from(990)));
-        assert_eq!(t.fees,      Decimal::from(10));
+        assert_eq!(t.net_pnl, Some(Decimal::from(990)));
+        assert_eq!(t.fees, Decimal::from(10));
     }
 
     #[test]
     fn losing_long_records_negative_pnl() {
         // Bought at 150, sold at 140 → -1000 gross.
         let execs = vec![
-            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
+            exec("AAPL", Side::Buy, 100, 150, 0, 1_000),
             exec("AAPL", Side::Sell, 100, 140, 0, 2_000),
         ];
         let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
@@ -692,10 +704,10 @@ mod tests {
         // Two independent round trips on AAPL — must produce two CLOSED trades,
         // not one merged one. Otherwise per-trade P&L reporting is broken.
         let execs = vec![
-            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
-            exec("AAPL", Side::Sell, 100, 155, 0, 2_000),  // close trade #1
-            exec("AAPL", Side::Buy,  100, 160, 0, 3_000),  // open trade #2
-            exec("AAPL", Side::Sell, 100, 170, 0, 4_000),  // close trade #2
+            exec("AAPL", Side::Buy, 100, 150, 0, 1_000),
+            exec("AAPL", Side::Sell, 100, 155, 0, 2_000), // close trade #1
+            exec("AAPL", Side::Buy, 100, 160, 0, 3_000),  // open trade #2
+            exec("AAPL", Side::Sell, 100, 170, 0, 4_000), // close trade #2
         ];
         let trades = rollup(&execs, LotMethod::Fifo).unwrap();
         assert_eq!(trades.len(), 2);
@@ -708,8 +720,8 @@ mod tests {
         // Symmetric counterpart of `sell_overshoot_flips_to_short`.
         let execs = vec![
             exec("META", Side::Short, 50, 400, 0, 1_000),
-            exec("META", Side::Cover, 100, 380, 0, 2_000),  // closes 50 short, opens 50 long
-            exec("META", Side::Sell,  50, 390, 0, 3_000),
+            exec("META", Side::Cover, 100, 380, 0, 2_000), // closes 50 short, opens 50 long
+            exec("META", Side::Sell, 50, 390, 0, 3_000),
         ];
         let trades = rollup(&execs, LotMethod::Fifo).unwrap();
         assert_eq!(trades.len(), 2);
@@ -726,8 +738,8 @@ mod tests {
         // Importer may emit rows in arbitrary order. Rollup must sort by
         // executed_at internally before matching; otherwise FIFO is wrong.
         let execs = vec![
-            exec("AAPL", Side::Sell, 100, 160, 0, 2_000),  // later
-            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),  // earlier
+            exec("AAPL", Side::Sell, 100, 160, 0, 2_000), // later
+            exec("AAPL", Side::Buy, 100, 150, 0, 1_000),  // earlier
         ];
         let trades = rollup(&execs, LotMethod::Fifo).unwrap();
         assert_eq!(trades.len(), 1);
@@ -739,16 +751,22 @@ mod tests {
     #[test]
     fn different_symbols_produce_independent_trades() {
         let execs = vec![
-            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
-            exec("TSLA", Side::Buy,   10, 300, 0, 1_500),
+            exec("AAPL", Side::Buy, 100, 150, 0, 1_000),
+            exec("TSLA", Side::Buy, 10, 300, 0, 1_500),
             exec("AAPL", Side::Sell, 100, 160, 0, 2_000),
-            exec("TSLA", Side::Sell,  10, 290, 0, 2_500),
+            exec("TSLA", Side::Sell, 10, 290, 0, 2_500),
         ];
         let trades = rollup(&execs, LotMethod::Fifo).unwrap();
         assert_eq!(trades.len(), 2);
         // Each symbol's P&L computed independently — not commingled.
-        let aapl = trades.iter().find(|t| t.trade.symbol == "AAPL").expect("AAPL");
-        let tsla = trades.iter().find(|t| t.trade.symbol == "TSLA").expect("TSLA");
+        let aapl = trades
+            .iter()
+            .find(|t| t.trade.symbol == "AAPL")
+            .expect("AAPL");
+        let tsla = trades
+            .iter()
+            .find(|t| t.trade.symbol == "TSLA")
+            .expect("TSLA");
         assert_eq!(aapl.trade.gross_pnl, Some(Decimal::from(1_000)));
         assert_eq!(tsla.trade.gross_pnl, Some(Decimal::from(-100)));
     }
@@ -766,8 +784,8 @@ mod tests {
     #[test]
     fn opened_at_uses_first_open_leg_timestamp() {
         let execs = vec![
-            exec("AAPL", Side::Buy,  50, 150, 0, 1_000),
-            exec("AAPL", Side::Buy,  50, 152, 0, 1_500),
+            exec("AAPL", Side::Buy, 50, 150, 0, 1_000),
+            exec("AAPL", Side::Buy, 50, 152, 0, 1_500),
             exec("AAPL", Side::Sell, 100, 160, 0, 2_000),
         ];
         let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;

@@ -35,7 +35,8 @@ impl Parser for ChaseParser {
     fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedTransaction>, ImportError> {
         let rows = sheet::rows(bytes)?;
         let header_idx = rows.iter().position(|r| {
-            r.iter().any(|c| c.trim().eq_ignore_ascii_case("Transaction Date"))
+            r.iter()
+                .any(|c| c.trim().eq_ignore_ascii_case("Transaction Date"))
                 && r.iter().any(|c| c.trim().eq_ignore_ascii_case("Amount"))
         });
         let header_idx = header_idx.ok_or_else(|| {
@@ -154,7 +155,11 @@ mod tests {
     #[test]
     fn raw_contains_chase_category() {
         let r = ChaseParser.parse(SAMPLE.as_bytes()).unwrap();
-        let cat = r[0].raw.get("chase_category").and_then(|v| v.as_str()).unwrap();
+        let cat = r[0]
+            .raw
+            .get("chase_category")
+            .and_then(|v| v.as_str())
+            .unwrap();
         assert_eq!(cat, "Shopping");
     }
 

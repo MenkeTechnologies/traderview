@@ -56,15 +56,22 @@ pub async fn chain(symbol: &str, expiration: Option<NaiveDate>) -> anyhow::Resul
         anyhow::bail!("options HTTP {}", resp.status());
     }
     let raw: OptionsResp = resp.json().await?;
-    let result = raw.option_chain.result.and_then(|mut v| v.pop())
+    let result = raw
+        .option_chain
+        .result
+        .and_then(|mut v| v.pop())
         .ok_or_else(|| anyhow::anyhow!("empty options result"))?;
     let spot = result.quote.regular_market_price.unwrap_or(0.0);
     let expirations: Vec<NaiveDate> = result
-        .expiration_dates.unwrap_or_default()
+        .expiration_dates
+        .unwrap_or_default()
         .into_iter()
         .filter_map(|ts| chrono::DateTime::from_timestamp(ts, 0).map(|d| d.date_naive()))
         .collect();
-    let one = result.options.into_iter().next()
+    let one = result
+        .options
+        .into_iter()
+        .next()
         .ok_or_else(|| anyhow::anyhow!("no option strip"))?;
     let exp = chrono::DateTime::from_timestamp(one.expiration_date.unwrap_or(0), 0)
         .map(|d| d.date_naive())
@@ -98,7 +105,7 @@ pub type AtmStraddle = ((OptionContract, f64), (OptionContract, f64), f64);
 /// bracket the spot price, then average the two.
 pub fn atm_straddle(chain: &Chain) -> Option<AtmStraddle> {
     let call = nearest_atm(&chain.calls, chain.spot)?;
-    let put  = nearest_atm(&chain.puts,  chain.spot)?;
+    let put = nearest_atm(&chain.puts, chain.spot)?;
     let cm = mid(&call)?;
     let pm = mid(&put)?;
     let atm = (call.strike + put.strike) / 2.0;
@@ -107,8 +114,12 @@ pub fn atm_straddle(chain: &Chain) -> Option<AtmStraddle> {
 
 fn nearest_atm(side: &[OptionContract], spot: f64) -> Option<OptionContract> {
     side.iter()
-        .min_by(|a, b| (a.strike - spot).abs().partial_cmp(&(b.strike - spot).abs())
-            .unwrap_or(std::cmp::Ordering::Equal))
+        .min_by(|a, b| {
+            (a.strike - spot)
+                .abs()
+                .partial_cmp(&(b.strike - spot).abs())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
         .cloned()
 }
 
@@ -122,9 +133,14 @@ fn mid(c: &OptionContract) -> Option<f64> {
 // ---- raw Yahoo shapes ----
 
 #[derive(serde::Deserialize)]
-struct OptionsResp { #[serde(rename = "optionChain")] option_chain: OuterChain }
+struct OptionsResp {
+    #[serde(rename = "optionChain")]
+    option_chain: OuterChain,
+}
 #[derive(serde::Deserialize)]
-struct OuterChain { result: Option<Vec<ChainResult>> }
+struct OuterChain {
+    result: Option<Vec<ChainResult>>,
+}
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChainResult {
@@ -166,7 +182,8 @@ mod tests {
     fn c(strike: f64, bid: Option<f64>, ask: Option<f64>) -> OptionContract {
         OptionContract {
             strike,
-            bid, ask,
+            bid,
+            ask,
             last_price: None,
             implied_vol: None,
             volume: None,
@@ -210,8 +227,11 @@ mod tests {
     fn mid_returns_none_when_last_price_is_zero_and_no_quote() {
         let mut ct = c(100.0, None, None);
         ct.last_price = Some(0.0);
-        assert_eq!(mid(&ct), None,
-            "zero last_price with no quotes shouldn't be treated as a real fill");
+        assert_eq!(
+            mid(&ct),
+            None,
+            "zero last_price with no quotes shouldn't be treated as a real fill"
+        );
     }
 
     // ─── nearest_atm() ────────────────────────────────────────────────────
@@ -219,7 +239,7 @@ mod tests {
     #[test]
     fn nearest_atm_picks_strike_closest_to_spot() {
         let strikes = vec![
-            c(95.0,  Some(5.0), Some(5.2)),
+            c(95.0, Some(5.0), Some(5.2)),
             c(100.0, Some(2.0), Some(2.2)),
             c(105.0, Some(0.5), Some(0.7)),
         ];
@@ -255,22 +275,22 @@ mod tests {
             expiration: chrono::NaiveDate::from_ymd_opt(2026, 6, 18).unwrap(),
             expirations: vec![],
             calls: vec![
-                c(95.0,  Some(6.0), Some(6.2)),
+                c(95.0, Some(6.0), Some(6.2)),
                 c(100.0, Some(3.0), Some(3.2)),
                 c(105.0, Some(1.0), Some(1.2)),
             ],
             puts: vec![
-                c(95.0,  Some(1.0), Some(1.2)),
+                c(95.0, Some(1.0), Some(1.2)),
                 c(100.0, Some(3.0), Some(3.2)),
                 c(105.0, Some(6.0), Some(6.2)),
             ],
         };
         let ((call, cm), (put, pm), atm) = atm_straddle(&chain).expect("straddle");
         assert_eq!(call.strike, 100.0);
-        assert_eq!(put.strike,  100.0);
-        assert_eq!(cm, 3.10);    // (3.00 + 3.20) / 2
+        assert_eq!(put.strike, 100.0);
+        assert_eq!(cm, 3.10); // (3.00 + 3.20) / 2
         assert_eq!(pm, 3.10);
-        assert_eq!(atm, 100.0,   "ATM strike = avg of call+put strikes");
+        assert_eq!(atm, 100.0, "ATM strike = avg of call+put strikes");
     }
 
     #[test]
@@ -281,9 +301,11 @@ mod tests {
             expiration: chrono::NaiveDate::from_ymd_opt(2026, 6, 18).unwrap(),
             expirations: vec![],
             calls: vec![c(100.0, Some(3.0), Some(3.2))],
-            puts: vec![],   // no puts
+            puts: vec![], // no puts
         };
-        assert!(atm_straddle(&chain).is_none(),
-            "straddle requires both call and put");
+        assert!(
+            atm_straddle(&chain).is_none(),
+            "straddle requires both call and put"
+        );
     }
 }

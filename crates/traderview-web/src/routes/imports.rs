@@ -85,7 +85,8 @@ async fn upload(
             _ => {}
         }
     }
-    let account_id = account_id.ok_or_else(|| ApiError::BadRequest("account_id required".into()))?;
+    let account_id =
+        account_id.ok_or_else(|| ApiError::BadRequest("account_id required".into()))?;
     if source.is_empty() {
         return Err(ApiError::BadRequest("source required".into()));
     }

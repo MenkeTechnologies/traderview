@@ -21,7 +21,12 @@ pub struct DayStats {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Tier { Quiet, Normal, Active, Hyper }
+pub enum Tier {
+    Quiet,
+    Normal,
+    Active,
+    Hyper,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TierStats {
@@ -46,7 +51,9 @@ pub struct OvertradingReport {
 
 pub fn analyze(days: &[DayStats]) -> OvertradingReport {
     let mut report = OvertradingReport::default();
-    if days.is_empty() { return report; }
+    if days.is_empty() {
+        return report;
+    }
     let total_trades: usize = days.iter().map(|d| d.trade_count).sum();
     let baseline = total_trades as f64 / days.len() as f64;
     report.baseline_avg_trades_per_day = baseline;
@@ -54,7 +61,7 @@ pub fn analyze(days: &[DayStats]) -> OvertradingReport {
         (baseline * 0.5, "quiet"),
         (baseline * 1.5, "normal"),
         (baseline * 3.0, "active"),
-        (f64::INFINITY,  "hyper"),
+        (f64::INFINITY, "hyper"),
     ];
     let mut by_tier: std::collections::BTreeMap<&str, (usize, usize, usize, f64)> =
         std::collections::BTreeMap::new();
@@ -62,7 +69,10 @@ pub fn analyze(days: &[DayStats]) -> OvertradingReport {
         by_tier.insert(label, (0, 0, 0, 0.0));
     }
     for d in days {
-        let tier = bands.iter().find(|(t, _)| (d.trade_count as f64) <= *t).map(|(_, l)| *l)
+        let tier = bands
+            .iter()
+            .find(|(t, _)| (d.trade_count as f64) <= *t)
+            .map(|(_, l)| *l)
             .unwrap_or("hyper");
         let e = by_tier.get_mut(tier).unwrap();
         e.0 += 1;
@@ -73,9 +83,21 @@ pub fn analyze(days: &[DayStats]) -> OvertradingReport {
     let order = ["quiet", "normal", "active", "hyper"];
     for label in order {
         let (day_count, total_trades, wins, pnl) = by_tier[label];
-        let win_rate = if total_trades > 0 { wins as f64 / total_trades as f64 } else { 0.0 };
-        let avg_pnl = if day_count > 0 { pnl / day_count as f64 } else { 0.0 };
-        let avg_trades = if day_count > 0 { total_trades as f64 / day_count as f64 } else { 0.0 };
+        let win_rate = if total_trades > 0 {
+            wins as f64 / total_trades as f64
+        } else {
+            0.0
+        };
+        let avg_pnl = if day_count > 0 {
+            pnl / day_count as f64
+        } else {
+            0.0
+        };
+        let avg_trades = if day_count > 0 {
+            total_trades as f64 / day_count as f64
+        } else {
+            0.0
+        };
         report.tiers.push(TierStats {
             tier: label.into(),
             day_count,
@@ -86,8 +108,16 @@ pub fn analyze(days: &[DayStats]) -> OvertradingReport {
             avg_pnl_per_day: avg_pnl,
         });
     }
-    let normal = report.tiers.iter().find(|t| t.tier == "normal").map(|t| t.avg_pnl_per_day);
-    let hyper = report.tiers.iter().find(|t| t.tier == "hyper").map(|t| t.avg_pnl_per_day);
+    let normal = report
+        .tiers
+        .iter()
+        .find(|t| t.tier == "normal")
+        .map(|t| t.avg_pnl_per_day);
+    let hyper = report
+        .tiers
+        .iter()
+        .find(|t| t.tier == "hyper")
+        .map(|t| t.avg_pnl_per_day);
     report.hyper_underperforms_normal = match (normal, hyper) {
         (Some(n), Some(h)) => h < n,
         _ => false,
@@ -100,7 +130,11 @@ mod tests {
     use super::*;
 
     fn d(trades: usize, wins: usize, pnl: f64) -> DayStats {
-        DayStats { trade_count: trades, win_count: wins, pnl }
+        DayStats {
+            trade_count: trades,
+            win_count: wins,
+            pnl,
+        }
     }
 
     #[test]
@@ -123,10 +157,10 @@ mod tests {
         // baseline = (4×5 + 200)/5 = 44. hyper threshold = 44 × 3 = 132.
         // 200 > 132 → hyper.
         let days = vec![
-            d(5,  3, 100.0),
-            d(5,  3, 100.0),
-            d(5,  3, 100.0),
-            d(5,  3, 100.0),
+            d(5, 3, 100.0),
+            d(5, 3, 100.0),
+            d(5, 3, 100.0),
+            d(5, 3, 100.0),
             d(200, 50, -500.0),
         ];
         let r = analyze(&days);
@@ -158,9 +192,9 @@ mod tests {
         // baseline = (5+5+5+100)/4 = 28.75. hyper threshold = 28.75 × 3 = 86.25.
         // 100 > 86.25 → hyper. Normal days each +$100, hyper day -$500.
         let days2 = vec![
-            d(5,  3, 100.0),
-            d(5,  3, 100.0),
-            d(5,  3, 100.0),
+            d(5, 3, 100.0),
+            d(5, 3, 100.0),
+            d(5, 3, 100.0),
             d(100, 30, -500.0),
         ];
         let r = analyze(&days2);
@@ -170,7 +204,10 @@ mod tests {
         assert!(hyper.avg_pnl_per_day < 0.0);
         // If normal has any days with positive PnL, flag fires.
         if normal.day_count > 0 && hyper.day_count > 0 {
-            assert_eq!(r.hyper_underperforms_normal, hyper.avg_pnl_per_day < normal.avg_pnl_per_day);
+            assert_eq!(
+                r.hyper_underperforms_normal,
+                hyper.avg_pnl_per_day < normal.avg_pnl_per_day
+            );
         }
     }
 

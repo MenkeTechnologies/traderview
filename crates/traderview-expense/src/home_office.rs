@@ -42,7 +42,7 @@ pub struct HomeOfficeReport {
     pub business_pct: Decimal,
     /// Whichever is larger — recommended choice.
     pub recommended_deduction: Decimal,
-    pub recommended_method: String,         // "simplified" | "actual"
+    pub recommended_method: String, // "simplified" | "actual"
 }
 
 const SIMPLIFIED_RATE_PER_SQFT: &str = "5";
@@ -93,7 +93,9 @@ pub fn compute(input: &HomeOfficeInput) -> HomeOfficeReport {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn input(sqft: &str, total: &str) -> HomeOfficeInput {
         HomeOfficeInput {
@@ -135,8 +137,11 @@ mod tests {
     fn simplified_caps_at_300_sqft() {
         // 500 sqft would naively be $2500 but the cap is 300 × $5 = $1500.
         let r = compute(&input("500", "2000"));
-        assert_eq!(r.simplified_deduction, d("1500"),
-            "simplified-method deduction must cap at $1,500");
+        assert_eq!(
+            r.simplified_deduction,
+            d("1500"),
+            "simplified-method deduction must cap at $1,500"
+        );
     }
 
     #[test]
@@ -157,8 +162,8 @@ mod tests {
 
     #[test]
     fn recommends_actual_when_larger() {
-        let mut i = input("200", "2000");   // simplified = $1000
-        i.annual_utilities = d("50000");    // 10% × 50k = $5,000
+        let mut i = input("200", "2000"); // simplified = $1000
+        i.annual_utilities = d("50000"); // 10% × 50k = $5,000
         let r = compute(&i);
         assert_eq!(r.recommended_method, "actual");
         assert_eq!(r.recommended_deduction, d("5000.0"));
@@ -166,8 +171,8 @@ mod tests {
 
     #[test]
     fn recommends_simplified_when_actual_is_smaller() {
-        let mut i = input("200", "2000");   // simplified = $1000
-        i.annual_utilities = d("5000");     // 10% × 5k = $500
+        let mut i = input("200", "2000"); // simplified = $1000
+        i.annual_utilities = d("5000"); // 10% × 5k = $500
         let r = compute(&i);
         assert_eq!(r.recommended_method, "simplified");
         assert_eq!(r.recommended_deduction, d("1000"));
@@ -176,7 +181,7 @@ mod tests {
     #[test]
     fn business_pct_clamps_to_100_percent_on_malformed_input() {
         // Office larger than home — shouldn't crash, just cap at 100%.
-        let mut i = input("3000", "2000");  // office > home
+        let mut i = input("3000", "2000"); // office > home
         i.annual_utilities = d("1000");
         let r = compute(&i);
         assert_eq!(r.business_pct, Decimal::ONE);

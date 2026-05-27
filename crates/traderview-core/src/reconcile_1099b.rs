@@ -68,10 +68,22 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
     // Sum user gross P&L per symbol for trades closed IN this tax year.
     let mut user: BTreeMap<String, Decimal> = BTreeMap::new();
     for t in trades {
-        if t.status != TradeStatus::Closed { continue; }
-        let Some(closed_at) = t.closed_at else { continue };
-        if closed_at.date_naive().format("%Y").to_string()
-            .parse::<i32>().map(|y| y != year).unwrap_or(true) { continue; }
+        if t.status != TradeStatus::Closed {
+            continue;
+        }
+        let Some(closed_at) = t.closed_at else {
+            continue;
+        };
+        if closed_at
+            .date_naive()
+            .format("%Y")
+            .to_string()
+            .parse::<i32>()
+            .map(|y| y != year)
+            .unwrap_or(true)
+        {
+            continue;
+        }
         let pnl = t.gross_pnl.unwrap_or(Decimal::ZERO);
         *user.entry(t.symbol.clone()).or_insert(Decimal::ZERO) += pnl;
     }
@@ -79,8 +91,12 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
     // Sum broker rows per symbol (for the year).
     let mut broker: BTreeMap<String, (Decimal, Decimal)> = BTreeMap::new();
     for r in rows {
-        if r.closed_year != year { continue; }
-        let e = broker.entry(r.symbol.clone()).or_insert((Decimal::ZERO, Decimal::ZERO));
+        if r.closed_year != year {
+            continue;
+        }
+        let e = broker
+            .entry(r.symbol.clone())
+            .or_insert((Decimal::ZERO, Decimal::ZERO));
         e.0 += r.reported_gain();
         e.1 += r.wash_sale_disallowed;
     }
@@ -88,8 +104,8 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
     let mut by_symbol: Vec<SymbolRecon> = Vec::new();
     let mut total_user = Decimal::ZERO;
     let mut total_broker = Decimal::ZERO;
-    let all_symbols: std::collections::BTreeSet<String> = user.keys()
-        .chain(broker.keys()).cloned().collect();
+    let all_symbols: std::collections::BTreeSet<String> =
+        user.keys().chain(broker.keys()).cloned().collect();
     let one_dollar = Decimal::ONE;
     for sym in all_symbols {
         let u = *user.get(&sym).unwrap_or(&Decimal::ZERO);
@@ -97,12 +113,19 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
         let delta = u - b;
         // Flag if delta > $1 absolute AND > 1% of broker (when broker
         // non-zero). Avoids false positives on penny-rounding.
-        let pct_threshold = if b.is_zero() { Decimal::ZERO } else { b.abs() / Decimal::from(100) };
-        let flagged = delta.abs() > one_dollar
-            && (b.is_zero() || delta.abs() > pct_threshold);
+        let pct_threshold = if b.is_zero() {
+            Decimal::ZERO
+        } else {
+            b.abs() / Decimal::from(100)
+        };
+        let flagged = delta.abs() > one_dollar && (b.is_zero() || delta.abs() > pct_threshold);
         by_symbol.push(SymbolRecon {
-            symbol: sym, user_pnl: u, broker_gain: b,
-            delta, wash_sale_disallowed: wash, flagged,
+            symbol: sym,
+            user_pnl: u,
+            broker_gain: b,
+            delta,
+            wash_sale_disallowed: wash,
+            flagged,
         });
         total_user += u;
         total_broker += b;
@@ -126,8 +149,10 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
 /// Format expected: `symbol,year,proceeds,cost_basis,wash_sale_disallowed`.
 pub fn parse_row(line: &str) -> Option<B1099Row> {
     let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
-    if parts.len() < 5 { return None; }
-    let _ = NaiveDate::from_ymd_opt(2026, 1, 1)?;   // silence unused import
+    if parts.len() < 5 {
+        return None;
+    }
+    let _ = NaiveDate::from_ymd_opt(2026, 1, 1)?; // silence unused import
     Some(B1099Row {
         symbol: parts[0].to_ascii_uppercase(),
         closed_year: parts[1].parse().ok()?,
@@ -145,34 +170,51 @@ mod tests {
     use std::str::FromStr;
     use uuid::Uuid;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     fn closed_trade(symbol: &str, year: i32, gross: &str) -> Trade {
         Trade {
-            id: Uuid::new_v4(), account_id: Uuid::nil(),
+            id: Uuid::new_v4(),
+            account_id: Uuid::nil(),
             symbol: symbol.into(),
             side: TradeSide::Long,
             status: TradeStatus::Closed,
             opened_at: Utc.with_ymd_and_hms(year, 1, 1, 9, 30, 0).unwrap(),
             closed_at: Some(Utc.with_ymd_and_hms(year, 6, 15, 15, 30, 0).unwrap()),
-            qty: d("100"), entry_avg: d("50"), exit_avg: Some(d("60")),
+            qty: d("100"),
+            entry_avg: d("50"),
+            exit_avg: Some(d("60")),
             gross_pnl: Some(d(gross)),
             fees: Decimal::ZERO,
             net_pnl: Some(d(gross)),
             asset_class: AssetClass::Stock,
-            option_type: None, strike: None, expiration: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
             multiplier: Decimal::ONE,
-            tick_size: None, tick_value: None,
-            base_ccy: None, quote_ccy: None, pip_size: None,
-            stop_loss: None, risk_amount: None, initial_target: None,
-            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+            stop_loss: None,
+            risk_amount: None,
+            initial_target: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
         }
     }
 
     fn b1099(symbol: &str, year: i32, proceeds: &str, basis: &str, wash: &str) -> B1099Row {
         B1099Row {
-            symbol: symbol.into(), closed_year: year,
-            proceeds: d(proceeds), cost_basis: d(basis),
+            symbol: symbol.into(),
+            closed_year: year,
+            proceeds: d(proceeds),
+            cost_basis: d(basis),
             wash_sale_disallowed: d(wash),
         }
     }
@@ -180,7 +222,7 @@ mod tests {
     #[test]
     fn matching_user_and_broker_unflagged() {
         let trades = vec![closed_trade("AAPL", 2026, "1000")];
-        let rows = vec![b1099("AAPL", 2026, "6000", "5000", "0")];   // gain = 1000
+        let rows = vec![b1099("AAPL", 2026, "6000", "5000", "0")]; // gain = 1000
         let r = reconcile(2026, &trades, &rows);
         assert_eq!(r.by_symbol.len(), 1);
         let s = &r.by_symbol[0];
@@ -221,7 +263,7 @@ mod tests {
     fn trade_in_wrong_year_excluded() {
         let trades = vec![
             closed_trade("AAPL", 2026, "100"),
-            closed_trade("AAPL", 2025, "9999"),   // prior year — ignored
+            closed_trade("AAPL", 2025, "9999"), // prior year — ignored
         ];
         let rows = vec![b1099("AAPL", 2026, "100", "0", "0")];
         let r = reconcile(2026, &trades, &rows);
@@ -260,9 +302,9 @@ mod tests {
             closed_trade("C", 2026, "0"),
         ];
         let rows = vec![
-            b1099("A", 2026, "10",  "0", "0"),   // delta 0
-            b1099("B", 2026, "500", "0", "0"),   // delta 500
-            b1099("C", 2026, "0",   "0", "0"),   // delta 0
+            b1099("A", 2026, "10", "0", "0"),  // delta 0
+            b1099("B", 2026, "500", "0", "0"), // delta 500
+            b1099("C", 2026, "0", "0", "0"),   // delta 0
         ];
         let r = reconcile(2026, &trades, &rows);
         assert_eq!(r.by_symbol[0].symbol, "B", "biggest delta first");
@@ -299,7 +341,7 @@ mod tests {
             b1099("TSLA", 2026, "4500", "5000", "0"),
         ];
         let r = reconcile(2026, &trades, &rows);
-        assert_eq!(r.total_user_pnl, d("500"));   // 1000 - 500
+        assert_eq!(r.total_user_pnl, d("500")); // 1000 - 500
         assert_eq!(r.total_broker_gain, d("500"));
         assert_eq!(r.total_delta, Decimal::ZERO);
     }

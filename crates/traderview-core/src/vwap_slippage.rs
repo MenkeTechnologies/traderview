@@ -17,7 +17,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BarOhlcv {
-    pub typical: Decimal,    // (high+low+close)/3, caller pre-computes
+    pub typical: Decimal, // (high+low+close)/3, caller pre-computes
     pub volume: Decimal,
 }
 
@@ -46,11 +46,14 @@ pub struct VwapResult {
 }
 
 pub fn compute(input: &VwapInput) -> Option<VwapResult> {
-    if input.bars.is_empty() { return None; }
+    if input.bars.is_empty() {
+        return None;
+    }
     let total_vol: Decimal = input.bars.iter().map(|b| b.volume).sum();
-    if total_vol.is_zero() { return None; }
-    let numerator: Decimal = input.bars.iter()
-        .map(|b| b.typical * b.volume).sum();
+    if total_vol.is_zero() {
+        return None;
+    }
+    let numerator: Decimal = input.bars.iter().map(|b| b.typical * b.volume).sum();
     let vwap = numerator / total_vol;
 
     // Trader-favorable slippage:
@@ -59,7 +62,7 @@ pub fn compute(input: &VwapInput) -> Option<VwapResult> {
     // For an EXIT the convention flips, but TCA usually reports entries.
     // Caller passes side reflecting entry direction.
     let slippage = match input.side {
-        TradeSide::Long  => vwap - input.fill_price,
+        TradeSide::Long => vwap - input.fill_price,
         TradeSide::Short => input.fill_price - vwap,
     };
     let slippage_bps = if vwap.is_zero() {
@@ -76,7 +79,9 @@ pub fn compute(input: &VwapInput) -> Option<VwapResult> {
     })
 }
 
-fn to_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn to_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 /// Aggregate slippage across many trades.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -90,7 +95,9 @@ pub struct VwapAggregate {
 }
 
 pub fn aggregate(results: &[VwapResult]) -> VwapAggregate {
-    if results.is_empty() { return VwapAggregate::default(); }
+    if results.is_empty() {
+        return VwapAggregate::default();
+    }
     let n = results.len();
     let beat_count = results.iter().filter(|r| r.beat_vwap).count();
     let avg = results.iter().map(|r| r.slippage_bps).sum::<f64>() / n as f64;
@@ -110,12 +117,16 @@ pub fn aggregate(results: &[VwapResult]) -> VwapAggregate {
 mod tests {
     use super::*;
 
-    fn d(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn empty_bars_returns_none() {
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("100"), bars: vec![],
+            side: TradeSide::Long,
+            fill_price: d("100"),
+            bars: vec![],
         });
         assert!(r.is_none());
     }
@@ -123,8 +134,12 @@ mod tests {
     #[test]
     fn zero_volume_returns_none() {
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("100"),
-            bars: vec![BarOhlcv { typical: d("100"), volume: Decimal::ZERO }],
+            side: TradeSide::Long,
+            fill_price: d("100"),
+            bars: vec![BarOhlcv {
+                typical: d("100"),
+                volume: Decimal::ZERO,
+            }],
         });
         assert!(r.is_none());
     }
@@ -132,9 +147,14 @@ mod tests {
     #[test]
     fn single_bar_vwap_equals_typical() {
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("99"),
-            bars: vec![BarOhlcv { typical: d("100"), volume: d("1000") }],
-        }).unwrap();
+            side: TradeSide::Long,
+            fill_price: d("99"),
+            bars: vec![BarOhlcv {
+                typical: d("100"),
+                volume: d("1000"),
+            }],
+        })
+        .unwrap();
         assert_eq!(r.vwap, d("100"));
         // Long filled at 99 vs VWAP 100 → favorable $1.
         assert_eq!(r.slippage_dollars, d("1"));
@@ -146,12 +166,20 @@ mod tests {
         // Two bars: 100 @ 100 vol, 110 @ 900 vol.
         // VWAP = (100×100 + 110×900) / 1000 = (10000 + 99000) / 1000 = 109.
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("105"),
+            side: TradeSide::Long,
+            fill_price: d("105"),
             bars: vec![
-                BarOhlcv { typical: d("100"), volume: d("100") },
-                BarOhlcv { typical: d("110"), volume: d("900") },
+                BarOhlcv {
+                    typical: d("100"),
+                    volume: d("100"),
+                },
+                BarOhlcv {
+                    typical: d("110"),
+                    volume: d("900"),
+                },
             ],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(r.vwap, d("109"));
         assert_eq!(r.slippage_dollars, d("4"));
         assert!(r.beat_vwap);
@@ -160,9 +188,14 @@ mod tests {
     #[test]
     fn long_filled_above_vwap_is_unfavorable() {
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("101"),
-            bars: vec![BarOhlcv { typical: d("100"), volume: d("1000") }],
-        }).unwrap();
+            side: TradeSide::Long,
+            fill_price: d("101"),
+            bars: vec![BarOhlcv {
+                typical: d("100"),
+                volume: d("1000"),
+            }],
+        })
+        .unwrap();
         assert_eq!(r.slippage_dollars, d("-1"));
         assert!(!r.beat_vwap);
     }
@@ -171,9 +204,14 @@ mod tests {
     fn short_filled_above_vwap_is_favorable() {
         // Short at 101 vs VWAP 100 → got $1 better.
         let r = compute(&VwapInput {
-            side: TradeSide::Short, fill_price: d("101"),
-            bars: vec![BarOhlcv { typical: d("100"), volume: d("1000") }],
-        }).unwrap();
+            side: TradeSide::Short,
+            fill_price: d("101"),
+            bars: vec![BarOhlcv {
+                typical: d("100"),
+                volume: d("1000"),
+            }],
+        })
+        .unwrap();
         assert_eq!(r.slippage_dollars, d("1"));
         assert!(r.beat_vwap);
     }
@@ -181,9 +219,14 @@ mod tests {
     #[test]
     fn slippage_bps_uses_vwap_as_denominator() {
         let r = compute(&VwapInput {
-            side: TradeSide::Long, fill_price: d("99"),
-            bars: vec![BarOhlcv { typical: d("100"), volume: d("1000") }],
-        }).unwrap();
+            side: TradeSide::Long,
+            fill_price: d("99"),
+            bars: vec![BarOhlcv {
+                typical: d("100"),
+                volume: d("1000"),
+            }],
+        })
+        .unwrap();
         // 1 / 100 × 10000 = 100 bps (= 1%).
         assert!((r.slippage_bps - 100.0).abs() < 1e-6);
     }
@@ -198,10 +241,26 @@ mod tests {
     #[test]
     fn aggregate_counts_beat_vwap_correctly() {
         let results = vec![
-            VwapResult { beat_vwap: true,  slippage_bps:  5.0, ..Default::default() },
-            VwapResult { beat_vwap: true,  slippage_bps: 10.0, ..Default::default() },
-            VwapResult { beat_vwap: false, slippage_bps: -3.0, ..Default::default() },
-            VwapResult { beat_vwap: false, slippage_bps: -7.0, ..Default::default() },
+            VwapResult {
+                beat_vwap: true,
+                slippage_bps: 5.0,
+                ..Default::default()
+            },
+            VwapResult {
+                beat_vwap: true,
+                slippage_bps: 10.0,
+                ..Default::default()
+            },
+            VwapResult {
+                beat_vwap: false,
+                slippage_bps: -3.0,
+                ..Default::default()
+            },
+            VwapResult {
+                beat_vwap: false,
+                slippage_bps: -7.0,
+                ..Default::default()
+            },
         ];
         let a = aggregate(&results);
         assert_eq!(a.trades_analyzed, 4);

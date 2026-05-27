@@ -64,7 +64,11 @@ async fn save_filter(
 ) -> Result<Json<FilterSet>, ApiError> {
     Ok(Json(
         traderview_db::settings::save_filter(
-            &s.pool, user.id, &body.name, &body.payload, body.is_default,
+            &s.pool,
+            user.id,
+            &body.name,
+            &body.payload,
+            body.is_default,
         )
         .await
         .map_err(ApiError::Internal)?,

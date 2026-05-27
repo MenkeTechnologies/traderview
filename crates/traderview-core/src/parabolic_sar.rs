@@ -23,7 +23,10 @@ pub struct Bar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Trend { Up, Down }
+pub enum Trend {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct SarPoint {
@@ -42,30 +45,47 @@ pub struct SarConfig {
 
 impl Default for SarConfig {
     fn default() -> Self {
-        Self { af_start: 0.02, af_increment: 0.02, af_max: 0.20 }
+        Self {
+            af_start: 0.02,
+            af_increment: 0.02,
+            af_max: 0.20,
+        }
     }
 }
 
 pub fn compute(bars: &[Bar], cfg: &SarConfig) -> Vec<SarPoint> {
     let n = bars.len();
     let mut out = vec![SarPoint::default(); n];
-    if n < 2 { return out; }
+    if n < 2 {
+        return out;
+    }
     // Seed: assume initial uptrend.
     let mut trend_up = true;
     let mut sar = bars[0].low;
     let mut ep = bars[0].high;
     let mut af = cfg.af_start;
-    out[0] = SarPoint { sar, af, ep, trend_up };
+    out[0] = SarPoint {
+        sar,
+        af,
+        ep,
+        trend_up,
+    };
     for i in 1..n {
         let prev_high = bars[i - 1].high;
-        let prev_low  = bars[i - 1].low;
+        let prev_low = bars[i - 1].low;
         let h = bars[i].high;
         let l = bars[i].low;
         let mut new_sar = sar + af * (ep - sar);
         if trend_up {
             // SAR can't be above prior 2 bars' lows.
-            let lo2 = if i >= 2 { bars[i-2].low.min(prev_low) } else { prev_low };
-            if new_sar > lo2 { new_sar = lo2; }
+            let lo2 = if i >= 2 {
+                bars[i - 2].low.min(prev_low)
+            } else {
+                prev_low
+            };
+            if new_sar > lo2 {
+                new_sar = lo2;
+            }
             if l < new_sar {
                 // Reversal to downtrend.
                 trend_up = false;
@@ -78,8 +98,14 @@ pub fn compute(bars: &[Bar], cfg: &SarConfig) -> Vec<SarPoint> {
             }
         } else {
             // SAR can't be below prior 2 bars' highs.
-            let hi2 = if i >= 2 { bars[i-2].high.max(prev_high) } else { prev_high };
-            if new_sar < hi2 { new_sar = hi2; }
+            let hi2 = if i >= 2 {
+                bars[i - 2].high.max(prev_high)
+            } else {
+                prev_high
+            };
+            if new_sar < hi2 {
+                new_sar = hi2;
+            }
             if h > new_sar {
                 trend_up = true;
                 new_sar = ep;
@@ -91,7 +117,12 @@ pub fn compute(bars: &[Bar], cfg: &SarConfig) -> Vec<SarPoint> {
             }
         }
         sar = new_sar;
-        out[i] = SarPoint { sar, af, ep, trend_up };
+        out[i] = SarPoint {
+            sar,
+            af,
+            ep,
+            trend_up,
+        };
     }
     out
 }
@@ -100,7 +131,9 @@ pub fn compute(bars: &[Bar], cfg: &SarConfig) -> Vec<SarPoint> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -116,10 +149,12 @@ mod tests {
 
     #[test]
     fn strong_uptrend_keeps_trend_up_true() {
-        let bars: Vec<Bar> = (1..=20).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=20)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
         let out = compute(&bars, &SarConfig::default());
         let last = out.last().unwrap();
         assert!(last.trend_up, "consistent uptrend → trend_up = true");
@@ -127,10 +162,12 @@ mod tests {
 
     #[test]
     fn strong_downtrend_keeps_trend_up_false() {
-        let bars: Vec<Bar> = (1..=20).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=20)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
         let out = compute(&bars, &SarConfig::default());
         let last = out.last().unwrap();
         assert!(!last.trend_up);
@@ -138,10 +175,12 @@ mod tests {
 
     #[test]
     fn af_increments_with_new_extremes() {
-        let bars: Vec<Bar> = (1..=20).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=20)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
         let out = compute(&bars, &SarConfig::default());
         let last = out.last().unwrap();
         assert!(last.af > 0.02, "AF should have grown above start");
@@ -150,10 +189,12 @@ mod tests {
     #[test]
     fn af_capped_at_max() {
         // 50 bars of new highs should saturate AF.
-        let bars: Vec<Bar> = (1..=50).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=50)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
         let cfg = SarConfig::default();
         let out = compute(&bars, &cfg);
         let last = out.last().unwrap();
@@ -164,23 +205,30 @@ mod tests {
     #[test]
     fn reversal_flips_trend_and_resets_af() {
         // Up trend then sudden crash.
-        let mut bars: Vec<Bar> = (1..=15).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
-        bars.push(b(80.0, 70.0));    // huge gap down
+        let mut bars: Vec<Bar> = (1..=15)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
+        bars.push(b(80.0, 70.0)); // huge gap down
         let out = compute(&bars, &SarConfig::default());
         let last = out.last().unwrap();
         assert!(!last.trend_up, "gap-down should reverse to downtrend");
-        assert!((last.af - 0.02).abs() < 1e-9, "AF resets to start on reversal");
+        assert!(
+            (last.af - 0.02).abs() < 1e-9,
+            "AF resets to start on reversal"
+        );
     }
 
     #[test]
     fn ep_tracks_highest_high_in_uptrend() {
-        let bars: Vec<Bar> = (1..=10).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=10)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0)
+            })
+            .collect();
         let out = compute(&bars, &SarConfig::default());
         let last = out.last().unwrap();
         // Last bar's high = 100 + 10 + 1 = 111.

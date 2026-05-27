@@ -46,8 +46,11 @@ mod tests {
         let s = random(12);
         assert_eq!(s.len(), 12);
         for c in s.chars() {
-            assert!(c.is_ascii_alphanumeric(),
-                "random char `{}` is not base62", c);
+            assert!(
+                c.is_ascii_alphanumeric(),
+                "random char `{}` is not base62",
+                c
+            );
         }
     }
 
@@ -97,7 +100,9 @@ mod tests {
 
     #[test]
     fn from_title_keeps_digits_and_strips_punctuation() {
-        assert_eq!(from_title("AAPL Q4 2026 — earnings beat!"),
-                   "aapl-q4-2026-earnings-beat");
+        assert_eq!(
+            from_title("AAPL Q4 2026 — earnings beat!"),
+            "aapl-q4-2026-earnings-beat"
+        );
     }
 }

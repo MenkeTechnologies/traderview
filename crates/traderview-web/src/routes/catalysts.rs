@@ -20,7 +20,9 @@ struct LatestQ {
     #[serde(default = "default_limit")]
     limit: usize,
 }
-fn default_limit() -> usize { 200 }
+fn default_limit() -> usize {
+    200
+}
 
 async fn latest(
     State(_s): State<AppState>,
@@ -47,7 +49,9 @@ async fn handle_ws(mut socket: WebSocket) {
     let store = catalysts::global();
     if let Ok(snap) = serde_json::to_string(&store.latest(100)) {
         if socket
-            .send(Message::Text(format!("{{\"type\":\"snapshot\",\"catalysts\":{snap}}}")))
+            .send(Message::Text(format!(
+                "{{\"type\":\"snapshot\",\"catalysts\":{snap}}}"
+            )))
             .await
             .is_err()
         {

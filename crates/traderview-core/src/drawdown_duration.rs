@@ -39,7 +39,9 @@ pub struct DrawdownReport {
 
 pub fn analyze(equity: &[f64]) -> DrawdownReport {
     let mut report = DrawdownReport::default();
-    if equity.is_empty() { return report; }
+    if equity.is_empty() {
+        return report;
+    }
     let mut peak = equity[0];
     let mut peak_idx = 0;
     let mut in_dd = false;
@@ -59,7 +61,9 @@ pub fn analyze(equity: &[f64]) -> DrawdownReport {
                     recovery_time: Some(i - trough_idx),
                     underwater_duration: Some(underwater),
                 });
-                if depth > report.max_depth_pct { report.max_depth_pct = depth; }
+                if depth > report.max_depth_pct {
+                    report.max_depth_pct = depth;
+                }
                 in_dd = false;
             }
             peak = v;
@@ -89,17 +93,23 @@ pub fn analyze(equity: &[f64]) -> DrawdownReport {
             recovery_time: None,
             underwater_duration: None,
         });
-        if depth > report.max_depth_pct { report.max_depth_pct = depth; }
+        if depth > report.max_depth_pct {
+            report.max_depth_pct = depth;
+        }
         report.currently_under_water = true;
     }
-    let recovered: Vec<_> = report.episodes.iter()
+    let recovered: Vec<_> = report
+        .episodes
+        .iter()
         .filter_map(|e| e.recovery_time)
         .collect();
     if !recovered.is_empty() {
-        report.avg_recovery_time = Some(
-            recovered.iter().sum::<usize>() as f64 / recovered.len() as f64);
+        report.avg_recovery_time =
+            Some(recovered.iter().sum::<usize>() as f64 / recovered.len() as f64);
     }
-    report.longest_underwater = report.episodes.iter()
+    report.longest_underwater = report
+        .episodes
+        .iter()
         .filter_map(|e| e.underwater_duration)
         .max();
     report
@@ -146,8 +156,8 @@ mod tests {
     fn max_depth_extracted_across_episodes() {
         // Two dds: 10% then 30%.
         let r = analyze(&[
-            100.0, 110.0, 99.0, 115.0,    // first DD ~10% deep
-            120.0, 84.0, 130.0,           // second DD 30% deep
+            100.0, 110.0, 99.0, 115.0, // first DD ~10% deep
+            120.0, 84.0, 130.0, // second DD 30% deep
         ]);
         assert_eq!(r.episodes.len(), 2);
         assert!((r.max_depth_pct - 0.30).abs() < 0.001);
@@ -156,8 +166,8 @@ mod tests {
     #[test]
     fn longest_underwater_picks_max() {
         let r = analyze(&[
-            100.0, 95.0, 105.0,            // 2-period DD
-            110.0, 100.0, 90.0, 95.0, 115.0,    // 4-period DD
+            100.0, 95.0, 105.0, // 2-period DD
+            110.0, 100.0, 90.0, 95.0, 115.0, // 4-period DD
         ]);
         assert_eq!(r.longest_underwater, Some(4));
     }
@@ -169,10 +179,7 @@ mod tests {
         // Then peak resets to 110. Next equity 100 < 110 → new DD.
         // Last bar 95 < trough → ongoing.
         // Recovered episodes: [1]. Mean = 1.0.
-        let r = analyze(&[
-            100.0, 90.0, 110.0,
-            100.0, 95.0,
-        ]);
+        let r = analyze(&[100.0, 90.0, 110.0, 100.0, 95.0]);
         assert_eq!(r.avg_recovery_time, Some(1.0));
     }
 

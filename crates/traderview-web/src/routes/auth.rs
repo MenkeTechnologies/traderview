@@ -16,7 +16,9 @@ pub fn router() -> Router<AppState> {
         .route("/auth/me", get(me))
 }
 
-async fn health() -> &'static str { "ok" }
+async fn health() -> &'static str {
+    "ok"
+}
 
 #[derive(Serialize)]
 struct ConfigResponse {

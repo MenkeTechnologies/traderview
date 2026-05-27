@@ -29,7 +29,7 @@ const DIVIDEND: f64 = 0.0;
 pub struct VolSurface {
     pub symbol: String,
     pub spot: f64,
-    pub moneyness: Vec<f64>,            // x-axis labels (decimal fractions of spot)
+    pub moneyness: Vec<f64>, // x-axis labels (decimal fractions of spot)
     pub expirations: Vec<ExpirationRow>,
     pub term_structure: Vec<TermPoint>, // ATM IV per expiration
     pub front_skew: Vec<SkewPoint>,     // front-month: IV by moneyness
@@ -40,7 +40,7 @@ pub struct VolSurface {
 pub struct ExpirationRow {
     pub expiration: NaiveDate,
     pub days_to_expiry: i64,
-    pub iv_by_moneyness: Vec<Option<f64>>,  // length == MONEYNESS.len()
+    pub iv_by_moneyness: Vec<Option<f64>>, // length == MONEYNESS.len()
     pub atm_iv: Option<f64>,
     pub atm_call_mid: Option<f64>,
     pub atm_put_mid: Option<f64>,
@@ -69,7 +69,9 @@ pub async fn surface(symbol: &str, n_expirations: usize) -> anyhow::Result<VolSu
     let today = Utc::now().date_naive();
 
     let mut rows = Vec::new();
-    let exps: Vec<NaiveDate> = head.expirations.iter()
+    let exps: Vec<NaiveDate> = head
+        .expirations
+        .iter()
         .filter(|d| **d >= today)
         .take(n_expirations.max(1))
         .copied()
@@ -97,20 +99,24 @@ pub async fn surface(symbol: &str, n_expirations: usize) -> anyhow::Result<VolSu
             let iv = if *m >= 0.0 {
                 iv_at_strike(&chain.calls, OptKind::Call, target, spot, t_years)
             } else {
-                iv_at_strike(&chain.puts,  OptKind::Put,  target, spot, t_years)
+                iv_at_strike(&chain.puts, OptKind::Put, target, spot, t_years)
             };
             iv_row.push(iv);
         }
 
         // ATM = average of call & put at nearest strike.
         let atm_c = nearest_strike(&chain.calls, spot);
-        let atm_p = nearest_strike(&chain.puts,  spot);
-        let cv = atm_c.as_ref().and_then(|c| resolve_iv(c, OptKind::Call, spot, t_years));
-        let pv = atm_p.as_ref().and_then(|c| resolve_iv(c, OptKind::Put,  spot, t_years));
+        let atm_p = nearest_strike(&chain.puts, spot);
+        let cv = atm_c
+            .as_ref()
+            .and_then(|c| resolve_iv(c, OptKind::Call, spot, t_years));
+        let pv = atm_p
+            .as_ref()
+            .and_then(|c| resolve_iv(c, OptKind::Put, spot, t_years));
         let atm_iv = match (cv, pv) {
             (Some(a), Some(b)) => Some((a + b) / 2.0),
-            (Some(a), None)    => Some(a),
-            (None, Some(b))    => Some(b),
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             _ => None,
         };
 
@@ -120,13 +126,19 @@ pub async fn surface(symbol: &str, n_expirations: usize) -> anyhow::Result<VolSu
             iv_by_moneyness: iv_row,
             atm_iv,
             atm_call_mid: atm_c.and_then(|c| mid(&c)),
-            atm_put_mid:  atm_p.and_then(|c| mid(&c)),
+            atm_put_mid: atm_p.and_then(|c| mid(&c)),
         });
     }
 
     // Term structure = filter rows where atm_iv resolved.
-    let term_structure: Vec<TermPoint> = rows.iter()
-        .filter_map(|r| r.atm_iv.map(|iv| TermPoint { days_to_expiry: r.days_to_expiry, atm_iv: iv }))
+    let term_structure: Vec<TermPoint> = rows
+        .iter()
+        .filter_map(|r| {
+            r.atm_iv.map(|iv| TermPoint {
+                days_to_expiry: r.days_to_expiry,
+                atm_iv: iv,
+            })
+        })
         .collect();
 
     // Front-month skew = the first expiration with > 0 strikes.
@@ -134,18 +146,28 @@ pub async fn surface(symbol: &str, n_expirations: usize) -> anyhow::Result<VolSu
         let chain = if *front == head.expiration {
             head.clone()
         } else {
-            options::chain(symbol, Some(*front)).await.unwrap_or(head.clone())
+            options::chain(symbol, Some(*front))
+                .await
+                .unwrap_or(head.clone())
         };
         let dte = (*front - today).num_days().max(0);
         let t_years = (dte as f64 / 365.0).max(1.0 / 365.0);
-        MONEYNESS.iter().map(|m| {
-            let target = spot * (1.0 + m);
-            let call_iv = nearest_strike(&chain.calls, target)
-                .and_then(|c| resolve_iv(&c, OptKind::Call, spot, t_years));
-            let put_iv = nearest_strike(&chain.puts, target)
-                .and_then(|c| resolve_iv(&c, OptKind::Put, spot, t_years));
-            SkewPoint { moneyness: *m, strike: target, call_iv, put_iv }
-        }).collect()
+        MONEYNESS
+            .iter()
+            .map(|m| {
+                let target = spot * (1.0 + m);
+                let call_iv = nearest_strike(&chain.calls, target)
+                    .and_then(|c| resolve_iv(&c, OptKind::Call, spot, t_years));
+                let put_iv = nearest_strike(&chain.puts, target)
+                    .and_then(|c| resolve_iv(&c, OptKind::Put, spot, t_years));
+                SkewPoint {
+                    moneyness: *m,
+                    strike: target,
+                    call_iv,
+                    put_iv,
+                }
+            })
+            .collect()
     } else {
         Vec::new()
     };
@@ -161,18 +183,33 @@ pub async fn surface(symbol: &str, n_expirations: usize) -> anyhow::Result<VolSu
     })
 }
 
-fn iv_at_strike(contracts: &[OptionContract], kind: OptKind, target: f64, spot: f64, t_years: f64)
-    -> Option<f64>
-{
-    if contracts.is_empty() { return None; }
+fn iv_at_strike(
+    contracts: &[OptionContract],
+    kind: OptKind,
+    target: f64,
+    spot: f64,
+    t_years: f64,
+) -> Option<f64> {
+    if contracts.is_empty() {
+        return None;
+    }
     // Find the two adjacent strikes bracketing target.
     let mut sorted: Vec<&OptionContract> = contracts.iter().collect();
-    sorted.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let mut lo: Option<&OptionContract> = None;
     let mut hi: Option<&OptionContract> = None;
     for c in &sorted {
-        if c.strike <= target { lo = Some(c); }
-        if c.strike >= target && hi.is_none() { hi = Some(c); break; }
+        if c.strike <= target {
+            lo = Some(c);
+        }
+        if c.strike >= target && hi.is_none() {
+            hi = Some(c);
+            break;
+        }
     }
     let (lo, hi) = match (lo, hi) {
         (Some(l), Some(h)) => (l, h),
@@ -191,10 +228,14 @@ fn iv_at_strike(contracts: &[OptionContract], kind: OptKind, target: f64, spot: 
 
 fn resolve_iv(c: &OptionContract, kind: OptKind, spot: f64, t_years: f64) -> Option<f64> {
     if let Some(iv) = c.implied_vol {
-        if iv > 0.0 && iv.is_finite() { return Some(iv); }
+        if iv > 0.0 && iv.is_finite() {
+            return Some(iv);
+        }
     }
     let m = mid(c)?;
-    if m <= 0.0 { return None; }
+    if m <= 0.0 {
+        return None;
+    }
     implied_vol(kind, m, spot, c.strike, t_years, RISK_FREE, DIVIDEND)
 }
 
@@ -206,9 +247,13 @@ fn mid(c: &OptionContract) -> Option<f64> {
 }
 
 fn nearest_strike(contracts: &[OptionContract], target: f64) -> Option<OptionContract> {
-    contracts.iter()
-        .min_by(|a, b| (a.strike - target).abs()
-            .partial_cmp(&(b.strike - target).abs())
-            .unwrap_or(std::cmp::Ordering::Equal))
+    contracts
+        .iter()
+        .min_by(|a, b| {
+            (a.strike - target)
+                .abs()
+                .partial_cmp(&(b.strike - target).abs())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
         .cloned()
 }

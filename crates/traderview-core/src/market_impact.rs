@@ -43,14 +43,16 @@ pub fn analyze(trades: &[TradeImpact], spike_bps: f64) -> MarketImpactReport {
     let bands = [
         (0.001, "< 0.1% ADV"),
         (0.005, "0.1-0.5% ADV"),
-        (0.01,  "0.5-1% ADV"),
-        (0.05,  "1-5% ADV"),
-        (0.10,  "5-10% ADV"),
+        (0.01, "0.5-1% ADV"),
+        (0.05, "1-5% ADV"),
+        (0.10, "5-10% ADV"),
         (f64::INFINITY, "> 10% ADV"),
     ];
     let mut by_bucket: Vec<Vec<f64>> = vec![Vec::new(); bands.len()];
     for t in trades {
-        if t.adv <= 0.0 { continue; }
+        if t.adv <= 0.0 {
+            continue;
+        }
         let pct = t.qty / t.adv;
         for (i, (cap, _)) in bands.iter().enumerate() {
             if pct <= *cap {
@@ -86,7 +88,9 @@ pub fn analyze(trades: &[TradeImpact], spike_bps: f64) -> MarketImpactReport {
             max_slippage_bps: mx,
         });
     }
-    report.impact_threshold_label = report.buckets.iter()
+    report.impact_threshold_label = report
+        .buckets
+        .iter()
         .find(|b| b.trade_count > 0 && b.avg_slippage_bps.abs() > spike_bps)
         .map(|b| b.label.clone());
     report
@@ -97,7 +101,11 @@ mod tests {
     use super::*;
 
     fn t(qty: f64, adv: f64, slip: f64) -> TradeImpact {
-        TradeImpact { qty, adv, slippage_bps: slip }
+        TradeImpact {
+            qty,
+            adv,
+            slippage_bps: slip,
+        }
     }
 
     #[test]
@@ -136,10 +144,7 @@ mod tests {
 
     #[test]
     fn no_spike_when_all_slippage_low() {
-        let trades = vec![
-            t(100.0, 1_000_000.0, -2.0),
-            t(1000.0, 1_000_000.0, -5.0),
-        ];
+        let trades = vec![t(100.0, 1_000_000.0, -2.0), t(1000.0, 1_000_000.0, -5.0)];
         let r = analyze(&trades, 30.0);
         assert!(r.impact_threshold_label.is_none());
     }
@@ -148,7 +153,7 @@ mod tests {
     fn zero_adv_trades_skipped() {
         // Trade with ADV=0 (data error) skipped — doesn't panic.
         let trades = vec![
-            t(100.0, 0.0, -10.0),    // skip
+            t(100.0, 0.0, -10.0), // skip
             t(100.0, 1_000_000.0, -2.0),
         ];
         let r = analyze(&trades, 30.0);
@@ -172,7 +177,7 @@ mod tests {
             t(40_000.0, 1_000_000.0, -20.0),
             t(50_000.0, 1_000_000.0, -30.0),
         ];
-        let r = analyze(&trades, 100.0);    // no spike threshold trip
+        let r = analyze(&trades, 100.0); // no spike threshold trip
         let bucket = r.buckets.iter().find(|b| b.label == "1-5% ADV").unwrap();
         assert_eq!(bucket.trade_count, 3);
         assert_eq!(bucket.avg_slippage_bps, -20.0);

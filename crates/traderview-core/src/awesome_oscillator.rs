@@ -11,12 +11,17 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 pub fn compute(bars: &[Bar], short: usize, long: usize) -> Vec<f64> {
     let n = bars.len();
     let mut out = vec![0.0; n];
-    if n < long || short == 0 || long == 0 || long < short { return out; }
+    if n < long || short == 0 || long == 0 || long < short {
+        return out;
+    }
     let medians: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
     for i in (long - 1)..n {
         let s: f64 = medians[(i + 1 - short)..=i].iter().sum::<f64>() / short as f64;
@@ -28,14 +33,22 @@ pub fn compute(bars: &[Bar], short: usize, long: usize) -> Vec<f64> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum AoCross { CrossedUp, CrossedDown, NoCross }
+pub enum AoCross {
+    CrossedUp,
+    CrossedDown,
+    NoCross,
+}
 
 pub fn detect_zero_cross(ao: &[f64]) -> Vec<AoCross> {
     let mut out = vec![AoCross::NoCross; ao.len()];
     for i in 1..ao.len() {
-        let cross = if ao[i - 1] < 0.0 && ao[i] >= 0.0 { AoCross::CrossedUp }
-            else if ao[i - 1] >= 0.0 && ao[i] < 0.0 { AoCross::CrossedDown }
-            else { AoCross::NoCross };
+        let cross = if ao[i - 1] < 0.0 && ao[i] >= 0.0 {
+            AoCross::CrossedUp
+        } else if ao[i - 1] >= 0.0 && ao[i] < 0.0 {
+            AoCross::CrossedDown
+        } else {
+            AoCross::NoCross
+        };
         out[i] = cross;
     }
     out
@@ -45,7 +58,9 @@ pub fn detect_zero_cross(ao: &[f64]) -> Vec<AoCross> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -56,15 +71,19 @@ mod tests {
     fn under_long_period_returns_zeros() {
         let bars = vec![b(10.0, 9.0); 10];
         let out = compute(&bars, 5, 34);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 
     #[test]
     fn ao_positive_in_strong_uptrend() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let p = i as f64;
-            b(p + 1.0, p - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let p = i as f64;
+                b(p + 1.0, p - 1.0)
+            })
+            .collect();
         let out = compute(&bars, 5, 34);
         // Recent SMA > long SMA in uptrend → AO > 0.
         assert!(out[39] > 0.0);
@@ -72,10 +91,12 @@ mod tests {
 
     #[test]
     fn ao_negative_in_strong_downtrend() {
-        let bars: Vec<Bar> = (1..=40).map(|i| {
-            let p = 50.0 - i as f64;
-            b(p + 1.0, p - 1.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| {
+                let p = 50.0 - i as f64;
+                b(p + 1.0, p - 1.0)
+            })
+            .collect();
         let out = compute(&bars, 5, 34);
         assert!(out[39] < 0.0);
     }
@@ -117,6 +138,8 @@ mod tests {
         // Defensive: invalid args.
         let bars = vec![b(10.0, 9.0); 40];
         let out = compute(&bars, 34, 5);
-        for v in &out { assert_eq!(*v, 0.0); }
+        for v in &out {
+            assert_eq!(*v, 0.0);
+        }
     }
 }

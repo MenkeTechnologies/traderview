@@ -21,8 +21,8 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CurvePoint {
-    pub t: f64,                // 0..1 along open→close
-    pub pnl_pct: f64,          // % return vs entry
+    pub t: f64,       // 0..1 along open→close
+    pub pnl_pct: f64, // % return vs entry
     pub time: DateTime<Utc>,
 }
 
@@ -58,9 +58,11 @@ pub struct CompareReport {
     pub fetched_at: DateTime<Utc>,
 }
 
-pub async fn compare(pool: &PgPool, user_id: Uuid, trade_ids: &[Uuid])
-    -> anyhow::Result<CompareReport>
-{
+pub async fn compare(
+    pool: &PgPool,
+    user_id: Uuid,
+    trade_ids: &[Uuid],
+) -> anyhow::Result<CompareReport> {
     let mut rows = Vec::with_capacity(trade_ids.len());
     for tid in trade_ids.iter().take(4) {
         let trade = match crate::trades::get(pool, *tid).await? {
@@ -68,49 +70,67 @@ pub async fn compare(pool: &PgPool, user_id: Uuid, trade_ids: &[Uuid])
             None => continue,
         };
         // Ownership check via account.
-        let owner: Option<(Uuid,)> = sqlx::query_as(
-            "SELECT user_id FROM accounts WHERE id = $1",
-        ).bind(trade.account_id).fetch_optional(pool).await?;
-        if owner.map(|(u,)| u) != Some(user_id) { continue; }
+        let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
+            .bind(trade.account_id)
+            .fetch_optional(pool)
+            .await?;
+        if owner.map(|(u,)| u) != Some(user_id) {
+            continue;
+        }
 
         let opened = trade.opened_at;
         let closed = trade.closed_at.unwrap_or_else(Utc::now);
         let hold = closed.signed_duration_since(opened);
 
-        let (interval, interval_str): (BarInterval, &'static str) =
-            if hold < Duration::hours(4) { (BarInterval::M1, "1m") }
-            else if hold < Duration::days(5) { (BarInterval::M5, "5m") }
-            else if hold < Duration::days(30) { (BarInterval::H1, "1h") }
-            else { (BarInterval::D1, "1d") };
+        let (interval, interval_str): (BarInterval, &'static str) = if hold < Duration::hours(4) {
+            (BarInterval::M1, "1m")
+        } else if hold < Duration::days(5) {
+            (BarInterval::M5, "5m")
+        } else if hold < Duration::days(30) {
+            (BarInterval::H1, "1h")
+        } else {
+            (BarInterval::D1, "1d")
+        };
 
         let pad = Duration::seconds(hold.num_seconds() / 20);
-        let bars = crate::prices::get_bars(
-            pool, &trade.symbol, interval, opened - pad, closed + pad,
-        ).await.unwrap_or_default();
+        let bars =
+            crate::prices::get_bars(pool, &trade.symbol, interval, opened - pad, closed + pad)
+                .await
+                .unwrap_or_default();
 
         let entry = dec(trade.entry_avg);
         let side_sign = match format!("{:?}", trade.side).to_lowercase().as_str() {
-            "short" => -1.0, _ => 1.0,
+            "short" => -1.0,
+            _ => 1.0,
         };
         let hold_secs = hold.num_seconds().max(1);
-        let curve: Vec<CurvePoint> = bars.iter()
+        let curve: Vec<CurvePoint> = bars
+            .iter()
             .filter(|b| b.bar_time >= opened && b.bar_time <= closed)
             .map(|b| {
                 let last = dec(b.close);
                 let pnl_pct = if entry > 0.0 {
                     (last - entry) / entry * 100.0 * side_sign
-                } else { 0.0 };
+                } else {
+                    0.0
+                };
                 let elapsed = (b.bar_time - opened).num_seconds().max(0);
                 CurvePoint {
                     t: elapsed as f64 / hold_secs as f64,
-                    pnl_pct, time: b.bar_time,
+                    pnl_pct,
+                    time: b.bar_time,
                 }
-            }).collect();
+            })
+            .collect();
 
         let r_multiple = match (trade.net_pnl, trade.risk_amount) {
             (Some(pnl), Some(risk)) => {
                 let r = dec(risk);
-                if r > 0.0 { Some(dec(pnl) / r) } else { None }
+                if r > 0.0 {
+                    Some(dec(pnl) / r)
+                } else {
+                    None
+                }
             }
             _ => None,
         };
@@ -121,7 +141,8 @@ pub async fn compare(pool: &PgPool, user_id: Uuid, trade_ids: &[Uuid])
             side: format!("{:?}", trade.side).to_lowercase(),
             status: format!("{:?}", trade.status).to_lowercase(),
             asset_class: format!("{:?}", trade.asset_class).to_lowercase(),
-            opened_at: opened, closed_at: trade.closed_at,
+            opened_at: opened,
+            closed_at: trade.closed_at,
             qty: dec(trade.qty),
             entry_avg: entry,
             exit_avg: trade.exit_avg.map(dec),
@@ -139,7 +160,12 @@ pub async fn compare(pool: &PgPool, user_id: Uuid, trade_ids: &[Uuid])
             curve,
         });
     }
-    Ok(CompareReport { rows, fetched_at: Utc::now() })
+    Ok(CompareReport {
+        rows,
+        fetched_at: Utc::now(),
+    })
 }
 
-fn dec(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}

@@ -66,8 +66,7 @@ pub fn detect_pairs(rows: &[DedupCandidate]) -> Vec<(Uuid, Uuid)> {
 fn is_transfer_pair(a: &DedupCandidate, b: &DedupCandidate, window: Duration) -> bool {
     // Opposite signs (one positive, one negative). Equal-magnitude check below
     // requires both to be non-zero, so this rejects two zero-amount rows too.
-    if (a.amount.is_sign_negative() == b.amount.is_sign_negative()) || a.amount.is_zero()
-    {
+    if (a.amount.is_sign_negative() == b.amount.is_sign_negative()) || a.amount.is_zero() {
         return false;
     }
 
@@ -86,7 +85,8 @@ fn is_transfer_pair(a: &DedupCandidate, b: &DedupCandidate, window: Duration) ->
     // Cross-account-kind preference: bank↔credit_card is the canonical case.
     // Same-kind pairs are still allowed but need a description tell.
     let cross_kind = a.account_kind != b.account_kind;
-    let payment_tell = has_payment_tell(&a.description_lower) || has_payment_tell(&b.description_lower);
+    let payment_tell =
+        has_payment_tell(&a.description_lower) || has_payment_tell(&b.description_lower);
 
     cross_kind || payment_tell
 }
@@ -119,7 +119,12 @@ mod tests {
     fn matches_bank_to_credit_card() {
         let rows = vec![
             cand(AccountKind::Bank, 15, -43210, "chase epay autopay"),
-            cand(AccountKind::CreditCard, 15, 43210, "automatic payment - thank you"),
+            cand(
+                AccountKind::CreditCard,
+                15,
+                43210,
+                "automatic payment - thank you",
+            ),
         ];
         let pairs = detect_pairs(&rows);
         assert_eq!(pairs.len(), 1);

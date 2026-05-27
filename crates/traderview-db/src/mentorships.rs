@@ -73,11 +73,7 @@ pub async fn mentees_of(pool: &PgPool, mentor_id: Uuid) -> anyhow::Result<Vec<Me
 }
 
 /// True iff `viewer_id` has an active mentor relationship over `owner_id`'s data.
-pub async fn can_view(
-    pool: &PgPool,
-    viewer_id: Uuid,
-    owner_id: Uuid,
-) -> anyhow::Result<bool> {
+pub async fn can_view(pool: &PgPool, viewer_id: Uuid, owner_id: Uuid) -> anyhow::Result<bool> {
     if viewer_id == owner_id {
         return Ok(true);
     }

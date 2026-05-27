@@ -11,5 +11,9 @@ pub fn router() -> Router<AppState> {
 }
 
 async fn snapshot(State(s): State<AppState>, _u: AuthUser) -> Result<Json<FearGreed>, ApiError> {
-    Ok(Json(traderview_db::fear_greed::snapshot(&s.pool).await.map_err(ApiError::Internal)?))
+    Ok(Json(
+        traderview_db::fear_greed::snapshot(&s.pool)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }

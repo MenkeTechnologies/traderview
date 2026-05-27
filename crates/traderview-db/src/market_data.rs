@@ -55,7 +55,17 @@ pub async fn quote(pool: &PgPool, symbol: &str) -> anyhow::Result<QuoteSnapshot>
     Ok(fresh)
 }
 
-type QuoteCacheRow = (String, Decimal, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<i64>, Option<String>, DateTime<Utc>);
+type QuoteCacheRow = (
+    String,
+    Decimal,
+    Option<Decimal>,
+    Option<Decimal>,
+    Option<Decimal>,
+    Option<Decimal>,
+    Option<i64>,
+    Option<String>,
+    DateTime<Utc>,
+);
 
 async fn read_quote_cache(pool: &PgPool, symbol: &str) -> anyhow::Result<Option<QuoteSnapshot>> {
     let row: Option<QuoteCacheRow>
@@ -66,17 +76,29 @@ async fn read_quote_cache(pool: &PgPool, symbol: &str) -> anyhow::Result<Option<
         .bind(symbol)
         .fetch_optional(pool)
         .await?;
-    Ok(row.map(|(symbol, price, prev_close, change_pct, day_high, day_low, volume, market_state, fetched_at)| QuoteSnapshot {
-        symbol,
-        price: dec_f64(price),
-        prev_close: prev_close.map(dec_f64),
-        change_pct: change_pct.map(dec_f64),
-        day_high: day_high.map(dec_f64),
-        day_low: day_low.map(dec_f64),
-        volume,
-        market_state,
-        fetched_at,
-    }))
+    Ok(row.map(
+        |(
+            symbol,
+            price,
+            prev_close,
+            change_pct,
+            day_high,
+            day_low,
+            volume,
+            market_state,
+            fetched_at,
+        )| QuoteSnapshot {
+            symbol,
+            price: dec_f64(price),
+            prev_close: prev_close.map(dec_f64),
+            change_pct: change_pct.map(dec_f64),
+            day_high: day_high.map(dec_f64),
+            day_low: day_low.map(dec_f64),
+            volume,
+            market_state,
+            fetched_at,
+        },
+    ))
 }
 
 async fn write_quote_cache(pool: &PgPool, q: &QuoteSnapshot) -> anyhow::Result<()> {
@@ -114,12 +136,21 @@ async fn fetch_quote_yahoo(symbol: &str) -> anyhow::Result<QuoteSnapshot> {
         anyhow::bail!("chart HTTP {}", resp.status());
     }
     let raw: ChartResp = resp.json().await?;
-    let r = raw.chart.result.and_then(|mut v| v.pop())
+    let r = raw
+        .chart
+        .result
+        .and_then(|mut v| v.pop())
         .ok_or_else(|| anyhow::anyhow!("empty result"))?;
     let m = r.meta;
     let price = m.regular_market_price.unwrap_or(0.0);
     let prev = m.chart_previous_close.or(m.previous_close);
-    let change_pct = prev.and_then(|p| if p > 0.0 { Some((price - p) / p * 100.0) } else { None });
+    let change_pct = prev.and_then(|p| {
+        if p > 0.0 {
+            Some((price - p) / p * 100.0)
+        } else {
+            None
+        }
+    });
     Ok(QuoteSnapshot {
         symbol: symbol.into(),
         price,
@@ -142,15 +173,25 @@ pub async fn quotes(pool: &PgPool, symbols: &[String]) -> Vec<QuoteSnapshot> {
         let sym = s.clone();
         async move { quote(&pool, &sym).await.ok() }
     });
-    futures_util::future::join_all(futs).await.into_iter().flatten().collect()
+    futures_util::future::join_all(futs)
+        .await
+        .into_iter()
+        .flatten()
+        .collect()
 }
 
 #[derive(serde::Deserialize)]
-struct ChartResp { chart: ChartInner }
+struct ChartResp {
+    chart: ChartInner,
+}
 #[derive(serde::Deserialize)]
-struct ChartInner { result: Option<Vec<ChartResult>> }
+struct ChartInner {
+    result: Option<Vec<ChartResult>>,
+}
 #[derive(serde::Deserialize)]
-struct ChartResult { meta: ChartMeta }
+struct ChartResult {
+    meta: ChartMeta,
+}
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChartMeta {
@@ -188,15 +229,32 @@ pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<ser
 }
 
 pub async fn fundamentals(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(symbol, &[
-        "summaryDetail", "financialData", "defaultKeyStatistics",
-        "incomeStatementHistory", "balanceSheetHistory", "cashflowStatementHistory",
-        "assetProfile",
-    ]).await
+    quote_summary(
+        symbol,
+        &[
+            "summaryDetail",
+            "financialData",
+            "defaultKeyStatistics",
+            "incomeStatementHistory",
+            "balanceSheetHistory",
+            "cashflowStatementHistory",
+            "assetProfile",
+        ],
+    )
+    .await
 }
 
 pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(symbol, &["earnings", "earningsHistory", "earningsTrend", "calendarEvents"]).await
+    quote_summary(
+        symbol,
+        &[
+            "earnings",
+            "earningsHistory",
+            "earningsTrend",
+            "calendarEvents",
+        ],
+    )
+    .await
 }
 
 pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> {
@@ -204,7 +262,15 @@ pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> 
 }
 
 pub async fn insiders(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(symbol, &["insiderTransactions", "insiderHolders", "netSharePurchaseActivity"]).await
+    quote_summary(
+        symbol,
+        &[
+            "insiderTransactions",
+            "insiderHolders",
+            "netSharePurchaseActivity",
+        ],
+    )
+    .await
 }
 
 pub async fn dividends(symbol: &str) -> anyhow::Result<serde_json::Value> {
@@ -212,7 +278,15 @@ pub async fn dividends(symbol: &str) -> anyhow::Result<serde_json::Value> {
 }
 
 pub async fn holders(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(symbol, &["majorHoldersBreakdown", "institutionOwnership", "fundOwnership"]).await
+    quote_summary(
+        symbol,
+        &[
+            "majorHoldersBreakdown",
+            "institutionOwnership",
+            "fundOwnership",
+        ],
+    )
+    .await
 }
 
 // ===========================================================================
@@ -241,19 +315,28 @@ pub async fn news(symbol: &str, count: usize) -> anyhow::Result<Vec<NewsItem>> {
     }
     let v: serde_json::Value = resp.json().await?;
     let news_arr = v["news"].as_array().cloned().unwrap_or_default();
-    Ok(news_arr.into_iter().map(|n| NewsItem {
-        uuid: n["uuid"].as_str().map(|s| s.into()),
-        title: n["title"].as_str().map(|s| s.into()),
-        publisher: n["publisher"].as_str().map(|s| s.into()),
-        link: n["link"].as_str().map(|s| s.into()),
-        provider_publish_time: n["providerPublishTime"].as_i64(),
-        thumbnail: n["thumbnail"]["resolutions"][0]["url"].as_str().map(|s| s.into()),
-    }).collect())
+    Ok(news_arr
+        .into_iter()
+        .map(|n| NewsItem {
+            uuid: n["uuid"].as_str().map(|s| s.into()),
+            title: n["title"].as_str().map(|s| s.into()),
+            publisher: n["publisher"].as_str().map(|s| s.into()),
+            link: n["link"].as_str().map(|s| s.into()),
+            provider_publish_time: n["providerPublishTime"].as_i64(),
+            thumbnail: n["thumbnail"]["resolutions"][0]["url"]
+                .as_str()
+                .map(|s| s.into()),
+        })
+        .collect())
 }
 
 // ===========================================================================
 // Helpers
 // ===========================================================================
 
-fn dec_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
-fn enc(s: &str) -> String { s.replace('^', "%5E").replace('=', "%3D") }
+fn dec_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
+fn enc(s: &str) -> String {
+    s.replace('^', "%5E").replace('=', "%3D")
+}
