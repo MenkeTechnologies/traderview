@@ -31,6 +31,7 @@ pub mod seed_rules;
 pub mod self_employment_tax;
 pub mod sheet;
 pub mod subscription_detector;
+pub mod tax_equivalent_yield;
 
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;

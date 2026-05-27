@@ -27,6 +27,7 @@ pub mod equity_regime;
 pub mod excursion;
 pub mod exit_timing;
 pub mod fibonacci;
+pub mod futures_roll;
 pub mod gex;
 pub mod goal_tracker;
 pub mod greeks;
