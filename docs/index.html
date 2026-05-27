@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri v2 shell. Embedded Postgres bootstrap, axum router, vanilla JS + uPlot. 86-tile launcher across 82 view modules, 304 axum routes, 67 tables, 29 migrations. Webull + Lightspeed import, Finnhub WS scanner, Nasdaq halts + SEC EDGAR + PR-wire catalyst radar.">
+  <meta name="description" content="traderview — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri v2 shell. Embedded Postgres bootstrap, axum router, vanilla JS + uPlot. 86-tile launcher across 84 view modules, 254 axum routes, 69 tables, 31 migrations. Webull + Lightspeed import, Finnhub WS scanner, Nasdaq halts + SEC EDGAR + PR-wire catalyst radar.">
   <title>TraderView — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -168,7 +168,7 @@
             <a href="https://github.com/MenkeTechnologies/traderview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
           <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 12 broker importers · 86-tile launcher · MIT</p>
-          <p class="docs-build-line"><span id="tvLoc">30,075 Rust LOC · 6 library crates + Tauri shell · 67 tables · 29 migrations · 304 axum routes · 82 view modules · 86 launcher tiles · 15,042 JS LOC · 1,937 CSS LOC</span></p>
+          <p class="docs-build-line"><span id="tvLoc">61,830 Rust LOC · 6 library crates + Tauri shell · 69 tables · 31 migrations · 254 axum routes · 84 view modules · 86 launcher tiles · 16,220 JS LOC · 1,990 CSS LOC</span></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -189,7 +189,7 @@
 
     <main class="tutorial-main">
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — FULL DESKTOP TRADING SUITE</h2>
-      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share six library crates and the vanilla JS + uPlot frontend. 82 view modules across an 86-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
+      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share six library crates and the vanilla JS + uPlot frontend. 84 view modules across an 86-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
 
       <section class="tutorial-section">
         <h2>Quickstart</h2>
@@ -265,7 +265,7 @@ cargo run -p traderview-web --bin server
             <tr><td><code>traderview-expense</code></td><td>1,640</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
             <tr><td><code>traderview-ocr</code></td><td>640</td><td>Receipt OCR via the system <code>tesseract</code> binary + image preprocessing (binarize, deskew). Extracts merchant / amount / date for the expense matcher.</td></tr>
             <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>366</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
-            <tr class="total"><td><strong>Total</strong></td><td><strong>30,075</strong></td><td>Plus 15,042 LOC vanilla JS (82 view modules) and 1,937 LOC CSS. No bundler, no npm.</td></tr>
+            <tr class="total"><td><strong>Total</strong></td><td><strong>61,830</strong></td><td>Plus 16,220 LOC vanilla JS (84 view modules) and 1,990 LOC CSS. No bundler, no npm.</td></tr>
           </tbody>
         </table>
       </section>
@@ -333,7 +333,7 @@ cargo run -p traderview-web --bin server
 
       <section class="tutorial-section">
         <h2>Frontend — Vanilla JS + uPlot, 82 Views, 86-Tile Launcher</h2>
-        <p>Zero npm. Zero bundler. Zero JS framework. <strong>15,042 LOC vanilla ES modules + 1,937 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
+        <p>Zero npm. Zero bundler. Zero JS framework. <strong>16,220 LOC vanilla ES modules + 1,990 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
         <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 86 tiles across 8 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
         <div class="tv-card-grid">
           <div class="tv-card">
