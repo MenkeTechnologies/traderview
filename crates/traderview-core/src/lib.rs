@@ -6,6 +6,7 @@
 
 pub mod backtest;
 pub mod bracket_order;
+pub mod buying_power;
 pub mod correlation;
 pub mod discipline_score;
 pub mod dow_hour_heatmap;

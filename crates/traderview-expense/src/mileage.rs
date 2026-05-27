@@ -139,6 +139,55 @@ pub fn report(trips: &[Trip]) -> MileageReport {
     r
 }
 
+// ---------------------------------------------------------------------------
+// Trip presets — named recurring routes the user can one-click log.
+// ---------------------------------------------------------------------------
+
+/// A named trip — "home → office" round-trip, "home → broker meetup", etc.
+/// User saves once with the distance, then logs an instance with one click
+/// instead of typing miles every day. The DB persists `TripPreset` rows;
+/// `apply_preset` builds a `Trip` for a given date.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TripPreset {
+    pub name: String,
+    pub miles: Decimal,
+    pub purpose: MileagePurpose,
+    pub note: String,
+}
+
+pub fn apply_preset(preset: &TripPreset, date: NaiveDate) -> Trip {
+    Trip {
+        date,
+        miles: preset.miles,
+        purpose: preset.purpose,
+        note: preset.note.clone(),
+    }
+}
+
+/// Common shipped defaults users can install with one click.
+pub fn default_presets() -> Vec<TripPreset> {
+    vec![
+        TripPreset {
+            name: "Home ↔ Office (round-trip)".into(),
+            miles: Decimal::from(20),
+            purpose: MileagePurpose::Business,
+            note: "daily commute".into(),
+        },
+        TripPreset {
+            name: "Home ↔ Broker meetup".into(),
+            miles: Decimal::from(15),
+            purpose: MileagePurpose::Business,
+            note: "broker / advisor visit".into(),
+        },
+        TripPreset {
+            name: "Conference travel (typical)".into(),
+            miles: Decimal::from(50),
+            purpose: MileagePurpose::Business,
+            note: "trading conference".into(),
+        },
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -244,5 +293,46 @@ mod tests {
             assert_eq!(r.charitable, "0.14",
                 "charitable rate changed in {} — verify Congress passed a law", r.effective_from);
         }
+    }
+
+    // ─── Trip presets ─────────────────────────────────────────────────────
+
+    #[test]
+    fn apply_preset_builds_a_trip_with_preset_fields() {
+        let p = TripPreset {
+            name: "test".into(),
+            miles: d("12.5"),
+            purpose: MileagePurpose::Business,
+            note: "preset note".into(),
+        };
+        let day = NaiveDate::from_ymd_opt(2026, 5, 27).unwrap();
+        let t = apply_preset(&p, day);
+        assert_eq!(t.date, day);
+        assert_eq!(t.miles, d("12.5"));
+        assert_eq!(t.purpose, MileagePurpose::Business);
+        assert_eq!(t.note, "preset note");
+    }
+
+    #[test]
+    fn default_presets_ship_at_least_three_useful_routes() {
+        let presets = default_presets();
+        assert!(presets.len() >= 3);
+        for p in &presets {
+            assert!(!p.name.is_empty(), "preset must have a name");
+            assert!(p.miles > Decimal::ZERO, "preset miles must be positive");
+            assert_eq!(p.purpose, MileagePurpose::Business,
+                "shipped default presets are all business — personal trips not auto-defaulted");
+        }
+    }
+
+    #[test]
+    fn applied_preset_round_trips_through_report() {
+        // The whole point — one-click an applied preset and the deduction
+        // emerges from the same `report` path as hand-entered trips.
+        let p = &default_presets()[0];                  // Home ↔ Office, 20 mi
+        let trip = apply_preset(p, NaiveDate::from_ymd_opt(2024, 6, 15).unwrap());
+        let r = report(&[trip]);
+        // 20 mi × $0.67 (2024 rate) = $13.40.
+        assert_eq!(r.deduction_business, d("13.40"));
     }
 }
