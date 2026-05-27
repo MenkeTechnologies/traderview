@@ -94,6 +94,7 @@ pub mod per_symbol_slippage;
 pub mod pivots;
 pub mod portfolio_greeks;
 pub mod position_aging;
+pub mod position_irr;
 pub mod probability_of_touch;
 pub mod profit_factor;
 pub mod put_call_ratio;
