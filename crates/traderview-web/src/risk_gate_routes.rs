@@ -20,6 +20,21 @@ pub fn router() -> Router<AppState> {
         .route("/rules/:id/toggle", post(toggle_rule))
         .route("/rules/install-preset", post(install_preset))
         .route("/evaluate",        post(evaluate_proposed))
+        .route("/fires",           get(list_fires))
+}
+
+#[derive(Deserialize)]
+struct FiresQuery { #[serde(default = "default_fires_limit")] limit: i64 }
+fn default_fires_limit() -> i64 { 100 }
+
+async fn list_fires(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<FiresQuery>,
+) -> Result<Json<Vec<risk_rules::RiskFire>>, ApiError> {
+    let rows = risk_rules::recent_fires(&s.pool, user.id, q.limit)
+        .await.map_err(ApiError::Internal)?;
+    Ok(Json(rows))
 }
 
 // ---------------------------------------------------------------------------
@@ -155,6 +170,20 @@ async fn evaluate_proposed(
         .await.map_err(ApiError::Internal)?;
 
     let decision = evaluate(&req.proposed, &ctx, &rules, Utc::now());
+
+    // Persist the fire (only when at least one rule triggered — log_fire
+    // short-circuits empty-violation decisions). Background-spawn so we
+    // never block the response on an audit-log insert.
+    if !decision.violations.is_empty() {
+        let pool = s.pool.clone();
+        let user_id = user.id;
+        let account_id = req.account_id;
+        let symbol = req.proposed.symbol.clone();
+        let decision_clone = decision.clone();
+        tokio::spawn(async move {
+            let _ = risk_rules::log_fire(&pool, user_id, Some(account_id), &symbol, &decision_clone).await;
+        });
+    }
 
     // If any Block fired, fan-out to every enabled webhook so the user
     // sees the veto in Discord/Slack/etc. Fire-and-forget — never block

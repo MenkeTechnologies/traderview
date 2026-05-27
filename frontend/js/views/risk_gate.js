@@ -19,6 +19,7 @@ const RULE_TYPES = [
     { id: 'require_stop_loss',          label: 'Require stop loss (warning only)',     fields: [] },
     { id: 'regular_trading_hours_only', label: 'Block outside RTH (09:30-16:00 ET, Mon-Fri)', fields: [] },
     { id: 'min_position_size_dollars',  label: 'Min notional $ (fat-finger guard)',    fields: [['min_dollars', 'number', '100']] },
+    { id: 'kill_switch',                label: 'Kill switch (always blocks)',          fields: [] },
 ];
 
 export async function renderRiskGate(mount, state) {
@@ -33,6 +34,13 @@ export async function renderRiskGate(mount, state) {
             <code>discipline</code> tells you what you already broke; this stops the next one.
             Engine: <code>traderview_core::risk_gate</code> (pure-compute, 18 unit tests).
         </p>
+
+        <div class="chart-panel" style="border-left:3px solid #ff2a6d">
+            <h2>🛑 Kill switch</h2>
+            <p class="muted small">Halt every trade entry across all rules with one click. Toggles a <code>kill_switch</code> rule that always blocks. Disable here when ready to resume.</p>
+            <button id="rg-kill" class="primary" type="button" style="background:#ff2a6d">Toggle kill switch</button>
+            <span id="rg-kill-state" class="muted small" style="margin-left:10px">checking…</span>
+        </div>
 
         <div class="chart-panel">
             <h2>Today's compliance snapshot</h2>
@@ -82,6 +90,16 @@ export async function renderRiskGate(mount, state) {
                 </label>
                 <button class="primary" type="submit">Add</button>
             </form>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Recent fires <span class="muted small">— rules that saved you</span></h2>
+            <table class="trades" id="rg-fires">
+                <thead><tr>
+                    <th>Time</th><th>Symbol</th><th>Outcome</th><th>Rules that fired</th>
+                </tr></thead>
+                <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+            </table>
         </div>
 
         <div class="chart-panel">
@@ -168,6 +186,44 @@ export async function renderRiskGate(mount, state) {
             } catch (e) { alert('Install failed: ' + e.message); }
         });
     });
+
+    // Kill switch toggle — toggles the existing kill_switch rule if present,
+    // installs one otherwise.
+    const killBtn = mount.querySelector('#rg-kill');
+    const killState = mount.querySelector('#rg-kill-state');
+    const refreshKillState = async () => {
+        try {
+            const rules = await api.riskRules();
+            if (!viewIsCurrent(tok)) return;
+            const ks = rules.find(r => r.rule.type === 'kill_switch');
+            if (!ks) {
+                killState.textContent = 'not installed — click to enable';
+                killBtn.dataset.id = '';
+                killBtn.dataset.enabled = '';
+            } else {
+                killState.textContent = ks.enabled ? '🛑 ACTIVE — all trades blocked' : 'installed, disabled';
+                killBtn.dataset.id = ks.id;
+                killBtn.dataset.enabled = ks.enabled ? '1' : '0';
+            }
+        } catch (e) { killState.textContent = 'Error: ' + e.message; }
+    };
+    killBtn.addEventListener('click', async () => {
+        try {
+            if (!killBtn.dataset.id) {
+                await api.createRiskRule({ rule: { type: 'kill_switch' }, account_id: null });
+            } else {
+                const wasEnabled = killBtn.dataset.enabled === '1';
+                await api.toggleRiskRule(killBtn.dataset.id, !wasEnabled);
+            }
+            if (!viewIsCurrent(tok)) return;
+            await refreshKillState();
+            await reloadRules(mount, tok);
+        } catch (e) { alert('Kill switch toggle failed: ' + e.message); }
+    });
+    await refreshKillState();
+
+    // Load fire log.
+    await reloadFires(mount, tok);
 
     // Load existing rules.
     await reloadRules(mount, tok);
@@ -270,6 +326,33 @@ async function reloadRules(mount, tok) {
 function stripType(rule) {
     const { type: _, ...rest } = rule;
     return rest;
+}
+
+async function reloadFires(mount, tok) {
+    const tb = mount.querySelector('#rg-fires tbody');
+    if (!tb) return;
+    try {
+        const fires = await api.riskFires(50);
+        if (!viewIsCurrent(tok)) return;
+        if (!fires.length) {
+            tb.innerHTML = '<tr><td colspan="4" class="muted">no fires yet — every gate check is recorded here</td></tr>';
+            return;
+        }
+        tb.innerHTML = fires.map(f => {
+            const rules = (f.decision.violations || [])
+                .map(v => `<span class="halt-code halt-${v.severity === 'block' ? 'volatility' : 'news'}">${esc(v.severity)}</span> ${esc(v.rule)}`)
+                .join('<br>');
+            return `
+                <tr>
+                    <td>${new Date(f.fired_at).toLocaleString(undefined, { hour12: false })}</td>
+                    <td><strong>${esc(f.symbol)}</strong></td>
+                    <td>${f.blocked ? '<strong style="color:#ff2a6d">BLOCKED</strong>' : '<span class="muted">warned, allowed</span>'}</td>
+                    <td>${rules}</td>
+                </tr>`;
+        }).join('');
+    } catch (err) {
+        tb.innerHTML = `<tr><td colspan="4" class="muted">Error: ${esc(err.message)}</td></tr>`;
+    }
 }
 
 function renderDecision(mount, d) {

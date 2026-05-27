@@ -312,6 +312,7 @@ export const api = {
             method: 'POST',
             body: JSON.stringify({ preset, account_id }),
         }),
+    riskFires: (limit = 100) => request(`/risk-gate/fires?limit=${limit}`),
 
     // mentorships
     mentorshipRequest: (mentor_id, scope = 'read') =>

@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use traderview_core::risk_gate::{GateContext, RecentTrade, RiskRule};
+use traderview_core::risk_gate::{GateContext, GateDecision, RecentTrade, RiskRule};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,6 +135,65 @@ pub async fn build_context(pool: &PgPool, account_id: Uuid)
     })
 }
 
+// ---------------------------------------------------------------------------
+// Audit log — every fire of the Risk Gate where at least one rule triggered.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RiskFire {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub account_id: Option<Uuid>,
+    pub symbol: String,
+    pub decision: GateDecision,
+    pub blocked: bool,
+    pub fired_at: DateTime<Utc>,
+}
+
+/// Persist a gate decision. Only inserts when at least one rule fired —
+/// no point logging every allow-with-no-violations call.
+pub async fn log_fire(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Option<Uuid>,
+    symbol: &str,
+    decision: &GateDecision,
+) -> anyhow::Result<()> {
+    if decision.violations.is_empty() { return Ok(()); }
+    sqlx::query(
+        "INSERT INTO risk_fires (user_id, account_id, symbol, decision, blocked)
+         VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(user_id)
+    .bind(account_id)
+    .bind(symbol)
+    .bind(serde_json::to_value(decision)?)
+    .bind(!decision.allow)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Read recent fires for a user, newest first. `limit` capped at 500.
+pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
+    -> anyhow::Result<Vec<RiskFire>>
+{
+    let limit = limit.clamp(1, 500);
+    let rows: Vec<(Uuid, Uuid, Option<Uuid>, String, serde_json::Value, bool, DateTime<Utc>)> = sqlx::query_as(
+        "SELECT id, user_id, account_id, symbol, decision, blocked, fired_at
+           FROM risk_fires WHERE user_id = $1
+          ORDER BY fired_at DESC LIMIT $2",
+    )
+    .bind(user_id).bind(limit)
+    .fetch_all(pool).await?;
+    let mut out = Vec::with_capacity(rows.len());
+    for (id, user_id, account_id, symbol, dj, blocked, fired_at) in rows {
+        let decision: GateDecision = serde_json::from_value(dj)?;
+        out.push(RiskFire { id, user_id, account_id, symbol, decision, blocked, fired_at });
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -190,6 +249,19 @@ mod tests {
         // table scan once the rule count grows past a few thousand.
         assert!(MIGRATION_0030.contains("risk_rules_user_idx"),
             "must index by user_id for the per-user list query");
+    }
+
+    // 0031 — risk_fires audit log.
+    const MIGRATION_0031: &str = include_str!("../../../migrations/0031_risk_fires.sql");
+
+    #[test]
+    fn migration_0031_creates_risk_fires_table_with_decision_jsonb() {
+        assert!(MIGRATION_0031.contains("CREATE TABLE risk_fires"));
+        // decision column must be JSONB so we can later GROUP BY rule name.
+        assert!(MIGRATION_0031.contains("decision") && MIGRATION_0031.contains("JSONB"));
+        // blocked bool column is the fast-path index target.
+        assert!(MIGRATION_0031.contains("blocked"));
+        assert!(MIGRATION_0031.contains("risk_fires_blocked_idx"));
     }
 
     #[test]

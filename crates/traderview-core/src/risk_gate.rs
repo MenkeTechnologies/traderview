@@ -98,6 +98,10 @@ pub enum RiskRule {
     /// × multiplier) is BELOW `min_dollars` — protects against fat-finger
     /// entries that are too small to be meaningful and would just burn fees.
     MinPositionSizeDollars { min_dollars: Decimal },
+    /// Hard kill switch — always blocks. Install + enable to halt all
+    /// trading without uninstalling other rules. Toggle off when ready
+    /// to resume.
+    KillSwitch,
 }
 
 // ---------------------------------------------------------------------------
@@ -309,6 +313,11 @@ fn check_rule(
                 })
             } else { None }
         }
+        RiskRule::KillSwitch => Some(Violation {
+            rule: "kill_switch".into(),
+            severity: Severity::Block,
+            message: "kill switch enabled — disable in Risk Gate to resume trading".into(),
+        }),
     }
 }
 
@@ -673,6 +682,7 @@ mod tests {
             RiskRule::RequireStopLoss,
             RiskRule::RegularTradingHoursOnly,
             RiskRule::MinPositionSizeDollars { min_dollars: d("100") },
+            RiskRule::KillSwitch,
         ] {
             let s = serde_json::to_string(&rule).unwrap();
             let back: RiskRule = serde_json::from_str(&s)
@@ -773,6 +783,35 @@ mod tests {
         let rules = vec![RiskRule::MinPositionSizeDollars { min_dollars: d("15000") }];
         let dec = evaluate(&proposed(), &ctx(), &rules, now());
         assert!(dec.allow, "$15,000 notional at $15,000 floor should allow (>=)");
+    }
+
+    // ─── KillSwitch ──────────────────────────────────────────────────────
+
+    #[test]
+    fn kill_switch_blocks_unconditionally() {
+        let rules = vec![RiskRule::KillSwitch];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now());
+        assert!(!dec.allow);
+        assert_eq!(dec.violations.len(), 1);
+        assert_eq!(dec.violations[0].rule, "kill_switch");
+    }
+
+    #[test]
+    fn kill_switch_blocks_even_with_perfect_setup() {
+        // Even a textbook valid trade — plan attached, stop set, well
+        // under every cap — must still be blocked by the kill switch.
+        let mut p = proposed();
+        p.has_attached_plan = true;
+        p.stop_loss = Some(d("149.95"));   // tiny $5 risk
+        let rules = vec![
+            RiskRule::MaxLossPerTradePct { pct: d("10") },
+            RiskRule::MaxLossPerDayPct   { pct: d("10") },
+            RiskRule::RequirePlanBeforeTrade,
+            RiskRule::RequireStopLoss,
+            RiskRule::KillSwitch,
+        ];
+        let dec = evaluate(&p, &ctx(), &rules, now());
+        assert!(!dec.allow, "kill switch must veto regardless of other rules");
     }
 
     // ─── Presets ─────────────────────────────────────────────────────────
