@@ -11,10 +11,15 @@ pub mod apple;
 pub mod boa;
 pub mod chase;
 pub mod dedup;
+pub mod home_office;
+pub mod mileage;
 pub mod normalize;
+pub mod quarterly_tax;
 pub mod rules;
 pub mod seed_rules;
+pub mod self_employment_tax;
 pub mod sheet;
+pub mod subscription_detector;
 
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
