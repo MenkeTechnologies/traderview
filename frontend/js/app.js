@@ -71,6 +71,7 @@ import { renderGoals } from './views/goals.js';
 import { renderRDist } from './views/r_distribution.js';
 import { renderTradeReviews } from './views/trade_reviews.js';
 import { renderEquityForecast } from './views/equity_forecast.js';
+import { renderFillQuality } from './views/fill_quality.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -262,6 +263,7 @@ export async function dispatch() {
             case 'r-dist':         await renderRDist(mount, state); break;
             case 'reviews':        await renderTradeReviews(mount, state); break;
             case 'forecast':       await renderEquityForecast(mount, state); break;
+            case 'fill-quality':   await renderFillQuality(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

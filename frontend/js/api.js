@@ -397,6 +397,9 @@ export const api = {
     equityForecast: (body) =>
         request('/equity-forecast', { method: 'POST', body: JSON.stringify(body) }),
 
+    // Fill quality (bar-level slippage approximation)
+    fillQuality: (accountId) => request(`/fill-quality/${accountId}`),
+
     // Trade reviews (forced reflection on |R|>=2 trades)
     listReviews:    (limit = 50) => request(`/trade-reviews?limit=${limit}`),
     reviewsNeeded:  (accountId, limit = 50) =>

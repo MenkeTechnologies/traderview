@@ -30,6 +30,7 @@ mod equity_forecast;
 mod executions;
 mod export;
 mod fear_greed;
+mod fill_quality;
 mod goals;
 mod heatmap;
 mod hotkeys;
@@ -143,6 +144,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(r_distribution::router())
         .merge(trade_reviews::router())
         .merge(equity_forecast::router())
+        .merge(fill_quality::router())
 }
 
 mod helpers {
