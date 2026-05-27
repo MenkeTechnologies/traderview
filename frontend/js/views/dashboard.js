@@ -55,17 +55,51 @@ export async function renderDashboard(mount, state) {
             <h2>🛡 Risk Gate · today</h2>
             <div id="dash-rg" class="muted small">loading…</div>
         </div>
+
+        <div class="chart-panel">
+            <h2>📐 Discipline score · last 7 days</h2>
+            <div id="dash-disc">loading…</div>
+        </div>
     `;
 
     const eqEl = mount.querySelector('#equity-chart');
     const calEl = mount.querySelector('#mini-cal');
     const wmEl = mount.querySelector('#world-markets-mount');
     const rgEl = mount.querySelector('#dash-rg');
+    const discEl = mount.querySelector('#dash-disc');
     if (eqEl) equityChart(eqEl, equity);
     if (calEl) renderMiniCalendar(calEl, cal);
     if (wmEl) renderWorldMarkets(wmEl);
     if (rgEl) loadRiskGateBadge(rgEl);
+    if (discEl && state.accountId) loadDisciplineScore(discEl, state.accountId);
 }
+
+async function loadDisciplineScore(el, accountId) {
+    try {
+        const s = await api.disciplineScore(accountId, 7);
+        const color = s.score >= 90 ? '#39ff14'
+                    : s.score >= 75 ? '#ffb800'
+                                    : '#ff2a6d';
+        el.innerHTML = `
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+                <div style="font-size:48px;font-weight:700;color:${color};line-height:1">${s.score}</div>
+                <div style="font-size:24px;color:${color}">${esc(s.grade)}</div>
+                <div class="muted small" style="flex:1;min-width:200px">
+                    stop set ${s.component_stop_set}/100 &middot;
+                    stop honored ${s.component_stop_honored}/100 &middot;
+                    plan ${s.component_plan_adherence}/100 &middot;
+                    gate restraint ${s.component_gate_restraint}/100
+                    <br>${s.gate_blocks} block${s.gate_blocks === 1 ? '' : 's'},
+                    ${s.gate_warnings} warning${s.gate_warnings === 1 ? '' : 's'} in the window
+                </div>
+            </div>
+        `;
+    } catch (_) {
+        el.textContent = '— (discipline score unavailable)';
+    }
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 async function loadRiskGateBadge(el) {
     try {

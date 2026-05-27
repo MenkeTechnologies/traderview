@@ -529,6 +529,8 @@ export const api = {
 
     // Streaks + discipline scorecard
     discipline: (accountId) => request(`/discipline/${accountId}`),
+    disciplineScore: (accountId, days = 7) =>
+        request(`/discipline/${accountId}/score?days=${days}`),
 
     // R-multiple distribution + SQN + per-tag breakdown
     rDistribution: (accountId) => request(`/r-distribution/${accountId}`),
