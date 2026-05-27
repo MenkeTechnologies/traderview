@@ -554,4 +554,208 @@ mod tests {
         assert_eq!(out[0].side, Side::Short);
         assert_eq!(out[1].side, Side::Cover);
     }
+
+    // -----------------------------------------------------------------------
+    // Per-broker round-trip tests.
+    // Each constructs a CSV using the real header names from each MAP_* and
+    // asserts the resulting ParsedExecution rows decode the symbol, side,
+    // qty, price and (where utc_assumed=true) executed_at correctly.
+    //
+    // For maps with utc_assumed=false we avoid asserting on executed_at to
+    // keep the tests host-timezone-independent (parse_datetime feeds the
+    // naive timestamp through Utc::from_local_datetime in that branch).
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn webull_round_trip() {
+        let csv = "Symbol,Side,Filled,Avg Price,Commission,Filled Time,Order ID\n\
+                   AAPL,Buy,200,182.45,0.00,01/15/2026 09:31:22,WB-1001\n\
+                   AAPL,Sell,200,184.10,0.00,01/15/2026 14:55:10,WB-1002\n";
+        let out = WebullParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "AAPL");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "200");
+        assert_eq!(out[0].price.to_string(), "182.45");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("WB-1001"));
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn lightspeed_round_trip() {
+        let csv = "Symbol,Side,Shares,Price,Commission,Exec Time,Order Ref\n\
+                   NVDA,buy,50,910.25,0.45,2026-03-04 10:02:15,LS-77\n\
+                   NVDA,sell,50,915.00,0.45,2026-03-04 10:05:00,LS-78\n";
+        let out = LightspeedParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "NVDA");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "50");
+        assert_eq!(out[0].price.to_string(), "910.25");
+        assert_eq!(out[0].fee.to_string(), "0.45");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("LS-77"));
+        // Lightspeed map sets utc_assumed=true, so the timestamp is stable.
+        assert_eq!(
+            out[0].executed_at.to_rfc3339(),
+            "2026-03-04T10:02:15+00:00"
+        );
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn ibkr_flex_options_row() {
+        // Exercise the options-aware fields (assetcategory / put-call / strike / expiry).
+        let csv = "Symbol,Buy/Sell,Quantity,TradePrice,IBCommission,DateTime,OrderID,\
+                   AssetCategory,Put/Call,Strike,Expiry,Multiplier\n\
+                   SPY,BUY,2,3.40,-1.05,2026-03-04 10:02:15,IB-9000,\
+                   OPT,C,520,2026-03-20,100\n";
+        let out = IbkrFlexParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 1);
+        let r = &out[0];
+        assert_eq!(r.symbol, "SPY");
+        assert_eq!(r.side, Side::Buy);
+        assert_eq!(r.qty.to_string(), "2");
+        assert_eq!(r.price.to_string(), "3.40");
+        assert_eq!(r.fee.to_string(), "1.05");
+        assert_eq!(r.broker_order_id.as_deref(), Some("IB-9000"));
+        // IBKR map sets utc_assumed=true so the executed_at is deterministic.
+        assert_eq!(r.executed_at.to_rfc3339(), "2026-03-04T10:02:15+00:00");
+        assert_eq!(
+            r.asset_class,
+            traderview_core::AssetClass::Option
+        );
+        assert_eq!(
+            r.option_type,
+            Some(traderview_core::OptionType::Call)
+        );
+        assert_eq!(r.strike.as_ref().unwrap().to_string(), "520");
+        assert_eq!(r.multiplier.to_string(), "100");
+    }
+
+    #[test]
+    fn thinkorswim_round_trip() {
+        // TOS uses 'BOT' / 'SOLD' and a two-digit-year date format.
+        let csv = "Symbol,Side,Qty,Price,Commissions & Fees,Exec Time,Order ID\n\
+                   MSFT,BOT,10,420.15,1.50,03/04/26 10:02:15,TOS-1\n\
+                   MSFT,SOLD,10,423.00,1.50,03/04/26 10:30:00,TOS-2\n";
+        let out = ThinkOrSwimParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "MSFT");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "10");
+        assert_eq!(out[0].price.to_string(), "420.15");
+        assert_eq!(out[0].fee.to_string(), "1.50");
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn schwab_round_trip() {
+        // Schwab uses 'action' for side and 'fees & comm' for fees.
+        let csv = "Date,Action,Symbol,Quantity,Price,Fees & Comm\n\
+                   03/04/2026,Buy,QQQ,25,440.00,0.00\n\
+                   03/04/2026,Sell,QQQ,25,442.50,0.00\n";
+        let out = SchwabParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "QQQ");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "25");
+        assert_eq!(out[0].price.to_string(), "440.00");
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn fidelity_phrase_actions() {
+        // Fidelity's "Action" column uses verbose phrases like "YOU BOUGHT".
+        let csv = "Run Date,Action,Symbol,Quantity,Price,Commission\n\
+                   03/04/2026,YOU BOUGHT,VOO,3,505.10,0.00\n\
+                   03/04/2026,YOU SOLD,VOO,3,507.00,0.00\n";
+        let out = FidelityParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "VOO");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "3");
+        assert_eq!(out[0].price.to_string(), "505.10");
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn etrade_round_trip() {
+        let csv = "Transaction Date,Transaction Type,Symbol,Quantity,Price,Commission\n\
+                   03/04/2026,Buy,IWM,40,200.10,0.00\n\
+                   03/04/2026,Sell,IWM,40,201.25,0.00\n";
+        let out = ETradeParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "IWM");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "40");
+        assert_eq!(out[0].price.to_string(), "200.10");
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn robinhood_round_trip() {
+        // Robinhood is utc_assumed=true and ships date-only execution dates.
+        let csv = "Execution Date,Instrument,Side,Quantity,Price,Fees,Order ID\n\
+                   2026-03-04,AMD,buy,15,175.00,0.00,RH-A1\n\
+                   2026-03-04,AMD,sell,15,180.00,0.00,RH-A2\n";
+        let out = RobinhoodParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "AMD");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "15");
+        assert_eq!(out[0].price.to_string(), "175.00");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("RH-A1"));
+        // Date-only falls through parse_date → midnight UTC.
+        assert_eq!(
+            out[0].executed_at.to_rfc3339(),
+            "2026-03-04T00:00:00+00:00"
+        );
+    }
+
+    #[test]
+    fn tradestation_round_trip() {
+        let csv = "Symbol,Side,Quantity,Price,Commission,Date/Time,Order ID\n\
+                   ES,Buy,1,5200.25,2.50,03/04/2026 10:02:15,TS-1\n\
+                   ES,Sell,1,5201.75,2.50,03/04/2026 10:03:00,TS-2\n";
+        let out = TradeStationParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "ES");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "1");
+        assert_eq!(out[0].price.to_string(), "5200.25");
+        assert_eq!(out[0].fee.to_string(), "2.50");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("TS-1"));
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn tdameritrade_round_trip() {
+        let csv = "Date,Side,Symbol,Quantity,Price,Commission,Order ID\n\
+                   03/04/2026 10:02:15,Buy,F,500,12.10,0.00,TDA-1\n\
+                   03/04/2026 10:03:00,Sell,F,500,12.25,0.00,TDA-2\n";
+        let out = TdAmeritradeParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "F");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "500");
+        assert_eq!(out[0].price.to_string(), "12.10");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("TDA-1"));
+        assert_eq!(out[1].side, Side::Sell);
+    }
+
+    #[test]
+    fn tradezero_round_trip() {
+        let csv = "Symbol,Side,Qty,Price,Fee,Time,Order ID\n\
+                   AMC,buy,300,4.50,0.10,2026-03-04 10:02:15,TZ-1\n\
+                   AMC,sell,300,4.65,0.10,2026-03-04 10:03:00,TZ-2\n";
+        let out = TradeZeroParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].symbol, "AMC");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "300");
+        assert_eq!(out[0].price.to_string(), "4.50");
+        assert_eq!(out[0].fee.to_string(), "0.10");
+        assert_eq!(out[0].broker_order_id.as_deref(), Some("TZ-1"));
+        assert_eq!(out[1].side, Side::Sell);
+    }
 }

@@ -139,3 +139,72 @@ pub fn supported_sources() -> &'static [&'static str] {
         "generic",
     ]
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every key in `supported_sources()` must resolve through `parser_for`
+    /// to a parser whose `source()` matches the dispatch key. Aliases are
+    /// also checked explicitly because they don't appear in `supported_sources`.
+    #[test]
+    fn parser_for_dispatches_every_supported_source() {
+        for key in supported_sources() {
+            let p = parser_for(key)
+                .unwrap_or_else(|| panic!("supported source {key:?} did not dispatch"));
+            // `parser_for("csv")` maps to GenericCsvParser whose source() is "generic" —
+            // accept both canonical key and its alias targets.
+            let s = p.source();
+            assert!(
+                s == *key
+                    || (*key == "ibkr" && s == "ibkr")
+                    || (*key == "tdameritrade" && s == "tdameritrade")
+                    || (*key == "tos" && s == "tos")
+                    || (*key == "tradestation" && s == "tradestation"),
+                "key {key:?} dispatched to parser whose source is {s:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn parser_for_resolves_aliases() {
+        assert_eq!(parser_for("ibkr-flex").unwrap().source(), "ibkr");
+        assert_eq!(parser_for("td").unwrap().source(), "tdameritrade");
+        assert_eq!(parser_for("ts").unwrap().source(), "tradestation");
+        assert_eq!(parser_for("dastrader").unwrap().source(), "das");
+        assert_eq!(parser_for("thinkorswim").unwrap().source(), "tos");
+        assert_eq!(parser_for("csv").unwrap().source(), "generic");
+    }
+
+    #[test]
+    fn parser_for_unknown_returns_none() {
+        assert!(parser_for("not-a-broker").is_none());
+        assert!(parser_for("").is_none());
+    }
+
+    /// `sha256_hex` is the dedupe primitive for the `imports` table.
+    /// Identical bytes must produce identical hashes; one different byte
+    /// must produce a different hash. This pins the dedupe contract.
+    #[test]
+    fn sha256_dedupe_key_is_stable_for_identical_bytes() {
+        let csv = b"Symbol,Side,Qty,Price,Fee,Date\nAAPL,buy,100,150.50,1.00,2026-01-15 09:30:00\n";
+        let a = sha256_hex(csv);
+        let b = sha256_hex(csv);
+        assert_eq!(a, b, "identical bytes must hash to identical keys");
+        assert_eq!(a.len(), 64, "sha256 hex digest must be 64 chars");
+
+        let mutated = b"Symbol,Side,Qty,Price,Fee,Date\nAAPL,buy,101,150.50,1.00,2026-01-15 09:30:00\n";
+        assert_ne!(
+            a,
+            sha256_hex(mutated),
+            "one-byte change must produce a different dedupe key"
+        );
+
+        // Empty input is still a valid (and stable) digest.
+        assert_eq!(sha256_hex(b"").len(), 64);
+    }
+}

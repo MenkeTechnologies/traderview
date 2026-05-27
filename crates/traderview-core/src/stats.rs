@@ -789,3 +789,279 @@ pub fn commissions(trades: &[Trade]) -> CommissionReport {
 fn decimal_to_f64(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{AssetClass, Trade, TradeSide, TradeStatus};
+    use chrono::{TimeZone, Utc};
+    use std::str::FromStr;
+    use uuid::Uuid;
+
+    /// Local shorthand — `rust_decimal_macros::dec!` isn't a workspace dep,
+    /// so reconstruct a Decimal from a string literal. Keeps tests readable
+    /// without growing the dependency graph.
+    fn dec(s: &str) -> Decimal {
+        Decimal::from_str(s).expect("valid decimal literal in test")
+    }
+
+    /// Build a minimal closed trade. We force net_pnl + risk_amount directly
+    /// rather than computing from entry/exit so tests assert against exact
+    /// hand-rolled numbers without floating-point drift.
+    fn t(symbol: &str, side: TradeSide, net_pnl: Decimal, day: u32) -> Trade {
+        Trade {
+            id: Uuid::new_v4(),
+            account_id: Uuid::nil(),
+            symbol: symbol.into(),
+            side,
+            status: TradeStatus::Closed,
+            opened_at: Utc.with_ymd_and_hms(2026, 5, day, 9, 30, 0).unwrap(),
+            closed_at: Some(Utc.with_ymd_and_hms(2026, 5, day, 15, 30, 0).unwrap()),
+            qty: dec("100"),
+            entry_avg: dec("10"),
+            exit_avg: Some(dec("10") + net_pnl / dec("100")),
+            gross_pnl: Some(net_pnl),
+            fees: Decimal::ZERO,
+            net_pnl: Some(net_pnl),
+            asset_class: AssetClass::Stock,
+            option_type: None,
+            strike: None,
+            expiration: None,
+            multiplier: dec("1"),
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+            stop_loss: None,
+            risk_amount: Some(dec("100")),    // 1R = $100
+            initial_target: None,
+            mfe: None,
+            mae: None,
+            best_exit_pnl: None,
+            exit_efficiency: None,
+        }
+    }
+
+    fn open_trade(symbol: &str) -> Trade {
+        let mut tr = t(symbol, TradeSide::Long, Decimal::ZERO, 1);
+        tr.status = TradeStatus::Open;
+        tr.closed_at = None;
+        tr.net_pnl = None;
+        tr.gross_pnl = None;
+        tr
+    }
+
+    // ─── summary ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn summary_empty_input_returns_zeros() {
+        let s = summary(&[]);
+        assert_eq!(s.trade_count, 0);
+        assert_eq!(s.win_count, 0);
+        assert_eq!(s.loss_count, 0);
+        assert_eq!(s.net_pnl, Decimal::ZERO);
+        assert_eq!(s.win_rate, 0.0);
+        assert_eq!(s.profit_factor, 0.0);
+    }
+
+    #[test]
+    fn summary_single_winner() {
+        let s = summary(&[t("AAPL", TradeSide::Long, dec("500"), 1)]);
+        assert_eq!(s.trade_count, 1);
+        assert_eq!(s.win_count, 1);
+        assert_eq!(s.loss_count, 0);
+        assert_eq!(s.net_pnl, dec("500"));
+        assert_eq!(s.avg_win, dec("500"));
+        assert_eq!(s.win_rate, 1.0);
+        assert_eq!(s.expectancy, dec("500"));
+        assert_eq!(s.largest_win, dec("500"));
+    }
+
+    #[test]
+    fn summary_single_loser() {
+        let s = summary(&[t("AAPL", TradeSide::Long, dec("-200"), 1)]);
+        assert_eq!(s.win_count, 0);
+        assert_eq!(s.loss_count, 1);
+        assert_eq!(s.net_pnl, dec("-200"));
+        assert_eq!(s.avg_loss, dec("-200"));
+        assert_eq!(s.largest_loss, dec("-200"));
+        assert_eq!(s.win_rate, 0.0);
+    }
+
+    #[test]
+    fn summary_scratch_trade_excluded_from_win_loss() {
+        let s = summary(&[t("AAPL", TradeSide::Long, dec("0"), 1)]);
+        assert_eq!(s.trade_count, 1);
+        assert_eq!(s.win_count, 0);
+        assert_eq!(s.loss_count, 0);
+        assert_eq!(s.scratch_count, 1);
+    }
+
+    #[test]
+    fn summary_open_trades_counted_separately() {
+        let s = summary(&[
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            open_trade("TSLA"),
+        ]);
+        assert_eq!(s.trade_count, 1, "open trades excluded from trade_count");
+        assert_eq!(s.open_count, 1);
+    }
+
+    #[test]
+    fn summary_win_rate_and_expectancy() {
+        // 3 wins of $100, 1 loss of -$50 → net $250 over 4 trades.
+        let s = summary(&[
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            t("AAPL", TradeSide::Long, dec("100"), 2),
+            t("AAPL", TradeSide::Long, dec("100"), 3),
+            t("AAPL", TradeSide::Long, dec("-50"), 4),
+        ]);
+        assert_eq!(s.trade_count, 4);
+        assert_eq!(s.win_count, 3);
+        assert_eq!(s.loss_count, 1);
+        assert_eq!(s.net_pnl, dec("250"));
+        assert!((s.win_rate - 0.75).abs() < 1e-9);
+        assert_eq!(s.expectancy, dec("62.5"));   // 250 / 4
+        assert_eq!(s.avg_win, dec("100"));
+        assert_eq!(s.avg_loss, dec("-50"));
+    }
+
+    #[test]
+    fn summary_profit_factor_handles_no_losses() {
+        // Pure winners → profit_factor = +Inf, not 0 or NaN.
+        let s = summary(&[
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            t("AAPL", TradeSide::Long, dec("200"), 2),
+        ]);
+        assert!(s.profit_factor.is_infinite());
+        assert!(s.profit_factor > 0.0);
+    }
+
+    #[test]
+    fn summary_profit_factor_normal() {
+        // Wins $300, losses -$100 → profit factor 3.0
+        let s = summary(&[
+            t("AAPL", TradeSide::Long, dec("300"), 1),
+            t("AAPL", TradeSide::Long, dec("-100"), 2),
+        ]);
+        assert!((s.profit_factor - 3.0).abs() < 1e-9,
+            "expected profit_factor=3.0 got {}", s.profit_factor);
+    }
+
+    #[test]
+    fn summary_max_consec_wins_and_losses() {
+        // W, W, W, L, W, L, L, L, L → wins streak 3, loss streak 4.
+        let pnls = [100, 100, 100, -50, 100, -50, -50, -50, -50];
+        let trades: Vec<Trade> = pnls.iter().enumerate()
+            .map(|(i, p)| t("AAPL", TradeSide::Long, Decimal::from(*p), (i + 1) as u32))
+            .collect();
+        let s = summary(&trades);
+        assert_eq!(s.max_consec_wins, 3);
+        assert_eq!(s.max_consec_losses, 4);
+    }
+
+    #[test]
+    fn summary_avg_r_uses_risk_amount() {
+        // All trades have risk_amount=$100. P&L of 250 → R=2.5.
+        let s = summary(&[
+            t("AAPL", TradeSide::Long, dec("200"), 1),
+            t("AAPL", TradeSide::Long, dec("300"), 2),
+        ]);
+        // avg R = (200/100 + 300/100) / 2 = 2.5
+        assert!((s.avg_r - 2.5).abs() < 1e-9, "got avg_r={}", s.avg_r);
+    }
+
+    // ─── equity_curve ─────────────────────────────────────────────────────
+
+    #[test]
+    fn equity_curve_aggregates_by_day() {
+        // Two trades on day 1, one trade on day 2.
+        let trades = vec![
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            t("TSLA", TradeSide::Long, dec("50"), 1),
+            t("NVDA", TradeSide::Long, dec("-30"), 2),
+        ];
+        let eq = equity_curve(&trades, dec("10000"));
+        assert_eq!(eq.len(), 2);
+        assert_eq!(eq[0].day_net_pnl, dec("150"), "day 1 = 100 + 50");
+        assert_eq!(eq[0].cum_net_pnl, dec("150"));
+        assert_eq!(eq[0].trades, 2);
+        assert_eq!(eq[1].day_net_pnl, dec("-30"));
+        assert_eq!(eq[1].cum_net_pnl, dec("120"), "150 - 30");
+    }
+
+    #[test]
+    fn equity_curve_drawdown_is_negative_below_peak() {
+        let trades = vec![
+            t("AAPL", TradeSide::Long, dec("500"), 1),
+            t("AAPL", TradeSide::Long, dec("-200"), 2),
+        ];
+        let eq = equity_curve(&trades, dec("10000"));
+        assert_eq!(eq[0].drawdown, dec("0"));   // at peak
+        assert_eq!(eq[1].drawdown, dec("-200")); // 200 below peak of 500
+    }
+
+    #[test]
+    fn equity_curve_skips_open_trades() {
+        let eq = equity_curve(&[open_trade("AAPL")], dec("10000"));
+        assert_eq!(eq.len(), 0);
+    }
+
+    // ─── max_drawdown ─────────────────────────────────────────────────────
+
+    #[test]
+    fn max_drawdown_finds_largest_peak_to_trough() {
+        // Curve goes 100, 300, 100, 50, 200 → max DD = 300 - 50 = 250.
+        let trades = vec![
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("200"), 2),
+            t("S", TradeSide::Long, dec("-200"), 3),
+            t("S", TradeSide::Long, dec("-50"), 4),
+            t("S", TradeSide::Long, dec("150"), 5),
+        ];
+        let eq = equity_curve(&trades, dec("10000"));
+        let dd = max_drawdown(&eq);
+        assert_eq!(dd.max_dd, dec("-250"),
+            "peak was 300 on day 2, trough 50 on day 4 → -250");
+    }
+
+    #[test]
+    fn max_drawdown_empty_curve_is_zero() {
+        let dd = max_drawdown(&[]);
+        assert_eq!(dd.max_dd, Decimal::ZERO);
+        assert_eq!(dd.max_dd_pct, 0.0);
+    }
+
+    // ─── by_symbol / by_side ──────────────────────────────────────────────
+
+    #[test]
+    fn by_symbol_groups_and_sums_per_ticker() {
+        let trades = vec![
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            t("AAPL", TradeSide::Long, dec("200"), 2),
+            t("TSLA", TradeSide::Long, dec("50"), 3),
+        ];
+        let buckets = by_symbol(&trades);
+        let aapl = buckets.iter().find(|b| b.key == "AAPL").expect("AAPL bucket");
+        let tsla = buckets.iter().find(|b| b.key == "TSLA").expect("TSLA bucket");
+        assert_eq!(aapl.trades, 2);
+        assert_eq!(aapl.net_pnl, dec("300"));
+        assert_eq!(tsla.trades, 1);
+        assert_eq!(tsla.net_pnl, dec("50"));
+    }
+
+    #[test]
+    fn by_side_splits_long_short() {
+        let trades = vec![
+            t("AAPL", TradeSide::Long, dec("100"), 1),
+            t("TSLA", TradeSide::Short, dec("50"), 2),
+        ];
+        let buckets = by_side(&trades);
+        assert_eq!(buckets.len(), 2);
+        let long = buckets.iter().find(|b| b.key == "long").unwrap();
+        let short = buckets.iter().find(|b| b.key == "short").unwrap();
+        assert_eq!(long.net_pnl, dec("100"));
+        assert_eq!(short.net_pnl, dec("50"));
+    }
+}

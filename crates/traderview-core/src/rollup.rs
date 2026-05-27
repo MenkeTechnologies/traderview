@@ -660,4 +660,137 @@ mod tests {
         // 1 contract * 100 multiplier * (7 - 5) = 200
         assert_eq!(trades[0].trade.gross_pnl, Some(Decimal::from(200)));
     }
+
+    // ─── Edge cases (added after the 4-pass audit) ────────────────────────
+
+    #[test]
+    fn empty_input_returns_no_trades() {
+        let trades = rollup(&[], LotMethod::Fifo).unwrap();
+        assert!(trades.is_empty());
+    }
+
+    #[test]
+    fn fees_are_summed_into_net_pnl() {
+        // Gross = 1000, fees = 5 + 5 → net = 990.
+        let execs = vec![
+            exec("AAPL", Side::Buy,  100, 150, 5, 1_000),
+            exec("AAPL", Side::Sell, 100, 160, 5, 2_000),
+        ];
+        let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
+        assert_eq!(t.gross_pnl, Some(Decimal::from(1_000)));
+        assert_eq!(t.net_pnl,   Some(Decimal::from(990)));
+        assert_eq!(t.fees,      Decimal::from(10));
+    }
+
+    #[test]
+    fn losing_long_records_negative_pnl() {
+        // Bought at 150, sold at 140 → -1000 gross.
+        let execs = vec![
+            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
+            exec("AAPL", Side::Sell, 100, 140, 0, 2_000),
+        ];
+        let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
+        assert_eq!(t.gross_pnl, Some(Decimal::from(-1_000)));
+        assert_eq!(t.side, TradeSide::Long);
+    }
+
+    #[test]
+    fn losing_short_records_negative_pnl() {
+        // Shorted at 300, covered at 320 → -200 gross.
+        let execs = vec![
+            exec("TSLA", Side::Short, 10, 300, 0, 1_000),
+            exec("TSLA", Side::Cover, 10, 320, 0, 2_000),
+        ];
+        let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
+        assert_eq!(t.gross_pnl, Some(Decimal::from(-200)));
+        assert_eq!(t.side, TradeSide::Short);
+    }
+
+    #[test]
+    fn multiple_round_trips_same_symbol_yield_separate_trades() {
+        // Two independent round trips on AAPL — must produce two CLOSED trades,
+        // not one merged one. Otherwise per-trade P&L reporting is broken.
+        let execs = vec![
+            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
+            exec("AAPL", Side::Sell, 100, 155, 0, 2_000),  // close trade #1
+            exec("AAPL", Side::Buy,  100, 160, 0, 3_000),  // open trade #2
+            exec("AAPL", Side::Sell, 100, 170, 0, 4_000),  // close trade #2
+        ];
+        let trades = rollup(&execs, LotMethod::Fifo).unwrap();
+        assert_eq!(trades.len(), 2);
+        assert_eq!(trades[0].trade.gross_pnl, Some(Decimal::from(500)));
+        assert_eq!(trades[1].trade.gross_pnl, Some(Decimal::from(1_000)));
+    }
+
+    #[test]
+    fn buy_overshoot_after_short_flips_to_long() {
+        // Symmetric counterpart of `sell_overshoot_flips_to_short`.
+        let execs = vec![
+            exec("META", Side::Short, 50, 400, 0, 1_000),
+            exec("META", Side::Cover, 100, 380, 0, 2_000),  // closes 50 short, opens 50 long
+            exec("META", Side::Sell,  50, 390, 0, 3_000),
+        ];
+        let trades = rollup(&execs, LotMethod::Fifo).unwrap();
+        assert_eq!(trades.len(), 2);
+        assert_eq!(trades[0].trade.side, TradeSide::Short);
+        // Short closed: 50 * (400 - 380) = 1000
+        assert_eq!(trades[0].trade.gross_pnl, Some(Decimal::from(1_000)));
+        assert_eq!(trades[1].trade.side, TradeSide::Long);
+        // Long: bought at 380 (the cover), sold at 390 → 50 * 10 = 500
+        assert_eq!(trades[1].trade.gross_pnl, Some(Decimal::from(500)));
+    }
+
+    #[test]
+    fn out_of_order_executions_get_sorted_chronologically() {
+        // Importer may emit rows in arbitrary order. Rollup must sort by
+        // executed_at internally before matching; otherwise FIFO is wrong.
+        let execs = vec![
+            exec("AAPL", Side::Sell, 100, 160, 0, 2_000),  // later
+            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),  // earlier
+        ];
+        let trades = rollup(&execs, LotMethod::Fifo).unwrap();
+        assert_eq!(trades.len(), 1);
+        // P&L must still be +1000 (buy first at 150, sell at 160).
+        assert_eq!(trades[0].trade.gross_pnl, Some(Decimal::from(1_000)));
+        assert_eq!(trades[0].trade.side, TradeSide::Long);
+    }
+
+    #[test]
+    fn different_symbols_produce_independent_trades() {
+        let execs = vec![
+            exec("AAPL", Side::Buy,  100, 150, 0, 1_000),
+            exec("TSLA", Side::Buy,   10, 300, 0, 1_500),
+            exec("AAPL", Side::Sell, 100, 160, 0, 2_000),
+            exec("TSLA", Side::Sell,  10, 290, 0, 2_500),
+        ];
+        let trades = rollup(&execs, LotMethod::Fifo).unwrap();
+        assert_eq!(trades.len(), 2);
+        // Each symbol's P&L computed independently — not commingled.
+        let aapl = trades.iter().find(|t| t.trade.symbol == "AAPL").expect("AAPL");
+        let tsla = trades.iter().find(|t| t.trade.symbol == "TSLA").expect("TSLA");
+        assert_eq!(aapl.trade.gross_pnl, Some(Decimal::from(1_000)));
+        assert_eq!(tsla.trade.gross_pnl, Some(Decimal::from(-100)));
+    }
+
+    #[test]
+    fn fully_open_position_carries_no_pnl_yet() {
+        // Pure buy with no offset — open trade, no P&L.
+        let execs = vec![exec("AAPL", Side::Buy, 100, 150, 1, 1_000)];
+        let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
+        assert_eq!(t.status, TradeStatus::Open);
+        assert!(t.gross_pnl.is_none() || t.gross_pnl == Some(Decimal::ZERO));
+        assert_eq!(t.qty, Decimal::from(100));
+    }
+
+    #[test]
+    fn opened_at_uses_first_open_leg_timestamp() {
+        let execs = vec![
+            exec("AAPL", Side::Buy,  50, 150, 0, 1_000),
+            exec("AAPL", Side::Buy,  50, 152, 0, 1_500),
+            exec("AAPL", Side::Sell, 100, 160, 0, 2_000),
+        ];
+        let t = &rollup(&execs, LotMethod::Fifo).unwrap()[0].trade;
+        assert_eq!(t.opened_at.timestamp(), 1_000);
+        assert_eq!(t.closed_at.expect("closed").timestamp(), 2_000);
+    }
 }

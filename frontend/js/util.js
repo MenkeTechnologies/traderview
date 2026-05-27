@@ -3,22 +3,44 @@
 export const fmt = (n, d = 2) => {
     if (n === null || n === undefined || n === '') return '—';
     const v = Number(n);
-    if (!Number.isFinite(v)) return '∞';
+    // Non-finite covers NaN, ±Infinity, and any unparseable string like "abc"
+    // (Number("abc") === NaN). The '∞' sentinel was misleading for both.
+    if (!Number.isFinite(v)) return '—';
     return v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 };
 
 export const fmtPct = (n) => {
     if (n === null || n === undefined) return '—';
-    return (Number(n) * 100).toFixed(1) + '%';
+    const v = Number(n);
+    if (!Number.isFinite(v)) return '—';   // guard NaN / Infinity (was rendered literally)
+    return (v * 100).toFixed(1) + '%';
 };
 
-export const fmtMoney = (n) => '$' + fmt(n);
+export const fmtMoney = (n) => {
+    if (n === null || n === undefined || n === '') return '—';
+    const v = Number(n);
+    if (!Number.isFinite(v)) return '—';
+    // Sign goes BEFORE the dollar — `-$100.00`, not `$-100.00`. Negative money
+    // displayed with the minus inside the dollar reads as broken to traders.
+    const abs = Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return v < 0 ? `-$${abs}` : `$${abs}`;
+};
 
-export const pnlClass = (n) => Number(n) >= 0 ? 'pos' : 'neg';
+export const pnlClass = (n) => {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return 'flat';   // missing data → neutral, not 'neg'
+    if (v > 0) return 'pos';
+    if (v < 0) return 'neg';
+    return 'flat';                              // exact zero / break-even is neutral
+};
 
 export const fmtDate = (iso) => (iso || '').slice(0, 10);
-export const fmtDateTime = (iso) =>
-    iso ? new Date(iso).toLocaleString(undefined, { hour12: false }) : '—';
+export const fmtDateTime = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';        // guard "not-an-iso" → 'Invalid Date'
+    return d.toLocaleString(undefined, { hour12: false });
+};
 
 export const fmtSecs = (s) => {
     if (s === null || s === undefined) return '—';
@@ -121,6 +143,10 @@ export function makeFilter(initial = {}, onApply) {
 }
 
 export function statCard(label, value, mod = '') {
+    // Both label and value pass through esc(). value was previously raw —
+    // an XSS sink if any caller fed user-controlled text. Pre-rendered HTML
+    // strings (e.g. fmtMoney output, which contains no `<>"`) still render
+    // identically; the escape is a no-op for safe input.
     return `<div class="card"><div class="label">${esc(label)}</div>
-        <div class="value ${mod}">${value}</div></div>`;
+        <div class="value ${esc(mod)}">${esc(value)}</div></div>`;
 }
