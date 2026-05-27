@@ -1102,4 +1102,67 @@ table.sc-table tfoot td {
     border-top: 1px solid var(--accent);
     padding: 8px 10px;
     background: var(--bg-2);
+
+/* ---- tile launcher ---------------------------------------------------- */
+#launcher-q {
+    width: auto; min-width: 260px;
+    margin-left: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 2px;
+}
+#launcher-q:focus { border-color: var(--cyan); outline: none; box-shadow: 0 0 10px var(--cyan-dim); }
+
+.launcher-cat { margin-bottom: 18px; }
+.launcher-cat h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--magenta); margin: 0 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed var(--border);
+}
+.launcher-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+}
+.tile {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+    border-radius: 2px;
+    cursor: pointer; text-align: left;
+    font-family: inherit; color: var(--text);
+    transition: transform 0.1s, box-shadow 0.15s, border-color 0.15s;
+}
+.tile:hover {
+    border-color: var(--cyan); border-left-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px var(--cyan-dim);
+}
+.tile:focus { outline: 1px solid var(--cyan); outline-offset: 1px; }
+.tile-glyph {
+    font-size: 22px; line-height: 1; flex: 0 0 auto;
+    text-shadow: 0 0 8px var(--cyan-glow);
+}
+.tile-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan); display: flex; align-items: center; gap: 6px;
+}
+.tile-badge {
+    font-size: 8.5px; padding: 1px 5px;
+    background: var(--green); color: var(--bg-primary);
+    border-radius: 9px; letter-spacing: 0.5px;
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
+}
+.tile-desc {
+    color: var(--text-dim); font-size: 11px; line-height: 1.4;
+    font-family: 'Share Tech Mono', monospace;
 }

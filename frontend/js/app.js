@@ -48,6 +48,7 @@ import { renderBreadth } from './views/breadth.js';
 import { renderFearGreed } from './views/fear_greed.js';
 import { renderPremarket } from './views/premarket.js';
 import { renderHalts } from './views/halts.js';
+import { renderLauncher } from './views/launcher.js';
 import { renderLiveScanner } from './views/live_scanner.js';
 import { renderCatalysts } from './views/catalysts.js';
 import { renderWebull } from './views/webull.js';
@@ -156,6 +157,17 @@ function bindTabs() {
     });
     window.addEventListener('hashchange', dispatch);
     bindNavToggle();
+    bindLauncherShortcut();
+}
+
+function bindLauncherShortcut() {
+    document.addEventListener('keydown', (e) => {
+        // Cmd-K / Ctrl-K opens the launcher with focus in the filter input.
+        if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            window.location.hash = 'launcher';
+        }
+    });
 }
 
 function bindNavToggle() {
@@ -206,7 +218,7 @@ export function go(view, params = '') {
 }
 
 export async function dispatch() {
-    const hash = (window.location.hash || '#dashboard').slice(1);
+    const hash = (window.location.hash || '#launcher').slice(1);
     const [view, ...rest] = hash.split('/');
     state.view = view;
     document.querySelectorAll('.tab').forEach(b =>
@@ -216,6 +228,7 @@ export async function dispatch() {
     mount.innerHTML = '<div class="boot">loading…</div>';
     try {
         switch (view) {
+            case 'launcher':    await renderLauncher(mount, state); break;
             case 'dashboard':   await renderDashboard(mount, state); break;
             case 'trades':      await renderTradesView(mount, state); break;
             case 'new-trade':   await renderNewTrade(mount, state); break;
