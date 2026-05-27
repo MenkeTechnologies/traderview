@@ -20,6 +20,7 @@ pub mod models;
 pub mod pnl;
 pub mod position_size;
 pub mod rebalance;
+pub mod reconcile_1099b;
 pub mod risk;
 pub mod risk_gate;
 pub mod risk_reward;
