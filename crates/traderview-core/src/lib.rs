@@ -28,6 +28,7 @@ pub mod concentration;
 pub mod coppock;
 pub mod correlation;
 pub mod correlation_clusters;
+pub mod cost_basis;
 pub mod currency_exposure;
 pub mod daily_loss_limit;
 pub mod discipline_score;
