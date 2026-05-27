@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn short_filled_above_vwap_is_FAVORABLE() {
+    fn short_filled_above_vwap_is_favorable() {
         // Short at 101 vs VWAP 100 → got $1 better.
         let r = compute(&VwapInput {
             side: TradeSide::Short, fill_price: d("101"),

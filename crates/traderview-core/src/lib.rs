@@ -7,6 +7,7 @@
 pub mod backtest;
 pub mod bracket_order;
 pub mod buying_power;
+pub mod commission_optimizer;
 pub mod correlation;
 pub mod discipline_score;
 pub mod dow_hour_heatmap;
@@ -19,8 +20,10 @@ pub mod margin_call;
 pub mod iv_backtest;
 pub mod liquidity;
 pub mod models;
+pub mod optimal_f;
 pub mod pnl;
 pub mod position_size;
+pub mod pyramid;
 pub mod rebalance;
 pub mod reconcile_1099b;
 pub mod risk;

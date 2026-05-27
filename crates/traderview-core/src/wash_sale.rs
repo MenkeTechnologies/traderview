@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn replacement_buy_BEFORE_loss_also_counts() {
+    fn replacement_buy_before_loss_also_counts() {
         // The wash-sale window is BIDIRECTIONAL ±30 days — buying
         // 20 days before the loss-sell also disqualifies.
         let closings = vec![losing_close("AAPL", day(2026, 6, 30), "-500", "100")];
