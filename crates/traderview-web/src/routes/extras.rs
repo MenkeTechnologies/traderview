@@ -17,17 +17,17 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    alligator, atr_cone, break_of_structure, breakout_detector, calmar_ratio, change_of_character,
-    choppiness, crossover, cumulative_delta, cusum, daily_loss_limit, displacement,
-    drawdown_throttle, earnings_calendar, efficiency_ratio, equal_levels, fair_value_gap,
-    futures_roll, goal_tracker, heikin_ashi_reversal, holiday_calendar,
-    models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
-    pair_trade, portfolio_heat, position_aging, position_irr, premium_discount, put_call_ratio,
-    random_walk_index, range_contraction, range_expansion, reconcile_1099b, risk_reward,
-    rolling_zscore, round_levels, sip_simulator, spread_attribution, stop_hunt,
-    strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer, three_bar_reversal,
-    timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
-    wyckoff,
+    acceleration_deceleration, alligator, atr_cone, break_of_structure, breakout_detector,
+    calmar_ratio, change_of_character, choppiness, crossover, cumulative_delta, cusum,
+    daily_loss_limit, displacement, drawdown_throttle, earnings_calendar, efficiency_ratio,
+    equal_levels, fair_value_gap, futures_roll, gap_fill_stats, goal_tracker, heikin_ashi_reversal,
+    holiday_calendar, liquidity_grab, models::{Trade, TradeSide}, mtm_reconciliation,
+    opening_range, options_margin, order_block, pair_trade, portfolio_heat, position_aging,
+    position_irr, premium_discount, put_call_ratio, random_walk_index, range_contraction,
+    range_expansion, reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator,
+    spread_attribution, stop_hunt, strategy_correlation, swing_points, symbol_filter,
+    tax_lot_optimizer, three_bar_reversal, timeframe_confluence, triple_screen, twap,
+    ulcer_index, volatility_stop, volume_burst, vsa, wyckoff,
 };
 
 pub fn router() -> Router<AppState> {
@@ -119,6 +119,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/choppiness",           post(choppiness_route))
         .route("/analytics/efficiency-ratio",     post(efficiency_ratio_route))
         .route("/analytics/random-walk-index",    post(random_walk_index_route))
+        // ── Bill Williams AC + ICT liquidity grab + gap stats ──────────
+        .route("/analytics/acceleration-deceleration", post(ac_route))
+        .route("/analytics/liquidity-grab",            post(liquidity_grab_route))
+        .route("/analytics/gap-fill-stats",            post(gap_fill_stats_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -912,4 +916,46 @@ async fn random_walk_index_route(
     _u: AuthUser, Json(b): Json<RwiBody>,
 ) -> Json<random_walk_index::RwiReport> {
     Json(random_walk_index::compute(&b.bars, b.max_n))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Bill Williams AC + ICT liquidity grab + gap-fill statistics.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct AcBody {
+    bars: Vec<acceleration_deceleration::HlBar>,
+}
+
+async fn ac_route(
+    _u: AuthUser, Json(b): Json<AcBody>,
+) -> Json<acceleration_deceleration::AcReport> {
+    Json(acceleration_deceleration::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct LiquidityGrabBody {
+    bars: Vec<liquidity_grab::OhlcBar>,
+    atr: Vec<f64>,
+    swings: Vec<swing_points::SwingPoint>,
+    #[serde(default)]
+    config: liquidity_grab::GrabConfig,
+}
+
+async fn liquidity_grab_route(
+    _u: AuthUser, Json(b): Json<LiquidityGrabBody>,
+) -> Json<liquidity_grab::GrabReport> {
+    Json(liquidity_grab::detect(&b.bars, &b.atr, &b.swings, &b.config))
+}
+
+#[derive(Deserialize)]
+struct GapFillBody {
+    bars: Vec<gap_fill_stats::OhlcBar>,
+    atr: Vec<f64>,
+}
+
+async fn gap_fill_stats_route(
+    _u: AuthUser, Json(b): Json<GapFillBody>,
+) -> Json<gap_fill_stats::GapStatsReport> {
+    Json(gap_fill_stats::analyze(&b.bars, &b.atr))
 }

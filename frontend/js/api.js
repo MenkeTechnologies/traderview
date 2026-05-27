@@ -953,4 +953,7 @@ export const api = {
     anlyChoppiness:          (b) => request('/analytics/choppiness',                 { method: 'POST', body: JSON.stringify(b) }),
     anlyEfficiencyRatio:     (b) => request('/analytics/efficiency-ratio',           { method: 'POST', body: JSON.stringify(b) }),
     anlyRandomWalkIndex:     (b) => request('/analytics/random-walk-index',          { method: 'POST', body: JSON.stringify(b) }),
+    anlyAccelerationDecel:   (b) => request('/analytics/acceleration-deceleration',  { method: 'POST', body: JSON.stringify(b) }),
+    anlyLiquidityGrab:       (b) => request('/analytics/liquidity-grab',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyGapFillStats:        (b) => request('/analytics/gap-fill-stats',             { method: 'POST', body: JSON.stringify(b) }),
 };
