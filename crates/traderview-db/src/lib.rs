@@ -30,6 +30,7 @@ pub mod live_positions;
 pub mod market_data;
 pub mod markets;
 pub mod mentorships;
+pub mod mood_analytics;
 pub mod news;
 pub mod note_templates;
 pub mod options;

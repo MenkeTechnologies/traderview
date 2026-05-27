@@ -36,6 +36,7 @@ mod journal_ai;
 mod live_positions;
 mod markets;
 mod mentorships;
+mod mood_analytics;
 mod news;
 mod note_templates;
 mod options;
@@ -131,6 +132,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sector_rotation::router())
         .merge(tape_replay::router())
         .merge(backtest_presets::router())
+        .merge(mood_analytics::router())
 }
 
 mod helpers {

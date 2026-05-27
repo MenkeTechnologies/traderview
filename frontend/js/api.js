@@ -384,6 +384,9 @@ export const api = {
     // Sector ETF rotation heatmap
     sectorRotation: () => request('/sector-rotation'),
 
+    // Mood-vs-PnL analytics
+    moodAnalytics: (accountId) => request(`/mood-analytics/${accountId}`),
+
     // Per-trade tape replay (bars + execs timeline)
     tapeReplay: (tradeId) => request(`/tape-replay/${tradeId}`),
 
