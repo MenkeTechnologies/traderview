@@ -935,4 +935,10 @@ export const api = {
     anlyStopHunt:            (b) => request('/analytics/stop-hunt',                  { method: 'POST', body: JSON.stringify(b) }),
     anlyFairValueGap:        (b) => request('/analytics/fair-value-gap',             { method: 'POST', body: JSON.stringify(b) }),
     anlyOrderBlock:          (b) => request('/analytics/order-block',                { method: 'POST', body: JSON.stringify(b) }),
+    anlyBreakOfStructure:    (b) => request('/analytics/break-of-structure',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyChangeOfCharacter:   (b) => request('/analytics/change-of-character',        { method: 'POST', body: JSON.stringify(b) }),
+    anlyEqualLevels:         (b) => request('/analytics/equal-levels',               { method: 'POST', body: JSON.stringify(b) }),
+    microCumulativeDelta:    (b) => request('/microstructure/cumulative-delta',      { method: 'POST', body: JSON.stringify(b) }),
+    anlyDisplacement:        (b) => request('/analytics/displacement',               { method: 'POST', body: JSON.stringify(b) }),
+    anlyOpeningRange:        (b) => request('/analytics/opening-range',              { method: 'POST', body: JSON.stringify(b) }),
 };

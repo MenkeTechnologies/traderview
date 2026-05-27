@@ -17,13 +17,14 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    alligator, atr_cone, breakout_detector, crossover, daily_loss_limit, drawdown_throttle,
-    earnings_calendar, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
-    models::{Trade, TradeSide}, mtm_reconciliation, options_margin, order_block, pair_trade,
-    portfolio_heat, position_aging, position_irr, put_call_ratio, range_contraction,
+    alligator, atr_cone, break_of_structure, breakout_detector, change_of_character, crossover,
+    cumulative_delta, daily_loss_limit, displacement, drawdown_throttle, earnings_calendar,
+    equal_levels, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
+    models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
+    pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, range_contraction,
     reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
-    stop_hunt, strategy_correlation, symbol_filter, tax_lot_optimizer, timeframe_confluence,
-    triple_screen, twap, volatility_stop, volume_burst,
+    stop_hunt, strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer,
+    timeframe_confluence, triple_screen, twap, volatility_stop, volume_burst,
 };
 
 pub fn router() -> Router<AppState> {
@@ -91,6 +92,14 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/stop-hunt",            post(stop_hunt_route))
         .route("/analytics/fair-value-gap",       post(fair_value_gap_route))
         .route("/analytics/order-block",          post(order_block_route))
+        // ── More SMC: BOS + CHoCH + equal levels ───────────────────────
+        .route("/analytics/break-of-structure",   post(break_of_structure_route))
+        .route("/analytics/change-of-character",  post(change_of_character_route))
+        .route("/analytics/equal-levels",         post(equal_levels_route))
+        // ── Order flow + ORB + displacement ────────────────────────────
+        .route("/microstructure/cumulative-delta",post(cumulative_delta_route))
+        .route("/analytics/displacement",         post(displacement_route))
+        .route("/analytics/opening-range",        post(opening_range_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -644,4 +653,83 @@ async fn order_block_route(
     _u: AuthUser, Json(b): Json<OrderBlockBody>,
 ) -> Json<order_block::OrderBlockReport> {
     Json(order_block::detect(&b.bars, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Break of Structure + Change of Character + Equal levels.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct BosBody {
+    closes: Vec<f64>,
+    swings: Vec<swing_points::SwingPoint>,
+}
+
+async fn break_of_structure_route(
+    _u: AuthUser, Json(b): Json<BosBody>,
+) -> Json<break_of_structure::BosReport> {
+    Json(break_of_structure::detect(&b.closes, &b.swings))
+}
+
+#[derive(Deserialize)]
+struct ChochBody {
+    closes: Vec<f64>,
+    swings: Vec<swing_points::SwingPoint>,
+    initial_trend: change_of_character::TrendDirection,
+}
+
+async fn change_of_character_route(
+    _u: AuthUser, Json(b): Json<ChochBody>,
+) -> Json<change_of_character::ChochReport> {
+    Json(change_of_character::detect(&b.closes, &b.swings, b.initial_trend))
+}
+
+#[derive(Deserialize)]
+struct EqualLevelsBody {
+    swings: Vec<swing_points::SwingPoint>,
+    config: equal_levels::EqualLevelsConfig,
+}
+
+async fn equal_levels_route(
+    _u: AuthUser, Json(b): Json<EqualLevelsBody>,
+) -> Json<equal_levels::LevelsReport> {
+    Json(equal_levels::detect(&b.swings, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Cumulative delta + displacement + ORB.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct CumulativeDeltaBody { ticks: Vec<cumulative_delta::TickWithPrice> }
+
+async fn cumulative_delta_route(
+    _u: AuthUser, Json(b): Json<CumulativeDeltaBody>,
+) -> Json<cumulative_delta::CdReport> {
+    Json(cumulative_delta::compute(&b.ticks))
+}
+
+#[derive(Deserialize)]
+struct DisplacementBody {
+    bars: Vec<displacement::OhlcBar>,
+    atr: Vec<f64>,
+    config: displacement::DisplacementConfig,
+}
+
+async fn displacement_route(
+    _u: AuthUser, Json(b): Json<DisplacementBody>,
+) -> Json<displacement::DisplacementReport> {
+    Json(displacement::detect(&b.bars, &b.atr, &b.config))
+}
+
+#[derive(Deserialize)]
+struct OrbBody {
+    bars: Vec<opening_range::OhlcBar>,
+    config: opening_range::OrbConfig,
+}
+
+async fn opening_range_route(
+    _u: AuthUser, Json(b): Json<OrbBody>,
+) -> Json<opening_range::OrbReport> {
+    Json(opening_range::detect(&b.bars, &b.config))
 }
