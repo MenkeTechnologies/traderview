@@ -98,11 +98,14 @@ async fn get_bytes(
         .await
         .map_err(ApiError::Internal)?
         .ok_or(ApiError::NotFound)?;
-    Ok(Response::builder()
+    // The builder can fail if `mime` contains invalid header bytes (CR/LF
+    // injection from a corrupted DB row, control chars, etc.). Map to a
+    // 500 rather than panicking the handler.
+    Response::builder()
         .header(header::CONTENT_TYPE, mime)
         .header(header::CACHE_CONTROL, "private, max-age=604800")
         .body(Body::from(bytes))
-        .unwrap())
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("invalid response headers: {e}")))
 }
 
 async fn delete_one(

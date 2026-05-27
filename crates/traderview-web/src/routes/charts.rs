@@ -90,6 +90,60 @@ fn parse_interval(s: &str) -> Option<BarInterval> {
 
 fn dec_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn parse_interval_accepts_known_strings() {
+        assert!(matches!(parse_interval("1m"),  Some(BarInterval::M1)));
+        assert!(matches!(parse_interval("5m"),  Some(BarInterval::M5)));
+        assert!(matches!(parse_interval("15m"), Some(BarInterval::M15)));
+        assert!(matches!(parse_interval("1h"),  Some(BarInterval::H1)));
+        assert!(matches!(parse_interval("1d"),  Some(BarInterval::D1)));
+        assert!(matches!(parse_interval("1w"),  Some(BarInterval::W1)));
+    }
+
+    #[test]
+    fn parse_interval_rejects_unknown_or_garbage() {
+        // Case-sensitive, no aliases — these must all return None so the
+        // route layer can 400-out with a clean error rather than silently
+        // bucketing into a wrong interval.
+        assert!(parse_interval("1M").is_none(),  "case-sensitive");
+        assert!(parse_interval("daily").is_none(), "no aliases");
+        assert!(parse_interval("").is_none());
+        assert!(parse_interval(" 1m ").is_none(), "no whitespace tolerance");
+    }
+
+    #[test]
+    fn dec_f64_round_trips_typical_prices() {
+        // Common stock-price magnitudes round-trip exactly.
+        for s in ["1.00", "100.50", "4995.25", "0.0001"] {
+            let d = Decimal::from_str(s).unwrap();
+            let f = dec_f64(d);
+            let want: f64 = s.parse().unwrap();
+            assert!((f - want).abs() < 1e-9, "round trip lost precision: {s} → {f}");
+        }
+    }
+
+    #[test]
+    fn dec_f64_returns_zero_on_unparseable_string_path() {
+        // Decimal::to_string() always produces a valid f64-parseable string,
+        // so this path is defensive but lives in production. Sanity: zero
+        // decimal → exactly 0.0.
+        assert_eq!(dec_f64(Decimal::ZERO), 0.0);
+    }
+
+    #[test]
+    fn dec_f64_handles_negative_values() {
+        // Bid/ask spreads can have negative-side computations; the
+        // converter must not eat the sign.
+        let d = Decimal::from_str("-42.50").unwrap();
+        assert!((dec_f64(d) - (-42.50)).abs() < 1e-9);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Heikin Ashi — alternative candle smoothing.
 // ---------------------------------------------------------------------------

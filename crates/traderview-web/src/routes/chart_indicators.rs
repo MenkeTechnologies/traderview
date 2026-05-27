@@ -807,3 +807,67 @@ async fn trend_channel_route(
         ))?;
     Ok(Json(report))
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Tests for inline helpers. The `rolling_stdev` helper feeds the
+// bb-squeeze route's SqueezeInput — wrong stdev there silently breaks
+// every BB-squeeze signal across every chart that uses it.
+// ──────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rolling_stdev_pre_warmup_slots_are_none() {
+        let v = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let s = rolling_stdev(&v, 3);
+        assert!(s[0].is_none() && s[1].is_none(), "first window-1 slots must be None");
+        assert!(s[2].is_some(), "slot at window-1 must be Some");
+    }
+
+    #[test]
+    fn rolling_stdev_constant_window_is_zero() {
+        // Flat 5.0 for any window → stdev = 0 in every populated slot.
+        let v = vec![5.0; 10];
+        let s = rolling_stdev(&v, 4);
+        for slot in s.iter().skip(3) {
+            let val = slot.expect("populated after warmup");
+            assert!(val.abs() < 1e-12, "flat series stdev should be 0, got {val}");
+        }
+    }
+
+    #[test]
+    fn rolling_stdev_window_zero_or_too_big_returns_all_none() {
+        let v = vec![1.0, 2.0, 3.0];
+        // window=0 — degenerate, return all-None rather than divide by zero.
+        let s0 = rolling_stdev(&v, 0);
+        assert!(s0.iter().all(|x| x.is_none()));
+        // window > len — no slot has enough data, return all-None.
+        let s_big = rolling_stdev(&v, 10);
+        assert!(s_big.iter().all(|x| x.is_none()));
+    }
+
+    #[test]
+    fn rolling_stdev_population_formula_matches_hand_calc() {
+        // Window [1, 2, 3]: mean=2, variance=(1+0+1)/3 = 0.6666..., stdev=√(2/3).
+        let v = vec![1.0, 2.0, 3.0];
+        let s = rolling_stdev(&v, 3);
+        let want = (2.0_f64 / 3.0_f64).sqrt();
+        let got = s[2].expect("populated");
+        assert!((got - want).abs() < 1e-12,
+            "expected stdev {want} for [1,2,3], got {got}");
+    }
+
+    #[test]
+    fn rolling_stdev_window_advances_with_input() {
+        // Window [1,2,3] then [2,3,4] — should both produce the same stdev
+        // (arithmetic progression with same step preserves variance).
+        let v = vec![1.0, 2.0, 3.0, 4.0];
+        let s = rolling_stdev(&v, 3);
+        let a = s[2].expect("populated");
+        let b = s[3].expect("populated");
+        assert!((a - b).abs() < 1e-12,
+            "stdev of constant-step windows must match: {a} vs {b}");
+    }
+}

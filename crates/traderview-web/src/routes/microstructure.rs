@@ -24,10 +24,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use traderview_core::{
     cluster_analysis, correlation_clusters, dow_hour_heatmap, equity_regime, footprint,
-    intraday_heatmap, iv_backtest, iv_rank, liquidity, market_impact, market_profile,
-    models::Trade, news_event_handler, oi_change, open_type, order_book_imbalance, order_flow,
-    order_staleness, per_symbol_slippage, pyramid, setup_catalog, stop_loss_backtest,
-    stress_test, time_in_force, trade_plan_checklist, vwap_slippage,
+    implementation_shortfall, intraday_heatmap, iv_backtest, iv_rank, liquidity, market_impact,
+    market_profile, models::Trade, news_event_handler, oi_change, open_type, order_book_imbalance,
+    order_flow, order_staleness, per_symbol_slippage, pyramid, setup_catalog, spread_tracker,
+    stop_loss_backtest, stress_test, tilt_indicator, time_in_force, trade_plan_checklist,
+    vwap_slippage,
 };
 
 pub fn router() -> Router<AppState> {
@@ -66,6 +67,11 @@ pub fn router() -> Router<AppState> {
         .route("/microstructure/footprint",            post(footprint_route))
         .route("/microstructure/market-profile",       post(market_profile_route))
         .route("/microstructure/stress-test",          post(stress_test_route))
+        // ── Cohort tilt indicator (TopstepX) ───────────────────────────
+        .route("/sentiment/cohort-tilt",               post(cohort_tilt_route))
+        // ── New: spread tracker + implementation shortfall ─────────────
+        .route("/microstructure/spread-tracker",       post(spread_tracker_route))
+        .route("/microstructure/implementation-shortfall", post(implementation_shortfall_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -444,4 +450,37 @@ async fn stress_test_route(
     _u: AuthUser, Json(input): Json<stress_test::StressInput>,
 ) -> Json<stress_test::StressReport> {
     Json(stress_test::analyze(&input))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Cohort tilt indicator — TopstepX class. Aggregate long/short bias
+// across a group of traders' positions.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct CohortTiltBody { positions: Vec<tilt_indicator::TraderPosition> }
+
+async fn cohort_tilt_route(
+    _u: AuthUser, Json(b): Json<CohortTiltBody>,
+) -> Json<tilt_indicator::TiltReport> {
+    Json(tilt_indicator::aggregate(&b.positions))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Bid/ask spread tracker + implementation shortfall (institutional TCA).
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct SpreadTrackerBody { samples: Vec<spread_tracker::QuoteSnapshot> }
+
+async fn spread_tracker_route(
+    _u: AuthUser, Json(b): Json<SpreadTrackerBody>,
+) -> Json<spread_tracker::SpreadReport> {
+    Json(spread_tracker::analyze(&b.samples))
+}
+
+async fn implementation_shortfall_route(
+    _u: AuthUser, Json(input): Json<implementation_shortfall::ShortfallInput>,
+) -> Json<implementation_shortfall::ShortfallReport> {
+    Json(implementation_shortfall::analyze(&input))
 }

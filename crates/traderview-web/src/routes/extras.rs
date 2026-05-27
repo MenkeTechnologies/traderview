@@ -19,9 +19,9 @@ use serde::{Deserialize, Serialize};
 use traderview_core::{
     alligator, atr_cone, daily_loss_limit, drawdown_throttle, earnings_calendar, futures_roll,
     goal_tracker, holiday_calendar, models::{Trade, TradeSide}, mtm_reconciliation, options_margin,
-    pair_trade, position_aging, position_irr, put_call_ratio, reconcile_1099b, risk_reward,
-    rolling_zscore, spread_attribution, strategy_correlation, symbol_filter, triple_screen,
-    twap, volatility_stop,
+    pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, reconcile_1099b,
+    risk_reward, rolling_zscore, sip_simulator, spread_attribution, strategy_correlation,
+    symbol_filter, tax_lot_optimizer, triple_screen, twap, volatility_stop,
 };
 
 pub fn router() -> Router<AppState> {
@@ -73,6 +73,10 @@ pub fn router() -> Router<AppState> {
         .route("/filter/symbols",                 post(symbol_filter_route))
         // ── Futures roll schedule ──────────────────────────────────────
         .route("/futures/roll-schedule",          post(futures_roll_route))
+        // ── New: SIP/DRIP + portfolio heat + HIFO lot optimizer ────────
+        .route("/portfolio/sip-simulator",        post(sip_simulator_route))
+        .route("/portfolio/heat",                 post(portfolio_heat_route))
+        .route("/tax/lot-optimizer",              post(tax_lot_optimizer_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -464,4 +468,56 @@ async fn futures_roll_route(
     _u: AuthUser, Json(b): Json<FuturesRollBody>,
 ) -> Json<futures_roll::RollReport> {
     Json(futures_roll::schedule(&b.positions, b.today, b.roll_window_days))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// SIP/DRIP simulator — eToro/Robinhood/Coinbase recurring-deposit math.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct SipBody {
+    bars: Vec<sip_simulator::PriceBar>,
+    spec: sip_simulator::ScheduleSpec,
+}
+
+async fn sip_simulator_route(
+    _u: AuthUser, Json(b): Json<SipBody>,
+) -> Json<sip_simulator::SipReport> {
+    Json(sip_simulator::simulate(&b.bars, &b.spec))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Portfolio heat — correlated-position budget enforcement.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct PortfolioHeatBody {
+    open_positions: Vec<portfolio_heat::OpenRiskPosition>,
+    correlations: Vec<portfolio_heat::CorrEdge>,
+    candidate: portfolio_heat::CandidateTrade,
+    config: portfolio_heat::HeatConfig,
+}
+
+async fn portfolio_heat_route(
+    _u: AuthUser, Json(b): Json<PortfolioHeatBody>,
+) -> Json<portfolio_heat::HeatReport> {
+    Json(portfolio_heat::evaluate(&b.open_positions, &b.correlations, &b.candidate, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Tax-lot optimizer — HIFO / Lifoust / MaxLossHarvest selection.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct TaxLotOptimizerBody {
+    lots: Vec<tax_lot_optimizer::CostLot>,
+    qty_to_close: Decimal,
+    sell_price: Decimal,
+    strategy: tax_lot_optimizer::LotStrategy,
+}
+
+async fn tax_lot_optimizer_route(
+    _u: AuthUser, Json(b): Json<TaxLotOptimizerBody>,
+) -> Json<tax_lot_optimizer::CloseReport> {
+    Json(tax_lot_optimizer::close(&b.lots, b.qty_to_close, b.sell_price, b.strategy))
 }

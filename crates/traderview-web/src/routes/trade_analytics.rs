@@ -23,10 +23,10 @@ use std::collections::HashMap;
 use traderview_core::{
     beta, beta_hedge, bracket_order, cagr, calendar_bias, concentration, discipline_score,
     drawdown_duration, earnings_move, emotion_tags, exit_timing, gap_analysis, halt_risk,
-    hedge_ratio, high_water_mark, mae_stop_tuning, models::TradeSide, overtrading, pead,
-    portfolio_greeks, probability_of_touch, profit_factor, pyramid_rules, sector_exposure,
-    sharpe_by_window, sortino, spread_payoff, streaks, tilt_detector, trade_quality, treynor,
-    winloss_asymmetry,
+    hedge_ratio, high_water_mark, mae_stop_tuning, mean_reversion, models::TradeSide, overtrading,
+    pead, portfolio_greeks, probability_of_touch, profit_factor, pyramid_rules, sector_exposure,
+    sharpe_by_window, sortino, spread_payoff, strategy_decay, streaks, tilt_detector,
+    trade_quality, treynor, volatility_regime, winloss_asymmetry,
 };
 
 pub fn router() -> Router<AppState> {
@@ -71,6 +71,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/beta-hedge",           post(beta_hedge_route))
         .route("/analytics/hedge-ratio",          post(hedge_ratio_route))
         .route("/analytics/spread-payoff",        post(spread_payoff_route))
+        // ── New: Strategy decay + vol regime ────────────────────────────
+        .route("/analytics/strategy-decay",       post(strategy_decay_route))
+        .route("/analytics/volatility-regime",    post(volatility_regime_route))
+        .route("/analytics/mean-reversion",       post(mean_reversion_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -506,4 +510,44 @@ async fn spread_payoff_route(
         ));
     }
     Ok(Json(spread_payoff::payoff(&b.legs, b.price_low, b.price_high, b.steps, b.multiplier)))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Strategy decay detector + volatility regime classifier.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct StrategyDecayBody {
+    rolling_sharpe: Vec<f64>,
+    config: strategy_decay::DecayConfig,
+}
+
+async fn strategy_decay_route(
+    _u: AuthUser, Json(b): Json<StrategyDecayBody>,
+) -> Json<strategy_decay::DecayReport> {
+    Json(strategy_decay::analyze(&b.rolling_sharpe, &b.config))
+}
+
+#[derive(Deserialize)]
+struct VolatilityRegimeBody {
+    current_vol: f64,
+    history: Vec<f64>,
+}
+
+async fn volatility_regime_route(
+    _u: AuthUser, Json(b): Json<VolatilityRegimeBody>,
+) -> Json<volatility_regime::VolRegimeReport> {
+    Json(volatility_regime::classify(b.current_vol, &b.history))
+}
+
+#[derive(Deserialize)]
+struct MeanReversionBody {
+    closes: Vec<f64>,
+    config: mean_reversion::MeanRevConfig,
+}
+
+async fn mean_reversion_route(
+    _u: AuthUser, Json(b): Json<MeanReversionBody>,
+) -> Json<mean_reversion::MeanRevReport> {
+    Json(mean_reversion::analyze(&b.closes, &b.config))
 }

@@ -917,4 +917,13 @@ export const api = {
     microFootprint:          (b) => request('/microstructure/footprint',            { method: 'POST', body: JSON.stringify(b) }),
     microMarketProfile:      (b) => request('/microstructure/market-profile',       { method: 'POST', body: JSON.stringify(b) }),
     microStressTest:         (b) => request('/microstructure/stress-test',          { method: 'POST', body: JSON.stringify(b) }),
+    cohortTilt:              (b) => request('/sentiment/cohort-tilt',                { method: 'POST', body: JSON.stringify(b) }),
+    anlyStrategyDecay:       (b) => request('/analytics/strategy-decay',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyVolatilityRegime:    (b) => request('/analytics/volatility-regime',          { method: 'POST', body: JSON.stringify(b) }),
+    sipSimulator:            (b) => request('/portfolio/sip-simulator',              { method: 'POST', body: JSON.stringify(b) }),
+    portfolioHeat:           (b) => request('/portfolio/heat',                       { method: 'POST', body: JSON.stringify(b) }),
+    taxLotOptimizer:         (b) => request('/tax/lot-optimizer',                    { method: 'POST', body: JSON.stringify(b) }),
+    microSpreadTracker:      (b) => request('/microstructure/spread-tracker',        { method: 'POST', body: JSON.stringify(b) }),
+    microImplShortfall:      (b) => request('/microstructure/implementation-shortfall', { method: 'POST', body: JSON.stringify(b) }),
+    anlyMeanReversion:       (b) => request('/analytics/mean-reversion',             { method: 'POST', body: JSON.stringify(b) }),
 };
