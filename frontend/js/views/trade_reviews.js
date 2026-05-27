@@ -1,0 +1,191 @@
+// Forced post-trade reflection: inbox of |R|>=2 trades + 5-question form.
+
+import { api } from '../api.js';
+import { esc, fmt } from '../util.js';
+
+const MOOD_OPTS = [
+    [-2, '😡 awful'], [-1, '🙁 down'], [0, '😐 flat'], [1, '🙂 good'], [2, '😄 great'],
+];
+
+export async function renderTradeReviews(mount, state) {
+    const acct = state.accounts.find(a => a.id === state.accountId);
+    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    mount.innerHTML = `
+        <h1 class="view-title">// REVIEWS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
+        <p class="muted small">Every closed trade with <strong>|R| ≥ 2</strong> auto-queues
+            here for forced reflection. Big wins teach as much as big losses — review them
+            both. Five fixed questions per review keep the dataset comparable across hundreds
+            of trades.</p>
+
+        <div id="tr-stats" class="cards"><div class="boot">loading…</div></div>
+        <div id="tr-inbox"></div>
+        <div id="tr-modal"></div>
+        <div id="tr-history"></div>
+    `;
+    await refresh(acct.id);
+}
+
+async function refresh(accountId) {
+    try {
+        const [s, needed, history] = await Promise.all([
+            api.reviewStats(accountId),
+            api.reviewsNeeded(accountId),
+            api.listReviews(20),
+        ]);
+        renderStats(s);
+        renderInbox(needed, accountId);
+        renderHistory(history);
+    } catch (e) {
+        document.getElementById('tr-inbox').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+    }
+}
+
+function renderStats(s) {
+    const cls = s.completion_pct >= 80 ? 'pos' : s.completion_pct >= 50 ? '' : 'neg';
+    document.getElementById('tr-stats').innerHTML = `
+        <div class="card"><div class="label">High-|R| trades</div>
+            <div class="value">${s.total_high_r_trades}</div>
+            <div class="small muted">closed, |R| ≥ 2</div></div>
+        <div class="card"><div class="label">Reviewed</div>
+            <div class="value pos">${s.reviewed}</div></div>
+        <div class="card"><div class="label">Pending</div>
+            <div class="value ${s.pending > 0 ? 'neg' : ''}">${s.pending}</div></div>
+        <div class="card"><div class="label">Completion</div>
+            <div class="value ${cls}">${s.completion_pct.toFixed(1)}%</div>
+            ${s.last_review_at ? `<div class="small muted">last ${new Date(s.last_review_at).toLocaleString()}</div>` : ''}
+        </div>
+    `;
+}
+
+function renderInbox(items, accountId) {
+    const el = document.getElementById('tr-inbox');
+    if (!items.length) {
+        el.innerHTML = '<div class="chart-panel"><p class="muted small">✓ Inbox zero — every high-|R| trade has been reviewed.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="chart-panel">
+        <h2>Needs review (${items.length})</h2>
+        <table class="trades">
+            <thead><tr>
+                <th>Closed</th><th>Symbol</th><th>Side</th>
+                <th>Net P/L</th><th>R</th><th></th>
+            </tr></thead>
+            <tbody>
+            ${items.map(i => `<tr>
+                <td class="small">${i.closed_at ? new Date(i.closed_at).toLocaleString() : '—'}</td>
+                <td><a href="#trade/${i.trade_id}">${esc(i.symbol)}</a></td>
+                <td>${esc(i.side)}</td>
+                <td class="${i.net_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(i.net_pnl)}</td>
+                <td class="${i.r_multiple >= 0 ? 'pos' : 'neg'}">${(i.r_multiple >= 0 ? '+' : '') + i.r_multiple.toFixed(2)}R</td>
+                <td><button class="btn tr-open" data-tid="${i.trade_id}" data-sym="${esc(i.symbol)}" data-r="${i.r_multiple.toFixed(2)}">Review</button></td>
+            </tr>`).join('')}
+            </tbody>
+        </table>
+    </div>`;
+    el.querySelectorAll('.tr-open').forEach(b =>
+        b.addEventListener('click', () => openModal(b.dataset.tid, b.dataset.sym, b.dataset.r, accountId)));
+}
+
+async function openModal(tradeId, symbol, rMult, accountId) {
+    let existing = null;
+    try { existing = await api.reviewForTrade(tradeId); } catch (_) {}
+    const m = document.getElementById('tr-modal');
+    m.innerHTML = `
+        <div style="position:fixed;inset:0;background:rgba(7,7,20,0.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;">
+            <div class="chart-panel" style="max-width:640px;width:100%;">
+                <h2>Review ${esc(symbol)} (${esc(rMult)}R)</h2>
+                <form id="tr-form" class="inline-form" style="flex-direction:column;align-items:stretch;gap:10px;">
+                    <label style="display:flex;justify-content:space-between;">
+                        <span>1. Was the entry per plan?</span>
+                        <span>
+                            <label><input type="radio" name="entry_per_plan" value="yes" ${existing?.entry_per_plan === true ? 'checked' : ''}> yes</label>
+                            <label><input type="radio" name="entry_per_plan" value="no"  ${existing?.entry_per_plan === false ? 'checked' : ''}> no</label>
+                        </span>
+                    </label>
+                    <label style="display:flex;justify-content:space-between;">
+                        <span>2. Was the exit per plan?</span>
+                        <span>
+                            <label><input type="radio" name="exit_per_plan" value="yes" ${existing?.exit_per_plan === true ? 'checked' : ''}> yes</label>
+                            <label><input type="radio" name="exit_per_plan" value="no"  ${existing?.exit_per_plan === false ? 'checked' : ''}> no</label>
+                        </span>
+                    </label>
+                    <label style="display:flex;flex-direction:column;">
+                        <span>3. What would you change next time?</span>
+                        <textarea name="would_change" rows="3"
+                            style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;font-family:inherit;">${esc(existing?.would_change || '')}</textarea>
+                    </label>
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        <span>4. Mood at exit</span>
+                        <select name="mood_at_exit">
+                            <option value="">—</option>
+                            ${MOOD_OPTS.map(([v, l]) =>
+                                `<option value="${v}" ${existing?.mood_at_exit === v ? 'selected' : ''}>${esc(l)}</option>`
+                            ).join('')}
+                        </select>
+                    </label>
+                    <label style="display:flex;flex-direction:column;">
+                        <span>5. Setup classifier (one tag)</span>
+                        <input name="setup_tag" placeholder="e.g. breakout / fade / news / squeeze"
+                            value="${esc(existing?.setup_tag || '')}"
+                            style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;">
+                    </label>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                        <button type="button" class="btn" id="tr-cancel">Cancel</button>
+                        <button class="primary" type="submit">Save review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    const close = () => { m.innerHTML = ''; };
+    document.getElementById('tr-cancel').addEventListener('click', close);
+    document.getElementById('tr-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const body = {
+            trade_id: tradeId,
+            entry_per_plan: fd.get('entry_per_plan') === 'yes' ? true
+                          : fd.get('entry_per_plan') === 'no'  ? false : null,
+            exit_per_plan:  fd.get('exit_per_plan')  === 'yes' ? true
+                          : fd.get('exit_per_plan')  === 'no'  ? false : null,
+            would_change: fd.get('would_change') || null,
+            mood_at_exit: fd.get('mood_at_exit') ? Number(fd.get('mood_at_exit')) : null,
+            setup_tag:    fd.get('setup_tag') || null,
+        };
+        try {
+            await api.saveReview(body);
+            close();
+            await refresh(accountId);
+        } catch (err) { alert(err.message); }
+    });
+}
+
+function renderHistory(rows) {
+    const el = document.getElementById('tr-history');
+    if (!rows.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="chart-panel">
+        <h2>Recent reviews (${rows.length})</h2>
+        <table class="trades">
+            <thead><tr>
+                <th>When</th><th>Trade</th><th>Entry / Exit per plan</th>
+                <th>Mood</th><th>Setup</th><th>Would change</th>
+            </tr></thead>
+            <tbody>
+            ${rows.map(r => {
+                const mood = (MOOD_OPTS.find(([v]) => v === r.mood_at_exit) || ['', '—'])[1];
+                const tick = b => b === true ? '<span class="pos">✓</span>'
+                                : b === false ? '<span class="neg">✗</span>'
+                                : '<span class="muted">—</span>';
+                return `<tr>
+                    <td class="small">${new Date(r.completed_at).toLocaleString()}</td>
+                    <td><a href="#trade/${r.trade_id}">${r.trade_id.slice(0, 8)}…</a></td>
+                    <td class="small">${tick(r.entry_per_plan)} / ${tick(r.exit_per_plan)}</td>
+                    <td>${esc(mood)}</td>
+                    <td class="small">${esc(r.setup_tag || '')}</td>
+                    <td class="small muted">${esc((r.would_change || '').slice(0, 80))}</td>
+                </tr>`;
+            }).join('')}
+            </tbody>
+        </table>
+    </div>`;
+}

@@ -393,6 +393,17 @@ export const api = {
     // R-multiple distribution + SQN + per-tag breakdown
     rDistribution: (accountId) => request(`/r-distribution/${accountId}`),
 
+    // Trade reviews (forced reflection on |R|>=2 trades)
+    listReviews:    (limit = 50) => request(`/trade-reviews?limit=${limit}`),
+    reviewsNeeded:  (accountId, limit = 50) =>
+        request(`/trade-reviews/needed/${accountId}?limit=${limit}`),
+    reviewStats:    (accountId) => request(`/trade-reviews/stats/${accountId}`),
+    reviewForTrade: (tradeId)   => request(`/trade-reviews/trade/${tradeId}`),
+    saveReview:     (body) =>
+        request('/trade-reviews', { method: 'POST', body: JSON.stringify(body) }),
+    deleteReview:   (tradeId) =>
+        request(`/trade-reviews/trade/${tradeId}/delete`, { method: 'POST' }),
+
     // Trading goals
     listGoals:   () => request('/goals'),
     createGoal:  (body) => request('/goals', { method: 'POST', body: JSON.stringify(body) }),

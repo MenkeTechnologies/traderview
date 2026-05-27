@@ -64,6 +64,7 @@ mod strategy_alerts;
 mod tags;
 mod tape_replay;
 mod tax_lots;
+mod trade_reviews;
 mod trades;
 mod vol;
 mod vol_surface;
@@ -139,6 +140,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(discipline::router())
         .merge(goals::router())
         .merge(r_distribution::router())
+        .merge(trade_reviews::router())
 }
 
 mod helpers {
