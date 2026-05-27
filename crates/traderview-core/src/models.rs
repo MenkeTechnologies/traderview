@@ -521,3 +521,170 @@ pub struct FxRate {
     pub rate: Decimal,
     pub source: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    // ─── Side enum methods ────────────────────────────────────────────────
+
+    #[test]
+    fn side_opens_only_for_buy_and_short() {
+        assert!(Side::Buy.opens());
+        assert!(Side::Short.opens());
+        assert!(!Side::Sell.opens());
+        assert!(!Side::Cover.opens());
+    }
+
+    #[test]
+    fn side_closes_only_for_sell_and_cover() {
+        assert!(Side::Sell.closes());
+        assert!(Side::Cover.closes());
+        assert!(!Side::Buy.closes());
+        assert!(!Side::Short.closes());
+    }
+
+    #[test]
+    fn side_is_long_side_only_for_buy_and_sell() {
+        assert!(Side::Buy.is_long_side());
+        assert!(Side::Sell.is_long_side());
+        assert!(!Side::Short.is_long_side());
+        assert!(!Side::Cover.is_long_side());
+    }
+
+    #[test]
+    fn side_opens_and_closes_are_mutually_exclusive() {
+        for s in [Side::Buy, Side::Sell, Side::Short, Side::Cover] {
+            assert!(s.opens() ^ s.closes(),
+                "{:?}: every side must be either open or close, never both", s);
+        }
+    }
+
+    #[test]
+    fn side_serde_lowercase_roundtrip() {
+        // Side must serialize as the lowercase string the DB enum expects.
+        for (variant, expected) in [
+            (Side::Buy,   r#""buy""#),
+            (Side::Sell,  r#""sell""#),
+            (Side::Short, r#""short""#),
+            (Side::Cover, r#""cover""#),
+        ] {
+            assert_eq!(serde_json::to_string(&variant).unwrap(), expected);
+            let back: Side = serde_json::from_str(expected).unwrap();
+            assert_eq!(back, variant);
+        }
+    }
+
+    // ─── TradeSide ────────────────────────────────────────────────────────
+
+    #[test]
+    fn trade_side_sign_is_signed_one() {
+        assert_eq!(TradeSide::Long.sign(), Decimal::ONE);
+        assert_eq!(TradeSide::Short.sign(), -Decimal::ONE);
+    }
+
+    // ─── AssetClass default ───────────────────────────────────────────────
+
+    #[test]
+    fn asset_class_defaults_to_stock() {
+        // Trade rows created from sources that don't carry asset_class
+        // (older imports, basic CSV) must land as Stock.
+        let a: AssetClass = Default::default();
+        assert_eq!(a, AssetClass::Stock);
+    }
+
+    // ─── BarInterval ──────────────────────────────────────────────────────
+
+    #[test]
+    fn bar_interval_seconds_match_real_durations() {
+        assert_eq!(BarInterval::M1.seconds(),  60);
+        assert_eq!(BarInterval::M5.seconds(),  300);
+        assert_eq!(BarInterval::M15.seconds(), 900);
+        assert_eq!(BarInterval::H1.seconds(),  3_600);
+        assert_eq!(BarInterval::D1.seconds(),  86_400);
+        assert_eq!(BarInterval::W1.seconds(),  604_800);
+    }
+
+    #[test]
+    fn bar_interval_serde_uses_short_label() {
+        let one_min: BarInterval = serde_json::from_str(r#""1m""#).unwrap();
+        assert_eq!(one_min, BarInterval::M1);
+        assert_eq!(serde_json::to_string(&BarInterval::D1).unwrap(), r#""1d""#);
+    }
+
+    // ─── Trade::r_multiple / hold_seconds ─────────────────────────────────
+
+    fn closed_trade(net_pnl: Option<Decimal>, risk_amount: Option<Decimal>) -> Trade {
+        Trade {
+            id: Uuid::nil(),
+            account_id: Uuid::nil(),
+            symbol: "TEST".into(),
+            side: TradeSide::Long,
+            status: TradeStatus::Closed,
+            opened_at: Utc.with_ymd_and_hms(2026, 1, 1, 9, 30, 0).unwrap(),
+            closed_at: Some(Utc.with_ymd_and_hms(2026, 1, 1, 15, 30, 0).unwrap()),
+            qty: Decimal::from(100),
+            entry_avg: Decimal::from(50),
+            exit_avg: Some(Decimal::from(52)),
+            gross_pnl: net_pnl,
+            fees: Decimal::ZERO,
+            net_pnl,
+            asset_class: AssetClass::Stock,
+            option_type: None, strike: None, expiration: None,
+            multiplier: Decimal::ONE,
+            tick_size: None, tick_value: None,
+            base_ccy: None, quote_ccy: None, pip_size: None,
+            stop_loss: None, risk_amount, initial_target: None,
+            mfe: None, mae: None, best_exit_pnl: None, exit_efficiency: None,
+        }
+    }
+
+    #[test]
+    fn r_multiple_returns_none_when_risk_amount_missing() {
+        let t = closed_trade(Some(Decimal::from(200)), None);
+        assert!(t.r_multiple().is_none());
+    }
+
+    #[test]
+    fn r_multiple_returns_none_when_risk_amount_zero() {
+        // Divide-by-zero guard — must not panic.
+        let t = closed_trade(Some(Decimal::from(200)), Some(Decimal::ZERO));
+        assert!(t.r_multiple().is_none());
+    }
+
+    #[test]
+    fn r_multiple_computes_pnl_over_risk() {
+        // $300 P&L on $100 R = 3R.
+        let t = closed_trade(Some(Decimal::from(300)), Some(Decimal::from(100)));
+        assert_eq!(t.r_multiple(), Some(Decimal::from(3)));
+    }
+
+    #[test]
+    fn r_multiple_handles_negative_pnl() {
+        // -$150 on $100 R = -1.5R.
+        let t = closed_trade(Some(Decimal::from(-150)), Some(Decimal::from(100)));
+        assert_eq!(t.r_multiple(), Some(Decimal::new(-15, 1)));
+    }
+
+    #[test]
+    fn r_multiple_returns_none_when_net_pnl_missing() {
+        let t = closed_trade(None, Some(Decimal::from(100)));
+        assert!(t.r_multiple().is_none());
+    }
+
+    #[test]
+    fn hold_seconds_returns_difference_between_open_and_close() {
+        let t = closed_trade(Some(Decimal::from(100)), None);
+        // 09:30 → 15:30 = 6 hours = 21600 seconds.
+        assert_eq!(t.hold_seconds(), Some(21_600));
+    }
+
+    #[test]
+    fn hold_seconds_returns_none_when_open() {
+        let mut t = closed_trade(Some(Decimal::from(100)), None);
+        t.closed_at = None;
+        t.status = TradeStatus::Open;
+        assert!(t.hold_seconds().is_none());
+    }
+}

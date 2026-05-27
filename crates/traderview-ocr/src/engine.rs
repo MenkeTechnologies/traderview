@@ -114,3 +114,37 @@ fn polygon_top_left(p: &pure_onnx_ocr_sync::Polygon<f64>) -> (f64, f64) {
 pub fn run(_bytes: &[u8], _model_dir: &Path) -> Result<RawText, OcrError> {
     Err(OcrError::EngineDisabled)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn raw_text_holds_string_and_confidence() {
+        // Smoke test on the struct — defends against accidental field
+        // renames that would break engine→parse pipeline.
+        let r = RawText { text: "TOTAL $12.34".into(), confidence: 0.85 };
+        assert_eq!(r.text, "TOTAL $12.34");
+        assert!((r.confidence - 0.85).abs() < 1e-6);
+    }
+
+    #[cfg(not(feature = "engine"))]
+    #[test]
+    fn run_returns_engine_disabled_when_feature_off() {
+        // Default workspace build doesn't enable `engine` (heavy tract+ndarray
+        // deps). The fallback must return a clear "this build doesn't include
+        // OCR" error instead of pretending to OCR.
+        let r = run(b"\xff\xd8\xff", Path::new("/nonexistent"));
+        assert!(matches!(r, Err(OcrError::EngineDisabled)));
+    }
+
+    #[cfg(feature = "engine")]
+    #[test]
+    fn run_with_missing_models_returns_models_missing() {
+        // When the engine feature IS on but the .onnx files aren't where
+        // we expect, error must be ModelsMissing (so the UI can prompt
+        // the user to download), not Engine (which implies a runtime bug).
+        let r = run(b"\xff\xd8\xff", Path::new("/definitely/does/not/exist"));
+        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })));
+    }
+}

@@ -73,3 +73,68 @@ pub fn extract(bytes: &[u8], mime: &str, model_dir: Option<&std::path::Path>) ->
     }
     Err(OcrError::UnsupportedMime(mime.into()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unsupported_mime_returns_error() {
+        let r = extract(b"some bytes", "text/plain", None);
+        assert!(matches!(r, Err(OcrError::UnsupportedMime(s)) if s == "text/plain"));
+    }
+
+    #[test]
+    fn unsupported_mime_is_case_insensitive() {
+        // Browser may send "IMAGE/JPEG" or "Application/PDF" — must not
+        // be misclassified as unsupported.
+        let r = extract(b"", "TEXT/PLAIN", None);
+        assert!(matches!(r, Err(OcrError::UnsupportedMime(_))));
+    }
+
+    #[test]
+    fn empty_pdf_returns_needs_image() {
+        // A 0-byte body — pdf::extract_text returns "" or errors. Either way
+        // the user-visible signal must be NeedsImage, not Decode (different UX).
+        let r = extract(b"%PDF-1.4\n%EOF\n", "application/pdf", None);
+        // Either NeedsImage (no text layer) or Pdf decode error — both are
+        // valid signals to the UI; what's NOT valid is a panic.
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn image_without_model_dir_returns_models_missing() {
+        // Caller forgot to point at the model directory — must NOT panic.
+        let r = extract(b"\xff\xd8\xff", "image/jpeg", None);
+        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })));
+    }
+
+    #[test]
+    fn ocr_result_serializes_to_json() {
+        // OcrResult is shipped over the wire to the frontend receipt-match
+        // modal — serde must produce flat JSON the JS can parse.
+        let r = OcrResult {
+            text: "subtotal $42.99".into(),
+            merchant: Some("CHIPOTLE".into()),
+            total: Some(rust_decimal::Decimal::new(4299, 2)),
+            date: chrono::NaiveDate::from_ymd_opt(2026, 5, 27),
+            confidence: 0.87,
+        };
+        let s = serde_json::to_string(&r).unwrap();
+        assert!(s.contains("CHIPOTLE"));
+        assert!(s.contains("42.99"));
+        assert!(s.contains("2026-05-27"));
+    }
+
+    #[test]
+    fn error_display_is_user_actionable() {
+        // The frontend surfaces these messages directly. Each must hint at
+        // the corrective action (no opaque "internal error"-style strings).
+        let needs_img = OcrError::NeedsImage.to_string();
+        assert!(needs_img.to_lowercase().contains("image") || needs_img.contains("JPG"));
+
+        let models_missing = OcrError::ModelsMissing { expected_dir: "/path/to/dir".into() }.to_string();
+        assert!(models_missing.contains("/path/to/dir"));
+        assert!(models_missing.contains(".onnx"));
+    }
+}

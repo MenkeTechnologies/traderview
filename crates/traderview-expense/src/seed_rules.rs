@@ -108,3 +108,94 @@ pub fn seed() -> Vec<Rule> {
         s("progressive", "insurance"),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    /// Categories that the shipped rules MAY emit. Adding a new category
+    /// here is fine; emitting one not in this set fails the test so the
+    /// frontend's category picker doesn't quietly desync.
+    const KNOWN_CATEGORIES: &[&str] = &[
+        "meals_50", "travel", "car_truck", "office", "utilities",
+        "legal", "advertising", "insurance",
+    ];
+
+    #[test]
+    fn every_seed_rule_uses_a_known_category() {
+        let known: HashSet<&str> = KNOWN_CATEGORIES.iter().copied().collect();
+        for r in seed() {
+            assert!(
+                known.contains(r.category_code.as_str()),
+                "rule for pattern `{}` uses unknown category `{}` — add to KNOWN_CATEGORIES or fix the typo",
+                r.pattern, r.category_code,
+            );
+        }
+    }
+
+    #[test]
+    fn seed_rules_all_default_to_business() {
+        // The seed is a *business* expense ruleset; nothing personal should
+        // ship by default.
+        for r in seed() {
+            assert!(r.is_business,
+                "non-business default rule slipped in: `{}` → `{}`",
+                r.pattern, r.category_code);
+        }
+    }
+
+    #[test]
+    fn no_duplicate_patterns() {
+        // First-match-wins; a duplicate is dead code and a confusion source.
+        let mut seen: HashSet<String> = HashSet::new();
+        for r in seed() {
+            assert!(seen.insert(r.pattern.clone()),
+                "duplicate pattern `{}` — second occurrence is unreachable",
+                r.pattern);
+        }
+    }
+
+    #[test]
+    fn specific_meals_precede_generic_uber() {
+        // "uber eats" → meals_50 must be encountered BEFORE bare "uber" →
+        // travel, or every Uber Eats charge gets misclassified as travel.
+        let rules = seed();
+        let eats_idx = rules.iter().position(|r| r.pattern == "uber eats")
+            .expect("`uber eats` rule missing");
+        let uber_idx = rules.iter().position(|r| r.pattern == "uber")
+            .expect("`uber` rule missing");
+        assert!(eats_idx < uber_idx,
+            "rule order broken: `uber eats` must precede `uber`");
+    }
+
+    #[test]
+    fn substring_kind_is_the_default_for_all_seed_rules() {
+        // The substring matcher is the cheapest + matches every shipped
+        // rule. If a future entry uses Regex, that requires extra
+        // compilation paths — call it out explicitly so it's a conscious
+        // decision.
+        for r in seed() {
+            assert!(matches!(r.pattern_kind, PatternKind::Substring),
+                "rule `{}` uses non-Substring kind — verify intentional",
+                r.pattern);
+        }
+    }
+
+    #[test]
+    fn patterns_are_lowercase() {
+        // Patterns are matched against merchant_normalized which is already
+        // lowercased; an uppercase pattern would silently never match.
+        for r in seed() {
+            assert_eq!(r.pattern, r.pattern.to_lowercase(),
+                "uppercase chars in pattern `{}` would never match", r.pattern);
+        }
+    }
+
+    #[test]
+    fn seed_is_non_trivial() {
+        // Sanity floor — if someone deletes the whole list by accident,
+        // catch it.
+        assert!(seed().len() > 20);
+    }
+}
