@@ -62,6 +62,8 @@ const SECTIONS = [
                 <dd>Simulated execution against the same quote pipeline as live. Order types: market, limit, stop, stop-limit. Reset starting cash anytime.</dd>
                 <dt><button class="link" data-go="plans">🎯 Pre-trade Plans</button></dt>
                 <dd>Write the setup before you take the trade. Link a plan to an execution post-fill — the plan vs. outcome lands in your discipline scorecard.</dd>
+                <dt><button class="link" data-go="risk-gate">🛡 Risk Gate</button></dt>
+                <dd>Pre-trade rules that BLOCK bad trades before they reach the broker. Define max loss per trade / per day, max consecutive losses, cool-down after a loss, max open positions, blocked symbols, require-plan, require-stop. Every new trade form runs these rules first and refuses to submit if any Block-severity rule fires (warnings get a confirm-then-proceed prompt).</dd>
                 <dt><button class="link" data-go="sizing">🧮 Position Size</button></dt>
                 <dd>Three modes: Kelly fraction (from your historical win-rate), fixed-fractional (% of equity per trade), R-based (max loss in dollars / stop distance). Correlation-aware: caps concentration when symbols co-move.</dd>
             </dl>`,

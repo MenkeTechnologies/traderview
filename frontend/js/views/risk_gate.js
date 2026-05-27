@@ -1,0 +1,247 @@
+// Risk Gate — manage pre-trade rules + dry-run the gate against a proposed trade.
+//
+// Backend: traderview_core::risk_gate (pure engine, unit-tested) + DB
+// table risk_rules (migration 0030) + 4 routes under /api/risk-gate/.
+
+import { api } from '../api.js';
+import { esc, fmtMoney, fmtPct } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+
+const RULE_TYPES = [
+    { id: 'max_loss_per_trade_pct',     label: 'Max loss per trade (% of equity)',     fields: [['pct', 'number', '1.0']] },
+    { id: 'max_loss_per_day_pct',       label: 'Max loss per day (% of equity)',       fields: [['pct', 'number', '2.0']] },
+    { id: 'max_consecutive_losses_today', label: 'Max consecutive losses today',       fields: [['n', 'integer', '3']] },
+    { id: 'cool_down_after_loss_minutes', label: 'Cool-down after loss (minutes)',     fields: [['minutes', 'integer', '15']] },
+    { id: 'max_open_positions',         label: 'Max open positions',                   fields: [['n', 'integer', '5']] },
+    { id: 'max_position_size_pct',      label: 'Max position size (% of equity)',      fields: [['pct', 'number', '20']] },
+    { id: 'blocked_symbols',            label: 'Blocked symbols (comma-sep)',          fields: [['symbols', 'text', 'GME,AMC']] },
+    { id: 'require_plan_before_trade',  label: 'Require pre-trade plan',                fields: [] },
+    { id: 'require_stop_loss',          label: 'Require stop loss (warning only)',     fields: [] },
+];
+
+export async function renderRiskGate(mount, state) {
+    if (!mount) return;
+    const tok = currentViewToken();
+    const accountId = state.accountId;
+
+    mount.innerHTML = `
+        <h1 class="view-title">// RISK GATE</h1>
+        <p class="muted small">
+            Pre-trade rules that veto bad trades <em>before</em> they reach the broker.
+            <code>discipline</code> tells you what you already broke; this stops the next one.
+            Engine: <code>traderview_core::risk_gate</code> (pure-compute, 18 unit tests).
+        </p>
+
+        <div class="chart-panel">
+            <h2>Install a preset</h2>
+            <p class="muted small">One-click curated rule pack. Existing rules are kept — review + delete after install if you want a clean slate.</p>
+            <div class="inline-form" id="rg-presets">
+                <button class="primary" data-preset="beginner">Beginner (strict — 1% trade, 3% day, requires plan + stop)</button>
+                <button class="primary" data-preset="intermediate">Intermediate (1% trade, 5% day, requires stop)</button>
+                <button class="primary" data-preset="aggressive">Aggressive (daily cap + cool-down only)</button>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Active rules</h2>
+            <table class="trades" id="rg-rules">
+                <thead><tr>
+                    <th>Type</th><th>Config</th><th>Account</th><th>Enabled</th><th></th>
+                </tr></thead>
+                <tbody><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Add rule</h2>
+            <form id="rg-add" class="inline-form">
+                <label>Rule type
+                    <select name="type" id="rg-type">
+                        ${RULE_TYPES.map(t =>
+                            `<option value="${esc(t.id)}">${esc(t.label)}</option>`
+                        ).join('')}
+                    </select>
+                </label>
+                <div id="rg-fields" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+                <label>Scope
+                    <select name="account_id">
+                        <option value="">All accounts</option>
+                        ${(state.accounts || []).map(a =>
+                            `<option value="${esc(a.id)}">${esc(a.broker)} · ${esc(a.name)}</option>`
+                        ).join('')}
+                    </select>
+                </label>
+                <button class="primary" type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Dry-run a proposed trade</h2>
+            <p class="muted small">Same call <code>POST /api/risk-gate/evaluate</code> the New Trade form will make before submitting. Use this to verify your rules.</p>
+            <form id="rg-eval" class="inline-form">
+                <label>Symbol <input name="symbol" value="AAPL" required></label>
+                <label>Side
+                    <select name="side">
+                        <option value="long">Long</option>
+                        <option value="short">Short</option>
+                    </select></label>
+                <label>Qty <input name="qty" type="number" step="any" value="100" required></label>
+                <label>Entry <input name="entry_price" type="number" step="any" value="150" required></label>
+                <label>Stop loss <input name="stop_loss" type="number" step="any" value="149"></label>
+                <label>Multiplier <input name="multiplier" type="number" step="any" value="1"></label>
+                <label><input type="checkbox" name="has_attached_plan" checked> Plan attached</label>
+                <button class="primary" type="submit">Evaluate</button>
+            </form>
+            <pre id="rg-eval-out" class="boot">—</pre>
+        </div>
+    `;
+
+    // Live form fields for the picked rule type.
+    const fieldsEl = mount.querySelector('#rg-fields');
+    const typeSel  = mount.querySelector('#rg-type');
+    const renderFields = () => {
+        const t = RULE_TYPES.find(x => x.id === typeSel.value);
+        if (!t || !t.fields.length) { fieldsEl.innerHTML = '<span class="muted small">no config</span>'; return; }
+        fieldsEl.innerHTML = t.fields.map(([name, kind, ph]) =>
+            `<label>${esc(name)}
+                <input name="${esc(name)}" type="${kind === 'text' ? 'text' : 'number'}"
+                       ${kind === 'integer' ? 'step="1"' : kind === 'number' ? 'step="any"' : ''}
+                       value="${esc(ph)}" required>
+            </label>`
+        ).join('');
+    };
+    typeSel.addEventListener('change', renderFields);
+    renderFields();
+
+    // Preset install buttons.
+    mount.querySelectorAll('#rg-presets [data-preset]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const preset = btn.dataset.preset;
+            const ok = confirm(`Install ${preset} preset? Existing rules are kept (deduplication is manual).`);
+            if (!ok) return;
+            try {
+                const r = await api.installRiskPreset(preset);
+                if (!viewIsCurrent(tok)) return;
+                alert(`Installed ${r.inserted} rules.`);
+                await reloadRules(mount, tok);
+            } catch (e) { alert('Install failed: ' + e.message); }
+        });
+    });
+
+    // Load existing rules.
+    await reloadRules(mount, tok);
+
+    // Add-rule submit.
+    mount.querySelector('#rg-add').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const t = RULE_TYPES.find(x => x.id === fd.get('type'));
+        const rule = { type: t.id };
+        for (const [name, kind] of t.fields) {
+            if (name === 'symbols') {
+                rule.symbols = String(fd.get(name) || '')
+                    .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+            } else if (kind === 'integer') {
+                rule[name] = parseInt(fd.get(name), 10);
+            } else {
+                rule[name] = String(fd.get(name));
+            }
+        }
+        const body = { rule, account_id: fd.get('account_id') || null };
+        try {
+            await api.createRiskRule(body);
+            if (!viewIsCurrent(tok)) return;
+            await reloadRules(mount, tok);
+        } catch (err) { alert('Create failed: ' + err.message); }
+    });
+
+    // Dry-run evaluate.
+    mount.querySelector('#rg-eval').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!accountId) {
+            mount.querySelector('#rg-eval-out').textContent =
+                'No account selected. Pick one in the topbar account strip.';
+            return;
+        }
+        const fd = new FormData(e.target);
+        const stop = fd.get('stop_loss');
+        const proposed = {
+            symbol: fd.get('symbol'),
+            side: fd.get('side'),
+            qty: fd.get('qty'),
+            entry_price: fd.get('entry_price'),
+            stop_loss: stop ? stop : null,
+            asset_class: 'stock',
+            multiplier: fd.get('multiplier'),
+            tick_size: null,
+            tick_value: null,
+            has_attached_plan: !!fd.get('has_attached_plan'),
+        };
+        try {
+            const decision = await api.evaluateProposedTrade(accountId, proposed);
+            if (!viewIsCurrent(tok)) return;
+            renderDecision(mount, decision);
+        } catch (err) {
+            mount.querySelector('#rg-eval-out').textContent = 'Error: ' + err.message;
+        }
+    });
+}
+
+async function reloadRules(mount, tok) {
+    const tb = mount.querySelector('#rg-rules tbody');
+    if (!tb) return;
+    try {
+        const rules = await api.riskRules();
+        if (!viewIsCurrent(tok)) return;
+        if (!rules.length) {
+            tb.innerHTML = '<tr><td colspan="5" class="muted">No rules yet. Add one below — the gate is a no-op until you do.</td></tr>';
+            return;
+        }
+        tb.innerHTML = rules.map(r => `
+            <tr>
+                <td><strong>${esc(r.rule.type)}</strong></td>
+                <td><code>${esc(JSON.stringify(stripType(r.rule)))}</code></td>
+                <td>${esc(r.account_id || 'all')}</td>
+                <td>
+                    <input type="checkbox" data-toggle="${esc(r.id)}" ${r.enabled ? 'checked' : ''}>
+                </td>
+                <td><button class="link" data-del="${esc(r.id)}">delete</button></td>
+            </tr>
+        `).join('');
+        tb.querySelectorAll('[data-toggle]').forEach(cb => {
+            cb.addEventListener('change', async () => {
+                try { await api.toggleRiskRule(cb.dataset.toggle, cb.checked); }
+                catch (e) { alert('Toggle failed: ' + e.message); cb.checked = !cb.checked; }
+            });
+        });
+        tb.querySelectorAll('[data-del]').forEach(b => {
+            b.addEventListener('click', async () => {
+                try { await api.deleteRiskRule(b.dataset.del); }
+                catch (e) { alert('Delete failed: ' + e.message); return; }
+                if (viewIsCurrent(tok)) await reloadRules(mount, tok);
+            });
+        });
+    } catch (err) {
+        tb.innerHTML = `<tr><td colspan="5" class="muted">Error: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+function stripType(rule) {
+    const { type: _, ...rest } = rule;
+    return rest;
+}
+
+function renderDecision(mount, d) {
+    const el = mount.querySelector('#rg-eval-out');
+    if (!el) return;
+    const lines = [];
+    lines.push(d.allow ? '✓ ALLOW — no Block-level rules fired' : '✗ BLOCK — at least one Block-severity rule fired');
+    if (d.violations.length) {
+        lines.push('');
+        lines.push('Violations:');
+        for (const v of d.violations) {
+            lines.push(`  [${v.severity.toUpperCase()}] ${v.rule}: ${v.message}`);
+        }
+    }
+    el.textContent = lines.join('\n');
+}

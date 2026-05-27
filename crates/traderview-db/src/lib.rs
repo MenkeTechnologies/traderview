@@ -50,6 +50,7 @@ pub mod premarket;
 pub mod prices;
 pub mod r_distribution;
 pub mod rebalance;
+pub mod risk_rules;
 pub mod scans;
 pub mod screenshots;
 pub mod search;

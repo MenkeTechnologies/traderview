@@ -24,6 +24,7 @@ const TILES = [
     ['plans',           'Pre-trade Plans', '🎯',  'Setups before fills — R:R, stop',  null],
     ['sizing',          'Position Size',   '🧮',  'Risk-based qty calculator',        null],
     ['hotkeys',         'Hotkeys',         '⌨️',  'Keyboard shortcuts editor',        null],
+    ['risk-gate',       'Risk Gate',       '🛡',   'Pre-trade rules that block bad trades', null],
 
     // — Journal (record + learn) ——————————————————————————————
     ['journal',         'Journal',         '📓',  'Per-trade + daily + general notes', null],
@@ -106,7 +107,7 @@ const TILES = [
 
 const CATEGORIES = [
     ['live',     '// LIVE MARKETS',     ['live-scanner','halts','catalysts','premarket','tape','heatmap']],
-    ['trading',  '// TRADING',          ['webull','live','paper','new-trade','plans','sizing','hotkeys']],
+    ['trading',  '// TRADING',          ['webull','live','paper','new-trade','plans','sizing','risk-gate','hotkeys']],
     ['journal',  '// JOURNAL',          ['journal','ai','reviews','trade-compare','replay','tape-replay','discipline','mood','goals']],
     ['research', '// CHARTS & RESEARCH',['charts','research','watchlists','screener','scanners','top-signals','compare','pairs','correlation','sectors','sector-rotation','breadth','fear-greed','sentiment','darkpool','short-interest','vol','vol-surface','options','earnings-cal','earnings-iv','disclosures','economy','news','crypto']],
     ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','tax-workshop','calendar','accounts-overview']],

@@ -282,6 +282,53 @@ fn check_rule(
 }
 
 // ---------------------------------------------------------------------------
+// Rule presets — curated rule packs the user can install with one click.
+// ---------------------------------------------------------------------------
+
+/// Predefined rule pack identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Preset {
+    /// Strict beginner ruleset. Forces plan + stop, hard daily cap,
+    /// short streak threshold, cool-down after every loss.
+    Beginner,
+    /// Moderate ruleset for an experienced trader: 1% per trade, 4 streak,
+    /// shorter cool-down, requires stop (not plan).
+    Intermediate,
+    /// Aggressive day-trader minimum: daily-loss cap + cool-down only.
+    /// Assumes the user is disciplined enough to manage per-trade risk
+    /// themselves.
+    Aggressive,
+}
+
+pub fn preset_rules(preset: Preset) -> Vec<RiskRule> {
+    use std::str::FromStr;
+    let d = |s: &str| Decimal::from_str(s).unwrap();
+    match preset {
+        Preset::Beginner => vec![
+            RiskRule::MaxLossPerTradePct { pct: d("1.0") },
+            RiskRule::MaxLossPerDayPct   { pct: d("3.0") },
+            RiskRule::MaxConsecutiveLossesToday { n: 3 },
+            RiskRule::CoolDownAfterLossMinutes  { minutes: 15 },
+            RiskRule::MaxPositionSizePct { pct: d("25") },
+            RiskRule::RequirePlanBeforeTrade,
+            RiskRule::RequireStopLoss,
+        ],
+        Preset::Intermediate => vec![
+            RiskRule::MaxLossPerTradePct { pct: d("1.0") },
+            RiskRule::MaxLossPerDayPct   { pct: d("5.0") },
+            RiskRule::MaxConsecutiveLossesToday { n: 4 },
+            RiskRule::CoolDownAfterLossMinutes  { minutes: 5 },
+            RiskRule::RequireStopLoss,
+        ],
+        Preset::Aggressive => vec![
+            RiskRule::MaxLossPerDayPct  { pct: d("8.0") },
+            RiskRule::CoolDownAfterLossMinutes { minutes: 2 },
+        ],
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -557,5 +604,67 @@ mod tests {
             // implementing PartialEq on the enum.
             assert_eq!(serde_json::to_string(&back).unwrap(), s);
         }
+    }
+
+    // ─── Presets ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn beginner_preset_is_strictest() {
+        let b = preset_rules(Preset::Beginner);
+        let i = preset_rules(Preset::Intermediate);
+        let a = preset_rules(Preset::Aggressive);
+        // More rules = more restrictions in this ruleset family.
+        assert!(b.len() > i.len(),  "beginner ({}) should restrict more than intermediate ({})", b.len(), i.len());
+        assert!(i.len() > a.len(), "intermediate ({}) should restrict more than aggressive ({})", i.len(), a.len());
+    }
+
+    #[test]
+    fn beginner_preset_includes_plan_and_stop_requirements() {
+        let rules = preset_rules(Preset::Beginner);
+        let has_plan = rules.iter().any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade));
+        let has_stop = rules.iter().any(|r| matches!(r, RiskRule::RequireStopLoss));
+        assert!(has_plan, "beginner must require a written plan");
+        assert!(has_stop, "beginner must require a stop loss");
+    }
+
+    #[test]
+    fn intermediate_preset_drops_plan_requirement_but_keeps_stop() {
+        let rules = preset_rules(Preset::Intermediate);
+        assert!(!rules.iter().any(|r| matches!(r, RiskRule::RequirePlanBeforeTrade)));
+        assert!( rules.iter().any(|r| matches!(r, RiskRule::RequireStopLoss)));
+    }
+
+    #[test]
+    fn aggressive_preset_is_daily_cap_plus_cool_down_only() {
+        let rules = preset_rules(Preset::Aggressive);
+        assert_eq!(rules.len(), 2,
+            "aggressive must stay minimal — adding more defeats the purpose");
+        assert!(rules.iter().any(|r| matches!(r, RiskRule::MaxLossPerDayPct { .. })));
+        assert!(rules.iter().any(|r| matches!(r, RiskRule::CoolDownAfterLossMinutes { .. })));
+    }
+
+    #[test]
+    fn presets_are_actually_usable_by_evaluate() {
+        // Smoke test — every preset must successfully evaluate against the
+        // sample proposed trade (no panic, no overflow).
+        for p in [Preset::Beginner, Preset::Intermediate, Preset::Aggressive] {
+            let rules = preset_rules(p);
+            let _ = evaluate(&proposed(), &ctx(), &rules, now());
+        }
+    }
+
+    #[test]
+    fn preset_daily_caps_are_progressively_more_lenient() {
+        let extract_daily = |p: Preset| -> Option<Decimal> {
+            preset_rules(p).into_iter().find_map(|r| match r {
+                RiskRule::MaxLossPerDayPct { pct } => Some(pct),
+                _ => None,
+            })
+        };
+        let b = extract_daily(Preset::Beginner).expect("beginner has daily cap");
+        let i = extract_daily(Preset::Intermediate).expect("intermediate has daily cap");
+        let a = extract_daily(Preset::Aggressive).expect("aggressive has daily cap");
+        assert!(b < i, "beginner daily cap ({b}) must be tighter than intermediate ({i})");
+        assert!(i < a, "intermediate cap ({i}) must be tighter than aggressive ({a})");
     }
 }

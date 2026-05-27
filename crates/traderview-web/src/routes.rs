@@ -86,6 +86,7 @@ mod ws;
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .nest("/expense", crate::expense_routes::router())
+        .nest("/risk-gate", crate::risk_gate_routes::router())
         .merge(auth::router())
         .merge(accounts::router())
         .merge(trades::router())

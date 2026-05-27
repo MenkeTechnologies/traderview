@@ -294,6 +294,25 @@ export const api = {
         request('/expense/calc/quarterly-tax', { method: 'POST', body: JSON.stringify(body) }),
     detectSubscriptions: () => request('/expense/subscriptions/detect'),
 
+    // --- pre-trade risk gate -------------------------------------------
+    riskRules: (account_id) =>
+        request(`/risk-gate/rules${account_id ? `?account_id=${account_id}` : ''}`),
+    createRiskRule: (body) =>
+        request('/risk-gate/rules', { method: 'POST', body: JSON.stringify(body) }),
+    deleteRiskRule: (id) => request(`/risk-gate/rules/${id}`, { method: 'DELETE' }),
+    toggleRiskRule: (id, enabled) =>
+        request(`/risk-gate/rules/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
+    evaluateProposedTrade: (account_id, proposed) =>
+        request('/risk-gate/evaluate', {
+            method: 'POST',
+            body: JSON.stringify({ account_id, proposed }),
+        }),
+    installRiskPreset: (preset, account_id = null) =>
+        request('/risk-gate/rules/install-preset', {
+            method: 'POST',
+            body: JSON.stringify({ preset, account_id }),
+        }),
+
     // mentorships
     mentorshipRequest: (mentor_id, scope = 'read') =>
         request('/mentorships', { method: 'POST', body: JSON.stringify({ mentor_id, scope }) }),

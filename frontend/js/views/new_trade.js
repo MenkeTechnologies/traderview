@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { fmt } from '../util.js';
+import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
 
 export async function renderNewTrade(mount, state) {
     const tok = currentViewToken();
@@ -42,8 +43,13 @@ export async function renderNewTrade(mount, state) {
                 <input name="strike"     type="number" step="any" placeholder="strike" style="display:none">
                 <input name="expiration" type="date"   placeholder="exp" style="display:none">
                 <input name="multiplier" type="number" step="any" placeholder="multiplier" style="display:none">
+                <input name="stop_loss"  type="number" step="any" placeholder="stop (for Risk Gate)">
+                <label style="display:flex;align-items:center;gap:4px;">
+                    <input type="checkbox" name="has_attached_plan"> plan attached
+                </label>
                 <button class="primary" type="submit">Add</button>
             </form>
+            <p class="muted small">Pre-trade <a href="#risk-gate">Risk Gate</a> rules evaluate <code>stop_loss</code> + <code>has_attached_plan</code> before submission. Configure rules in the Risk Gate view.</p>
         </div>
 
         <div class="chart-panel">
@@ -91,6 +97,48 @@ export async function renderNewTrade(mount, state) {
             body.multiplier  = fd.get('multiplier')  ? Number(fd.get('multiplier'))  : 100;
         }
         try {
+            // ─── Pre-trade risk gate ──────────────────────────────────────
+            // Run the configured rules first. Any Block-severity violation
+            // stops the submission entirely; warnings prompt-then-allow so
+            // the user can still proceed if they're sure. Adapter is
+            // extracted to _risk_gate_adapter.js so node --test pins the
+            // form→ProposedTrade shape independently of this DOM glue.
+            const proposed = buildProposedTrade({
+                symbol: body.symbol,
+                side: body.side,
+                qty: body.qty,
+                price: body.price,
+                stop_loss: fd.get('stop_loss'),
+                asset_class: body.asset_class,
+                multiplier: body.multiplier,
+                has_attached_plan: fd.get('has_attached_plan'),
+            });
+            let decision;
+            try {
+                decision = await api.evaluateProposedTrade(state.accountId, proposed);
+            } catch (gateErr) {
+                // Gate is best-effort — if it fails we don't block trade entry.
+                // The DB-side rules still apply post-fact via discipline.rs.
+                console.warn('risk gate eval failed:', gateErr.message);
+                decision = null;
+            }
+            if (decision && !viewIsCurrent(tok)) return;
+            if (decision) {
+                const { blocks, warnings } = splitViolations(decision);
+                if (blocks.length) {
+                    alert('Risk Gate BLOCKED this trade:\n\n' +
+                        blocks.map(b => `[${b.rule}] ${b.message}`).join('\n\n') +
+                        '\n\nFix the inputs or disable the rule and try again.');
+                    return;
+                }
+                if (warnings.length) {
+                    const ok = confirm('Risk Gate WARNING:\n\n' +
+                        warnings.map(w => `[${w.rule}] ${w.message}`).join('\n\n') +
+                        '\n\nProceed anyway?');
+                    if (!ok) return;
+                }
+            }
+
             await api.createExecution(body);
             if (!viewIsCurrent(tok)) return;
             await refresh();
