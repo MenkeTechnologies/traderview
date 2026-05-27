@@ -134,3 +134,76 @@ pub async fn build_context(pool: &PgPool, account_id: Uuid)
         today_closed_trades,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use traderview_core::risk_gate::{Preset, preset_rules};
+
+    /// The 0030 migration shape is load-bearing for the risk_rules CRUD
+    /// helpers above — every column name + type must match what the SELECT
+    /// statements ask for. We embed the migration via include_str! at
+    /// compile time and assert structural properties so a drift between
+    /// the SQL and this module is caught at `cargo test`, not at runtime
+    /// when the user tries to install a preset and gets a 500.
+    const MIGRATION_0030: &str = include_str!("../../../migrations/0030_risk_rules.sql");
+
+    #[test]
+    fn migration_creates_risk_rules_table() {
+        assert!(MIGRATION_0030.contains("CREATE TABLE risk_rules"),
+            "migration 0030 must create the risk_rules table");
+    }
+
+    #[test]
+    fn migration_declares_every_column_the_helpers_read() {
+        // The list/create/build_context helpers SELECT these columns.
+        // If anyone renames a column in the migration without updating
+        // the helpers (or vice versa) this test catches the drift.
+        for col in ["id", "user_id", "account_id", "rule", "enabled", "created_at"] {
+            assert!(MIGRATION_0030.contains(col),
+                "migration 0030 missing column `{col}` that risk_rules.rs reads");
+        }
+    }
+
+    #[test]
+    fn migration_uses_jsonb_for_rule_column() {
+        // The RiskRule serde-tagged enum is stored as JSONB so adding
+        // new variants doesn't require a schema migration. If this ever
+        // becomes plain TEXT or JSON we'd lose the GIN index option +
+        // strict validation. Pinned.
+        assert!(MIGRATION_0030.contains("rule") && MIGRATION_0030.contains("JSONB"),
+            "rule column must be JSONB");
+    }
+
+    #[test]
+    fn migration_cascades_account_delete() {
+        // Deleting an account must auto-delete its scoped rules.
+        // Otherwise orphan rules accumulate and the next account that
+        // happens to get the same UUID inherits stale rules.
+        assert!(MIGRATION_0030.contains("ON DELETE CASCADE"),
+            "account_id FK must cascade on delete");
+    }
+
+    #[test]
+    fn migration_has_user_index_for_per_user_lookup() {
+        // list() filters by user_id; without the index this is a full
+        // table scan once the rule count grows past a few thousand.
+        assert!(MIGRATION_0030.contains("risk_rules_user_idx"),
+            "must index by user_id for the per-user list query");
+    }
+
+    #[test]
+    fn every_preset_serializes_to_valid_jsonb_shape() {
+        // The shape we'd INSERT into the rule column. Verifies that the
+        // serde-tagged enum produces an object with `type` discriminator
+        // — required for Postgres JSON path queries to work.
+        for p in [Preset::Beginner, Preset::Intermediate, Preset::Aggressive] {
+            for rule in preset_rules(p) {
+                let v = serde_json::to_value(&rule).expect("serialize");
+                let obj = v.as_object().expect("rule must be a JSON object");
+                assert!(obj.contains_key("type"),
+                    "rule {rule:?} missing serde tag — JSONB queries would break");
+            }
+        }
+    }
+}

@@ -150,6 +150,22 @@ fn slack_body(p: &AlertPayload) -> serde_json::Value {
     })
 }
 
+/// Fan-out to every enabled webhook belonging to the user. Used by the
+/// Risk Gate when a Block-severity rule fires — the user wants ALL their
+/// alert sinks to know (Discord + Slack + generic), not a chosen subset.
+pub async fn fan_out_all(pool: &PgPool, user_id: Uuid, payload: &AlertPayload) {
+    let rows: Vec<Webhook> = match sqlx::query_as::<_, Webhook>(
+        "SELECT id, user_id, name, kind::text, url, secret, enabled,
+                last_fired_at, fire_count, last_status, created_at
+           FROM webhooks WHERE user_id = $1 AND enabled = TRUE",
+    )
+    .bind(user_id)
+    .fetch_all(pool).await { Ok(r) => r, Err(_) => return };
+    for wh in rows {
+        let _ = fire(pool, &wh, payload).await;
+    }
+}
+
 /// Fan-out to all webhook IDs (called by alert engines).
 pub async fn fan_out(pool: &PgPool, user_id: Uuid, webhook_ids: &[Uuid], payload: &AlertPayload) {
     if webhook_ids.is_empty() { return; }
@@ -162,5 +178,79 @@ pub async fn fan_out(pool: &PgPool, user_id: Uuid, webhook_ids: &[Uuid], payload
     .fetch_all(pool).await { Ok(r) => r, Err(_) => return };
     for wh in rows {
         let _ = fire(pool, &wh, payload).await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_payload() -> AlertPayload {
+        AlertPayload {
+            title:   "Risk Gate vetoed AAPL entry".into(),
+            message: "[max_loss_per_day_pct] today's loss has hit the 3% daily cap".into(),
+            symbol:  Some("AAPL".into()),
+            kind:    "risk_gate_block".into(),
+            url:     None,
+            fired_at: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn discord_body_includes_title_and_message() {
+        let s = discord_body(&sample_payload()).to_string();
+        assert!(s.contains("Risk Gate vetoed AAPL"));
+        assert!(s.contains("daily cap"));
+    }
+
+    #[test]
+    fn discord_body_color_varies_by_kind() {
+        let mut p = sample_payload();
+        p.kind = "price_alert".into();
+        let s1 = discord_body(&p).to_string();
+        p.kind = "disclosure".into();
+        let s2 = discord_body(&p).to_string();
+        assert_ne!(s1, s2, "different kinds must produce different bodies");
+    }
+
+    #[test]
+    fn discord_body_handles_missing_symbol() {
+        let mut p = sample_payload();
+        p.symbol = None;
+        let body = discord_body(&p);
+        let fields = body.get("embeds")
+            .and_then(|e| e.get(0))
+            .and_then(|e| e.get("fields"))
+            .expect("embed has fields");
+        let arr = fields.as_array().expect("fields is array");
+        assert_eq!(arr.len(), 0, "no symbol → empty fields array, not crash");
+    }
+
+    #[test]
+    fn slack_body_includes_symbol_in_header() {
+        let s = slack_body(&sample_payload()).to_string();
+        assert!(s.contains("AAPL"));
+        assert!(s.contains("Risk Gate vetoed"));
+    }
+
+    #[test]
+    fn slack_body_omits_symbol_prefix_when_missing() {
+        let mut p = sample_payload();
+        p.symbol = None;
+        let body = slack_body(&p);
+        let text = body.get("text").and_then(|t| t.as_str()).expect("text");
+        assert!(!text.contains("*None*"));
+        assert!(!text.contains("**"), "no orphan asterisks from None.symbol");
+    }
+
+    #[test]
+    fn alert_payload_serializes_to_json_for_generic_webhooks() {
+        // Generic webhooks (the fallback path in `send`) receive the
+        // payload as raw JSON. Verify the shape is renderable.
+        let v = serde_json::to_value(sample_payload()).unwrap();
+        let obj = v.as_object().expect("payload is JSON object");
+        for k in ["title", "message", "kind", "fired_at"] {
+            assert!(obj.contains_key(k), "missing key `{k}`");
+        }
     }
 }

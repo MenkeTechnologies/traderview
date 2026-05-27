@@ -146,6 +146,27 @@ const SECTIONS = [
             <p class="muted small">All data lands in embedded Postgres at <code>~/Library/Application Support/com.menketechnologies.traderview/traderview/pg-data</code>. Logs at <code>~/Library/Application Support/traderview/traderview.log</code>.</p>`,
     },
     {
+        id: 'risk-gate',
+        title: '// RISK GATE — PRE-TRADE RULES',
+        body: `
+            <p>Discipline that <em>enforces</em> instead of just reporting. The gate sits between the new-trade form and the broker — every submission runs the rules first.</p>
+            <ol class="tut-steps">
+                <li><strong>Install a preset</strong> from the <button class="link" data-go="risk-gate">Risk Gate</button> view. Three packs:
+                    <ul class="tut-list">
+                        <li><strong>Beginner</strong> — 7 rules. 1% max per trade, 3% per day, 3 consec losses stop you, 15-min cool-down, 25% max position, plan + stop required. Strictest.</li>
+                        <li><strong>Intermediate</strong> — 5 rules. Same per-trade cap, 5% daily, 4 streak, 5-min cool-down, stop required (plan optional).</li>
+                        <li><strong>Aggressive</strong> — 2 rules. Daily-loss cap + cool-down only. Assumes you manage per-trade risk yourself.</li>
+                    </ul>
+                </li>
+                <li><strong>Tune</strong> — toggle individual rules off via the checkbox column. Delete with the link. Add custom rules with the form below the list.</li>
+                <li><strong>Dry-run</strong> a hypothetical trade in the bottom panel to see exactly what the gate would say. Same call the new-trade form makes on submit.</li>
+                <li><strong>Compliance snapshot</strong> at top — synthetic probe that surfaces which rules would fire on ANY entry right now (max daily loss already hit, in cool-down after the last loss, etc).</li>
+                <li><strong>Paper trades also gate.</strong> Paper trading is where you build the habit; if rules only fired live, you'd practice rule-breaking.</li>
+                <li><strong>Webhook on Block.</strong> Every Block-severity veto fires to every enabled webhook (Discord / Slack / generic) so you get a public record of every rule save.</li>
+            </ol>
+            <p class="muted small">Engine lives in <code>traderview_core::risk_gate</code> — pure compute, 21 unit tests pin the rule semantics + serde compat + preset rule sets.</p>`,
+    },
+    {
         id: 'workflow',
         title: '// TYPICAL DAY-TRADE WORKFLOW',
         body: `

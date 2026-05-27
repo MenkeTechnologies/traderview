@@ -155,5 +155,34 @@ async fn evaluate_proposed(
         .await.map_err(ApiError::Internal)?;
 
     let decision = evaluate(&req.proposed, &ctx, &rules, Utc::now());
+
+    // If any Block fired, fan-out to every enabled webhook so the user
+    // sees the veto in Discord/Slack/etc. Fire-and-forget — never block
+    // the response on outbound HTTP.
+    if !decision.allow {
+        let blocks: Vec<_> = decision.violations.iter()
+            .filter(|v| matches!(v.severity, traderview_core::risk_gate::Severity::Block))
+            .collect();
+        if !blocks.is_empty() {
+            let summary = blocks.iter()
+                .map(|b| format!("[{}] {}", b.rule, b.message))
+                .collect::<Vec<_>>()
+                .join("\n");
+            let payload = traderview_db::webhooks::AlertPayload {
+                title:   format!("Risk Gate vetoed {} entry", req.proposed.symbol),
+                message: summary,
+                symbol:  Some(req.proposed.symbol.clone()),
+                kind:    "risk_gate_block".into(),
+                url:     None,
+                fired_at: Utc::now(),
+            };
+            let pool = s.pool.clone();
+            let user_id = user.id;
+            tokio::spawn(async move {
+                traderview_db::webhooks::fan_out_all(&pool, user_id, &payload).await;
+            });
+        }
+    }
+
     Ok(Json(decision))
 }

@@ -33,6 +33,13 @@ export async function renderRiskGate(mount, state) {
         </p>
 
         <div class="chart-panel">
+            <h2>Today's compliance snapshot</h2>
+            <p class="muted small">Live ping of the gate with a near-zero-risk synthetic trade — shows which rules would fire on a probe entry RIGHT NOW. Click refresh after every trade close.</p>
+            <button id="rg-snap-refresh" class="primary" type="button">Refresh snapshot</button>
+            <pre id="rg-snap-out" class="boot">click refresh to evaluate</pre>
+        </div>
+
+        <div class="chart-panel">
             <h2>Install a preset</h2>
             <p class="muted small">One-click curated rule pack. Existing rules are kept — review + delete after install if you want a clean slate.</p>
             <div class="inline-form" id="rg-presets">
@@ -112,6 +119,38 @@ export async function renderRiskGate(mount, state) {
     };
     typeSel.addEventListener('change', renderFields);
     renderFields();
+
+    // Today's compliance snapshot — fire a near-zero-cost probe trade.
+    mount.querySelector('#rg-snap-refresh').addEventListener('click', async () => {
+        const out = mount.querySelector('#rg-snap-out');
+        if (!accountId) { out.textContent = 'pick an account in the topbar'; return; }
+        try {
+            const probe = {
+                symbol: '_PROBE_',
+                side: 'long',
+                qty: 1,
+                entry_price: 1,
+                stop_loss: 0.99,
+                asset_class: 'stock',
+                multiplier: 1,
+                tick_size: null,
+                tick_value: null,
+                has_attached_plan: true,
+            };
+            const d = await api.evaluateProposedTrade(accountId, probe);
+            if (!viewIsCurrent(tok)) return;
+            const blocks = (d.violations || []).filter(v => v.severity === 'block');
+            const warns  = (d.violations || []).filter(v => v.severity === 'warning');
+            const lines = [];
+            lines.push(blocks.length === 0
+                ? `✓ Trading allowed. ${warns.length} warning${warns.length === 1 ? '' : 's'}.`
+                : `✗ Trading BLOCKED by ${blocks.length} rule${blocks.length === 1 ? '' : 's'}.`);
+            for (const v of d.violations || []) {
+                lines.push(`  [${v.severity.toUpperCase()}] ${v.rule}: ${v.message}`);
+            }
+            out.textContent = lines.join('\n');
+        } catch (e) { out.textContent = 'Error: ' + e.message; }
+    });
 
     // Preset install buttons.
     mount.querySelectorAll('#rg-presets [data-preset]').forEach(btn => {
