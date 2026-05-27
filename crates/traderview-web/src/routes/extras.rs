@@ -17,17 +17,18 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    acceleration_deceleration, alligator, atr_cone, break_of_structure, breakout_detector,
-    calmar_ratio, change_of_character, choppiness, crossover, cumulative_delta, cusum,
-    daily_loss_limit, displacement, drawdown_throttle, earnings_calendar, efficiency_ratio,
+    acceleration_deceleration, alligator, arms_index, atr_cone, break_of_structure,
+    breakout_detector, calmar_ratio, change_of_character, choppiness, crossover, cumulative_delta,
+    cusum, daily_loss_limit, displacement, drawdown_throttle, earnings_calendar, efficiency_ratio,
     equal_levels, fair_value_gap, futures_roll, gap_fill_stats, goal_tracker, heikin_ashi_reversal,
-    holiday_calendar, liquidity_grab, models::{Trade, TradeSide}, mtm_reconciliation,
-    opening_range, options_margin, order_block, pair_trade, portfolio_heat, position_aging,
-    position_irr, premium_discount, put_call_ratio, random_walk_index, range_contraction,
-    range_expansion, reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator,
-    spread_attribution, stop_hunt, strategy_correlation, swing_points, symbol_filter,
-    tax_lot_optimizer, three_bar_reversal, timeframe_confluence, triple_screen, twap,
-    ulcer_index, volatility_stop, volume_burst, vsa, wyckoff,
+    holiday_calendar, inside_bar_breakout, liquidity_grab, mcclellan_oscillator,
+    models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
+    pair_trade, portfolio_heat, position_aging, position_irr, premium_discount, put_call_ratio,
+    random_walk_index, range_contraction, range_expansion, reconcile_1099b, risk_reward,
+    rolling_zscore, round_levels, sip_simulator, spread_attribution, stop_hunt,
+    strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer, three_bar_reversal,
+    timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
+    wyckoff,
 };
 
 pub fn router() -> Router<AppState> {
@@ -123,6 +124,10 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/acceleration-deceleration", post(ac_route))
         .route("/analytics/liquidity-grab",            post(liquidity_grab_route))
         .route("/analytics/gap-fill-stats",            post(gap_fill_stats_route))
+        // ── Market breadth + inside-bar pattern ────────────────────────
+        .route("/analytics/arms-index",                post(arms_index_route))
+        .route("/analytics/mcclellan-oscillator",      post(mcclellan_oscillator_route))
+        .route("/analytics/inside-bar-breakout",       post(inside_bar_breakout_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -958,4 +963,43 @@ async fn gap_fill_stats_route(
     _u: AuthUser, Json(b): Json<GapFillBody>,
 ) -> Json<gap_fill_stats::GapStatsReport> {
     Json(gap_fill_stats::analyze(&b.bars, &b.atr))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Market breadth (TRIN, McClellan) + inside-bar breakout pattern.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct ArmsBody {
+    bars: Vec<arms_index::BreadthBar>,
+}
+
+async fn arms_index_route(
+    _u: AuthUser, Json(b): Json<ArmsBody>,
+) -> Json<arms_index::TrinReport> {
+    Json(arms_index::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct McClellanBody {
+    bars: Vec<mcclellan_oscillator::BreadthBar>,
+}
+
+async fn mcclellan_oscillator_route(
+    _u: AuthUser, Json(b): Json<McClellanBody>,
+) -> Json<mcclellan_oscillator::McClellanReport> {
+    Json(mcclellan_oscillator::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct InsideBarBody {
+    bars: Vec<inside_bar_breakout::OhlcBar>,
+    #[serde(default)]
+    config: inside_bar_breakout::IbConfig,
+}
+
+async fn inside_bar_breakout_route(
+    _u: AuthUser, Json(b): Json<InsideBarBody>,
+) -> Json<inside_bar_breakout::IbReport> {
+    Json(inside_bar_breakout::detect(&b.bars, &b.config))
 }

@@ -956,4 +956,7 @@ export const api = {
     anlyAccelerationDecel:   (b) => request('/analytics/acceleration-deceleration',  { method: 'POST', body: JSON.stringify(b) }),
     anlyLiquidityGrab:       (b) => request('/analytics/liquidity-grab',             { method: 'POST', body: JSON.stringify(b) }),
     anlyGapFillStats:        (b) => request('/analytics/gap-fill-stats',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyArmsIndex:           (b) => request('/analytics/arms-index',                 { method: 'POST', body: JSON.stringify(b) }),
+    anlyMcclellanOsc:        (b) => request('/analytics/mcclellan-oscillator',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyInsideBarBreakout:   (b) => request('/analytics/inside-bar-breakout',        { method: 'POST', body: JSON.stringify(b) }),
 };
