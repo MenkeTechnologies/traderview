@@ -29,6 +29,7 @@ use std::time::Duration;
 use tokio::sync::{broadcast, RwLock};
 
 const TRADE_BASE: &str = "https://tradeapi.webullbroker.com";
+#[allow(dead_code)]   // reserved for future profile / region endpoints
 const USER_BASE:  &str = "https://userapi.webull.com";
 
 #[derive(Debug, Clone, Default)]

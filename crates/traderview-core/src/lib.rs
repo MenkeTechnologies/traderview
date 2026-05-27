@@ -19,6 +19,7 @@ pub mod position_size;
 pub mod rebalance;
 pub mod risk;
 pub mod risk_gate;
+pub mod risk_reward;
 pub mod rollup;
 pub mod scan;
 pub mod sentiment;

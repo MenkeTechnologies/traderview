@@ -12,6 +12,7 @@ pub mod boa;
 pub mod chase;
 pub mod dedup;
 pub mod home_office;
+pub mod manual_entry;
 pub mod mileage;
 pub mod normalize;
 pub mod quarterly_tax;

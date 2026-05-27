@@ -138,8 +138,12 @@ pub fn run(bars: &[PriceBar], preset: Preset, initial_capital: f64, fee_per_trad
     // Close any open position at last close.
     if let Some((entry_idx, qty)) = position {
         let price = c[n - 1];
+        // `cash` is recomputed below from realized P&L; these two updates
+        // are intentionally tracked for the final close legcheck — keep
+        // the explicit `_ = cash` to silence unused-assignment.
         cash += qty * price;
         cash -= fee_per_trade;
+        let _ = cash;
         let entry = c[entry_idx];
         let pnl = (price - entry) * qty - 2.0 * fee_per_trade;
         let pnl_pct = (price - entry) / entry * 100.0;
