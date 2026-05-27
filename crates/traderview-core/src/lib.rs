@@ -5,6 +5,7 @@
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
 pub mod backtest;
+pub mod bb_squeeze;
 pub mod beta;
 pub mod bracket_order;
 pub mod buying_power;
@@ -61,6 +62,7 @@ pub mod stops;
 pub mod strategy_alert;
 pub mod strategy_correlation;
 pub mod streaks;
+pub mod swing_points;
 pub mod trade_quality;
 pub mod stats;
 pub mod tax_loss_harvest;
