@@ -12,6 +12,7 @@ pub mod boa;
 pub mod chase;
 pub mod dedup;
 pub mod depreciation;
+pub mod foreign_tax_credit;
 pub mod home_office;
 pub mod manual_entry;
 pub mod meals_50;

@@ -9,6 +9,7 @@ pub mod bracket_order;
 pub mod buying_power;
 pub mod commission_optimizer;
 pub mod correlation;
+pub mod correlation_clusters;
 pub mod discipline_score;
 pub mod dow_hour_heatmap;
 pub mod equity_forecast;
