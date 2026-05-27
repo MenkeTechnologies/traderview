@@ -75,6 +75,7 @@ import { renderFillQuality } from './views/fill_quality.js';
 import { renderCustomIndicators } from './views/custom_indicators.js';
 import { renderTradeCompare } from './views/trade_compare.js';
 import { renderCsvWizard } from './views/csv_wizard.js';
+import { renderAccountsOverview } from './views/accounts_overview.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -270,6 +271,7 @@ export async function dispatch() {
             case 'custom-indicators': await renderCustomIndicators(mount, state); break;
             case 'trade-compare':     await renderTradeCompare(mount, state); break;
             case 'csv-wizard':        await renderCsvWizard(mount, state); break;
+            case 'accounts-overview': await renderAccountsOverview(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

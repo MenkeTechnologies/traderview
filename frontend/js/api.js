@@ -400,6 +400,9 @@ export const api = {
     // Fill quality (bar-level slippage approximation)
     fillQuality: (accountId) => request(`/fill-quality/${accountId}`),
 
+    // Multi-account overview
+    accountsOverview: () => request('/accounts/overview'),
+
     // Trade comparison (2-4 trades, side-by-side + normalized P/L overlay)
     tradeCompare: (tradeIds) =>
         request(`/trade-compare?trade_ids=${tradeIds.join(',')}`),

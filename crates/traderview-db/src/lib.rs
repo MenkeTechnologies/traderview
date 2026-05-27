@@ -2,6 +2,7 @@
 //! repository layer (hand-written sqlx queries) used by `traderview-web`.
 
 pub mod accounts;
+pub mod accounts_overview;
 pub mod alerts;
 pub mod api_tokens;
 pub mod backtest_presets;

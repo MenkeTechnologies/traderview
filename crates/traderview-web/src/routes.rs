@@ -5,6 +5,7 @@ use crate::state::AppState;
 use axum::Router;
 
 mod accounts;
+mod accounts_overview;
 mod alerts;
 mod analysis;
 mod api_tokens;
@@ -151,6 +152,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(custom_indicators::router())
         .merge(trade_compare::router())
         .merge(csv_wizard::router())
+        .merge(accounts_overview::router())
 }
 
 mod helpers {
