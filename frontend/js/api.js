@@ -384,6 +384,9 @@ export const api = {
     // Sector ETF rotation heatmap
     sectorRotation: () => request('/sector-rotation'),
 
+    // Per-trade tape replay (bars + execs timeline)
+    tapeReplay: (tradeId) => request(`/tape-replay/${tradeId}`),
+
     // Portfolio rebalancing
     rebalanceTargetsList: () => request('/rebalance/targets'),
     rebalanceTargetSave: (body) =>

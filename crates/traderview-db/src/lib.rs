@@ -51,6 +51,7 @@ pub mod vol_surface;
 pub mod webhooks;
 pub mod shares;
 pub mod tags;
+pub mod tape_replay;
 pub mod tax_lots;
 pub mod trades;
 pub mod users;

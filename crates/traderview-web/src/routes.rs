@@ -57,6 +57,7 @@ mod shares;
 mod short_interest;
 mod strategy_alerts;
 mod tags;
+mod tape_replay;
 mod tax_lots;
 mod trades;
 mod vol;
@@ -127,6 +128,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(strategy_alerts::router())
         .merge(rebalance::router())
         .merge(sector_rotation::router())
+        .merge(tape_replay::router())
 }
 
 mod helpers {

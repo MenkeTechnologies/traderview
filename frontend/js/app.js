@@ -63,6 +63,7 @@ import { renderCorrMatrix } from './views/corr_matrix.js';
 import { renderStrategyAlerts } from './views/strategy_alerts.js';
 import { renderRebalance } from './views/rebalance.js';
 import { renderSectorRotation } from './views/sector_rotation.js';
+import { renderTapeReplay } from './views/tape_replay.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -246,6 +247,7 @@ export async function dispatch() {
             case 'strategy-alerts': await renderStrategyAlerts(mount, state); break;
             case 'rebalance':      await renderRebalance(mount, state); break;
             case 'sector-rotation': await renderSectorRotation(mount, state); break;
+            case 'tape-replay':    await renderTapeReplay(mount, state, rest[0] || ''); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;
