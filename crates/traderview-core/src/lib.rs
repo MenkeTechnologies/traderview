@@ -101,6 +101,7 @@ pub mod renko;
 pub mod risk;
 pub mod risk_gate;
 pub mod risk_metrics;
+pub mod risk_on_off;
 pub mod risk_parity;
 pub mod roc;
 pub mod risk_reward;
