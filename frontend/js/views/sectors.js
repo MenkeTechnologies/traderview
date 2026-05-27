@@ -7,7 +7,7 @@ export async function renderSectors(mount) {
     mount.innerHTML = `
         <h1 class="view-title">// SECTOR STRENGTH</h1>
         <p class="muted small">11 SPDR sector ETFs ranked by today's % change and relative strength vs SPY (ZenBot-style).</p>
-        <div id="sec"><div class="boot">loading…</div></div>
+        <div id="sec"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     try {
         const rows = await api.sectors();

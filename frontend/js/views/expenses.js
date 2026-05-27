@@ -26,7 +26,7 @@ export async function renderExpensesView(mount) {
     const tok = currentViewToken();
     state.mount = mount;
     state.tok = tok;
-    mount.innerHTML = '<div class="boot">loading…</div>';
+    mount.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div>';
     try {
         const [accts, cats] = await Promise.all([
             api.expenseAccounts(),
@@ -339,7 +339,7 @@ async function openRulesModal() {
     const modal = state.mount.querySelector('#exp-rules-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
-    modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
+    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>';
     let rules = [];
     try { rules = await api.expenseRules(); }
     catch (e) {
@@ -646,7 +646,7 @@ async function openReceiptsModal() {
     const modal = state.mount.querySelector('#exp-rules-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
-    modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
+    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>';
     let rs = [];
     try { rs = await api.receipts(); }
     catch (e) {

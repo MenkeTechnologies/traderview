@@ -20,7 +20,7 @@ export async function renderLivePositions(mount, state) {
             server-cached). Unrealized P/L honors multiplier and side (long/short). Day P/L
             uses the quote's prev_close. Refreshes every 30 seconds.</p>
 
-        <div id="lp-cards" class="cards"><div class="boot">loading…</div></div>
+        <div id="lp-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="lp-table"></div>
         <p class="muted small" id="lp-status"></p>
     `;

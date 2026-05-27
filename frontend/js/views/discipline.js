@@ -17,7 +17,7 @@ export async function renderDiscipline(mount, state) {
             qty_within (≤ 1.10× planned), direction_match. Discipline % = passing / linked
             across week / month / all-time.</p>
 
-        <div id="d-out"><div class="boot">loading…</div></div>
+        <div id="d-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     try {
         const r = await api.discipline(acct.id);

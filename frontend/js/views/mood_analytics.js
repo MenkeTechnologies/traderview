@@ -18,7 +18,7 @@ export async function renderMoodAnalytics(mount, state) {
             correlation is across the union. Positive ρ means happier-mood days produce better
             outcomes; negative means good moods correlate with overconfidence and losses.</p>
 
-        <div id="ma-cards" class="cards"><div class="boot">loading…</div></div>
+        <div id="ma-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="ma-out"></div>
     `;
     try {

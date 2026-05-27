@@ -37,11 +37,11 @@ async function renderBrowse(mount) {
 
         <div class="chart-panel">
             <h2>My presets</h2>
-            <div id="bp-mine"><div class="boot">loading…</div></div>
+            <div id="bp-mine"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
         <div class="chart-panel">
             <h2>Public library (top by forks)</h2>
-            <div id="bp-public"><div class="boot">loading…</div></div>
+            <div id="bp-public"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
     `;
     mount.querySelector('#bp-form').addEventListener('submit', async (e) => {
@@ -149,7 +149,7 @@ function wireRowButtons(scope, mine, mount, tok) {
 async function renderPresetDetail(mount, slug) {
     const tok = currentViewToken();
     mount.innerHTML = `<h1 class="view-title">// PRESET — ${esc(slug)}</h1>
-        <div class="boot">loading…</div>`;
+        <div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div>`;
     try {
         const r = await api.getBacktestPresetBySlug(slug);
         if (!viewIsCurrent(tok)) return;

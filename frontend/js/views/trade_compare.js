@@ -25,7 +25,7 @@ export async function renderTradeCompare(mount, state) {
             <div class="chart-panel">
                 <h2>Picker</h2>
                 <input id="tc-search" placeholder="filter by symbol…" style="width:100%;margin-bottom:8px;">
-                <div id="tc-picker" style="max-height:500px;overflow:auto;"><div class="boot">loading…</div></div>
+                <div id="tc-picker" style="max-height:500px;overflow:auto;"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
             </div>
             <div id="tc-result"><p class="muted small">Select 2-4 trades from the picker.</p></div>
         </div>

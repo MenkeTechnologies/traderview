@@ -15,7 +15,7 @@ export async function renderSectorRotation(mount) {
             The sparkline column shows daily sector_return − SPY_return for the last 60 sessions —
             a rising line means the sector is gaining ground on the index. Refreshes every 5 min.</p>
 
-        <div id="sr-out"><div class="boot">loading…</div></div>
+        <div id="sr-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     await refresh(mount, tok);
     const t = setInterval(() => {

@@ -14,7 +14,7 @@ export async function renderBreadth(mount) {
             CBOE Put-Call ratio. Composite score combines all five into a -100..+100
             regime gauge. Polls every 60s.</p>
 
-        <div id="bcomp" class="cards"><div class="boot">loading…</div></div>
+        <div id="bcomp" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="binds"></div>
         <div class="chart-panel">
             <h2>Regime guide</h2>

@@ -27,7 +27,7 @@ export async function renderResearch(mount, _state, sym) {
         <h1 class="view-title">// ${esc(sym)}
             <a class="link small" href="#research">← search another</a>
         </h1>
-        <div id="rs-quote" class="cards"><div class="boot">loading quote…</div></div>
+        <div id="rs-quote" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading quote…</div></div></div>
         <div class="chart-panel">
             <h2>Daily chart (1y)</h2>
             <div id="rs-chart"></div>

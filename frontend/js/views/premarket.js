@@ -15,7 +15,7 @@ export async function renderPremarket(mount) {
             releases scheduled for today appear at the bottom. Refreshes every 30s.</p>
 
         <div id="pmEvents"></div>
-        <div id="pmContent" class="cards"><div class="boot">loading…</div></div>
+        <div id="pmContent" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     if (timer) clearInterval(timer);
     timer = setInterval(() => {

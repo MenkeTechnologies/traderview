@@ -181,7 +181,7 @@ async function renderSymbol(mount, sym, tok) {
         <h1 class="view-title">// SENTIMENT · ${esc(sym)}
             <a class="link small" href="#sentiment">← back</a>
         </h1>
-        <div id="sym-cards" class="cards"><div class="boot">loading…</div></div>
+        <div id="sym-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
 
         <div class="chart-panel">
             <h2>Hourly mention volume (last 7d)</h2>

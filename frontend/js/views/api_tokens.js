@@ -40,7 +40,7 @@ export async function renderDeveloper(mount) {
 
         <div class="chart-panel">
             <h2>Active tokens</h2>
-            <div id="tok-list"><div class="boot">loading…</div></div>
+            <div id="tok-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
 
         <div class="chart-panel">

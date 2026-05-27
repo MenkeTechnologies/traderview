@@ -32,7 +32,7 @@ export async function renderReports(mount, state, sub) {
         <div class="report-tabs">
             ${TABS.map(([k, l]) => `<a class="report-tab ${k === sub ? 'active' : ''}" href="#reports/${k}">${l}</a>`).join('')}
         </div>
-        <div id="report-body"><div class="boot">loading…</div></div>
+        <div id="report-body"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     const acct = state.accountId;
     // After each await, re-fetch the body element (caller may have replaced it).

@@ -58,7 +58,7 @@ export async function renderStrategyAlerts(mount) {
 
         <div class="chart-panel">
             <h2>Active rules</h2>
-            <div id="sa-list"><div class="boot">loading…</div></div>
+            <div id="sa-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
             <button id="sa-eval-now" class="btn">Evaluate now</button>
             <span id="sa-status" class="muted small" style="margin-left:8px;"></span>
         </div>

@@ -19,7 +19,7 @@ export async function renderTradeReviews(mount, state) {
             both. Five fixed questions per review keep the dataset comparable across hundreds
             of trades.</p>
 
-        <div id="tr-stats" class="cards"><div class="boot">loading…</div></div>
+        <div id="tr-stats" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="tr-inbox"></div>
         <div id="tr-modal"></div>
         <div id="tr-history"></div>

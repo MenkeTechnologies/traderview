@@ -13,7 +13,7 @@ export async function renderAccountsOverview(mount) {
             Open-position fields pull fresh quotes (60s server cache) and aggregate the same
             way the Live P/L tab does per-account.</p>
 
-        <div id="ao-out"><div class="boot">loading…</div></div>
+        <div id="ao-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     try {
         const r = await api.accountsOverview();

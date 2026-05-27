@@ -13,7 +13,7 @@ export async function renderFearGreed(mount) {
             Score 0 = extreme fear, 100 = extreme greed. Each component is normalized
             to 0..100 and the average is taken. Refreshes every 90s.</p>
 
-        <div class="chart-panel" id="fgGauge"><div class="boot">loading…</div></div>
+        <div class="chart-panel" id="fgGauge"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="fgComps"></div>
         <div class="chart-panel">
             <h2>Score bands</h2>

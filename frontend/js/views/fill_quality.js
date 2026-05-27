@@ -20,7 +20,7 @@ export async function renderFillQuality(mount, state) {
             range". <strong>Slippage bps</strong> = deviation from typical price (HLC/3),
             sign-flipped so positive = worse than typical for that side.</p>
 
-        <div id="fq-out"><div class="boot">loading…</div></div>
+        <div id="fq-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     try {
         const r = await api.fillQuality(acct.id);

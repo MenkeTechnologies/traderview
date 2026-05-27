@@ -84,6 +84,7 @@ import { renderAccountsOverview } from './views/accounts_overview.js';
 import { renderTutorial } from './views/tutorial.js';
 import { renderTaxWorkshop } from './views/tax_workshop.js';
 import { renderRiskGate } from './views/risk_gate.js';
+import { spinnerHTML } from './spinner.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -269,7 +270,7 @@ export async function dispatch() {
         b.classList.toggle('active', b.dataset.view === view)
     );
     const mount = document.getElementById('app');
-    mount.innerHTML = '<div class="boot">loading…</div>';
+    mount.innerHTML = spinnerHTML(`loading ${view}…`);
     try {
         switch (view) {
             case 'launcher':    await renderLauncher(mount, state); break;

@@ -33,7 +33,7 @@ async function renderPicker(mount, state, tok) {
             with execution markers fading in at their fill timestamps. Auto-picks bar interval
             from hold duration (1m/5m/1h/1d). Use the replay to ask "what would I do differently"
             and drop client-side journal notes at the cursor.</p>
-        <div id="tr-list" class="chart-panel"><div class="boot">loading recent closed trades…</div></div>
+        <div id="tr-list" class="chart-panel"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading recent closed trades…</div></div></div>
     `;
     try {
         const trades = await api.trades(acct.id, { status: 'closed', limit: 60 });
@@ -65,7 +65,7 @@ async function renderPicker(mount, state, tok) {
 
 async function renderReplay(mount, tradeId, tok) {
     mount.innerHTML = `<h1 class="view-title">// TAPE REPLAY</h1>
-        <div class="boot">loading replay…</div>`;
+        <div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading replay…</div></div>`;
     let data;
     try { data = await api.tapeReplay(tradeId); }
     catch (e) {
