@@ -50,14 +50,42 @@ export async function renderDashboard(mount, state) {
             <h2>Last 90 Days</h2>
             <div class="mini-cal" id="mini-cal"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2>🛡 Risk Gate · today</h2>
+            <div id="dash-rg" class="muted small">loading…</div>
+        </div>
     `;
 
     const eqEl = mount.querySelector('#equity-chart');
     const calEl = mount.querySelector('#mini-cal');
     const wmEl = mount.querySelector('#world-markets-mount');
+    const rgEl = mount.querySelector('#dash-rg');
     if (eqEl) equityChart(eqEl, equity);
     if (calEl) renderMiniCalendar(calEl, cal);
     if (wmEl) renderWorldMarkets(wmEl);
+    if (rgEl) loadRiskGateBadge(rgEl);
+}
+
+async function loadRiskGateBadge(el) {
+    try {
+        const fires = await api.riskFires(200);
+        const today = new Date().toISOString().slice(0, 10);
+        const todays = fires.filter(f => f.fired_at.slice(0, 10) === today);
+        const blocks = todays.filter(f => f.blocked).length;
+        const warns  = todays.length - blocks;
+        if (!todays.length) {
+            el.innerHTML = '<span class="muted">no fires today — every trade passed clean</span>';
+            return;
+        }
+        el.innerHTML = `
+            <strong style="color:#ff2a6d">${blocks}</strong> blocks &middot;
+            <strong style="color:#ffb800">${warns}</strong> warnings today &middot;
+            <a href="#risk-gate">audit log →</a>
+        `;
+    } catch (_) {
+        el.textContent = '— (risk-gate route not available)';
+    }
 }
 
 function renderMiniCalendar(el, cells) {

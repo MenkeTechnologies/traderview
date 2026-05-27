@@ -58,6 +58,54 @@ async fn kill_switch_state(
     }))
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The topbar JS polls /api/risk-gate/kill-switch every 30s and reads
+    /// `{installed: bool, active: bool}`. If either field gets renamed,
+    /// the topbar 🛑 icon silently stops working. Pin the wire shape.
+    #[test]
+    fn kill_state_serializes_with_expected_field_names() {
+        let s = KillState { installed: true, active: false };
+        let v = serde_json::to_value(&s).unwrap();
+        assert_eq!(v["installed"], serde_json::Value::Bool(true));
+        assert_eq!(v["active"], serde_json::Value::Bool(false));
+        // Object only has those two fields — keeps payload tight.
+        assert_eq!(v.as_object().unwrap().len(), 2);
+    }
+
+    /// risk_gate_routes::FiresQuery default — clients hit /fires without
+    /// any query string and expect to get the most recent batch.
+    #[test]
+    fn default_fires_limit_is_sensible() {
+        assert_eq!(default_fires_limit(), 100,
+            "default limit is the UI's page size; bumping it changes the public contract");
+    }
+
+    #[test]
+    fn default_days_for_by_rule_is_30() {
+        assert_eq!(default_days(), 30,
+            "30 days is what 'Fires by rule — last 30 days' header promises");
+    }
+
+    /// FiresQuery + ByRuleQuery + InstallPresetBody all reach the wire as
+    /// JSON; pin a representative shape so a serde rename can't silently
+    /// break the frontend bindings.
+    #[test]
+    fn install_preset_body_deserializes_each_preset_variant() {
+        let cases = [
+            r#"{"preset":"beginner","account_id":null}"#,
+            r#"{"preset":"intermediate","account_id":null}"#,
+            r#"{"preset":"aggressive","account_id":null}"#,
+        ];
+        for s in cases {
+            let _: InstallPresetBody = serde_json::from_str(s)
+                .unwrap_or_else(|e| panic!("must parse `{s}`: {e}"));
+        }
+    }
+}
+
 #[derive(Deserialize)]
 struct FiresQuery { #[serde(default = "default_fires_limit")] limit: i64 }
 fn default_fires_limit() -> i64 { 100 }
