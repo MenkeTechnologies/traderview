@@ -27,7 +27,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --workspace --all-targets --locked
+      # src-tauri requires GTK/Webkit system libs not present on the runner;
+      # exclude it from Linux workspace builds. macOS handles it fine via
+      # the dedicated release-build job below.
+      - run: cargo check --workspace --all-targets --locked --exclude traderview-desktop
 
   test:
     name: Test
@@ -44,7 +47,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       # The unit tests in -core and -import are pure compute (no DB needed).
-      - run: cargo test --workspace --locked --no-fail-fast --lib
+      # src-tauri excluded everywhere — it has no library tests, only the
+      # GUI entry point that depends on platform GTK/Webkit libs.
+      - run: cargo test --workspace --locked --no-fail-fast --lib --exclude traderview-desktop
 
   frontend-test:
     name: Frontend JS Tests
@@ -82,7 +87,7 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets --locked
+      - run: cargo clippy --workspace --all-targets --locked --exclude traderview-desktop
 
   release-build:
     name: Release Build (${{ matrix.target }})
