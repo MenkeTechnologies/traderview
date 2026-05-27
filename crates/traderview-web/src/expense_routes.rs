@@ -33,6 +33,14 @@ pub fn router() -> Router<AppState> {
         .route("/rules/:id", delete(delete_rule))
         .route("/rules/seed", post(seed_default_rules))
         .route("/report/schedule_c", get(schedule_c_report))
+        // Tax-workshop calculators — pure-compute endpoints. Each returns
+        // the report shape exported by the corresponding traderview-expense
+        // module, no DB state changes.
+        .route("/calc/self-employment-tax", post(calc_self_employment_tax))
+        .route("/calc/home-office",         post(calc_home_office))
+        .route("/calc/mileage",             post(calc_mileage))
+        .route("/calc/quarterly-tax",       post(calc_quarterly_tax))
+        .route("/subscriptions/detect",     get(detect_subscriptions))
         .nest("/receipts", crate::receipt_routes::router())
 }
 
@@ -979,4 +987,145 @@ async fn ensure_transaction_owner(s: &AppState, user_id: Uuid, tx_id: Uuid) -> R
 #[allow(dead_code)]
 fn _hashmap_typecheck() -> HashMap<String, String> {
     HashMap::new()
+}
+
+// ============================================================================
+// Tax-workshop calculator endpoints
+// ============================================================================
+//
+// Each is a thin shell: deserialize a JSON body matching the calculator's
+// input shape, hand to traderview-expense, return the report. No DB writes,
+// no auth side-effects — the AuthUser extractor is held just to keep these
+// behind the bearer wall like the rest of the expense surface.
+
+#[derive(Deserialize)]
+struct ScheduleSeRequest {
+    net_profit_schedule_c: Decimal,
+    w2_ss_wages: Decimal,
+    filing_status: traderview_expense::self_employment_tax::FilingStatus,
+    year: u16,
+}
+
+async fn calc_self_employment_tax(
+    _user: AuthUser,
+    Json(req): Json<ScheduleSeRequest>,
+) -> Result<Json<traderview_expense::self_employment_tax::ScheduleSeReport>, ApiError> {
+    use traderview_expense::self_employment_tax::{compute, ScheduleSeInput};
+    let input = ScheduleSeInput {
+        net_profit_schedule_c: req.net_profit_schedule_c,
+        w2_ss_wages: req.w2_ss_wages,
+        filing_status: req.filing_status,
+        year: req.year,
+    };
+    Ok(Json(compute(&input)))
+}
+
+#[derive(Deserialize)]
+struct HomeOfficeRequest {
+    business_use_sqft: Decimal,
+    total_home_sqft: Decimal,
+    annual_mortgage_interest: Decimal,
+    annual_property_tax: Decimal,
+    annual_utilities: Decimal,
+    annual_insurance: Decimal,
+    annual_repairs: Decimal,
+    annual_depreciation: Decimal,
+}
+
+async fn calc_home_office(
+    _user: AuthUser,
+    Json(req): Json<HomeOfficeRequest>,
+) -> Result<Json<traderview_expense::home_office::HomeOfficeReport>, ApiError> {
+    use traderview_expense::home_office::{compute, HomeOfficeInput};
+    let input = HomeOfficeInput {
+        business_use_sqft: req.business_use_sqft,
+        total_home_sqft: req.total_home_sqft,
+        annual_mortgage_interest: req.annual_mortgage_interest,
+        annual_property_tax: req.annual_property_tax,
+        annual_utilities: req.annual_utilities,
+        annual_insurance: req.annual_insurance,
+        annual_repairs: req.annual_repairs,
+        annual_depreciation: req.annual_depreciation,
+    };
+    Ok(Json(compute(&input)))
+}
+
+#[derive(Deserialize)]
+struct MileageRequest {
+    trips: Vec<traderview_expense::mileage::Trip>,
+}
+
+async fn calc_mileage(
+    _user: AuthUser,
+    Json(req): Json<MileageRequest>,
+) -> Result<Json<traderview_expense::mileage::MileageReport>, ApiError> {
+    Ok(Json(traderview_expense::mileage::report(&req.trips)))
+}
+
+#[derive(Deserialize)]
+struct QuarterlyRequest {
+    tax_year: i32,
+    prior_year_total_tax: Decimal,
+    prior_year_agi: Decimal,
+    ytd_net_profit: Decimal,
+    days_through_ytd: i32,
+    estimated_effective_tax_rate: Decimal,
+    withholding_ytd: Decimal,
+}
+
+async fn calc_quarterly_tax(
+    _user: AuthUser,
+    Json(req): Json<QuarterlyRequest>,
+) -> Result<Json<traderview_expense::quarterly_tax::QuarterlyForecast>, ApiError> {
+    use traderview_expense::quarterly_tax::{forecast, ForecastInput};
+    let input = ForecastInput {
+        tax_year: req.tax_year,
+        prior_year_total_tax: req.prior_year_total_tax,
+        prior_year_agi: req.prior_year_agi,
+        ytd_net_profit: req.ytd_net_profit,
+        days_through_ytd: req.days_through_ytd,
+        estimated_effective_tax_rate: req.estimated_effective_tax_rate,
+        withholding_ytd: req.withholding_ytd,
+    };
+    Ok(Json(forecast(&input)))
+}
+
+/// Scan the authenticated user's transactions for recurring subscriptions.
+/// Pulls everything from `transactions` then runs detection in-process.
+async fn detect_subscriptions(
+    user: AuthUser,
+    State(s): State<AppState>,
+) -> Result<Json<Vec<traderview_expense::subscription_detector::Subscription>>, ApiError> {
+    use traderview_expense::subscription_detector::{detect, DetectOptions};
+    use traderview_expense::ParsedTransaction;
+
+    // Load the user's whole transaction history (joined to their accounts
+    // for owner-scope). Reasonable bound — even heavy users top out in the
+    // low tens of thousands of transactions; the detector is linear.
+    let rows: Vec<(DateTime<Utc>, Decimal, String, String, String)> = sqlx::query_as(
+        "SELECT t.posted_at, t.amount, t.currency, t.merchant_raw, t.merchant_normalized
+           FROM transactions t
+           JOIN financial_accounts a ON a.id = t.account_id
+          WHERE a.user_id = $1
+          ORDER BY t.posted_at",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let txns: Vec<ParsedTransaction> = rows.into_iter()
+        .map(|(posted_at, amount, currency, merchant_raw, merchant_normalized)| {
+            ParsedTransaction {
+                posted_at,
+                amount,
+                currency,
+                merchant_raw,
+                merchant_normalized,
+                description: String::new(),
+                raw: serde_json::Value::Null,
+            }
+        })
+        .collect();
+
+    Ok(Json(detect(&txns, DetectOptions::default())))
 }

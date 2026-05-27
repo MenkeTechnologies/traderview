@@ -283,6 +283,17 @@ export const api = {
     // --- schedule C report ---------------------------------------------
     scheduleC: (year) => request(`/expense/report/schedule_c${year ? `?year=${year}` : ''}`),
 
+    // --- tax workshop calculators (pure compute, no DB writes) ---------
+    calcSelfEmploymentTax: (body) =>
+        request('/expense/calc/self-employment-tax', { method: 'POST', body: JSON.stringify(body) }),
+    calcHomeOffice: (body) =>
+        request('/expense/calc/home-office', { method: 'POST', body: JSON.stringify(body) }),
+    calcMileage: (trips) =>
+        request('/expense/calc/mileage', { method: 'POST', body: JSON.stringify({ trips }) }),
+    calcQuarterlyTax: (body) =>
+        request('/expense/calc/quarterly-tax', { method: 'POST', body: JSON.stringify(body) }),
+    detectSubscriptions: () => request('/expense/subscriptions/detect'),
+
     // mentorships
     mentorshipRequest: (mentor_id, scope = 'read') =>
         request('/mentorships', { method: 'POST', body: JSON.stringify({ mentor_id, scope }) }),

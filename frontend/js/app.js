@@ -82,6 +82,7 @@ import { renderTradeCompare } from './views/trade_compare.js';
 import { renderCsvWizard } from './views/csv_wizard.js';
 import { renderAccountsOverview } from './views/accounts_overview.js';
 import { renderTutorial } from './views/tutorial.js';
+import { renderTaxWorkshop } from './views/tax_workshop.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -336,6 +337,7 @@ export async function dispatch() {
             case 'accounts':    await renderAccounts(mount, state, () => { renderAccountStrip(); }); break;
             case 'settings':    await renderSettings(mount, state); break;
             case 'tutorial':    await renderTutorial(mount, state); break;
+            case 'tax-workshop': await renderTaxWorkshop(mount, state); break;
             default:            mount.innerHTML = `<p class="boot">Unknown view: ${view}</p>`;
         }
     } catch (e) {

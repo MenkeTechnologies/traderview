@@ -72,6 +72,7 @@ const TILES = [
     ['rebalance',       'Rebalance',       '⚖️',  'Portfolio rebalance helper',       null],
     ['tax-lots',        'Tax Lots',        '💸',  'Lot-by-lot cost basis',            null],
     ['expenses',        'Expenses',        '🧾',  'Trading expenses tracking',        null],
+    ['tax-workshop',    'Tax Workshop',    '💰',  'SE tax · home office · mileage · 1040-ES · subscriptions', null],
     ['calendar',        'Calendar',        '📆',  'Yearly P&L heatmap',               null],
     ['accounts-overview', 'Accounts Overview', '🗂', 'All accounts combined',        null],
 
@@ -107,7 +108,7 @@ const CATEGORIES = [
     ['trading',  '// TRADING',          ['webull','live','paper','new-trade','plans','sizing','hotkeys']],
     ['journal',  '// JOURNAL',          ['journal','ai','reviews','trade-compare','replay','tape-replay','discipline','mood','goals']],
     ['research', '// CHARTS & RESEARCH',['charts','research','watchlists','screener','scanners','top-signals','compare','pairs','correlation','sectors','sector-rotation','breadth','fear-greed','sentiment','darkpool','short-interest','vol','vol-surface','options','earnings-cal','earnings-iv','disclosures','economy','news','crypto']],
-    ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','calendar','accounts-overview']],
+    ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','tax-workshop','calendar','accounts-overview']],
     ['strategy', '// STRATEGY & AUTOMATION', ['backtest','backtest-presets','walk-forward','custom-indicators','strategy-alerts','alerts','webhooks']],
     ['community','// COMMUNITY',        ['shares','community','mentorship','boards']],
     ['admin',    '// ADMIN & DATA',     ['import','csv-wizard','exports','accounts','tags','search','settings','developer','tutorial']],
