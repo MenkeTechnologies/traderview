@@ -23,6 +23,7 @@ pub mod correlation_clusters;
 pub mod currency_exposure;
 pub mod discipline_score;
 pub mod dow_hour_heatmap;
+pub mod drawdown_duration;
 pub mod drawdown_throttle;
 pub mod earnings_move;
 pub mod emotion_tags;
@@ -110,6 +111,7 @@ pub mod vwap_bands;
 pub mod vwap_slippage;
 pub mod wash_sale;
 pub mod williams_r;
+pub mod winloss_asymmetry;
 pub mod yield_curve;
 
 pub use models::*;
