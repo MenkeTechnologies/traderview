@@ -14,11 +14,13 @@
 //!
 //! Pure compute.
 
-use chrono::{Duration, NaiveDate};
+use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::str::FromStr;
+
+use crate::schedule_d::is_long_term;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -65,7 +67,6 @@ pub struct CryptoTaxReport {
 
 pub fn classify(events: &[CryptoEvent]) -> CryptoTaxReport {
     let mut r = CryptoTaxReport::default();
-    let one_year = Duration::days(365);
     for e in events {
         match e.kind {
             CryptoEventKind::MiningReward => {
@@ -85,12 +86,14 @@ pub fn classify(events: &[CryptoEvent]) -> CryptoTaxReport {
                 r.ordinary_income += e.amount_usd;
             }
             CryptoEventKind::Sale => {
-                let held = match e.acquired {
-                    Some(acq) => e.when.signed_duration_since(acq),
-                    // Missing acquired date — treat as ST (conservative).
-                    None => Duration::days(0),
+                // IRS rule: long-term requires holding MORE THAN ONE CALENDAR
+                // YEAR (calendar-date, not 365 days — leap years matter).
+                // Missing acquired date defaults to ST (conservative).
+                let lt = match e.acquired {
+                    Some(acq) => is_long_term(acq, e.when),
+                    None => false,
                 };
-                if held > one_year {
+                if lt {
                     r.long_term_capital += e.amount_usd;
                 } else {
                     r.short_term_capital += e.amount_usd;
@@ -183,6 +186,21 @@ mod tests {
         let r = classify(&events);
         assert_eq!(r.long_term_capital, d("1000"));
         assert_eq!(r.short_term_capital, Decimal::ZERO);
+    }
+
+    #[test]
+    fn leap_year_held_exactly_one_year_is_short_term() {
+        // 2024 = leap. Jan 15 2024 → Jan 15 2025 spans 366 calendar days
+        // but is still EXACTLY one year. A naive 365-day rule would
+        // misclassify as long-term. Calendar-date rule says short-term.
+        let events = vec![ev(
+            CryptoEventKind::Sale, "BTC",
+            day(2025, 1, 15), "1000",
+            Some(day(2024, 1, 15)),
+        )];
+        let r = classify(&events);
+        assert_eq!(r.short_term_capital, d("1000"),
+            "exactly-1-year hold across leap year must be short-term");
     }
 
     #[test]

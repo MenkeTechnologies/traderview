@@ -15,7 +15,7 @@
 //! caller pre-processes those (use `wash_sale.rs` and `section_1256.rs`
 //! upstream).
 
-use chrono::{Duration, NaiveDate};
+use chrono::{Datelike, NaiveDate};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -51,12 +51,26 @@ pub struct ScheduleDReport {
     pub lt_lot_count: usize,
 }
 
+/// True iff `closed` is strictly after the one-year anniversary of `opened`.
+/// Implements the IRS "more than one year" test by calendar date (so leap
+/// years don't shift the boundary by a day).
+pub fn is_long_term(opened: NaiveDate, closed: NaiveDate) -> bool {
+    let target_year = opened.year() + 1;
+    // Handle Feb 29 → Feb 28 on non-leap years.
+    let anniversary = NaiveDate::from_ymd_opt(target_year, opened.month(), opened.day())
+        .or_else(|| NaiveDate::from_ymd_opt(target_year, opened.month(), 28))
+        .unwrap_or(opened);
+    closed > anniversary
+}
+
 pub fn summarize(lots: &[ClosedLot], status: FilingStatus) -> ScheduleDReport {
     let mut report = ScheduleDReport::default();
-    let one_year = Duration::days(365);
     for lot in lots {
-        let held = lot.closed.signed_duration_since(lot.opened);
-        if held > one_year {
+        // IRS rule: long-term requires holding MORE THAN ONE CALENDAR YEAR
+        // (not 365 days — that's wrong across leap-year boundaries).
+        // The one-year anniversary is the same month + day, next year.
+        // Long-term = sold strictly AFTER the one-year anniversary.
+        if is_long_term(lot.opened, lot.closed) {
             report.long_term_pnl += lot.realized_pnl;
             report.lt_lot_count += 1;
         } else {
@@ -121,6 +135,51 @@ mod tests {
         let r = summarize(&lots, FilingStatus::Single);
         assert_eq!(r.long_term_pnl, d("1000"));
         assert_eq!(r.short_term_pnl, Decimal::ZERO);
+    }
+
+    #[test]
+    fn leap_year_anniversary_held_exactly_one_year_is_short_term() {
+        // 2024 is leap year. Jan 15 2024 → Jan 15 2025 = 366 days (spans
+        // Feb 29 2024). A naive day-count rule (>365 days = LT) would
+        // INCORRECTLY classify this as long-term. The IRS rule is
+        // calendar-date: exactly one year held → short-term.
+        let lots = vec![lot(day(2024, 1, 15), day(2025, 1, 15), "1000")];
+        let r = summarize(&lots, FilingStatus::Single);
+        assert_eq!(r.short_term_pnl, d("1000"),
+            "exactly-1-calendar-year hold must be short-term even across leap year");
+    }
+
+    #[test]
+    fn leap_year_one_day_after_anniversary_is_long_term() {
+        let lots = vec![lot(day(2024, 1, 15), day(2025, 1, 16), "1000")];
+        let r = summarize(&lots, FilingStatus::Single);
+        assert_eq!(r.long_term_pnl, d("1000"));
+    }
+
+    #[test]
+    fn feb_29_buy_anniversary_falls_back_to_feb_28() {
+        // Bought Feb 29 2024 (leap). Anniversary in 2025 doesn't exist —
+        // falls back to Feb 28 2025. Sell on Feb 28 2025 = exactly one
+        // year (LT? No, must be AFTER anniversary). Sell on Mar 1 = LT.
+        let lots_st = vec![lot(day(2024, 2, 29), day(2025, 2, 28), "1000")];
+        let r_st = summarize(&lots_st, FilingStatus::Single);
+        assert_eq!(r_st.short_term_pnl, d("1000"));
+        let lots_lt = vec![lot(day(2024, 2, 29), day(2025, 3, 1), "1000")];
+        let r_lt = summarize(&lots_lt, FilingStatus::Single);
+        assert_eq!(r_lt.long_term_pnl, d("1000"));
+    }
+
+    #[test]
+    fn is_long_term_helper_handles_boundary_correctly() {
+        // Direct test of the helper for cleaner regression coverage.
+        // Same date next year (anniversary) → NOT long-term (strict >).
+        assert!(!is_long_term(day(2024, 5, 15), day(2025, 5, 15)));
+        // One day after → long-term.
+        assert!(is_long_term(day(2024, 5, 15), day(2025, 5, 16)));
+        // Same year (much less than year) → short-term.
+        assert!(!is_long_term(day(2024, 5, 15), day(2024, 8, 15)));
+        // Multiple years → long-term.
+        assert!(is_long_term(day(2020, 5, 15), day(2026, 5, 15)));
     }
 
     #[test]

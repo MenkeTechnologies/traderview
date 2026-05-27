@@ -153,4 +153,25 @@ mod tests {
         let k = out[9].kelly_fraction.unwrap();
         assert!(k.abs() <= 1.0, "kelly clamped to [-1, 1]");
     }
+
+    #[test]
+    fn zero_pnl_trades_count_in_window_but_not_as_wins_or_losses() {
+        // 5 zeros + 5 wins of 100 → 10-bar window: win_rate = 5/10 = 0.5.
+        // No losses → payoff = None → kelly = None.
+        // Documents the convention: zero-pnl is neither win nor loss.
+        let mut trades = vec![0.0; 5];
+        trades.extend(vec![100.0; 5]);
+        let out = compute(&trades, 10);
+        assert_eq!(out[9].window_win_rate, 0.5);
+        assert!(out[9].window_payoff_ratio.is_none());
+    }
+
+    #[test]
+    fn first_pnl_in_window_zero_does_not_panic() {
+        let trades = vec![0.0, -50.0, 100.0, -50.0, 100.0];
+        let out = compute(&trades, 5);
+        // 2 wins, 2 losses, 1 zero → win_rate = 2/5 = 0.4.
+        assert_eq!(out[4].window_win_rate, 0.4);
+        assert!(out[4].kelly_fraction.is_some());
+    }
 }
