@@ -9,7 +9,7 @@
 // CSV parsers are stubs until real samples arrive — upload returns 400 with
 // the parser-stub message, which we surface verbatim.
 
-import { api, ApiError } from './api.js';
+import { api, ApiError } from '../api.js';
 
 const state = {
     accounts: [],
