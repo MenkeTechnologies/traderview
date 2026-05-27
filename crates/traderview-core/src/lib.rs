@@ -77,6 +77,7 @@ pub mod oi_change;
 pub mod optimal_f;
 pub mod open_type;
 pub mod options_margin;
+pub mod order_book_imbalance;
 pub mod order_flow;
 pub mod overtrading;
 pub mod pair_trade;

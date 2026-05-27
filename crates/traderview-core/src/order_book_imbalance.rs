@@ -1,0 +1,116 @@
+//! Order-book imbalance signal.
+//!
+//! For a Level-2 snapshot (top-N bid + ask sizes), compute:
+//!   total_bid_size = sum(bid_sizes[..N])
+//!   total_ask_size = sum(ask_sizes[..N])
+//!   imbalance = (total_bid - total_ask) / (total_bid + total_ask)
+//!
+//! Range [-1, 1]. Positive = more size on bid (buying pressure);
+//! negative = more size on ask (selling pressure). Used by HFT firms
+//! as a microsecond-scale signal.
+//!
+//! Pure compute.
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ObiReport {
+    pub total_bid_size: f64,
+    pub total_ask_size: f64,
+    pub imbalance: f64,
+    pub bias: ObiBias,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ObiBias {
+    StronglyBid,    // > 0.3
+    Bid,            // 0.1 to 0.3
+    #[default]
+    Balanced,       // -0.1 to 0.1
+    Ask,            // -0.3 to -0.1
+    StronglyAsk,    // < -0.3
+}
+
+pub fn compute(bid_sizes: &[f64], ask_sizes: &[f64], levels: usize) -> ObiReport {
+    let bid_total: f64 = bid_sizes.iter().take(levels).sum();
+    let ask_total: f64 = ask_sizes.iter().take(levels).sum();
+    let total = bid_total + ask_total;
+    let imbalance = if total > 0.0 { (bid_total - ask_total) / total } else { 0.0 };
+    let bias = if imbalance > 0.3 { ObiBias::StronglyBid }
+        else if imbalance > 0.1 { ObiBias::Bid }
+        else if imbalance < -0.3 { ObiBias::StronglyAsk }
+        else if imbalance < -0.1 { ObiBias::Ask }
+        else { ObiBias::Balanced };
+    ObiReport {
+        total_bid_size: bid_total,
+        total_ask_size: ask_total,
+        imbalance,
+        bias,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_returns_balanced() {
+        let r = compute(&[], &[], 5);
+        assert_eq!(r.bias, ObiBias::Balanced);
+        assert_eq!(r.imbalance, 0.0);
+    }
+
+    #[test]
+    fn balanced_book_zero_imbalance() {
+        let r = compute(&[100.0, 50.0], &[100.0, 50.0], 5);
+        assert_eq!(r.imbalance, 0.0);
+        assert_eq!(r.bias, ObiBias::Balanced);
+    }
+
+    #[test]
+    fn pure_bid_imbalance_one() {
+        let r = compute(&[1000.0], &[], 5);
+        assert_eq!(r.imbalance, 1.0);
+        assert_eq!(r.bias, ObiBias::StronglyBid);
+    }
+
+    #[test]
+    fn pure_ask_imbalance_minus_one() {
+        let r = compute(&[], &[1000.0], 5);
+        assert_eq!(r.imbalance, -1.0);
+        assert_eq!(r.bias, ObiBias::StronglyAsk);
+    }
+
+    #[test]
+    fn levels_caps_summation() {
+        // 10 bid sizes of 100 each; ask 5 × 100. With levels=5,
+        // bid = 500, ask = 500 → balanced.
+        let bids = vec![100.0; 10];
+        let asks = vec![100.0; 5];
+        let r = compute(&bids, &asks, 5);
+        assert_eq!(r.total_bid_size, 500.0);
+        assert_eq!(r.imbalance, 0.0);
+    }
+
+    #[test]
+    fn moderate_bid_classified_bid_bias() {
+        // 20% imbalance → "Bid".
+        let r = compute(&[600.0], &[400.0], 5);
+        // (600-400)/(1000) = 0.2 → Bid.
+        assert_eq!(r.bias, ObiBias::Bid);
+    }
+
+    #[test]
+    fn moderate_ask_classified_ask_bias() {
+        let r = compute(&[400.0], &[600.0], 5);
+        assert_eq!(r.bias, ObiBias::Ask);
+    }
+
+    #[test]
+    fn levels_zero_returns_zero_totals() {
+        let r = compute(&[100.0, 200.0], &[100.0, 200.0], 0);
+        assert_eq!(r.total_bid_size, 0.0);
+        assert_eq!(r.imbalance, 0.0);
+    }
+}
