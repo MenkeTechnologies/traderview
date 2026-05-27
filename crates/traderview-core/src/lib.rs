@@ -75,6 +75,7 @@ pub mod mae_stop_tuning;
 pub mod market_impact;
 pub mod models;
 pub mod monte_carlo;
+pub mod mtm_reconciliation;
 pub mod news_event_handler;
 pub mod oi_change;
 pub mod optimal_f;
