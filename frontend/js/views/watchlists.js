@@ -1,12 +1,16 @@
 import { api } from '../api.js';
-import { go } from '../app.js';
+import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { esc, fmt } from '../util.js';
 
 export async function renderWatchlists(mount) {
+    const tok = currentViewToken();
     let lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     if (!lists.length) {
         await api.createWatchlist('Main');
+        if (!viewIsCurrent(tok)) return;
         lists = await api.watchlists();
+        if (!viewIsCurrent(tok)) return;
     }
     const active = lists[0];
 
@@ -39,55 +43,64 @@ export async function renderWatchlists(mount) {
         </div>
     `;
 
-    document.querySelectorAll('[data-wl]').forEach(b =>
+    mount.querySelectorAll('[data-wl]').forEach(b =>
         b.addEventListener('click', async () => {
             const list = lists.find(w => w.id === b.dataset.wl);
             if (list) {
-                document.querySelectorAll('[data-wl]').forEach(x => x.classList.toggle('active', x === b));
-                document.getElementById('wl-name').textContent = list.name;
+                mount.querySelectorAll('[data-wl]').forEach(x => x.classList.toggle('active', x === b));
+                const nameEl = mount.querySelector('#wl-name');
+                if (nameEl) nameEl.textContent = list.name;
                 await refresh(list.id);
             }
         }));
 
-    document.getElementById('wl-create').addEventListener('submit', async (e) => {
+    mount.querySelector('#wl-create').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.createWatchlist(fd.get('name'));
+        if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);
     });
 
-    document.getElementById('add-sym').addEventListener('submit', async (e) => {
+    mount.querySelector('#add-sym').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.addWatchlistSym(active.id, fd.get('symbol').trim().toUpperCase());
+        if (!viewIsCurrent(tok)) return;
         e.target.reset();
         await refresh(active.id);
     });
 
-    document.getElementById('rename-wl').addEventListener('click', async () => {
+    mount.querySelector('#rename-wl').addEventListener('click', async () => {
         const name = prompt('New name:', active.name);
         if (!name) return;
         await api.renameWatchlist(active.id, name);
+        if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);
     });
-    document.getElementById('delete-wl').addEventListener('click', async () => {
+    mount.querySelector('#delete-wl').addEventListener('click', async () => {
         if (!confirm(`Delete watchlist "${active.name}"?`)) return;
         await api.deleteWatchlist(active.id);
+        if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);
     });
 
     await refresh(active.id);
 
     async function refresh(wid) {
-        const el = document.getElementById('wl-table');
+        const el = mount.querySelector('#wl-table');
+        if (!el) return;
         el.innerHTML = '<div class="boot">loading quotes…</div>';
         const data = await api.watchlistQuotes(wid);
+        if (!viewIsCurrent(tok)) return;
+        const elNow = mount.querySelector('#wl-table');
+        if (!elNow) return;
         if (!data.symbols.length) {
-            el.innerHTML = '<p class="muted">No symbols yet. Add one above.</p>';
+            elNow.innerHTML = '<p class="muted">No symbols yet. Add one above.</p>';
             return;
         }
         const byKey = new Map(data.quotes.map(q => [q.symbol, q]));
-        el.innerHTML = `
+        elNow.innerHTML = `
             <table class="trades">
                 <thead><tr>
                     <th>Symbol</th><th>Price</th><th>Change</th>
@@ -109,9 +122,10 @@ export async function renderWatchlists(mount) {
                     </tr>`;
                 }).join('')}</tbody>
             </table>`;
-        el.querySelectorAll('[data-rm]').forEach(b =>
+        elNow.querySelectorAll('[data-rm]').forEach(b =>
             b.addEventListener('click', async () => {
                 await api.removeWatchlistSym(wid, b.dataset.rm);
+                if (!viewIsCurrent(tok)) return;
                 await refresh(wid);
             }));
     }

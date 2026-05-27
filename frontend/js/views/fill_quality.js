@@ -4,8 +4,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderFillQuality(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -22,17 +24,22 @@ export async function renderFillQuality(mount, state) {
     `;
     try {
         const r = await api.fillQuality(acct.id);
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('fq-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#fq-out');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function render(r) {
+function render(r, mount) {
     const o = r.overall;
     const effCls   = o.avg_fill_efficiency >= 0.6 ? 'pos' : o.avg_fill_efficiency >= 0.4 ? '' : 'neg';
     const slipCls  = o.avg_slippage_bps <= 5 ? 'pos' : o.avg_slippage_bps <= 25 ? '' : 'neg';
-    document.getElementById('fq-out').innerHTML = `
+    const el = mount.querySelector('#fq-out');
+    if (!el) return;
+    el.innerHTML = `
         <div class="cards">
             <div class="card"><div class="label">Sampled fills</div>
                 <div class="value">${o.samples}</div>

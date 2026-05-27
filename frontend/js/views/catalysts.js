@@ -4,14 +4,17 @@
 
 import { api, wsUrl } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const catalysts = new Map();   // key → catalyst
 let ws = null;
 let voiceOn = true;
+let viewTok = 0;
 let watchSet = new Set();      // symbols user wants to be alerted on
 const announced = new Set();
 
 export async function renderCatalysts(mount, _state) {
+    viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// CATALYST RADAR · LIVE
             <span class="status-dot" id="cat-status" title="connecting">●</span>
@@ -48,33 +51,35 @@ export async function renderCatalysts(mount, _state) {
         </div>
     `;
 
-    document.getElementById('cat-voice').addEventListener('change', (e) => {
+    mount.querySelector('#cat-voice').addEventListener('change', (e) => {
         voiceOn = e.target.checked;
     });
-    document.getElementById('cat-watch').addEventListener('submit', (e) => {
+    mount.querySelector('#cat-watch').addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const list = fd.get('symbols').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
         watchSet = new Set(list);
-        document.getElementById('cat-watch-state').textContent =
-            watchSet.size ? `watching ${watchSet.size}` : 'all clear';
+        const stateEl = mount.querySelector('#cat-watch-state');
+        if (stateEl) stateEl.textContent = watchSet.size ? `watching ${watchSet.size}` : 'all clear';
     });
 
-    connectWs(mount);
+    connectWs(mount, viewTok);
 }
 
-function connectWs(mount) {
+function connectWs(mount, tok) {
     try { if (ws) ws.close(); } catch (_) {}
+    if (!viewIsCurrent(tok)) return;
+    const dot = mount.querySelector('#cat-status');
+    if (!dot) return;
     catalysts.clear();
     announced.clear();
     ws = new WebSocket(wsUrl('/api/ws/catalysts'));
-    const dot = document.getElementById('cat-status');
-    if (!dot) return;
-    ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });
-    ws.addEventListener('error', () => { dot.style.color = 'var(--red)';        dot.title = 'error'; });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
     ws.addEventListener('close', () => {
+        if (!viewIsCurrent(tok)) return;
         dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
-        setTimeout(() => { if (document.body.contains(mount)) connectWs(mount); }, 4000);
+        setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {
         try {

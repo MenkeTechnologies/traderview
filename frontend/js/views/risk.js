@@ -1,8 +1,10 @@
 // Risk dashboard — Warrior-style daily P&L tracker vs goal + max loss.
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderRisk(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p class="boot">No account.</p>';
         return;
@@ -12,6 +14,7 @@ export async function renderRisk(mount, state) {
         api.summary(state.accountId),
         api.equity(state.accountId),
     ]);
+    if (!viewIsCurrent(tok)) return;
     const today = new Date().toISOString().slice(0, 10);
     const todayPnl = (eq || []).find(p => p.day === today)?.day_net_pnl ?? 0;
     const todayNum = Number(todayPnl);
@@ -68,7 +71,7 @@ export async function renderRisk(mount, state) {
             </form>
         </div>
     `;
-    document.getElementById('risk-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#risk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = Object.assign({}, s, {
@@ -76,6 +79,7 @@ export async function renderRisk(mount, state) {
             daily_max_loss:    Number(fd.get('max')  || 0),
         });
         await api.updateSettings(body);
+        if (!viewIsCurrent(tok)) return;
         renderRisk(mount, state);
     });
     void fmt;

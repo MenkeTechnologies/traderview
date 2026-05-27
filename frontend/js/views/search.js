@@ -1,7 +1,9 @@
 import { api } from '../api.js';
 import { esc, fmtDate, fmtDateTime, fmtMoney, pnlClass } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSearch(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// SEARCH</h1>
         <form id="search-form" class="inline-form" style="margin-bottom:14px">
@@ -16,18 +18,23 @@ export async function renderSearch(mount) {
         </form>
         <div id="search-results"></div>
     `;
-    document.getElementById('search-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#search-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const q = fd.get('q');
         const scope = fd.get('scope');
-        const el = document.getElementById('search-results');
+        const el = mount.querySelector('#search-results');
+        if (!el) return;
         el.innerHTML = '<div class="boot">searching…</div>';
         try {
             const r = await api.search(q, scope);
-            el.innerHTML = renderHits(r);
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#search-results');
+            if (elNow) elNow.innerHTML = renderHits(r);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${err.message}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#search-results');
+            if (elNow) elNow.innerHTML = `<p class="boot">${err.message}</p>`;
         }
     });
 }

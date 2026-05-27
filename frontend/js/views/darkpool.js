@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const pct = (n) => n == null ? '—' : (n * 100).toFixed(2) + '%';
 const compact = (n) => {
@@ -13,8 +14,10 @@ const compact = (n) => {
 };
 
 export async function renderDarkpool(mount, _state, sym) {
+    const tok = currentViewToken();
     if (sym) return renderSymbol(mount, sym.toUpperCase());
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// DARK POOL / OFF-EXCHANGE VOLUME</h1>
         <p class="muted small">FINRA TRF off-exchange share volume / Yahoo consolidated total volume —
@@ -40,23 +43,28 @@ export async function renderDarkpool(mount, _state, sym) {
             <div id="dp-ranked"></div>
         </div>
     `;
-    document.getElementById('df').addEventListener('submit', (e) => {
+    mount.querySelector('#df').addEventListener('submit', (e) => {
         e.preventDefault();
         const s = new FormData(e.target).get('sym').trim().toUpperCase();
         if (s) window.location.hash = `darkpool/${encodeURIComponent(s)}`;
     });
-    document.getElementById('rf').addEventListener('submit', async (e) => {
+    mount.querySelector('#rf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const wid = fd.get('wl') || null;
         const days = Number(fd.get('days') || 30);
-        const el = document.getElementById('dp-ranked');
+        const el = mount.querySelector('#dp-ranked');
+        if (!el) return;
         el.innerHTML = '<div class="boot">scanning…</div>';
         try {
             const rows = await api.darkpoolRanked(wid, days);
-            renderRanked(el, rows);
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#dp-ranked');
+            if (el2) renderRanked(el2, rows);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#dp-ranked');
+            if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
@@ -76,6 +84,7 @@ function renderRanked(el, rows) {
 }
 
 async function renderSymbol(mount, sym) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// DARK POOL · ${esc(sym)}
             <a class="link small" href="#darkpool">← back</a>
@@ -87,13 +96,16 @@ async function renderSymbol(mount, sym) {
     `;
     try {
         const s = await api.darkpoolSymbol(sym, 60);
+        if (!viewIsCurrent(tok)) return;
+        const cardsEl = mount.querySelector('#dp-cards');
+        if (!cardsEl) return;
         if (!s.days.length) {
-            document.getElementById('dp-cards').innerHTML =
+            cardsEl.innerHTML =
                 '<p class="muted">No overlap between FINRA TRF and Yahoo bars yet — fetch price bars first.</p>';
             return;
         }
         const latest = s.days[s.days.length - 1];
-        document.getElementById('dp-cards').innerHTML = `
+        cardsEl.innerHTML = `
             <div class="card"><div class="label">Avg off-exch %</div>
                 <div class="value">${pct(s.avg_off_exchange_pct)}</div></div>
             <div class="card"><div class="label">Latest (${latest.date})</div>
@@ -106,9 +118,12 @@ async function renderSymbol(mount, sym) {
                 <div class="value">${s.days.length}</div></div>
         `;
         const labels = s.days.map(d => d.date);
-        barChart(document.getElementById('dp-pct'), labels, s.days.map(d => d.off_exchange_pct * 100), { color: '#b86bff' });
-        barChart(document.getElementById('dp-vol'), labels, s.days.map(d => d.off_exchange_volume), { color: '#00e5ff' });
-        document.getElementById('dp-table').innerHTML = `
+        const pctEl = mount.querySelector('#dp-pct');
+        const volEl = mount.querySelector('#dp-vol');
+        if (pctEl) barChart(pctEl, labels, s.days.map(d => d.off_exchange_pct * 100), { color: '#b86bff' });
+        if (volEl) barChart(volEl, labels, s.days.map(d => d.off_exchange_volume), { color: '#00e5ff' });
+        const tableEl = mount.querySelector('#dp-table');
+        if (tableEl) tableEl.innerHTML = `
             <table class="trades">
                 <thead><tr><th>Date</th><th>Off-exchange vol</th><th>Total vol</th><th>Off %</th></tr></thead>
                 <tbody>${s.days.slice().reverse().map(d => `
@@ -120,7 +135,9 @@ async function renderSymbol(mount, sym) {
                     </tr>`).join('')}</tbody>
             </table>`;
     } catch (e) {
-        document.getElementById('dp-cards').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const cardsEl = mount.querySelector('#dp-cards');
+        if (cardsEl) cardsEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
     void fmt;
 }

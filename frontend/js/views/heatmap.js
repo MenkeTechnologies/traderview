@@ -1,8 +1,10 @@
 // Finviz-style S&P 500 heatmap — color-coded grid by sector.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderHeatmap(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// MARKET HEATMAP</h1>
         <p class="muted small">~150 S&P 500 names grouped by GICS sector, colored by today's % change. Your watchlist symbols add to a "Watchlist" pseudo-sector.</p>
@@ -10,13 +12,16 @@ export async function renderHeatmap(mount) {
     `;
     try {
         const r = await api.heatmap();
-        renderTiles(r);
+        if (!viewIsCurrent(tok)) return;
+        renderTiles(r, mount);
     } catch (e) {
-        document.getElementById('hm').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#hm');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderTiles(r) {
+function renderTiles(r, mount) {
     const bySector = new Map();
     for (const t of r.tiles) {
         const arr = bySector.get(t.sector) || [];
@@ -51,5 +56,6 @@ function renderTiles(r) {
         </div>`;
     }).join('');
 
-    document.getElementById('hm').innerHTML = html || '<p class="muted">No quotes cached yet — refresh in a minute.</p>';
+    const el = mount.querySelector('#hm');
+    if (el) el.innerHTML = html || '<p class="muted">No quotes cached yet — refresh in a minute.</p>';
 }

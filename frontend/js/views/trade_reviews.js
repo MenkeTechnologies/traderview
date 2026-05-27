@@ -2,12 +2,14 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_OPTS = [
     [-2, '😡 awful'], [-1, '🙁 down'], [0, '😐 flat'], [1, '🙂 good'], [2, '😄 great'],
 ];
 
 export async function renderTradeReviews(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -22,27 +24,32 @@ export async function renderTradeReviews(mount, state) {
         <div id="tr-modal"></div>
         <div id="tr-history"></div>
     `;
-    await refresh(acct.id);
+    await refresh(acct.id, mount, tok);
 }
 
-async function refresh(accountId) {
+async function refresh(accountId, mount, tok) {
     try {
         const [s, needed, history] = await Promise.all([
             api.reviewStats(accountId),
             api.reviewsNeeded(accountId),
             api.listReviews(20),
         ]);
-        renderStats(s);
-        renderInbox(needed, accountId);
-        renderHistory(history);
+        if (!viewIsCurrent(tok)) return;
+        renderStats(s, mount);
+        renderInbox(needed, accountId, mount, tok);
+        renderHistory(history, mount);
     } catch (e) {
-        document.getElementById('tr-inbox').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const inbox = mount.querySelector('#tr-inbox');
+        if (inbox) inbox.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderStats(s) {
+function renderStats(s, mount) {
+    const el = mount.querySelector('#tr-stats');
+    if (!el) return;
     const cls = s.completion_pct >= 80 ? 'pos' : s.completion_pct >= 50 ? '' : 'neg';
-    document.getElementById('tr-stats').innerHTML = `
+    el.innerHTML = `
         <div class="card"><div class="label">High-|R| trades</div>
             <div class="value">${s.total_high_r_trades}</div>
             <div class="small muted">closed, |R| ≥ 2</div></div>
@@ -57,8 +64,9 @@ function renderStats(s) {
     `;
 }
 
-function renderInbox(items, accountId) {
-    const el = document.getElementById('tr-inbox');
+function renderInbox(items, accountId, mount, tok) {
+    const el = mount.querySelector('#tr-inbox');
+    if (!el) return;
     if (!items.length) {
         el.innerHTML = '<div class="chart-panel"><p class="muted small">✓ Inbox zero — every high-|R| trade has been reviewed.</p></div>';
         return;
@@ -83,13 +91,15 @@ function renderInbox(items, accountId) {
         </table>
     </div>`;
     el.querySelectorAll('.tr-open').forEach(b =>
-        b.addEventListener('click', () => openModal(b.dataset.tid, b.dataset.sym, b.dataset.r, accountId)));
+        b.addEventListener('click', () => openModal(b.dataset.tid, b.dataset.sym, b.dataset.r, accountId, mount, tok)));
 }
 
-async function openModal(tradeId, symbol, rMult, accountId) {
+async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
     let existing = null;
     try { existing = await api.reviewForTrade(tradeId); } catch (_) {}
-    const m = document.getElementById('tr-modal');
+    if (!viewIsCurrent(tok)) return;
+    const m = mount.querySelector('#tr-modal');
+    if (!m) return;
     m.innerHTML = `
         <div style="position:fixed;inset:0;background:rgba(7,7,20,0.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;">
             <div class="chart-panel" style="max-width:640px;width:100%;">
@@ -138,8 +148,8 @@ async function openModal(tradeId, symbol, rMult, accountId) {
         </div>
     `;
     const close = () => { m.innerHTML = ''; };
-    document.getElementById('tr-cancel').addEventListener('click', close);
-    document.getElementById('tr-form').addEventListener('submit', async (e) => {
+    m.querySelector('#tr-cancel').addEventListener('click', close);
+    m.querySelector('#tr-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -154,14 +164,16 @@ async function openModal(tradeId, symbol, rMult, accountId) {
         };
         try {
             await api.saveReview(body);
+            if (!viewIsCurrent(tok)) return;
             close();
-            await refresh(accountId);
+            await refresh(accountId, mount, tok);
         } catch (err) { alert(err.message); }
     });
 }
 
-function renderHistory(rows) {
-    const el = document.getElementById('tr-history');
+function renderHistory(rows, mount) {
+    const el = mount.querySelector('#tr-history');
+    if (!el) return;
     if (!rows.length) { el.innerHTML = ''; return; }
     el.innerHTML = `<div class="chart-panel">
         <h2>Recent reviews (${rows.length})</h2>

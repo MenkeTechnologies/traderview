@@ -1,9 +1,12 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPlans(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) { mount.innerHTML = '<p class="boot">No account.</p>'; return; }
     const plans = await api.plans();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// PRE-TRADE PLANS</h1>
         <div class="chart-panel">
@@ -51,7 +54,7 @@ export async function renderPlans(mount, state) {
             </tbody>
         </table>
     `;
-    document.getElementById('plan-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#plan-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -66,11 +69,13 @@ export async function renderPlans(mount, state) {
             setup_notes: fd.get('setup_notes') || '',
         };
         await api.createPlan(body);
+        if (!viewIsCurrent(tok)) return;
         renderPlans(mount, state);
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.abandonPlan(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderPlans(mount, state);
         }));
 }

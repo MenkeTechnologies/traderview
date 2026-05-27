@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
 import { renderAiAnalyze } from './journal_ai.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const dtLocal = (iso) => {
     if (!iso) return '';
@@ -11,6 +12,7 @@ const dtLocal = (iso) => {
 };
 
 export async function renderTradeDetail(mount, state, tradeId) {
+    const tok = currentViewToken();
     if (!tradeId) { mount.innerHTML = '<p class="boot">No trade id</p>'; return; }
     const [trade, executions, tags, journal, screenshots, share] = await Promise.all([
         api.trade(tradeId),
@@ -20,6 +22,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         api.screenshotsForTrade(tradeId),
         Promise.resolve(null),
     ]);
+    if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
         <h1 class="view-title">// ${esc(trade.symbol)} · ${trade.side} · ${trade.status}</h1>
@@ -156,27 +159,32 @@ export async function renderTradeDetail(mount, state, tradeId) {
     const bars = await api.bars(trade.symbol, interval,
         Math.floor(opened - padding), Math.floor(closed + padding))
         .catch(_ => ({ bars: [] }));
+    if (!viewIsCurrent(tok)) return;
     const marks = executions.map(e => ({
         x: new Date(e.executed_at).getTime() / 1000,
         y: Number(e.price),
         side: e.side === 'buy' || e.side === 'cover' ? 'buy' : 'sell',
     }));
-    ohlcChart(document.getElementById('chart-wrap'), bars.bars || [], marks, { height: 360 });
+    const chartWrap = mount.querySelector('#chart-wrap');
+    if (chartWrap) ohlcChart(chartWrap, bars.bars || [], marks, { height: 360 });
 
     // Tag add
     const allTags = await api.tags();
-    const sel = document.getElementById('tag-add-select');
+    if (!viewIsCurrent(tok)) return;
+    const sel = mount.querySelector('#tag-add-select');
     const have = new Set(tags.map(t => t.id));
-    sel.innerHTML = allTags.filter(t => !have.has(t.id))
+    if (sel) sel.innerHTML = allTags.filter(t => !have.has(t.id))
         .map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
-    document.getElementById('tag-add-btn').addEventListener('click', async () => {
-        if (!sel.value) return;
+    const tagAddBtn = mount.querySelector('#tag-add-btn');
+    if (tagAddBtn) tagAddBtn.addEventListener('click', async () => {
+        if (!sel || !sel.value) return;
         await api.attachTag(tradeId, sel.value);
+        if (!viewIsCurrent(tok)) return;
         renderTradeDetail(mount, state, tradeId);
     });
 
     // Risk form
-    document.getElementById('risk-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#risk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {};
@@ -185,47 +193,57 @@ export async function renderTradeDetail(mount, state, tradeId) {
             body[k] = v ? Number(v) : null;
         }
         await api.setRisk(tradeId, body);
+        if (!viewIsCurrent(tok)) return;
         renderTradeDetail(mount, state, tradeId);
     });
 
     // Screenshot upload + delete
-    document.getElementById('shot-upload').addEventListener('click', async () => {
-        const file = document.getElementById('shot-input').files[0];
+    mount.querySelector('#shot-upload').addEventListener('click', async () => {
+        const inp = mount.querySelector('#shot-input');
+        const file = inp && inp.files[0];
         if (!file) return;
-        const cap = document.getElementById('shot-caption').value;
+        const capEl = mount.querySelector('#shot-caption');
+        const cap = capEl ? capEl.value : '';
         await api.uploadScreenshot(tradeId, file, cap);
+        if (!viewIsCurrent(tok)) return;
         renderTradeDetail(mount, state, tradeId);
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteScreenshot(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderTradeDetail(mount, state, tradeId);
         }));
 
     // Journal save / delete
-    document.getElementById('journal-save').addEventListener('click', async () => {
-        const body_md = document.getElementById('journal-body').value;
+    mount.querySelector('#journal-save').addEventListener('click', async () => {
+        const ta = mount.querySelector('#journal-body');
+        const body_md = ta ? ta.value : '';
         if (!body_md.trim()) return;
         await api.createJournal({ trade_id: tradeId, body_md });
+        if (!viewIsCurrent(tok)) return;
         renderTradeDetail(mount, state, tradeId);
     });
-    document.getElementById('journal-template').addEventListener('click', async () => {
+    mount.querySelector('#journal-template').addEventListener('click', async () => {
         const tpl = await api.defaultNoteTemplate('trade');
-        const ta = document.getElementById('journal-body');
+        if (!viewIsCurrent(tok)) return;
+        const ta = mount.querySelector('#journal-body');
+        if (!ta) return;
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
             alert('No default trade template set. Configure one under Settings → Notes Templates.');
         }
     });
-    document.querySelectorAll('[data-del-journal]').forEach(b =>
+    mount.querySelectorAll('[data-del-journal]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteJournal(b.dataset.delJournal);
+            if (!viewIsCurrent(tok)) return;
             renderTradeDetail(mount, state, tradeId);
         }));
 
     // Execution editor — save / delete each row + add new
-    document.querySelectorAll('[data-save-ex]').forEach(b =>
+    mount.querySelectorAll('[data-save-ex]').forEach(b =>
         b.addEventListener('click', async () => {
             const eid = b.dataset.saveEx;
             const row = b.closest('tr');
@@ -238,16 +256,18 @@ export async function renderTradeDetail(mount, state, tradeId) {
             };
             try {
                 await api.updateExecution(eid, body);
+                if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
             } catch (err) { alert('Save failed: ' + err.message); }
         }));
-    document.querySelectorAll('[data-del-ex]').forEach(b =>
+    mount.querySelectorAll('[data-del-ex]').forEach(b =>
         b.addEventListener('click', async () => {
             if (!confirm('Delete this execution? The trade will re-FIFO.')) return;
             await api.deleteExecution(b.dataset.delEx);
+            if (!viewIsCurrent(tok)) return;
             renderTradeDetail(mount, state, tradeId);
         }));
-    const addForm = document.getElementById('ex-add-form');
+    const addForm = mount.querySelector('#ex-add-form');
     if (addForm) {
         // pre-fill time with the trade's last close (or now)
         const dt = trade.closed_at || trade.opened_at;
@@ -272,15 +292,18 @@ export async function renderTradeDetail(mount, state, tradeId) {
             };
             try {
                 await api.addExecutionToTrade(tradeId, body);
+                if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
             } catch (err) { alert('Add failed: ' + err.message); }
         });
     }
 
     // Share
-    document.getElementById('share-btn').addEventListener('click', async () => {
+    mount.querySelector('#share-btn').addEventListener('click', async () => {
         const sh = await api.createShare({ trade_id: tradeId });
-        document.getElementById('share-result').innerHTML =
+        if (!viewIsCurrent(tok)) return;
+        const result = mount.querySelector('#share-result');
+        if (result) result.innerHTML =
             `Public link: <a href="#shared/${sh.slug}">/#shared/${sh.slug}</a> (slug: <code>${sh.slug}</code>)`;
     });
     void share;

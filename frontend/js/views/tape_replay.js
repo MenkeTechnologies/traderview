@@ -11,6 +11,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const SPEEDS = [1, 10, 100, 500];
 let raf = null;
@@ -18,11 +19,12 @@ let timerHandle = null;
 
 export async function renderTapeReplay(mount, state, tradeId = '') {
     cancelAnims();
-    if (!tradeId) return renderPicker(mount, state);
-    return renderReplay(mount, tradeId);
+    const tok = currentViewToken();
+    if (!tradeId) return renderPicker(mount, state, tok);
+    return renderReplay(mount, tradeId, tok);
 }
 
-async function renderPicker(mount, state) {
+async function renderPicker(mount, state, tok) {
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -35,6 +37,7 @@ async function renderPicker(mount, state) {
     `;
     try {
         const trades = await api.trades(acct.id, { status: 'closed', limit: 60 });
+        if (!viewIsCurrent(tok)) return;
         const rows = trades.map(t => `<tr>
             <td><a href="#tape-replay/${t.id}">${esc(t.symbol)}</a></td>
             <td>${esc(t.side)}</td>
@@ -45,23 +48,32 @@ async function renderPicker(mount, state) {
                 t.net_pnl != null ? '$' + fmt(Number(t.net_pnl)) : '—'
             }</td>
         </tr>`).join('');
-        document.getElementById('tr-list').innerHTML = trades.length === 0
+        const listEl = mount.querySelector('#tr-list');
+        if (!listEl) return;
+        listEl.innerHTML = trades.length === 0
             ? '<p class="muted small">No closed trades on this account.</p>'
             : `<table class="trades">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Opened</th><th>Closed</th><th>Net P/L</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>`;
     } catch (e) {
-        document.getElementById('tr-list').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const listEl = mount.querySelector('#tr-list');
+        if (listEl) listEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-async function renderReplay(mount, tradeId) {
+async function renderReplay(mount, tradeId, tok) {
     mount.innerHTML = `<h1 class="view-title">// TAPE REPLAY</h1>
         <div class="boot">loading replay…</div>`;
     let data;
     try { data = await api.tapeReplay(tradeId); }
-    catch (e) { mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`; return; }
+    catch (e) {
+        if (!viewIsCurrent(tok)) return;
+        mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        return;
+    }
+    if (!viewIsCurrent(tok)) return;
 
     const sessionNotes = [];      // { time_iso, cursor_idx, text }
     const state = { idx: data.bars.length ? 0 : -1, playing: false, speed: 10 };
@@ -107,11 +119,11 @@ async function renderReplay(mount, tradeId) {
         </div>
     `;
 
-    const $ = (id) => document.getElementById(id);
+    const $ = (id) => mount.querySelector('#' + id);
     $('tr-play').addEventListener('click', () => {
         state.playing = !state.playing;
         $('tr-play').textContent = state.playing ? '⏸ Pause' : '▶ Play';
-        if (state.playing) play(data, state);
+        if (state.playing) play(data, state, mount, tok);
         else cancelAnims();
     });
     $('tr-rewind').addEventListener('click', () => {
@@ -119,18 +131,18 @@ async function renderReplay(mount, tradeId) {
         state.playing = false;
         $('tr-play').textContent = '▶ Play';
         state.idx = 0;
-        renderChart(data, state);
+        renderChart(data, state, mount);
     });
     $('tr-speed').addEventListener('change', (e) => {
         state.speed = Number(e.target.value);
-        if (state.playing) { cancelAnims(); play(data, state); }
+        if (state.playing) { cancelAnims(); play(data, state, mount, tok); }
     });
     $('tr-scrub').addEventListener('input', (e) => {
         cancelAnims();
         state.playing = false;
         $('tr-play').textContent = '▶ Play';
         state.idx = Number(e.target.value);
-        renderChart(data, state);
+        renderChart(data, state, mount);
     });
     $('tr-note-form').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -139,28 +151,29 @@ async function renderReplay(mount, tradeId) {
         const bar = data.bars[state.idx];
         sessionNotes.push({ time_iso: bar?.time, cursor_idx: state.idx, text });
         $('tr-note').value = '';
-        renderNotes(sessionNotes);
+        renderNotes(sessionNotes, mount);
     });
 
-    renderChart(data, state);
-    renderNotes(sessionNotes);
+    renderChart(data, state, mount);
+    renderNotes(sessionNotes, mount);
 }
 
-function play(data, state) {
+function play(data, state, mount, tok) {
     if (state.idx >= data.bars.length - 1) state.idx = 0;
     // realTickMs = bar_duration / speed_multiplier. speed=1 plays in real
     // time (1m bar takes 60s); speed=500 collapses a 1m bar into 120ms.
     const intervalMs = { '1m': 60_000, '5m': 300_000, '1h': 3_600_000, '1d': 86_400_000 }[data.interval] || 60_000;
     const realTickMs = Math.max(20, intervalMs / state.speed);
     const tick = () => {
+        if (!viewIsCurrent(tok)) { cancelAnims(); state.playing = false; return; }
         if (!state.playing) return;
         state.idx++;
-        renderChart(data, state);
-        const slider = document.getElementById('tr-scrub');
+        renderChart(data, state, mount);
+        const slider = mount.querySelector('#tr-scrub');
         if (slider) slider.value = String(state.idx);
         if (state.idx >= data.bars.length - 1) {
             state.playing = false;
-            const btn = document.getElementById('tr-play');
+            const btn = mount.querySelector('#tr-play');
             if (btn) btn.textContent = '▶ Play';
             return;
         }
@@ -174,8 +187,8 @@ function cancelAnims() {
     if (timerHandle) { clearTimeout(timerHandle); timerHandle = null; }
 }
 
-function renderChart(data, state) {
-    const el = document.getElementById('tr-chart');
+function renderChart(data, state, mount) {
+    const el = mount.querySelector('#tr-chart');
     if (!el) return;
     const bars = data.bars;
     if (!bars.length) { el.innerHTML = '<p class="muted small">No bars cached for this trade window.</p>'; return; }
@@ -262,14 +275,14 @@ function renderChart(data, state) {
         ${yAxis}
     </svg>`;
 
-    const pos = document.getElementById('tr-pos');
+    const pos = mount.querySelector('#tr-pos');
     if (pos && cursorTime) {
         pos.textContent = `bar ${state.idx + 1}/${bars.length} · ${new Date(cursorTime).toLocaleString()}`;
     }
 }
 
-function renderNotes(notes) {
-    const el = document.getElementById('tr-notes');
+function renderNotes(notes, mount) {
+    const el = mount.querySelector('#tr-notes');
     if (!el) return;
     if (!notes.length) { el.innerHTML = '<p class="muted small">No notes yet.</p>'; return; }
     el.innerHTML = `<ol style="padding-left:18px;">

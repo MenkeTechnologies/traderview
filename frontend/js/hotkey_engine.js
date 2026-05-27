@@ -37,7 +37,9 @@ function run(action) {
     switch (action) {
         case 'go_dashboard':  window.location.hash = 'dashboard'; break;
         case 'go_trades':     window.location.hash = 'trades'; break;
-        case 'go_journal':    window.location.hash = 'journal/' + new Date().toISOString().slice(0,10); break;
+        // Use LOCAL date — toISOString() is UTC and rolls over at 7-8pm ET,
+        // putting the user on yesterday's journal page during evening review.
+        case 'go_journal':    window.location.hash = 'journal/' + localToday(); break;
         case 'go_scanners':   window.location.hash = 'scanners'; break;
         case 'go_paper':      window.location.hash = 'paper'; break;
         case 'go_watchlists': window.location.hash = 'watchlists'; break;
@@ -90,6 +92,14 @@ async function journalQuick() {
     const body = prompt('Journal note for today:');
     if (!body) return;
     try {
-        await api.createJournal({ day: new Date().toISOString().slice(0,10), body_md: body });
+        await api.createJournal({ day: localToday(), body_md: body });
     } catch (e) { alert(e.message); }
+}
+
+function localToday() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }

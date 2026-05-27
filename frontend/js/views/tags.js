@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTags(mount) {
+    const tok = currentViewToken();
     const tags = await api.tags();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// TAGS</h1>
         <div class="chart-panel">
@@ -20,15 +23,17 @@ export async function renderTags(mount) {
             </span>
         `).join('') || '<p class="muted">No tags yet.</p>'}</div>
     `;
-    document.getElementById('tag-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#tag-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.createTag(fd.get('name'), fd.get('color'));
+        if (!viewIsCurrent(tok)) return;
         renderTags(mount);
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteTag(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderTags(mount);
         }));
 }

@@ -3,8 +3,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPositionSize(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     mount.innerHTML = `
         <h1 class="view-title">// POSITION SIZING</h1>
@@ -58,25 +60,35 @@ export async function renderPositionSize(mount, state) {
         <div id="ps-out"></div>
     `;
 
-    document.getElementById('ps-go').addEventListener('click', compute);
-    document.getElementById('ps-fill-history').addEventListener('click', async () => {
+    mount.querySelector('#ps-go').addEventListener('click', () => compute(mount, tok));
+    mount.querySelector('#ps-fill-history').addEventListener('click', async () => {
         if (!acct) return;
-        const status = document.getElementById('ps-fill-status');
-        status.textContent = 'fetching…';
+        const status = mount.querySelector('#ps-fill-status');
+        if (status) status.textContent = 'fetching…';
         try {
             const r = await api.positionSizeWinRate(acct.id);
-            document.querySelector('#ps-kelly [name=win_rate]').value = r.win_rate.toFixed(4);
-            document.querySelector('#ps-kelly [name=avg_win]').value  = r.avg_win.toFixed(2);
-            document.querySelector('#ps-kelly [name=avg_loss]').value = r.avg_loss.toFixed(2);
-            status.textContent = `loaded ${r.wins}W / ${r.losses}L (${r.samples} closed)`;
-        } catch (e) { status.textContent = 'error: ' + e.message; }
+            if (!viewIsCurrent(tok)) return;
+            const wr = mount.querySelector('#ps-kelly [name=win_rate]');
+            const aw = mount.querySelector('#ps-kelly [name=avg_win]');
+            const al = mount.querySelector('#ps-kelly [name=avg_loss]');
+            if (wr) wr.value = r.win_rate.toFixed(4);
+            if (aw) aw.value = r.avg_win.toFixed(2);
+            if (al) al.value = r.avg_loss.toFixed(2);
+            const s2 = mount.querySelector('#ps-fill-status');
+            if (s2) s2.textContent = `loaded ${r.wins}W / ${r.losses}L (${r.samples} closed)`;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#ps-fill-status');
+            if (s2) s2.textContent = 'error: ' + e.message;
+        }
     });
-    await compute();
+    await compute(mount, tok);
 }
 
-async function compute() {
-    const f1 = document.getElementById('ps-form');
-    const f2 = document.getElementById('ps-kelly');
+async function compute(mount, tok) {
+    const f1 = mount.querySelector('#ps-form');
+    const f2 = mount.querySelector('#ps-kelly');
+    if (!f1 || !f2) return;
     const body = {
         side: f1.side.value,
         entry: Number(f1.entry.value),
@@ -94,17 +106,24 @@ async function compute() {
         },
         recommended_method: 'fixed_fractional',
     };
-    const status = document.getElementById('ps-status');
-    status.textContent = 'computing…';
+    const status = mount.querySelector('#ps-status');
+    if (status) status.textContent = 'computing…';
     try {
         const r = await api.positionSize(body);
-        render(r);
-        status.textContent = '';
-    } catch (e) { status.textContent = 'error: ' + e.message; }
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
+        const s2 = mount.querySelector('#ps-status');
+        if (s2) s2.textContent = '';
+    } catch (e) {
+        if (!viewIsCurrent(tok)) return;
+        const s2 = mount.querySelector('#ps-status');
+        if (s2) s2.textContent = 'error: ' + e.message;
+    }
 }
 
-function render(r) {
-    const out = document.getElementById('ps-out');
+function render(r, mount) {
+    const out = mount.querySelector('#ps-out');
+    if (!out) return;
     const sizing = (s, color) => {
         if (!s) return `<div class="card"><div class="label">${color}</div>
             <div class="muted small">n/a</div></div>`;

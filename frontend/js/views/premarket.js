@@ -1,10 +1,12 @@
 // Pre-market futures dashboard — index futures, commodities, crypto, FX.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 
 export async function renderPremarket(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// PRE-MARKET / OVERNIGHT</h1>
         <p class="muted small">Cross-asset overnight tape: index futures, commodities, crypto, FX.
@@ -16,24 +18,30 @@ export async function renderPremarket(mount) {
         <div id="pmContent" class="cards"><div class="boot">loading…</div></div>
     `;
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 30_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 30_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#premarket')) { clearInterval(timer); timer = null; }
     }, { once: true });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const s = await api.premarketSnapshot();
-        renderGroups(s.contracts);
-        renderEvents(s.today_events, s.fetched_at);
+        if (!viewIsCurrent(tok)) return;
+        renderGroups(s.contracts, mount);
+        renderEvents(s.today_events, s.fetched_at, mount);
     } catch (e) {
-        document.getElementById('pmContent').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#pmContent');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderGroups(contracts) {
+function renderGroups(contracts, mount) {
     const groups = new Map();
     for (const c of contracts) {
         if (!groups.has(c.group)) groups.set(c.group, []);
@@ -44,8 +52,8 @@ function renderGroups(contracts) {
         out.push(`<h2 class="view-title" style="margin-top:1rem;">// ${esc(grp).toUpperCase()}</h2>`);
         out.push(`<div class="cards">${rows.map(card).join('')}</div>`);
     }
-    document.getElementById('pmContent').outerHTML =
-        `<div id="pmContent">${out.join('')}</div>`;
+    const el = mount.querySelector('#pmContent');
+    if (el) el.innerHTML = out.join('');
 }
 
 function card(c) {
@@ -77,9 +85,11 @@ function card(c) {
     </div>`;
 }
 
-function renderEvents(events, fetched) {
+function renderEvents(events, fetched, mount) {
+    const el = mount.querySelector('#pmEvents');
+    if (!el) return;
     if (!events || !events.length) {
-        document.getElementById('pmEvents').innerHTML = `
+        el.innerHTML = `
             <div class="chart-panel">
                 <h2>Today's high-impact releases</h2>
                 <p class="muted small">No high-importance scheduled releases today (per static
@@ -87,7 +97,7 @@ function renderEvents(events, fetched) {
             </div>`;
         return;
     }
-    document.getElementById('pmEvents').innerHTML = `
+    el.innerHTML = `
         <div class="chart-panel">
             <h2>Today's high-impact releases (${events.length})</h2>
             <table class="trades">

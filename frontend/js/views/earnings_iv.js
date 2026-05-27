@@ -1,11 +1,14 @@
 // Earnings-week IV scanner + per-symbol straddle backtest detail.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderEarningsIv(mount, _state, symbol) {
+    const tok = currentViewToken();
     if (symbol) return renderDetail(mount, symbol.toUpperCase());
 
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// EARNINGS-WEEK IV SCANNER</h1>
         <p class="muted small">
@@ -30,10 +33,11 @@ export async function renderEarningsIv(mount, _state, symbol) {
 
         <div id="iv-result"></div>
     `;
-    document.getElementById('ivf').addEventListener('submit', async (e) => {
+    mount.querySelector('#ivf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const el = document.getElementById('iv-result');
+        const el = mount.querySelector('#iv-result');
+        if (!el) return;
         el.innerHTML = '<div class="boot">scanning… options chains can take ~1s per symbol</div>';
         try {
             const hits = await api.ivScan(
@@ -41,9 +45,13 @@ export async function renderEarningsIv(mount, _state, symbol) {
                 Number(fd.get('horizon_days') || 7),
                 Number(fd.get('limit') || 50),
             );
-            el.innerHTML = renderTable(hits);
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#iv-result');
+            if (el2) el2.innerHTML = renderTable(hits);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#iv-result');
+            if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
@@ -83,6 +91,7 @@ function renderTable(hits) {
 }
 
 async function renderDetail(mount, sym) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// EARNINGS IV · ${esc(sym)}
             <a class="link small" href="#earnings-iv">← back to scan</a>
@@ -91,9 +100,12 @@ async function renderDetail(mount, sym) {
     `;
     try {
         const r = await api.ivSymbol(sym);
+        if (!viewIsCurrent(tok)) return;
         const recCls = r.backtest.recommendation === 'long' ? 'pos' :
                        r.backtest.recommendation === 'short' ? 'neg' : '';
-        document.getElementById('iv-detail').innerHTML = `
+        const detailEl = mount.querySelector('#iv-detail');
+        if (!detailEl) return;
+        detailEl.innerHTML = `
             <div class="cards">
                 <div class="card"><div class="label">Earnings</div>
                     <div class="value">${esc(r.earnings_date)}</div></div>
@@ -158,6 +170,8 @@ async function renderDetail(mount, sym) {
             </div>
         `;
     } catch (e) {
-        document.getElementById('iv-detail').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const detailEl = mount.querySelector('#iv-detail');
+        if (detailEl) detailEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

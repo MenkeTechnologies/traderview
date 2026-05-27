@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { equityChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = [
     { id: 'sma_cross', label: 'SMA crossover',
@@ -14,6 +15,7 @@ const PRESETS = [
 ];
 
 export async function renderBacktest(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// STRATEGY BACKTEST</h1>
         <p class="muted small">Bar-by-bar over cached daily price bars. Long-only, single-position, 95% allocation.
@@ -35,8 +37,8 @@ export async function renderBacktest(mount) {
 
         <div id="bt-result"></div>
     `;
-    const ps = document.getElementById('ps');
-    const slot = document.getElementById('param-slot');
+    const ps = mount.querySelector('#ps');
+    const slot = mount.querySelector('#param-slot');
     const renderParams = () => {
         const p = PRESETS.find(x => x.id === ps.value);
         slot.innerHTML = Object.entries(p.defaults).map(([k, v]) =>
@@ -46,7 +48,7 @@ export async function renderBacktest(mount) {
     ps.addEventListener('change', renderParams);
     renderParams();
 
-    document.getElementById('bt-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#bt-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const preset_id = fd.get('preset');
@@ -65,12 +67,17 @@ export async function renderBacktest(mount) {
             initial_capital: Number(fd.get('capital') || 10000),
             fee_per_trade: Number(fd.get('fee') || 0),
         };
-        const el = document.getElementById('bt-result');
+        const el = mount.querySelector('#bt-result');
+        if (!el) return;
         el.innerHTML = '<div class="boot">running…</div>';
         try {
             const r = await api.backtestRun(body);
-            el.innerHTML = render(r);
-            const eqMount = document.getElementById('bt-eq');
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#bt-result');
+            if (!el2) return;
+            el2.innerHTML = render(r);
+            const eqMount = mount.querySelector('#bt-eq');
+            if (!eqMount) return;
             // Adapt to equityChart's expected shape.
             const points = r.equity.map(p => ({
                 day: p.time.slice(0, 10),
@@ -79,7 +86,9 @@ export async function renderBacktest(mount) {
             }));
             equityChart(eqMount, points, { height: 320 });
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#bt-result');
+            if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }

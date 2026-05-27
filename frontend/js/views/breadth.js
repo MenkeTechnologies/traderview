@@ -1,10 +1,12 @@
 // Market breadth — NYSE TICK / TRIN / A-D / Up-Down Vol / Put-Call + regime.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 
 export async function renderBreadth(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// MARKET BREADTH</h1>
         <p class="muted small">Intraday tape regime: NYSE TICK (instantaneous up-tick count),
@@ -29,27 +31,35 @@ export async function renderBreadth(mount) {
         </div>
     `;
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 60_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 60_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#breadth')) { clearInterval(timer); timer = null; }
     }, { once: true });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const s = await api.breadthSnapshot();
-        renderComposite(s);
-        renderIndicators(s);
+        if (!viewIsCurrent(tok)) return;
+        renderComposite(s, mount);
+        renderIndicators(s, mount);
     } catch (e) {
-        document.getElementById('bcomp').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#bcomp');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderComposite(s) {
+function renderComposite(s, mount) {
     const regCls = s.regime === 'bullish' ? 'pos' : s.regime === 'bearish' ? 'neg' : '';
     const scoreCls = s.composite_score >= 30 ? 'pos' : s.composite_score <= -30 ? 'neg' : '';
-    document.getElementById('bcomp').innerHTML = `
+    const el = mount.querySelector('#bcomp');
+    if (!el) return;
+    el.innerHTML = `
         <div class="card"><div class="label">Composite score</div>
             <div class="value ${scoreCls}">${s.composite_score >= 0 ? '+' : ''}${s.composite_score}</div></div>
         <div class="card"><div class="label">Regime</div>
@@ -61,13 +71,15 @@ function renderComposite(s) {
     `;
 }
 
-function renderIndicators(s) {
+function renderIndicators(s, mount) {
     const inds = [s.tick, s.trin, s.addn, s.vold, s.pcr].filter(Boolean);
+    const el = mount.querySelector('#binds');
+    if (!el) return;
     if (!inds.length) {
-        document.getElementById('binds').innerHTML = '<p class="boot">No breadth tickers returned data — try in market hours.</p>';
+        el.innerHTML = '<p class="boot">No breadth tickers returned data — try in market hours.</p>';
         return;
     }
-    document.getElementById('binds').innerHTML = `
+    el.innerHTML = `
         <div class="cards">
             ${inds.map(i => {
                 const chCls = i.change_pct >= 0 ? 'pos' : 'neg';

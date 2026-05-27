@@ -1,6 +1,7 @@
 // Stock scanners — Warrior/Zendoo presets across the user's watchlist universe.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = [
     { id: 'premarket_gappers', label: 'Premarket Gappers',  desc: '≥ 5% gap (open vs prior close)' },
@@ -16,7 +17,9 @@ const PRESETS = [
 ];
 
 export async function renderScanners(mount) {
+    const tok = currentViewToken();
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// SCANNERS</h1>
         <p class="muted small">Warrior/Zendoo-style preset scans across your watchlist universe.
@@ -41,17 +44,23 @@ export async function renderScanners(mount) {
 
         <div id="scan-result"></div>
     `;
-    document.querySelectorAll('[data-preset]').forEach(b =>
+    mount.querySelectorAll('[data-preset]').forEach(b =>
         b.addEventListener('click', async () => {
-            const wid = document.getElementById('wl').value || null;
-            const el = document.getElementById('scan-result');
+            const wlEl = mount.querySelector('#wl');
+            const wid = (wlEl && wlEl.value) || null;
+            const el = mount.querySelector('#scan-result');
+            if (!el) return;
             el.innerHTML = '<div class="boot">scanning…</div>';
-            document.querySelectorAll('.scanner-tile').forEach(t => t.classList.toggle('active', t === b));
+            mount.querySelectorAll('.scanner-tile').forEach(t => t.classList.toggle('active', t === b));
             try {
                 const r = await api.scanRun(b.dataset.preset, wid, 100);
-                el.innerHTML = renderHits(r);
+                if (!viewIsCurrent(tok)) return;
+                const elNow = mount.querySelector('#scan-result');
+                if (elNow) elNow.innerHTML = renderHits(r);
             } catch (e) {
-                el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+                if (!viewIsCurrent(tok)) return;
+                const elNow = mount.querySelector('#scan-result');
+                if (elNow) elNow.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
             }
         }));
 }

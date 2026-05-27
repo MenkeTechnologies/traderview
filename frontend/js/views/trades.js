@@ -1,10 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, fmtSecs, makeFilter, pnlClass } from '../util.js';
-import { go } from '../app.js';
+import { go, currentViewToken, viewIsCurrent } from '../app.js';
 
 let currentFilter = {};
 
 export async function renderTradesView(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p class="boot">No account.</p>';
         return;
@@ -34,28 +35,34 @@ export async function renderTradesView(mount, state) {
         currentFilter = f;
         await refresh();
     });
-    document.getElementById('filter-mount').appendChild(fEl);
+    const filterMount = mount.querySelector('#filter-mount');
+    if (filterMount) filterMount.appendChild(fEl);
 
-    document.getElementById('rollup-btn').addEventListener('click', async () => {
+    mount.querySelector('#rollup-btn').addEventListener('click', async () => {
         await api.rollupTrades(state.accountId);
+        if (!viewIsCurrent(tok)) return;
         await refresh();
     });
-    document.getElementById('close-exp-btn').addEventListener('click', async () => {
+    mount.querySelector('#close-exp-btn').addEventListener('click', async () => {
         const n = await api.closeExpiredOptions(state.accountId);
+        if (!viewIsCurrent(tok)) return;
         alert(`Closed ${n} expired option trade${n === 1 ? '' : 's'}.`);
         await refresh();
     });
 
-    document.getElementById('apply-bulk').addEventListener('click', async () => {
-        const action = document.getElementById('bulk-action').value;
+    mount.querySelector('#apply-bulk').addEventListener('click', async () => {
+        const actEl = mount.querySelector('#bulk-action');
+        const action = actEl ? actEl.value : '';
         if (!action) return;
-        const ids = Array.from(document.querySelectorAll('.trade-row input:checked'))
+        const ids = Array.from(mount.querySelectorAll('.trade-row input:checked'))
             .map(c => c.value);
         if (!ids.length) { alert('Select trades first.'); return; }
         try {
             const extras = await collectActionExtras(action);
+            if (!viewIsCurrent(tok)) return;
             if (extras === null) return; // cancelled
             const r = await api.bulkTrades(ids, action, extras);
+            if (!viewIsCurrent(tok)) return;
             alert(`${action} → affected ${r.affected}`);
             await refresh();
         } catch (e) {
@@ -66,6 +73,7 @@ export async function renderTradesView(mount, state) {
     async function collectActionExtras(action) {
         if (action === 'add_tag' || action === 'remove_tag') {
             const tags = await api.tags();
+            if (!viewIsCurrent(tok)) return null;
             if (!tags.length) { alert('Create a tag first (Tags tab).'); return null; }
             const name = prompt(`Tag name (${tags.map(t => t.name).join(', ')})`);
             if (!name) return null;
@@ -89,7 +97,9 @@ export async function renderTradesView(mount, state) {
 
     async function refresh() {
         const trades = await api.trades(state.accountId, currentFilter);
-        const tableEl = document.getElementById('trades-table');
+        if (!viewIsCurrent(tok)) return;
+        const tableEl = mount.querySelector('#trades-table');
+        if (!tableEl) return;
         if (!trades.length) { tableEl.innerHTML = '<p class="boot">No trades match.</p>'; return; }
         tableEl.innerHTML = `
             <table class="trades">
@@ -122,13 +132,16 @@ export async function renderTradesView(mount, state) {
             <p class="muted">${trades.length} trade${trades.length === 1 ? '' : 's'}</p>
         `;
         const updateSel = () => {
-            const n = document.querySelectorAll('.trade-row input:checked').length;
-            document.getElementById('sel-count').textContent = `${n} selected`;
-            document.getElementById('apply-bulk').disabled = n === 0;
+            const n = mount.querySelectorAll('.trade-row input:checked').length;
+            const cEl = mount.querySelector('#sel-count');
+            const aEl = mount.querySelector('#apply-bulk');
+            if (cEl) cEl.textContent = `${n} selected`;
+            if (aEl) aEl.disabled = n === 0;
         };
         tableEl.querySelectorAll('.trade-row input').forEach(c =>
             c.addEventListener('change', updateSel));
-        document.getElementById('sel-all').addEventListener('change', (e) => {
+        const selAll = mount.querySelector('#sel-all');
+        if (selAll) selAll.addEventListener('change', (e) => {
             tableEl.querySelectorAll('.trade-row input').forEach(c => c.checked = e.target.checked);
             updateSel();
         });
@@ -140,6 +153,7 @@ export async function renderTradesView(mount, state) {
                 e.stopPropagation();
                 if (!confirm('Delete this trade?')) return;
                 await api.deleteTrade(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
                 await refresh();
             }));
     }

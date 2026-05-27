@@ -2,8 +2,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderRDist(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -17,17 +19,22 @@ export async function renderRDist(mount, state) {
     `;
     try {
         const r = await api.rDistribution(acct.id);
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('r-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#r-out');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function render(r) {
+function render(r, mount) {
     const s = r.stats;
     const sqnCls = s.sqn >= 2.5 ? 'pos' : s.sqn >= 1.6 ? '' : 'neg';
     const exCls  = s.mean_r >= 0 ? 'pos' : 'neg';
-    document.getElementById('r-out').innerHTML = `
+    const el = mount.querySelector('#r-out');
+    if (!el) return;
+    el.innerHTML = `
         <div class="cards">
             <div class="card"><div class="label">Samples</div>
                 <div class="value">${s.samples}</div>

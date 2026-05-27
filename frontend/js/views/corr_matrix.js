@@ -1,9 +1,12 @@
 // Correlation matrix view — pairwise Pearson heatmap + leaderboards.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderCorrMatrix(mount) {
+    const tok = currentViewToken();
     const wls = await api.watchlists().catch(() => []);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// CORRELATION MATRIX</h1>
         <p class="muted small">Pairwise Pearson correlation on log-returns of cached daily bars
@@ -37,28 +40,36 @@ export async function renderCorrMatrix(mount) {
 
         <div id="cm-out"><p class="muted small">Pick a watchlist or paste symbols and compute.</p></div>
     `;
-    const modeSel = document.querySelector('#cm-form [name=mode]');
+    const modeSel = mount.querySelector('#cm-form [name=mode]');
     modeSel.addEventListener('change', () => {
         const isSyms = modeSel.value === 'symbols';
-        document.getElementById('cm-wl-label').style.display   = isSyms ? 'none' : '';
-        document.getElementById('cm-syms-label').style.display = isSyms ? '' : 'none';
+        const wlLabel = mount.querySelector('#cm-wl-label');
+        const symLabel = mount.querySelector('#cm-syms-label');
+        if (wlLabel) wlLabel.style.display = isSyms ? 'none' : '';
+        if (symLabel) symLabel.style.display = isSyms ? '' : 'none';
     });
-    document.getElementById('cm-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#cm-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const status = document.getElementById('cm-status');
-        const out = document.getElementById('cm-out');
+        const status = mount.querySelector('#cm-status');
+        const out = mount.querySelector('#cm-out');
+        if (!out) return;
         out.innerHTML = '<div class="boot">computing… (one bar fetch per symbol)</div>';
-        status.textContent = '';
+        if (status) status.textContent = '';
         try {
             const days = Number(fd.get('days')) || 90;
             const r = fd.get('mode') === 'symbols'
                 ? await api.corrSymbols(fd.get('symbols').trim().toUpperCase(), days)
                 : await api.corrWatchlist(fd.get('watchlist_id'), days);
-            render(r, out);
-            status.textContent = `${r.symbols.length} symbols · ${r.pairs.length} pairs`;
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#cm-out');
+            if (out2) render(r, out2);
+            const status2 = mount.querySelector('#cm-status');
+            if (status2) status2.textContent = `${r.symbols.length} symbols · ${r.pairs.length} pairs`;
         } catch (err) {
-            out.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#cm-out');
+            if (out2) out2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }

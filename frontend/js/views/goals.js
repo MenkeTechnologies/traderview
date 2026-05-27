@@ -2,6 +2,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PACE_COLOR = {
     on_track:      '#7af0a8',
@@ -11,6 +12,7 @@ const PACE_COLOR = {
 };
 
 export async function renderGoals(mount, state) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// GOALS</h1>
         <p class="muted small">Set monthly / quarterly / yearly P/L + win-rate + max-drawdown
@@ -47,9 +49,9 @@ export async function renderGoals(mount, state) {
         <div id="g-list"><div class="boot">loading…</div></div>
     `;
     // Default date range based on selected period.
-    const periodSel = document.querySelector('#g-form [name=period]');
-    const start = document.querySelector('#g-form [name=start_date]');
-    const end   = document.querySelector('#g-form [name=end_date]');
+    const periodSel = mount.querySelector('#g-form [name=period]');
+    const start = mount.querySelector('#g-form [name=start_date]');
+    const end   = mount.querySelector('#g-form [name=end_date]');
     const fillRange = () => {
         const now = new Date();
         let s, e;
@@ -70,7 +72,7 @@ export async function renderGoals(mount, state) {
     periodSel.addEventListener('change', fillRange);
     fillRange();
 
-    document.getElementById('g-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#g-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const winPct = fd.get('target_win_rate');
@@ -84,33 +86,52 @@ export async function renderGoals(mount, state) {
             target_win_rate: winPct ? Number(winPct) / 100 : null,
             target_max_drawdown_pct: fd.get('target_max_drawdown_pct') ? Number(fd.get('target_max_drawdown_pct')) : null,
         };
-        const status = document.getElementById('g-status');
-        status.textContent = 'saving…';
-        try { await api.createGoal(body); e.target.reset(); fillRange(); await refresh(); status.textContent = ''; }
-        catch (err) { status.textContent = 'error: ' + err.message; }
+        const status = mount.querySelector('#g-status');
+        if (status) status.textContent = 'saving…';
+        try {
+            await api.createGoal(body);
+            if (!viewIsCurrent(tok)) return;
+            e.target.reset();
+            fillRange();
+            await refresh(mount, tok);
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#g-status');
+            if (s2) s2.textContent = '';
+        } catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#g-status');
+            if (s2) s2.textContent = 'error: ' + err.message;
+        }
     });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
-    const el = document.getElementById('g-list');
+async function refresh(mount, tok) {
+    const el = mount.querySelector('#g-list');
+    if (!el) return;
     try {
         const goals = await api.listGoals();
+        if (!viewIsCurrent(tok)) return;
         if (!goals.length) { el.innerHTML = '<div class="chart-panel"><p class="muted small">No goals yet — create one above.</p></div>'; return; }
         // Fetch progress for each goal in parallel.
         const progressList = await Promise.all(goals.map(g =>
             api.goalProgress(g.id).catch(() => null)));
-        el.innerHTML = progressList.map((p, i) => p ? card(p) : `<div class="chart-panel">
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#g-list');
+        if (!el2) return;
+        el2.innerHTML = progressList.map((p, i) => p ? card(p) : `<div class="chart-panel">
             <p class="boot">progress fetch failed for ${esc(goals[i].name)}</p></div>`).join('');
-        el.querySelectorAll('.g-del').forEach(b => {
+        el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!confirm('Delete this goal?')) return;
-                try { await api.deleteGoal(b.dataset.id); await refresh(); }
+                try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { alert(e.message); }
             });
         });
     } catch (e) {
-        el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#g-list');
+        if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 

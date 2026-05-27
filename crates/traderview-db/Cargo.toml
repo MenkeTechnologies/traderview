@@ -34,3 +34,6 @@ futures-util = { workspace = true }
 dashmap = { workspace = true }
 once_cell = { workspace = true }
 quick-xml = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

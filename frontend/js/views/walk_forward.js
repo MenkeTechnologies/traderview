@@ -1,6 +1,7 @@
 // Walk-forward optimization — rolling IS/OOS sweep; exposes curve-fit collapse.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const KINDS = [
     { id: 'sma_cross',         label: 'SMA crossover (6×6 grid)' },
@@ -10,6 +11,7 @@ const KINDS = [
 ];
 
 export async function renderWalkForward(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// WALK-FORWARD OPTIMIZATION</h1>
         <p class="muted small">Rolling in-sample / out-of-sample sweep. For each window we
@@ -42,7 +44,7 @@ export async function renderWalkForward(mount) {
 
         <div id="wf-out"><p class="muted small">Pick a long-history symbol (SPY, QQQ, AAPL) and run.</p></div>
     `;
-    document.getElementById('wf-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#wf-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -56,18 +58,23 @@ export async function renderWalkForward(mount) {
             fee_per_trade: Number(fd.get('fee')) || 0,
             metric: fd.get('metric'),
         };
-        const out = document.getElementById('wf-out');
+        const out = mount.querySelector('#wf-out');
+        if (!out) return;
         out.innerHTML = `<div class="boot">running ${body.symbol}, sweeping grid…</div>`;
         try {
             const r = await api.walkForward(body);
-            renderResult(r, body, out);
+            if (!viewIsCurrent(tok)) return;
+            const outNow = mount.querySelector('#wf-out');
+            if (outNow) renderResult(r, body, outNow, mount);
         } catch (err) {
-            out.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const outNow = mount.querySelector('#wf-out');
+            if (outNow) outNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
 
-function renderResult(r, body, out) {
+function renderResult(r, body, out, mount) {
     const wfe = r.walk_forward_efficiency;
     const wfeCls = wfe >= 0.7 ? 'pos' : (wfe >= 0.4 ? '' : 'neg');
     const wfeText = wfe >= 0.7 ? 'robust' : (wfe >= 0.4 ? 'marginal' : 'curve-fit');
@@ -136,10 +143,10 @@ function renderResult(r, body, out) {
             </table>
         </div>
     `;
-    renderEqSvg(r.oos_equity, body.initial_capital);
+    renderEqSvg(r.oos_equity, body.initial_capital, mount);
 }
 
-function renderEqSvg(pts, capital) {
+function renderEqSvg(pts, capital, mount) {
     if (!pts.length) return;
     const w = 1000, h = 280, pad = 40;
     const eqs = pts.map(p => p.equity);
@@ -149,7 +156,9 @@ function renderEqSvg(pts, capital) {
     const sy = (y) => h - pad - (y - yMin) / Math.max(yMax - yMin, 1e-9) * (h - 2 * pad);
     const path = pts.map((p, i) => (i ? 'L' : 'M') + sx(i) + ',' + sy(p.equity)).join(' ');
     const baseY = sy(capital);
-    document.getElementById('wf-eq-svg').innerHTML = `
+    const eqEl = mount.querySelector('#wf-eq-svg');
+    if (!eqEl) return;
+    eqEl.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
             <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>

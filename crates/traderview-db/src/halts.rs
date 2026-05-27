@@ -86,6 +86,25 @@ impl HaltStore {
             self.latest.insert(key, h.clone());
             // Best-effort broadcast; ignore lagging receivers.
             let _ = self.tx.send(h);
+            self.evict_if_full();
+        }
+    }
+
+    /// Bound the in-memory map so it doesn't grow forever across multi-day
+    /// sessions. When over `MAX_ENTRIES`, evict the oldest 25% in a single
+    /// O(N) pass — keeps the amortized insert cost flat.
+    fn evict_if_full(&self) {
+        const MAX_ENTRIES: usize = 2_000;
+        const EVICT_FRACTION: usize = 4; // drop oldest 1/N
+        if self.latest.len() <= MAX_ENTRIES { return; }
+        let drop_n = self.latest.len() / EVICT_FRACTION;
+        let mut by_age: Vec<(String, DateTime<Utc>)> = self.latest
+            .iter()
+            .map(|e| (e.key().clone(), e.value().fetched_at))
+            .collect();
+        by_age.sort_by_key(|(_, t)| *t);   // oldest first
+        for (key, _) in by_age.into_iter().take(drop_n) {
+            self.latest.remove(&key);
         }
     }
 }

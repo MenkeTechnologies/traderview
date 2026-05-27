@@ -1,8 +1,10 @@
 // Full options chain UI — strike grid with bid/ask/IV plus computed Greeks.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderOptions(mount, _state, rest) {
+    const tok = currentViewToken();
     const sym = (rest || '').toUpperCase() || 'SPY';
     mount.innerHTML = `
         <h1 class="view-title">// OPTIONS · ${esc(sym)}</h1>
@@ -29,8 +31,8 @@ export async function renderOptions(mount, _state, rest) {
             <div id="g-out"></div>
         </div>
     `;
-    const form = document.getElementById('of');
-    const gform = document.getElementById('gf');
+    const form = mount.querySelector('#of');
+    const gform = mount.querySelector('#gf');
     let r = Number(form.r.value || 0.045);
     let expirations = [];
     let activeExp = null;
@@ -38,22 +40,29 @@ export async function renderOptions(mount, _state, rest) {
     async function reload() {
         const s = form.sym.value.trim().toUpperCase() || 'SPY';
         r = Number(form.r.value || 0.045);
-        document.getElementById('oc-mount').innerHTML = '<div class="boot">fetching chain…</div>';
+        const ocm = mount.querySelector('#oc-mount');
+        if (ocm) ocm.innerHTML = '<div class="boot">fetching chain…</div>';
         try {
             const chain = await api.options(s, activeExp);
+            if (!viewIsCurrent(tok)) return;
             expirations = chain.expirations || [];
             if (!activeExp && expirations.length) activeExp = expirations[0];
-            const sel = document.getElementById('expsel');
-            sel.innerHTML = expirations.map(e =>
-                `<option value="${e}" ${e === activeExp ? 'selected' : ''}>${e}</option>`).join('');
-            sel.onchange = () => { activeExp = sel.value; reload(); };
-            renderChain(chain, r);
+            const sel = mount.querySelector('#expsel');
+            if (sel) {
+                sel.innerHTML = expirations.map(e =>
+                    `<option value="${e}" ${e === activeExp ? 'selected' : ''}>${e}</option>`).join('');
+                sel.onchange = () => { activeExp = sel.value; reload(); };
+            }
+            renderChain(chain, r, mount);
         } catch (e) {
-            document.getElementById('oc-mount').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const ocm2 = mount.querySelector('#oc-mount');
+            if (ocm2) ocm2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
         }
     }
     form.addEventListener('submit', (e) => { e.preventDefault(); activeExp = null; reload(); });
     await reload();
+    if (!viewIsCurrent(tok)) return;
 
     gform.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -61,8 +70,11 @@ export async function renderOptions(mount, _state, rest) {
         const params = {};
         for (const [k, v] of fd.entries()) if (v !== '') params[k] = v;
         const out = await api.greeksCalc(params);
+        if (!viewIsCurrent(tok)) return;
         const g = out.greeks;
-        document.getElementById('g-out').innerHTML = `
+        const gOut = mount.querySelector('#g-out');
+        if (!gOut) return;
+        gOut.innerHTML = `
             <table class="trades" style="margin-top:8px">
                 <tbody>
                     <tr><td>Price</td><td>${fmt(g.price, 4)}</td></tr>
@@ -79,7 +91,7 @@ export async function renderOptions(mount, _state, rest) {
     });
 }
 
-function renderChain(chain, r) {
+function renderChain(chain, r, mount) {
     // T = (expiration midnight - now) / yearSeconds
     const expMs = new Date(chain.expiration + 'T16:00:00').getTime();
     const t = Math.max(0.0005, (expMs - Date.now()) / (365.25 * 86400_000));
@@ -91,7 +103,9 @@ function renderChain(chain, r) {
     const callBy = new Map(chain.calls.map(c => [c.strike, c]));
     const putBy  = new Map(chain.puts.map(p => [p.strike, p]));
 
-    document.getElementById('oc-mount').innerHTML = `
+    const ocm = mount.querySelector('#oc-mount');
+    if (!ocm) return;
+    ocm.innerHTML = `
         <div class="chart-panel">
             <h2>${esc(chain.symbol)} · spot ${fmt(chain.spot)} · exp ${esc(chain.expiration)} · T = ${(t*365).toFixed(0)}d</h2>
             <table class="trades">

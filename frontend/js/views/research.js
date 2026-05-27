@@ -2,8 +2,10 @@
 import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderResearch(mount, _state, sym) {
+    const tok = currentViewToken();
     if (!sym) {
         mount.innerHTML = `
             <h1 class="view-title">// RESEARCH</h1>
@@ -13,7 +15,7 @@ export async function renderResearch(mount, _state, sym) {
             </form>
             <p class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD).</p>
         `;
-        document.getElementById('rs-form').addEventListener('submit', (e) => {
+        mount.querySelector('#rs-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const s = new FormData(e.target).get('symbol').trim().toUpperCase();
             if (s) window.location.hash = `research/${encodeURIComponent(s)}`;
@@ -84,15 +86,49 @@ export async function renderResearch(mount, _state, sym) {
     const from = to - 365 * 86400;
     const bars = api.bars(sym, '1d', from, to).catch(() => ({ bars: [] }));
 
-    renderQuote(document.getElementById('rs-quote'), await q);
-    bars.then(r => ohlcChart(document.getElementById('rs-chart'), r.bars || [], [], { height: 380 }));
-    sig.then(s => renderSignals(s));
-    news.then(n => renderNews(document.getElementById('rs-news'), n));
-    fund.then(f => renderFund(document.getElementById('rs-fund'), f));
-    earn.then(e => renderEarnings(document.getElementById('rs-earn'), e));
-    recs.then(r => renderRecs(document.getElementById('rs-recs'), r));
-    ins.then(i  => renderInsiders(document.getElementById('rs-ins'), i));
-    hold.then(h => renderHolders(document.getElementById('rs-hold'), h));
+    const qv = await q;
+    if (!viewIsCurrent(tok)) return;
+    const quoteEl = mount.querySelector('#rs-quote');
+    if (quoteEl) renderQuote(quoteEl, qv);
+    bars.then(r => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-chart');
+        if (el) ohlcChart(el, r.bars || [], [], { height: 380 });
+    });
+    sig.then(s => {
+        if (!viewIsCurrent(tok)) return;
+        renderSignals(s, mount);
+    });
+    news.then(n => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-news');
+        if (el) renderNews(el, n);
+    });
+    fund.then(f => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-fund');
+        if (el) renderFund(el, f);
+    });
+    earn.then(e => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-earn');
+        if (el) renderEarnings(el, e);
+    });
+    recs.then(r => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-recs');
+        if (el) renderRecs(el, r);
+    });
+    ins.then(i => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-ins');
+        if (el) renderInsiders(el, i);
+    });
+    hold.then(h => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-hold');
+        if (el) renderHolders(el, h);
+    });
 }
 
 function renderQuote(el, q) {
@@ -111,10 +147,11 @@ function renderQuote(el, q) {
     `;
 }
 
-function renderSignals(s) {
-    const sigEl = document.getElementById('rs-signals');
-    const indEl = document.getElementById('rs-indicators');
-    const pivEl = document.getElementById('rs-pivots');
+function renderSignals(s, mount) {
+    const sigEl = mount.querySelector('#rs-signals');
+    const indEl = mount.querySelector('#rs-indicators');
+    const pivEl = mount.querySelector('#rs-pivots');
+    if (!sigEl || !indEl || !pivEl) return;
     if (!s) { sigEl.textContent = 'no data'; indEl.textContent = ''; pivEl.textContent = ''; return; }
     const cls = s.score >= 3 ? 'pos' : s.score <= -3 ? 'neg' : '';
     sigEl.innerHTML = `

@@ -44,6 +44,13 @@ impl Embedded {
             "starting embedded postgres"
         );
 
+        // If a prior launch was SIGKILL'd / OOM'd, the postmaster process is
+        // gone but the lockfile remains, and pg_ctl will refuse to start
+        // ("another server might be running"). Detect a stale lock by reading
+        // the PID from line 1 of postmaster.pid and checking liveness; if the
+        // PID is dead, remove the lock so the next start() can succeed.
+        clean_stale_lock(&data_dir.join("pg-data"));
+
         let mut pg = PostgreSQL::new(settings);
         pg.setup().await?;
         pg.start().await?;
@@ -70,6 +77,36 @@ impl Embedded {
         if let Err(e) = pg.stop().await {
             tracing::warn!(error = %e, "embedded postgres stop failed");
         }
+    }
+}
+
+/// Remove a stale `postmaster.pid` whose recorded PID is not alive.
+/// Safe no-op if the file is missing or unreadable.
+fn clean_stale_lock(pg_data: &Path) {
+    let pid_file = pg_data.join("postmaster.pid");
+    let Ok(contents) = std::fs::read_to_string(&pid_file) else { return };
+    let Some(first) = contents.lines().next() else { return };
+    let Ok(pid) = first.trim().parse::<i32>() else { return };
+
+    // kill(pid, 0) probes existence without delivering a signal.
+    #[cfg(unix)]
+    let alive = unsafe { libc::kill(pid, 0) == 0 };
+    #[cfg(not(unix))]
+    let alive = true; // Conservative on non-unix — never delete.
+
+    if !alive {
+        tracing::warn!(
+            pid_file = %pid_file.display(),
+            stale_pid = pid,
+            "removing stale postmaster.pid (recorded PID is dead)"
+        );
+        let _ = std::fs::remove_file(&pid_file);
+    } else {
+        tracing::warn!(
+            pid_file = %pid_file.display(),
+            live_pid = pid,
+            "postmaster.pid recorded a live PID; not removing — start may fail"
+        );
     }
 }
 

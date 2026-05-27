@@ -2,6 +2,7 @@
 // fields, preview the parse, commit through dedupe-aware insert.
 
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const FIELDS = [
     { key: 'symbol',          required: true,  hint: 'AAPL, MSFT, …' },
@@ -18,6 +19,7 @@ let rawBytes  = null;       // raw File bytes for /commit
 let mapping = {};
 
 export async function renderCsvWizard(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -39,30 +41,36 @@ export async function renderCsvWizard(mount, state) {
         <div id="cw-commit"></div>
         <div id="cw-result"></div>
     `;
-    document.getElementById('cw-file').addEventListener('change', async (e) => {
+    mount.querySelector('#cw-file').addEventListener('change', async (e) => {
         const f = e.target.files[0];
         if (!f) return;
-        const status = document.getElementById('cw-status');
-        status.textContent = `parsing ${f.name}…`;
+        const status = mount.querySelector('#cw-status');
+        if (status) status.textContent = `parsing ${f.name}…`;
         rawBytes = await f.arrayBuffer();
+        if (!viewIsCurrent(tok)) return;
         try {
             const res = await fetch('/api/imports/csv-wizard/parse', {
                 method: 'POST',
                 headers: tokenHeaders({ 'Content-Type': 'text/csv' }),
                 body: rawBytes,
             });
+            if (!viewIsCurrent(tok)) return;
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || res.statusText);
             }
             parsedCsv = await res.json();
-            status.textContent = `${parsedCsv.total_rows} rows · ${parsedCsv.headers.length} columns · sha256 ${parsedCsv.sha256.slice(0, 12)}…`;
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#cw-status');
+            if (status2) status2.textContent = `${parsedCsv.total_rows} rows · ${parsedCsv.headers.length} columns · sha256 ${parsedCsv.sha256.slice(0, 12)}…`;
             mapping = {};
-            renderMap();
-            renderPreview();
-            renderCommit(acct.id);
+            renderMap(mount);
+            renderPreview(mount);
+            renderCommit(acct.id, mount, tok);
         } catch (err) {
-            status.textContent = 'error: ' + err.message;
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#cw-status');
+            if (status2) status2.textContent = 'error: ' + err.message;
         }
     });
 }
@@ -72,13 +80,15 @@ function tokenHeaders(extra = {}) {
     return Object.assign({}, extra, t ? { 'Authorization': `Bearer ${t}` } : {});
 }
 
-function renderMap() {
+function renderMap(mount) {
     if (!parsedCsv) return;
     const headers = parsedCsv.headers;
     const opts = (cur) =>
         `<option value="">(unmapped)</option>` +
         headers.map(h => `<option value="${esc(h)}" ${cur === h ? 'selected' : ''}>${esc(h)}</option>`).join('');
-    document.getElementById('cw-map').innerHTML = `<div class="chart-panel">
+    const mapEl = mount.querySelector('#cw-map');
+    if (!mapEl) return;
+    mapEl.innerHTML = `<div class="chart-panel">
         <h2>2 — Map columns</h2>
         <table class="trades" style="width:auto;">
             <thead><tr><th>Canonical field</th><th>CSV column</th><th>Hint</th></tr></thead>
@@ -92,12 +102,12 @@ function renderMap() {
         </table>
         <p class="muted small">Auto-guesses based on header names. Adjust as needed.</p>
     </div>`;
-    document.querySelectorAll('#cw-map select[data-field]').forEach(sel => {
+    mapEl.querySelectorAll('select[data-field]').forEach(sel => {
         const f = sel.dataset.field;
         if (!mapping[f] && sel.value) mapping[f] = sel.value;
         sel.addEventListener('change', () => {
             mapping[f] = sel.value || null;
-            renderPreview();
+            renderPreview(mount);
         });
     });
 }
@@ -117,14 +127,16 @@ function autoGuess(field, headers) {
     return headers.find(h => re.test(h)) || '';
 }
 
-function renderPreview() {
+function renderPreview(mount) {
     if (!parsedCsv) return;
     const headers = parsedCsv.headers;
     const mapped = FIELDS.filter(f => mapping[f.key]).map(f => ({
         field: f.key,
         idx: headers.indexOf(mapping[f.key]),
     }));
-    document.getElementById('cw-preview').innerHTML = `<div class="chart-panel">
+    const el = mount.querySelector('#cw-preview');
+    if (!el) return;
+    el.innerHTML = `<div class="chart-panel">
         <h2>3 — Preview (first 20 rows after mapping)</h2>
         ${mapped.length === 0
             ? '<p class="muted small">Map at least the required fields to preview.</p>'
@@ -139,20 +151,22 @@ function renderPreview() {
     </div>`;
 }
 
-function renderCommit(accountId) {
-    document.getElementById('cw-commit').innerHTML = `<div class="chart-panel">
+function renderCommit(accountId, mount, tok) {
+    const commitEl = mount.querySelector('#cw-commit');
+    if (!commitEl) return;
+    commitEl.innerHTML = `<div class="chart-panel">
         <h2>4 — Commit</h2>
         <button class="primary" id="cw-go">Insert rows into account</button>
         <span id="cw-go-status" class="muted small" style="margin-left:8px;"></span>
     </div>`;
-    document.getElementById('cw-go').addEventListener('click', async () => {
+    mount.querySelector('#cw-go').addEventListener('click', async () => {
         const missing = FIELDS.filter(f => f.required && !mapping[f.key]);
         if (missing.length) {
             alert('missing required fields: ' + missing.map(f => f.key).join(', '));
             return;
         }
-        const status = document.getElementById('cw-go-status');
-        status.textContent = 'inserting…';
+        const status = mount.querySelector('#cw-go-status');
+        if (status) status.textContent = 'inserting…';
         try {
             const body = {
                 symbol: mapping.symbol, side: mapping.side, qty: mapping.qty,
@@ -168,19 +182,28 @@ function renderCommit(accountId) {
                 }),
                 body: rawBytes,
             });
+            if (!viewIsCurrent(tok)) return;
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || res.statusText);
             }
             const r = await res.json();
-            renderResult(r);
-            status.textContent = '';
-        } catch (err) { status.textContent = 'error: ' + err.message; }
+            if (!viewIsCurrent(tok)) return;
+            renderResult(r, mount);
+            const status2 = mount.querySelector('#cw-go-status');
+            if (status2) status2.textContent = '';
+        } catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#cw-go-status');
+            if (status2) status2.textContent = 'error: ' + err.message;
+        }
     });
 }
 
-function renderResult(r) {
-    document.getElementById('cw-result').innerHTML = `<div class="chart-panel">
+function renderResult(r, mount) {
+    const el = mount.querySelector('#cw-result');
+    if (!el) return;
+    el.innerHTML = `<div class="chart-panel">
         <h2>5 — Result</h2>
         <div class="cards">
             <div class="card"><div class="label">Inserted</div>

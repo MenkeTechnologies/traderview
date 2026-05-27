@@ -2,9 +2,12 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPairs(mount) {
+    const tok = currentViewToken();
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// PAIRS / CORRELATION</h1>
         <p class="muted small">Pearson correlation matrix over log-returns + per-pair OLS spread &amp; z-score
@@ -39,7 +42,7 @@ export async function renderPairs(mount) {
             <div id="pair-out"></div>
         </div>
     `;
-    document.getElementById('cf').addEventListener('submit', async (e) => {
+    mount.querySelector('#cf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         let syms = fd.get('symbols').toUpperCase();
@@ -47,36 +50,45 @@ export async function renderPairs(mount) {
         if (wid) {
             try {
                 const ws = await api.watchlistSymbols(wid);
+                if (!viewIsCurrent(tok)) return;
                 if (ws.length) syms = ws.join(',');
             } catch (_) {}
         }
         const days = Number(fd.get('days') || 90);
-        document.getElementById('cmatrix').innerHTML = '<div class="boot">computing matrix…</div>';
+        const cm = mount.querySelector('#cmatrix');
+        if (cm) cm.innerHTML = '<div class="boot">computing matrix…</div>';
         try {
             const r = await api.correlationMatrix(syms, days);
-            renderMatrix(r);
+            if (!viewIsCurrent(tok)) return;
+            renderMatrix(r, mount);
         } catch (err) {
-            document.getElementById('cmatrix').innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const cm2 = mount.querySelector('#cmatrix');
+            if (cm2) cm2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
-    document.getElementById('pf').addEventListener('submit', async (e) => {
+    mount.querySelector('#pf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const a = fd.get('a').toUpperCase();
         const b = fd.get('b').toUpperCase();
         const days = Number(fd.get('days') || 180);
-        const el = document.getElementById('pair-out');
-        el.innerHTML = '<div class="boot">analyzing…</div>';
+        const el = mount.querySelector('#pair-out');
+        if (el) el.innerHTML = '<div class="boot">analyzing…</div>';
         try {
             const r = await api.pairAnalysis(a, b, days);
-            renderPairOut(el, a, b, r);
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#pair-out');
+            if (el2) renderPairOut(el2, a, b, r, mount);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const el2 = mount.querySelector('#pair-out');
+            if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
 
-function renderMatrix(r) {
+function renderMatrix(r, mount) {
     const heat = (c) => {
         const intensity = Math.min(1, Math.abs(c));
         if (c >= 0) return `rgba(35, 209, 96, ${0.15 + intensity * 0.65})`;
@@ -92,10 +104,11 @@ function renderMatrix(r) {
             </tr>`).join('')}</tbody>
         </table>
     </div>`;
-    document.getElementById('cmatrix').innerHTML = html;
+    const cm = mount.querySelector('#cmatrix');
+    if (cm) cm.innerHTML = html;
 }
 
-function renderPairOut(el, a, b, r) {
+function renderPairOut(el, a, b, r, mount) {
     const zCls = r.latest_zscore > 2 ? 'neg' : r.latest_zscore < -2 ? 'pos' : '';
     const reco = r.latest_zscore > 2  ? `SHORT ${esc(a)} / LONG ${esc(b)}`
               : r.latest_zscore < -2  ? `LONG ${esc(a)} / SHORT ${esc(b)}`
@@ -117,6 +130,8 @@ function renderPairOut(el, a, b, r) {
         <div class="chart-panel"><h2>Z-score</h2><div id="z-chart"></div></div>
     `;
     const labels = r.spread_series.map((_, i) => String(i));
-    barChart(document.getElementById('sp-chart'), labels, r.spread_series, { color: '#00e5ff' });
-    barChart(document.getElementById('z-chart'),  labels, r.zscore_series, { color: '#b86bff' });
+    const spChart = mount.querySelector('#sp-chart');
+    const zChart = mount.querySelector('#z-chart');
+    if (spChart) barChart(spChart, labels, r.spread_series, { color: '#00e5ff' });
+    if (zChart) barChart(zChart,  labels, r.zscore_series, { color: '#b86bff' });
 }

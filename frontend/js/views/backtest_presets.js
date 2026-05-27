@@ -1,6 +1,7 @@
 // Backtest preset library — save, share via slug, fork community presets.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderBacktestPresets(mount, _state, slug = '') {
     if (slug) return renderPresetDetail(mount, slug);
@@ -8,6 +9,7 @@ export async function renderBacktestPresets(mount, _state, slug = '') {
 }
 
 async function renderBrowse(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// BACKTEST PRESETS</h1>
         <p class="muted small">Save parameter combinations under a name; mark them public to
@@ -42,11 +44,11 @@ async function renderBrowse(mount) {
             <div id="bp-public"><div class="boot">loading…</div></div>
         </div>
     `;
-    document.getElementById('bp-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#bp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         let preset;
-        try { preset = JSON.parse(document.getElementById('bp-json').value); }
+        try { preset = JSON.parse(mount.querySelector('#bp-json').value); }
         catch (err) { alert('preset JSON invalid: ' + err.message); return; }
         try {
             await api.createBacktestPreset({
@@ -55,39 +57,46 @@ async function renderBrowse(mount) {
                 preset,
                 is_public: !!fd.get('is_public'),
             });
+            if (!viewIsCurrent(tok)) return;
             e.target.reset();
-            document.getElementById('bp-json').value = '';
-            await refresh();
+            const ta = mount.querySelector('#bp-json');
+            if (ta) ta.value = '';
+            await refresh(mount, tok);
         } catch (err) { alert(err.message); }
     });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const [mine, pub_] = await Promise.all([
             api.listMyBacktestPresets(),
             api.listPublicBacktestPresets(),
         ]);
-        renderMine(mine);
-        renderPublic(pub_);
+        if (!viewIsCurrent(tok)) return;
+        renderMine(mine, mount, tok);
+        renderPublic(pub_, mount, tok);
     } catch (e) {
-        document.getElementById('bp-mine').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#bp-mine');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderMine(rows) {
-    const el = document.getElementById('bp-mine');
+function renderMine(rows, mount, tok) {
+    const el = mount.querySelector('#bp-mine');
+    if (!el) return;
     if (!rows.length) { el.innerHTML = '<p class="muted small">No presets yet.</p>'; return; }
     el.innerHTML = table(rows, true);
-    wireRowButtons(el, true);
+    wireRowButtons(el, true, mount, tok);
 }
 
-function renderPublic(rows) {
-    const el = document.getElementById('bp-public');
+function renderPublic(rows, mount, tok) {
+    const el = mount.querySelector('#bp-public');
+    if (!el) return;
     if (!rows.length) { el.innerHTML = '<p class="muted small">No public presets yet — be the first.</p>'; return; }
     el.innerHTML = table(rows, false);
-    wireRowButtons(el, false);
+    wireRowButtons(el, false, mount, tok);
 }
 
 function table(rows, mine) {
@@ -115,12 +124,12 @@ function table(rows, mine) {
         </tbody></table>`;
 }
 
-function wireRowButtons(scope, mine) {
+function wireRowButtons(scope, mine, mount, tok) {
     if (mine) {
         scope.querySelectorAll('.bp-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!confirm('Delete this preset?')) return;
-                try { await api.deleteBacktestPreset(b.dataset.id); await refresh(); }
+                try { await api.deleteBacktestPreset(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { alert(e.message); }
             });
         });
@@ -130,7 +139,7 @@ function wireRowButtons(scope, mine) {
                 try {
                     const forked = await api.forkBacktestPreset(b.dataset.slug);
                     alert(`Forked as "${forked.name}"`);
-                    await refresh();
+                    if (viewIsCurrent(tok)) await refresh(mount, tok);
                 } catch (e) { alert(e.message); }
             });
         });
@@ -138,10 +147,12 @@ function wireRowButtons(scope, mine) {
 }
 
 async function renderPresetDetail(mount, slug) {
+    const tok = currentViewToken();
     mount.innerHTML = `<h1 class="view-title">// PRESET — ${esc(slug)}</h1>
         <div class="boot">loading…</div>`;
     try {
         const r = await api.getBacktestPresetBySlug(slug);
+        if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `
             <h1 class="view-title">// PRESET — ${esc(r.name)}</h1>
             <div class="cards">
@@ -162,7 +173,8 @@ async function renderPresetDetail(mount, slug) {
                 <a class="btn" href="#backtest-presets" style="margin-left:6px;">Back to library</a>
             </div>
         `;
-        document.getElementById('bp-fork-btn').addEventListener('click', async () => {
+        const btn = mount.querySelector('#bp-fork-btn');
+        if (btn) btn.addEventListener('click', async () => {
             try {
                 const f = await api.forkBacktestPreset(slug);
                 alert(`Forked as "${f.name}"`);
@@ -170,6 +182,7 @@ async function renderPresetDetail(mount, slug) {
             } catch (e) { alert(e.message); }
         });
     } catch (e) {
+        if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

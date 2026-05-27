@@ -10,6 +10,7 @@
 //! Plus today's high-importance economic events (from the static calendar).
 
 use chrono::{Duration, NaiveDate, Utc};
+use futures_util::future::join_all;
 use serde::Serialize;
 use sqlx::PgPool;
 use traderview_core::BarInterval;
@@ -59,44 +60,50 @@ const UNIVERSE: &[(&str, &str, &str)] = &[
 ];
 
 pub async fn snapshot(pool: &PgPool) -> anyhow::Result<PremarketSnapshot> {
-    let mut contracts = Vec::with_capacity(UNIVERSE.len());
-    for (group, symbol, label) in UNIVERSE {
-        if let Ok(q) = market_data::quote(pool, symbol).await {
-            let atr_pct = atr20_pct(pool, symbol).await;
-            let atr_multiple = match (q.change_pct, atr_pct) {
+    // Fetch all 15 symbols concurrently. Serial fetches were observed
+    // taking 150+ seconds in production (15 syms × ~10s timeout each on cold
+    // Yahoo misses), which blocked the axum handler and starved every other
+    // request waiting on the sqlx pool.
+    let fetches = UNIVERSE.iter().map(|(group, symbol, label)| {
+        let pool = pool.clone();
+        async move {
+            let q = market_data::quote(&pool, symbol).await.ok();
+            let atr_pct = atr20_pct(&pool, symbol).await;
+            let atr_multiple = match (q.as_ref().and_then(|q| q.change_pct), atr_pct) {
                 (Some(c), Some(a)) if a > 0.0 => Some(c.abs() / a),
                 _ => None,
             };
-            contracts.push(ContractRow {
-                group,
-                symbol: symbol.to_string(),
-                label,
-                price: q.price,
-                prev_close: q.prev_close,
-                change_pct: q.change_pct,
-                atr_pct,
-                atr_multiple,
-                day_high: q.day_high,
-                day_low: q.day_low,
-                market_state: q.market_state,
-            });
-        } else {
-            // Insert placeholder so the UI still renders the slot.
-            contracts.push(ContractRow {
-                group,
-                symbol: symbol.to_string(),
-                label,
-                price: 0.0,
-                prev_close: None,
-                change_pct: None,
-                atr_pct: None,
-                atr_multiple: None,
-                day_high: None,
-                day_low: None,
-                market_state: None,
-            });
+            match q {
+                Some(q) => ContractRow {
+                    group,
+                    symbol: symbol.to_string(),
+                    label,
+                    price: q.price,
+                    prev_close: q.prev_close,
+                    change_pct: q.change_pct,
+                    atr_pct,
+                    atr_multiple,
+                    day_high: q.day_high,
+                    day_low: q.day_low,
+                    market_state: q.market_state,
+                },
+                None => ContractRow {
+                    group,
+                    symbol: symbol.to_string(),
+                    label,
+                    price: 0.0,
+                    prev_close: None,
+                    change_pct: None,
+                    atr_pct: None,
+                    atr_multiple: None,
+                    day_high: None,
+                    day_low: None,
+                    market_state: None,
+                },
+            }
         }
-    }
+    });
+    let contracts: Vec<ContractRow> = join_all(fetches).await;
 
     let today = Utc::now().date_naive();
     let today_events = economy::upcoming(1, Importance::High)

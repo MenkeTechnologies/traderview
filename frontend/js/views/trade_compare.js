@@ -3,12 +3,14 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
 
 let selectedIds = [];
 
 export async function renderTradeCompare(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -30,19 +32,24 @@ export async function renderTradeCompare(mount, state) {
     `;
     try {
         const trades = await api.trades(acct.id, { status: 'closed', limit: 300 });
-        renderPicker(trades);
-        document.getElementById('tc-search').addEventListener('input', (e) => {
+        if (!viewIsCurrent(tok)) return;
+        renderPicker(trades, mount, tok);
+        const searchEl = mount.querySelector('#tc-search');
+        if (searchEl) searchEl.addEventListener('input', (e) => {
             const q = e.target.value.toLowerCase().trim();
             const filtered = q ? trades.filter(t => t.symbol.toLowerCase().includes(q)) : trades;
-            renderPicker(filtered);
+            renderPicker(filtered, mount, tok);
         });
     } catch (e) {
-        document.getElementById('tc-picker').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const picker = mount.querySelector('#tc-picker');
+        if (picker) picker.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderPicker(trades) {
-    const el = document.getElementById('tc-picker');
+function renderPicker(trades, mount, tok) {
+    const el = mount.querySelector('#tc-picker');
+    if (!el) return;
     if (!trades.length) { el.innerHTML = '<p class="muted small">no closed trades</p>'; return; }
     el.innerHTML = trades.map(t => {
         const sel = selectedIds.includes(t.id);
@@ -71,21 +78,30 @@ function renderPicker(trades) {
                 selectedIds = selectedIds.filter(x => x !== id);
             }
             // Re-render picker for highlight + re-run compare if >=2 selected.
-            renderPicker(trades);
-            if (selectedIds.length >= 2) await runCompare();
-            else document.getElementById('tc-result').innerHTML =
-                '<p class="muted small">Select at least 2 trades.</p>';
+            renderPicker(trades, mount, tok);
+            if (selectedIds.length >= 2) await runCompare(mount, tok);
+            else {
+                const r = mount.querySelector('#tc-result');
+                if (r) r.innerHTML = '<p class="muted small">Select at least 2 trades.</p>';
+            }
         });
     });
 }
 
-async function runCompare() {
-    const out = document.getElementById('tc-result');
+async function runCompare(mount, tok) {
+    const out = mount.querySelector('#tc-result');
+    if (!out) return;
     out.innerHTML = '<div class="boot">comparing…</div>';
     try {
         const r = await api.tradeCompare(selectedIds);
-        render(r, out);
-    } catch (e) { out.innerHTML = `<p class="boot">${esc(e.message)}</p>`; }
+        if (!viewIsCurrent(tok)) return;
+        const outNow = mount.querySelector('#tc-result');
+        if (outNow) render(r, outNow);
+    } catch (e) {
+        if (!viewIsCurrent(tok)) return;
+        const outNow = mount.querySelector('#tc-result');
+        if (outNow) outNow.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+    }
 }
 
 function render(r, out) {

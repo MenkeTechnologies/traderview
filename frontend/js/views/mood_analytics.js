@@ -2,10 +2,12 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_LABELS = { '-2': '😡 awful', '-1': '🙁 down', '0': '😐 flat', '1': '🙂 good', '2': '😄 great' };
 
 export async function renderMoodAnalytics(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -21,16 +23,21 @@ export async function renderMoodAnalytics(mount, state) {
     `;
     try {
         const r = await api.moodAnalytics(acct.id);
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('ma-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#ma-out');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function render(r) {
+function render(r, mount) {
     const cls = (v) => v == null ? '' : v >= 0 ? 'pos' : 'neg';
     const corr = r.overall_correlation;
-    document.getElementById('ma-cards').innerHTML = `
+    const cardsEl = mount.querySelector('#ma-cards');
+    if (!cardsEl) return;
+    cardsEl.innerHTML = `
         <div class="card"><div class="label">Samples</div>
             <div class="value">${r.samples_total}</div></div>
         <div class="card"><div class="label">Pearson(mood, P/L)</div>
@@ -41,12 +48,14 @@ function render(r) {
         <div class="card"><div class="label">Per-trade vs per-day</div>
             <div class="value small">${r.pairs.filter(p=>p.source==='per_trade').length} / ${r.pairs.filter(p=>p.source==='per_day').length}</div></div>
     `;
+    const outEl = mount.querySelector('#ma-out');
+    if (!outEl) return;
     if (!r.stats.length) {
-        document.getElementById('ma-out').innerHTML =
+        outEl.innerHTML =
             '<div class="chart-panel"><p class="muted small">No mood-tagged journal entries yet — tag your journal entries with a mood -2..+2 to seed this view.</p></div>';
         return;
     }
-    document.getElementById('ma-out').innerHTML = `
+    outEl.innerHTML = `
         <div class="chart-panel">
             <h2>Per-mood stats</h2>
             ${moodTable(r.stats)}

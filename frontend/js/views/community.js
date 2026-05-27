@@ -1,12 +1,16 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime, md } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderCommunity(mount, _state, catSlug) {
+    const tok = currentViewToken();
     const cats = await api.forumCategories();
+    if (!viewIsCurrent(tok)) return;
     if (!cats.length) { mount.innerHTML = '<p class="boot">No forum categories.</p>'; return; }
     if (!catSlug) catSlug = cats[0].slug;
     const cat = cats.find(c => c.slug === catSlug) || cats[0];
     const threads = await api.forumThreadsIn(cat.slug);
+    if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
         <h1 class="view-title">// COMMUNITY</h1>
@@ -35,18 +39,22 @@ export async function renderCommunity(mount, _state, catSlug) {
             </tbody>
         </table>
     `;
-    document.getElementById('thread-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#thread-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.forumCreateThread(cat.id, fd.get('title'), fd.get('body_md'));
+        if (!viewIsCurrent(tok)) return;
         renderCommunity(mount, _state, cat.slug);
     });
 }
 
 export async function renderCommunityThread(mount, _state, catSlug, threadSlug) {
+    const tok = currentViewToken();
     const thread = await api.forumThreadBySlug(catSlug, threadSlug);
+    if (!viewIsCurrent(tok)) return;
     api.forumBumpView(thread.id).catch(() => {});
     const posts = await api.forumPosts(thread.id);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// ${esc(thread.title)}
             <a class="link small" href="#community/${catSlug}">← back</a></h1>
@@ -67,10 +75,11 @@ export async function renderCommunityThread(mount, _state, catSlug, threadSlug) 
         `}
     `;
     if (!thread.is_locked) {
-        document.getElementById('reply-form').addEventListener('submit', async (e) => {
+        mount.querySelector('#reply-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
             await api.forumCreatePost(thread.id, fd.get('body_md'));
+            if (!viewIsCurrent(tok)) return;
             renderCommunityThread(mount, _state, catSlug, threadSlug);
         });
     }

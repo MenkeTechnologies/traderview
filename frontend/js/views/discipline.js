@@ -3,8 +3,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDiscipline(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -19,17 +21,22 @@ export async function renderDiscipline(mount, state) {
     `;
     try {
         const r = await api.discipline(acct.id);
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('d-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#d-out');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function render(r) {
+function render(r, mount) {
     const s = r.streaks;
     const streakColor = s.current_streak_kind === 'win' ? 'pos' :
                         s.current_streak_kind === 'loss' ? 'neg' : 'muted';
-    document.getElementById('d-out').innerHTML = `
+    const el = mount.querySelector('#d-out');
+    if (!el) return;
+    el.innerHTML = `
         <div class="cards">
             <div class="card"><div class="label">Total closed trades</div>
                 <div class="value">${s.total_closed}</div></div>

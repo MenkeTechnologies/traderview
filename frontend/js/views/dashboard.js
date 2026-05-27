@@ -2,15 +2,18 @@ import { api } from '../api.js';
 import { fmt, fmtMoney, fmtPct, fmtSecs, pnlClass, statCard } from '../util.js';
 import { equityChart } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDashboard(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = `
             <h1 class="view-title">// DASHBOARD</h1>
             <div id="world-markets-mount"></div>
             <p class="boot">No account yet. Add one via Accounts, then import or add trades.</p>
         `;
-        renderWorldMarkets(document.getElementById('world-markets-mount'));
+        const wm = mount.querySelector('#world-markets-mount');
+        if (wm) renderWorldMarkets(wm);
         return;
     }
     const [summary, equity, cal] = await Promise.all([
@@ -18,6 +21,7 @@ export async function renderDashboard(mount, state) {
         api.equity(state.accountId),
         api.calendar(state.accountId),
     ]);
+    if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
         <h1 class="view-title">// DASHBOARD</h1>
@@ -48,9 +52,12 @@ export async function renderDashboard(mount, state) {
         </div>
     `;
 
-    equityChart(document.getElementById('equity-chart'), equity);
-    renderMiniCalendar(document.getElementById('mini-cal'), cal);
-    renderWorldMarkets(document.getElementById('world-markets-mount'));
+    const eqEl = mount.querySelector('#equity-chart');
+    const calEl = mount.querySelector('#mini-cal');
+    const wmEl = mount.querySelector('#world-markets-mount');
+    if (eqEl) equityChart(eqEl, equity);
+    if (calEl) renderMiniCalendar(calEl, cal);
+    if (wmEl) renderWorldMarkets(wmEl);
 }
 
 function renderMiniCalendar(el, cells) {

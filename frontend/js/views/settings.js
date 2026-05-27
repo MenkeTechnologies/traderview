@@ -1,12 +1,15 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSettings(mount, state) {
+    const tok = currentViewToken();
     const [s, filters, templates] = await Promise.all([
         api.settings(),
         api.listFilters(),
         api.noteTemplates(),
     ]);
+    if (!viewIsCurrent(tok)) return;
     const accountOptions = state.accounts.map(a =>
         `<option value="${a.id}" ${a.id === s.default_account_id ? 'selected' : ''}>${esc(a.broker)} · ${esc(a.name)}</option>`
     ).join('');
@@ -111,7 +114,7 @@ export async function renderSettings(mount, state) {
         window.tvHud.remountSchemeGrid();
     }
 
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#settings-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = Object.assign({}, s, {
@@ -126,10 +129,11 @@ export async function renderSettings(mount, state) {
             require_account_tag: !!fd.get('require_account_tag'),
         });
         await api.updateSettings(body);
+        if (!viewIsCurrent(tok)) return;
         renderSettings(mount, state);
     });
 
-    document.getElementById('tpl-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#tpl-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.upsertNoteTemplate(
@@ -138,25 +142,29 @@ export async function renderSettings(mount, state) {
             fd.get('body_md') || '',
             !!fd.get('is_default'),
         );
+        if (!viewIsCurrent(tok)) return;
         renderSettings(mount, state);
     });
-    document.querySelectorAll('[data-edit-tpl]').forEach(b =>
+    mount.querySelectorAll('[data-edit-tpl]').forEach(b =>
         b.addEventListener('click', () => {
             const t = JSON.parse(b.dataset.editTpl);
-            const f = document.getElementById('tpl-form');
+            const f = mount.querySelector('#tpl-form');
+            if (!f) return;
             f.name.value = t.name;
             f.scope.value = t.scope;
             f.body_md.value = t.body_md;
             f.is_default.checked = t.is_default;
         }));
-    document.querySelectorAll('[data-del-tpl]').forEach(b =>
+    mount.querySelectorAll('[data-del-tpl]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteNoteTemplate(b.dataset.delTpl);
+            if (!viewIsCurrent(tok)) return;
             renderSettings(mount, state);
         }));
-    document.querySelectorAll('[data-del-f]').forEach(b =>
+    mount.querySelectorAll('[data-del-f]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteFilter(b.dataset.delF);
+            if (!viewIsCurrent(tok)) return;
             renderSettings(mount, state);
         }));
 }

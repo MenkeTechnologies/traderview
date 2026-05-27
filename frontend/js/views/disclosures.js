@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { playSound } from '../alert_engine.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let wsUnsub = null;
 
@@ -16,10 +17,12 @@ let pollTimer = null;
 let lastSeen = '';
 
 export async function renderDisclosures(mount) {
+    const tok = currentViewToken();
     const [filings, watchers] = await Promise.all([
         api.disclosures(null, null, 100),
         api.disclosureWatchers(),
     ]);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// DISCLOSURES — INSIDER + CONGRESS</h1>
         <p class="muted small">
@@ -65,20 +68,24 @@ export async function renderDisclosures(mount) {
         </div>
     `;
 
-    document.getElementById('poll-now').addEventListener('click', async () => {
-        const status = document.getElementById('poll-status');
-        status.textContent = 'polling…';
+    mount.querySelector('#poll-now').addEventListener('click', async () => {
+        const status = mount.querySelector('#poll-status');
+        if (status) status.textContent = 'polling…';
         try {
             const r = await api.disclosuresPollNow();
-            status.textContent =
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#poll-status');
+            if (status2) status2.textContent =
                 `${r.edgar_inserted} EDGAR / ${r.senate_inserted} Senate / ${r.house_inserted} House new`;
-            await refreshFeed(watchers);
+            await refreshFeed(watchers, mount, tok);
         } catch (e) {
-            status.textContent = 'error: ' + e.message;
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#poll-status');
+            if (status2) status2.textContent = 'error: ' + e.message;
         }
     });
 
-    document.getElementById('w-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#w-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const symbols = (fd.get('symbols') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -89,22 +96,30 @@ export async function renderDisclosures(mount) {
             filers: filers.length ? filers : null,
             min_amount_usd: fd.get('min_amount_usd') ? Number(fd.get('min_amount_usd')) : null,
         });
+        if (!viewIsCurrent(tok)) return;
         renderDisclosures(mount);
     });
-    document.querySelectorAll('[data-del-w]').forEach(b =>
+    mount.querySelectorAll('[data-del-w]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteDisclosureWatcher(b.dataset.delW);
+            if (!viewIsCurrent(tok)) return;
             renderDisclosures(mount);
         }));
 
     // Poll loop — kept as a 60s safety net; WS push handles the real-time path.
     if (pollTimer) clearInterval(pollTimer);
     lastSeen = filings[0]?.id || '';
-    pollTimer = setInterval(() => refreshFeed(watchers), 60_000);
+    pollTimer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(pollTimer); pollTimer = null; return; }
+        refreshFeed(watchers, mount, tok);
+    }, 60_000);
 
     // Live push: refresh immediately on any disclosure event from the server.
     if (wsUnsub) wsUnsub();
-    wsUnsub = onWsEvent('disclosure', () => refreshFeed(watchers));
+    wsUnsub = onWsEvent('disclosure', () => {
+        if (!viewIsCurrent(tok)) { if (wsUnsub) { wsUnsub(); wsUnsub = null; } return; }
+        refreshFeed(watchers, mount, tok);
+    });
 
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#disclosures')) {
@@ -114,9 +129,10 @@ export async function renderDisclosures(mount) {
     }, { once: true });
 }
 
-async function refreshFeed(watchers) {
+async function refreshFeed(watchers, mount, tok) {
     try {
         const all = await api.disclosures(null, null, 100);
+        if (tok != null && !viewIsCurrent(tok)) return;
         const top = all[0]?.id || '';
         // Fire watchers on any new rows we haven't seen.
         const fresh = [];
@@ -144,7 +160,7 @@ async function refreshFeed(watchers) {
             }
         }
         lastSeen = top;
-        const feedEl = document.getElementById('feed');
+        const feedEl = mount ? mount.querySelector('#feed') : document.getElementById('feed');
         if (feedEl) feedEl.innerHTML = renderFeed(all);
     } catch (_) {}
 }

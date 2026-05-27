@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderAccounts(mount, _state, onChange) {
+    const tok = currentViewToken();
     const accounts = await api.accounts();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// ACCOUNTS</h1>
         <div class="chart-panel">
@@ -41,17 +44,19 @@ export async function renderAccounts(mount, _state, onChange) {
         </table>
     `;
 
-    document.getElementById('acct-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#acct-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.createAccount(fd.get('broker'), fd.get('name'), fd.get('base_currency'));
+        if (!viewIsCurrent(tok)) return;
         if (onChange) onChange();
         renderAccounts(mount, _state, onChange);
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             if (!confirm('Delete this account and all its trades?')) return;
             await api.deleteAccount(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             if (onChange) onChange();
             renderAccounts(mount, _state, onChange);
         }));

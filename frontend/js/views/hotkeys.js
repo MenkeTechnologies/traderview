@@ -3,6 +3,7 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const ACTIONS = [
     { id: 'go_dashboard',   label: 'Jump to Dashboard' },
@@ -18,7 +19,9 @@ const ACTIONS = [
 ];
 
 export async function renderHotkeys(mount) {
+    const tok = currentViewToken();
     const keys = await api.hotkeys();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// HOTKEYS</h1>
         <p class="muted small">DAS-style key bindings. Click "capture" then press the desired combo.</p>
@@ -51,8 +54,8 @@ export async function renderHotkeys(mount) {
                 `).join('')}</tbody></table>` : '<p class="muted">No bindings yet.</p>'}
         </div>
     `;
-    const comboInput = document.querySelector('[name=combo]');
-    document.getElementById('capture').addEventListener('click', () => {
+    const comboInput = mount.querySelector('[name=combo]');
+    mount.querySelector('#capture').addEventListener('click', () => {
         comboInput.value = '';
         comboInput.placeholder = 'press a key…';
         const handler = (e) => {
@@ -71,7 +74,7 @@ export async function renderHotkeys(mount) {
         };
         window.addEventListener('keydown', handler, true);
     });
-    document.getElementById('hk-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#hk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.upsertHotkey({
@@ -80,11 +83,13 @@ export async function renderHotkeys(mount) {
             action: fd.get('action'),
             payload: {},
         });
+        if (!viewIsCurrent(tok)) return;
         renderHotkeys(mount);
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteHotkey(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderHotkeys(mount);
         }));
 }

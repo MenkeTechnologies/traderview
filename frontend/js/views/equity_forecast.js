@@ -2,8 +2,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderEquityForecast(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -42,11 +44,11 @@ export async function renderEquityForecast(mount, state) {
 
         <div id="ef-out"></div>
     `;
-    document.getElementById('ef-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#ef-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const status = document.getElementById('ef-status');
-        status.textContent = 'running…';
+        const status = mount.querySelector('#ef-status');
+        if (status) status.textContent = 'running…';
         const body = {
             account_id: acct.id,
             starting_equity: Number(fd.get('starting_equity')) || 10_000,
@@ -58,14 +60,21 @@ export async function renderEquityForecast(mount, state) {
         };
         try {
             const r = await api.equityForecast(body);
-            render(r);
-            status.textContent = `${r.paths} paths × ${r.steps} trades · sampled ${r.samples_used} historical R`;
-        } catch (err) { status.textContent = 'error: ' + err.message; }
+            if (!viewIsCurrent(tok)) return;
+            render(r, mount);
+            const status2 = mount.querySelector('#ef-status');
+            if (status2) status2.textContent = `${r.paths} paths × ${r.steps} trades · sampled ${r.samples_used} historical R`;
+        } catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#ef-status');
+            if (status2) status2.textContent = 'error: ' + err.message;
+        }
     });
 }
 
-function render(r) {
-    const out = document.getElementById('ef-out');
+function render(r, mount) {
+    const out = mount.querySelector('#ef-out');
+    if (!out) return;
     const ruinCls = r.ruin_probability >= 0.10 ? 'neg' : r.ruin_probability >= 0.02 ? 'warn' : 'pos';
     const dblCls  = r.double_probability >= 0.50 ? 'pos' : r.double_probability >= 0.25 ? '' : 'neg';
     const exCls   = r.mean_r >= 0 ? 'pos' : 'neg';

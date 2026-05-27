@@ -3,6 +3,7 @@
 
 import { api, apiFetchBlob } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = {
     '60/40 stocks/bonds': [
@@ -29,6 +30,7 @@ const PRESETS = {
 };
 
 export async function renderRebalance(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
@@ -67,21 +69,24 @@ export async function renderRebalance(mount, state) {
         <div id="rb-out"></div>
     `;
 
-    document.querySelector('#rb-form [name=preset]').addEventListener('change', (e) => {
+    mount.querySelector('#rb-form [name=preset]').addEventListener('change', (e) => {
         const k = e.target.value;
         if (k && PRESETS[k]) {
-            document.getElementById('rb-targets').value = JSON.stringify(PRESETS[k], null, 2);
+            const ta = mount.querySelector('#rb-targets');
+            if (ta) ta.value = JSON.stringify(PRESETS[k], null, 2);
         }
     });
 
-    document.getElementById('rb-go').addEventListener('click', () => run(acct.id, false));
-    document.getElementById('rb-csv').addEventListener('click', () => run(acct.id, true));
+    mount.querySelector('#rb-go').addEventListener('click', () => run(acct.id, false, mount, tok));
+    mount.querySelector('#rb-csv').addEventListener('click', () => run(acct.id, true, mount, tok));
 }
 
-function bodyFromForm(accountId) {
-    const f = document.getElementById('rb-form');
+function bodyFromForm(accountId, mount) {
+    const f = mount.querySelector('#rb-form');
+    const ta = mount.querySelector('#rb-targets');
+    if (!f || !ta) throw new Error('form gone');
     let targets;
-    try { targets = JSON.parse(document.getElementById('rb-targets').value); }
+    try { targets = JSON.parse(ta.value); }
     catch (e) { throw new Error('targets JSON invalid: ' + e.message); }
     if (!Array.isArray(targets)) throw new Error('targets must be a JSON array');
     return {
@@ -92,26 +97,34 @@ function bodyFromForm(accountId) {
     };
 }
 
-async function run(accountId, asCsv) {
-    const status = document.getElementById('rb-status');
-    status.textContent = asCsv ? 'building CSV…' : 'computing…';
+async function run(accountId, asCsv, mount, tok) {
+    const status = mount.querySelector('#rb-status');
+    if (status) status.textContent = asCsv ? 'building CSV…' : 'computing…';
     try {
-        const body = bodyFromForm(accountId);
+        const body = bodyFromForm(accountId, mount);
         if (asCsv) {
             // CSV path → blob → synthetic download.
             const r = await apiFetchBlobJson('/rebalance/run/trades.csv', body);
+            if (!viewIsCurrent(tok)) return;
             const url = URL.createObjectURL(r);
             const a = document.createElement('a');
             a.href = url; a.download = `rebalance-${accountId}.csv`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
-            status.textContent = 'downloaded';
+            const s2 = mount.querySelector('#rb-status');
+            if (s2) s2.textContent = 'downloaded';
             return;
         }
         const r = await api.rebalanceRun(body);
-        render(r);
-        status.textContent = `${r.plan.trade_count} trades · $${fmt(r.plan.total_trade_value)} traded · $${fmt(r.plan.total_value)} portfolio`;
-    } catch (e) { status.textContent = 'error: ' + e.message; }
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
+        const s2 = mount.querySelector('#rb-status');
+        if (s2) s2.textContent = `${r.plan.trade_count} trades · $${fmt(r.plan.total_trade_value)} traded · $${fmt(r.plan.total_value)} portfolio`;
+    } catch (e) {
+        if (!viewIsCurrent(tok)) return;
+        const s2 = mount.querySelector('#rb-status');
+        if (s2) s2.textContent = 'error: ' + e.message;
+    }
 }
 
 // Helper because apiFetchBlob is GET-only; we need a POST-with-blob path.
@@ -130,8 +143,9 @@ async function apiFetchBlobJson(path, body) {
     return res.blob();
 }
 
-function render(r) {
-    const out = document.getElementById('rb-out');
+function render(r, mount) {
+    const out = mount.querySelector('#rb-out');
+    if (!out) return;
     const p = r.plan;
     out.innerHTML = `
         <div class="cards">

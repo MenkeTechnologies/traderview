@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { fmt, fmtMoney, fmtPct, fmtDate, fmtSecs, pnlClass, esc, statCard } from '../util.js';
 import { barChart, equityChart } from '../charts.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const TABS = [
     ['overview',       'Overview'],
@@ -23,6 +24,7 @@ const TABS = [
 ];
 
 export async function renderReports(mount, state, sub) {
+    const tok = currentViewToken();
     if (!state.accountId) { mount.innerHTML = '<p class="boot">No account.</p>'; return; }
     if (!TABS.find(t => t[0] === sub)) sub = 'overview';
     mount.innerHTML = `
@@ -32,33 +34,45 @@ export async function renderReports(mount, state, sub) {
         </div>
         <div id="report-body"><div class="boot">loading…</div></div>
     `;
-    const body = document.getElementById('report-body');
     const acct = state.accountId;
+    // After each await, re-fetch the body element (caller may have replaced it).
+    const setBody = (html) => {
+        if (!viewIsCurrent(tok)) return null;
+        const el = mount.querySelector('#report-body');
+        if (el) el.innerHTML = html;
+        return el;
+    };
     try {
         if (sub === 'overview') {
-            const s = await api.overview(acct);
-            body.innerHTML = overviewHtml(s);
-        } else if (sub === 'by-symbol')  body.innerHTML = bucketTable(await api.bySymbol(acct), 'Symbol');
-        else if (sub === 'by-side')      body.innerHTML = bucketTable(await api.bySide(acct), 'Side');
-        else if (sub === 'by-asset')     body.innerHTML = bucketTable(await api.byAssetClass(acct), 'Asset');
-        else if (sub === 'by-dow')       body.innerHTML = bucketTable(await api.byDow(acct), 'DoW');
-        else if (sub === 'by-hour')      body.innerHTML = bucketTable(await api.byHour(acct), 'Hour');
-        else if (sub === 'by-hold')      body.innerHTML = bucketTable(await api.byHold(acct), 'Hold');
-        else if (sub === 'by-month')     body.innerHTML = bucketTable(await api.byMonth(acct), 'Month');
-        else if (sub === 'r-dist')       renderRDist(body, await api.rDist(acct));
-        else if (sub === 'streaks')      body.innerHTML = streaksHtml(await api.streaks(acct));
-        else if (sub === 'comparison')   body.innerHTML = comparisonHtml(await api.comparison(acct));
-        else if (sub === 'exit-eff')     body.innerHTML = exitEffHtml(await api.exitEff(acct));
-        else if (sub === 'commissions')  body.innerHTML = commissionsHtml(await api.commissions(acct));
-        else if (sub === 'liquidity')    body.innerHTML = liquidityHtml(await api.liquidity(acct));
-        else if (sub === 'risk')         body.innerHTML = riskHtml(await api.risk(acct));
+            const s = await api.overview(acct); setBody(overviewHtml(s));
+        } else if (sub === 'by-symbol')  setBody(bucketTable(await api.bySymbol(acct), 'Symbol'));
+        else if (sub === 'by-side')      setBody(bucketTable(await api.bySide(acct), 'Side'));
+        else if (sub === 'by-asset')     setBody(bucketTable(await api.byAssetClass(acct), 'Asset'));
+        else if (sub === 'by-dow')       setBody(bucketTable(await api.byDow(acct), 'DoW'));
+        else if (sub === 'by-hour')      setBody(bucketTable(await api.byHour(acct), 'Hour'));
+        else if (sub === 'by-hold')      setBody(bucketTable(await api.byHold(acct), 'Hold'));
+        else if (sub === 'by-month')     setBody(bucketTable(await api.byMonth(acct), 'Month'));
+        else if (sub === 'r-dist') {
+            const dist = await api.rDist(acct);
+            if (!viewIsCurrent(tok)) return;
+            const body = mount.querySelector('#report-body');
+            if (body) renderRDist(body, dist, mount);
+        }
+        else if (sub === 'streaks')      setBody(streaksHtml(await api.streaks(acct)));
+        else if (sub === 'comparison')   setBody(comparisonHtml(await api.comparison(acct)));
+        else if (sub === 'exit-eff')     setBody(exitEffHtml(await api.exitEff(acct)));
+        else if (sub === 'commissions')  setBody(commissionsHtml(await api.commissions(acct)));
+        else if (sub === 'liquidity')    setBody(liquidityHtml(await api.liquidity(acct)));
+        else if (sub === 'risk')         setBody(riskHtml(await api.risk(acct)));
         else if (sub === 'drawdown') {
             const [dd, eq] = await Promise.all([api.drawdown(acct), api.equity(acct)]);
-            body.innerHTML = drawdownHtml(dd);
-            equityChart(document.getElementById('eq-mount'), eq);
-        } else if (sub === 'risk-adjusted') body.innerHTML = riskAdjustedHtml(await api.riskAdjusted(acct));
+            if (!viewIsCurrent(tok)) return;
+            setBody(drawdownHtml(dd));
+            const eqMount = mount.querySelector('#eq-mount');
+            if (eqMount) equityChart(eqMount, eq);
+        } else if (sub === 'risk-adjusted') setBody(riskAdjustedHtml(await api.riskAdjusted(acct)));
     } catch (e) {
-        body.innerHTML = `<p class="boot">Error: ${e.message}</p>`;
+        setBody(`<p class="boot">Error: ${e.message}</p>`);
     }
 }
 
@@ -101,7 +115,7 @@ function bucketTable(rows, header) {
         `).join('')}</tbody></table>`;
 }
 
-function renderRDist(body, dist) {
+function renderRDist(body, dist, mount) {
     body.innerHTML = `
         <div class="cards">
             ${statCard('Trades with R', dist.trades_with_r)}
@@ -112,8 +126,10 @@ function renderRDist(body, dist) {
             <h2>R-Multiple Distribution</h2>
             <div id="r-chart"></div>
         </div>`;
+    const chart = mount.querySelector('#r-chart');
+    if (!chart) return;
     barChart(
-        document.getElementById('r-chart'),
+        chart,
         dist.bins.map(b => b.label),
         dist.bins.map(b => b.count),
         { color: '#00e5ff' }

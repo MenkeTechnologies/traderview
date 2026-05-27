@@ -1,11 +1,13 @@
 import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a', '#ffd24a'];
 const FIB_LEVELS = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0];
 
 export async function renderCharts(mount, _state, symbol = '') {
+    const tok = currentViewToken();
     if (!symbol) symbol = 'SPY';
     mount.innerHTML = `
         <h1 class="view-title">// CHARTS</h1>
@@ -60,8 +62,8 @@ export async function renderCharts(mount, _state, symbol = '') {
 
     const to = new Date();
     const from = new Date(to.getTime() - 90 * 86400_000);
-    document.getElementById('from').value = from.toISOString().slice(0, 10);
-    document.getElementById('to').value = to.toISOString().slice(0, 10);
+    mount.querySelector('#from').value = from.toISOString().slice(0, 10);
+    mount.querySelector('#to').value = to.toISOString().slice(0, 10);
 
     // State for the drawing layer.
     const ds = {
@@ -71,64 +73,75 @@ export async function renderCharts(mount, _state, symbol = '') {
         color: COLORS[0],
         pending: null,         // first click of a 2-click tool
         drawings: [],
+        mount,
+        tok,
     };
 
     renderColorPicker(ds);
-    document.querySelectorAll('.tool-btn').forEach(btn => {
+    mount.querySelectorAll('.tool-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             ds.tool = btn.dataset.tool;
             ds.pending = null;
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b === btn));
-            const svg = document.getElementById('drawLayer');
-            svg.style.cursor = ds.tool === 'select' ? 'default' : 'crosshair';
+            mount.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b === btn));
+            const svg = mount.querySelector('#drawLayer');
+            if (svg) svg.style.cursor = ds.tool === 'select' ? 'default' : 'crosshair';
         });
     });
-    document.getElementById('clearDrawings').addEventListener('click', async () => {
+    mount.querySelector('#clearDrawings').addEventListener('click', async () => {
         if (!confirm(`Delete ALL drawings on ${ds.symbol}?`)) return;
         try {
             await api.deleteChartDrawings(ds.symbol);
+            if (!viewIsCurrent(tok)) return;
             ds.drawings = [];
             drawAll(ds);
         } catch (e) { alert(e.message); }
     });
 
-    document.getElementById('drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
+    mount.querySelector('#drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
 
     // Populate indicator selector from registry.
     let allIndicators = [];
     try {
         allIndicators = await api.listCustomIndicators();
-        const sel = document.getElementById('indicatorSel');
-        sel.innerHTML = allIndicators.map(i =>
+        if (!viewIsCurrent(tok)) return;
+        const sel = mount.querySelector('#indicatorSel');
+        if (sel) sel.innerHTML = allIndicators.map(i =>
             `<option value="${i.id}" ${i.is_default ? 'selected' : ''}>${esc(i.name)}</option>`
         ).join('');
     } catch (_) { /* ignore */ }
     ds.indicatorSeries = [];
 
     const load = async () => {
-        const sym = document.getElementById('sym').value.trim().toUpperCase();
+        const sym = mount.querySelector('#sym').value.trim().toUpperCase();
         ds.symbol = sym;
-        const iv = document.getElementById('iv').value;
-        const f = Math.floor(new Date(document.getElementById('from').value).getTime() / 1000);
-        const t = Math.floor(new Date(document.getElementById('to').value).getTime() / 1000) + 86400;
+        const iv = mount.querySelector('#iv').value;
+        const f = Math.floor(new Date(mount.querySelector('#from').value).getTime() / 1000);
+        const t = Math.floor(new Date(mount.querySelector('#to').value).getTime() / 1000) + 86400;
         try {
             const resp = await api.bars(sym, iv, f, t);
-            ds.plot = ohlcChart(document.getElementById('chart-mount'), resp.bars, [], { height: 480 });
+            if (!viewIsCurrent(tok)) return;
+            const cm = mount.querySelector('#chart-mount');
+            if (!cm) return;
+            ds.plot = ohlcChart(cm, resp.bars, [], { height: 480 });
             sizeOverlay(ds);
             ds.drawings = await api.listChartDrawings(sym);
+            if (!viewIsCurrent(tok)) return;
             await loadIndicators(ds, sym, iv);
+            if (!viewIsCurrent(tok)) return;
             drawAll(ds);
         } catch (e) {
-            document.getElementById('chart-mount').innerHTML =
-                `<div class="boot">Error: ${e.message}</div>`;
+            if (!viewIsCurrent(tok)) return;
+            const cm = mount.querySelector('#chart-mount');
+            if (cm) cm.innerHTML = `<div class="boot">Error: ${e.message}</div>`;
         }
     };
 
-    document.getElementById('load').addEventListener('click', load);
-    document.getElementById('indicatorReload').addEventListener('click', async () => {
-        const sym = document.getElementById('sym').value.trim().toUpperCase();
-        const iv = document.getElementById('iv').value;
+    mount.querySelector('#load').addEventListener('click', load);
+    mount.querySelector('#indicatorReload').addEventListener('click', async () => {
+        const sym = mount.querySelector('#sym').value.trim().toUpperCase();
+        const iv = mount.querySelector('#iv').value;
         await loadIndicators(ds, sym, iv);
+        if (!viewIsCurrent(tok)) return;
         drawAll(ds);
     });
     window.addEventListener('resize', () => { sizeOverlay(ds); drawAll(ds); });
@@ -136,14 +149,16 @@ export async function renderCharts(mount, _state, symbol = '') {
 }
 
 async function loadIndicators(ds, sym, iv) {
-    const sel = document.getElementById('indicatorSel');
+    const sel = ds.mount.querySelector('#indicatorSel');
+    if (!sel) { ds.indicatorSeries = []; return; }
     const ids = Array.from(sel.selectedOptions).map(o => o.value);
     if (!ids.length) { ds.indicatorSeries = []; return; }
     try {
         const days = Math.max(30, Math.ceil(
-            (Number(document.getElementById('to').valueAsNumber || Date.now()) -
-             Number(document.getElementById('from').valueAsNumber || Date.now())) / 86400_000));
+            (Number(ds.mount.querySelector('#to').valueAsNumber || Date.now()) -
+             Number(ds.mount.querySelector('#from').valueAsNumber || Date.now())) / 86400_000));
         const r = await api.evalCustomIndicators(sym, iv, days, ids);
+        if (!viewIsCurrent(ds.tok)) return;
         ds.indicatorSeries = (r.series || []).map(s => ({
             name: s.name, color: s.color, values: s.values, times: r.times,
         }));
@@ -154,7 +169,8 @@ async function loadIndicators(ds, sym, iv) {
 }
 
 function renderColorPicker(ds) {
-    const el = document.getElementById('colorPicker');
+    const el = ds.mount.querySelector('#colorPicker');
+    if (!el) return;
     el.innerHTML = COLORS.map(c =>
         `<button type="button" class="scheme-swatch" data-color="${c}"
                  style="background:${c};width:18px;height:18px;border:2px solid ${ds.color === c ? '#fff' : 'transparent'};border-radius:50%;margin-right:4px;cursor:pointer;"></button>`
@@ -168,8 +184,8 @@ function renderColorPicker(ds) {
 }
 
 function sizeOverlay(ds) {
-    const wrap = document.getElementById('chartWrap');
-    const svg = document.getElementById('drawLayer');
+    const wrap = ds.mount.querySelector('#chartWrap');
+    const svg = ds.mount.querySelector('#drawLayer');
     if (!wrap || !svg) return;
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
@@ -252,13 +268,14 @@ async function onDrawClick(e, ds) {
 async function persistAndAdd(ds, draft) {
     try {
         const saved = await api.createChartDrawing(ds.symbol, draft);
+        if (!viewIsCurrent(ds.tok)) return;
         ds.drawings.push(saved);
         drawAll(ds);
     } catch (e) { alert(e.message); }
 }
 
 function drawAll(ds, opts = {}) {
-    const svg = document.getElementById('drawLayer');
+    const svg = ds.mount.querySelector('#drawLayer');
     if (!svg) return;
     svg.innerHTML = '';
     renderIndicators(svg, ds);
@@ -404,6 +421,7 @@ function appendDeleteBtn(svg, ds, d, x, y) {
         e.stopPropagation();
         try {
             await api.deleteChartDrawing(d.id);
+            if (!viewIsCurrent(ds.tok)) return;
             ds.drawings = ds.drawings.filter(x => x.id !== d.id);
             drawAll(ds);
         } catch (err) { alert(err.message); }

@@ -5,9 +5,12 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderAiSettings(mount) {
+    const tok = currentViewToken();
     const cfg = await api.getAiSettings().catch(() => ({}));
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// AI / LLM SETTINGS</h1>
         <p class="muted small">Configure a provider for AI trade-journal analysis.
@@ -50,7 +53,7 @@ export async function renderAiSettings(mount) {
             The prompt asks the model to return strict JSON with summary / mistakes /
             risk_gaps / suggestions / rule_changes arrays.</p>
     `;
-    document.getElementById('ai-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#ai-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -61,19 +64,32 @@ export async function renderAiSettings(mount) {
             max_tokens: Number(fd.get('max_tokens')) || null,
             temperature: Number(fd.get('temperature')) || null,
         };
-        const status = document.getElementById('ai-save-status');
-        status.textContent = 'saving…';
+        const status = mount.querySelector('#ai-save-status');
+        if (status) status.textContent = 'saving…';
         try {
             await api.setAiSettings(body);
-            status.textContent = 'saved';
-            setTimeout(() => { status.textContent = ''; }, 2000);
-        } catch (err) { status.textContent = 'error: ' + err.message; }
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#ai-save-status');
+            if (s2) {
+                s2.textContent = 'saved';
+                setTimeout(() => {
+                    if (!viewIsCurrent(tok)) return;
+                    const s3 = mount.querySelector('#ai-save-status');
+                    if (s3) s3.textContent = '';
+                }, 2000);
+            }
+        } catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#ai-save-status');
+            if (s2) s2.textContent = 'error: ' + err.message;
+        }
     });
 }
 
 /// Render the AI-analyze panel for a single trade. Caller passes a mount
 /// (typically a container appended inside the trade detail view).
 export async function renderAiAnalyze(mount, tradeId) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <div class="chart-panel">
             <h2>AI analysis</h2>
@@ -82,37 +98,50 @@ export async function renderAiAnalyze(mount, tradeId) {
             <button class="btn" id="ai-run">Run analysis</button>
         </div>
     `;
-    const status = document.getElementById('ai-status');
-    const body = document.getElementById('ai-body');
+    const status = mount.querySelector('#ai-status');
+    const body = mount.querySelector('#ai-body');
 
     async function loadCached() {
         try {
             const cached = await api.getAiCached(tradeId);
+            if (!viewIsCurrent(tok)) return;
             if (cached) {
-                status.textContent = `cached ${new Date(cached.created_at).toLocaleString()} · ${cached.provider}/${cached.model}` +
+                if (status) status.textContent = `cached ${new Date(cached.created_at).toLocaleString()} · ${cached.provider}/${cached.model}` +
                     (cached.prompt_tokens ? ` · ${cached.prompt_tokens}+${cached.response_tokens || 0} tok` : '');
-                body.innerHTML = renderFindings(cached.findings);
-                document.getElementById('ai-run').textContent = 'Re-analyze';
+                if (body) body.innerHTML = renderFindings(cached.findings);
+                const runBtn = mount.querySelector('#ai-run');
+                if (runBtn) runBtn.textContent = 'Re-analyze';
             } else {
-                status.textContent = 'no cached analysis for this trade';
+                if (status) status.textContent = 'no cached analysis for this trade';
             }
-        } catch (e) { status.textContent = 'cache lookup failed: ' + e.message; }
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            if (status) status.textContent = 'cache lookup failed: ' + e.message;
+        }
     }
     await loadCached();
+    if (!viewIsCurrent(tok)) return;
 
-    document.getElementById('ai-run').addEventListener('click', async () => {
-        const btn = document.getElementById('ai-run');
+    const runBtn = mount.querySelector('#ai-run');
+    if (!runBtn) return;
+    runBtn.addEventListener('click', async () => {
+        const btn = mount.querySelector('#ai-run');
+        if (!btn) return;
         btn.disabled = true;
-        status.textContent = 'analyzing… (LLM call may take 5-30s)';
+        if (status) status.textContent = 'analyzing… (LLM call may take 5-30s)';
         try {
             const r = await api.runAiAnalysis(tradeId);
-            status.textContent = `done · ${r.provider}/${r.model}` +
+            if (!viewIsCurrent(tok)) return;
+            if (status) status.textContent = `done · ${r.provider}/${r.model}` +
                 (r.prompt_tokens ? ` · ${r.prompt_tokens}+${r.response_tokens || 0} tok` : '');
-            body.innerHTML = renderFindings(r.findings);
+            if (body) body.innerHTML = renderFindings(r.findings);
             btn.textContent = 'Re-analyze';
         } catch (e) {
-            status.textContent = 'error: ' + e.message;
-        } finally { btn.disabled = false; }
+            if (!viewIsCurrent(tok)) return;
+            if (status) status.textContent = 'error: ' + e.message;
+        } finally {
+            if (viewIsCurrent(tok)) btn.disabled = false;
+        }
     });
 }
 

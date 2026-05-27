@@ -1,10 +1,12 @@
 // Fear & Greed gauge — CNN-style 0..100 composite of 7 risk-appetite signals.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 
 export async function renderFearGreed(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// FEAR &amp; GREED</h1>
         <p class="muted small">CNN-methodology composite of seven risk-appetite signals.
@@ -31,20 +33,26 @@ export async function renderFearGreed(mount) {
         </div>
     `;
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 90_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 90_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#fear-greed')) { clearInterval(timer); timer = null; }
     }, { once: true });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const s = await api.fearGreed();
-        renderGauge(s);
-        renderComponents(s);
+        if (!viewIsCurrent(tok)) return;
+        renderGauge(s, mount);
+        renderComponents(s, mount);
     } catch (e) {
-        document.getElementById('fgGauge').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#fgGauge');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
@@ -56,7 +64,7 @@ function bandColor(score) {
     return '#00ffaa';
 }
 
-function renderGauge(s) {
+function renderGauge(s, mount) {
     // Simple SVG semicircle gauge, 0 (left) → 100 (right).
     const color = bandColor(s.score);
     const angle = (s.score / 100) * 180 - 90; // -90..+90 deg
@@ -65,7 +73,9 @@ function renderGauge(s) {
     const cx = 160, cy = 140;
     const nx = cx + r * Math.sin(rad);
     const ny = cy - r * Math.cos(rad);
-    document.getElementById('fgGauge').innerHTML = `
+    const gaugeEl = mount.querySelector('#fgGauge');
+    if (!gaugeEl) return;
+    gaugeEl.innerHTML = `
         <h2>${esc(s.label)} — ${s.score}/100</h2>
         <svg viewBox="0 0 320 180" width="100%" height="180" style="display:block;max-width:480px;margin:0 auto;">
             <defs>
@@ -86,8 +96,10 @@ function renderGauge(s) {
     `;
 }
 
-function renderComponents(s) {
-    document.getElementById('fgComps').innerHTML = `
+function renderComponents(s, mount) {
+    const el = mount.querySelector('#fgComps');
+    if (!el) return;
+    el.innerHTML = `
         <div class="cards">
             ${s.components.map(c => {
                 const color = bandColor(c.score);

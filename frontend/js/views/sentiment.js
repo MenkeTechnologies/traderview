@@ -5,12 +5,14 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 let wsUnsub = null;
 
 export async function renderSentiment(mount, _state, symbol) {
-    if (symbol) return renderSymbol(mount, symbol.toUpperCase());
+    const tok = currentViewToken();
+    if (symbol) return renderSymbol(mount, symbol.toUpperCase(), tok);
 
     mount.innerHTML = `
         <h1 class="view-title">// SENTIMENT — WSB + STOCKTWITS</h1>
@@ -56,24 +58,31 @@ export async function renderSentiment(mount, _state, symbol) {
             <div id="feed"></div>
         </div>
     `;
-    document.getElementById('hours').addEventListener('change', () => refresh());
-    document.getElementById('poll-now').addEventListener('click', async () => {
-        const status = document.getElementById('poll-status');
-        status.textContent = 'polling…';
+    mount.querySelector('#hours').addEventListener('change', () => refresh(mount, tok));
+    mount.querySelector('#poll-now').addEventListener('click', async () => {
+        const status = mount.querySelector('#poll-status');
+        if (status) status.textContent = 'polling…';
         try {
             const r = await api.sentimentPollNow();
-            status.textContent = `${r.wsb_inserted} WSB / ${r.stocktwits_inserted} StockTwits new`;
-            await refresh();
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#poll-status');
+            if (status2) status2.textContent = `${r.wsb_inserted} WSB / ${r.stocktwits_inserted} StockTwits new`;
+            await refresh(mount, tok);
         } catch (e) {
-            status.textContent = 'error: ' + e.message;
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#poll-status');
+            if (status2) status2.textContent = 'error: ' + e.message;
         }
     });
 
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 60_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 60_000);
 
     if (wsUnsub) wsUnsub();
-    wsUnsub = onWsEvent('sentiment', () => refresh());
+    wsUnsub = onWsEvent('sentiment', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
 
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#sentiment')) {
@@ -81,15 +90,18 @@ export async function renderSentiment(mount, _state, symbol) {
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
     }, { once: true });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
-    const hours = Number(document.getElementById('hours').value);
+async function refresh(mount, tok) {
+    const hoursEl = mount.querySelector('#hours');
+    if (!hoursEl) return;
+    const hours = Number(hoursEl.value);
     const [ranked, feed] = await Promise.all([
         api.sentimentRanked(hours, 50).catch(() => []),
         api.sentimentFeed(80).catch(() => []),
     ]);
+    if (!viewIsCurrent(tok)) return;
     // Split by direction of sentiment delta.
     const ups   = ranked.filter(r => Number(r.sentiment_delta) > 0)
                         .sort((a, b) => Number(b.sentiment_delta) - Number(a.sentiment_delta))
@@ -100,10 +112,14 @@ async function refresh() {
     const byVol = [...ranked].sort((a, b) => Number(b.mention_count) - Number(a.mention_count))
                              .slice(0, 25);
 
-    document.getElementById('top-up').innerHTML   = rankedTable(ups, 'up');
-    document.getElementById('top-down').innerHTML = rankedTable(downs, 'down');
-    document.getElementById('top-volume').innerHTML = volumeTable(byVol);
-    document.getElementById('feed').innerHTML = feedTable(feed);
+    const upEl = mount.querySelector('#top-up');
+    const downEl = mount.querySelector('#top-down');
+    const volEl = mount.querySelector('#top-volume');
+    const feedEl = mount.querySelector('#feed');
+    if (upEl) upEl.innerHTML   = rankedTable(ups, 'up');
+    if (downEl) downEl.innerHTML = rankedTable(downs, 'down');
+    if (volEl) volEl.innerHTML = volumeTable(byVol);
+    if (feedEl) feedEl.innerHTML = feedTable(feed);
 }
 
 function rankedTable(rows, dir) {
@@ -160,7 +176,7 @@ function feedTable(items) {
         }).join('')}</tbody></table>`;
 }
 
-async function renderSymbol(mount, sym) {
+async function renderSymbol(mount, sym, tok) {
     mount.innerHTML = `
         <h1 class="view-title">// SENTIMENT · ${esc(sym)}
             <a class="link small" href="#sentiment">← back</a>
@@ -185,6 +201,7 @@ async function renderSymbol(mount, sym) {
             api.sentimentSeries(sym, 168),
             api.sentimentForSymbol(sym, 168, 200),
         ]);
+        if (!viewIsCurrent(tok)) return;
 
         // Aggregate per hour across sources.
         const buckets = new Map();
@@ -204,19 +221,25 @@ async function renderSymbol(mount, sym) {
         const avgScore = totalCount > 0
             ? scores.reduce((a, b, i) => a + b * counts[i], 0) / totalCount : 0;
 
-        document.getElementById('sym-cards').innerHTML = `
+        const cardsEl = mount.querySelector('#sym-cards');
+        if (cardsEl) cardsEl.innerHTML = `
             <div class="card"><div class="label">Mentions (7d)</div><div class="value">${totalCount}</div></div>
             <div class="card"><div class="label">Avg sentiment</div>
                 <div class="value ${avgScore >= 0 ? 'pos' : 'neg'}">${avgScore >= 0 ? '+' : ''}${avgScore.toFixed(2)}</div></div>
             <div class="card"><div class="label">Hours covered</div><div class="value">${sorted.length}</div></div>
         `;
 
-        barChart(document.getElementById('sent-vol-chart'), labels, counts, { color: '#00e5ff' });
-        barChart(document.getElementById('sent-score-chart'), labels, scores, { color: '#b86bff' });
+        const volChartEl = mount.querySelector('#sent-vol-chart');
+        const scoreChartEl = mount.querySelector('#sent-score-chart');
+        if (volChartEl) barChart(volChartEl, labels, counts, { color: '#00e5ff' });
+        if (scoreChartEl) barChart(scoreChartEl, labels, scores, { color: '#b86bff' });
 
-        document.getElementById('sent-list').innerHTML = feedTable(mentions);
+        const listEl = mount.querySelector('#sent-list');
+        if (listEl) listEl.innerHTML = feedTable(mentions);
     } catch (e) {
-        document.getElementById('sym-cards').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const cardsEl = mount.querySelector('#sym-cards');
+        if (cardsEl) cardsEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
     void fmt;
 }

@@ -10,6 +10,7 @@
 // the parser-stub message, which we surface verbatim.
 
 import { api, ApiError } from '../api.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const state = {
     accounts: [],
@@ -17,18 +18,25 @@ const state = {
     currentAccountId: '',     // '' = ALL
     filters: { from: '', to: '', category: '', is_business: '', search: '' },
     transactions: [],
+    mount: null,
+    tok: 0,
 };
 
 export async function renderExpensesView(mount) {
+    const tok = currentViewToken();
+    state.mount = mount;
+    state.tok = tok;
     mount.innerHTML = '<div class="boot">loading…</div>';
     try {
         const [accts, cats] = await Promise.all([
             api.expenseAccounts(),
             api.expenseCategories(),
         ]);
+        if (!viewIsCurrent(tok)) return;
         state.accounts = accts;
         state.categories = cats;
     } catch (e) {
+        if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `<p class="boot">expense load failed: ${e.message}</p>`;
         return;
     }
@@ -100,28 +108,28 @@ function drawShell(mount) {
     <div id="exp-rules-modal" class="modal hidden"></div>
     `;
 
-    document.getElementById('exp-account').addEventListener('change', e => {
+    mount.querySelector('#exp-account').addEventListener('change', e => {
         state.currentAccountId = e.target.value;
         refresh();
     });
-    document.getElementById('exp-new-account').addEventListener('click', createAccountFlow);
-    document.getElementById('exp-upload').addEventListener('click', () => {
-        document.getElementById('exp-file').click();
+    mount.querySelector('#exp-new-account').addEventListener('click', createAccountFlow);
+    mount.querySelector('#exp-upload').addEventListener('click', () => {
+        mount.querySelector('#exp-file').click();
     });
-    document.getElementById('exp-file').addEventListener('change', handleUpload);
-    document.getElementById('exp-seed-rules').addEventListener('click', seedRulesFlow);
-    document.getElementById('exp-rules-btn').addEventListener('click', openRulesModal);
-    document.getElementById('exp-receipts-btn').addEventListener('click', openReceiptsModal);
-    document.getElementById('exp-report-btn').addEventListener('click', () => openScheduleCModal());
+    mount.querySelector('#exp-file').addEventListener('change', handleUpload);
+    mount.querySelector('#exp-seed-rules').addEventListener('click', seedRulesFlow);
+    mount.querySelector('#exp-rules-btn').addEventListener('click', openRulesModal);
+    mount.querySelector('#exp-receipts-btn').addEventListener('click', openReceiptsModal);
+    mount.querySelector('#exp-report-btn').addEventListener('click', () => openScheduleCModal());
 
     bindReceiptDropzone();
-    document.getElementById('exp-apply').addEventListener('click', () => {
-        state.filters.from = document.getElementById('exp-from').value;
-        state.filters.to = document.getElementById('exp-to').value;
-        const catVal = document.getElementById('exp-category').value;
+    mount.querySelector('#exp-apply').addEventListener('click', () => {
+        state.filters.from = mount.querySelector('#exp-from').value;
+        state.filters.to = mount.querySelector('#exp-to').value;
+        const catVal = mount.querySelector('#exp-category').value;
         state.filters.category = catVal === '__none__' ? '__none__' : catVal;
-        state.filters.is_business = document.getElementById('exp-business').value;
-        state.filters.search = document.getElementById('exp-search').value;
+        state.filters.is_business = mount.querySelector('#exp-business').value;
+        state.filters.search = mount.querySelector('#exp-search').value;
         refresh();
     });
 }
@@ -139,19 +147,22 @@ async function refresh() {
     };
     try {
         let rows = await api.expenseTransactions(params);
+        if (!viewIsCurrent(state.tok)) return;
         if (state.filters.category === '__none__') {
             rows = rows.filter(r => !r.category_code);
         }
         state.transactions = rows;
         drawTable();
     } catch (e) {
-        document.getElementById('exp-table').innerHTML =
-            `<p class="boot">transactions load failed: ${esc(e.message)}</p>`;
+        if (!viewIsCurrent(state.tok)) return;
+        const tbl = state.mount.querySelector('#exp-table');
+        if (tbl) tbl.innerHTML = `<p class="boot">transactions load failed: ${esc(e.message)}</p>`;
     }
 }
 
 function drawTable() {
-    const host = document.getElementById('exp-table');
+    const host = state.mount.querySelector('#exp-table');
+    if (!host) return;
     if (!state.transactions.length) {
         host.innerHTML = `<p class="boot">no transactions. upload a CSV.</p>`;
         return;
@@ -258,12 +269,13 @@ async function createAccountFlow() {
     if (!source) return;
     try {
         const acct = await api.createExpenseAccount({ kind, source, name });
+        if (!viewIsCurrent(state.tok)) return;
         state.accounts.push(acct);
         state.currentAccountId = acct.id;
         // Redraw shell so the account picker re-renders with the new option.
-        const mount = document.getElementById('app');
-        drawShell(mount);
-        document.getElementById('exp-account').value = acct.id;
+        drawShell(state.mount);
+        const sel = state.mount.querySelector('#exp-account');
+        if (sel) sel.value = acct.id;
         await refresh();
     } catch (e) {
         alert(`create failed: ${e.message}`);
@@ -278,53 +290,66 @@ async function handleUpload(ev) {
         alert('pick an account first (or create one)');
         return;
     }
-    const source = document.getElementById('exp-source').value;
-    const status = document.getElementById('exp-status');
-    status.textContent = `uploading ${file.name}…`;
+    const source = state.mount.querySelector('#exp-source').value;
+    const status = state.mount.querySelector('#exp-status');
+    if (status) status.textContent = `uploading ${file.name}…`;
     try {
         const res = await api.importExpense(state.currentAccountId, source, file);
+        if (!viewIsCurrent(state.tok)) return;
+        const status2 = state.mount.querySelector('#exp-status');
         if (res.duplicate) {
-            status.textContent = `already imported (sha matches existing import ${res.import_id.slice(0, 8)})`;
+            if (status2) status2.textContent = `already imported (sha matches existing import ${res.import_id.slice(0, 8)})`;
         } else {
-            status.textContent =
+            if (status2) status2.textContent =
                 `imported ${res.inserted_count}/${res.row_count} rows · ` +
                 `auto-categorized ${res.categorized_count} · ` +
                 `transfer pairs ${res.transfer_pairs}`;
         }
         await refresh();
     } catch (e) {
-        if (e instanceof ApiError && e.status === 400) {
-            status.textContent = `parser: ${e.message}`;
-        } else {
-            status.textContent = `upload failed: ${e.message}`;
+        if (!viewIsCurrent(state.tok)) return;
+        const status2 = state.mount.querySelector('#exp-status');
+        if (status2) {
+            if (e instanceof ApiError && e.status === 400) {
+                status2.textContent = `parser: ${e.message}`;
+            } else {
+                status2.textContent = `upload failed: ${e.message}`;
+            }
         }
     }
 }
 
 async function seedRulesFlow() {
-    const status = document.getElementById('exp-status');
+    const status = state.mount.querySelector('#exp-status');
     try {
         const res = await api.seedExpenseRules();
-        status.textContent = res.skipped_existing
+        if (!viewIsCurrent(state.tok)) return;
+        const status2 = state.mount.querySelector('#exp-status');
+        if (status2) status2.textContent = res.skipped_existing
             ? `you already have ${res.skipped_existing} rules — seed skipped`
             : `seeded ${res.inserted} default rules`;
     } catch (e) {
-        status.textContent = `seed failed: ${e.message}`;
+        if (!viewIsCurrent(state.tok)) return;
+        const status2 = state.mount.querySelector('#exp-status');
+        if (status2) status2.textContent = `seed failed: ${e.message}`;
     }
 }
 
 async function openRulesModal() {
-    const modal = document.getElementById('exp-rules-modal');
+    const modal = state.mount.querySelector('#exp-rules-modal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
     let rules = [];
     try { rules = await api.expenseRules(); }
     catch (e) {
+        if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
             <button id="rules-close">Close</button></div>`;
-        document.getElementById('rules-close').onclick = () => modal.classList.add('hidden');
+        modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
         return;
     }
+    if (!viewIsCurrent(state.tok)) return;
     const catOpts = state.categories
         .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
         .join('');
@@ -361,16 +386,17 @@ async function openRulesModal() {
         </table>
         <button id="rules-close" style="margin-top:12px">Close</button>
     </div>`;
-    document.getElementById('rules-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.rule-del').forEach(btn => {
         btn.onclick = async () => {
             if (!confirm('delete this rule?')) return;
             try { await api.deleteExpenseRule(btn.dataset.id); }
             catch (e) { alert(`delete failed: ${e.message}`); return; }
+            if (!viewIsCurrent(state.tok)) return;
             openRulesModal();
         };
     });
-    document.getElementById('rule-form').addEventListener('submit', async ev => {
+    modal.querySelector('#rule-form').addEventListener('submit', async ev => {
         ev.preventDefault();
         const fd = new FormData(ev.target);
         try {
@@ -382,6 +408,7 @@ async function openRulesModal() {
                 priority: Number(fd.get('priority')) || 100,
                 apply_retroactively: fd.get('apply_retroactively') === 'on',
             });
+            if (!viewIsCurrent(state.tok)) return;
             await refresh();
             openRulesModal();
         } catch (e) { alert(`create failed: ${e.message}`); }
@@ -397,8 +424,8 @@ function esc(s) {
 // --- receipt drag-drop + OCR poll + match modal --------------------------
 
 function bindReceiptDropzone() {
-    const dz = document.getElementById('receipt-dz');
-    const picker = document.getElementById('receipt-file');
+    const dz = state.mount.querySelector('#receipt-dz');
+    const picker = state.mount.querySelector('#receipt-file');
     if (!dz || !picker) return;
     dz.addEventListener('click', () => picker.click());
     ['dragenter', 'dragover'].forEach(ev =>
@@ -413,60 +440,74 @@ function bindReceiptDropzone() {
 }
 
 async function receiptUploadAll(fileList) {
-    const status = document.getElementById('exp-status');
     if (!fileList || !fileList.length) return;
+    const setStatus = (txt) => {
+        const s = state.mount.querySelector('#exp-status');
+        if (s) s.textContent = txt;
+    };
     for (const file of fileList) {
-        status.textContent = `uploading ${file.name}…`;
+        setStatus(`uploading ${file.name}…`);
         try {
             const r = await api.uploadReceipt(file);
-            status.textContent = `uploaded ${file.name} — OCR running…`;
+            if (!viewIsCurrent(state.tok)) return;
+            setStatus(`uploaded ${file.name} — OCR running…`);
             pollReceiptUntilReady(r.id);
         } catch (e) {
-            status.textContent = `receipt upload failed: ${e.message}`;
+            if (!viewIsCurrent(state.tok)) return;
+            setStatus(`receipt upload failed: ${e.message}`);
         }
     }
 }
 
 async function pollReceiptUntilReady(receiptId) {
-    const status = document.getElementById('exp-status');
+    const setStatus = (txt) => {
+        const s = state.mount.querySelector('#exp-status');
+        if (s) s.textContent = txt;
+    };
     const maxAttempts = 60;        // 60 * 2s = 2 min ceiling
     for (let i = 0; i < maxAttempts; i++) {
         await new Promise(r => setTimeout(r, 2000));
+        if (!viewIsCurrent(state.tok)) return;
         let meta;
         try { meta = await api.receiptMeta(receiptId); }
         catch (e) {
-            status.textContent = `receipt poll failed: ${e.message}`;
+            if (!viewIsCurrent(state.tok)) return;
+            setStatus(`receipt poll failed: ${e.message}`);
             return;
         }
+        if (!viewIsCurrent(state.tok)) return;
         if (meta.ocr_status === 'pending') continue;
         if (meta.ocr_status === 'failed') {
-            status.textContent = `OCR failed: ${meta.error_message || 'unknown'}`;
+            setStatus(`OCR failed: ${meta.error_message || 'unknown'}`);
             return;
         }
         if (meta.ocr_status === 'needs_image') {
-            status.textContent = `OCR needs image: ${meta.error_message}`;
+            setStatus(`OCR needs image: ${meta.error_message}`);
             return;
         }
         // done — open match suggestion modal
-        status.textContent = `OCR done: ${meta.ocr_merchant || '?'} · ${meta.ocr_total ?? '?'} · ${meta.ocr_date ?? '?'}`;
+        setStatus(`OCR done: ${meta.ocr_merchant || '?'} · ${meta.ocr_total ?? '?'} · ${meta.ocr_date ?? '?'}`);
         openReceiptMatchModal(meta);
         return;
     }
-    status.textContent = `OCR timed out for receipt ${receiptId.slice(0, 8)}`;
+    setStatus(`OCR timed out for receipt ${receiptId.slice(0, 8)}`);
 }
 
 async function openReceiptMatchModal(meta) {
-    const modal = document.getElementById('exp-rules-modal');
+    const modal = state.mount.querySelector('#exp-rules-modal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     modal.innerHTML = '<div class="modal-inner"><p class="boot">scoring candidates…</p></div>';
     let matches = [];
     try { matches = await api.receiptMatches(meta.id); }
     catch (e) {
+        if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">match load failed: ${esc(e.message)}</p>
             <button id="m-close">Close</button></div>`;
-        document.getElementById('m-close').onclick = () => modal.classList.add('hidden');
+        modal.querySelector('#m-close').onclick = () => modal.classList.add('hidden');
         return;
     }
+    if (!viewIsCurrent(state.tok)) return;
 
     const acctNames = Object.fromEntries(state.accounts.map(a => [a.id, a.name]));
 
@@ -498,13 +539,15 @@ async function openReceiptMatchModal(meta) {
             <button id="m-close" style="margin-left:auto">Close</button>
         </div>
     </div>`;
-    document.getElementById('m-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelector('#m-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.m-pick').forEach(btn => {
         btn.onclick = async () => {
             try {
                 await api.attachReceipt(meta.id, btn.dataset.tx);
+                if (!viewIsCurrent(state.tok)) return;
                 modal.classList.add('hidden');
-                document.getElementById('exp-status').textContent = 'receipt attached';
+                const s = state.mount.querySelector('#exp-status');
+                if (s) s.textContent = 'receipt attached';
                 await refresh();
             } catch (e) { alert(`attach failed: ${e.message}`); }
         };
@@ -512,18 +555,21 @@ async function openReceiptMatchModal(meta) {
 }
 
 async function openScheduleCModal(year) {
-    const modal = document.getElementById('exp-rules-modal');
+    const modal = state.mount.querySelector('#exp-rules-modal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     const initialYear = year || new Date().getFullYear();
     modal.innerHTML = '<div class="modal-inner"><p class="boot">building report…</p></div>';
     let report;
     try { report = await api.scheduleC(initialYear); }
     catch (e) {
+        if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">report failed: ${esc(e.message)}</p>
             <button id="sc-close">Close</button></div>`;
-        document.getElementById('sc-close').onclick = () => modal.classList.add('hidden');
+        modal.querySelector('#sc-close').onclick = () => modal.classList.add('hidden');
         return;
     }
+    if (!viewIsCurrent(state.tok)) return;
 
     const fmt = n => Number(n).toLocaleString(undefined, {
         minimumFractionDigits: 2, maximumFractionDigits: 2,
@@ -590,24 +636,27 @@ async function openScheduleCModal(year) {
         </p>
         <button id="sc-close" style="margin-top:8px">Close</button>
     </div>`;
-    document.getElementById('sc-close').onclick = () => modal.classList.add('hidden');
-    document.getElementById('sc-year').addEventListener('change', e => {
+    modal.querySelector('#sc-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelector('#sc-year').addEventListener('change', e => {
         openScheduleCModal(Number(e.target.value));
     });
 }
 
 async function openReceiptsModal() {
-    const modal = document.getElementById('exp-rules-modal');
+    const modal = state.mount.querySelector('#exp-rules-modal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     modal.innerHTML = '<div class="modal-inner"><p class="boot">loading…</p></div>';
     let rs = [];
     try { rs = await api.receipts(); }
     catch (e) {
+        if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
             <button id="r-close">Close</button></div>`;
-        document.getElementById('r-close').onclick = () => modal.classList.add('hidden');
+        modal.querySelector('#r-close').onclick = () => modal.classList.add('hidden');
         return;
     }
+    if (!viewIsCurrent(state.tok)) return;
 
     const rows = rs.map(r => `
         <tr>
@@ -636,11 +685,12 @@ async function openReceiptsModal() {
         </table>
         <button id="r-close" style="margin-top:12px">Close</button>
     </div>`;
-    document.getElementById('r-close').onclick = () => modal.classList.add('hidden');
+    modal.querySelector('#r-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.r-match').forEach(btn => {
         btn.onclick = async () => {
             try {
                 const meta = await api.receiptMeta(btn.dataset.id);
+                if (!viewIsCurrent(state.tok)) return;
                 openReceiptMatchModal(meta);
             } catch (e) { alert(`open failed: ${e.message}`); }
         };

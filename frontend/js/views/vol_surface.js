@@ -1,8 +1,10 @@
 // Implied-volatility surface — heatmap matrix + ATM term structure + skew curve.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderVolSurface(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// VOL SURFACE</h1>
         <p class="muted small">IV grid across moneyness × expiration. Color intensity shows IV
@@ -19,26 +21,33 @@ export async function renderVolSurface(mount) {
 
         <div id="vsOut"><p class="muted small">Enter a symbol to fetch its surface.</p></div>
     `;
-    document.getElementById('vsForm').addEventListener('submit', async (e) => {
+    mount.querySelector('#vsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const sym = document.getElementById('vsSym').value.trim().toUpperCase();
-        const n = parseInt(document.getElementById('vsN').value, 10) || 8;
-        await fetchAndRender(sym, n);
+        const symEl = mount.querySelector('#vsSym');
+        const nEl = mount.querySelector('#vsN');
+        const sym = symEl ? symEl.value.trim().toUpperCase() : '';
+        const n = (nEl && parseInt(nEl.value, 10)) || 8;
+        await fetchAndRender(sym, n, mount, tok);
     });
 }
 
-async function fetchAndRender(sym, n) {
-    const out = document.getElementById('vsOut');
+async function fetchAndRender(sym, n, mount, tok) {
+    const out = mount.querySelector('#vsOut');
+    if (!out) return;
     out.innerHTML = `<p class="muted small">Fetching ${esc(sym)} chain across ${n} expirations (this calls Yahoo once per expiration)…</p>`;
     try {
         const s = await api.volSurface(sym, n);
-        renderSurface(s, out);
+        if (!viewIsCurrent(tok)) return;
+        const outNow = mount.querySelector('#vsOut');
+        if (outNow) renderSurface(s, outNow, mount);
     } catch (e) {
-        out.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const outNow = mount.querySelector('#vsOut');
+        if (outNow) outNow.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderSurface(s, out) {
+function renderSurface(s, out, mount) {
     if (!s.expirations.length) {
         out.innerHTML = `<p class="boot">No expirations returned for ${esc(s.symbol)}.</p>`;
         return;
@@ -59,12 +68,12 @@ function renderSurface(s, out) {
             <div id="vsSkew"></div>
         </div>
     `;
-    renderHeatmap(s);
-    renderTermSvg(s);
-    renderSkewSvg(s);
+    renderHeatmap(s, mount);
+    renderTermSvg(s, mount);
+    renderSkewSvg(s, mount);
 }
 
-function renderHeatmap(s) {
+function renderHeatmap(s, mount) {
     const all = s.expirations.flatMap(r => r.iv_by_moneyness).filter(v => v != null);
     const min = Math.min(...all);
     const max = Math.max(...all);
@@ -87,7 +96,9 @@ function renderHeatmap(s) {
         }).join('')}
         <td class="small">${row.atm_iv == null ? '—' : (row.atm_iv * 100).toFixed(1) + '%'}</td>
     </tr>`;
-    document.getElementById('vsHeat').innerHTML = `
+    const heatEl = mount.querySelector('#vsHeat');
+    if (!heatEl) return;
+    heatEl.innerHTML = `
         <table class="trades" style="table-layout:fixed;">
             <thead><tr>
                 <th>Expiration</th>
@@ -101,9 +112,11 @@ function renderHeatmap(s) {
     `;
 }
 
-function renderTermSvg(s) {
+function renderTermSvg(s, mount) {
+    const termEl = mount.querySelector('#vsTerm');
+    if (!termEl) return;
     const pts = s.term_structure;
-    if (!pts.length) { document.getElementById('vsTerm').innerHTML = '<p class="muted small">no ATM IV resolved</p>'; return; }
+    if (!pts.length) { termEl.innerHTML = '<p class="muted small">no ATM IV resolved</p>'; return; }
     const w = 700, h = 220, pad = 40;
     const xs = pts.map(p => p.days_to_expiry);
     const ys = pts.map(p => p.atm_iv * 100);
@@ -115,7 +128,7 @@ function renderTermSvg(s) {
     const dots = pts.map(p => `<circle cx="${sx(p.days_to_expiry)}" cy="${sy(p.atm_iv * 100)}" r="3" fill="#00ffaa"/>`).join('');
     const front = ys[0], back = ys[ys.length - 1];
     const inverted = front > back;
-    document.getElementById('vsTerm').innerHTML = `
+    termEl.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
             <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>
@@ -131,13 +144,15 @@ function renderTermSvg(s) {
     `;
 }
 
-function renderSkewSvg(s) {
+function renderSkewSvg(s, mount) {
+    const skewEl = mount.querySelector('#vsSkew');
+    if (!skewEl) return;
     const pts = s.front_skew;
-    if (!pts.length) { document.getElementById('vsSkew').innerHTML = '<p class="muted small">no skew data</p>'; return; }
+    if (!pts.length) { skewEl.innerHTML = '<p class="muted small">no skew data</p>'; return; }
     const w = 700, h = 220, pad = 40;
     const xs = pts.map(p => p.moneyness * 100);
     const allY = pts.flatMap(p => [p.call_iv, p.put_iv]).filter(v => v != null).map(v => v * 100);
-    if (!allY.length) { document.getElementById('vsSkew').innerHTML = '<p class="muted small">no skew IVs resolved</p>'; return; }
+    if (!allY.length) { skewEl.innerHTML = '<p class="muted small">no skew IVs resolved</p>'; return; }
     const xMin = Math.min(...xs), xMax = Math.max(...xs);
     const yMin = Math.min(...allY), yMax = Math.max(...allY);
     const sx = (x) => pad + (x - xMin) / Math.max(xMax - xMin, 1) * (w - 2 * pad);
@@ -150,7 +165,7 @@ function renderSkewSvg(s) {
         .filter(p => p[key] != null)
         .map(p => `<circle cx="${sx(p.moneyness * 100)}" cy="${sy(p[key] * 100)}" r="3" fill="${col}"/>`)
         .join('');
-    document.getElementById('vsSkew').innerHTML = `
+    skewEl.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
             <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>

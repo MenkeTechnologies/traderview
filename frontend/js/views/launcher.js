@@ -99,6 +99,7 @@ const TILES = [
     ['search',          'Search',          '🔍',  'Full-text across trades/journal',  null],
     ['settings',        'Settings',        '⚙️',  'Profile, commissions, templates',  null],
     ['developer',       'Developer',       '🔧',  'API tokens + webhook tester',      null],
+    ['tutorial',        'Tutorial',        '❓',  'In-app guide (also `?` hotkey)',   null],
 ];
 
 const CATEGORIES = [
@@ -109,7 +110,7 @@ const CATEGORIES = [
     ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','calendar','accounts-overview']],
     ['strategy', '// STRATEGY & AUTOMATION', ['backtest','backtest-presets','walk-forward','custom-indicators','strategy-alerts','alerts','webhooks']],
     ['community','// COMMUNITY',        ['shares','community','mentorship','boards']],
-    ['admin',    '// ADMIN & DATA',     ['import','csv-wizard','exports','accounts','tags','search','settings','developer']],
+    ['admin',    '// ADMIN & DATA',     ['import','csv-wizard','exports','accounts','tags','search','settings','developer','tutorial']],
 ];
 
 let lastQuery = '';

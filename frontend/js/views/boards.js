@@ -13,6 +13,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const WIDGET_KINDS = [
     { kind: 'quote',      label: 'Quote',        defaults: { symbol: 'SPY' },     w: 3, h: 2 },
@@ -41,7 +42,9 @@ export async function renderBoards(mount, _state, id = '') {
 // ---------------------------------------------------------------------------
 
 async function renderList(mount) {
+    const tok = currentViewToken();
     const boards = await api.listDashboards().catch(() => []);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// BOARDS</h1>
         <p class="muted small">Custom dashboards. Open each board in its own browser window
@@ -72,7 +75,7 @@ async function renderList(mount) {
                 </table>`}
         </div>
     `;
-    document.getElementById('b-new').addEventListener('submit', async (e) => {
+    mount.querySelector('#b-new').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         try {
@@ -83,7 +86,7 @@ async function renderList(mount) {
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!confirm('Delete this board?')) return;
-            try { await api.deleteDashboard(btn.dataset.id); renderList(mount); }
+            try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
             catch (e) { alert(e.message); }
         });
     });
@@ -94,11 +97,13 @@ async function renderList(mount) {
 // ---------------------------------------------------------------------------
 
 async function renderBoard(mount, id) {
+    const tok = currentViewToken();
     let board;
     try { board = await api.getDashboard(id); }
-    catch (e) { mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`; return; }
+    catch (e) { if (!viewIsCurrent(tok)) return; mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`; return; }
+    if (!viewIsCurrent(tok)) return;
 
-    const state = { board, dirty: false, drag: null };
+    const state = { board, dirty: false, drag: null, tok, mount };
 
     mount.innerHTML = `
         <h1 class="view-title">// BOARD — <span id="b-name">${esc(board.name)}</span>
@@ -136,11 +141,12 @@ async function renderBoard(mount, id) {
         </div>
     `;
 
-    document.getElementById('b-rename').addEventListener('click', async () => {
+    mount.querySelector('#b-rename').addEventListener('click', async () => {
         const next = prompt('Board name:', state.board.name);
         if (!next || next === state.board.name) return;
         state.board.name = next;
-        document.getElementById('b-name').textContent = next;
+        const nm = mount.querySelector('#b-name');
+        if (nm) nm.textContent = next;
         await persist(state);
     });
 
@@ -153,13 +159,14 @@ async function renderBoard(mount, id) {
 // ---------------------------------------------------------------------------
 
 function bindPaletteDrag(state) {
-    document.querySelectorAll('.palette-tile').forEach(el => {
+    state.mount.querySelectorAll('.palette-tile').forEach(el => {
         el.addEventListener('dragstart', (e) => {
             state.drag = { kind: el.dataset.kind, source: 'palette' };
             e.dataTransfer.effectAllowed = 'copy';
         });
     });
-    const grid = document.getElementById('b-grid');
+    const grid = state.mount.querySelector('#b-grid');
+    if (!grid) return;
     grid.addEventListener('dragover', (e) => {
         if (!state.drag) return;
         e.preventDefault();
@@ -203,7 +210,8 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function renderGrid(state) {
     clearTimers();
-    const grid = document.getElementById('b-grid');
+    const grid = state.mount.querySelector('#b-grid');
+    if (!grid) return;
     grid.innerHTML = '';
     for (const w of (state.board.layout || [])) {
         const el = document.createElement('div');
@@ -242,7 +250,7 @@ function renderGrid(state) {
         });
 
         grid.appendChild(el);
-        mountWidget(body, w);
+        mountWidget(body, w, state.tok);
     }
 }
 
@@ -264,16 +272,20 @@ function configureWidget(w) {
 
 async function persist(state) {
     state.dirty = true;
-    const tag = document.getElementById('b-save');
+    const tag = state.mount.querySelector('#b-save');
     if (tag) tag.textContent = 'saving…';
     try {
         await api.updateDashboard(state.board.id, {
             name: state.board.name, layout: state.board.layout || [],
         });
-        if (tag) tag.textContent = `saved ${new Date().toLocaleTimeString(undefined, { hour12: false })}`;
+        if (!viewIsCurrent(state.tok)) return;
+        const tag2 = state.mount.querySelector('#b-save');
+        if (tag2) tag2.textContent = `saved ${new Date().toLocaleTimeString(undefined, { hour12: false })}`;
         state.dirty = false;
     } catch (e) {
-        if (tag) tag.textContent = 'save failed: ' + e.message;
+        if (!viewIsCurrent(state.tok)) return;
+        const tag2 = state.mount.querySelector('#b-save');
+        if (tag2) tag2.textContent = 'save failed: ' + e.message;
     }
 }
 
@@ -287,31 +299,40 @@ function clearTimers() {
     refreshTimers = [];
 }
 
-function tickEvery(secs, fn) {
-    fn();
-    refreshTimers.push(setInterval(fn, secs * 1000));
+function tickEvery(secs, fn, tok) {
+    const wrapped = async () => {
+        if (tok != null && !viewIsCurrent(tok)) return;
+        await fn();
+    };
+    wrapped();
+    const handle = setInterval(() => {
+        if (tok != null && !viewIsCurrent(tok)) { clearInterval(handle); return; }
+        wrapped();
+    }, secs * 1000);
+    refreshTimers.push(handle);
 }
 
-function mountWidget(body, w) {
+function mountWidget(body, w, tok) {
     body.innerHTML = '<div class="muted small">loading…</div>';
     switch (w.kind) {
-        case 'quote':       return mountQuote(body, w);
-        case 'mini_chart':  return mountMiniChart(body, w);
-        case 'breadth':     return mountBreadth(body);
-        case 'vix':         return mountVix(body);
-        case 'watchlist':   return mountWatchlist(body, w);
-        case 'alerts':      return mountAlerts(body, w);
-        case 'fear_greed':  return mountFearGreed(body);
-        case 'news':        return mountNews(body, w);
+        case 'quote':       return mountQuote(body, w, tok);
+        case 'mini_chart':  return mountMiniChart(body, w, tok);
+        case 'breadth':     return mountBreadth(body, tok);
+        case 'vix':         return mountVix(body, tok);
+        case 'watchlist':   return mountWatchlist(body, w, tok);
+        case 'alerts':      return mountAlerts(body, w, tok);
+        case 'fear_greed':  return mountFearGreed(body, tok);
+        case 'news':        return mountNews(body, w, tok);
         case 'note':        return mountNote(body, w);
         default:            body.innerHTML = `<p class="muted small">unknown widget: ${esc(w.kind)}</p>`;
     }
 }
 
-async function mountQuote(body, w) {
+async function mountQuote(body, w, tok) {
     tickEvery(60, async () => {
         try {
             const q = await api.quote(w.params.symbol);
+            if (!viewIsCurrent(tok)) return;
             const ch = q.change_pct;
             const cls = ch == null ? '' : ch >= 0 ? 'pos' : 'neg';
             body.innerHTML = `
@@ -319,16 +340,17 @@ async function mountQuote(body, w) {
                 <div style="font-size:24px;font-weight:700;">${fmt(q.price, q.price < 10 ? 4 : 2)}</div>
                 <div class="small ${cls}">${ch == null ? '—' : (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%'}</div>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountMiniChart(body, w) {
+async function mountMiniChart(body, w, tok) {
     tickEvery(120, async () => {
         try {
             const to = Math.floor(Date.now() / 1000);
             const from = to - 30 * 86400;
             const resp = await api.bars(w.params.symbol, '1d', from, to);
+            if (!viewIsCurrent(tok)) return;
             const bars = resp.bars || [];
             if (!bars.length) { body.innerHTML = '<p class="muted small">no bars</p>'; return; }
             const closes = bars.map(b => Number(b.close));
@@ -347,28 +369,30 @@ async function mountMiniChart(body, w) {
                 </svg>
                 <div class="small">${fmt(last, last < 10 ? 4 : 2)}</div>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountBreadth(body) {
+async function mountBreadth(body, tok) {
     tickEvery(60, async () => {
         try {
             const s = await api.breadthSnapshot();
+            if (!viewIsCurrent(tok)) return;
             const cls = s.composite_score >= 30 ? 'pos' : s.composite_score <= -30 ? 'neg' : '';
             body.innerHTML = `
                 <div class="muted small">Composite</div>
                 <div style="font-size:22px;font-weight:700;" class="${cls}">${s.composite_score >= 0 ? '+' : ''}${s.composite_score}</div>
                 <div class="small ${cls}">${(s.regime || '').toUpperCase()}</div>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountVix(body) {
+async function mountVix(body, tok) {
     tickEvery(60, async () => {
         try {
             const q = await api.quote('^VIX');
+            if (!viewIsCurrent(tok)) return;
             const ch = q.change_pct;
             const cls = ch == null ? '' : ch >= 0 ? 'neg' : 'pos'; // VIX up = risk-off
             body.innerHTML = `
@@ -376,14 +400,15 @@ async function mountVix(body) {
                 <div style="font-size:22px;font-weight:700;">${fmt(q.price, 2)}</div>
                 <div class="small ${cls}">${ch == null ? '—' : (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%'}</div>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountFearGreed(body) {
+async function mountFearGreed(body, tok) {
     tickEvery(120, async () => {
         try {
             const r = await api.fearGreed();
+            if (!viewIsCurrent(tok)) return;
             const c = r.score <= 24 ? '#ff1f7a' :
                       r.score <= 44 ? '#ff7a1f' :
                       r.score <= 55 ? '#9aa0c8' :
@@ -393,20 +418,23 @@ async function mountFearGreed(body) {
                 <div style="font-size:22px;font-weight:700;color:${c};">${r.score}</div>
                 <div class="small" style="color:${c};">${esc(r.label)}</div>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountWatchlist(body, w) {
+async function mountWatchlist(body, w, tok) {
     tickEvery(90, async () => {
         try {
             const wls = await api.watchlists();
+            if (!viewIsCurrent(tok)) return;
             const def = wls.find(x => x.is_default) || wls[0];
             if (!def) { body.innerHTML = '<p class="muted small">no watchlist</p>'; return; }
             const syms = await api.watchlistSymbols(def.id);
+            if (!viewIsCurrent(tok)) return;
             const rows = (syms || []).slice(0, w.params.limit || 10)
                                      .map(r => typeof r === 'string' ? r : r.symbol);
             const quotes = await Promise.all(rows.map(s => api.quote(s).catch(() => null)));
+            if (!viewIsCurrent(tok)) return;
             body.innerHTML = `
                 <table class="trades" style="font-size:11px;">
                     <thead><tr><th>Sym</th><th>Last</th><th>%</th></tr></thead>
@@ -425,14 +453,15 @@ async function mountWatchlist(body, w) {
                     </tbody>
                 </table>
             `;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountAlerts(body, w) {
+async function mountAlerts(body, w, tok) {
     tickEvery(60, async () => {
         try {
             const rules = await api.alerts().catch(() => []);
+            if (!viewIsCurrent(tok)) return;
             const rows = rules.slice(0, w.params.limit || 10);
             if (!rows.length) { body.innerHTML = '<p class="muted small">no alert rules</p>'; return; }
             body.innerHTML = `<table class="trades" style="font-size:11px;">
@@ -445,14 +474,15 @@ async function mountAlerts(body, w) {
                     <td>${r.fire_count ?? 0}</td>
                 </tr>`).join('')}
                 </tbody></table>`;
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
-async function mountNews(body, w) {
+async function mountNews(body, w, tok) {
     tickEvery(120, async () => {
         try {
             const items = await api.newsBySymbol(w.params.symbol, w.params.limit || 6);
+            if (!viewIsCurrent(tok)) return;
             if (!items.length) {
                 body.innerHTML = `<p class="muted small">No cached news for ${esc(w.params.symbol)} — hit Poll now on the News tab to seed.</p>`;
                 return;
@@ -470,8 +500,8 @@ async function mountNews(body, w) {
                     <span class="muted small" style="margin-left:6px;white-space:nowrap;">${esc(relTime(when))}</span>
                 </div>`;
             }).join('');
-        } catch (e) { body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
-    });
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }
 
 function relTime(iso) {

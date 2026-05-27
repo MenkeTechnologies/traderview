@@ -3,8 +3,10 @@
 // arrive as blobs, then we trigger a synthetic <a download> click.
 import { apiFetchBlob } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderExports(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) {
         mount.innerHTML = `<p class="boot">No account selected. Create one on the Accounts tab first.</p>`;
@@ -88,14 +90,16 @@ export async function renderExports(mount, state) {
                 if (action === 'csv') {
                     await downloadBlob(btn.dataset.path, btn.dataset.name);
                 } else if (action === 'tax-csv') {
-                    const f = document.getElementById('tx-export-form');
+                    const f = mount.querySelector('#tx-export-form');
+                    if (!f) return;
                     const year = f.year.value, method = f.method.value;
                     const which = btn.dataset.which;
                     const path = `/export/tax-lots/${acct.id}/${which}.csv?year=${year}&method=${method}`;
                     const name = `tax-${which}-${year}-${acct.id}.csv`;
                     await downloadBlob(path, name);
                 } else if (action === 'tax-pkg') {
-                    const f = document.getElementById('tx-export-form');
+                    const f = mount.querySelector('#tx-export-form');
+                    if (!f) return;
                     const year = f.year.value, method = f.method.value;
                     const path = `/export/tax-package/${acct.id}.html?year=${year}&method=${method}`;
                     await openBlobInNewTab(path);
@@ -103,8 +107,10 @@ export async function renderExports(mount, state) {
             } catch (e) {
                 alert(e.message);
             } finally {
-                btn.textContent = orig;
-                btn.disabled = false;
+                if (viewIsCurrent(tok)) {
+                    btn.textContent = orig;
+                    btn.disabled = false;
+                }
             }
         });
     });

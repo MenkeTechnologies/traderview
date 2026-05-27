@@ -3,11 +3,12 @@
 
 import { api, ApiError } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { go } from '../app.js';
+import { go, currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 
 export async function renderLivePositions(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) {
         mount.innerHTML = `<p class="boot">No account selected.</p>`;
@@ -24,31 +25,40 @@ export async function renderLivePositions(mount, state) {
         <p class="muted small" id="lp-status"></p>
     `;
     if (timer) clearInterval(timer);
-    timer = setInterval(() => refresh(acct.id), 30_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(acct.id, mount, tok);
+    }, 30_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#live')) {
             clearInterval(timer); timer = null;
         }
     }, { once: true });
-    await refresh(acct.id);
+    await refresh(acct.id, mount, tok);
 }
 
-async function refresh(accountId) {
+async function refresh(accountId, mount, tok) {
     try {
         const r = await api.livePositions(accountId);
-        renderCards(r);
-        renderTable(r);
-        document.getElementById('lp-status').textContent =
+        if (!viewIsCurrent(tok)) return;
+        renderCards(r, mount);
+        renderTable(r, mount);
+        const st = mount.querySelector('#lp-status');
+        if (st) st.textContent =
             `Updated ${new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false })} · ${r.position_count} positions`;
     } catch (e) {
         if (e instanceof ApiError && e.status === 401) return;
-        document.getElementById('lp-status').textContent = 'error: ' + e.message;
+        if (!viewIsCurrent(tok)) return;
+        const st = mount.querySelector('#lp-status');
+        if (st) st.textContent = 'error: ' + e.message;
     }
 }
 
-function renderCards(r) {
+function renderCards(r, mount) {
     const cls = (v) => v == null ? '' : v >= 0 ? 'pos' : 'neg';
-    document.getElementById('lp-cards').innerHTML = `
+    const el = mount.querySelector('#lp-cards');
+    if (!el) return;
+    el.innerHTML = `
         <div class="card"><div class="label">Open positions</div>
             <div class="value">${r.position_count}</div></div>
         <div class="card"><div class="label">Total notional</div>
@@ -64,9 +74,11 @@ function renderCards(r) {
     `;
 }
 
-function renderTable(r) {
+function renderTable(r, mount) {
+    const tbl = mount.querySelector('#lp-table');
+    if (!tbl) return;
     if (!r.positions.length) {
-        document.getElementById('lp-table').innerHTML =
+        tbl.innerHTML =
             '<div class="chart-panel"><p class="muted small">No open positions.</p></div>';
         return;
     }
@@ -93,7 +105,7 @@ function renderTable(r) {
             <td class="small muted">${esc((p.market_state || '').toLowerCase())}</td>
         </tr>`;
     };
-    document.getElementById('lp-table').innerHTML = `
+    tbl.innerHTML = `
         <div class="chart-panel">
             <table class="trades">
                 <thead><tr>

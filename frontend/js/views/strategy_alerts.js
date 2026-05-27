@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let wsUnsub = null;
 
@@ -31,6 +32,7 @@ const TEMPLATES = {
 };
 
 export async function renderStrategyAlerts(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// STRATEGY ALERTS</h1>
         <p class="muted small">Compound AND/OR/NOT rules over price + RSI/SMA/EMA + change-pct +
@@ -66,64 +68,77 @@ export async function renderStrategyAlerts(mount) {
             <div id="sa-fires"></div>
         </div>
     `;
-    document.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
+    mount.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
         const t = e.target.value;
         if (t && TEMPLATES[t]) {
-            document.getElementById('sa-ast').value = JSON.stringify(TEMPLATES[t], null, 2);
+            const ast = mount.querySelector('#sa-ast');
+            if (ast) ast.value = JSON.stringify(TEMPLATES[t], null, 2);
         }
     });
-    document.getElementById('sa-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#sa-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         let ast;
-        try { ast = JSON.parse(document.getElementById('sa-ast').value); }
+        try { ast = JSON.parse(mount.querySelector('#sa-ast').value); }
         catch (err) { alert('AST JSON invalid: ' + err.message); return; }
         try {
             await api.createStrategyAlert({
                 name: fd.get('name').trim(),
                 enabled: true, ast, webhook_ids: [],
             });
-            document.getElementById('sa-ast').value = '';
+            if (!viewIsCurrent(tok)) return;
+            const astEl = mount.querySelector('#sa-ast');
+            if (astEl) astEl.value = '';
             e.target.reset();
-            await refresh();
+            await refresh(mount, tok);
         } catch (err) { alert(err.message); }
     });
-    document.getElementById('sa-eval-now').addEventListener('click', async () => {
-        const status = document.getElementById('sa-status');
-        status.textContent = 'evaluating…';
+    mount.querySelector('#sa-eval-now').addEventListener('click', async () => {
+        const status = mount.querySelector('#sa-status');
+        if (status) status.textContent = 'evaluating…';
         try {
             const r = await api.strategyAlertsEvaluateNow();
-            status.textContent = `${r.evaluated} evaluated · ${r.fired} fired · ${r.errors} errors`;
-            await refresh();
-        } catch (e) { status.textContent = 'error: ' + e.message; }
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#sa-status');
+            if (status2) status2.textContent = `${r.evaluated} evaluated · ${r.fired} fired · ${r.errors} errors`;
+            await refresh(mount, tok);
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#sa-status');
+            if (status2) status2.textContent = 'error: ' + e.message;
+        }
     });
 
     if (wsUnsub) wsUnsub();
-    wsUnsub = onWsEvent('alert_fired', () => refresh());
+    wsUnsub = onWsEvent('alert_fired', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#strategy-alerts')) {
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
     }, { once: true });
 
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const [rules, fires] = await Promise.all([
             api.listStrategyAlerts(),
             api.strategyAlertFires(),
         ]);
-        renderRules(rules);
-        renderFires(fires, rules);
+        if (!viewIsCurrent(tok)) return;
+        renderRules(rules, mount, tok);
+        renderFires(fires, rules, mount);
     } catch (e) {
-        document.getElementById('sa-list').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#sa-list');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderRules(rules) {
-    const el = document.getElementById('sa-list');
+function renderRules(rules, mount, tok) {
+    const el = mount.querySelector('#sa-list');
+    if (!el) return;
     if (!rules.length) { el.innerHTML = '<p class="muted small">No rules yet.</p>'; return; }
     el.innerHTML = `<table class="trades">
         <thead><tr>
@@ -150,25 +165,32 @@ function renderRules(rules) {
     el.querySelectorAll('.sa-del').forEach(b =>
         b.addEventListener('click', async () => {
             if (!confirm('Delete this rule?')) return;
-            try { await api.deleteStrategyAlert(b.dataset.id); await refresh(); }
+            try {
+                await api.deleteStrategyAlert(b.dataset.id);
+                if (!viewIsCurrent(tok)) return;
+                await refresh(mount, tok);
+            }
             catch (e) { alert(e.message); }
         }));
     el.querySelectorAll('.sa-toggle').forEach(b =>
         b.addEventListener('click', async () => {
             const row = (await api.listStrategyAlerts()).find(x => x.id === b.dataset.id);
+            if (!viewIsCurrent(tok)) return;
             if (!row) return;
             try {
                 await api.updateStrategyAlert(row.id, {
                     name: row.name, ast: row.ast,
                     enabled: !row.enabled, webhook_ids: row.webhook_ids,
                 });
-                await refresh();
+                if (!viewIsCurrent(tok)) return;
+                await refresh(mount, tok);
             } catch (e) { alert(e.message); }
         }));
 }
 
-function renderFires(fires, rules) {
-    const el = document.getElementById('sa-fires');
+function renderFires(fires, rules, mount) {
+    const el = mount.querySelector('#sa-fires');
+    if (!el) return;
     if (!fires.length) { el.innerHTML = '<p class="muted small">No fires yet.</p>'; return; }
     const nameOf = (id) => rules.find(r => r.id === id)?.name || id;
     el.innerHTML = `<table class="trades">

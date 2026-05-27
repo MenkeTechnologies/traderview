@@ -1,9 +1,12 @@
 // Outbound webhooks: Discord, Slack, generic HTTP.
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderWebhooks(mount) {
+    const tok = currentViewToken();
     const rows = await api.webhooks();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// WEBHOOKS</h1>
         <p class="muted small">Fan-out alerts to Discord, Slack, or any generic HTTP endpoint.
@@ -63,7 +66,7 @@ export async function renderWebhooks(mount) {
             </details>
         </div>
     `;
-    document.getElementById('wf').addEventListener('submit', async (e) => {
+    mount.querySelector('#wf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.createWebhook({
@@ -72,22 +75,26 @@ export async function renderWebhooks(mount) {
             url:  fd.get('url'),
             secret: fd.get('secret') || null,
         });
+        if (!viewIsCurrent(tok)) return;
         renderWebhooks(mount);
     });
-    document.querySelectorAll('[data-test]').forEach(b =>
+    mount.querySelectorAll('[data-test]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.testWebhook(b.dataset.test);
+            if (!viewIsCurrent(tok)) return;
             alert('Test fired — check your Discord/Slack/endpoint.');
             renderWebhooks(mount);
         }));
-    document.querySelectorAll('[data-tog]').forEach(b =>
+    mount.querySelectorAll('[data-tog]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.toggleWebhook(b.dataset.tog, b.dataset.en !== 'true');
+            if (!viewIsCurrent(tok)) return;
             renderWebhooks(mount);
         }));
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteWebhook(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderWebhooks(mount);
         }));
 }

@@ -5,7 +5,11 @@
 //! required (the v8 chart endpoint is public).
 
 use chrono::{DateTime, Utc};
+use futures_util::future::join_all;
+use once_cell::sync::Lazy;
 use serde::Serialize;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
 
 const USER_AGENT: &str =
     "Mozilla/5.0 (compatible; traderview/0.1; +https://github.com/MenkeTechnologies/traderview)";
@@ -63,15 +67,33 @@ const PINS: &[Pin] = &[
     Pin { symbol: "GC=F",     label: "Gold",      flag: "🥇", lat: 0.0, lng: 0.0, currency: "USD", is_index: false },
 ];
 
-/// Fetch the latest snapshot. Hits Yahoo's v8 chart endpoint for each pin in
-/// parallel — typical end-to-end latency ~1 second for ~16 symbols.
+// In-process snapshot cache. The world-map view polls this on every dashboard
+// load; without caching we paid ~1.2s on every visit to hit 16 Yahoo endpoints.
+// 60s freshness matches the on-disk quote cache used elsewhere.
+const CACHE_TTL: Duration = Duration::from_secs(60);
+static CACHE: Lazy<Mutex<Option<(Instant, MarketsSnapshot)>>> = Lazy::new(|| Mutex::new(None));
+
+/// Fetch the latest snapshot. Hits Yahoo's v8 chart endpoint for each pin
+/// concurrently. Result is cached in-process for 60s; subsequent calls within
+/// the window return the cached value immediately (sub-millisecond).
 pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
+    {
+        let cache = CACHE.lock().await;
+        if let Some((stored_at, snap)) = cache.as_ref() {
+            if stored_at.elapsed() < CACHE_TTL {
+                return Ok(snap.clone());
+            }
+        }
+    }
+
     let client = reqwest::Client::builder()
         .user_agent(USER_AGENT)
         .timeout(std::time::Duration::from_secs(8))
         .build()?;
-    let futs = PINS.iter().map(|p| fetch_one(&client, p));
-    let results = futures_collect(futs).await;
+    // Real concurrent fetch — prior version "popped and awaited" one at a
+    // time which was sequential despite the parallelism comment.
+    let results: Vec<Option<MarketTile>> =
+        join_all(PINS.iter().map(|p| fetch_one(&client, p))).await;
 
     let mut indices = Vec::new();
     let mut commodities = Vec::new();
@@ -86,28 +108,14 @@ pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
             commodities.push(r);
         }
     }
-    Ok(MarketsSnapshot {
+    let snap = MarketsSnapshot {
         indices,
         commodities,
         us_market_open,
         fetched_at: Utc::now(),
-    })
-}
-
-// Tiny vendored helper so we don't add the `futures` crate just for join_all.
-async fn futures_collect<I, F, T>(iter: I) -> Vec<T>
-where
-    I: IntoIterator<Item = F>,
-    F: std::future::Future<Output = T>,
-{
-    let mut tasks: Vec<F> = iter.into_iter().collect();
-    let mut out: Vec<T> = Vec::with_capacity(tasks.len());
-    while let Some(t) = tasks.pop() {
-        out.push(t.await);
-    }
-    // We pushed in reverse — re-reverse to preserve input order.
-    out.reverse();
-    out
+    };
+    *CACHE.lock().await = Some((Instant::now(), snap.clone()));
+    Ok(snap)
 }
 
 async fn fetch_one(client: &reqwest::Client, p: &Pin) -> Option<MarketTile> {

@@ -1,10 +1,11 @@
 // "New Trade" — one or more manual executions, posted to /executions.
 // Each insert triggers a server-side rollup so trades auto-form via FIFO.
 import { api } from '../api.js';
-import { go } from '../app.js';
+import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { fmt } from '../util.js';
 
 export async function renderNewTrade(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p class="boot">Create an account first (Accounts tab).</p>';
         return;
@@ -54,11 +55,11 @@ export async function renderNewTrade(mount, state) {
     // Default executed_at to now (local time).
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
-    document.querySelector('[name=executed_at]').value =
+    mount.querySelector('[name=executed_at]').value =
         `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T` +
         `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-    const form = document.getElementById('ex-form');
+    const form = mount.querySelector('#ex-form');
     const assetSelect = form.querySelector('[name=asset_class]');
     const optionFields = ['option_type', 'strike', 'expiration', 'multiplier'];
     const syncOption = () => {
@@ -91,10 +92,13 @@ export async function renderNewTrade(mount, state) {
         }
         try {
             await api.createExecution(body);
+            if (!viewIsCurrent(tok)) return;
             await refresh();
+            if (!viewIsCurrent(tok)) return;
             e.target.reset();
             // restore the executed_at default
-            document.querySelector('[name=executed_at]').value =
+            const ts = mount.querySelector('[name=executed_at]');
+            if (ts) ts.value =
                 `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T` +
                 `${pad(now.getHours())}:${pad(now.getMinutes())}`;
             syncOption();
@@ -103,7 +107,10 @@ export async function renderNewTrade(mount, state) {
 
     async function refresh() {
         const execs = (await api.executions(state.accountId)).slice(-20).reverse();
-        document.getElementById('recent-execs').innerHTML = execs.length ? `
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#recent-execs');
+        if (!el) return;
+        el.innerHTML = execs.length ? `
             <table class="trades">
                 <thead><tr><th>Time</th><th>Symbol</th><th>Side</th>
                     <th>Qty</th><th>Price</th><th>Fee</th></tr></thead>
@@ -115,7 +122,7 @@ export async function renderNewTrade(mount, state) {
             </table>
             <button class="primary" id="open-trades">View trades</button>
         ` : '<p class="muted">No executions yet on this account.</p>';
-        const btn = document.getElementById('open-trades');
+        const btn = mount.querySelector('#open-trades');
         if (btn) btn.addEventListener('click', () => go('trades'));
     }
     refresh();

@@ -1,8 +1,9 @@
 // World markets map — SVG silhouette + lat/lng-pinned index tiles + commodity
-// strip. Polls /api/markets/snapshot (60s server cache).
+// strip. Polls /api/markets/snapshot (in-process cache on server).
 
 import { api } from '../api.js';
 import { fmt, esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 // Simplified low-poly world continents in equirectangular projection.
 // Viewport is the rectangle: lng [-180,180], lat [85,-85].
@@ -49,6 +50,8 @@ const fmtPct = (n) => {
 };
 
 export async function renderWorldMarkets(mount) {
+    if (!mount) return;
+    const tok = currentViewToken();
     mount.innerHTML = `
         <div class="markets-panel">
             <div class="markets-header">
@@ -63,34 +66,44 @@ export async function renderWorldMarkets(mount) {
     `;
     try {
         const snap = await api.marketsSnapshot();
-        renderSnapshot(snap);
+        if (!viewIsCurrent(tok)) return;  // user navigated away mid-fetch
+        renderSnapshot(snap, mount);
     } catch (e) {
-        document.getElementById('world-map-wrap').innerHTML =
-            `<div class="boot">markets unavailable: ${esc(e.message)}</div>`;
+        if (!viewIsCurrent(tok)) return;
+        const wrap = mount.querySelector('#world-map-wrap');
+        if (wrap) {
+            wrap.innerHTML = `<div class="boot">markets unavailable: ${esc(e.message)}</div>`;
+        }
     }
 }
 
-function renderSnapshot(snap) {
-    const wrap = document.getElementById('world-map-wrap');
+function renderSnapshot(snap, mount) {
+    if (!mount) return;
+    const wrap = mount.querySelector('#world-map-wrap');
+    if (!wrap) return;
     wrap.innerHTML = renderSvg(snap.indices);
 
-    const status = document.getElementById('market-status');
-    status.className = 'market-status ' + (snap.us_market_open ? 'open' : 'closed');
-    status.innerHTML = snap.us_market_open
-        ? '🇺🇸 U.S. markets are <strong>open</strong>'
-        : '🇺🇸 U.S. markets are <strong>closed</strong>';
+    const status = mount.querySelector('#market-status');
+    if (status) {
+        status.className = 'market-status ' + (snap.us_market_open ? 'open' : 'closed');
+        status.innerHTML = snap.us_market_open
+            ? '🇺🇸 U.S. markets are <strong>open</strong>'
+            : '🇺🇸 U.S. markets are <strong>closed</strong>';
+    }
 
-    const strip = document.getElementById('commodities-strip');
-    strip.innerHTML = snap.commodities.map(c => `
-        <div class="commodity">
-            <div class="commodity-label">
-                <span class="flag">${c.flag}</span>
-                <span>${esc(c.label)}</span>
+    const strip = mount.querySelector('#commodities-strip');
+    if (strip) {
+        strip.innerHTML = snap.commodities.map(c => `
+            <div class="commodity">
+                <div class="commodity-label">
+                    <span class="flag">${c.flag}</span>
+                    <span>${esc(c.label)}</span>
+                </div>
+                <div class="commodity-price">${fmt(c.price, c.symbol.includes('USD') ? 2 : 4)}</div>
+                <div class="commodity-pct ${c.change_pct >= 0 ? 'pos' : 'neg'}">${fmtPct(c.change_pct)}</div>
             </div>
-            <div class="commodity-price">${fmt(c.price, c.symbol.includes('USD') ? 2 : 4)}</div>
-            <div class="commodity-pct ${c.change_pct >= 0 ? 'pos' : 'neg'}">${fmtPct(c.change_pct)}</div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 function renderSvg(pins) {

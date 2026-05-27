@@ -89,6 +89,25 @@ impl CatalystStore {
         if !self.seen.contains_key(&key) {
             self.seen.insert(key, c.clone());
             let _ = self.tx.send(c);
+            self.evict_if_full();
+        }
+    }
+
+    /// Cap the in-memory dedupe set so a multi-day session can't OOM the
+    /// process. EDGAR alone can fire tens of thousands of filings per day;
+    /// without an eviction policy this DashMap grows without bound.
+    fn evict_if_full(&self) {
+        const MAX_ENTRIES: usize = 10_000;
+        const EVICT_FRACTION: usize = 4;
+        if self.seen.len() <= MAX_ENTRIES { return; }
+        let drop_n = self.seen.len() / EVICT_FRACTION;
+        let mut by_age: Vec<(String, DateTime<Utc>)> = self.seen
+            .iter()
+            .map(|e| (e.key().clone(), e.value().fetched_at))
+            .collect();
+        by_age.sort_by_key(|(_, t)| *t);
+        for (key, _) in by_age.into_iter().take(drop_n) {
+            self.seen.remove(&key);
         }
     }
 }

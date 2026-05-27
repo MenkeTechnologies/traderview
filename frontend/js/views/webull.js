@@ -3,10 +3,13 @@
 
 import { api, wsUrl } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let ws = null;
+let viewTok = 0;
 
 export async function renderWebull(mount, _state) {
+    viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// WEBULL · LIVE BROKER
             <span class="status-dot" id="wb-status" title="connecting">●</span>
@@ -62,7 +65,7 @@ export async function renderWebull(mount, _state) {
         </div>
     `;
 
-    document.getElementById('wb-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#wb-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -73,50 +76,56 @@ export async function renderWebull(mount, _state) {
         };
         try {
             const r = await api.connectWebull(body);
+            if (!viewIsCurrent(viewTok)) return;
             alert(`Connected. has_creds=${r.has_creds}`);
-            document.getElementById('wb-creds-panel').open = false;
-            connectWs(mount);
+            const panel = mount.querySelector('#wb-creds-panel');
+            if (panel) panel.open = false;
+            connectWs(mount, viewTok);
         } catch (err) {
             alert('Connect failed: ' + err.message);
         }
     });
 
-    connectWs(mount);
+    connectWs(mount, viewTok);
 }
 
-function connectWs(mount) {
+function connectWs(mount, tok) {
     try { if (ws) ws.close(); } catch (_) {}
-    ws = new WebSocket(wsUrl('/api/ws/webull'));
-    const dot = document.getElementById('wb-status');
+    if (!viewIsCurrent(tok)) return;
+    const dot = mount.querySelector('#wb-status');
     if (!dot) return;
-    ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });
-    ws.addEventListener('error', () => { dot.style.color = 'var(--red)';        dot.title = 'error'; });
+    ws = new WebSocket(wsUrl('/api/ws/webull'));
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
     ws.addEventListener('close', () => {
+        if (!viewIsCurrent(tok)) return;
         dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
-        setTimeout(() => { if (document.body.contains(mount)) connectWs(mount); }, 4000);
+        setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {
+        if (!viewIsCurrent(tok)) return;
         try {
             const m = JSON.parse(e.data);
-            if (m.type === 'snapshot' && m.snap) render(m.snap);
+            if (m.type === 'snapshot' && m.snap) render(mount, m.snap);
         } catch (_) {}
     });
 }
 
-function render(snap) {
-    document.getElementById('wb-fetched').textContent =
-        snap.fetched_at ? `updated ${fmtDateTime(snap.fetched_at)}` : '';
+function render(mount, snap) {
+    const fetched = mount.querySelector('#wb-fetched');
+    if (fetched) fetched.textContent = snap.fetched_at ? `updated ${fmtDateTime(snap.fetched_at)}` : '';
     const a = snap.account;
     if (a) {
-        document.getElementById('wb-nl').textContent    = fmtMoney(a.net_liquidation);
-        document.getElementById('wb-cash').textContent  = fmtMoney(a.cash);
-        const dp = document.getElementById('wb-daypl');
-        dp.textContent = fmtMoney(a.day_pnl); dp.className = `value ${pnlClass(a.day_pnl)}`;
-        const tp = document.getElementById('wb-totpl');
-        tp.textContent = fmtMoney(a.total_pnl); tp.className = `value ${pnlClass(a.total_pnl)}`;
-        document.getElementById('wb-bp').textContent    = fmtMoney(a.buying_power);
+        const nl = mount.querySelector('#wb-nl');     if (nl) nl.textContent = fmtMoney(a.net_liquidation);
+        const cash = mount.querySelector('#wb-cash'); if (cash) cash.textContent = fmtMoney(a.cash);
+        const dp = mount.querySelector('#wb-daypl');
+        if (dp) { dp.textContent = fmtMoney(a.day_pnl); dp.className = `value ${pnlClass(a.day_pnl)}`; }
+        const tp = mount.querySelector('#wb-totpl');
+        if (tp) { tp.textContent = fmtMoney(a.total_pnl); tp.className = `value ${pnlClass(a.total_pnl)}`; }
+        const bp = mount.querySelector('#wb-bp');     if (bp) bp.textContent = fmtMoney(a.buying_power);
     }
-    const posBody = document.querySelector('#wb-pos tbody');
+    const posBody = mount.querySelector('#wb-pos tbody');
+    if (!posBody) return;
     if (snap.positions && snap.positions.length) {
         posBody.innerHTML = snap.positions.map(p => `
             <tr>
@@ -135,7 +144,8 @@ function render(snap) {
     } else {
         posBody.innerHTML = '<tr><td colspan="10" class="muted">no open positions</td></tr>';
     }
-    const ordBody = document.querySelector('#wb-orders tbody');
+    const ordBody = mount.querySelector('#wb-orders tbody');
+    if (!ordBody) return;
     if (snap.orders && snap.orders.length) {
         ordBody.innerHTML = snap.orders.map(o => `
             <tr>

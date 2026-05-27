@@ -1,8 +1,10 @@
 // Economic calendar — upcoming US macro releases grouped by day.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderEconomy(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// ECONOMIC CALENDAR</h1>
         <form id="ec-form" class="inline-form">
@@ -21,24 +23,32 @@ export async function renderEconomy(mount) {
         <div id="ec">loading…</div>
     `;
     const load = async () => {
-        const fd = new FormData(document.getElementById('ec-form'));
+        const form = mount.querySelector('#ec-form');
+        if (!form) return;
+        const fd = new FormData(form);
         const days = Number(fd.get('days') || 60);
         const imp = fd.get('importance');
-        document.getElementById('ec').innerHTML = '<div class="boot">loading…</div>';
+        const ecEl = mount.querySelector('#ec');
+        if (ecEl) ecEl.innerHTML = '<div class="boot">loading…</div>';
         try {
             const evs = await api.economyCalendar(days, imp);
-            renderEvents(evs);
+            if (!viewIsCurrent(tok)) return;
+            renderEvents(evs, mount);
         } catch (e) {
-            document.getElementById('ec').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const ecEl2 = mount.querySelector('#ec');
+            if (ecEl2) ecEl2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
         }
     };
-    document.getElementById('ec-form').addEventListener('submit', (e) => { e.preventDefault(); load(); });
+    mount.querySelector('#ec-form').addEventListener('submit', (e) => { e.preventDefault(); load(); });
     load();
 }
 
-function renderEvents(evs) {
+function renderEvents(evs, mount) {
+    const ecEl = mount.querySelector('#ec');
+    if (!ecEl) return;
     if (!evs.length) {
-        document.getElementById('ec').innerHTML = '<p class="muted">No events in horizon.</p>';
+        ecEl.innerHTML = '<p class="muted">No events in horizon.</p>';
         return;
     }
     // Group by day.
@@ -67,7 +77,7 @@ function renderEvents(evs) {
                         </tr>`).join('')}</tbody>
                 </table>
             </div>`).join('');
-    document.getElementById('ec').innerHTML = html;
+    ecEl.innerHTML = html;
 }
 
 function dayName(iso) {

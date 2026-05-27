@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderScreener(mount) {
+    const tok = currentViewToken();
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// SCREENER</h1>
         <p class="muted small">Runs technical signals across your watchlists, returns ranked hits. Score range -10..+10.</p>
@@ -33,18 +36,23 @@ export async function renderScreener(mount) {
 
         <div id="sc-result"></div>
     `;
-    document.getElementById('sc-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#sc-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const opts = {};
         for (const [k, v] of fd.entries()) if (v !== '') opts[k] = v;
-        const el = document.getElementById('sc-result');
+        const el = mount.querySelector('#sc-result');
+        if (!el) return;
         el.innerHTML = '<div class="boot">scanning…</div>';
         try {
             const r = await api.screenerRun(opts);
-            el.innerHTML = renderResult(r);
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#sc-result');
+            if (elNow) elNow.innerHTML = renderResult(r);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#sc-result');
+            if (elNow) elNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }

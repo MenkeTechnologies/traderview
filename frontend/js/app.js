@@ -81,6 +81,7 @@ import { renderCustomIndicators } from './views/custom_indicators.js';
 import { renderTradeCompare } from './views/trade_compare.js';
 import { renderCsvWizard } from './views/csv_wizard.js';
 import { renderAccountsOverview } from './views/accounts_overview.js';
+import { renderTutorial } from './views/tutorial.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -103,16 +104,18 @@ async function boot() {
     try {
         const me = await api.me();
         state.me = me;
-        document.getElementById('user-strip').textContent =
-            me.is_local ? 'local user' : (me.email || me.display_name || '');
+        const userStrip = document.getElementById('user-strip');
+        if (userStrip) {
+            userStrip.textContent = me.is_local ? 'local user' : (me.email || me.display_name || '');
+        }
         await loadAccounts();
         renderAccountStrip();
         await dispatch();
         hideAuthScreen();
-        // Boot background engines once authenticated.
+        // Boot background engines once authenticated. installHotkeyEngine
+        // already calls reloadHotkeys() internally — don't double-fetch.
         startAlertEngine();
         installHotkeyEngine();
-        reloadHotkeys();
         requestNotifPermission();
         startWs();
         wireWsStatusIndicator();
@@ -120,8 +123,8 @@ async function boot() {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
             showAuthScreen();
         } else {
-            document.getElementById('app').innerHTML =
-                `<p class="boot">Failed to connect: ${e.message}</p>`;
+            const appEl = document.getElementById('app');
+            if (appEl) appEl.innerHTML = `<p class="boot">Failed to connect: ${e.message}</p>`;
         }
     }
 }
@@ -133,6 +136,7 @@ async function loadAccounts() {
 
 function renderAccountStrip() {
     const strip = document.getElementById('account-strip');
+    if (!strip) return;
     if (state.accounts.length === 0) {
         strip.innerHTML = '<span class="muted">no account</span>';
         return;
@@ -141,7 +145,8 @@ function renderAccountStrip() {
         <option value="${a.id}" ${a.id === state.accountId ? 'selected' : ''}>${a.broker} · ${a.name}</option>
     `).join('');
     strip.innerHTML = `<select id="account-select" class="account-select">${options}</select>`;
-    document.getElementById('account-select').addEventListener('change', (e) => {
+    const sel = strip.querySelector('#account-select');
+    if (sel) sel.addEventListener('change', (e) => {
         state.accountId = e.target.value;
         dispatch();
     });
@@ -163,9 +168,19 @@ function bindTabs() {
 function bindLauncherShortcut() {
     document.addEventListener('keydown', (e) => {
         // Cmd-K / Ctrl-K opens the launcher with focus in the filter input.
+        // Skip when the user is editing text — otherwise Cmd-K while writing
+        // a journal note or a symbol filter would jump them out mid-keystroke.
+        const tag = (e.target && e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        if (e.target && e.target.isContentEditable) return;
         if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
             window.location.hash = 'launcher';
+        }
+        // "?" anywhere outside an input opens the tutorial.
+        if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+            e.preventDefault();
+            window.location.hash = 'tutorial';
         }
     });
 }
@@ -217,7 +232,22 @@ export function go(view, params = '') {
     window.location.hash = view + (params ? `/${params}` : '');
 }
 
+// View-token machinery. The #app element is reused across every view, so
+// `mount.isConnected` and `document.body.contains(mount)` are USELESS for
+// detecting navigation. Every dispatch bumps a counter; views capture the
+// counter at start and check `viewIsCurrent(tok)` after every await, in
+// WebSocket reconnect timeouts, and on setInterval ticks. If the user has
+// navigated away, the captured token no longer matches and the pending work
+// bails out instead of crashing into a stale DOM.
+let _viewToken = 0;
+export function currentViewToken() { return _viewToken; }
+export function viewIsCurrent(tok) { return _viewToken === tok; }
+
 export async function dispatch() {
+    // Invalidate every captured token from the previous view — pending awaits,
+    // queued WS reconnects, and setInterval ticks will see a stale token and
+    // skip the work that would otherwise reach into the wrong view's DOM.
+    _viewToken++;
     const hash = (window.location.hash || '#launcher').slice(1);
     const [view, ...rest] = hash.split('/');
     state.view = view;
@@ -310,6 +340,7 @@ export async function dispatch() {
             case 'shared':      await renderSharedTrade(mount, state, rest[0]); break;
             case 'accounts':    await renderAccounts(mount, state, () => { renderAccountStrip(); }); break;
             case 'settings':    await renderSettings(mount, state); break;
+            case 'tutorial':    await renderTutorial(mount, state); break;
             default:            mount.innerHTML = `<p class="boot">Unknown view: ${view}</p>`;
         }
     } catch (e) {

@@ -131,15 +131,16 @@ async fn fetch_quote_yahoo(symbol: &str) -> anyhow::Result<QuoteSnapshot> {
     })
 }
 
-/// Bulk quote — sequential (Yahoo throttles parallel fan-out hard).
+/// Bulk quote — concurrent fan-out. Yahoo handles ~16 parallel requests fine
+/// for the chart endpoint (markets snapshot does the same). The previous
+/// serial loop is what made `/api/premarket/snapshot` block for 150s.
 pub async fn quotes(pool: &PgPool, symbols: &[String]) -> Vec<QuoteSnapshot> {
-    let mut out = Vec::with_capacity(symbols.len());
-    for s in symbols {
-        if let Ok(q) = quote(pool, s).await {
-            out.push(q);
-        }
-    }
-    out
+    let futs = symbols.iter().map(|s| {
+        let pool = pool.clone();
+        let sym = s.clone();
+        async move { quote(&pool, &sym).await.ok() }
+    });
+    futures_util::future::join_all(futs).await.into_iter().flatten().collect()
 }
 
 #[derive(serde::Deserialize)]

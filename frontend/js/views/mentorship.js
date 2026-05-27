@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderMentorship(mount) {
+    const tok = currentViewToken();
     const [mentors, mentees] = await Promise.all([api.mentors(), api.mentees()]);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// MENTORSHIP</h1>
 
@@ -29,21 +32,24 @@ export async function renderMentorship(mount) {
         </div>
     `;
 
-    document.getElementById('mentor-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#mentor-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.mentorshipRequest(fd.get('mentor_id'), fd.get('scope'));
+        if (!viewIsCurrent(tok)) return;
         renderMentorship(mount);
     });
 
-    document.querySelectorAll('[data-accept]').forEach(b =>
+    mount.querySelectorAll('[data-accept]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.acceptMentorship(b.dataset.accept);
+            if (!viewIsCurrent(tok)) return;
             renderMentorship(mount);
         }));
-    document.querySelectorAll('[data-revoke]').forEach(b =>
+    mount.querySelectorAll('[data-revoke]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.revokeMentorship(b.dataset.revoke);
+            if (!viewIsCurrent(tok)) return;
             renderMentorship(mount);
         }));
 }

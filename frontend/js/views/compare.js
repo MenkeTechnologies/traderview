@@ -1,6 +1,7 @@
 // Stock comparison — side-by-side fundamentals + RS chart for 2-4 symbols.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
 
@@ -61,6 +62,7 @@ const ROWS = [
 ];
 
 export async function renderCompare(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// STOCK COMPARISON</h1>
         <p class="muted small">Side-by-side fundamentals + multi-horizon returns + 252-bar relative-strength
@@ -75,21 +77,26 @@ export async function renderCompare(mount) {
 
         <div id="cmp-out"><p class="muted small">Enter 2-4 tickers and run.</p></div>
     `;
-    document.getElementById('cmp-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#cmp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const syms = e.target.symbols.value.trim().toUpperCase();
-        const out = document.getElementById('cmp-out');
+        const out = mount.querySelector('#cmp-out');
+        if (!out) return;
         out.innerHTML = '<div class="boot">fetching…</div>';
         try {
             const r = await api.compare(syms);
-            renderReport(r, out);
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#cmp-out');
+            if (out2) renderReport(r, out2, mount);
         } catch (err) {
-            out.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#cmp-out');
+            if (out2) out2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
 
-function renderReport(r, out) {
+function renderReport(r, out, mount) {
     if (r.rows.length < 2) {
         out.innerHTML = `<p class="boot">Only ${r.rows.length} symbol(s) returned data — need at least 2.</p>`;
         return;
@@ -105,7 +112,7 @@ function renderReport(r, out) {
             <p class="muted small">Fetched ${new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
         </div>
     `;
-    renderRsSvg(r.rows);
+    renderRsSvg(r.rows, mount);
 }
 
 function renderTable(rows) {
@@ -159,10 +166,12 @@ function abbreviate(v) {
     return '$' + fmt(v);
 }
 
-function renderRsSvg(rows) {
+function renderRsSvg(rows, mount) {
     const series = rows.filter(r => r.normalized_closes && r.normalized_closes.length > 0);
+    const rsEl = mount.querySelector('#cmp-rs');
+    if (!rsEl) return;
     if (!series.length) {
-        document.getElementById('cmp-rs').innerHTML = '<p class="muted small">no cached bars for any symbol — populate the prices cache first.</p>';
+        rsEl.innerHTML = '<p class="muted small">no cached bars for any symbol — populate the prices cache first.</p>';
         return;
     }
     const w = 1000, h = 320, pad = 50;
@@ -184,7 +193,7 @@ function renderRsSvg(rows) {
         return `<g><rect x="${pad + 12 + i * 160}" y="${pad - 18}" width="10" height="10" fill="${COLORS[i]}"/>
             <text x="${pad + 26 + i * 160}" y="${pad - 9}" fill="#cfd2e8" font-size="12">${esc(r.symbol)} (${lastTxt})</text></g>`;
     }).join('');
-    document.getElementById('cmp-rs').innerHTML = `
+    rsEl.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;">
             <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>

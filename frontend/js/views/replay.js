@@ -3,14 +3,17 @@
 import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderReplay(mount, state, day) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p class="boot">No account.</p>';
         return;
     }
     if (!day) day = new Date().toISOString().slice(0, 10);
     const trades = await api.trades(state.accountId, { date_from: day, date_to: day, limit: 500 });
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// REPLAY ·
             <input type="date" id="day" value="${day}">
@@ -29,10 +32,11 @@ export async function renderReplay(mount, state, day) {
             </div>
         ` : '<p class="muted">No closed trades on this day.</p>'}
     `;
-    document.getElementById('day').addEventListener('change', (e) => {
+    const dayEl = mount.querySelector('#day');
+    if (dayEl) dayEl.addEventListener('change', (e) => {
         renderReplay(mount, state, e.target.value);
     });
-    const pick = document.getElementById('trade-pick');
+    const pick = mount.querySelector('#trade-pick');
     if (pick) {
         pick.addEventListener('change', () => loadTrade(pick.value));
         loadTrade(pick.value);
@@ -40,13 +44,17 @@ export async function renderReplay(mount, state, day) {
 
     async function loadTrade(id) {
         const trade = await api.trade(id);
+        if (!viewIsCurrent(tok)) return;
         const execs = await api.executionsForTrade(id);
+        if (!viewIsCurrent(tok)) return;
         const from = Math.floor(new Date(trade.opened_at).getTime() / 1000) - 1800;
         const to   = Math.floor((trade.closed_at ? new Date(trade.closed_at).getTime() : Date.now()) / 1000) + 1800;
         const span = to - from;
         const iv = span < 3600 ? '5m' : span < 86400 ? '15m' : '1d';
         const bars = await api.bars(trade.symbol, iv, from, to).catch(() => ({ bars: [] }));
-        document.getElementById('replay-title').textContent =
+        if (!viewIsCurrent(tok)) return;
+        const title = mount.querySelector('#replay-title');
+        if (title) title.textContent =
             `${trade.symbol} · ${trade.side} · entry ${fmt(trade.entry_avg)} · ` +
             (trade.exit_avg != null ? `exit ${fmt(trade.exit_avg)} · net $${fmt(trade.net_pnl)}` : 'open');
         const marks = execs.map(e => ({
@@ -54,8 +62,11 @@ export async function renderReplay(mount, state, day) {
             y: Number(e.price),
             side: e.side === 'buy' || e.side === 'cover' ? 'buy' : 'sell',
         }));
-        ohlcChart(document.getElementById('replay-chart'), bars.bars || [], marks, { height: 380 });
-        document.getElementById('replay-execs').innerHTML = `
+        const chart = mount.querySelector('#replay-chart');
+        if (chart) ohlcChart(chart, bars.bars || [], marks, { height: 380 });
+        const execsEl = mount.querySelector('#replay-execs');
+        if (!execsEl) return;
+        execsEl.innerHTML = `
             <table class="trades">
                 <thead><tr><th>Time</th><th>Side</th><th>Qty</th><th>Price</th><th>Fee</th></tr></thead>
                 <tbody>${execs.map(e => `

@@ -3,12 +3,15 @@
 
 import { api, wsUrl } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let ws = null;
 let voiceOn = true;
+let viewTok = 0;
 const halts = new Map(); // dedupe key → halt
 
 export async function renderHalts(mount, _state) {
+    viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// HALT SCANNER · LIVE
             <span class="status-dot" id="halt-status" title="connecting">●</span>
@@ -32,24 +35,27 @@ export async function renderHalts(mount, _state) {
             </table>
         </div>
     `;
-    document.getElementById('halt-voice').addEventListener('change', (e) => {
+    mount.querySelector('#halt-voice').addEventListener('change', (e) => {
         voiceOn = e.target.checked;
     });
-    connectWs(mount);
+    connectWs(mount, viewTok);
 }
 
-function connectWs(mount) {
+function connectWs(mount, tok) {
     try {
         if (ws) { try { ws.close(); } catch (_) {} ws = null; }
     } catch (_) {}
+    if (!viewIsCurrent(tok)) return;     // view changed before we got here
+    const dot = mount.querySelector('#halt-status');
+    if (!dot) return;                    // DOM gone — don't open an orphan WS
     halts.clear();
     ws = new WebSocket(wsUrl('/api/ws/halts'));
-    const dot = document.getElementById('halt-status');
-    ws.addEventListener('open',  () => { dot.style.color = 'var(--green)'; dot.title = 'connected'; });
-    ws.addEventListener('error', () => { dot.style.color = 'var(--red)';   dot.title = 'error'; });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
     ws.addEventListener('close', () => {
+        if (!viewIsCurrent(tok)) return;
         dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
-        setTimeout(() => { if (document.body.contains(mount)) connectWs(mount); }, 4000);
+        setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {
         try {

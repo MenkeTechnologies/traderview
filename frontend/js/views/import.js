@@ -1,7 +1,9 @@
 import { api } from '../api.js';
 import { fmt, fmtDateTime, esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderImportView(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p class="boot">Create an account first (Accounts tab).</p>';
         return;
@@ -10,6 +12,7 @@ export async function renderImportView(mount, state) {
         api.importSources(),
         api.importList(state.accountId),
     ]);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// IMPORT</h1>
         <div class="chart-panel">
@@ -43,8 +46,8 @@ export async function renderImportView(mount, state) {
         </div>
     `;
 
-    const drop = document.getElementById('drop');
-    const fileInput = document.getElementById('file');
+    const drop = mount.querySelector('#drop');
+    const fileInput = mount.querySelector('#file');
     drop.addEventListener('click', () => fileInput.click());
     drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
     drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
@@ -58,17 +61,21 @@ export async function renderImportView(mount, state) {
         drop.textContent = fileInput.files[0]?.name || '';
     });
 
-    document.getElementById('go').addEventListener('click', async () => {
+    mount.querySelector('#go').addEventListener('click', async () => {
         const f = fileInput.files[0];
         if (!f) { alert('pick a file'); return; }
-        const src = document.getElementById('source').value;
+        const src = mount.querySelector('#source').value;
         try {
             const r = await api.upload(state.accountId, src, f);
-            document.getElementById('import-result').textContent =
+            if (!viewIsCurrent(tok)) return;
+            const out = mount.querySelector('#import-result');
+            if (out) out.textContent =
                 `parsed=${r.parsed} inserted=${r.inserted} duplicates=${r.duplicates} trades=${r.trades_rolled}`;
             renderImportView(mount, state);
         } catch (e) {
-            document.getElementById('import-result').textContent = 'Error: ' + e.message;
+            if (!viewIsCurrent(tok)) return;
+            const out = mount.querySelector('#import-result');
+            if (out) out.textContent = 'Error: ' + e.message;
         }
         void fmt;
     });

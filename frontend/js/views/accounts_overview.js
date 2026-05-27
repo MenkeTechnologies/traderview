@@ -2,8 +2,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderAccountsOverview(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// ACCOUNTS OVERVIEW</h1>
         <p class="muted small">Side-by-side snapshot of every account you own. P/L windows
@@ -15,16 +17,21 @@ export async function renderAccountsOverview(mount) {
     `;
     try {
         const r = await api.accountsOverview();
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('ao-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const out = mount.querySelector('#ao-out');
+        if (out) out.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function render(r) {
+function render(r, mount) {
     const cls = (v) => v == null ? '' : v >= 0 ? 'pos' : 'neg';
     const g = r.grand_total;
-    document.getElementById('ao-out').innerHTML = `
+    const out = mount.querySelector('#ao-out');
+    if (!out) return;
+    out.innerHTML = `
         <div class="cards">
             <div class="card"><div class="label">Accounts</div>
                 <div class="value">${g.accounts}</div></div>

@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -15,8 +16,10 @@ const pct1 = (n) => n == null ? '—' : (n * 100).toFixed(2) + '%';
 const pctSigned = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
 
 export async function renderShortInterest(mount, _state, sym) {
-    if (sym) return renderSymbol(mount, sym.toUpperCase());
+    const tok = currentViewToken();
+    if (sym) return renderSymbol(mount, sym.toUpperCase(), tok);
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// SHORT INTEREST</h1>
         <p class="muted small">Yahoo defaultKeyStatistics for shares short / float % / days-to-cover,
@@ -41,22 +44,27 @@ export async function renderShortInterest(mount, _state, sym) {
             <div id="ranked"></div>
         </div>
     `;
-    document.getElementById('sf').addEventListener('submit', (e) => {
+    mount.querySelector('#sf').addEventListener('submit', (e) => {
         e.preventDefault();
         const s = new FormData(e.target).get('sym').trim().toUpperCase();
         if (s) window.location.hash = `short-interest/${encodeURIComponent(s)}`;
     });
-    document.getElementById('rf').addEventListener('submit', async (e) => {
+    mount.querySelector('#rf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const wid = fd.get('wl') || null;
-        const el = document.getElementById('ranked');
+        const el = mount.querySelector('#ranked');
+        if (!el) return;
         el.innerHTML = '<div class="boot">fetching…</div>';
         try {
             const rows = await api.shortRanked(wid);
-            renderRanked(el, rows);
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#ranked');
+            if (elNow) renderRanked(elNow, rows);
         } catch (err) {
-            el.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const elNow = mount.querySelector('#ranked');
+            if (elNow) elNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }
@@ -80,7 +88,7 @@ function renderRanked(el, rows) {
             </tr>`).join('')}</tbody></table>`;
 }
 
-async function renderSymbol(mount, sym) {
+async function renderSymbol(mount, sym, tok) {
     mount.innerHTML = `
         <h1 class="view-title">// SHORT INTEREST · ${esc(sym)}
             <a class="link small" href="#short-interest">← back</a>
@@ -100,8 +108,11 @@ async function renderSymbol(mount, sym) {
             api.shortSymbol(sym),
             api.shortFinra(sym, 30).catch(() => []),
         ]);
+        if (!viewIsCurrent(tok)) return;
         const changeCls = (s.change_pct ?? 0) >= 0 ? 'neg' : 'pos';
-        document.getElementById('ss-cards').innerHTML = `
+        const cardsEl = mount.querySelector('#ss-cards');
+        if (!cardsEl) return;
+        cardsEl.innerHTML = `
             <div class="card"><div class="label">Shares short</div><div class="value">${compact(s.shares_short)}</div></div>
             <div class="card"><div class="label">Prior month</div><div class="value">${compact(s.shares_short_prior)}</div></div>
             <div class="card"><div class="label">Δ vs prior</div>
@@ -114,13 +125,17 @@ async function renderSymbol(mount, sym) {
         const labels = days.map(d => d.date);
         const vols   = days.map(d => Number(d.short_volume));
         const pcts   = days.map(d => Number(d.short_pct));
+        const volEl = mount.querySelector('#finra-vol');
+        const pctEl = mount.querySelector('#finra-pct');
         if (days.length) {
-            barChart(document.getElementById('finra-vol'), labels, vols, { color: '#ff2a6d' });
-            barChart(document.getElementById('finra-pct'), labels, pcts, { color: '#b86bff' });
-        } else {
-            document.getElementById('finra-vol').innerHTML = '<p class="muted">No FINRA data — file may be embargoed or pending.</p>';
+            if (volEl) barChart(volEl, labels, vols, { color: '#ff2a6d' });
+            if (pctEl) barChart(pctEl, labels, pcts, { color: '#b86bff' });
+        } else if (volEl) {
+            volEl.innerHTML = '<p class="muted">No FINRA data — file may be embargoed or pending.</p>';
         }
     } catch (e) {
-        document.getElementById('ss-cards').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const cardsEl = mount.querySelector('#ss-cards');
+        if (cardsEl) cardsEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

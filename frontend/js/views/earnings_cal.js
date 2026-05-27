@@ -1,10 +1,12 @@
 // Earnings calendar + surprise leaderboard.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 export async function renderEarningsCal(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// EARNINGS CALENDAR</h1>
         <p class="muted small">Polls Yahoo's <code>quoteSummary</code> earnings module every 6h
@@ -36,24 +38,31 @@ export async function renderEarningsCal(mount) {
             <div id="e-surp"></div>
         </div>
     `;
-    document.getElementById('e-form').addEventListener('submit', (e) => {
+    mount.querySelector('#e-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        refresh();
+        refresh(mount, tok);
     });
-    document.getElementById('e-poll').addEventListener('click', async () => {
-        const status = document.getElementById('e-status');
-        status.textContent = 'polling…';
+    mount.querySelector('#e-poll').addEventListener('click', async () => {
+        const status = mount.querySelector('#e-status');
+        if (status) status.textContent = 'polling…';
         try {
             const s = await api.earningsPollNow();
-            status.textContent = `${s.symbols_polled} symbols · ${s.events_upserted} events · ${s.reactions_computed} reactions`;
-            await refresh();
-        } catch (err) { status.textContent = 'error: ' + err.message; }
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#e-status');
+            if (status2) status2.textContent = `${s.symbols_polled} symbols · ${s.events_upserted} events · ${s.reactions_computed} reactions`;
+            await refresh(mount, tok);
+        } catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#e-status');
+            if (status2) status2.textContent = 'error: ' + err.message;
+        }
     });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
-    const form = document.getElementById('e-form');
+async function refresh(mount, tok) {
+    const form = mount.querySelector('#e-form');
+    if (!form) return;
     const days = Number(form.days.value) || 7;
     const back = Number(form.back.value) || 30;
     try {
@@ -61,15 +70,19 @@ async function refresh() {
             api.earningsCalendar(days),
             api.earningsSurprises(back),
         ]);
-        renderCalendarMatrix(upcoming, days);
-        renderSurpriseTable(surprises);
+        if (!viewIsCurrent(tok)) return;
+        renderCalendarMatrix(upcoming, days, mount);
+        renderSurpriseTable(surprises, mount);
     } catch (e) {
-        document.getElementById('e-cal').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#e-cal');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderCalendarMatrix(events, days) {
-    const el = document.getElementById('e-cal');
+function renderCalendarMatrix(events, days, mount) {
+    const el = mount.querySelector('#e-cal');
+    if (!el) return;
     if (!events.length) {
         el.innerHTML = `<p class="muted small">No upcoming earnings in the next ${days} days. Hit "Poll now" to seed from Yahoo.</p>`;
         return;
@@ -108,8 +121,9 @@ function renderCalendarMatrix(events, days) {
     `;
 }
 
-function renderSurpriseTable(events) {
-    const el = document.getElementById('e-surp');
+function renderSurpriseTable(events, mount) {
+    const el = mount.querySelector('#e-surp');
+    if (!el) return;
     if (!events.length) {
         el.innerHTML = '<p class="muted small">No surprise data yet.</p>';
         return;

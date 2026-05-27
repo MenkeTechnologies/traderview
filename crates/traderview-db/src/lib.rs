@@ -78,8 +78,13 @@ use std::time::Duration;
 
 pub async fn connect_external(database_url: &str) -> anyhow::Result<PgPool> {
     let pool = PgPoolOptions::new()
-        .max_connections(16)
-        .acquire_timeout(Duration::from_secs(10))
+        .max_connections(32)
+        // Keep a warm baseline so cold-start fan-out (config + auth/me +
+        // accounts + alerts + hotkeys + snapshot all firing in parallel on
+        // first paint) doesn't hit acquire_timeout while sqlx negotiates new
+        // connections.
+        .min_connections(4)
+        .acquire_timeout(Duration::from_secs(15))
         .connect(database_url)
         .await?;
     Ok(pool)

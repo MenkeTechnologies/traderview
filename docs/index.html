@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview — TraderVue-style trading journal. One Rust workspace, two deploy targets: Tauri v2 desktop with embedded Postgres, and axum web server with external Postgres + JWT. Shared traderview-{core,db,import} crates. Vanilla JS + uPlot frontend. Webull importer first.">
+  <meta name="description" content="traderview — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri v2 shell. Embedded Postgres bootstrap, axum router, vanilla JS + uPlot. 86-tile launcher across 82 view modules, 304 axum routes, 67 tables, 29 migrations. Webull + Lightspeed import, Finnhub WS scanner, Nasdaq halts + SEC EDGAR + PR-wire catalyst radar.">
   <title>TraderView — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,8 +167,8 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/traderview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
-          <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · Webull importer first · MIT</p>
-          <p class="docs-build-line"><span id="tvLoc">1,257 Rust LOC · 5 crates · 18 .rs files · 9 tables · 10 routes · 5 frontend views</span></p>
+          <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 12 broker importers · 86-tile launcher · MIT</p>
+          <p class="docs-build-line"><span id="tvLoc">30,075 Rust LOC · 6 library crates + Tauri shell · 67 tables · 29 migrations · 304 axum routes · 82 view modules · 86 launcher tiles · 15,042 JS LOC · 1,937 CSS LOC</span></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -188,8 +188,8 @@
     </div>
 
     <main class="tutorial-main">
-      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — DESKTOP &amp; WEB FROM ONE WORKSPACE</h2>
-      <p class="tutorial-subtitle"><strong>Two binaries, one crate graph.</strong> A Tauri v2 desktop app that downloads and runs an embedded PostgreSQL on first launch and auto-logs in a local user — and an axum web server that talks to an external Postgres with argon2 + JWT auth for multi-user deployment. Both binaries depend on the same <code>traderview-{core,db,import}</code> library crates; the vanilla JS + uPlot frontend is shared verbatim. Executions are the atom; trades are FIFO-derived; the journal is markdown.</p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — FULL DESKTOP TRADING SUITE</h2>
+      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share six library crates and the vanilla JS + uPlot frontend. 82 view modules across an 86-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
 
       <section class="tutorial-section">
         <h2>Quickstart</h2>
@@ -255,101 +255,175 @@ cargo run -p traderview-web --bin server
         <h2>Crate Graph</h2>
         <table class="tv-table">
           <thead>
-            <tr><th>Crate</th><th>Lines</th><th>Files</th><th>Purpose</th></tr>
+            <tr><th>Crate</th><th>Lines</th><th>Purpose</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>traderview-core</code></td><td>265</td><td>4</td><td><code>models.rs</code> — User / Account / Execution / Trade. <code>rollup.rs</code> — FIFO matcher. <code>stats.rs</code> — wins / losses / expectancy / win-rate / equity curve.</td></tr>
-            <tr><td><code>traderview-db</code></td><td>268</td><td>3</td><td><code>repo.rs</code> — sqlx query layer. <code>embedded.rs</code> — <code>postgresql_embedded</code> wrapper. <code>lib.rs</code> — pool factory + migration runner.</td></tr>
-            <tr><td><code>traderview-import</code></td><td>73</td><td>2</td><td><code>webull.rs</code> — Webull <em>Account Statement → Orders</em> CSV parser. <code>lib.rs</code> — trait + dedupe key + dispatcher for future brokers.</td></tr>
-            <tr><td><code>traderview-web</code></td><td>503</td><td>6</td><td><code>routes.rs</code> — 10 axum routes. <code>auth.rs</code> — argon2 + JWT. <code>error.rs</code> — typed error → HTTP. <code>state.rs</code> — AppState. <code>bin/server.rs</code> — main.</td></tr>
-            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>148</td><td>3</td><td><code>lib.rs</code> — embedded-PG lifecycle, port-allocation, auto-login local user, mount axum on localhost. <code>main.rs</code> — entry point. <code>build.rs</code> — Tauri build script.</td></tr>
-            <tr class="total"><td><strong>Total</strong></td><td><strong>1,257</strong></td><td><strong>18</strong></td><td>Excluding the 3-line <code>build.rs</code> from headcount of source files.</td></tr>
+            <tr><td><code>traderview-core</code></td><td>5,286</td><td>Domain types (User / Account / Execution / Trade / Plan / Goal / Strategy), FIFO roll-up, statistics (win-rate / expectancy / R-multiple / SQN / Sharpe / Sortino), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom indicator AST.</td></tr>
+            <tr><td><code>traderview-db</code></td><td>12,758</td><td>sqlx pool factory + 29 embedded migrations, embedded PostgreSQL lifecycle (stale-PID lock cleanup, persisted password file), 50+ repo modules covering everything from <code>trades</code> &amp; <code>journal</code> to live <code>halts</code> &amp; <code>catalysts</code> &amp; <code>live_ticks</code> stores. Background pollers for Yahoo / FINRA / EDGAR / nasdaqtrader / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. In-process LRU caches with eviction.</td></tr>
+            <tr><td><code>traderview-import</code></td><td>1,005</td><td>12 broker CSV parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, Generic. Common <code>Parser</code> trait + column-mapping wizard for unknown sources. Asset classes: stocks, options, futures, forex.</td></tr>
+            <tr><td><code>traderview-web</code></td><td>8,380</td><td>axum 0.7 router — 304 routes split across ~70 route files. argon2 + JWT auth, multipart upload, WebSocket endpoints for halts / catalysts / live ticks / Webull. Custom request/response logging middleware (snippets bodies on 4xx/5xx). <code>client-errors</code> sink for browser-side reports.</td></tr>
+            <tr><td><code>traderview-expense</code></td><td>1,640</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
+            <tr><td><code>traderview-ocr</code></td><td>640</td><td>Receipt OCR via the system <code>tesseract</code> binary + image preprocessing (binarize, deskew). Extracts merchant / amount / date for the expense matcher.</td></tr>
+            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>366</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
+            <tr class="total"><td><strong>Total</strong></td><td><strong>30,075</strong></td><td>Plus 15,042 LOC vanilla JS (82 view modules) and 1,937 LOC CSS. No bundler, no npm.</td></tr>
           </tbody>
         </table>
       </section>
 
       <section class="tutorial-section">
-        <h2>Schema — One Migration, 9 Tables</h2>
-        <p>Single migration (<code>migrations/0001_initial.sql</code>, 149 LOC) defines the entire schema. Money is <code>NUMERIC(20, 8)</code> everywhere — no floats. Sides are typed enums.</p>
+        <h2>Schema — 67 Tables, 29 Migrations</h2>
+        <p>Migrations under <code>migrations/0001_initial.sql</code> through <code>0029_expenses.sql</code> — each one adds a self-contained feature. Money is <code>NUMERIC(20, 8)</code> everywhere. 67 base tables, 87 indexes, 17 PostgreSQL enum types. Grouped by domain:</p>
         <table class="tv-table">
           <thead>
-            <tr><th>Table</th><th>Purpose</th></tr>
+            <tr><th>Domain</th><th>Representative tables</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>users</code></td><td>Real users (web) or one auto-created <code>local</code> user (desktop). Email and <code>password_hash</code> are nullable to accommodate the desktop auto-user. Unique on <code>lower(email)</code> when non-null.</td></tr>
-            <tr><td><code>accounts</code></td><td>Broker accounts (<code>webull</code>, <code>ibkr</code>, <code>tos</code>, …). One user → many accounts. <code>base_currency</code> defaults to <code>USD</code>.</td></tr>
-            <tr><td><code>executions</code></td><td>One row per fill — the atom. Unique on <code>(account_id, broker_order_id, executed_at, symbol, side, qty, price)</code> when <code>broker_order_id</code> is non-null, so re-importing the same statement is idempotent.</td></tr>
-            <tr><td><code>trades</code></td><td>FIFO-derived from <code>executions</code>. Materialized for fast UI queries. Carries <code>status</code> (<code>open</code> / <code>closed</code>), <code>side</code> (<code>long</code> / <code>short</code>), entry/exit averages, gross P&amp;L, fees.</td></tr>
-            <tr><td><code>trade_executions</code></td><td>Many-to-many: which executions composed each trade. Lets you click a trade and see every fill that built the position.</td></tr>
-            <tr><td><code>trade_tags</code></td><td>Free-form tags per trade — <code>"scalp"</code>, <code>"earnings"</code>, <code>"momo"</code>, whatever the journal needs.</td></tr>
-            <tr><td><code>journal_entries</code></td><td>Markdown notes, either keyed to one trade (<code>trade_id</code>) or to a calendar day (<code>day</code>).</td></tr>
-            <tr><td><code>imports</code></td><td>Audit trail — every CSV upload, the broker, the row count, the file hash. Lets you re-parse the same source if the importer improves.</td></tr>
-            <tr><td><code>_sqlx_migrations</code></td><td>sqlx's own migration tracker.</td></tr>
+            <tr><td><strong>Identity &amp; accounts</strong></td><td><code>users</code>, <code>accounts</code>, <code>api_tokens</code>, <code>mentorships</code></td></tr>
+            <tr><td><strong>Execution &amp; trades</strong></td><td><code>executions</code>, <code>trades</code>, <code>trade_executions</code>, <code>trade_tags</code>, <code>tags</code>, <code>imports</code></td></tr>
+            <tr><td><strong>Journal</strong></td><td><code>journal_entries</code>, <code>note_templates</code>, <code>trade_reviews</code>, <code>chart_drawings</code>, <code>screenshots</code></td></tr>
+            <tr><td><strong>Plans, goals, discipline</strong></td><td><code>plans</code>, <code>trading_goals</code>, <code>goal_progress</code>, <code>discipline_violations</code></td></tr>
+            <tr><td><strong>Price data &amp; quotes</strong></td><td><code>bars</code>, <code>quote_snapshots</code>, <code>news_items</code>, <code>earnings_events</code>, <code>dividends</code></td></tr>
+            <tr><td><strong>Live feeds</strong></td><td><code>halts</code>, <code>catalysts</code>, <code>mentions</code> (sentiment), <code>tick_snapshots</code></td></tr>
+            <tr><td><strong>Watchlists &amp; screening</strong></td><td><code>watchlists</code>, <code>watchlist_symbols</code>, <code>filter_sets</code></td></tr>
+            <tr><td><strong>Alerts &amp; webhooks</strong></td><td><code>alerts</code>, <code>strategy_alerts</code>, <code>strategy_alert_fires</code>, <code>hotkeys</code>, <code>webhooks</code>, <code>webhook_deliveries</code>, <code>disclosures_watchers</code></td></tr>
+            <tr><td><strong>Backtest &amp; strategy</strong></td><td><code>backtest_runs</code>, <code>backtest_presets</code>, <code>walk_forward_runs</code>, <code>custom_indicators</code></td></tr>
+            <tr><td><strong>Paper trading</strong></td><td><code>paper_accounts</code>, <code>paper_orders</code>, <code>paper_positions</code></td></tr>
+            <tr><td><strong>Portfolio / risk</strong></td><td><code>rebalance_targets</code>, <code>rebalance_runs</code>, <code>tax_lots</code></td></tr>
+            <tr><td><strong>Disclosures</strong></td><td><code>disclosures</code> (Form 4, 13D/G, Senate/House STOCK Act)</td></tr>
+            <tr><td><strong>Community</strong></td><td><code>shares</code>, <code>shared_comments</code>, <code>forum_categories</code>, <code>forum_threads</code>, <code>forum_posts</code>, <code>boards</code>, <code>board_items</code></td></tr>
+            <tr><td><strong>Settings &amp; AI</strong></td><td><code>user_settings</code>, <code>ai_settings</code>, <code>ai_journal_cache</code>, <code>dashboards</code></td></tr>
+            <tr><td><strong>Expenses</strong></td><td><code>expense_accounts</code>, <code>expense_categories</code>, <code>expense_transactions</code>, <code>expense_rules</code>, <code>expense_receipts</code></td></tr>
           </tbody>
         </table>
-        <p><strong>Enum types:</strong> <code>side_t = (buy, sell, short, cover)</code> on executions; <code>trade_side_t = (long, short)</code> and <code>trade_status_t = (open, closed)</code> on trades.</p>
+        <p><strong>Enum types (17):</strong> sides (<code>side_t</code>, <code>trade_side_t</code>), statuses (<code>trade_status_t</code>, <code>order_status_t</code>, <code>review_status_t</code>), asset classes, alert triggers, sentiment sources, halt reason codes, etc. — see <code>migrations/0001_initial.sql</code> and feature-incremental migrations for the full set.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>HTTP API — 10 Routes Under <code>/api/</code></h2>
+        <h2>HTTP API — 304 Routes Under <code>/api/</code></h2>
+        <p>~70 route files in <code>crates/traderview-web/src/routes/</code>. Bearer-auth required on everything except <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code>. WebSocket endpoints expose live feeds. Grouped by domain (representative endpoints — see <code>frontend/js/api.js</code> for the full 96 method-bound bindings):</p>
         <table class="tv-table">
           <thead>
-            <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+            <tr><th>Group</th><th>Sample routes</th></tr>
           </thead>
           <tbody>
-            <tr><td class="method">GET</td>  <td class="path">/health</td>              <td>Liveness probe. No auth.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/config</td>              <td>Server config + auth mode (<code>local</code> for desktop, <code>multi</code> for web). Frontend reads this on boot to decide whether to show the login screen.</td></tr>
-            <tr><td class="method post">POST</td> <td class="path">/auth/register</td> <td>Create user. Web mode only — desktop refuses.</td></tr>
-            <tr><td class="method post">POST</td> <td class="path">/auth/login</td>    <td>Exchange <code>(email, password)</code> for a JWT bearer token. argon2 verify.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/auth/me</td>             <td>Current user from bearer token.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/accounts</td>            <td>List broker accounts for the authenticated user.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/trades</td>              <td>List trades. Filter by <code>symbol</code>, <code>status</code>, <code>opened_at</code> range.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/stats/summary</td>       <td>Summary stats — total trades, win rate, average win/loss, expectancy, profit factor.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/stats/equity</td>        <td>Equity curve points for uPlot. <code>[timestamp, cumulative_pnl]</code> rows.</td></tr>
-            <tr><td class="method">GET</td>  <td class="path">/journal/:day</td>        <td>Markdown journal entries for a calendar day.</td></tr>
+            <tr><td><strong>Auth + config</strong></td><td><code>GET /config</code>, <code>GET /auth/me</code>, <code>POST /auth/login</code>, <code>POST /auth/register</code></td></tr>
+            <tr><td><strong>Trades + executions</strong></td><td><code>GET/POST /trades</code>, <code>POST /trades/rollup</code>, <code>POST /trades/{id}/risk</code>, <code>POST /trades/merge</code>, <code>POST /trades/bulk</code>, <code>POST /trades/close-expired-options</code>, <code>POST /trades/{id}/split</code>, <code>GET/POST /executions</code></td></tr>
+            <tr><td><strong>Journal + AI + reviews</strong></td><td><code>GET /journal/day/{day}</code>, <code>GET /journal/trade/{id}</code>, <code>POST /journal-ai/{id}/analyze</code>, <code>GET /trade-reviews/needed/{acct}</code></td></tr>
+            <tr><td><strong>Reports (17 cuts)</strong></td><td><code>/reports/overview</code>, <code>/by-symbol</code>, <code>/by-day-of-week</code>, <code>/by-hour</code>, <code>/by-hold</code>, <code>/r-distribution</code>, <code>/comparison</code>, <code>/exit-efficiency</code>, <code>/liquidity</code>, <code>/drawdown</code>, <code>/risk-adjusted</code>, <code>/calendar</code></td></tr>
+            <tr><td><strong>Live streams (WS)</strong></td><td><code>WS /ws/halts</code>, <code>WS /ws/catalysts</code>, <code>WS /ws/ticks</code>, <code>WS /ws/webull</code></td></tr>
+            <tr><td><strong>Research per-symbol</strong></td><td><code>/symbols/{sym}/quote</code>, <code>/signals</code>, <code>/news</code>, <code>/earnings</code>, <code>/dividends</code>, <code>/recommendations</code>, <code>/insiders</code>, <code>/fundamentals</code>, <code>/holders</code></td></tr>
+            <tr><td><strong>Screener + scanners</strong></td><td><code>GET /screener/run</code>, <code>GET /screener/top</code>, <code>GET /scans/run</code> (24 presets)</td></tr>
+            <tr><td><strong>Options + vol</strong></td><td><code>/options/{sym}</code>, <code>/greeks</code>, <code>/vol-surface/{sym}</code>, <code>/iv/scan</code>, <code>/iv/symbols/{sym}</code></td></tr>
+            <tr><td><strong>Markets + breadth</strong></td><td><code>/markets/snapshot</code> (cached), <code>/premarket/snapshot</code>, <code>/breadth/snapshot</code>, <code>/fear-greed</code>, <code>/sector-rotation</code></td></tr>
+            <tr><td><strong>Backtest engine</strong></td><td><code>POST /backtest/run</code>, <code>POST /backtest/walk-forward</code>, <code>GET/POST /backtest-presets</code>, <code>POST /custom-indicators/eval/{sym}</code></td></tr>
+            <tr><td><strong>Paper trading</strong></td><td><code>POST /paper/accounts</code>, <code>GET /paper/accounts/{id}/positions</code>, <code>POST /paper/accounts/{id}/orders</code>, <code>POST /paper/accounts/{id}/reset</code></td></tr>
+            <tr><td><strong>Alerts + webhooks + hotkeys</strong></td><td><code>GET/POST /alerts</code>, <code>POST /alerts/{id}/toggle</code>, <code>GET/POST /strategy-alerts</code>, <code>GET /strategy-alerts/fires</code>, <code>GET/POST /hotkeys</code>, <code>GET/POST /webhooks</code>, <code>POST /webhooks/{id}/test</code></td></tr>
+            <tr><td><strong>Sentiment</strong></td><td><code>/sentiment/feed</code>, <code>/sentiment/ranked</code>, <code>/sentiment/symbol/{sym}</code>, <code>/sentiment/series/{sym}</code> (Reddit WSB + StockTwits)</td></tr>
+            <tr><td><strong>Crypto</strong></td><td><code>/crypto/markets</code>, <code>/crypto/global</code>, <code>/crypto/btc/chain</code></td></tr>
+            <tr><td><strong>Tax + reports</strong></td><td><code>/tax-lots/{acct}?year=&amp;method=FIFO|LIFO</code>, <code>/r-distribution/{acct}</code>, <code>/discipline/{acct}</code>, <code>/mood-analytics/{acct}</code>, <code>/equity-forecast</code>, <code>/fill-quality/{acct}</code></td></tr>
+            <tr><td><strong>Webull (read-only)</strong></td><td><code>POST /webull/connect</code> (tokens in memory only), <code>GET /webull/snapshot</code></td></tr>
+            <tr><td><strong>Expenses + OCR</strong></td><td><code>GET/POST /expense/transactions</code>, <code>POST /expense/import</code>, <code>POST /expense/receipts</code>, <code>POST /expense/receipts/{id}/attach</code>, <code>GET /expense/report/schedule_c?year=</code></td></tr>
+            <tr><td><strong>Community</strong></td><td><code>/shares</code>, <code>/shared/{slug}</code>, <code>/forum/threads</code>, <code>/forum/threads/{id}/posts</code>, <code>/mentorships</code>, <code>/boards</code></td></tr>
+            <tr><td><strong>Custom dashboards</strong></td><td><code>GET/POST /dashboards</code>, <code>GET /dashboards/{id}</code> — user-defined boards built from widgets</td></tr>
+            <tr><td><strong>Client error sink</strong></td><td><code>POST /client-errors</code> (no auth — browser-side <code>window.onerror</code> + <code>unhandledrejection</code> + console.error funnel)</td></tr>
           </tbody>
         </table>
-        <p>Desktop mode auto-logs in as the <code>local</code> user; the frontend talks to the embedded server on a random localhost port. Web mode requires <code>POST /api/auth/login</code> → returns JWT → sent as <code>Authorization: Bearer …</code> on subsequent calls.</p>
+        <p>Desktop mode binds to a random localhost port and auto-logs in as the <code>local</code> user. Web mode requires <code>POST /api/auth/login</code> → JWT → <code>Authorization: Bearer …</code>. A custom request/response logging middleware records every request with elapsed_ms; 4xx/5xx responses get a 4KB body snippet attached to the log entry for offline debugging.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>Frontend — Vanilla JS + uPlot, Five Views</h2>
-        <p>Zero npm. Zero bundler. Zero JS framework. <strong>384 lines of JS, 259 lines of CSS</strong>, no build step. The entire frontend ships as static files under <code>frontend/</code> and is served by axum's <code>tower-http</code> <code>fs</code> middleware in web mode or loaded directly from disk by Tauri in desktop mode.</p>
+        <h2>Frontend — Vanilla JS + uPlot, 82 Views, 86-Tile Launcher</h2>
+        <p>Zero npm. Zero bundler. Zero JS framework. <strong>15,042 LOC vanilla ES modules + 1,937 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
+        <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 86 tiles across 8 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
         <div class="tv-card-grid">
           <div class="tv-card">
-            <h4>Dashboard</h4>
-            <p><code>js/app.js</code>. Summary stats card (win rate / expectancy / profit factor / total P&amp;L) + equity curve drawn by <code>js/charts.js</code> using uPlot.</p>
+            <h4>⚡ Live Markets (6 tiles)</h4>
+            <p>Live Scanner (Finnhub WS, 6-panel), Halts (Nasdaq RSS + TTS), Catalysts (EDGAR + PR wires), Pre-market (futures + commodities + crypto + FX + econ events), Tape (time &amp; sales), Heatmap (sector / S&amp;P).</p>
           </div>
           <div class="tv-card accent">
-            <h4>Trades</h4>
-            <p><code>js/trades.js</code>. Filterable, sortable trade table. Filter by symbol, status, date range, tag. Click a trade to drill into its component executions.</p>
+            <h4>📊 Trading (7 tiles)</h4>
+            <p>Webull (read-only broker), Live Positions (open P/L), Paper Trade, New Trade, Pre-trade Plans, Position Size (Kelly + correlation-aware), Hotkeys editor.</p>
           </div>
           <div class="tv-card magenta">
-            <h4>Journal</h4>
-            <p><code>js/journal.js</code>. Per-day and per-trade markdown notes. Saved server-side in <code>journal_entries</code>; markdown is rendered client-side.</p>
+            <h4>📓 Journal (9 tiles)</h4>
+            <p>Journal (per-trade + daily + general), AI Journal (GPT post-mortem with cache), Trade Reviews (forced reflection on |R| ≥ 2), Trade Compare, Replay, Tape Replay, Discipline, Mood Analytics, Goals.</p>
           </div>
           <div class="tv-card green">
-            <h4>Import</h4>
-            <p><code>js/import.js</code>. Broker CSV upload, dedupe report, re-parse from <code>imports</code> table.</p>
+            <h4>🔎 Charts &amp; Research (25 tiles)</h4>
+            <p>Charts (OHLC + persisted drawings), Research, Watchlists, Screener, Scanners (24 presets), Top Signals, Compare, Pairs, Correlation, Sectors, Sector Rotation, Breadth, Fear/Greed, Sentiment, Dark Pool, Short Interest, Volatility, Vol Surface, Options Chain, Earnings Cal, Earnings IV, Disclosures, Economy, News, Crypto.</p>
           </div>
           <div class="tv-card">
-            <h4>Accounts</h4>
-            <p><code>js/auth.js</code>. List broker accounts, add / edit / remove. Auth screens (login / register) for web mode.</p>
+            <h4>📈 Reports (11 tiles)</h4>
+            <p>Dashboard (overview + equity + world map), Reports (17 cuts), R-Multiple, Equity Forecast (Monte Carlo), Fill Quality (slippage vs NBBO), Risk, Rebalance, Tax Lots, Expenses (with OCR), Calendar, Accounts Overview.</p>
+          </div>
+          <div class="tv-card accent">
+            <h4>🧷 Strategy &amp; Automation (7 tiles)</h4>
+            <p>Backtest (stryke-JIT), Backtest Presets, Walk-forward, Custom Indicators, Strategy Alerts (AND/OR/NOT), Alerts (price/threshold), Webhooks (Discord/Slack/generic).</p>
+          </div>
+          <div class="tv-card magenta">
+            <h4>💬 Community (4 tiles)</h4>
+            <p>Shares (public trade links), Community (forum), Mentorship, Boards (public/private symbol boards).</p>
+          </div>
+          <div class="tv-card green">
+            <h4>⚙️ Admin &amp; Data (9 tiles)</h4>
+            <p>Import (12 brokers), CSV Wizard, Exports (CSV/JSON/Schedule D), Accounts, Tags, Search (full-text), Settings, Developer (API tokens), Tutorial (<kbd>?</kbd> hotkey).</p>
           </div>
         </div>
-        <p><code>js/api.js</code> wraps <code>fetch</code> — it adds the JWT bearer header in web mode and a no-op header in desktop mode. uPlot is vendored under <code>frontend/lib/</code> by <code>./scripts/vendor-uplot.sh</code> — pinned, reproducible, no CDN at runtime.</p>
+        <p><strong>Race-safe view dispatch.</strong> <code>app.js</code> maintains a per-dispatch token (<code>currentViewToken()</code>) bumped on every navigation. Every view captures the token at render start and bails after each <code>await</code> if the token is stale — prevents the "<code>document.getElementById(...)</code> returns null after navigation" crash that hits naïve SPAs when slow async resolves into a replaced DOM.</p>
+        <p><code>js/api.js</code> wraps <code>fetch</code> with auth, error reporting, JSON parsing, and an <code>ApiError</code> class. <code>js/error_reporter.js</code> funnels <code>window.onerror</code>, <code>unhandledrejection</code>, and overridden <code>console.error</code> to <code>POST /api/client-errors</code>, queue-capped at 200 to survive a console-error loop. uPlot vendored under <code>frontend/lib/</code> — pinned, reproducible, no CDN at runtime.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>Importing — Webull First, Mapping Wizard Later</h2>
-        <p>Export Webull <em>Account Statement → Orders</em> as CSV. Drop the file into the Import view. The parser:</p>
+        <h2>Importing — 12 Brokers + Column-Mapping Wizard</h2>
+        <p>Built-in parsers (<code>crates/traderview-import/src/brokers.rs</code>):</p>
+        <ul>
+          <li><strong>Webull</strong> · <strong>Lightspeed</strong> · <strong>IBKR Flex</strong> · <strong>ThinkOrSwim</strong> · <strong>Schwab</strong> · <strong>Fidelity</strong> · <strong>ETrade</strong> · <strong>Robinhood</strong> · <strong>TradeStation</strong> · <strong>Tradier</strong> · <strong>Tastytrade</strong> · <strong>Generic</strong> (column-mapping wizard)</li>
+        </ul>
+        <p>Pipeline per upload:</p>
         <ol>
-          <li>Inserts the raw row into <code>imports</code> for audit trail.</li>
-          <li>Maps each row to an <code>execution</code> and inserts under the dedupe key <code>(account_id, broker_order_id, executed_at, symbol, side, qty, price)</code>.</li>
-          <li>Re-runs the FIFO roll-up for affected <code>(account_id, symbol)</code> pairs and updates <code>trades</code>.</li>
+          <li>Raw rows + file hash recorded in <code>imports</code> for audit / re-parse.</li>
+          <li>Each row maps to an <code>execution</code> and inserts under <code>(account_id, broker_order_id, executed_at, symbol, side, qty, price)</code> — dedupe-safe.</li>
+          <li>FIFO roll-up re-runs for affected <code>(account_id, symbol)</code> pairs and rewrites <code>trades</code>.</li>
         </ol>
-        <p>Re-importing the same CSV is idempotent — the unique constraint silently drops duplicate fills. Importing a <em>new</em> statement that overlaps an old one is also safe; only the new fills are inserted.</p>
-        <p>Other brokers (IBKR, TOS, Schwab, Fidelity) are scheduled. The importer ships a generic mapping-wizard backend once the Webull baseline is solid — you point at a CSV, the wizard maps columns to <code>execution</code> fields, and the mapping is saved per-broker per-user.</p>
+        <p>Re-importing the same CSV is idempotent. Unknown brokers go through the CSV Wizard — you point at any CSV, the UI maps columns to <code>execution</code> fields (symbol / side / qty / price / executed_at / fees), and the mapping is saved per-broker per-user. Asset class is auto-detected from symbol patterns (options: <code>SYMyyMMddCNNNN</code>; futures: <code>=F</code> suffix; FX: <code>=X</code> suffix).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Live Data Streams — Polled Upstream, Pushed Downstream</h2>
+        <p>Server-side pollers run on tokio tasks, push to in-process <code>DashMap</code>+<code>broadcast</code> stores, then fan out to browsers over WebSocket. All stores are bounded with oldest-first eviction (halts cap 2,000; catalysts cap 10,000) so multi-day sessions don't grow without limit.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Stream</th><th>Source</th><th>Interval</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Halts</strong></td><td><code>nasdaqtrader.com/rss.aspx?feed=tradehalts</code></td><td>3s</td></tr>
+            <tr><td><strong>EDGAR filings</strong></td><td><code>sec.gov/cgi-bin/browse-edgar?action=getcurrent&amp;type=4&amp;output=atom</code></td><td>6s</td></tr>
+            <tr><td><strong>PR wires</strong></td><td>Business Wire / PR Newswire / GlobeNewswire / AccessWire RSS</td><td>30s each</td></tr>
+            <tr><td><strong>Finnhub ticks</strong></td><td><code>wss://ws.finnhub.io</code> (free tier: 25 syms / connection — chunked)</td><td>realtime</td></tr>
+            <tr><td><strong>Webull broker</strong></td><td><code>tradeapi.webullbroker.com</code> (your pasted tokens; never on disk)</td><td>5s</td></tr>
+            <tr><td><strong>Reddit WSB</strong></td><td><code>reddit.com/r/wallstreetbets/new.json</code></td><td>60s</td></tr>
+            <tr><td><strong>StockTwits</strong></td><td><code>api.stocktwits.com/api/2/streams/symbol/{sym}.json</code></td><td>60s per symbol</td></tr>
+            <tr><td><strong>FINRA Reg-SHO</strong></td><td><code>cdn.finra.org/equity/regsho/daily/</code></td><td>on demand (back-walked by day)</td></tr>
+            <tr><td><strong>Yahoo quote / fundamentals</strong></td><td><code>query1.finance.yahoo.com</code> v8/v10</td><td>cached 60s per symbol in <code>quote_snapshots</code> + 60s in-process world-markets cache</td></tr>
+            <tr><td><strong>CoinGecko + blockchain.com</strong></td><td>Crypto markets + BTC chain stats</td><td>on demand</td></tr>
+          </tbody>
+        </table>
+        <p>Ticker extraction (catalyst NER) handles <code>$SYM</code> cashtags, parenthetical <code>(SYM)</code> with stop-word filter, and exchange-prefixed forms (<code>NYSE:</code>, <code>NASDAQ:</code>, <code>AMEX:</code>, <code>OTC:</code>). Halt reason codes (T1, T5, LUDP, MWC1/2/3, H10, …) are looked up in a static reason-code table for readable labels.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Resilience &amp; Hardening</h2>
+        <ul>
+          <li><strong>Stale-lock recovery.</strong> Embedded Postgres checks <code>postmaster.pid</code> before start; if the recorded PID is dead, removes the lockfile so a SIGKILL'd parent doesn't permanently block the next launch.</li>
+          <li><strong>Persisted PG password.</strong> Random password file (mode 0600) in the data dir — initialized once, reused forever — so auth survives across launches.</li>
+          <li><strong>Backend held across <code>axum::serve</code>.</strong> The <code>Embedded</code> handle is owned by the worker thread for the lifetime of the server; explicit drop after serve. Earlier, the handle dropped at function exit and <code>pg_ctl stop</code> killed Postgres mid-request — every subsequent query timed out with "pool timed out".</li>
+          <li><strong>Real concurrency for multi-symbol fan-outs.</strong> <code>premarket::snapshot</code> + <code>markets::snapshot</code> + <code>market_data::quotes</code> + <code>compare::compare</code> all use <code>futures_util::future::join_all</code> — previously serial loops blocked <code>/api/premarket/snapshot</code> for 150 seconds and starved the pool.</li>
+          <li><strong>Pool sized for cold-start fan-out.</strong> <code>max_connections=32</code>, <code>min_connections=4</code> (kept warm), <code>acquire_timeout=15s</code>.</li>
+          <li><strong>Per-view race tokens.</strong> Frontend dispatch increments a counter on every navigation; views bail post-<code>await</code> if their captured token is stale, preventing null-DOM crashes.</li>
+          <li><strong>Browser-side error sink.</strong> <code>window.onerror</code>, <code>unhandledrejection</code>, and overridden <code>console.error</code> all POST to <code>/api/client-errors</code> (queue-capped). The Rust log mirrors every browser failure.</li>
+          <li><strong>WebKit SecurityError guards.</strong> Under Tauri's <code>tauri://localhost</code> custom scheme, <code>navigator.sendBeacon</code>, <code>Notification.requestPermission</code>, <code>new Notification</code>, <code>speechSynthesis.speak</code>, and <code>localStorage</code> all throw cross-origin SecurityErrors. Each is try/caught so boot survives.</li>
+          <li><strong>CSP allows <code>ws://127.0.0.1:*</code></strong> so WebSocket connections to the dynamic backend port aren't blocked under custom scheme.</li>
+        </ul>
       </section>
 
       <section class="tutorial-section">
@@ -371,28 +445,47 @@ cargo run -p traderview-web --bin server
       </section>
 
       <section class="tutorial-section">
-        <h2>Roadmap</h2>
+        <h2>What's Built</h2>
         <table class="tv-table">
           <thead>
-            <tr><th>Phase</th><th>Item</th><th>Status</th></tr>
+            <tr><th>Area</th><th>Item</th><th>Status</th></tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>Workspace + crate scaffold + initial schema</td><td><span class="tv-pill done">Done</span></td></tr>
-            <tr><td>2</td><td>Webull importer (awaiting redacted real sample)</td><td><span class="tv-pill wip">In progress</span></td></tr>
-            <tr><td>3</td><td>FIFO trade roll-up (<code>traderview-core::rollup</code>)</td><td><span class="tv-pill wip">In progress</span></td></tr>
-            <tr><td>4</td><td>Trades UI — filters, tags, sort</td><td><span class="tv-pill todo">Todo</span></td></tr>
-            <tr><td>5</td><td>Equity curve + summary stats (uPlot)</td><td><span class="tv-pill todo">Todo</span></td></tr>
-            <tr><td>6</td><td>Journal — markdown, per-trade + per-day</td><td><span class="tv-pill todo">Todo</span></td></tr>
-            <tr><td>7</td><td>IBKR + TOS + Schwab importers via mapping wizard</td><td><span class="tv-pill todo">Todo</span></td></tr>
-            <tr><td>8</td><td>Cloud sync — encrypted snapshot to S3 / R2</td><td><span class="tv-pill todo">Todo</span></td></tr>
+            <tr><td>Foundation</td><td>Workspace + 6 crates + 29 migrations</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Foundation</td><td>FIFO trade roll-up + stats (expectancy, R-multiple, SQN, Sharpe, Sortino)</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Foundation</td><td>Tauri v2 desktop + embedded Postgres bootstrap, axum web binary w/ argon2 + JWT</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Import</td><td>12 broker parsers + Generic column-mapping wizard</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Live</td><td>Halts (Nasdaq RSS, 3s) + Catalysts (EDGAR + 4 PR wires) + Finnhub WS scanner</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Live</td><td>Webull read-only broker integration (paste session tokens)</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Journal</td><td>Per-trade + daily + general notes, templates, trade reviews, AI post-mortem cache</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Analytics</td><td>17 reports + R-distribution + Monte Carlo forecast + fill-quality + tax-lot tracker + Schedule D export</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Strategy</td><td>stryke-JIT backtest + walk-forward sweeper + custom-indicator AST + strategy alerts (AND/OR/NOT)</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Research</td><td>Options chain + Greeks + IV surface + earnings-IV crush + short interest + dark pool</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Community</td><td>Public trade shares + forum + mentorship + boards</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Expenses</td><td>Multi-account expense tracker + receipt OCR + Schedule-C report</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>UX</td><td>86-tile launcher (Cmd-K) + in-app tutorial (<kbd>?</kbd>) + 11-shortcut topbar</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Hardening</td><td>Per-view race tokens + browser-side error sink + WebKit SecurityError guards + bounded in-memory caches</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>Roadmap</td><td>Lightspeed live broker (currently CSV-only)</td><td><span class="tv-pill wip">Planned</span></td></tr>
+            <tr><td>Roadmap</td><td>Cloud sync — encrypted snapshot to S3/R2</td><td><span class="tv-pill todo">Future</span></td></tr>
           </tbody>
         </table>
       </section>
 
       <section class="tutorial-section">
-        <h2>Why Not TraderVue?</h2>
-        <p>TraderVue is hosted-only, subscription-priced, and your trades live on their server. <code>traderview</code> is single-binary desktop or self-hosted multi-user; your data never leaves your machine in desktop mode and never leaves your infrastructure in web mode. Same UI shape — dashboard, trades, journal, equity curve — but you own the database and the deploy.</p>
-        <p>Built by <a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a>, part of the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a> stack alongside <a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a>, <a href="https://github.com/MenkeTechnologies/zshrs">zshrs</a>, <a href="https://github.com/MenkeTechnologies/Audio-Haxor">Audio-Haxor</a>, and the broader Rust CLI family.</p>
+        <h2>What This Replaces</h2>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Tool</th><th>Cost</th><th>Replaced by</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>TraderVue</strong> (trade journal)</td><td>$30/mo</td><td>Trades + Journal + Reports + AI Journal + Trade Reviews</td></tr>
+            <tr><td><strong>DayTradeDash</strong> (Warrior Trading scanner)</td><td>$187/mo</td><td>Live Scanner + Halts + Catalysts + Pre-market + Scanners (24 presets)</td></tr>
+            <tr><td><strong>StockInvest.us</strong> (signal site)</td><td>varies</td><td>Top Signals + Screener + Research (per-symbol dossier)</td></tr>
+            <tr><td><strong>Zendoo Live Scanners</strong></td><td>free w/ TTS</td><td>Live Scanner with built-in TTS voice alerts</td></tr>
+            <tr><td colspan="2"><strong>Total saved</strong></td><td><strong>$2,604/yr</strong> (self-hosted, your data stays local)</td></tr>
+          </tbody>
+        </table>
+        <p>Built by <a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a>, part of the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a> stack alongside <a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a>, <a href="https://github.com/MenkeTechnologies/zshrs">zshrs</a>, <a href="https://github.com/MenkeTechnologies/zpwr">zpwr</a>, and the broader Rust + CLI family.</p>
       </section>
 
       <p class="doc-footer">traderview v0.1.0 &middot; <a href="https://github.com/MenkeTechnologies/traderview">GitHub</a> &middot; <a href="report.html">Engineering Report</a> &middot; MIT License</p>

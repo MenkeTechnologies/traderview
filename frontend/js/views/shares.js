@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime, fmtMoney, md, pnlClass } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderShares(mount) {
+    const tok = currentViewToken();
     const [mine, pub] = await Promise.all([api.sharesMine(), api.sharesPublic()]);
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// SHARES</h1>
         <div class="panel-grid">
@@ -16,9 +19,10 @@ export async function renderShares(mount) {
             </div>
         </div>
     `;
-    document.querySelectorAll('[data-del-share]').forEach(b =>
+    mount.querySelectorAll('[data-del-share]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteShare(b.dataset.delShare);
+            if (!viewIsCurrent(tok)) return;
             renderShares(mount);
         }));
 }
@@ -37,11 +41,13 @@ function shareTable(rows, mine) {
 }
 
 export async function renderSharedTrade(mount, _state, slug) {
+    const tok = currentViewToken();
     if (!slug) { mount.innerHTML = '<p class="boot">No slug.</p>'; return; }
     const [view, comments] = await Promise.all([
         api.viewShared(slug),
         api.comments(slug).catch(_ => []),
     ]);
+    if (!viewIsCurrent(tok)) return;
     const t = view.trade;
     mount.innerHTML = `
         <h1 class="view-title">// SHARED · ${esc(t.symbol)}</h1>
@@ -70,11 +76,12 @@ export async function renderSharedTrade(mount, _state, slug) {
             </form>
         </div>
     `;
-    document.getElementById('comment-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#comment-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         try {
             await api.postComment(slug, fd.get('body'));
+            if (!viewIsCurrent(tok)) return;
             renderSharedTrade(mount, _state, slug);
         } catch (err) {
             alert(err.message);

@@ -3,8 +3,10 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDeveloper(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// DEVELOPER — PUBLIC API</h1>
         <p class="muted small">Personal Access Tokens authenticate third-party integrations
@@ -48,7 +50,7 @@ export async function renderDeveloper(mount) {
         </div>
     `;
 
-    document.getElementById('tok-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#tok-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const scopes = Array.from(e.target.scopes.selectedOptions).map(o => o.value);
@@ -59,11 +61,14 @@ export async function renderDeveloper(mount) {
             expires_at: expIso ? new Date(expIso).toISOString() : null,
             rate_limit_per_min: Number(fd.get('rate_limit_per_min')) || 60,
         };
-        const out = document.getElementById('tok-new');
+        const out = mount.querySelector('#tok-new');
+        if (!out) return;
         out.innerHTML = '<p class="muted small">generating…</p>';
         try {
             const r = await api.createApiToken(body);
-            out.innerHTML = `
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#tok-new');
+            if (out2) out2.innerHTML = `
                 <div class="chart-panel" style="background:#0d0d22;border-left:3px solid #ff7a1f;">
                     <p><strong>Save this token now — it will never be shown again:</strong></p>
                     <pre style="background:#070714;padding:8px;font-size:13px;overflow:auto;">${esc(r.token)}</pre>
@@ -71,24 +76,30 @@ export async function renderDeveloper(mount) {
                 </div>
             `;
             e.target.reset();
-            await loadList();
+            await loadList(mount, tok);
         } catch (err) {
-            out.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const out2 = mount.querySelector('#tok-new');
+            if (out2) out2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 
-    await loadList();
+    await loadList(mount, tok);
 }
 
-async function loadList() {
-    const el = document.getElementById('tok-list');
+async function loadList(mount, tok) {
+    const el = mount.querySelector('#tok-list');
+    if (!el) return;
     try {
         const rows = await api.listApiTokens();
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#tok-list');
+        if (!el2) return;
         if (!rows.length) {
-            el.innerHTML = '<p class="muted small">No tokens yet.</p>';
+            el2.innerHTML = '<p class="muted small">No tokens yet.</p>';
             return;
         }
-        el.innerHTML = `
+        el2.innerHTML = `
             <table class="trades">
                 <thead><tr>
                     <th>Name</th><th>Prefix</th><th>Scopes</th><th>Rate/min</th>
@@ -117,24 +128,26 @@ async function loadList() {
                 </tbody>
             </table>
         `;
-        el.querySelectorAll('.revoke-btn').forEach(b => {
+        el2.querySelectorAll('.revoke-btn').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!confirm('Revoke this token? Integrations using it will lose access immediately.')) return;
-                try { await api.revokeApiToken(b.dataset.id); await loadList(); }
+                try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
                 catch (e) { alert(e.message); }
             });
         });
-        el.querySelectorAll('.rate-input').forEach(input => {
+        el2.querySelectorAll('.rate-input').forEach(input => {
             input.addEventListener('change', async () => {
                 const v = Number(input.value);
                 if (!Number.isFinite(v) || v < 1 || v > 10000) {
                     alert('rate must be 1..=10000'); return;
                 }
                 try { await api.setApiTokenRateLimit(input.dataset.id, v); }
-                catch (e) { alert(e.message); await loadList(); }
+                catch (e) { alert(e.message); if (viewIsCurrent(tok)) await loadList(mount, tok); }
             });
         });
     } catch (e) {
-        el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#tok-list');
+        if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

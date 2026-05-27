@@ -1,6 +1,7 @@
 // Crypto pack — CoinGecko top-N + global stats + BTC on-chain dashboard.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -15,6 +16,7 @@ const num = (n) => n == null ? '—' : Number(n).toLocaleString(undefined, { max
 const pct = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + Number(n).toFixed(2) + '%';
 
 export async function renderCrypto(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// CRYPTO</h1>
         <div id="c-glob" class="cards">loading…</div>
@@ -33,16 +35,20 @@ export async function renderCrypto(mount) {
             api.cryptoMarkets(100).catch(() => []),
             api.cryptoBtcChain().catch(() => null),
         ]);
-        if (g) renderGlobal(g);
-        renderTable(top);
-        if (chain) renderChain(chain);
+        if (!viewIsCurrent(tok)) return;
+        if (g) renderGlobal(g, mount);
+        renderTable(top, mount);
+        if (chain) renderChain(chain, mount);
     } catch (e) {
-        document.getElementById('c-table').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#c-table');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderGlobal(g) {
-    const el = document.getElementById('c-glob');
+function renderGlobal(g, mount) {
+    const el = mount.querySelector('#c-glob');
+    if (!el) return;
     el.innerHTML = `
         <div class="card"><div class="label">Total mcap</div><div class="value">${compact(g.total_market_cap_usd)}</div></div>
         <div class="card"><div class="label">24h volume</div><div class="value">${compact(g.total_volume_usd)}</div></div>
@@ -55,8 +61,9 @@ function renderGlobal(g) {
     `;
 }
 
-function renderTable(rows) {
-    const el = document.getElementById('c-table');
+function renderTable(rows, mount) {
+    const el = mount.querySelector('#c-table');
+    if (!el) return;
     if (!rows.length) { el.innerHTML = '<p class="muted">CoinGecko rate limit hit — retry in a minute.</p>'; return; }
     el.innerHTML = `<table class="trades">
         <thead><tr><th>#</th><th></th><th>Coin</th><th>Price</th>
@@ -80,8 +87,10 @@ function renderTable(rows) {
             </tr>`).join('')}</tbody></table>`;
 }
 
-function renderChain(c) {
-    document.getElementById('c-onchain').innerHTML = `
+function renderChain(c, mount) {
+    const el = mount.querySelector('#c-onchain');
+    if (!el) return;
+    el.innerHTML = `
         <div class="card"><div class="label">Hash rate</div><div class="value">${c.hash_rate_thps != null ? (c.hash_rate_thps/1e6).toFixed(1)+' EH/s' : '—'}</div></div>
         <div class="card"><div class="label">Difficulty</div><div class="value">${c.difficulty != null ? (c.difficulty/1e12).toFixed(2)+'T' : '—'}</div></div>
         <div class="card"><div class="label">Block height</div><div class="value">${num(c.block_height)}</div></div>

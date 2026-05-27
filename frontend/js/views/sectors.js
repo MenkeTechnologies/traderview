@@ -1,7 +1,9 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSectors(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// SECTOR STRENGTH</h1>
         <p class="muted small">11 SPDR sector ETFs ranked by today's % change and relative strength vs SPY (ZenBot-style).</p>
@@ -9,8 +11,11 @@ export async function renderSectors(mount) {
     `;
     try {
         const rows = await api.sectors();
+        if (!viewIsCurrent(tok)) return;
         const max = Math.max(1, ...rows.map(r => Math.abs(Number(r.change_pct))));
-        document.getElementById('sec').innerHTML = `
+        const secEl = mount.querySelector('#sec');
+        if (!secEl) return;
+        secEl.innerHTML = `
             <div class="chart-panel">
                 <table class="trades">
                     <thead><tr><th>#</th><th>Sector</th><th>ETF</th><th>Price</th>
@@ -34,6 +39,8 @@ export async function renderSectors(mount) {
             </div>
         `;
     } catch (e) {
-        document.getElementById('sec').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const secEl = mount.querySelector('#sec');
+        if (secEl) secEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

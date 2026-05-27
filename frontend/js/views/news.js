@@ -2,12 +2,14 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 let wsUnsub = null;
 let lastQuery = { mode: 'recent', sym: '', q: '' };
 
 export async function renderNews(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// NEWS</h1>
         <p class="muted small">Yahoo headlines polled per watchlist symbol every 5 minutes,
@@ -32,7 +34,7 @@ export async function renderNews(mount) {
 
         <div id="n-list"><div class="boot">loading…</div></div>
     `;
-    document.getElementById('n-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#n-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         lastQuery = {
@@ -41,22 +43,31 @@ export async function renderNews(mount) {
             q: fd.get('value').trim(),
             limit: Number(fd.get('limit')) || 40,
         };
-        await refresh();
+        await refresh(mount, tok);
     });
-    document.getElementById('n-poll-now').addEventListener('click', async () => {
-        const status = document.getElementById('n-status');
-        status.textContent = 'polling watchlists…';
+    mount.querySelector('#n-poll-now').addEventListener('click', async () => {
+        const status = mount.querySelector('#n-status');
+        if (status) status.textContent = 'polling watchlists…';
         try {
             const s = await api.newsPollNow();
-            status.textContent = `${s.symbols_polled} symbols / ${s.inserted} new`;
-            await refresh();
-        } catch (e) { status.textContent = 'error: ' + e.message; }
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#n-status');
+            if (s2) s2.textContent = `${s.symbols_polled} symbols / ${s.inserted} new`;
+            await refresh(mount, tok);
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            const s2 = mount.querySelector('#n-status');
+            if (s2) s2.textContent = 'error: ' + e.message;
+        }
     });
 
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 120_000);
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 120_000);
     if (wsUnsub) wsUnsub();
-    wsUnsub = onWsEvent('news', () => refresh());
+    wsUnsub = onWsEvent('news', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
 
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#news')) {
@@ -65,11 +76,11 @@ export async function renderNews(mount) {
         }
     }, { once: true });
 
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
-    const list = document.getElementById('n-list');
+async function refresh(mount, tok) {
+    const list = mount.querySelector('#n-list');
     if (!list) return;
     const limit = lastQuery.limit || 40;
     try {
@@ -81,8 +92,14 @@ async function refresh() {
         } else {
             items = await api.newsRecent(limit);
         }
-        renderList(list, items);
-    } catch (e) { list.innerHTML = `<p class="boot">${esc(e.message)}</p>`; }
+        if (!viewIsCurrent(tok)) return;
+        const list2 = mount.querySelector('#n-list');
+        if (list2) renderList(list2, items);
+    } catch (e) {
+        if (!viewIsCurrent(tok)) return;
+        const list2 = mount.querySelector('#n-list');
+        if (list2) list2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+    }
 }
 
 function renderList(el, items) {

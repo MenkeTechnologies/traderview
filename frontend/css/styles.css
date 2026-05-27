@@ -1175,3 +1175,107 @@ table.sc-table tfoot td {
     gap: 6px;
     margin-top: 8px;
 }
+
+/* ---- tutorial view --------------------------------------------------- */
+#tut-q {
+    margin-left: 14px;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--accent, #00e5ff);
+    border: 1px solid var(--accent, #00e5ff);
+    border-radius: 2px;
+    font-family: inherit;
+    min-width: 240px;
+}
+.tut-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 18px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 2px;
+}
+.tut-toc-btn {
+    background: transparent;
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    color: var(--accent, #00e5ff);
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+.tut-toc-btn:hover {
+    background: rgba(0, 229, 255, 0.12);
+}
+.tut-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.tut-section h2 {
+    color: var(--accent, #00e5ff);
+    border-bottom: 1px dashed rgba(0, 229, 255, 0.3);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+.tut-steps {
+    padding-left: 22px;
+    line-height: 1.65;
+}
+.tut-steps li {
+    margin-bottom: 8px;
+}
+.tut-defs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 0;
+}
+.tut-defs dt {
+    font-weight: 600;
+    color: var(--accent, #00e5ff);
+    margin-top: 8px;
+}
+.tut-defs dd {
+    margin: 4px 0 8px 0;
+    padding-left: 14px;
+    line-height: 1.5;
+}
+.tut-kbd {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0;
+}
+.tut-kbd th, .tut-kbd td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+}
+.tut-kbd th {
+    color: var(--accent, #00e5ff);
+    text-transform: uppercase;
+    font-size: 0.78em;
+    letter-spacing: 0.06em;
+}
+.tut-list {
+    padding-left: 22px;
+    line-height: 1.6;
+}
+.tut-list li {
+    margin-bottom: 6px;
+}
+kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    background: rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.45);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    color: var(--accent, #00e5ff);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9em;
+    line-height: 1;
+}

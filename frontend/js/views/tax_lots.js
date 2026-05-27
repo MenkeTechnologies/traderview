@@ -1,8 +1,10 @@
 // Tax-lot tracker — FIFO/LIFO matching, ST/LT classification, wash-sale flag.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTaxLots(mount, state) {
+    const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) {
         mount.innerHTML = `<p class="boot">No account selected. Create one on the Accounts tab first.</p>`;
@@ -38,16 +40,21 @@ export async function renderTaxLots(mount, state) {
 
         <div id="tx-out"><p class="muted small">Pick a year + method and run.</p></div>
     `;
-    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#tx-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const out = document.getElementById('tx-out');
+        const out = mount.querySelector('#tx-out');
+        if (!out) return;
         out.innerHTML = '<div class="boot">running…</div>';
         try {
             const r = await api.taxLots(state.accountId, fd.get('year'), fd.get('method'));
-            renderReport(r, out);
+            if (!viewIsCurrent(tok)) return;
+            const outNow = mount.querySelector('#tx-out');
+            if (outNow) renderReport(r, outNow);
         } catch (err) {
-            out.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            if (!viewIsCurrent(tok)) return;
+            const outNow = mount.querySelector('#tx-out');
+            if (outNow) outNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
 }

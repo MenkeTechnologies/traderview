@@ -2,10 +2,12 @@
 // snapshot, refreshed every 30s.
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
 
 export async function renderTape(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// LIVE TAPE</h1>
         <p class="muted small">Auto-refreshing news + sector snapshot from your watchlist universe. Updates every 30 seconds.</p>
@@ -25,8 +27,11 @@ export async function renderTape(mount) {
         </div>
     `;
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 30_000);
-    await refresh();
+    timer = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
+        refresh(mount, tok);
+    }, 30_000);
+    await refresh(mount, tok);
     // Stop polling when leaving the view.
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#tape')) {
@@ -35,11 +40,13 @@ export async function renderTape(mount) {
     }, { once: true });
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     const symbols = new Set();
     for (const w of lists) {
         for (const s of await api.watchlistSymbols(w.id)) symbols.add(s);
+        if (!viewIsCurrent(tok)) return;
     }
     const syms = Array.from(symbols).slice(0, 12);
 
@@ -48,11 +55,13 @@ async function refresh() {
     for (const sym of syms) {
         try {
             const items = await api.symbolNews(sym, 3);
+            if (!viewIsCurrent(tok)) return;
             for (const n of items) allNews.push({ ...n, symbol: sym });
         } catch (_) {}
     }
     allNews.sort((a, b) => (b.provider_publish_time || 0) - (a.provider_publish_time || 0));
-    document.getElementById('tape-news').innerHTML = allNews.length
+    const newsEl = mount.querySelector('#tape-news');
+    if (newsEl) newsEl.innerHTML = allNews.length
         ? allNews.slice(0, 40).map(n => `
             <div class="news-item">
                 <a href="${esc(n.link || '#')}" target="_blank" rel="noopener noreferrer">
@@ -67,7 +76,9 @@ async function refresh() {
     // Sectors
     try {
         const sectors = await api.sectors();
-        document.getElementById('tape-sectors').innerHTML = `<table class="trades">
+        if (!viewIsCurrent(tok)) return;
+        const secEl = mount.querySelector('#tape-sectors');
+        if (secEl) secEl.innerHTML = `<table class="trades">
             ${sectors.map(s => `<tr>
                 <td>${esc(s.label)}</td>
                 <td><a href="#research/${encodeURIComponent(s.sector)}">${esc(s.sector)}</a></td>
@@ -79,9 +90,13 @@ async function refresh() {
     // Quotes
     const quotes = [];
     for (const sym of syms) {
-        try { quotes.push(await api.quote(sym)); } catch (_) {}
+        try {
+            quotes.push(await api.quote(sym));
+            if (!viewIsCurrent(tok)) return;
+        } catch (_) {}
     }
-    document.getElementById('tape-quotes').innerHTML = quotes.length ? `<table class="trades">
+    const quotesEl = mount.querySelector('#tape-quotes');
+    if (quotesEl) quotesEl.innerHTML = quotes.length ? `<table class="trades">
         ${quotes.map(q => `<tr>
             <td><a href="#research/${encodeURIComponent(q.symbol)}">${esc(q.symbol)}</a></td>
             <td>${Number(q.price).toFixed(2)}</td>

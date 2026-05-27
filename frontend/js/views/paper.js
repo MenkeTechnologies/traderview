@@ -1,11 +1,15 @@
 // Paper-trading simulator — Warrior Trading SimTrader equivalent.
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPaper(mount) {
+    const tok = currentViewToken();
     const accounts = await api.paperAccounts();
+    if (!viewIsCurrent(tok)) return;
     if (!accounts.length) {
         await api.paperEnsure();
+        if (!viewIsCurrent(tok)) return;
         return renderPaper(mount);
     }
     const acct = accounts[0];
@@ -13,6 +17,7 @@ export async function renderPaper(mount) {
         api.paperPositions(acct.id),
         api.paperOrders(acct.id, 50),
     ]);
+    if (!viewIsCurrent(tok)) return;
 
     // Live unrealized P&L — fetch quotes for held symbols.
     const symList = positions.map(p => p.symbol);
@@ -21,6 +26,7 @@ export async function renderPaper(mount) {
         try {
             const promises = symList.map(s => api.quote(s).catch(() => null));
             const qs = await Promise.all(promises);
+            if (!viewIsCurrent(tok)) return;
             qs.forEach(q => { if (q) quotes[q.symbol] = q; });
         } catch (_) {}
     }
@@ -118,7 +124,7 @@ export async function renderPaper(mount) {
         </div>
     `;
 
-    document.getElementById('ord-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const body = {
@@ -131,13 +137,15 @@ export async function renderPaper(mount) {
         };
         try {
             const o = await api.paperSubmit(acct.id, body);
+            if (!viewIsCurrent(tok)) return;
             if (o.status === 'rejected') alert('Order rejected: ' + (o.reject_reason || 'unknown'));
             renderPaper(mount);
         } catch (err) { alert('Error: ' + err.message); }
     });
-    document.getElementById('reset').addEventListener('click', async () => {
+    mount.querySelector('#reset').addEventListener('click', async () => {
         if (!confirm('Wipe orders + positions and reset cash to $200,000?')) return;
         await api.paperReset(acct.id, 200000);
+        if (!viewIsCurrent(tok)) return;
         renderPaper(mount);
     });
 }

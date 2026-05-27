@@ -78,13 +78,15 @@ pub struct CompareReport {
 }
 
 pub async fn compare(pool: &PgPool, symbols: &[String]) -> anyhow::Result<CompareReport> {
-    // Sequential is fine — Yahoo rate-limits, and 2-4 symbols × ~500ms is acceptable.
-    let mut rows = Vec::with_capacity(symbols.len());
-    for s in symbols {
-        if let Ok(row) = build_row(pool, s.clone()).await {
-            rows.push(row);
-        }
-    }
+    // Concurrent fan-out. Each row does 2 Yahoo calls (fundamentals + quote)
+    // plus a DB bars read; serial blew up linearly with the symbol count.
+    let futs = symbols.iter().map(|s| {
+        let pool = pool.clone();
+        let sym = s.clone();
+        async move { build_row(&pool, sym).await.ok() }
+    });
+    let rows: Vec<CompareRow> = futures_util::future::join_all(futs).await
+        .into_iter().flatten().collect();
     Ok(CompareReport { rows, fetched_at: Utc::now() })
 }
 

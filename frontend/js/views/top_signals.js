@@ -1,8 +1,11 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTopSignals(mount) {
+    const tok = currentViewToken();
     const lists = await api.watchlists();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// TOP SIGNALS</h1>
         <p class="muted small">Highest- and lowest-scoring symbols across your watchlists (StockInvest-style ranking).</p>
@@ -32,24 +35,34 @@ export async function renderTopSignals(mount) {
         </div>
     `;
     const refresh = async () => {
-        const fd = new FormData(document.getElementById('top-form'));
+        const form = mount.querySelector('#top-form');
+        if (!form) return;
+        const fd = new FormData(form);
         const wid = fd.get('watchlist_id') || null;
         const limit = Number(fd.get('limit') || 25);
-        document.getElementById('buys').innerHTML = '<div class="boot">scoring…</div>';
-        document.getElementById('sells').innerHTML = '<div class="boot">scoring…</div>';
+        const buysEl0 = mount.querySelector('#buys');
+        const sellsEl0 = mount.querySelector('#sells');
+        if (buysEl0) buysEl0.innerHTML = '<div class="boot">scoring…</div>';
+        if (sellsEl0) sellsEl0.innerHTML = '<div class="boot">scoring…</div>';
         try {
             const [buys, sells] = await Promise.all([
                 api.topSignals('buy', wid, limit),
                 api.topSignals('sell', wid, limit),
             ]);
-            document.getElementById('buys').innerHTML  = renderList(buys, 'buy');
-            document.getElementById('sells').innerHTML = renderList(sells, 'sell');
+            if (!viewIsCurrent(tok)) return;
+            const buysEl = mount.querySelector('#buys');
+            const sellsEl = mount.querySelector('#sells');
+            if (buysEl) buysEl.innerHTML  = renderList(buys, 'buy');
+            if (sellsEl) sellsEl.innerHTML = renderList(sells, 'sell');
         } catch (e) {
-            document.getElementById('buys').innerHTML  = `<p class="boot">${esc(e.message)}</p>`;
-            document.getElementById('sells').innerHTML = '';
+            if (!viewIsCurrent(tok)) return;
+            const buysEl = mount.querySelector('#buys');
+            const sellsEl = mount.querySelector('#sells');
+            if (buysEl) buysEl.innerHTML  = `<p class="boot">${esc(e.message)}</p>`;
+            if (sellsEl) sellsEl.innerHTML = '';
         }
     };
-    document.getElementById('top-form').addEventListener('submit', (e) => { e.preventDefault(); refresh(); });
+    mount.querySelector('#top-form').addEventListener('submit', (e) => { e.preventDefault(); refresh(); });
     refresh();
 }
 

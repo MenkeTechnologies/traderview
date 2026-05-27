@@ -7,14 +7,17 @@
 
 import { api, wsUrl } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const states = new Map(); // symbol → SymbolState
 let ws = null;
 let rerenderHandle = null;
 let voiceOn = true;
+let viewTok = 0;
 const announced = new Set();   // dedupe TTS alerts per session
 
 export async function renderLiveScanner(mount, _state) {
+    viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// LIVE SCANNER · DayTradeDash replacement
             <span class="status-dot" id="ls-status" title="connecting">●</span>
@@ -52,41 +55,51 @@ export async function renderLiveScanner(mount, _state) {
         </div>
     `;
 
-    document.getElementById('ls-voice').addEventListener('change', (e) => {
+    mount.querySelector('#ls-voice').addEventListener('change', (e) => {
         voiceOn = e.target.checked;
     });
 
-    document.getElementById('ls-config').addEventListener('submit', async (e) => {
+    mount.querySelector('#ls-config').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const symbols = fd.get('symbols').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
         const api_key = fd.get('api_key').trim() || undefined;
         try {
             const r = await api.configureLiveTicks({ api_key, symbols });
-            connectWs(mount);
+            if (!viewIsCurrent(viewTok)) return;
+            connectWs(mount, viewTok);
             alert(`Subscribed: ${r.subscribed} symbols. has_key=${r.has_key}`);
         } catch (err) {
             alert('Configure failed: ' + err.message);
         }
     });
 
-    connectWs(mount);
+    connectWs(mount, viewTok);
     if (rerenderHandle) clearInterval(rerenderHandle);
-    rerenderHandle = setInterval(rerender, 300);
+    rerenderHandle = setInterval(() => {
+        if (!viewIsCurrent(viewTok)) {
+            clearInterval(rerenderHandle);
+            rerenderHandle = null;
+            return;
+        }
+        rerender(mount);
+    }, 300);
 }
 
-function connectWs(mount) {
+function connectWs(mount, tok) {
     try { if (ws) ws.close(); } catch (_) {}
+    if (!viewIsCurrent(tok)) return;
+    const dot = mount.querySelector('#ls-status');
+    if (!dot) return;
     states.clear();
     announced.clear();
     ws = new WebSocket(wsUrl('/api/ws/ticks'));
-    const dot = document.getElementById('ls-status');
-    if (!dot) return;
-    ws.addEventListener('open',  () => { dot.style.color = 'var(--green)';      dot.title = 'connected'; });
-    ws.addEventListener('error', () => { dot.style.color = 'var(--red)';        dot.title = 'error'; });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
     ws.addEventListener('close', () => {
+        if (!viewIsCurrent(tok)) return;
         dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
-        setTimeout(() => { if (document.body.contains(mount)) connectWs(mount); }, 4000);
+        setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {
         try {
@@ -129,18 +142,18 @@ function speak(text) {
 }
 function spell(s) { return s.split('').join(' '); }
 
-function rerender() {
+function rerender(mount) {
     const all = Array.from(states.values());
-    panel('p-gap',  all.filter(s => s.gap_pct      !== 0).sort((a, b) => b.gap_pct      - a.gap_pct).slice(0, 12), 'gap_pct');
-    panel('p-gain', all.filter(s => s.change_pct    > 0).sort((a, b) => b.change_pct   - a.change_pct).slice(0, 12), 'change_pct');
-    panel('p-loss', all.filter(s => s.change_pct    < 0).sort((a, b) => a.change_pct   - b.change_pct).slice(0, 12), 'change_pct');
-    panel('p-hod',  all.filter(s => Math.abs(s.hod_dist_pct) < 0.5).sort((a, b) => b.day_volume - a.day_volume).slice(0, 12), 'day_pct');
-    panel('p-vol',  all.slice().sort((a, b) => b.day_volume - a.day_volume).slice(0, 12), 'change_pct');
-    panel('p-ross', all.filter(s => s.gap_pct >= 10 && s.last > 0 && s.last <= 20).sort((a, b) => b.gap_pct - a.gap_pct).slice(0, 12), 'gap_pct');
+    panel(mount, 'p-gap',  all.filter(s => s.gap_pct      !== 0).sort((a, b) => b.gap_pct      - a.gap_pct).slice(0, 12), 'gap_pct');
+    panel(mount, 'p-gain', all.filter(s => s.change_pct    > 0).sort((a, b) => b.change_pct   - a.change_pct).slice(0, 12), 'change_pct');
+    panel(mount, 'p-loss', all.filter(s => s.change_pct    < 0).sort((a, b) => a.change_pct   - b.change_pct).slice(0, 12), 'change_pct');
+    panel(mount, 'p-hod',  all.filter(s => Math.abs(s.hod_dist_pct) < 0.5).sort((a, b) => b.day_volume - a.day_volume).slice(0, 12), 'day_pct');
+    panel(mount, 'p-vol',  all.slice().sort((a, b) => b.day_volume - a.day_volume).slice(0, 12), 'change_pct');
+    panel(mount, 'p-ross', all.filter(s => s.gap_pct >= 10 && s.last > 0 && s.last <= 20).sort((a, b) => b.gap_pct - a.gap_pct).slice(0, 12), 'gap_pct');
 }
 
-function panel(id, rows, pctField) {
-    const el = document.getElementById(id);
+function panel(mount, id, rows, pctField) {
+    const el = mount.querySelector('#' + id);
     if (!el) return;
     if (!rows.length) {
         el.innerHTML = '<div class="muted small">—</div>';

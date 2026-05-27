@@ -3,8 +3,10 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSectorRotation(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// SECTOR ROTATION</h1>
         <p class="muted small">For each SPDR sector ETF (XLK/XLF/XLE/XLV/XLY/XLP/XLI/XLB/XLU/XLRE/XLC),
@@ -15,19 +17,25 @@ export async function renderSectorRotation(mount) {
 
         <div id="sr-out"><div class="boot">loading…</div></div>
     `;
-    await refresh();
-    const t = setInterval(refresh, 5 * 60_000);
+    await refresh(mount, tok);
+    const t = setInterval(() => {
+        if (!viewIsCurrent(tok)) { clearInterval(t); return; }
+        refresh(mount, tok);
+    }, 5 * 60_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#sector-rotation')) clearInterval(t);
     }, { once: true });
 }
 
-async function refresh() {
+async function refresh(mount, tok) {
     try {
         const r = await api.sectorRotation();
-        render(r);
+        if (!viewIsCurrent(tok)) return;
+        render(r, mount);
     } catch (e) {
-        document.getElementById('sr-out').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#sr-out');
+        if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
@@ -61,7 +69,7 @@ function sparkSvg(values, h = 28, w = 160) {
     </svg>`;
 }
 
-function render(r) {
+function render(r, mount) {
     const n = r.sectors.length;
     const headers = r.windows.map(w => `<th>${esc(w)}</th>`).join('');
     const leadership = r.leadership_by_window.map((arr, i) =>
@@ -87,7 +95,9 @@ function render(r) {
         </tr>`;
     }).join('');
 
-    document.getElementById('sr-out').innerHTML = `
+    const out = mount.querySelector('#sr-out');
+    if (!out) return;
+    out.innerHTML = `
         <div class="chart-panel">
             <h2>Leadership</h2>
             <div class="muted small">${leadership}</div>

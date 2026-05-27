@@ -1,12 +1,15 @@
 import { api } from '../api.js';
 import { fmtDateTime, md, esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderJournalView(mount, _state, dayOrGeneral) {
+    const tok = currentViewToken();
     const isGeneral = dayOrGeneral === 'general';
     const day = isGeneral ? null : (dayOrGeneral || new Date().toISOString().slice(0, 10));
     const entries = isGeneral
         ? await api.journalGeneral()
         : await api.journalForDay(day);
+    if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
         <h1 class="view-title">
@@ -48,35 +51,39 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             </div>
         </div>
     `;
-    const dayInput = document.getElementById('journal-day');
+    const dayInput = mount.querySelector('#journal-day');
     if (dayInput) {
         dayInput.addEventListener('change', (e) => {
             window.location.hash = `journal/${e.target.value}`;
         });
     }
-    document.getElementById('save').addEventListener('click', async () => {
-        const body_md = document.getElementById('body').value.trim();
+    mount.querySelector('#save').addEventListener('click', async () => {
+        const body_md = mount.querySelector('#body').value.trim();
         if (!body_md) return;
-        const mood = document.getElementById('mood')?.value;
+        const mood = mount.querySelector('#mood')?.value;
         await api.createJournal({
             day: isGeneral ? null : day,
             body_md,
             mood: mood === '' || mood === undefined ? null : Number(mood),
         });
+        if (!viewIsCurrent(tok)) return;
         renderJournalView(mount, _state, dayOrGeneral);
     });
-    document.getElementById('apply-template').addEventListener('click', async () => {
+    mount.querySelector('#apply-template').addEventListener('click', async () => {
         const tpl = await api.defaultNoteTemplate('journal');
-        const ta = document.getElementById('body');
+        if (!viewIsCurrent(tok)) return;
+        const ta = mount.querySelector('#body');
+        if (!ta) return;
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
             alert('No default journal template set. Configure one under Settings → Notes Templates.');
         }
     });
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteJournal(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderJournalView(mount, _state, dayOrGeneral);
         }));
     void esc;

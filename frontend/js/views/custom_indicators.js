@@ -3,6 +3,7 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const KINDS = [
     { id: 'sma',       label: 'SMA',       params: { period: 20 } },
@@ -13,6 +14,7 @@ const KINDS = [
 ];
 
 export async function renderCustomIndicators(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// CUSTOM INDICATORS</h1>
         <p class="muted small">Save named indicator + parameter combos (SMA, EMA, RSI, Bollinger,
@@ -42,17 +44,18 @@ export async function renderCustomIndicators(mount) {
             <div id="ci-list"><div class="boot">loading…</div></div>
         </div>
     `;
-    const kindSel = document.querySelector('#ci-form [name=kind]');
+    const kindSel = mount.querySelector('#ci-form [name=kind]');
     const renderParams = () => {
         const k = KINDS.find(x => x.id === kindSel.value);
-        document.getElementById('ci-params').innerHTML = Object.entries(k.params).map(
+        const params = mount.querySelector('#ci-params');
+        if (params) params.innerHTML = Object.entries(k.params).map(
             ([key, val]) => `<label>${esc(key)}
                 <input name="param_${key}" type="number" step="any" value="${val}" style="width:70px;">
             </label>`).join('');
     };
     kindSel.addEventListener('change', renderParams);
     renderParams();
-    document.getElementById('ci-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#ci-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const k = KINDS.find(x => x.id === fd.get('kind'));
@@ -67,20 +70,36 @@ export async function renderCustomIndicators(mount) {
             color: fd.get('color') || '#00e5ff',
             is_default: !!fd.get('is_default'),
         };
-        const status = document.getElementById('ci-status');
-        status.textContent = 'saving…';
-        try { await api.createCustomIndicator(body); e.target.reset(); renderParams(); status.textContent = ''; await refresh(); }
-        catch (err) { status.textContent = 'error: ' + err.message; }
+        const status = mount.querySelector('#ci-status');
+        if (status) status.textContent = 'saving…';
+        try {
+            await api.createCustomIndicator(body);
+            if (!viewIsCurrent(tok)) return;
+            e.target.reset();
+            renderParams();
+            const status2 = mount.querySelector('#ci-status');
+            if (status2) status2.textContent = '';
+            await refresh(mount, tok);
+        }
+        catch (err) {
+            if (!viewIsCurrent(tok)) return;
+            const status2 = mount.querySelector('#ci-status');
+            if (status2) status2.textContent = 'error: ' + err.message;
+        }
     });
-    await refresh();
+    await refresh(mount, tok);
 }
 
-async function refresh() {
-    const el = document.getElementById('ci-list');
+async function refresh(mount, tok) {
+    const el = mount.querySelector('#ci-list');
+    if (!el) return;
     try {
         const rows = await api.listCustomIndicators();
-        if (!rows.length) { el.innerHTML = '<p class="muted small">No saved indicators yet.</p>'; return; }
-        el.innerHTML = `<table class="trades">
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#ci-list');
+        if (!el2) return;
+        if (!rows.length) { el2.innerHTML = '<p class="muted small">No saved indicators yet.</p>'; return; }
+        el2.innerHTML = `<table class="trades">
             <thead><tr><th>Name</th><th>Definition</th><th>Color</th><th>Default</th><th></th></tr></thead>
             <tbody>
             ${rows.map(r => `<tr>
@@ -91,13 +110,15 @@ async function refresh() {
                 <td><button class="btn ci-del" data-id="${r.id}">Delete</button></td>
             </tr>`).join('')}
             </tbody></table>`;
-        el.querySelectorAll('.ci-del').forEach(b =>
+        el2.querySelectorAll('.ci-del').forEach(b =>
             b.addEventListener('click', async () => {
                 if (!confirm('Delete preset?')) return;
-                try { await api.deleteCustomIndicator(b.dataset.id); await refresh(); }
+                try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { alert(e.message); }
             }));
     } catch (e) {
-        el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const el2 = mount.querySelector('#ci-list');
+        if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }

@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { playSound, speak } from '../alert_engine.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const TRIGGERS = [
     'price_above', 'price_below',
@@ -13,7 +14,9 @@ const TRIGGERS = [
 const SOUNDS = ['bell', 'chime', 'voice'];
 
 export async function renderAlerts(mount) {
+    const tok = currentViewToken();
     const rules = await api.alerts();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title">// ALERTS</h1>
         <p class="muted small">Audio + voice alerts on price / % / volume / signal triggers. Polls every 60s.</p>
@@ -59,7 +62,7 @@ export async function renderAlerts(mount) {
                     </tr>`).join('')}</tbody></table>` : '<p class="muted">No alert rules yet.</p>'}
         </div>
     `;
-    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+    mount.querySelector('#alert-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         await api.createAlert({
@@ -69,19 +72,22 @@ export async function renderAlerts(mount) {
             sound: fd.get('sound'),
             voice_text: fd.get('voice_text') || null,
         });
+        if (!viewIsCurrent(tok)) return;
         renderAlerts(mount);
     });
-    document.getElementById('test-bell').addEventListener('click', () => playSound('bell'));
-    document.getElementById('test-voice').addEventListener('click', () =>
+    mount.querySelector('#test-bell').addEventListener('click', () => playSound('bell'));
+    mount.querySelector('#test-voice').addEventListener('click', () =>
         speak('Test alert from TraderView'));
-    document.querySelectorAll('[data-tog]').forEach(b =>
+    mount.querySelectorAll('[data-tog]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.toggleAlert(b.dataset.tog, b.dataset.en !== 'true');
+            if (!viewIsCurrent(tok)) return;
             renderAlerts(mount);
         }));
-    document.querySelectorAll('[data-del]').forEach(b =>
+    mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteAlert(b.dataset.del);
+            if (!viewIsCurrent(tok)) return;
             renderAlerts(mount);
         }));
 }

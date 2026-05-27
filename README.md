@@ -52,13 +52,19 @@
 
 ## [0x00] OVERVIEW
 
-- **One workspace, two binaries** — `traderview-desktop` (Tauri v2 + embedded Postgres) and `server` (axum + external Postgres) both depend on the same `traderview-{core,db,import}` library crates. No code is duplicated between desktop and web.
+- **Full desktop trading suite** — replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo Warrior Trading scanner) + StockInvest.us in one self-hosted binary. **$2,604/yr saved**, data stays on your machine.
+- **One workspace, two binaries** — `traderview-desktop` (Tauri v2 + embedded Postgres) and `server` (axum + external Postgres) both depend on six shared library crates. No code is duplicated between desktop and web.
 - **Executions are the atom** — every broker fill is one row in `executions`. Trades are FIFO-derived from those rows and materialized into `trades` for fast UI queries. Re-running the roll-up is always safe.
 - **FIFO trade roll-up** — `traderview-core::rollup` matches buy/sell pairs in first-in-first-out order per `(account_id, symbol)`. Open positions stay in `status='open'`; fully-closed positions get `gross_pnl`, `exit_avg`, `closed_at`.
-- **Embedded Postgres on the desktop** — `postgresql_embedded` downloads a portable PostgreSQL on first launch (~80 MB, cached in `~/.theseus`), stores data under `$APP_DATA_DIR/traderview/pg/`, and shuts it down cleanly on app exit. Zero external dependencies for desktop users.
+- **Embedded Postgres on the desktop** — `postgresql_embedded` downloads a portable PostgreSQL on first launch (~80 MB, cached in `~/.theseus`), stores data under `$APP_DATA_DIR/traderview/pg/`, and shuts it down cleanly on app exit. Stale-PID lockfile cleanup survives a hard-killed parent. Zero external dependencies for desktop users.
 - **Multi-user web on the same crates** — the axum binary swaps the embedded pool for an external `DATABASE_URL`, layers in argon2 password hashing + JWT bearer auth, and serves the same vanilla-JS frontend.
-- **Vanilla JS + uPlot frontend** — zero npm, zero build step, zero JS framework. Five views (Dashboard, Trades, Journal, Import, Accounts). uPlot draws the equity curve.
-- **Webull-first importer** — `traderview-import::webull` parses Webull `Account Statement → Orders` CSV. Dedupes by `(broker_order_id, executed_at, symbol, side, qty, price)` so re-importing the same statement is idempotent.
+- **86-tile launcher (Cmd-K)** — categorized tile grid with live filter replaces the old 77-tab strip. Press `?` anywhere for the in-app tutorial. 11-shortcut topbar carries the most-used routes.
+- **Vanilla JS + uPlot frontend** — zero npm, zero bundler, zero framework. 82 view modules + 11 supporting modules across 15,042 LOC JS + 1,937 LOC CSS. Per-view race-token machinery prevents post-await DOM crashes; window.onerror + console.error funnel to a Rust-side `/api/client-errors` sink.
+- **Live data streams** — Nasdaq halts (3s RSS, TTS voice alerts), SEC EDGAR + 4 PR wires (catalyst radar with ticker NER), Finnhub WebSocket 6-panel intraday scanner, Webull read-only broker (paste session tokens, in-memory only), 16-symbol world markets snapshot (60s in-process cache). All live stores are bounded with oldest-first eviction.
+- **12 broker importers** — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, Generic (column-mapping wizard).
+- **17 reports + R-multiple + Monte Carlo forecast + fill-quality TCA + tax-lot tracker** with Schedule-D export.
+- **stryke-JIT backtest engine + walk-forward sweeper + custom-indicator AST + strategy alerts (AND/OR/NOT) + webhooks** (Discord / Slack / generic).
+- **Expense tracker with receipt OCR + Schedule-C report** — `traderview-expense` parses Amazon / BoA / Chase / Apple Card statements; `traderview-ocr` extracts merchant / amount / date from receipt images.
 - **MIT licensed**, single-author, single-language workspace.
 
 ---
@@ -105,74 +111,98 @@ Same schema, same migrations, same FIFO roll-up, same frontend, same API surface
 
 ## [0x03] CRATE GRAPH
 
-| Crate                        | Lines | Purpose                                                                       |
-|------------------------------|-------|-------------------------------------------------------------------------------|
-| `traderview-core`            | ~1,500 | Domain models (24 types), FIFO roll-up + 6 tests, per-asset P&L, statistics (20+ reports), risk + R-multiple, MFE/MAE excursion, liquidity, slug |
-| `traderview-db`              | ~1,800 | 16 modules: accounts, trades, executions, tags, journal, screenshots, imports, mentorships, shares, comments, forum, prices (yfinance fetcher), settings, plans, users, embedded |
-| `traderview-import`          | ~1,000 | Generic ColumnMap CSV parser + 12 broker presets (Webull, IBKR Flex, TD, Schwab, TradeStation, Lightspeed, DAS, ThinkOrSwim, E*Trade, Fidelity, TradeZero, Robinhood, Generic) + 5 tests |
-| `traderview-expense`         | ~1,200 | Schedule C business-expense parsers (Amazon, BoA, Chase, Apple Card — CSV / XLSX / PDF via `calamine` + `lopdf`), merchant→category rule engine + seed, cross-account transfer dedup |
-| `traderview-ocr`             | ~600  | Pure-Rust receipt OCR (PaddleOCR DBNet + SVTR via `tract-onnx`, no C deps) + PDF text-layer extraction + amount/date/merchant regex parsing + Jaccard match scoring |
-| `traderview-web`             | ~2,500 | 16 route modules — 50+ HTTP endpoints (auth, accounts, trades, executions, tags, journal, screenshots, imports, 20 reports, mentorships, shares, comments, forum, charts/bars, settings, plans) |
-| `src-tauri` (`traderview-desktop`) | ~150  | Tauri v2 shell — spawns embedded Postgres + axum on localhost          |
+| Crate                        | Lines  | Purpose                                                                       |
+|------------------------------|--------|-------------------------------------------------------------------------------|
+| `traderview-core`            | 5,286  | Domain types, FIFO roll-up + tests, per-asset P&L, statistics (R-multiple / SQN / Sharpe / Sortino / expectancy), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom-indicator AST. |
+| `traderview-db`              | 12,758 | ~50 repo modules — trades / executions / tags / journal / screenshots / imports / mentorships / shares / forum / settings / plans / users / watchlists / alerts / hotkeys / paper / disclosures / catalysts / halts / live_ticks / markets / premarket / earnings / news / strategy alerts / rebalance / goals / reviews / custom indicators. sqlx pool + 29 migrations + embedded PG lifecycle (stale-PID cleanup, persisted password). Background pollers for Yahoo / FINRA / EDGAR / Nasdaq RSS / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. Bounded in-memory stores. |
+| `traderview-import`          | 1,005  | Generic ColumnMap CSV parser + 12 broker presets (Webull, Lightspeed, IBKR Flex, ThinkOrSwim, Schwab, Fidelity, ETrade, Robinhood, TradeStation, Tradier, Tastytrade, Generic). |
+| `traderview-expense`         | 1,640  | Schedule C business-expense parsers (Amazon, BoA, Chase, Apple Card — CSV / XLSX / PDF via `calamine` + `lopdf`), merchant→category rule engine + seed, cross-account transfer dedup. |
+| `traderview-ocr`             | 640    | Receipt OCR via the system `tesseract` binary + image preprocessing (binarize, deskew), PDF text-layer extraction + amount/date/merchant regex parsing + Jaccard match scoring. |
+| `traderview-web`             | 8,380  | axum 0.7 router — **304 routes** across ~70 route files (auth, accounts, trades, executions, tags, journal + AI, screenshots, imports + CSV wizard, 17 reports, mentorships, shares, comments, forum, charts/bars, settings, plans, hotkeys, watchlists, alerts + strategy alerts, paper, options, vol, breadth, fear-greed, sector rotation, sentiment, disclosures, catalysts WS, halts WS, live-ticks WS, webull WS, premarket, markets, news, earnings, custom indicators, backtest + walk-forward, rebalance, goals, reviews, expenses + receipts + Schedule C, dashboards, API tokens, webhooks, client-errors sink). Custom logging middleware (`log_mw`) records every request with elapsed_ms; 4xx/5xx attaches a 4KB body snippet. |
+| `src-tauri` (`traderview-desktop`) | 366    | Tauri v2 shell — spawns embedded Postgres + axum on localhost. Worker-thread bring-up, native-dialog on failure, `tracing-appender` non-blocking file log + panic hook, `Embedded` held across `axum::serve` so Postgres can't be dropped mid-request. |
 
-**Dependency direction** is one-way: `desktop` and `web` both depend on `core + db + import`. Neither depends on the other. `import` and `db` both depend on `core`. Nothing depends on `desktop` or `web`.
+**Dependency direction** is one-way: `desktop` depends on `db + web`. `web` depends on `core + db + import + expense + ocr`. `import`, `expense`, `db` all depend on `core`. Nothing depends on `desktop`.
 
 ---
 
 ## [0x04] SCHEMA
 
-Single migration (`migrations/0001_initial.sql`, 149 LOC) defines 9 tables:
+29 migrations from `0001_initial.sql` through `0029_expenses.sql` define **67 tables, 87 indexes, 17 PostgreSQL enum types**. Each migration adds a self-contained feature; the schema grows by feature, not by big-bang. Money is `NUMERIC(20, 8)` everywhere — no floats. Grouped by domain:
 
-| Table          | Purpose                                                                    |
-|----------------|----------------------------------------------------------------------------|
-| `users`        | Real users (web) or one auto-created `local` user (desktop). Nullable email/hash for desktop. |
-| `accounts`     | Broker accounts (`webull`, `ibkr`, `tos`, …). One user → many accounts.    |
-| `executions`   | One row per fill — the atom. Unique on `(account_id, broker_order_id, executed_at, symbol, side, qty, price)` when `broker_order_id` is non-null. |
-| `trades`       | FIFO-derived from `executions`. Materialized for fast UI queries.          |
-| `trade_executions` | Many-to-many: which executions composed each trade.                    |
-| `trade_tags`   | Free-form tags per trade.                                                  |
-| `journal_entries`  | Per-trade or per-day markdown notes.                                   |
-| `imports`      | Audit trail — every CSV upload + the rows it produced.                     |
-| `_sqlx_migrations` | sqlx migration tracker.                                                |
+| Domain                     | Tables                                                                 |
+|----------------------------|------------------------------------------------------------------------|
+| Identity & accounts        | `users`, `accounts`, `api_tokens`, `mentorships`                       |
+| Executions & trades        | `executions`, `trades`, `trade_executions`, `trade_tags`, `tags`, `imports` |
+| Journal                    | `journal_entries`, `note_templates`, `trade_reviews`, `chart_drawings`, `screenshots` |
+| Plans / goals / discipline | `plans`, `trading_goals`, `goal_progress`, `discipline_violations`     |
+| Price data & quotes        | `bars`, `quote_snapshots`, `news_items`, `earnings_events`, `dividends` |
+| Live feeds                 | `halts`, `catalysts`, `mentions` (sentiment), `tick_snapshots`         |
+| Watchlists & screening     | `watchlists`, `watchlist_symbols`, `filter_sets`                       |
+| Alerts / webhooks / hotkeys | `alerts`, `strategy_alerts`, `strategy_alert_fires`, `hotkeys`, `webhooks`, `webhook_deliveries`, `disclosures_watchers` |
+| Backtest & strategy        | `backtest_runs`, `backtest_presets`, `walk_forward_runs`, `custom_indicators` |
+| Paper trading              | `paper_accounts`, `paper_orders`, `paper_positions`                    |
+| Portfolio / risk           | `rebalance_targets`, `rebalance_runs`, `tax_lots`                      |
+| Disclosures                | `disclosures` (Form 4, 13D/G, Senate / House STOCK Act)                |
+| Community                  | `shares`, `shared_comments`, `forum_categories`, `forum_threads`, `forum_posts`, `boards`, `board_items` |
+| Settings & AI              | `user_settings`, `ai_settings`, `ai_journal_cache`, `dashboards`       |
+| Expenses + OCR             | `expense_accounts`, `expense_categories`, `expense_transactions`, `expense_rules`, `expense_receipts` |
 
-Sides are typed enums: `side_t = (buy, sell, short, cover)` for executions; `trade_side_t = (long, short)` and `trade_status_t = (open, closed)` for trades. Money is `NUMERIC(20, 8)` — no floats anywhere in the schema.
+Sides are typed enums: `side_t = (buy, sell, short, cover)` for executions; `trade_side_t = (long, short)` and `trade_status_t = (open, closed)` for trades. Other enums cover order status, review status, asset class, alert triggers, sentiment sources, halt reason codes, etc.
 
 ---
 
 ## [0x05] HTTP API
 
-10 routes, all under `/api/`:
+**304 axum routes** under `/api/` across ~70 route files. Bearer-auth required on everything except `/health`, `/config`, `/auth/*`, and `/client-errors`. Four WebSocket endpoints expose live feeds. Frontend bindings live in `frontend/js/api.js` (96 method-bound helpers). Grouped:
 
-| Method | Path                  | Purpose                                          |
-|--------|-----------------------|--------------------------------------------------|
-| GET    | `/health`             | Liveness probe                                   |
-| GET    | `/config`             | Server config + auth mode (`local` vs `multi`)   |
-| POST   | `/auth/register`      | Create user (web mode only)                      |
-| POST   | `/auth/login`         | Exchange email/password for JWT bearer token     |
-| GET    | `/auth/me`            | Current user from bearer token                   |
-| GET    | `/accounts`           | List accounts for current user                   |
-| GET    | `/trades`             | List trades (filterable by symbol / status / date) |
-| GET    | `/stats/summary`      | Summary stats — wins / losses / expectancy / win rate |
-| GET    | `/stats/equity`       | Equity curve points for uPlot                    |
-| GET    | `/journal/:day`       | Markdown journal entries for a calendar day      |
+| Group                      | Endpoints | Examples                                                          |
+|----------------------------|-----------|-------------------------------------------------------------------|
+| Auth + config              | ~6        | `GET /config`, `GET /auth/me`, `POST /auth/login`, `POST /auth/register` |
+| Trades + executions        | ~20       | `GET/POST /trades`, `POST /trades/rollup`, `POST /trades/merge`, `POST /trades/bulk`, `GET/POST /executions` |
+| Journal + AI + reviews     | ~15       | `GET /journal/day/{day}`, `POST /journal-ai/{id}/analyze`, `GET /trade-reviews/needed/{acct}` |
+| Reports (17 cuts)          | ~20       | `/reports/{overview, by-symbol, by-day-of-week, by-hour, by-hold, r-distribution, comparison, exit-efficiency, liquidity, drawdown, risk-adjusted, calendar, …}` |
+| **Live streams (WS)**      | 4         | `WS /ws/halts`, `WS /ws/catalysts`, `WS /ws/ticks`, `WS /ws/webull` |
+| Research per-symbol        | ~10       | `/symbols/{sym}/{quote, signals, news, earnings, dividends, recommendations, insiders, fundamentals, holders}` |
+| Screener + scanners        | ~4        | `GET /screener/run`, `GET /screener/top`, `GET /scans/run` (24 presets) |
+| Options + vol              | ~7        | `/options/{sym}`, `/greeks`, `/vol-surface/{sym}`, `/iv/scan`, `/iv/symbols/{sym}` |
+| Markets + breadth          | ~7        | `/markets/snapshot` (60s cache), `/premarket/snapshot`, `/breadth/snapshot`, `/fear-greed`, `/sector-rotation`, `/heatmap` |
+| Backtest + custom indicators | ~12     | `POST /backtest/run`, `POST /backtest/walk-forward`, `POST /custom-indicators/eval/{sym}` |
+| Paper trading              | ~8        | `POST /paper/accounts`, `GET /paper/accounts/{id}/positions`, `POST /paper/accounts/{id}/orders` |
+| Alerts + webhooks + hotkeys | ~15      | `GET/POST /alerts`, `GET/POST /strategy-alerts`, `GET/POST /hotkeys`, `GET/POST /webhooks`, `POST /webhooks/{id}/test` |
+| Sentiment                  | ~5        | `/sentiment/{feed, ranked, symbol/{sym}, series/{sym}, poll}` |
+| Crypto                     | 3         | `/crypto/markets`, `/crypto/global`, `/crypto/btc/chain` |
+| Tax + analytics            | ~10       | `/tax-lots/{acct}`, `/r-distribution/{acct}`, `/discipline/{acct}`, `/mood-analytics/{acct}`, `/equity-forecast`, `/fill-quality/{acct}` |
+| Webull (read-only)         | 2         | `POST /webull/connect` (tokens in memory only), `GET /webull/snapshot` |
+| Expenses + OCR             | ~15       | `GET/POST /expense/transactions`, `POST /expense/import`, `POST /expense/receipts`, `GET /expense/report/schedule_c?year=` |
+| Community                  | ~12       | `/shares`, `/shared/{slug}`, `/forum/threads`, `/mentorships`, `/boards` |
+| Watchlists + filter-sets   | ~10       | `GET/POST /watchlists`, `GET /watchlists/{id}/{symbols,quotes}`, `GET/POST /filter-sets` |
+| Custom dashboards          | ~5        | `GET/POST /dashboards`, `GET /dashboards/{id}` |
+| Disclosures + earnings + news | ~10    | `GET /disclosures`, `GET /earnings/calendar`, `GET /news/recent`, `GET /news/search` |
+| API tokens + import sources | ~7       | `GET/POST /api-tokens`, `PATCH /api-tokens/{id}/rate-limit`, `GET /imports/sources`, `POST /imports` |
+| Client error sink          | 1         | `POST /client-errors` (no auth; browser-side error funnel) |
 
-Desktop mode auto-logs in as the local user; the frontend talks to the embedded server on a random localhost port via `fetch`. Web mode requires `POST /api/auth/login` → returns JWT → sent as `Authorization: Bearer …` on subsequent calls.
+Desktop mode auto-logs in as the local user; the frontend talks to the embedded server on a random localhost port. Web mode requires `POST /api/auth/login` → returns JWT → `Authorization: Bearer …` on subsequent calls. A custom logging middleware (`log_mw.rs`) records every request with elapsed_ms; 4xx/5xx responses get a 4 KB body snippet attached to the log for offline debugging.
 
 ---
 
 ## [0x06] FRONTEND
 
-`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. Five top-level views, all rendered into `<main id="app">`:
+`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. **82 view modules + 11 supporting modules**, 15,042 LOC JS + 1,937 LOC CSS. All views render into `<main id="app">` via hash-routed dispatch. **86-tile launcher (Cmd-K)** is the primary entry point; topbar carries 11 shortcuts and the rest is the launcher. `?` opens the in-app tutorial.
 
-| View      | File             | What it shows                                          |
-|-----------|------------------|--------------------------------------------------------|
-| Dashboard | `js/app.js`      | Summary stats + equity curve (uPlot)                   |
-| Trades    | `js/trades.js`   | Filterable, sortable trade table                       |
-| Journal   | `js/journal.js`  | Per-day markdown journal entries                       |
-| Import    | `js/import.js`   | Broker CSV upload + dedupe report                      |
-| Accounts  | `js/auth.js`     | Accounts list + add/edit                               |
+| Category              | Tiles | Notable views                                                       |
+|-----------------------|-------|---------------------------------------------------------------------|
+| Live Markets          | 6     | Live Scanner (Finnhub WS), Halts, Catalysts, Pre-market, Tape, Heatmap |
+| Trading               | 7     | Webull (read-only broker), Live Positions, Paper Trade, New Trade, Plans, Position Size (Kelly + correlation-aware), Hotkeys |
+| Journal               | 9     | Journal (per-trade + daily + general), AI Journal, Trade Reviews, Trade Compare, Replay, Tape Replay, Discipline, Mood Analytics, Goals |
+| Charts & Research     | 25    | Charts, Research, Watchlists, Screener, Scanners (24 presets), Top Signals, Compare, Pairs, Correlation, Sectors, Sector Rotation, Breadth, Fear/Greed, Sentiment, Dark Pool, Short Interest, Vol, Vol Surface, Options, Earnings Cal, Earnings IV, Disclosures, Economy, News, Crypto |
+| Reports               | 11    | Dashboard, Reports (17 cuts), R-Multiple, Equity Forecast, Fill Quality, Risk, Rebalance, Tax Lots, Expenses, Calendar, Accounts Overview |
+| Strategy & Automation | 7     | Backtest (stryke-JIT), Backtest Presets, Walk-forward, Custom Indicators, Strategy Alerts, Alerts, Webhooks |
+| Community             | 4     | Shares, Community (forum), Mentorship, Boards |
+| Admin & Data          | 9     | Import (12 brokers), CSV Wizard, Exports, Accounts, Tags, Search, Settings, Developer (API tokens), **Tutorial** (`?`) |
 
-`js/api.js` wraps `fetch` with the JWT header in web mode and a no-op header in desktop mode. `js/charts.js` owns all uPlot setup so chart code lives in one place.
+**Race-safe view dispatch** — `app.js` maintains a per-dispatch token (`currentViewToken()`) bumped on every navigation. Every view captures the token at render start and bails after each `await` if the token is stale, preventing the "`document.getElementById(...)` returns null after navigation" crash that hits naïve SPAs when slow async resolves into a replaced DOM. WebSocket reconnect loops and `setInterval` callbacks are also token-gated so leaving a view tears down its streams.
+
+`js/api.js` wraps `fetch` with the JWT header, error reporting, JSON parsing, and an `ApiError` class. `js/error_reporter.js` funnels `window.onerror`, `unhandledrejection`, and overridden `console.error` to `POST /api/client-errors` (queue-capped at 200). `js/charts.js` owns all uPlot setup. `js/hud-theme.js` provides the cyberpunk chrome (5 color schemes, CRT scanlines, neon-border pulse). `js/alert_engine.js` polls alerts and fires sound + SpeechSynthesis voice + Notification (all SecurityError-guarded under Tauri's custom scheme).
 
 uPlot is vendored under `frontend/lib/` by `./scripts/vendor-uplot.sh` — pinned, reproducible, no CDN at runtime.
 

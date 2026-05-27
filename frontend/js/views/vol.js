@@ -2,10 +2,12 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const sign = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2);
 
 export async function renderVol(mount) {
+    const tok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// VIX TERM STRUCTURE · YIELDS · DXY</h1>
         <div id="vix" class="cards">loading…</div>
@@ -31,15 +33,18 @@ export async function renderVol(mount) {
             api.volYields(),
             api.volDollar(),
         ]);
-        renderVix(v);
-        renderYields(y);
-        renderDxy(d);
+        if (!viewIsCurrent(tok)) return;
+        renderVix(v, mount);
+        renderYields(y, mount);
+        renderDxy(d, mount);
     } catch (e) {
-        document.getElementById('vix').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (!viewIsCurrent(tok)) return;
+        const vixEl = mount.querySelector('#vix');
+        if (vixEl) vixEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
 }
 
-function renderVix(v) {
+function renderVix(v, mount) {
     const regimeCls = v.regime === 'backwardation' ? 'neg'
                     : v.regime === 'contango'      ? 'pos' : '';
     const cards = `
@@ -51,10 +56,12 @@ function renderVix(v) {
         <div class="card"><div class="label">Regime</div>
             <div class="value ${regimeCls}">${v.regime.toUpperCase()}</div></div>
     `;
-    document.getElementById('vix').innerHTML = cards;
-    if (v.points.length) {
+    const vixEl = mount.querySelector('#vix');
+    if (vixEl) vixEl.innerHTML = cards;
+    const curveEl = mount.querySelector('#vix-curve');
+    if (v.points.length && curveEl) {
         barChart(
-            document.getElementById('vix-curve'),
+            curveEl,
             v.points.map(p => p.label),
             v.points.map(p => p.value),
             { color: '#ff2a6d' },
@@ -62,8 +69,10 @@ function renderVix(v) {
     }
 }
 
-function renderYields(y) {
-    document.getElementById('yields-cards').innerHTML = `
+function renderYields(y, mount) {
+    const ycEl = mount.querySelector('#yields-cards');
+    if (!ycEl) return;
+    ycEl.innerHTML = `
         ${y.points.map(p => `
             <div class="card"><div class="label">${esc(p.label)} (${esc(p.symbol)})</div>
                 <div class="value">${fmt(p.yield_pct, 3)}%</div>
@@ -76,9 +85,10 @@ function renderYields(y) {
         <div class="card"><div class="label">Inverted</div>
             <div class="value ${y.inverted ? 'neg' : 'pos'}">${y.inverted ? 'YES' : 'NO'}</div></div>
     `;
-    if (y.points.length) {
+    const ycChart = mount.querySelector('#yc-chart');
+    if (y.points.length && ycChart) {
         barChart(
-            document.getElementById('yc-chart'),
+            ycChart,
             y.points.map(p => p.label),
             y.points.map(p => p.yield_pct),
             { color: '#00e5ff' },
@@ -86,8 +96,10 @@ function renderYields(y) {
     }
 }
 
-function renderDxy(d) {
-    document.getElementById('dxy').innerHTML = `
+function renderDxy(d, mount) {
+    const dxyEl = mount.querySelector('#dxy');
+    if (!dxyEl) return;
+    dxyEl.innerHTML = `
         <div class="card"><div class="label">DXY</div>
             <div class="value">${fmt(d.dxy, 3)}</div>
             <div class="small ${(d.dxy_change_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${d.dxy_change_pct != null ? sign(d.dxy_change_pct) + '%' : '—'}</div></div>
