@@ -23,6 +23,8 @@ pub mod qbi;
 pub mod quarterly_tax;
 pub mod recurring;
 pub mod rules;
+pub mod schedule_d;
+pub mod section_1256;
 pub mod seed_rules;
 pub mod self_employment_tax;
 pub mod sheet;
