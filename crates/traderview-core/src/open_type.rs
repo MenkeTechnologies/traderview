@@ -17,7 +17,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct OpenInput {
     pub open_price: f64,
     /// First 30-60 minute bar — high and low of that opening range.

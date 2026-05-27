@@ -325,6 +325,38 @@ pub fn classic_pivots(high: f64, low: f64, close: f64) -> Pivots {
 }
 
 // ===========================================================================
+// ATR — Average True Range (Wilder smoothing).
+// ===========================================================================
+
+/// Returns ATR aligned with the input length. The first `period` slots are
+/// `None`; the seed at index `period` is the simple average of the first
+/// `period` true-range values; subsequent values use Wilder smoothing.
+pub fn atr(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Vec<Option<f64>> {
+    let n = closes.len();
+    let mut out = vec![None; n];
+    if period == 0 || n < period + 1 || highs.len() != n || lows.len() != n {
+        return out;
+    }
+    let tr = |i: usize| -> f64 {
+        let prev_close = closes[i - 1];
+        let a = highs[i] - lows[i];
+        let b = (highs[i] - prev_close).abs();
+        let c = (lows[i] - prev_close).abs();
+        a.max(b).max(c)
+    };
+    let mut sum = 0.0;
+    for i in 1..=period { sum += tr(i); }
+    let p = period as f64;
+    let mut prev = sum / p;
+    out[period] = Some(prev);
+    for (i, slot) in out.iter_mut().enumerate().take(n).skip(period + 1) {
+        prev = (prev * (p - 1.0) + tr(i)) / p;
+        *slot = Some(prev);
+    }
+    out
+}
+
+// ===========================================================================
 // Tests
 // ===========================================================================
 
@@ -369,5 +401,30 @@ mod tests {
         assert_eq!(p.pivot, 100.0);
         assert_eq!(p.r1, 110.0);
         assert_eq!(p.s1, 90.0);
+    }
+
+    #[test]
+    fn atr_returns_none_until_period_then_wilder_smooths() {
+        // Flat HLC bars where high-low = 2 and close sits inside the range.
+        // Every TR collapses to (high - low) = 2.0, so ATR converges to 2.0.
+        let h = vec![2.0; 15];
+        let l = vec![0.0; 15];
+        let c = vec![1.0; 15];
+        let a = atr(&h, &l, &c, 5);
+        for v in a.iter().take(5) { assert!(v.is_none()); }
+        let seed = a[5].expect("seed at period index");
+        assert!((seed - 2.0).abs() < 1e-9, "constant TR of 2.0 must yield ATR=2.0");
+        let tail = a[14].expect("smoothed tail");
+        assert!((tail - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn atr_rejects_mismatched_input_lengths() {
+        // Length mismatch must return all-None rather than panic.
+        let h = vec![1.0, 2.0, 3.0];
+        let l = vec![0.5, 1.5];
+        let c = vec![0.7, 1.7, 2.7];
+        let a = atr(&h, &l, &c, 2);
+        assert!(a.iter().all(|v| v.is_none()));
     }
 }

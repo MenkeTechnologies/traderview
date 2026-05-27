@@ -16,7 +16,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct KellyInput {
     /// Win probability (0..=1).
     pub win_rate: f64,

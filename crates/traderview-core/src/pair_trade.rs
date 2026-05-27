@@ -27,7 +27,7 @@ pub enum PairSignal {
     Hold,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PairConfig {
     pub entry_z: f64,
     pub exit_z: f64,

@@ -9,7 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradeOutcome {
     pub entry: f64,
     pub mae: f64,

@@ -15,7 +15,12 @@ mod backtest_presets;
 mod breadth;
 mod catalysts;
 mod chart_drawings;
+mod calc;
 mod charts;
+mod chart_indicators;
+mod extras;
+mod microstructure;
+mod trade_analytics;
 mod client_errors;
 mod comments;
 mod community;
@@ -101,6 +106,11 @@ pub fn api_router() -> Router<AppState> {
         .merge(comments::router())
         .merge(community::router())
         .merge(charts::router())
+        .merge(chart_indicators::router())
+        .merge(calc::router())
+        .merge(trade_analytics::router())
+        .merge(microstructure::router())
+        .merge(extras::router())
         .merge(settings::router())
         .merge(plans::router())
         .merge(search::router())

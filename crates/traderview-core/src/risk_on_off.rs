@@ -14,7 +14,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CrossAssetSnapshot {
     pub spy_change_pct: f64,
     pub gold_change_pct: f64,

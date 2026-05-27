@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BarOhlcv {
     pub typical: Decimal,    // (high+low+close)/3, caller pre-computes
     pub volume: Decimal,

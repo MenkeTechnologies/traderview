@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Bar { pub high: f64, pub low: f64 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]

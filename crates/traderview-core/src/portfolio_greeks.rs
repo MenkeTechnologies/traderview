@@ -15,7 +15,7 @@
 use crate::greeks::Greeks;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptionPosition {
     pub symbol: String,
     pub greeks: Greeks,

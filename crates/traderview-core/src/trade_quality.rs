@@ -16,7 +16,7 @@ use crate::models::TradeSide;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BarRange {
     pub low: Decimal,
     pub high: Decimal,

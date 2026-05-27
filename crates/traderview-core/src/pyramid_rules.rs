@@ -23,7 +23,7 @@ pub struct PyramidAdd {
     pub raised_stop_to: Option<f64>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PyramidRules {
     pub max_tranches: usize,
     pub min_favorable_atrs_between_adds: f64,

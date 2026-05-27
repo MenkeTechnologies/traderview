@@ -15,7 +15,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradeImpact {
     pub qty: f64,
     pub adv: f64,

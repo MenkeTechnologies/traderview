@@ -9,7 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradeFeature {
     pub entry_minute_of_day: f64,    // 0..1440
     pub hold_duration_minutes: f64,

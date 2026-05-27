@@ -15,7 +15,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradeMae {
     /// Final realized result. Positive = winner, negative = loser.
     pub realized: f64,

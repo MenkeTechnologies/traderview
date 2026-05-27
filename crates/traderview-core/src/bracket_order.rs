@@ -45,7 +45,7 @@ pub struct ResolvedBracket {
     pub bar_index: Option<usize>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PriceBar {
     pub high: Decimal,
     pub low: Decimal,

@@ -706,4 +706,215 @@ export const api = {
     linkPlan: (plan_id, trade_id) =>
         request(`/plans/${plan_id}/link/${trade_id}`, { method: 'POST' }),
     abandonPlan: (id) => request(`/plans/${id}`, { method: 'DELETE' }),
+
+    // ============================================================
+    // Chart transformations — alt bar series + auto-drawing overlays
+    // ============================================================
+    barsHeikinAshi:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/heikin-ashi${qs(q)}`),
+    barsRenko:         (sym, q) => request(`/bars/${encodeURIComponent(sym)}/renko${qs(q)}`),
+    barsVolumeProfile: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/volume-profile${qs(q)}`),
+    barsIchimoku:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ichimoku${qs(q)}`),
+    barsFibonacci:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/fibonacci${qs(q)}`),
+    barsSupertrend:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/supertrend${qs(q)}`),
+    barsSwingPoints:   (sym, q) => request(`/bars/${encodeURIComponent(sym)}/swing-points${qs(q)}`),
+    barsCandlestickPatterns: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/candlestick-patterns${qs(q)}`),
+    barsPivotsFloor:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pivots/floor${qs(q)}`),
+    barsPivotsCamarilla: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pivots/camarilla${qs(q)}`),
+    barsPivotsWoodie:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pivots/woodie${qs(q)}`),
+    barsPivotsDemark:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pivots/demark${qs(q)}`),
+
+    // ============================================================
+    // Technical indicators — series-out, aligned with bar_time
+    // ============================================================
+    indSma:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/sma${qs(q)}`),
+    indEma:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ema${qs(q)}`),
+    indRsi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/rsi${qs(q)}`),
+    indMacd:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/macd${qs(q)}`),
+    indBollinger:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/bollinger${qs(q)}`),
+    indAtr:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/atr${qs(q)}`),
+    indRoc:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/roc${qs(q)}`),
+    indTrix:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/trix${qs(q)}`),
+    indDpo:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/dpo${qs(q)}`),
+    indCoppock:       (sym, q) => request(`/bars/${encodeURIComponent(sym)}/coppock${qs(q)}`),
+    indSchaffTrend:   (sym, q) => request(`/bars/${encodeURIComponent(sym)}/schaff-trend${qs(q)}`),
+    indMassIndex:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/mass-index${qs(q)}`),
+    indAdx:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/adx${qs(q)}`),
+    indStochastic:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/stochastic${qs(q)}`),
+    indWilliamsR:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/williams-r${qs(q)}`),
+    indCci:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/cci${qs(q)}`),
+    indMfi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/mfi${qs(q)}`),
+    indDonchian:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/donchian${qs(q)}`),
+    indParabolicSar:  (sym, q) => request(`/bars/${encodeURIComponent(sym)}/parabolic-sar${qs(q)}`),
+    indAnchoredVwap:  (sym, q) => request(`/bars/${encodeURIComponent(sym)}/anchored-vwap${qs(q)}`),
+    indAroon:         (sym, q) => request(`/bars/${encodeURIComponent(sym)}/aroon${qs(q)}`),
+    indAwesomeOscillator: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/awesome-oscillator${qs(q)}`),
+    indVortex:        (sym, q) => request(`/bars/${encodeURIComponent(sym)}/vortex${qs(q)}`),
+    indChaikinVolatility: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/chaikin-volatility${qs(q)}`),
+    indObv:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/obv${qs(q)}`),
+    indAccumulationDistribution: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/accumulation-distribution${qs(q)}`),
+    indForceIndex:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/force-index${qs(q)}`),
+    indKeltner:       (sym, q) => request(`/bars/${encodeURIComponent(sym)}/keltner${qs(q)}`),
+    indVwapBands:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/vwap-bands${qs(q)}`),
+    indBbSqueeze:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/bb-squeeze${qs(q)}`),
+    indRsiDivergence: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/rsi-divergence${qs(q)}`),
+    indTrendChannel:  (sym, q) => request(`/bars/${encodeURIComponent(sym)}/trend-channel${qs(q)}`),
+
+    // ============================================================
+    // Options analytics (chain-derived)
+    // ============================================================
+    optionsMaxPain: (sym, q) => request(`/options/${encodeURIComponent(sym)}/max-pain${qs(q)}`),
+    optionsGex:     (sym, q) => request(`/options/${encodeURIComponent(sym)}/gex${qs(q)}`),
+    optionsIvSkew:  (sym, q) => request(`/options/${encodeURIComponent(sym)}/iv-skew${qs(q)}`),
+
+    // ============================================================
+    // Stateless calculators
+    // ============================================================
+    calcKelly:               (b) => request('/calc/kelly',                { method: 'POST', body: JSON.stringify(b) }),
+    calcDynamicKelly:        (b) => request('/calc/dynamic-kelly',        { method: 'POST', body: JSON.stringify(b) }),
+    calcOptimalF:            (b) => request('/calc/optimal-f',            { method: 'POST', body: JSON.stringify(b) }),
+    calcVarHistorical:       (b) => request('/calc/var-historical',       { method: 'POST', body: JSON.stringify(b) }),
+    calcVarGaussian:         (b) => request('/calc/var-gaussian',         { method: 'POST', body: JSON.stringify(b) }),
+    calcMonteCarlo:          (b) => request('/calc/monte-carlo',          { method: 'POST', body: JSON.stringify(b) }),
+    calcRiskParity:          (b) => request('/calc/risk-parity',          { method: 'POST', body: JSON.stringify(b) }),
+    calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
+    calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
+    calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
+    calcBuyingPower:         (b) => request('/calc/buying-power',         { method: 'POST', body: JSON.stringify(b) }),
+    calcTaxLossHarvest:      (b) => request('/calc/tax-loss-harvest',     { method: 'POST', body: JSON.stringify(b) }),
+    calcWashSale:            (b) => request('/calc/wash-sale',            { method: 'POST', body: JSON.stringify(b) }),
+    calcCostBasis:           (b) => request('/calc/cost-basis',           { method: 'POST', body: JSON.stringify(b) }),
+    calcCommissionOptimizer: (b) => request('/calc/commission-optimizer', { method: 'POST', body: JSON.stringify(b) }),
+    calcYieldCurve:          (b) => request('/calc/yield-curve',          { method: 'POST', body: JSON.stringify(b) }),
+    calcBondDuration:        (b) => request('/calc/bond-duration',        { method: 'POST', body: JSON.stringify(b) }),
+    calcCarryScore:          (b) => request('/calc/carry-score',          { method: 'POST', body: JSON.stringify(b) }),
+    calcCurrencyExposure:    (b) => request('/calc/currency-exposure',    { method: 'POST', body: JSON.stringify(b) }),
+    calcVixTermStructure:    (b) => request('/calc/vix-term-structure',   { method: 'POST', body: JSON.stringify(b) }),
+    calcRiskReward:          (b) => request('/calc/risk-reward',          { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Trade analytics — psychology, performance, event, quality, portfolio
+    // ============================================================
+    anlyTiltDetector:        (b) => request('/analytics/tilt-detector',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyDisciplineScore:     (b) => request('/analytics/discipline-score',      { method: 'POST', body: JSON.stringify(b) }),
+    anlyEmotionTags:         (b) => request('/analytics/emotion-tags',          { method: 'POST', body: JSON.stringify(b) }),
+    anlyOvertrading:         (b) => request('/analytics/overtrading',           { method: 'POST', body: JSON.stringify(b) }),
+    anlyStreaks:             (b) => request('/analytics/streaks',               { method: 'POST', body: JSON.stringify(b) }),
+    anlyLosingStreakProbability: (b) => request('/analytics/losing-streak-probability', { method: 'POST', body: JSON.stringify(b) }),
+    anlyWinLossAsymmetry:    (b) => request('/analytics/winloss-asymmetry',     { method: 'POST', body: JSON.stringify(b) }),
+    anlyPyramidRules:        (b) => request('/analytics/pyramid-rules',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyCagrSimple:          (b) => request('/analytics/cagr-simple',           { method: 'POST', body: JSON.stringify(b) }),
+    anlyCagrRolling:         (b) => request('/analytics/cagr-rolling',          { method: 'POST', body: JSON.stringify(b) }),
+    anlyProfitFactor:        (b) => request('/analytics/profit-factor',         { method: 'POST', body: JSON.stringify(b) }),
+    anlySortino:             (b) => request('/analytics/sortino',               { method: 'POST', body: JSON.stringify(b) }),
+    anlyTreynor:             (b) => request('/analytics/treynor',               { method: 'POST', body: JSON.stringify(b) }),
+    anlyInformationRatio:    (b) => request('/analytics/information-ratio',     { method: 'POST', body: JSON.stringify(b) }),
+    anlySharpeByWindow:      (b) => request('/analytics/sharpe-by-window',      { method: 'POST', body: JSON.stringify(b) }),
+    anlyHighWaterMark:       (b) => request('/analytics/high-water-mark',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyDrawdownDuration:    (b) => request('/analytics/drawdown-duration',     { method: 'POST', body: JSON.stringify(b) }),
+    anlyEarningsMoveStraddle:(b) => request('/analytics/earnings-move-straddle',{ method: 'POST', body: JSON.stringify(b) }),
+    anlyEarningsMoveIv:      (b) => request('/analytics/earnings-move-iv',      { method: 'POST', body: JSON.stringify(b) }),
+    anlyPead:                (b) => request('/analytics/pead',                  { method: 'POST', body: JSON.stringify(b) }),
+    anlyGapAnalysis:         (b) => request('/analytics/gap-analysis',          { method: 'POST', body: JSON.stringify(b) }),
+    anlyCalendarBias:        (b) => request('/analytics/calendar-bias',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyHaltRisk:            (b) => request('/analytics/halt-risk',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyTradeQuality:        (b) => request('/analytics/trade-quality',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyExitTiming:          (b) => request('/analytics/exit-timing',           { method: 'POST', body: JSON.stringify(b) }),
+    anlyMaeStopTuning:       (b) => request('/analytics/mae-stop-tuning',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyBracketOrder:        (b) => request('/analytics/bracket-order',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyProbabilityOfTouch:  (b) => request('/analytics/probability-of-touch',  { method: 'POST', body: JSON.stringify(b) }),
+    anlyPortfolioGreeks:     (b) => request('/analytics/portfolio-greeks',      { method: 'POST', body: JSON.stringify(b) }),
+    anlyConcentration:       (b) => request('/analytics/concentration',         { method: 'POST', body: JSON.stringify(b) }),
+    anlySectorExposure:      (b) => request('/analytics/sector-exposure',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyBeta:                (b) => request('/analytics/beta',                  { method: 'POST', body: JSON.stringify(b) }),
+    anlyBetaHedge:           (b) => request('/analytics/beta-hedge',            { method: 'POST', body: JSON.stringify(b) }),
+    anlyHedgeRatio:          (b) => request('/analytics/hedge-ratio',           { method: 'POST', body: JSON.stringify(b) }),
+    anlySpreadPayoff:        (b) => request('/analytics/spread-payoff',         { method: 'POST', body: JSON.stringify(b) }),
+    anlyRollingZscore:       (b) => request('/analytics/rolling-zscore',        { method: 'POST', body: JSON.stringify(b) }),
+    anlyStrategyCorrelation: (b) => request('/analytics/strategy-correlation',  { method: 'POST', body: JSON.stringify(b) }),
+    anlySpreadAttribution:   (b) => request('/analytics/spread-attribution',    { method: 'POST', body: JSON.stringify(b) }),
+    anlyPairTradeSignal:     (b) => request('/analytics/pair-trade-signal',     { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Microstructure / order flow / heatmaps / regime
+    // ============================================================
+    microOrderBookImbalance: (b) => request('/microstructure/order-book-imbalance', { method: 'POST', body: JSON.stringify(b) }),
+    microOrderFlowClassify:  (b) => request('/microstructure/order-flow-classify',  { method: 'POST', body: JSON.stringify(b) }),
+    microOrderFlowAggregate: (b) => request('/microstructure/order-flow-aggregate', { method: 'POST', body: JSON.stringify(b) }),
+    microLiquidity:          (b) => request('/microstructure/liquidity',            { method: 'POST', body: JSON.stringify(b) }),
+    microMarketImpact:       (b) => request('/microstructure/market-impact',        { method: 'POST', body: JSON.stringify(b) }),
+    microPerSymbolSlippage:  (b) => request('/microstructure/per-symbol-slippage',  { method: 'POST', body: JSON.stringify(b) }),
+    microVwapSlippage:       (b) => request('/microstructure/vwap-slippage',        { method: 'POST', body: JSON.stringify(b) }),
+    microOrderStaleness:     (b) => request('/microstructure/order-staleness',      { method: 'POST', body: JSON.stringify(b) }),
+    microTwap:               (b) => request('/microstructure/twap',                 { method: 'POST', body: JSON.stringify(b) }),
+    heatmapIntraday:         (b) => request('/heatmaps/intraday',                   { method: 'POST', body: JSON.stringify(b) }),
+    heatmapDowHour:          (b) => request('/heatmaps/dow-hour',                   { method: 'POST', body: JSON.stringify(b) }),
+    regimeEquity:            (b) => request('/regime/equity',                       { method: 'POST', body: JSON.stringify(b) }),
+    regimeNewsEvent:         (b) => request('/regime/news-event',                   { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Discipline / risk-gates / pre-trade
+    // ============================================================
+    discTimeInForce:         (b) => request('/discipline/time-in-force',            { method: 'POST', body: JSON.stringify(b) }),
+    discOpenType:            (b) => request('/discipline/open-type',                { method: 'POST', body: JSON.stringify(b) }),
+    discTradePlanChecklist:  (b) => request('/discipline/trade-plan-checklist',     { method: 'POST', body: JSON.stringify(b) }),
+    discStopLossBacktest:    (b) => request('/discipline/stop-loss-backtest',       { method: 'POST', body: JSON.stringify(b) }),
+    discStopLossBestOf:      (b) => request('/discipline/stop-loss-best-of',        { method: 'POST', body: JSON.stringify(b) }),
+    discPyramidPlan:         (b) => request('/discipline/pyramid-plan',             { method: 'POST', body: JSON.stringify(b) }),
+    discDailyLossLimit:      (b) => request('/discipline/daily-loss-limit',         { method: 'POST', body: JSON.stringify(b) }),
+    discDrawdownThrottle:    (b) => request('/discipline/drawdown-throttle',        { method: 'POST', body: JSON.stringify(b) }),
+    discGoalTracker:         (b) => request('/discipline/goal-tracker',             { method: 'POST', body: JSON.stringify(b) }),
+    discTripleScreen:        (b) => request('/discipline/triple-screen',            { method: 'POST', body: JSON.stringify(b) }),
+    discChandelierStop:      (b) => request('/discipline/chandelier-stop',          { method: 'POST', body: JSON.stringify(b) }),
+    discVolStopClose:        (b) => request('/discipline/vol-stop-close',           { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Options calc (IV/OI history + margin)
+    // ============================================================
+    optCalcIvRank:           (b) => request('/options/calc/iv-rank',                { method: 'POST', body: JSON.stringify(b) }),
+    optCalcIvBacktest:       (b) => request('/options/calc/iv-backtest',            { method: 'POST', body: JSON.stringify(b) }),
+    optCalcOiChange:         (b) => request('/options/calc/oi-change',              { method: 'POST', body: JSON.stringify(b) }),
+    optCalcMarginNakedShort: (b) => request('/options/calc/margin-naked-short',     { method: 'POST', body: JSON.stringify(b) }),
+    optCalcMarginVertical:   (b) => request('/options/calc/margin-vertical',        { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Clustering + setup tracking
+    // ============================================================
+    clustersTradeFeatures:   (b) => request('/clusters/trade-features',             { method: 'POST', body: JSON.stringify(b) }),
+    clustersCorrelation:     (b) => request('/clusters/correlation',                { method: 'POST', body: JSON.stringify(b) }),
+    setupsBySetup:           (b) => request('/setups/by-setup',                     { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Portfolio reporting (POST)
+    // ============================================================
+    portPositionAging:       (b) => request('/portfolio/position-aging',            { method: 'POST', body: JSON.stringify(b) }),
+    portPositionIrr:         (b) => request('/portfolio/position-irr',              { method: 'POST', body: JSON.stringify(b) }),
+    portMtmReconciliation:   (b) => request('/portfolio/mtm-reconciliation',        { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Sentiment + tax + filter
+    // ============================================================
+    sentPutCallRatio:        (b) => request('/sentiment/calc/put-call-ratio',       { method: 'POST', body: JSON.stringify(b) }),
+    taxReconcile1099b:       (b) => request('/tax/reconcile-1099b',                 { method: 'POST', body: JSON.stringify(b) }),
+    filterSymbols:           (b) => request('/filter/symbols',                      { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Misc charts/bars
+    // ============================================================
+    chartsAtrCone:           (b) => request('/charts/atr-cone',                     { method: 'POST', body: JSON.stringify(b) }),
+    barsAlligator:           (b) => request('/bars/alligator',                      { method: 'POST', body: JSON.stringify(b) }),
+
+    // ============================================================
+    // Calendar helpers
+    // ============================================================
+    calIsTradingDay:         (b) => request('/calendar/is-trading-day',             { method: 'POST', body: JSON.stringify(b) }),
+    calNextTradingDay:       (b) => request('/calendar/next-trading-day',           { method: 'POST', body: JSON.stringify(b) }),
+    calPriorTradingDay:      (b) => request('/calendar/prior-trading-day',          { method: 'POST', body: JSON.stringify(b) }),
+    calAddTradingDays:       (b) => request('/calendar/add-trading-days',           { method: 'POST', body: JSON.stringify(b) }),
+    calTradingDaysBetween:   (b) => request('/calendar/trading-days-between',       { method: 'POST', body: JSON.stringify(b) }),
+    calEarningsWindow:       (b) => request('/calendar/earnings-window',            { method: 'POST', body: JSON.stringify(b) }),
+    calEarningsAnalysis:     (b) => request('/calendar/earnings-analysis',          { method: 'POST', body: JSON.stringify(b) }),
+    futuresRollSchedule:     (b) => request('/futures/roll-schedule',               { method: 'POST', body: JSON.stringify(b) }),
+    microFootprint:          (b) => request('/microstructure/footprint',            { method: 'POST', body: JSON.stringify(b) }),
+    microMarketProfile:      (b) => request('/microstructure/market-profile',       { method: 'POST', body: JSON.stringify(b) }),
+    microStressTest:         (b) => request('/microstructure/stress-test',          { method: 'POST', body: JSON.stringify(b) }),
 };

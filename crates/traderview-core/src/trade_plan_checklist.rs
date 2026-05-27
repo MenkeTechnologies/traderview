@@ -24,7 +24,7 @@ pub struct PlannedTrade {
     pub is_long: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ChecklistConfig {
     pub min_thesis_words: usize,
     pub min_r_multiple: f64,

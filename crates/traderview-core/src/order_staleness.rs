@@ -38,7 +38,7 @@ pub struct StaleOrderRow {
     pub tier: StaleTier,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct StaleThresholds {
     pub warn_hours: f64,
     pub stale_hours: f64,

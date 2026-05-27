@@ -47,7 +47,7 @@ pub struct PutCallReport {
 }
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Thresholds {
     pub bullish_extreme_below: f64,
     pub bearish_extreme_above: f64,

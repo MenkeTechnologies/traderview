@@ -38,7 +38,7 @@ pub struct RegimeReport {
 }
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DetectorConfig {
     /// Min |slope/mean_equity| to count as "trending" rather than Choppy.
     pub trend_slope_pct: f64,

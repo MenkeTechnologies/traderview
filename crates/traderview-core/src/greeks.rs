@@ -5,14 +5,14 @@
 //!   r = risk-free annual rate, q = continuous dividend yield (0.0 for most).
 //! Returns prices in the same currency as S/K.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::{PI, E};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OptKind { Call, Put }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Greeks {
     pub price: f64,
     pub delta: f64,

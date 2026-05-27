@@ -12,7 +12,7 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradeReturn {
     pub when: DateTime<Utc>,
     /// Per-trade return — caller normalizes (R-multiple, %, dollars).

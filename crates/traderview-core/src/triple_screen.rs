@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TripleScreenInput {
     pub weekly_trend: TrendBias,
     pub daily_oscillator_value: f64,
