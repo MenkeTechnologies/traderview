@@ -301,4 +301,11 @@
       applyNeon(btnNeon.classList.contains('active') ? false : true);
     });
   });
+
+  // Expose a re-mount hook so the Settings view can repaint the
+  // scheme grid each time it renders (the element doesn't exist at
+  // DOMContentLoaded since the SPA mounts views on demand).
+  window.tvHud = {
+    remountSchemeGrid: function () { renderSchemeGrid(currentScheme()); },
+  };
 })();

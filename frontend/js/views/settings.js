@@ -14,6 +14,14 @@ export async function renderSettings(mount, state) {
         <h1 class="view-title">// SETTINGS</h1>
 
         <div class="chart-panel">
+            <h2>Appearance</h2>
+            <p class="muted small">CRT scanlines, neon-border pulse, and dark/light theme are toggled from the buttons in the topbar. Color scheme switches the whole HUD palette — picks below.</p>
+            <div class="settings-scheme">
+                <div class="scheme-grid" id="hudSchemeGrid"></div>
+            </div>
+        </div>
+
+        <div class="chart-panel">
             <h2>Profile</h2>
             <form id="settings-form" class="inline-form">
                 <label>Default account
@@ -97,6 +105,11 @@ export async function renderSettings(mount, state) {
             <code>${esc(state.me?.id || '')}</code>
         </div>
     `;
+
+    // Repaint the color-scheme grid into the Appearance panel.
+    if (window.tvHud && typeof window.tvHud.remountSchemeGrid === 'function') {
+        window.tvHud.remountSchemeGrid();
+    }
 
     document.getElementById('settings-form').addEventListener('submit', async (e) => {
         e.preventDefault();

@@ -43,8 +43,9 @@ pub fn run() {
     let log_dir_path = log_dir();
     let _ = std::fs::create_dir_all(&log_dir_path);
 
-    // tracing-appender rolls daily; keep a guard alive for the program lifetime.
-    let file_appender = tracing_appender::rolling::daily(&log_dir_path, "desktop.log");
+    // Single fixed file at ~/Library/Application Support/traderview/traderview.log
+    // (no rotation — matches the user-requested path).
+    let file_appender = tracing_appender::rolling::never(&log_dir_path, "traderview.log");
     let (file_writer, guard) = tracing_appender::non_blocking(file_appender);
 
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
@@ -282,24 +283,27 @@ fn load_or_create_secret(path: &std::path::Path) -> anyhow::Result<Vec<u8>> {
 // ===========================================================================
 
 fn log_dir() -> PathBuf {
-    // macOS:   ~/Library/Logs/TraderView/
-    // Linux:   ~/.local/share/TraderView/log/
-    // Windows: %APPDATA%/TraderView/log/
+    // Single canonical directory:
+    //   macOS   : ~/Library/Application Support/traderview/
+    //   Linux   : ~/.local/share/traderview/
+    //   Windows : %APPDATA%/traderview/
     #[cfg(target_os = "macos")]
     {
         if let Some(home) = dirs::home_dir() {
-            return home.join("Library").join("Logs").join("TraderView");
+            return home
+                .join("Library")
+                .join("Application Support")
+                .join("traderview");
         }
     }
     if let Some(base) = dirs::data_local_dir() {
-        return base.join("TraderView").join("log");
+        return base.join("traderview");
     }
-    std::env::temp_dir().join("TraderView").join("log")
+    std::env::temp_dir().join("traderview")
 }
 
 fn log_file_path() -> PathBuf {
-    let today = chrono::Utc::now().format("%Y-%m-%d");
-    log_dir().join(format!("desktop.log.{today}"))
+    log_dir().join("traderview.log")
 }
 
 fn install_panic_hook(log_dir: PathBuf) {
