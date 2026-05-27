@@ -35,6 +35,7 @@ mod export;
 mod fear_greed;
 mod fill_quality;
 mod goals;
+mod halts;
 mod heatmap;
 mod hotkeys;
 mod imports;
@@ -123,6 +124,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth::router())
         .merge(fear_greed::router())
         .merge(premarket::router())
+        .merge(halts::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
         .merge(compare::router())

@@ -26,6 +26,7 @@ pub mod fear_greed;
 pub mod executions;
 pub mod fill_quality;
 pub mod goals;
+pub mod halts;
 pub mod forum;
 pub mod heatmap;
 pub mod hotkeys;

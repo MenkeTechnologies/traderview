@@ -862,3 +862,31 @@ label {
     }
 }
 .u-axis { color: var(--text-muted) !important; }
+
+/* ---- halt scanner ---------------------------------------------------- */
+.status-dot {
+    font-size: 18px; vertical-align: middle; margin-left: 6px;
+    color: var(--text-muted); transition: color 0.2s, text-shadow 0.2s;
+    text-shadow: 0 0 6px currentColor;
+}
+.halt-voice-toggle {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'Share Tech Mono', monospace; font-size: 10.5px;
+    color: var(--text-dim); margin-left: 14px;
+    flex-direction: row !important;
+    letter-spacing: 1px; text-transform: uppercase;
+}
+.halt-voice-toggle input { width: auto; margin: 0; }
+.halt-code {
+    display: inline-block; padding: 1px 6px; margin-right: 6px;
+    border-radius: 2px; font-size: 10px; font-weight: 700;
+    font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px;
+    border: 1px solid var(--border);
+}
+.halt-code.halt-news       { color: var(--accent);  border-color: var(--accent);  }
+.halt-code.halt-volatility { color: var(--yellow);  border-color: var(--yellow);  }
+.halt-code.halt-circuit    { color: var(--red);     border-color: var(--red);     }
+.halt-code.halt-regulatory { color: var(--magenta); border-color: var(--magenta); }
+.halt-code.halt-ipo        { color: var(--cyan);    border-color: var(--cyan);    }
+.halt-code.halt-resume     { color: var(--green);   border-color: var(--green);   }
+.halt-code.halt-other      { color: var(--text-dim); }
