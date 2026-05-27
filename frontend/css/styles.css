@@ -914,3 +914,16 @@ label {
 }
 table.scanner-table { font-size: 11px; }
 table.scanner-table td, table.scanner-table th { padding: 3px 6px; }
+
+/* ---- catalyst radar ticker chips --------------------------------------- */
+.tick-chip {
+    display: inline-block; padding: 1px 6px; margin: 1px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 2px; font-size: 10.5px; font-weight: 700;
+    font-family: 'Share Tech Mono', monospace; color: var(--accent);
+    letter-spacing: 0.5px;
+}
+.tick-chip.tick-watched {
+    background: var(--cyan); color: var(--bg-primary);
+    border-color: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow);
+}

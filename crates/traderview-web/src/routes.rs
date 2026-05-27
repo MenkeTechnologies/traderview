@@ -13,6 +13,7 @@ mod auth;
 mod backtest;
 mod backtest_presets;
 mod breadth;
+mod catalysts;
 mod chart_drawings;
 mod charts;
 mod comments;
@@ -126,6 +127,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fear_greed::router())
         .merge(premarket::router())
         .merge(halts::router())
+        .merge(catalysts::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
         .merge(compare::router())
