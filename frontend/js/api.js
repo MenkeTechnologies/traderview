@@ -393,6 +393,10 @@ export const api = {
     // R-multiple distribution + SQN + per-tag breakdown
     rDistribution: (accountId) => request(`/r-distribution/${accountId}`),
 
+    // Monte Carlo equity forecast
+    equityForecast: (body) =>
+        request('/equity-forecast', { method: 'POST', body: JSON.stringify(body) }),
+
     // Trade reviews (forced reflection on |R|>=2 trades)
     listReviews:    (limit = 50) => request(`/trade-reviews?limit=${limit}`),
     reviewsNeeded:  (accountId, limit = 50) =>

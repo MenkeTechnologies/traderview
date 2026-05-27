@@ -26,6 +26,7 @@ mod disclosures;
 mod earnings_cal;
 mod earnings_iv;
 mod economy;
+mod equity_forecast;
 mod executions;
 mod export;
 mod fear_greed;
@@ -141,6 +142,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(goals::router())
         .merge(r_distribution::router())
         .merge(trade_reviews::router())
+        .merge(equity_forecast::router())
 }
 
 mod helpers {
