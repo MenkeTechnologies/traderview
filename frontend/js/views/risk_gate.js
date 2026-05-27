@@ -17,6 +17,8 @@ const RULE_TYPES = [
     { id: 'blocked_symbols',            label: 'Blocked symbols (comma-sep)',          fields: [['symbols', 'text', 'GME,AMC']] },
     { id: 'require_plan_before_trade',  label: 'Require pre-trade plan',                fields: [] },
     { id: 'require_stop_loss',          label: 'Require stop loss (warning only)',     fields: [] },
+    { id: 'regular_trading_hours_only', label: 'Block outside RTH (09:30-16:00 ET, Mon-Fri)', fields: [] },
+    { id: 'min_position_size_dollars',  label: 'Min notional $ (fat-finger guard)',    fields: [['min_dollars', 'number', '100']] },
 ];
 
 export async function renderRiskGate(mount, state) {

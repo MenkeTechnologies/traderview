@@ -89,6 +89,15 @@ pub enum RiskRule {
     RequirePlanBeforeTrade,
     /// Block if `stop_loss` is missing.
     RequireStopLoss,
+    /// Block if `now` is outside US regular trading hours (09:30-16:00 ET,
+    /// Mon-Fri). Catches accidental after-hours entries when the user only
+    /// wants RTH liquidity. NOT a holiday calendar — for "is the market
+    /// closed today" use a separate calendar check.
+    RegularTradingHoursOnly,
+    /// Block if the proposed trade's notional dollar exposure (qty × entry
+    /// × multiplier) is BELOW `min_dollars` — protects against fat-finger
+    /// entries that are too small to be meaningful and would just burn fees.
+    MinPositionSizeDollars { min_dollars: Decimal },
 }
 
 // ---------------------------------------------------------------------------
@@ -278,7 +287,73 @@ fn check_rule(
                 })
             } else { None }
         }
+        RiskRule::RegularTradingHoursOnly => {
+            if !is_us_rth(now) {
+                Some(Violation {
+                    rule: "regular_trading_hours_only".into(),
+                    severity: Severity::Block,
+                    message: "outside US regular trading hours (09:30-16:00 ET, Mon-Fri)".into(),
+                })
+            } else { None }
+        }
+        RiskRule::MinPositionSizeDollars { min_dollars } => {
+            let notional = p.qty * p.entry_price * p.multiplier;
+            if notional < *min_dollars {
+                Some(Violation {
+                    rule: "min_position_size_dollars".into(),
+                    severity: Severity::Block,
+                    message: format!(
+                        "notional ${} below ${} minimum — fat-finger guard",
+                        notional, min_dollars,
+                    ),
+                })
+            } else { None }
+        }
     }
+}
+
+/// Is `now` inside US regular trading hours (09:30-16:00 America/New_York,
+/// Mon-Fri)? Does NOT consult a holiday calendar — that's the caller's job
+/// if needed. Implemented via chrono-tz-free UTC-offset math so we don't
+/// pull a TZ database into the workspace for one check.
+fn is_us_rth(now: DateTime<Utc>) -> bool {
+    use chrono::{Datelike, Timelike, Weekday};
+    // US Eastern is UTC-5 (EST) or UTC-4 (EDT). Approximation: DST runs
+    // from second Sunday of March to first Sunday of November. This is a
+    // best-effort guess; perfect handling requires chrono-tz. The error
+    // window is at most one hour twice a year — acceptable for a gate
+    // rule users can override.
+    let month = now.month();
+    let day   = now.day();
+    let in_dst = match month {
+        1 | 2 | 12 => false,
+        3 => {
+            // Second Sunday of March.
+            let mar = chrono::NaiveDate::from_ymd_opt(now.year(), 3, 1).unwrap();
+            let first_sun = (8 - (mar.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+            let second_sun = first_sun + 7;
+            day as i32 >= second_sun
+        }
+        11 => {
+            // First Sunday of November.
+            let nov = chrono::NaiveDate::from_ymd_opt(now.year(), 11, 1).unwrap();
+            let first_sun = (8 - (nov.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+            (day as i32) < first_sun
+        }
+        4..=10 => true,
+        _ => false,
+    };
+    let offset_hours: i64 = if in_dst { -4 } else { -5 };
+    let local = now + chrono::Duration::hours(offset_hours);
+    match local.weekday() {
+        Weekday::Sat | Weekday::Sun => return false,
+        _ => {}
+    }
+    // 09:30 → 16:00 inclusive of 09:30, exclusive of 16:00.
+    let h = local.hour();
+    let m = local.minute();
+    let minutes = h * 60 + m;
+    minutes >= 9 * 60 + 30 && minutes < 16 * 60
 }
 
 // ---------------------------------------------------------------------------
@@ -596,6 +671,8 @@ mod tests {
             RiskRule::BlockedSymbols { symbols: vec!["GME".into()] },
             RiskRule::RequirePlanBeforeTrade,
             RiskRule::RequireStopLoss,
+            RiskRule::RegularTradingHoursOnly,
+            RiskRule::MinPositionSizeDollars { min_dollars: d("100") },
         ] {
             let s = serde_json::to_string(&rule).unwrap();
             let back: RiskRule = serde_json::from_str(&s)
@@ -604,6 +681,98 @@ mod tests {
             // implementing PartialEq on the enum.
             assert_eq!(serde_json::to_string(&back).unwrap(), s);
         }
+    }
+
+    // ─── RegularTradingHoursOnly + RTH detector ──────────────────────────
+
+    /// Convert ET local clock to a `DateTime<Utc>` for testing the gate at
+    /// a specific Eastern wall-clock time. Uses the same approximate DST
+    /// rule the detector uses so tests + production stay in sync.
+    fn et_to_utc(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> DateTime<Utc> {
+        use chrono::{Datelike, Weekday};
+        let in_dst = match month {
+            1 | 2 | 12 => false,
+            3 => {
+                let mar = chrono::NaiveDate::from_ymd_opt(year, 3, 1).unwrap();
+                let first_sun = (8 - (mar.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+                let second_sun = first_sun + 7;
+                day as i32 >= second_sun
+            }
+            11 => {
+                let nov = chrono::NaiveDate::from_ymd_opt(year, 11, 1).unwrap();
+                let first_sun = (8 - (nov.weekday().num_days_from_sunday() as i32)).rem_euclid(7) + 1;
+                (day as i32) < first_sun
+            }
+            4..=10 => true,
+            _ => false,
+        };
+        let _ = Weekday::Mon; // silence unused-import warning if any
+        let offset_hours: i64 = if in_dst { -4 } else { -5 };
+        Utc.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap()
+            - chrono::Duration::hours(offset_hours)
+    }
+
+    #[test]
+    fn rth_rule_allows_tuesday_10am_et() {
+        // Tuesday 2026-05-26 10:00 ET — RTH open.
+        let now_ = et_to_utc(2026, 5, 26, 10, 0);
+        let rules = vec![RiskRule::RegularTradingHoursOnly];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now_);
+        assert!(dec.allow);
+    }
+
+    #[test]
+    fn rth_rule_blocks_at_8am_et() {
+        // Pre-market — before 09:30.
+        let now_ = et_to_utc(2026, 5, 26, 8, 30);
+        let rules = vec![RiskRule::RegularTradingHoursOnly];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now_);
+        assert!(!dec.allow);
+    }
+
+    #[test]
+    fn rth_rule_blocks_at_4pm_et() {
+        // RTH is exclusive of 16:00 — first after-hours tick is at 4:00.
+        let now_ = et_to_utc(2026, 5, 26, 16, 0);
+        let rules = vec![RiskRule::RegularTradingHoursOnly];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now_);
+        assert!(!dec.allow);
+    }
+
+    #[test]
+    fn rth_rule_blocks_saturday() {
+        // 2026-05-30 is a Saturday.
+        let now_ = et_to_utc(2026, 5, 30, 12, 0);
+        let rules = vec![RiskRule::RegularTradingHoursOnly];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now_);
+        assert!(!dec.allow);
+    }
+
+    #[test]
+    fn rth_rule_allows_exactly_at_open() {
+        // 09:30:00 ET is the first allowed minute.
+        let now_ = et_to_utc(2026, 5, 26, 9, 30);
+        let rules = vec![RiskRule::RegularTradingHoursOnly];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now_);
+        assert!(dec.allow, "09:30 ET must be inclusive open");
+    }
+
+    // ─── MinPositionSizeDollars (fat-finger guard) ───────────────────────
+
+    #[test]
+    fn min_position_size_blocks_tiny_notional() {
+        // Notional = 100 × $150 = $15,000. Min $100k → block.
+        let rules = vec![RiskRule::MinPositionSizeDollars { min_dollars: d("100000") }];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now());
+        assert!(!dec.allow);
+        assert!(dec.violations[0].message.contains("fat-finger"));
+    }
+
+    #[test]
+    fn min_position_size_allows_at_or_above_minimum() {
+        let rules = vec![RiskRule::MinPositionSizeDollars { min_dollars: d("15000") }];
+        let dec = evaluate(&proposed(), &ctx(), &rules, now());
+        assert!(dec.allow, "$15,000 notional at $15,000 floor should allow (>=)");
     }
 
     // ─── Presets ─────────────────────────────────────────────────────────
