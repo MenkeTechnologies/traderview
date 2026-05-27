@@ -1,0 +1,83 @@
+// Browser-side error reporter — sends every uncaught error / unhandled
+// promise rejection / failed API call to /api/client-errors so it lands in
+// the server log alongside Rust traces. Auth-less by design: boot errors
+// fire before the token is available, and the backend binds to localhost
+// only.
+
+let inflight = 0;
+const MAX_INFLIGHT = 4;     // don't fan-out forever if the network is dead
+const queue = [];
+
+function send(payload) {
+    // Always include the current view so we can correlate.
+    payload.view = (location.hash || '#?').slice(1);
+    payload.href = location.href;
+    payload.ua = navigator.userAgent;
+    queue.push(payload);
+    drain();
+}
+
+function drain() {
+    while (inflight < MAX_INFLIGHT && queue.length) {
+        const body = queue.shift();
+        inflight++;
+        // Use sendBeacon when available — survives page-unload and doesn't
+        // need a CORS preflight for same-origin POST text/plain.
+        const ok = (navigator.sendBeacon && body.kind !== 'log')
+            ? navigator.sendBeacon('/api/client-errors',
+                  new Blob([JSON.stringify(body)], { type: 'application/json' }))
+            : false;
+        if (ok) { inflight--; continue; }
+        fetch('/api/client-errors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            keepalive: true,
+        })
+            .catch(() => {})
+            .finally(() => { inflight--; drain(); });
+    }
+}
+
+window.addEventListener('error', (e) => {
+    send({
+        kind: 'error',
+        message: e.message || (e.error && e.error.message) || 'window error',
+        stack: (e.error && e.error.stack) || '',
+        src: e.filename || '',
+        line: e.lineno | 0,
+        col: e.colno | 0,
+    });
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+    const r = e.reason;
+    const message = (r && (r.message || String(r))) || 'unhandled rejection';
+    const stack = (r && r.stack) || '';
+    send({ kind: 'unhandledrejection', message, stack });
+});
+
+export function reportApiFail(method, path, status, body) {
+    send({
+        kind: 'api-fail',
+        message: `${method} ${path} → ${status}`,
+        extra: { method, path, status, body: String(body).slice(0, 1024) },
+    });
+}
+
+// Bring console.error into the same pipeline so plain `console.error()`
+// calls show up in the server log too. Original behavior preserved.
+const _err = console.error.bind(console);
+console.error = function (...args) {
+    try {
+        send({
+            kind: 'log',
+            message: args.map(a =>
+                (a && a.stack) ? a.stack
+              : (typeof a === 'string') ? a
+              : JSON.stringify(a)
+            ).join(' '),
+        });
+    } catch (_) {}
+    _err(...args);
+};

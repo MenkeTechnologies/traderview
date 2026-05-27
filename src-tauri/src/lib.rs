@@ -48,8 +48,23 @@ pub fn run() {
     let file_appender = tracing_appender::rolling::never(&log_dir_path, "traderview.log");
     let (file_writer, guard) = tracing_appender::non_blocking(file_appender);
 
+    // Default filter is *deliberately loud* — when widgets break we need to
+    // see every failing query, every 4xx/5xx response, every dropped sqlx
+    // connection. Override at runtime via RUST_LOG.
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        "info,traderview_desktop=debug,traderview_web=info,traderview_db=info".into()
+        "info,\
+         traderview_desktop=debug,\
+         traderview_web=debug,\
+         traderview_db=debug,\
+         traderview_core=info,\
+         traderview_import=info,\
+         tower_http=debug,\
+         axum=debug,\
+         sqlx=warn,\
+         hyper=warn,\
+         hyper_util=warn,\
+         reqwest=warn"
+            .into()
     });
 
     use tracing_subscriber::layer::SubscriberExt;

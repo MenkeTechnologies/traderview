@@ -11,6 +11,7 @@
 pub mod auth;
 pub mod error;
 pub mod expense_routes;
+pub mod log_mw;
 pub mod rate_limit;
 pub mod realtime;
 pub mod receipt_routes;
@@ -22,12 +23,13 @@ pub use state::{AppMode, AppState};
 
 use axum::Router;
 use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
 
 pub fn router(state: AppState) -> Router {
     Router::new()
         .nest("/api", routes::api_router())
         .with_state(state)
-        .layer(TraceLayer::new_for_http())
+        // Custom middleware logs every request + body-sniffs 4xx/5xx so the
+        // log file tells us WHY a widget broke, not just "request failed".
+        .layer(axum::middleware::from_fn(log_mw::request_response_logger))
         .layer(CorsLayer::permissive())
 }

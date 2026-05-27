@@ -16,6 +16,7 @@ mod breadth;
 mod catalysts;
 mod chart_drawings;
 mod charts;
+mod client_errors;
 mod comments;
 mod community;
 mod compare;
@@ -129,6 +130,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fear_greed::router())
         .merge(premarket::router())
         .merge(halts::router())
+        .merge(client_errors::router())
         .merge(catalysts::router())
         .merge(webull::router())
         .merge(vol_surface::router())

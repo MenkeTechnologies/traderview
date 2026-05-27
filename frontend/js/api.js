@@ -26,19 +26,40 @@ export function clearToken() {
 }
 
 async function request(path, opts = {}) {
+    const method = (opts.method || 'GET').toUpperCase();
     const headers = Object.assign({}, opts.headers || {});
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (opts.body && !(opts.body instanceof FormData) && !headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
     }
-    const res = await fetch(`${baseUrl}/api${path}`, Object.assign({}, opts, { headers }));
+    let res;
+    try {
+        res = await fetch(`${baseUrl}/api${path}`, Object.assign({}, opts, { headers }));
+    } catch (netErr) {
+        // Network-level failure (server down, CORS, DNS) — also report.
+        try {
+            const m = await import('./error_reporter.js');
+            m.reportApiFail(method, path, 0, String(netErr));
+        } catch (_) {}
+        throw netErr;
+    }
     if (res.status === 401) {
         clearToken();
         throw new ApiError(401, 'unauthorized');
     }
     if (!res.ok) {
+        // Read body once so we can both report it and surface a useful Error.
+        let bodyText = '';
+        try { bodyText = await res.text(); } catch (_) {}
         let msg = res.statusText;
-        try { msg = (await res.json()).error || msg; } catch (_) { /* not json */ }
+        try { msg = JSON.parse(bodyText).error || msg; } catch (_) {}
+        // Don't recursively report errors from /client-errors itself.
+        if (path !== '/client-errors') {
+            try {
+                const m = await import('./error_reporter.js');
+                m.reportApiFail(method, path, res.status, bodyText);
+            } catch (_) {}
+        }
         throw new ApiError(res.status, msg);
     }
     if (res.status === 204) return null;
