@@ -17,11 +17,12 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    alligator, atr_cone, daily_loss_limit, drawdown_throttle, earnings_calendar, futures_roll,
-    goal_tracker, holiday_calendar, models::{Trade, TradeSide}, mtm_reconciliation, options_margin,
-    pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, reconcile_1099b,
-    risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
-    strategy_correlation, symbol_filter, tax_lot_optimizer, timeframe_confluence,
+    alligator, atr_cone, breakout_detector, crossover, daily_loss_limit, drawdown_throttle,
+    earnings_calendar, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
+    models::{Trade, TradeSide}, mtm_reconciliation, options_margin, order_block, pair_trade,
+    portfolio_heat, position_aging, position_irr, put_call_ratio, range_contraction,
+    reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
+    stop_hunt, strategy_correlation, symbol_filter, tax_lot_optimizer, timeframe_confluence,
     triple_screen, twap, volatility_stop, volume_burst,
 };
 
@@ -82,6 +83,14 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/volume-burst",         post(volume_burst_route))
         .route("/charts/round-levels",            post(round_levels_route))
         .route("/analytics/timeframe-confluence", post(timeframe_confluence_route))
+        // ── Pattern primitives: crossover + breakout + range-contraction
+        .route("/analytics/crossover",            post(crossover_route))
+        .route("/analytics/breakout",             post(breakout_route))
+        .route("/analytics/range-contraction",    post(range_contraction_route))
+        // ── SMC primitives: stop hunt + FVG + order block ──────────────
+        .route("/analytics/stop-hunt",            post(stop_hunt_route))
+        .route("/analytics/fair-value-gap",       post(fair_value_gap_route))
+        .route("/analytics/order-block",          post(order_block_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -564,4 +573,75 @@ async fn timeframe_confluence_route(
     _u: AuthUser, Json(b): Json<ConfluenceBody>,
 ) -> Json<timeframe_confluence::ConfluenceReport> {
     Json(timeframe_confluence::analyze(&b.verdicts))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Crossover + breakout + range-contraction primitives.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct CrossoverBody { a: Vec<Option<f64>>, b: Vec<Option<f64>> }
+
+async fn crossover_route(
+    _u: AuthUser, Json(body): Json<CrossoverBody>,
+) -> Json<crossover::CrossReport> {
+    Json(crossover::detect(&body.a, &body.b))
+}
+
+#[derive(Deserialize)]
+struct BreakoutBody {
+    bars: Vec<breakout_detector::OhlcBar>,
+    config: breakout_detector::BreakoutConfig,
+}
+
+async fn breakout_route(
+    _u: AuthUser, Json(b): Json<BreakoutBody>,
+) -> Json<breakout_detector::BreakoutReport> {
+    Json(breakout_detector::detect(&b.bars, &b.config))
+}
+
+#[derive(Deserialize)]
+struct RangeContractionBody { bars: Vec<range_contraction::OhlcBar> }
+
+async fn range_contraction_route(
+    _u: AuthUser, Json(b): Json<RangeContractionBody>,
+) -> Json<range_contraction::PatternReport> {
+    Json(range_contraction::detect(&b.bars))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Smart-money concepts: stop hunt + fair value gap + order block.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct StopHuntBody {
+    bars: Vec<stop_hunt::OhlcBar>,
+    config: stop_hunt::StopHuntConfig,
+}
+
+async fn stop_hunt_route(
+    _u: AuthUser, Json(b): Json<StopHuntBody>,
+) -> Json<stop_hunt::SweepReport> {
+    Json(stop_hunt::detect(&b.bars, &b.config))
+}
+
+#[derive(Deserialize)]
+struct FairValueGapBody { bars: Vec<fair_value_gap::OhlcBar> }
+
+async fn fair_value_gap_route(
+    _u: AuthUser, Json(b): Json<FairValueGapBody>,
+) -> Json<fair_value_gap::FvgReport> {
+    Json(fair_value_gap::detect(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct OrderBlockBody {
+    bars: Vec<order_block::OhlcBar>,
+    config: order_block::OrderBlockConfig,
+}
+
+async fn order_block_route(
+    _u: AuthUser, Json(b): Json<OrderBlockBody>,
+) -> Json<order_block::OrderBlockReport> {
+    Json(order_block::detect(&b.bars, &b.config))
 }

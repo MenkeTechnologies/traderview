@@ -929,4 +929,10 @@ export const api = {
     anlyVolumeBurst:         (b) => request('/analytics/volume-burst',               { method: 'POST', body: JSON.stringify(b) }),
     chartsRoundLevels:       (b) => request('/charts/round-levels',                  { method: 'POST', body: JSON.stringify(b) }),
     anlyTimeframeConfluence: (b) => request('/analytics/timeframe-confluence',       { method: 'POST', body: JSON.stringify(b) }),
+    anlyCrossover:           (b) => request('/analytics/crossover',                  { method: 'POST', body: JSON.stringify(b) }),
+    anlyBreakout:            (b) => request('/analytics/breakout',                   { method: 'POST', body: JSON.stringify(b) }),
+    anlyRangeContraction:    (b) => request('/analytics/range-contraction',          { method: 'POST', body: JSON.stringify(b) }),
+    anlyStopHunt:            (b) => request('/analytics/stop-hunt',                  { method: 'POST', body: JSON.stringify(b) }),
+    anlyFairValueGap:        (b) => request('/analytics/fair-value-gap',             { method: 'POST', body: JSON.stringify(b) }),
+    anlyOrderBlock:          (b) => request('/analytics/order-block',                { method: 'POST', body: JSON.stringify(b) }),
 };
