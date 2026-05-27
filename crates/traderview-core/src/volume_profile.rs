@@ -44,7 +44,7 @@ pub fn build(prints: &[PrintAt], tick_size: f64) -> VolumeProfile {
         *by_price.entry(bucket).or_default() += p.volume;
     }
     let total: f64 = by_price.values().sum();
-    let mut levels: Vec<PriceLevel> = by_price.into_iter()
+    let levels: Vec<PriceLevel> = by_price.into_iter()
         .map(|(b, v)| PriceLevel { price: b as f64 * tick_size, volume: v })
         .collect();
     // POC = price with highest volume.
