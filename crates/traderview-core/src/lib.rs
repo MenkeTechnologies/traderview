@@ -18,6 +18,7 @@ pub mod bracket_order;
 pub mod buying_power;
 pub mod cagr;
 pub mod calendar_bias;
+pub mod candlestick_patterns;
 pub mod carry_score;
 pub mod cci;
 pub mod chaikin_volatility;
