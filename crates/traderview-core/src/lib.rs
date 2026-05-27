@@ -7,6 +7,7 @@
 pub mod backtest;
 pub mod correlation;
 pub mod discipline_score;
+pub mod dow_hour_heatmap;
 pub mod equity_forecast;
 pub mod excursion;
 pub mod greeks;
@@ -23,6 +24,7 @@ pub mod risk_reward;
 pub mod rollup;
 pub mod scan;
 pub mod sentiment;
+pub mod setup_catalog;
 pub mod signals;
 pub mod slug;
 pub mod strategy_alert;
