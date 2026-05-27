@@ -381,6 +381,9 @@ export const api = {
     // Live P/L tracker (snapshot of open positions with fresh quotes)
     livePositions: (accountId) => request(`/live-positions/${accountId}`),
 
+    // Sector ETF rotation heatmap
+    sectorRotation: () => request('/sector-rotation'),
+
     // Portfolio rebalancing
     rebalanceTargetsList: () => request('/rebalance/targets'),
     rebalanceTargetSave: (body) =>

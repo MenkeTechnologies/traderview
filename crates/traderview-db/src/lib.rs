@@ -40,6 +40,7 @@ pub mod rebalance;
 pub mod scans;
 pub mod screenshots;
 pub mod search;
+pub mod sector_rotation;
 pub mod sectors;
 pub mod sentiment;
 pub mod settings;

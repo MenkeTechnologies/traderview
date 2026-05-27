@@ -49,6 +49,7 @@ mod scans;
 mod screener;
 mod screenshots;
 mod search;
+mod sector_rotation;
 mod sectors;
 mod sentiment;
 mod settings;
@@ -125,6 +126,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(corr_matrix::router())
         .merge(strategy_alerts::router())
         .merge(rebalance::router())
+        .merge(sector_rotation::router())
 }
 
 mod helpers {
