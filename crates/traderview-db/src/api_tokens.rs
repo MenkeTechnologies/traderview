@@ -52,24 +52,25 @@ impl From<ApiToken> for ApiTokenSummary {
     }
 }
 
-pub async fn insert(
-    pool: &PgPool,
-    user_id: Uuid,
-    name: &str,
-    prefix: &str,
-    hash: &str,
-    scopes: &[String],
-    expires_at: Option<DateTime<Utc>>,
-    rate_limit_per_min: Option<i32>,
-) -> anyhow::Result<ApiToken> {
+pub struct NewToken<'a> {
+    pub user_id: Uuid,
+    pub name: &'a str,
+    pub prefix: &'a str,
+    pub hash: &'a str,
+    pub scopes: &'a [String],
+    pub expires_at: Option<DateTime<Utc>>,
+    pub rate_limit_per_min: Option<i32>,
+}
+
+pub async fn insert(pool: &PgPool, t: NewToken<'_>) -> anyhow::Result<ApiToken> {
     let row: ApiToken = sqlx::query_as(
         "INSERT INTO api_tokens (user_id, name, prefix, hash, scopes, expires_at, rate_limit_per_min)
               VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, 60))
           RETURNING id, user_id, name, prefix, hash, scopes, expires_at, revoked_at,
                     last_used_at, use_count, rate_limit_per_min, created_at",
     )
-    .bind(user_id).bind(name).bind(prefix).bind(hash)
-    .bind(scopes).bind(expires_at).bind(rate_limit_per_min)
+    .bind(t.user_id).bind(t.name).bind(t.prefix).bind(t.hash)
+    .bind(t.scopes).bind(t.expires_at).bind(t.rate_limit_per_min)
     .fetch_one(pool).await?;
     Ok(row)
 }

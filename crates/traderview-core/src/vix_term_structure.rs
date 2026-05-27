@@ -26,9 +26,11 @@ pub struct VixTermStructure {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum CurveState {
     SteepContango,    // vix/vix3m < 0.80
     Contango,         // 0.80 ≤ vix/vix3m < 1.00
+    #[default]
     Flat,             // 1.00 ≤ vix/vix3m < 1.05
     Backwardation,    // 1.05 ≤ vix/vix3m < 1.20
     SevereBackwardation,    // ≥ 1.20
@@ -42,9 +44,6 @@ pub struct TermStructureReport {
     pub note: String,
 }
 
-impl Default for CurveState {
-    fn default() -> Self { CurveState::Flat }
-}
 
 pub fn analyze(ts: &VixTermStructure) -> TermStructureReport {
     let mut report = TermStructureReport::default();

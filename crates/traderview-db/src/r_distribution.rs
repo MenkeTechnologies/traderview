@@ -106,7 +106,7 @@ pub async fn report(pool: &PgPool, _user_id: Uuid, account_id: Uuid)
         for (trade_id, tag_id, tag_name, tag_color) in tag_rows {
             if let Some(r) = r_by_trade.get(&trade_id) {
                 by_tag_r.entry((tag_id, tag_name, tag_color))
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(*r);
             }
         }
@@ -125,7 +125,7 @@ pub async fn report(pool: &PgPool, _user_id: Uuid, account_id: Uuid)
         lo = hi;
     }
     for r in &r_values {
-        let clamped = r.max(-5.0).min(4.99);
+        let clamped = r.clamp(-5.0, 4.99);
         let idx = ((clamped - (-5.0)) / 0.5) as usize;
         let idx = idx.min(bins.len() - 1);
         bins[idx].count += 1;

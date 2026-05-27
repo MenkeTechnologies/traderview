@@ -358,16 +358,19 @@ pub struct WfResult {
     pub baseline_summary: BtSummary,
 }
 
-pub fn walk_forward(
-    bars: &[PriceBar],
-    kind: PresetKind,
-    is_bars: usize,
-    oos_bars: usize,
-    step: usize,
-    initial_capital: f64,
-    fee_per_trade: f64,
-    metric: OptMetric,
-) -> WfResult {
+#[derive(Debug, Clone, Copy)]
+pub struct WfConfig {
+    pub kind: PresetKind,
+    pub is_bars: usize,
+    pub oos_bars: usize,
+    pub step: usize,
+    pub initial_capital: f64,
+    pub fee_per_trade: f64,
+    pub metric: OptMetric,
+}
+
+pub fn walk_forward(bars: &[PriceBar], cfg: WfConfig) -> WfResult {
+    let WfConfig { kind, is_bars, oos_bars, step, initial_capital, fee_per_trade, metric } = cfg;
     let grid = default_grid(kind);
     let mut windows = Vec::new();
     let mut oos_equity: Vec<WfPoint> = Vec::new();
@@ -504,8 +507,12 @@ mod tests {
             let p = 100.0 + 0.02 * i as f64 + 8.0 * (i as f64 / 10.0).sin();
             bars.push(bar(p, i * 86_400));
         }
-        let r = walk_forward(&bars, PresetKind::SmaCross, 200, 60, 60,
-                             10_000.0, 0.0, OptMetric::Return);
+        let r = walk_forward(&bars, WfConfig {
+            kind: PresetKind::SmaCross,
+            is_bars: 200, oos_bars: 60, step: 60,
+            initial_capital: 10_000.0, fee_per_trade: 0.0,
+            metric: OptMetric::Return,
+        });
         assert!(r.windows.len() >= 4, "expected at least 4 windows, got {}", r.windows.len());
         assert!(r.grid_size > 1, "grid should contain multiple presets");
         assert!(!r.oos_equity.is_empty(), "OOS equity stitched curve empty");

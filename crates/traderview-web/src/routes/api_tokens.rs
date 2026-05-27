@@ -65,8 +65,16 @@ async fn create(
     }
     let (prefix, _secret, wire, hash) = generate_pat()?;
     let row = traderview_db::api_tokens::insert(
-        &s.pool, u.id, &body.name, &prefix, &hash, &scopes, body.expires_at,
-        body.rate_limit_per_min,
+        &s.pool,
+        traderview_db::api_tokens::NewToken {
+            user_id: u.id,
+            name: &body.name,
+            prefix: &prefix,
+            hash: &hash,
+            scopes: &scopes,
+            expires_at: body.expires_at,
+            rate_limit_per_min: body.rate_limit_per_min,
+        },
     ).await.map_err(ApiError::Internal)?;
     Ok(Json(CreateResp { summary: row.into(), token: wire }))
 }

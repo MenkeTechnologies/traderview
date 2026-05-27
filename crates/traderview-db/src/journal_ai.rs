@@ -75,8 +75,10 @@ pub struct LlmConfigDto {
     pub temperature: Option<f32>,
 }
 
+type LlmSettingsRow = (Option<String>, Option<String>, Option<String>, Option<String>, Option<i32>, Option<f32>);
+
 pub async fn get_llm_settings(pool: &PgPool, user_id: Uuid) -> anyhow::Result<LlmConfigDto> {
-    let row: Option<(Option<String>, Option<String>, Option<String>, Option<String>, Option<i32>, Option<f32>)> =
+    let row: Option<LlmSettingsRow> =
         sqlx::query_as(
             "SELECT llm_provider, llm_endpoint, llm_model, llm_api_key, llm_max_tokens, llm_temperature
                FROM user_settings WHERE user_id = $1",
@@ -138,7 +140,7 @@ pub async fn set_llm_settings(pool: &PgPool, user_id: Uuid, dto: &LlmConfigDto) 
 
 /// Load user_settings → LlmConfig. Returns None if no provider configured.
 pub async fn load_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<LlmConfig>> {
-    let row: Option<(Option<String>, Option<String>, Option<String>, Option<String>, Option<i32>, Option<f32>)> =
+    let row: Option<LlmSettingsRow> =
         sqlx::query_as(
             "SELECT llm_provider, llm_endpoint, llm_model, llm_api_key, llm_max_tokens, llm_temperature
                FROM user_settings WHERE user_id = $1",

@@ -39,14 +39,14 @@ impl Tier {
         let raw = self.per_trade_flat
             + self.per_share * ex.qty
             + self.per_dollar * ex.notional;
-        let bounded = if self.min_per_trade > Decimal::ZERO && raw < self.min_per_trade {
+        
+        if self.min_per_trade > Decimal::ZERO && raw < self.min_per_trade {
             self.min_per_trade
         } else if self.max_per_trade > Decimal::ZERO && raw > self.max_per_trade {
             self.max_per_trade
         } else {
             raw
-        };
-        bounded
+        }
     }
 }
 
@@ -70,7 +70,7 @@ pub struct OptimizerReport {
     /// Each candidate tier scored. Sorted by total_fee ascending —
     /// cheapest first.
     pub tiers: Vec<TierResult>,
-    /// Best alternative (sorted[0]) if it beats `actual`. None if user's
+    /// Best alternative (`sorted[0]`) if it beats `actual`. None if user's
     /// actual is already optimal among candidates.
     pub best_alternative: Option<String>,
     /// Annual projected savings if user switches to best alternative
@@ -109,7 +109,7 @@ pub fn evaluate(execs: &[Execution], tiers: &[Tier]) -> OptimizerReport {
             delta_vs_actual: total - actual_total,
         }
     }).collect();
-    results.sort_by(|a, b| a.total_fee.cmp(&b.total_fee));
+    results.sort_by_key(|a| a.total_fee);
 
     let (best_alternative, annual_savings) = if let Some(best) = results.first() {
         if best.delta_vs_actual < Decimal::ZERO {

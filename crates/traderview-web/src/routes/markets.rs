@@ -13,7 +13,8 @@ pub fn router() -> Router<AppState> {
 }
 
 /// 60-second in-process cache. The dashboard polls this on every load.
-static CACHE: once_cell::sync::Lazy<Arc<Mutex<Option<(Instant, MarketsSnapshot)>>>> =
+type TimedCache<T> = once_cell::sync::Lazy<Arc<Mutex<Option<(Instant, T)>>>>;
+static CACHE: TimedCache<MarketsSnapshot> =
     once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(None)));
 
 async fn snapshot(State(_s): State<AppState>) -> Result<Json<MarketsSnapshot>, ApiError> {

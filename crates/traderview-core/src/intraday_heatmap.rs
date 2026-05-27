@@ -61,10 +61,10 @@ pub fn build(trades: &[IntradayTrade]) -> IntradayHeatmapReport {
         let avg = if *count > 0 { pnl / *count as f64 } else { 0.0 };
         let wr = if *count > 0 { *wins as f64 / *count as f64 } else { 0.0 };
         if *count > 0 {
-            if best.as_ref().map_or(true, |(_, p)| *pnl > *p) {
+            if best.as_ref().is_none_or(|(_, p)| *pnl > *p) {
                 best = Some((label.clone(), *pnl));
             }
-            if worst.as_ref().map_or(true, |(_, p)| *pnl < *p) {
+            if worst.as_ref().is_none_or(|(_, p)| *pnl < *p) {
                 worst = Some((label.clone(), *pnl));
             }
         }

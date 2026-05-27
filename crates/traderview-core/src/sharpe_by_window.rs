@@ -9,7 +9,7 @@
 //! works for intraday R-buckets (factor = 252) and per-trade buckets
 //! (factor = trades_per_year). Sharpe = mean / stdev × sqrt(factor).
 
-use chrono::{DateTime, Datelike, Timelike, Utc, Weekday};
+use chrono::{DateTime, Datelike, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
@@ -119,9 +119,6 @@ pub fn day_of_week_ordered(returns: &[TradeReturn], annualization: f64) -> [Wind
     let labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     std::array::from_fn(|i| stats_for(labels[i].into(), by_day[i].clone(), annualization))
 }
-
-#[allow(dead_code)]
-fn _weekday_ordering(_w: Weekday) {}
 
 #[cfg(test)]
 mod tests {

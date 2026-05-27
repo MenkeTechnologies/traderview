@@ -1,9 +1,9 @@
 //! Insider Form 4 + Senate + House STOCK Act disclosure pipeline.
 //!
 //! Pollers:
-//!   * EDGAR Form 4 atom: https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&output=atom
-//!   * Senate STOCK Act:  https://efdsearch.senate.gov/search/  (HTML scrape via results table)
-//!   * House STOCK Act:   https://disclosures-clerk.house.gov/PublicDisclosure/FinancialDisclosure
+//!   * EDGAR Form 4 atom: <https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&output=atom>
+//!   * Senate STOCK Act:  <https://efdsearch.senate.gov/search/>  (HTML scrape via results table)
+//!   * House STOCK Act:   <https://disclosures-clerk.house.gov/PublicDisclosure/FinancialDisclosure>
 //!
 //! Each poller upserts into `disclosures` (UNIQUE on kind + external_id makes
 //! re-polling a no-op). On insert, fired-watcher rows are emitted so the push
@@ -103,7 +103,7 @@ pub async fn poll_edgar_form4(pool: &PgPool) -> anyhow::Result<usize> {
             .unwrap_or(&e.id).to_string();
         // Filer name lives in <title>: "4 - <FILER NAME> (CIK)"
         let title = e.title.clone();
-        let filer = title.splitn(3, " - ").nth(1)
+        let filer = title.split(" - ").nth(1)
             .map(|s| s.trim().to_string())
             .unwrap_or_else(|| title.clone());
         let disclosure = Disclosure {
@@ -238,7 +238,7 @@ fn extract_senate_rows(body: &str) -> Vec<SenateRow> {
             .map(|s| strip_html(&s).trim().to_string())
             .collect();
         if tds.len() < 4 { continue; }
-        let filer = tds.get(0).cloned().unwrap_or_default();
+        let filer = tds.first().cloned().unwrap_or_default();
         let filing_type = tds.get(2).cloned().unwrap_or_default();
         let filed = tds.get(3).and_then(|s|
             NaiveDate::parse_from_str(s, "%m/%d/%Y").ok()
@@ -356,22 +356,23 @@ pub async fn list_watchers(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<W
     .fetch_all(pool).await?)
 }
 
-pub async fn create_watcher(
-    pool: &PgPool,
-    user_id: Uuid,
-    name: &str,
-    kinds: &[String],
-    symbols: Option<&[String]>,
-    filers: Option<&[String]>,
-    min_amount_usd: Option<Decimal>,
-    sound: &str,
-) -> anyhow::Result<Watcher> {
+pub struct NewWatcher<'a> {
+    pub user_id: Uuid,
+    pub name: &'a str,
+    pub kinds: &'a [String],
+    pub symbols: Option<&'a [String]>,
+    pub filers: Option<&'a [String]>,
+    pub min_amount_usd: Option<Decimal>,
+    pub sound: &'a str,
+}
+
+pub async fn create_watcher(pool: &PgPool, w: NewWatcher<'_>) -> anyhow::Result<Watcher> {
     Ok(sqlx::query_as::<_, Watcher>(
         "INSERT INTO disclosure_watchers (user_id, name, kinds, symbols, filers, min_amount_usd, sound)
               VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id, user_id, name, kinds, symbols, filers, min_amount_usd, enabled, sound, created_at",
     )
-    .bind(user_id).bind(name).bind(kinds).bind(symbols).bind(filers).bind(min_amount_usd).bind(sound)
+    .bind(w.user_id).bind(w.name).bind(w.kinds).bind(w.symbols).bind(w.filers).bind(w.min_amount_usd).bind(w.sound)
     .fetch_one(pool).await?)
 }
 

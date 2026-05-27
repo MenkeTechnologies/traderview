@@ -17,11 +17,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum EquityRegime {
     TrendingUp,
     TrendingDown,
     VolatileUp,
     VolatileDown,
+    #[default]
     Choppy,
 }
 
@@ -35,9 +37,6 @@ pub struct RegimeReport {
     pub regime: EquityRegime,
 }
 
-impl Default for EquityRegime {
-    fn default() -> Self { EquityRegime::Choppy }
-}
 
 #[derive(Debug, Clone, Copy)]
 pub struct DetectorConfig {

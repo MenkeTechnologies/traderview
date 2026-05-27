@@ -82,7 +82,11 @@ async fn walk_forward_handler(
         )));
     }
     let step = b.step_bars.unwrap_or(b.oos_bars);
-    let r = walk_forward(&bars, b.kind, b.is_bars, b.oos_bars, step,
-                         b.initial_capital, b.fee_per_trade, b.metric);
+    let r = walk_forward(&bars, traderview_core::backtest::WfConfig {
+        kind: b.kind,
+        is_bars: b.is_bars, oos_bars: b.oos_bars, step,
+        initial_capital: b.initial_capital, fee_per_trade: b.fee_per_trade,
+        metric: b.metric,
+    });
     Ok(Json(r))
 }

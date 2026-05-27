@@ -74,7 +74,16 @@ async fn upload(
     }
     Ok(Json(
         traderview_db::screenshots::create(
-            &s.pool, user.id, Some(trade_id), None, &filename, &mime, &bytes, &caption,
+            &s.pool,
+            traderview_db::screenshots::NewScreenshot {
+                user_id: user.id,
+                trade_id: Some(trade_id),
+                journal_id: None,
+                filename: &filename,
+                mime_type: &mime,
+                bytes: &bytes,
+                caption: &caption,
+            },
         )
         .await
         .map_err(ApiError::Internal)?,

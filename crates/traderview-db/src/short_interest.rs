@@ -4,7 +4,7 @@
 //!   1. Yahoo `defaultKeyStatistics` quoteSummary module —
 //!      sharesShort / shortRatio / shortPercentOfFloat / sharesShortPriorMonth
 //!   2. FINRA Reg SHO daily short-volume TSV:
-//!      https://cdn.finra.org/equity/regsho/daily/CNMSshvolYYYYMMDD.txt
+//!      <https://cdn.finra.org/equity/regsho/daily/CNMSshvolYYYYMMDD.txt>
 //!      (one row per symbol per market center; we aggregate to per-day per-symbol)
 
 use chrono::{Datelike, DateTime, Duration, NaiveDate, Utc};

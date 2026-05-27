@@ -4,26 +4,27 @@ use sqlx::PgPool;
 use traderview_core::{AssetClass, TradePlan, TradeSide};
 use uuid::Uuid;
 
-pub async fn create(
-    pool: &PgPool,
-    user_id: Uuid,
-    account_id: Uuid,
-    symbol: &str,
-    asset_class: AssetClass,
-    side: TradeSide,
-    intended_qty: Decimal,
-    intended_entry: Decimal,
-    stop_loss: Option<Decimal>,
-    initial_target: Option<Decimal>,
-    setup_notes: &str,
-) -> anyhow::Result<TradePlan> {
-    let ac = match asset_class {
+pub struct NewPlan<'a> {
+    pub user_id: Uuid,
+    pub account_id: Uuid,
+    pub symbol: &'a str,
+    pub asset_class: AssetClass,
+    pub side: TradeSide,
+    pub intended_qty: Decimal,
+    pub intended_entry: Decimal,
+    pub stop_loss: Option<Decimal>,
+    pub initial_target: Option<Decimal>,
+    pub setup_notes: &'a str,
+}
+
+pub async fn create(pool: &PgPool, p: NewPlan<'_>) -> anyhow::Result<TradePlan> {
+    let ac = match p.asset_class {
         AssetClass::Stock => "stock",
         AssetClass::Option => "option",
         AssetClass::Future => "future",
         AssetClass::Forex => "forex",
     };
-    let s = match side {
+    let s = match p.side {
         TradeSide::Long => "long",
         TradeSide::Short => "short",
     };
@@ -36,16 +37,16 @@ pub async fn create(
                    intended_qty, intended_entry, stop_loss, initial_target, setup_notes,
                    plan_status, linked_trade_id, created_at, filled_at",
     )
-    .bind(user_id)
-    .bind(account_id)
-    .bind(symbol)
+    .bind(p.user_id)
+    .bind(p.account_id)
+    .bind(p.symbol)
     .bind(ac)
     .bind(s)
-    .bind(intended_qty)
-    .bind(intended_entry)
-    .bind(stop_loss)
-    .bind(initial_target)
-    .bind(setup_notes)
+    .bind(p.intended_qty)
+    .bind(p.intended_entry)
+    .bind(p.stop_loss)
+    .bind(p.initial_target)
+    .bind(p.setup_notes)
     .fetch_one(pool)
     .await?;
     Ok(row.into())

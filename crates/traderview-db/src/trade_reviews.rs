@@ -52,10 +52,12 @@ pub struct ReviewStats {
     pub last_review_at: Option<DateTime<Utc>>,
 }
 
+type NeedsReviewSqlRow = (Uuid, String, Decimal, Decimal, Option<DateTime<Utc>>, String);
+
 pub async fn needs_review(pool: &PgPool, user_id: Uuid, account_id: Uuid, limit: i64)
     -> anyhow::Result<Vec<NeedsReviewRow>>
 {
-    let rows: Vec<(Uuid, String, Decimal, Decimal, Option<DateTime<Utc>>, String)> = sqlx::query_as(
+    let rows: Vec<NeedsReviewSqlRow> = sqlx::query_as(
         "SELECT t.id, t.symbol, t.net_pnl, t.risk_amount, t.closed_at, t.side::text
            FROM trades t
            LEFT JOIN trade_reviews r ON r.trade_id = t.id AND r.user_id = $1

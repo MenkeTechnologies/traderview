@@ -92,8 +92,8 @@ pub fn report(meals: &[MealExpense]) -> MealsReport {
     let total_non_deductible = total_gross - total_deductible;
     let mut by_category_gross: Vec<_> = gross.into_iter().collect();
     let mut by_category_deductible: Vec<_> = deductible.into_iter().collect();
-    by_category_gross.sort_by(|a, b| b.1.cmp(&a.1));
-    by_category_deductible.sort_by(|a, b| b.1.cmp(&a.1));
+    by_category_gross.sort_by_key(|a| std::cmp::Reverse(a.1));
+    by_category_deductible.sort_by_key(|a| std::cmp::Reverse(a.1));
     MealsReport {
         total_gross,
         total_deductible,

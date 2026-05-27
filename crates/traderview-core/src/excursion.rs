@@ -6,7 +6,7 @@
 //!   - **MAE** (max adverse excursion) — the worst $ unrealized drawdown
 //!   - **best_exit_pnl** — what net P&L would have been if exited at the favorable extreme
 
-use crate::models::{AssetClass, PriceBar, Trade, TradeSide};
+use crate::models::{PriceBar, Trade, TradeSide};
 use crate::pnl::{gross_pnl, PricePoint};
 use rust_decimal::Decimal;
 
@@ -85,7 +85,3 @@ pub fn compute_excursion(trade: &Trade, bars: &[PriceBar]) -> Excursion {
     }
 }
 
-// Avoid unused-AssetClass warning for the future case where this module
-// uses asset-specific code.
-#[allow(dead_code)]
-fn _force_use(_: AssetClass) {}

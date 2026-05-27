@@ -77,7 +77,7 @@ pub fn suggest(
     let mut sorted: Vec<&OpenLoser> = losers.iter()
         .filter(|l| l.current_price < l.avg_cost)   // genuinely losing
         .collect();
-    sorted.sort_by(|a, b| b.unrealized_loss().cmp(&a.unrealized_loss()));
+    sorted.sort_by_key(|a| std::cmp::Reverse(a.unrealized_loss()));
 
     for l in sorted {
         let loss = l.unrealized_loss();

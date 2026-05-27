@@ -74,8 +74,10 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
         let timing = guess_timing(&cal["earningsDate"][0]);
         let est = f_opt(&cal["earningsAverage"]);
         let rev_est = f_opt(&cal["revenueAverage"]);
-        if upsert_event(pool, symbol, date, timing.as_deref(),
-                        est, None, rev_est, None).await? {
+        if upsert_event(pool, EventUpsert {
+            symbol, date, timing: timing.as_deref(),
+            eps_est: est, eps_act: None, rev_est, rev_act: None,
+        }).await? {
             upserted += 1;
         }
     }
@@ -86,7 +88,10 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
         let Some(date) = pick_date(&h["quarter"]) else { continue };
         let est = f_opt(&h["epsEstimate"]);
         let act = f_opt(&h["epsActual"]);
-        if upsert_event(pool, symbol, date, None, est, act, None, None).await? {
+        if upsert_event(pool, EventUpsert {
+            symbol, date, timing: None,
+            eps_est: est, eps_act: act, rev_est: None, rev_act: None,
+        }).await? {
             upserted += 1;
         }
     }
@@ -121,18 +126,19 @@ pub async fn poll_symbol(pool: &PgPool, symbol: &str) -> anyhow::Result<(u64, u6
     Ok((upserted, reactions))
 }
 
-async fn upsert_event(
-    pool: &PgPool,
-    symbol: &str,
+struct EventUpsert<'a> {
+    symbol: &'a str,
     date: NaiveDate,
-    timing: Option<&str>,
+    timing: Option<&'a str>,
     eps_est: Option<f64>,
     eps_act: Option<f64>,
     rev_est: Option<f64>,
     rev_act: Option<f64>,
-) -> anyhow::Result<bool> {
-    let surprise_pct = match (eps_est, eps_act) {
-        (Some(e), Some(a)) if e.abs() > 1e-9 => Some(((a - e) / e.abs() * 100.0) as f32),
+}
+
+async fn upsert_event(pool: &PgPool, e: EventUpsert<'_>) -> anyhow::Result<bool> {
+    let surprise_pct = match (e.eps_est, e.eps_act) {
+        (Some(est), Some(act)) if est.abs() > 1e-9 => Some(((act - est) / est.abs() * 100.0) as f32),
         _ => None,
     };
     let r = sqlx::query(
@@ -149,11 +155,11 @@ async fn upsert_event(
             surprise_pct     = COALESCE(EXCLUDED.surprise_pct, earnings_events.surprise_pct),
             updated_at       = now()",
     )
-    .bind(symbol).bind(date).bind(timing)
-    .bind(eps_est.and_then(|x| Decimal::try_from(x).ok()))
-    .bind(eps_act.and_then(|x| Decimal::try_from(x).ok()))
-    .bind(rev_est.and_then(|x| Decimal::try_from(x).ok()))
-    .bind(rev_act.and_then(|x| Decimal::try_from(x).ok()))
+    .bind(e.symbol).bind(e.date).bind(e.timing)
+    .bind(e.eps_est.and_then(|x| Decimal::try_from(x).ok()))
+    .bind(e.eps_act.and_then(|x| Decimal::try_from(x).ok()))
+    .bind(e.rev_est.and_then(|x| Decimal::try_from(x).ok()))
+    .bind(e.rev_act.and_then(|x| Decimal::try_from(x).ok()))
     .bind(surprise_pct)
     .execute(pool).await?;
     Ok(r.rows_affected() > 0)

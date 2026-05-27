@@ -31,12 +31,6 @@ enum Rule {
     LastWeekdayOfMonth { weekday: Weekday, time_et: (u32, u32) },
     EveryWeekday      { weekday: Weekday, time_et: (u32, u32) },
     NthBusinessDay    { n: u8, time_et: (u32, u32) },
-    // For irregular releases (FOMC) we pin specific dates. Currently
-    // matched-against in time_at / instances below but no row in the
-    // static release table uses it — dead_code allowed to keep the
-    // parser branch live for upcoming FOMC entries.
-    #[allow(dead_code)]
-    FixedDate { y: i32, m: u32, d: u32, time_et: (u32, u32) },
 }
 
 struct Release {
@@ -106,7 +100,6 @@ pub fn upcoming(days: i64, importance_min: Importance) -> Vec<EconEvent> {
             Rule::LastWeekdayOfMonth { time_et, .. } => time_et,
             Rule::EveryWeekday      { time_et, .. } => time_et,
             Rule::NthBusinessDay    { time_et, .. } => time_et,
-            Rule::FixedDate         { time_et, .. } => time_et,
         };
         for d in expand_rule(r.rule, today, horizon) {
             let t = NaiveTime::from_hms_opt(h, m, 0).unwrap();
@@ -187,11 +180,6 @@ fn expand_rule(rule: Rule, from: NaiveDate, to: NaiveDate) -> Vec<NaiveDate> {
                 let bd = nth_business_day(d, n);
                 if bd >= from && bd <= to { out.push(bd); }
                 d = next_month(d);
-            }
-        }
-        Rule::FixedDate { y, m, d, .. } => {
-            if let Some(date) = NaiveDate::from_ymd_opt(y, m, d) {
-                if date >= from && date <= to { out.push(date); }
             }
         }
     }

@@ -19,8 +19,8 @@ fn ema(values: &[f64], period: usize) -> Vec<f64> {
     let mut out = Vec::with_capacity(n);
     let mut prev = values[0];
     out.push(prev);
-    for i in 1..n {
-        let e = k * values[i] + (1.0 - k) * prev;
+    for v in &values[1..n] {
+        let e = k * v + (1.0 - k) * prev;
         out.push(e);
         prev = e;
     }

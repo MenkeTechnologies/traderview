@@ -22,10 +22,13 @@ pub struct StoredRule {
 }
 
 /// List all rules belonging to a user, optionally filtered by account.
+type RiskRuleRow = (Uuid, Uuid, Option<Uuid>, serde_json::Value, bool, DateTime<Utc>);
+type RiskFireRow = (Uuid, Uuid, Option<Uuid>, String, serde_json::Value, bool, DateTime<Utc>);
+
 pub async fn list(pool: &PgPool, user_id: Uuid, account_id: Option<Uuid>)
     -> anyhow::Result<Vec<StoredRule>>
 {
-    let rows: Vec<(Uuid, Uuid, Option<Uuid>, serde_json::Value, bool, DateTime<Utc>)> = sqlx::query_as(
+    let rows: Vec<RiskRuleRow> = sqlx::query_as(
         "SELECT id, user_id, account_id, rule, enabled, created_at
            FROM risk_rules
           WHERE user_id = $1
@@ -215,7 +218,7 @@ pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
     -> anyhow::Result<Vec<RiskFire>>
 {
     let limit = limit.clamp(1, 500);
-    let rows: Vec<(Uuid, Uuid, Option<Uuid>, String, serde_json::Value, bool, DateTime<Utc>)> = sqlx::query_as(
+    let rows: Vec<RiskFireRow> = sqlx::query_as(
         "SELECT id, user_id, account_id, symbol, decision, blocked, fired_at
            FROM risk_fires WHERE user_id = $1
           ORDER BY fired_at DESC LIMIT $2",
@@ -232,7 +235,6 @@ pub async fn recent_fires(pool: &PgPool, user_id: Uuid, limit: i64)
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use traderview_core::risk_gate::{Preset, preset_rules};
 
     /// The 0030 migration shape is load-bearing for the risk_rules CRUD

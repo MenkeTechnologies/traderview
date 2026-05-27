@@ -171,7 +171,7 @@ fn check_rule(
         RiskRule::MaxLossPerTradePct { pct } => {
             let stop = p.stop_loss?;
             let risk_dollars = risk::risk_amount(
-                p.asset_class, p.side, p.qty, p.entry_price, stop,
+                p.asset_class, p.qty, p.entry_price, stop,
                 p.multiplier, p.tick_size, p.tick_value,
             );
             let cap = ctx.account_equity * (*pct / Decimal::from(100));
@@ -362,7 +362,7 @@ fn is_us_rth(now: DateTime<Utc>) -> bool {
     let h = local.hour();
     let m = local.minute();
     let minutes = h * 60 + m;
-    minutes >= 9 * 60 + 30 && minutes < 16 * 60
+    (9 * 60 + 30..16 * 60).contains(&minutes)
 }
 
 // ---------------------------------------------------------------------------

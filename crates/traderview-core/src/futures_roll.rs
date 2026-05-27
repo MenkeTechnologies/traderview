@@ -76,7 +76,7 @@ pub fn schedule(positions: &[FuturesPosition], today: NaiveDate, roll_window_day
         }
     }
     // Most urgent first (expired before now, then soon, then comfortable).
-    report.rows.sort_by(|a, b| a.days_to_expiry.cmp(&b.days_to_expiry));
+    report.rows.sort_by_key(|a| a.days_to_expiry);
     report
 }
 
@@ -160,8 +160,8 @@ mod tests {
     #[test]
     fn larger_window_makes_more_positions_urgent() {
         let pos = p("/ES", 1, d(2026, 6, 10));
-        let small_window = schedule(&[pos.clone()], d(2026, 5, 27), 7);
-        let large_window = schedule(&[pos.clone()], d(2026, 5, 27), 21);
+        let small_window = schedule(std::slice::from_ref(&pos), d(2026, 5, 27), 7);
+        let large_window = schedule(std::slice::from_ref(&pos), d(2026, 5, 27), 21);
         assert_eq!(small_window.rows[0].urgency, RollUrgency::Soon);
         assert_eq!(large_window.rows[0].urgency, RollUrgency::Now);
     }

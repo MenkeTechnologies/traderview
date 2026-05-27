@@ -97,8 +97,7 @@ pub fn implied_vol(kind: OptKind, market: f64, s: f64, k: f64, t: f64, r: f64, q
         let vega = g.vega * 100.0; // un-scale (price_and_greeks pre-divided)
         if vega.abs() < 1e-10 { break; }
         sigma -= diff / vega;
-        if sigma <= 0.001 { sigma = 0.001; }
-        if sigma > 5.0 { sigma = 5.0; }
+        sigma = sigma.clamp(0.001, 5.0);
     }
     Some(sigma)
 }

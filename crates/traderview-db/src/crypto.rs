@@ -1,8 +1,8 @@
 //! Crypto market data via CoinGecko's free public API (no auth).
 //!
 //! Endpoints:
-//!   * https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=100
-//!   * https://api.coingecko.com/api/v3/global
+//!   * <https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=100>
+//!   * <https://api.coingecko.com/api/v3/global>
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

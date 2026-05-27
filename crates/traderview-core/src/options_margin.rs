@@ -2,9 +2,9 @@
 //!
 //! Per FINRA Rule 4210, common short-option / spread requirements:
 //!   - Naked call:  greatest of [20% × underlying - OTM amount, 10% × underlying] × 100,
-//!                  plus the premium received
+//!     plus the premium received
 //!   - Naked put:   greatest of [20% × underlying - OTM amount, 10% × strike] × 100,
-//!                  plus the premium
+//!     plus the premium
 //!   - Vertical debit spread: net debit paid (caller usually pre-computes)
 //!   - Vertical credit spread: max loss = (strike width × 100) - premium received
 //!   - Iron condor: max loss = greater of the two wings (long + short combined)

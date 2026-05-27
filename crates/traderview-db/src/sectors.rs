@@ -37,7 +37,7 @@ pub async fn ranked(pool: &PgPool) -> anyhow::Result<Vec<Sector>> {
     .fetch_optional(pool)
     .await?;
     let needs_refresh = stale
-        .and_then(|(t,)| Some((Utc::now() - t).num_seconds() > 300))
+        .map(|(t,)| (Utc::now() - t).num_seconds() > 300)
         .unwrap_or(true);
     if needs_refresh {
         refresh(pool).await?;

@@ -51,16 +51,18 @@ async fn create(
     Ok(Json(
         traderview_db::plans::create(
             &s.pool,
-            user.id,
-            body.account_id,
-            &body.symbol,
-            body.asset_class,
-            body.side,
-            body.intended_qty,
-            body.intended_entry,
-            body.stop_loss,
-            body.initial_target,
-            &body.setup_notes,
+            traderview_db::plans::NewPlan {
+                user_id: user.id,
+                account_id: body.account_id,
+                symbol: &body.symbol,
+                asset_class: body.asset_class,
+                side: body.side,
+                intended_qty: body.intended_qty,
+                intended_entry: body.intended_entry,
+                stop_loss: body.stop_loss,
+                initial_target: body.initial_target,
+                setup_notes: &body.setup_notes,
+            },
         )
         .await
         .map_err(ApiError::Internal)?,

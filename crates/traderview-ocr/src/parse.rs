@@ -3,7 +3,7 @@
 //! Receipt heuristics:
 //!   * Merchant — first non-empty line that isn't an address/phone/URL.
 //!   * Total   — the largest dollar amount preceded by a "total"-like word,
-//!               falling back to the largest dollar amount on the page.
+//!     falling back to the largest dollar amount on the page.
 //!   * Date    — first `MM/DD/YYYY`, `MM-DD-YYYY`, or month-name date.
 
 use crate::OcrResult;

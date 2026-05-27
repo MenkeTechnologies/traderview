@@ -23,9 +23,10 @@ struct TopQ { #[serde(default = "default_n")] n: u32 }
 fn default_n() -> u32 { 100 }
 
 // 60-second caches (CoinGecko rate-limits hard).
-static MK: Lazy<Arc<Mutex<Option<(Instant, Vec<CoinRow>)>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
-static GB: Lazy<Arc<Mutex<Option<(Instant, Global)>>>>      = Lazy::new(|| Arc::new(Mutex::new(None)));
-static BC: Lazy<Arc<Mutex<Option<(Instant, OnChainBtc)>>>>  = Lazy::new(|| Arc::new(Mutex::new(None)));
+type TimedCache<T> = Lazy<Arc<Mutex<Option<(Instant, T)>>>>;
+static MK: TimedCache<Vec<CoinRow>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+static GB: TimedCache<Global>       = Lazy::new(|| Arc::new(Mutex::new(None)));
+static BC: TimedCache<OnChainBtc>   = Lazy::new(|| Arc::new(Mutex::new(None)));
 
 async fn markets(_s: State<AppState>, _u: AuthUser, Query(q): Query<TopQ>) -> Result<Json<Vec<CoinRow>>, ApiError> {
     {

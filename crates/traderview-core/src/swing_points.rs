@@ -36,13 +36,13 @@ pub fn detect(bars: &[Bar], lookback: usize) -> Vec<SwingPoint> {
         let center = bars[i];
         let mut is_high = true;
         let mut is_low = true;
-        for j in (i - lookback)..i {
-            if bars[j].high >= center.high { is_high = false; }
-            if bars[j].low <= center.low   { is_low = false; }
+        for bar in &bars[(i - lookback)..i] {
+            if bar.high >= center.high { is_high = false; }
+            if bar.low <= center.low   { is_low = false; }
         }
-        for j in (i + 1)..=(i + lookback) {
-            if bars[j].high >= center.high { is_high = false; }
-            if bars[j].low <= center.low   { is_low = false; }
+        for bar in &bars[(i + 1)..=(i + lookback)] {
+            if bar.high >= center.high { is_high = false; }
+            if bar.low <= center.low   { is_low = false; }
         }
         if is_high {
             out.push(SwingPoint { index: i, price: center.high, kind: SwingKind::High });

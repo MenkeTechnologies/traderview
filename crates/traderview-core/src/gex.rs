@@ -47,15 +47,14 @@ pub struct GexReport {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum GexRegime {
     Positive,    // dealer long gamma — vol suppression
     Negative,    // dealer short gamma — vol amplification
+    #[default]
     Neutral,     // ~ zero
 }
 
-impl Default for GexRegime {
-    fn default() -> Self { GexRegime::Neutral }
-}
 
 pub fn compute(chain: &[StrikeGreeks], spot: f64) -> GexReport {
     let spot2 = spot * spot;

@@ -16,7 +16,6 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 use traderview_expense::dedup::{AccountKind as DedupKind, DedupCandidate};
 use traderview_expense::rules::{CompiledRules, PatternKind as RulePatternKind, Rule};
 use traderview_expense::{seed_rules, ExpenseSource};
@@ -1021,12 +1020,6 @@ async fn ensure_transaction_owner(s: &AppState, user_id: Uuid, tx_id: Uuid) -> R
         Some(_) => Err(ApiError::Forbidden),
         None => Err(ApiError::NotFound),
     }
-}
-
-// Suppress unused-import warnings; HashMap is held for future bulk-update paths.
-#[allow(dead_code)]
-fn _hashmap_typecheck() -> HashMap<String, String> {
-    HashMap::new()
 }
 
 // ============================================================================

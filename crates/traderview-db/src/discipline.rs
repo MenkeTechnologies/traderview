@@ -7,7 +7,7 @@
 //! `trade_plans` row, check four rules:
 //!   * stop_set:   actual trade has a non-null stop_loss
 //!   * stop_honored: trade closed at/above plan.stop_loss (long) or
-//!                   at/below (short) — never closed worse than plan stop
+//!     at/below (short) — never closed worse than plan stop
 //!   * qty_within: actual qty <= 1.10 × plan.intended_qty (10% slack)
 //!   * direction_match: actual side == plan.side
 //!
@@ -74,7 +74,8 @@ pub struct RuleBreakdown {
 pub async fn report(pool: &PgPool, _user_id: Uuid, account_id: Uuid)
     -> anyhow::Result<DisciplineReport>
 {
-    let trades: Vec<(Uuid, String, DateTime<Utc>, Option<Decimal>, String, Decimal, Option<Decimal>, Option<Decimal>)> = sqlx::query_as(
+    type ClosedTradeRow = (Uuid, String, DateTime<Utc>, Option<Decimal>, String, Decimal, Option<Decimal>, Option<Decimal>);
+    let trades: Vec<ClosedTradeRow> = sqlx::query_as(
         "SELECT id, symbol, opened_at, net_pnl, side::text, qty, stop_loss, exit_avg
            FROM trades
           WHERE account_id = $1 AND status = 'closed' AND net_pnl IS NOT NULL
@@ -119,7 +120,8 @@ pub async fn report(pool: &PgPool, _user_id: Uuid, account_id: Uuid)
     };
 
     // ---- Rule evaluations against linked plans --------------------------
-    let plan_rows: Vec<(Uuid, Uuid, String, Decimal, Option<Decimal>, Uuid, DateTime<Utc>, Option<Decimal>, String, Decimal, Option<Decimal>)> = sqlx::query_as(
+    type PlanTradeJoinRow = (Uuid, Uuid, String, Decimal, Option<Decimal>, Uuid, DateTime<Utc>, Option<Decimal>, String, Decimal, Option<Decimal>);
+    let plan_rows: Vec<PlanTradeJoinRow> = sqlx::query_as(
         "SELECT p.id, p.linked_trade_id, p.symbol, p.intended_qty, p.stop_loss,
                 t.id, t.opened_at, t.exit_avg, t.side::text, t.qty, t.stop_loss
            FROM trade_plans p

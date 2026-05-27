@@ -1,8 +1,8 @@
 //! Yahoo options chain fetcher.
 //!
 //! Endpoint (no auth):
-//!   https://query2.finance.yahoo.com/v7/finance/options/SYMBOL
-//!   https://query2.finance.yahoo.com/v7/finance/options/SYMBOL?date=EPOCH
+//!   <https://query2.finance.yahoo.com/v7/finance/options/SYMBOL>
+//!   <https://query2.finance.yahoo.com/v7/finance/options/SYMBOL?date=EPOCH>
 //! The first call returns `expirationDates: [..]` listing available expiries.
 //! Subsequent calls with `?date=` return the full call+put grid for one expiry.
 
@@ -91,9 +91,12 @@ pub async fn chain(symbol: &str, expiration: Option<NaiveDate>) -> anyhow::Resul
     })
 }
 
+/// Result of an ATM straddle pick: (call, call_mid), (put, put_mid), atm_strike.
+pub type AtmStraddle = ((OptionContract, f64), (OptionContract, f64), f64);
+
 /// Pick the ATM call+put for an expiration: the contracts whose strikes
 /// bracket the spot price, then average the two.
-pub fn atm_straddle(chain: &Chain) -> Option<((OptionContract, f64), (OptionContract, f64), f64)> {
+pub fn atm_straddle(chain: &Chain) -> Option<AtmStraddle> {
     let call = nearest_atm(&chain.calls, chain.spot)?;
     let put  = nearest_atm(&chain.puts,  chain.spot)?;
     let cm = mid(&call)?;

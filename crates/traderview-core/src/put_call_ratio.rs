@@ -30,8 +30,10 @@ pub struct PutCallInput {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum SentimentZone {
     BullishExtreme,    // contrarian SELL (heavy call activity)
+    #[default]
     Normal,
     BearishExtreme,    // contrarian BUY (heavy put activity)
 }
@@ -44,9 +46,6 @@ pub struct PutCallReport {
     pub zone: SentimentZone,
 }
 
-impl Default for SentimentZone {
-    fn default() -> Self { SentimentZone::Normal }
-}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Thresholds {

@@ -23,7 +23,7 @@
 //! positive = credit / money in), matching our schema convention exactly.
 //! Rows with empty `Amount` (the "Beginning balance" marker) are dropped.
 //!
-//! Same logic for the .xlsx export — sheet helper produces the same Vec<Vec<String>>.
+//! Same logic for the .xlsx export — sheet helper produces the same `Vec<Vec<String>>`.
 
 use crate::{normalize::normalize, sheet, ExpenseSource, ImportError, ParsedTransaction, Parser};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};

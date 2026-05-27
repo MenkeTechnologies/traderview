@@ -65,8 +65,16 @@ async fn create_watcher(State(s): State<AppState>, user: AuthUser, Json(b): Json
     -> Result<Json<Watcher>, ApiError>
 {
     Ok(Json(traderview_db::disclosures::create_watcher(
-        &s.pool, user.id, &b.name, &b.kinds,
-        b.symbols.as_deref(), b.filers.as_deref(), b.min_amount_usd, &b.sound,
+        &s.pool,
+        traderview_db::disclosures::NewWatcher {
+            user_id: user.id,
+            name: &b.name,
+            kinds: &b.kinds,
+            symbols: b.symbols.as_deref(),
+            filers: b.filers.as_deref(),
+            min_amount_usd: b.min_amount_usd,
+            sound: &b.sound,
+        },
     ).await.map_err(ApiError::Internal)?))
 }
 

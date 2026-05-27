@@ -7,7 +7,6 @@
 //! Pure compute. Input: equity series (one point per period, typically
 //! daily). Output: scalar metrics + intermediate series for plotting.
 
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
@@ -86,7 +85,7 @@ pub fn risk_of_ruin(avg_r: f64, bankroll_units: f64) -> f64 {
     if avg_r == 0.0 { return 1.0; }      // zero edge → ruin in infinite
     let ratio = (1.0 - avg_r) / (1.0 + avg_r);
     if ratio <= 0.0 { return 0.0; }
-    ratio.powf(bankroll_units).min(1.0).max(0.0)
+    ratio.powf(bankroll_units).clamp(0.0, 1.0)
 }
 
 /// Drawdown recovery analysis. For each peak-to-trough drawdown,
@@ -151,9 +150,6 @@ impl RecoveryEvent {
         self.trough_index - self.peak_index
     }
 }
-
-#[allow(dead_code)]
-fn _unused(_: Decimal) {}    // silence Decimal import on the public path
 
 #[cfg(test)]
 mod tests {

@@ -44,7 +44,7 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<MfiPoint> {
         out[i].typical = typical_series[i];
         out[i].money_flow = mf_series[i];
     }
-    for i in period..n {
+    for (i, slot) in out.iter_mut().enumerate().take(n).skip(period) {
         let mut pos = 0.0;
         let mut neg = 0.0;
         for j in (i + 1 - period)..=i {
@@ -54,7 +54,7 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<MfiPoint> {
             if tp > prev_tp { pos += mf_series[j]; }
             else if tp < prev_tp { neg += mf_series[j]; }
         }
-        out[i].mfi = if neg == 0.0 {
+        slot.mfi = if neg == 0.0 {
             if pos > 0.0 { 100.0 } else { 50.0 }
         } else {
             let ratio = pos / neg;

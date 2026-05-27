@@ -44,8 +44,10 @@ pub struct MarginCallReport {
 }
 
 pub fn evaluate(snap: &AccountSnapshot) -> MarginCallReport {
-    let mut r = MarginCallReport::default();
-    r.current_equity = snap.long_market_value - snap.margin_debt;
+    let mut r = MarginCallReport {
+        current_equity: snap.long_market_value - snap.margin_debt,
+        ..MarginCallReport::default()
+    };
 
     if snap.long_market_value.is_zero() {
         // No positions — can't be in margin call.

@@ -108,8 +108,7 @@ pub fn run() {
                 Err(e) => {
                     tracing::error!(?e, "app_data_dir failed");
                     show_fatal_dialog(app, &format!("app_data_dir: {e}"));
-                    return Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    return Err(Box::new(std::io::Error::other(
                         format!("app_data_dir: {e}"),
                     )));
                 }
@@ -127,8 +126,7 @@ pub fn run() {
                 Err(e) => {
                     tracing::error!(?e, "secret load/create failed");
                     show_fatal_dialog(app, &format!("jwt-secret: {e}"));
-                    return Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    return Err(Box::new(std::io::Error::other(
                         format!("jwt-secret: {e}"),
                     )));
                 }
@@ -198,8 +196,7 @@ pub fn run() {
                             log_file_path().display()
                         ),
                     );
-                    Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    Err(Box::new(std::io::Error::other(
                         format!("backend failed: {err_msg}"),
                     )))
                 }
@@ -212,8 +209,7 @@ pub fn run() {
                             log_file_path().display()
                         ),
                     );
-                    Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    Err(Box::new(std::io::Error::other(
                         format!("backend timeout: {e}"),
                     )))
                 }

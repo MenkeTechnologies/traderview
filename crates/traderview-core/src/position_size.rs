@@ -118,7 +118,7 @@ pub fn kelly(i: Inputs, p: KellyParams) -> Option<Sizing> {
     if p.avg_loss <= 0.0 { return None; }
     let b = p.avg_win / p.avg_loss;
     let f_star = (p.win_rate * b - (1.0 - p.win_rate)) / b;
-    let f = (f_star * p.fractional_kelly).max(0.0).min(1.0);
+    let f = (f_star * p.fractional_kelly).clamp(0.0, 1.0);
     let dollar_risk = i.equity * f;
     // Small epsilon nudge so e.g. 1999.9999... from 0.6*2.0-0.4 rounds to 2000
     // rather than truncating away the user's intended whole-share count.

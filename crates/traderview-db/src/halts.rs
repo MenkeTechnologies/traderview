@@ -74,7 +74,7 @@ impl HaltStore {
     /// Snapshot the current halts, newest first.
     pub fn latest(&self, limit: usize) -> Vec<Halt> {
         let mut all: Vec<Halt> = self.latest.iter().map(|e| e.value().clone()).collect();
-        all.sort_by(|a, b| b.fetched_at.cmp(&a.fetched_at));
+        all.sort_by_key(|a| std::cmp::Reverse(a.fetched_at));
         all.truncate(limit);
         all
     }
@@ -177,27 +177,23 @@ fn parse_rss(body: &str) -> Vec<Halt> {
                 }
                 current_tag = None;
             }
-            Ok(Event::Text(e)) => {
-                if in_item {
-                    let txt = e.unescape().unwrap_or_default().to_string();
-                    if let Some(tag) = &current_tag {
-                        match tag.as_str() {
-                            "title" => current_title.push_str(&txt),
-                            "description" => current_desc.push_str(&txt),
-                            _ => {}
-                        }
+            Ok(Event::Text(e)) if in_item => {
+                let txt = e.unescape().unwrap_or_default().to_string();
+                if let Some(tag) = &current_tag {
+                    match tag.as_str() {
+                        "title" => current_title.push_str(&txt),
+                        "description" => current_desc.push_str(&txt),
+                        _ => {}
                     }
                 }
             }
-            Ok(Event::CData(e)) => {
-                if in_item {
-                    let txt = String::from_utf8_lossy(&e).to_string();
-                    if let Some(tag) = &current_tag {
-                        match tag.as_str() {
-                            "title" => current_title.push_str(&txt),
-                            "description" => current_desc.push_str(&txt),
-                            _ => {}
-                        }
+            Ok(Event::CData(e)) if in_item => {
+                let txt = String::from_utf8_lossy(&e).to_string();
+                if let Some(tag) = &current_tag {
+                    match tag.as_str() {
+                        "title" => current_title.push_str(&txt),
+                        "description" => current_desc.push_str(&txt),
+                        _ => {}
                     }
                 }
             }

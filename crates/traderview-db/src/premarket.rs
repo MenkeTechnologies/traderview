@@ -9,7 +9,7 @@
 //!
 //! Plus today's high-importance economic events (from the static calendar).
 
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{Duration, Utc};
 use futures_util::future::join_all;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -138,5 +138,3 @@ async fn atr20_pct(pool: &PgPool, symbol: &str) -> Option<f64> {
 
 fn dec(d: rust_decimal::Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
 
-#[allow(dead_code)]
-fn _today() -> NaiveDate { Utc::now().date_naive() }

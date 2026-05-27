@@ -1,8 +1,8 @@
 //! Sentiment-as-a-feed — Reddit r/wallstreetbets + StockTwits pollers.
 //!
 //! Free public JSON endpoints:
-//!   * https://www.reddit.com/r/wallstreetbets/new.json?limit=100  (User-Agent required)
-//!   * https://api.stocktwits.com/api/2/streams/symbol/SYM.json    (rate-limited but no auth)
+//!   * <https://www.reddit.com/r/wallstreetbets/new.json?limit=100>  (User-Agent required)
+//!   * <https://api.stocktwits.com/api/2/streams/symbol/SYM.json>    (rate-limited but no auth)
 //!
 //! X / Twitter is auth-gated. We expose the schema and source enum value
 //! but skip the poller until the user supplies bearer credentials.

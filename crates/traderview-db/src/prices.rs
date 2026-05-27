@@ -4,8 +4,8 @@
 //! window, fetch from Yahoo Finance, upsert into `price_bars`, and re-query.
 //!
 //! Yahoo v8 chart endpoint:
-//!   https://query1.finance.yahoo.com/v8/finance/chart/{symbol}
-//!     ?period1={epoch}&period2={epoch}&interval={1m,5m,15m,1h,1d,1wk}
+//!   `https://query1.finance.yahoo.com/v8/finance/chart/{symbol}`
+//!     `?period1={epoch}&period2={epoch}&interval={1m,5m,15m,1h,1d,1wk}`
 //!
 //! Public endpoint — no API key. Subject to rate-limits; the cache amortizes.
 
@@ -46,7 +46,8 @@ async fn read_bars(
     from: DateTime<Utc>,
     to: DateTime<Utc>,
 ) -> anyhow::Result<Vec<PriceBar>> {
-    let rows: Vec<(String, String, DateTime<Utc>, Decimal, Decimal, Decimal, Decimal, Decimal, String)> =
+    type PriceBarRow = (String, String, DateTime<Utc>, Decimal, Decimal, Decimal, Decimal, Decimal, String);
+    let rows: Vec<PriceBarRow> =
         sqlx::query_as(
             "SELECT symbol, interval::text, bar_time, open, high, low, close, volume, source
                FROM price_bars

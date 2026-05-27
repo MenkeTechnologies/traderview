@@ -237,7 +237,7 @@ mod tests {
         let start = d(2026, 1, 1);
         let end = d(2026, 12, 31);
         let n = trading_days_between(start, end);
-        assert!(n >= 250 && n <= 253, "should be ~252 trading days, got {}", n);
+        assert!((250..=253).contains(&n), "should be ~252 trading days, got {}", n);
     }
 
     #[test]

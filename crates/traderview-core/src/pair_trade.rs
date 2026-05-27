@@ -5,7 +5,7 @@
 //!   - Spread series: spread_t = y_t - β × x_t.
 //!   - Spread mean + stdev for normalizing.
 //!   - Z-score of the latest spread observation.
-//:
+//!
 //! Entry signal: |Z| > entry_threshold (typically 2.0).
 //! Exit signal:  |Z| < exit_threshold (typically 0.5).
 //! Stop loss:    |Z| > stop_threshold (typically 3.5).
@@ -17,11 +17,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum PairSignal {
     LongSpread,    // |z| > entry AND z < 0 (spread cheap)
     ShortSpread,   // |z| > entry AND z > 0 (spread expensive)
     ExitSpread,    // |z| < exit (mean-reverted)
     StopOut,       // |z| > stop (blown out)
+    #[default]
     Hold,
 }
 
@@ -46,9 +48,6 @@ pub struct PairReport {
     pub signal: PairSignal,
 }
 
-impl Default for PairSignal {
-    fn default() -> Self { PairSignal::Hold }
-}
 
 pub fn analyze(y: &[f64], x: &[f64], cfg: &PairConfig) -> Option<PairReport> {
     if y.len() != x.len() || y.len() < 3 { return None; }

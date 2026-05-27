@@ -36,7 +36,8 @@ pub async fn create(
 }
 
 pub async fn list(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec<Import>> {
-    let rows: Vec<(Uuid, Uuid, String, String, String, i32, DateTime<Utc>)> = sqlx::query_as(
+    type ImportRow = (Uuid, Uuid, String, String, String, i32, DateTime<Utc>);
+    let rows: Vec<ImportRow> = sqlx::query_as(
         "SELECT id, account_id, source, filename, sha256, row_count, imported_at
            FROM imports WHERE account_id = $1 ORDER BY imported_at DESC",
     )

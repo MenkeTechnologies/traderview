@@ -1,11 +1,11 @@
 //! Compound strategy-alert AST + evaluator.
 //!
 //! AST shape (serialized as tagged JSON):
-//!   { "kind": "leaf", "symbol": "AAPL", "metric": { "kind": "rsi", "period": 14 },
-//!     "op": "lt", "value": 30.0 }
-//!   { "kind": "and",  "left": <Node>, "right": <Node> }
-//!   { "kind": "or",   "left": <Node>, "right": <Node> }
-//!   { "kind": "not",  "node": <Node> }
+//!   `{ "kind": "leaf", "symbol": "AAPL", "metric": { "kind": "rsi", "period": 14 },`
+//!     `"op": "lt", "value": 30.0 }`
+//!   `{ "kind": "and",  "left": <Node>, "right": <Node> }`
+//!   `{ "kind": "or",   "left": <Node>, "right": <Node> }`
+//!   `{ "kind": "not",  "node": <Node> }`
 //!
 //! The evaluator takes a `MetricResolver` closure that the calling crate
 //! wires up to whatever data sources it has (cached bars, live quotes,
@@ -212,7 +212,7 @@ mod tests {
     fn rsi_lt_with_real_series() {
         // 30 declining closes → RSI(14) trends toward 0. Should fire on `< 30`.
         let mut c = closes(30, 100.0, 0.0);
-        for i in 15..30 { c[i] = 100.0 - (i - 14) as f64 * 2.0; }
+        for (i, slot) in c.iter_mut().enumerate().take(30).skip(15) { *slot = 100.0 - (i - 14) as f64 * 2.0; }
         let node = Node::Leaf {
             symbol: "X".into(),
             metric: Metric::Rsi { period: 14 },

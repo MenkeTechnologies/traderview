@@ -76,12 +76,12 @@ mod tests {
         // 8 bars, window 3 → 6 points have non-zero z (indices 2..=7).
         let series: Vec<f64> = (1..=8).map(|i| i as f64).collect();
         let out = compute(&series, 3);
-        for i in 0..2 {
-            assert_eq!(out[i].z_score, 0.0);    // pre-warmup
+        for p in &out[..2] {
+            assert_eq!(p.z_score, 0.0);    // pre-warmup
         }
-        for i in 2..8 {
+        for (i, p) in out.iter().enumerate().take(8).skip(2) {
             // Each window of [i-2, i-1, i] = arithmetic progression → window_mean = i.
-            assert!((out[i].window_mean - i as f64).abs() < 1e-9);
+            assert!((p.window_mean - i as f64).abs() < 1e-9);
         }
     }
 

@@ -269,7 +269,7 @@ fn decode_option_type(raw: &str) -> Option<OptionType> {
 }
 
 fn parse_decimal(raw: &str) -> Option<Decimal> {
-    let cleaned = raw.trim().replace(',', "").replace('$', "");
+    let cleaned = raw.trim().replace([',', '$'], "");
     if cleaned.is_empty() {
         return None;
     }

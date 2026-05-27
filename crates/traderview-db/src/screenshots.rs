@@ -3,17 +3,18 @@ use sqlx::PgPool;
 use traderview_core::Screenshot;
 use uuid::Uuid;
 
-pub async fn create(
-    pool: &PgPool,
-    user_id: Uuid,
-    trade_id: Option<Uuid>,
-    journal_id: Option<Uuid>,
-    filename: &str,
-    mime_type: &str,
-    bytes: &[u8],
-    caption: &str,
-) -> anyhow::Result<Screenshot> {
-    let size = bytes.len() as i64;
+pub struct NewScreenshot<'a> {
+    pub user_id: Uuid,
+    pub trade_id: Option<Uuid>,
+    pub journal_id: Option<Uuid>,
+    pub filename: &'a str,
+    pub mime_type: &'a str,
+    pub bytes: &'a [u8],
+    pub caption: &'a str,
+}
+
+pub async fn create(pool: &PgPool, ss: NewScreenshot<'_>) -> anyhow::Result<Screenshot> {
+    let size = ss.bytes.len() as i64;
     let (id, position, created_at): (Uuid, i32, DateTime<Utc>) = sqlx::query_as(
         "INSERT INTO screenshots
             (user_id, trade_id, journal_id, filename, mime_type, size_bytes, bytes, caption, position)
@@ -24,25 +25,25 @@ pub async fn create(
                           OR (journal_id = $3 AND $3 IS NOT NULL)), 0))
          RETURNING id, position, created_at",
     )
-    .bind(user_id)
-    .bind(trade_id)
-    .bind(journal_id)
-    .bind(filename)
-    .bind(mime_type)
+    .bind(ss.user_id)
+    .bind(ss.trade_id)
+    .bind(ss.journal_id)
+    .bind(ss.filename)
+    .bind(ss.mime_type)
     .bind(size)
-    .bind(bytes)
-    .bind(caption)
+    .bind(ss.bytes)
+    .bind(ss.caption)
     .fetch_one(pool)
     .await?;
     Ok(Screenshot {
         id,
-        user_id,
-        trade_id,
-        journal_id,
-        filename: filename.into(),
-        mime_type: mime_type.into(),
+        user_id: ss.user_id,
+        trade_id: ss.trade_id,
+        journal_id: ss.journal_id,
+        filename: ss.filename.into(),
+        mime_type: ss.mime_type.into(),
         size_bytes: size,
-        caption: caption.into(),
+        caption: ss.caption.into(),
         position,
         created_at,
     })

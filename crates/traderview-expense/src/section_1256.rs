@@ -68,8 +68,10 @@ pub struct Section1256Report {
 pub fn report(trades: &[Section1256Trade]) -> Section1256Report {
     let sixty = Decimal::from_str("0.60").unwrap();
     let forty = Decimal::from_str("0.40").unwrap();
-    let mut report = Section1256Report::default();
-    report.trade_count = trades.len();
+    let mut report = Section1256Report {
+        trade_count: trades.len(),
+        ..Section1256Report::default()
+    };
     for t in trades {
         let is_1256 = t.is_1256.unwrap_or_else(|| is_section_1256_symbol(&t.symbol));
         if is_1256 {

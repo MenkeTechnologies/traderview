@@ -107,16 +107,16 @@ async fn run(State(s): State<AppState>, user: AuthUser, Query(q): Query<RunQ>)
     let mut hits = Vec::new();
     for sym in &universe {
         if let Some(r) = score_symbol(&s.pool, sym, q.days).await {
-            if q.min_score.map_or(true, |m| r.score >= m)
-               && q.max_score.map_or(true, |m| r.score <= m)
-               && q.summary.as_deref().map_or(true, |w| w == r.summary)
+            if q.min_score.is_none_or(|m| r.score >= m)
+               && q.max_score.is_none_or(|m| r.score <= m)
+               && q.summary.as_deref().is_none_or(|w| w == r.summary)
             {
                 hits.push(project(r));
             }
         }
         if hits.len() >= q.limit * 3 { break; } // bound work
     }
-    hits.sort_by(|a, b| b.score.cmp(&a.score));
+    hits.sort_by_key(|a| std::cmp::Reverse(a.score));
     hits.truncate(q.limit);
     Ok(Json(ScreenerResult { universe_size, hits }))
 }
@@ -145,9 +145,9 @@ async fn top(State(s): State<AppState>, user: AuthUser, Query(q): Query<TopQ>)
         }
     }
     if q.side == "sell" {
-        hits.sort_by(|a, b| a.score.cmp(&b.score));
+        hits.sort_by_key(|a| a.score);
     } else {
-        hits.sort_by(|a, b| b.score.cmp(&a.score));
+        hits.sort_by_key(|a| std::cmp::Reverse(a.score));
     }
     hits.truncate(q.limit);
     Ok(Json(ScreenerResult { universe_size, hits }))

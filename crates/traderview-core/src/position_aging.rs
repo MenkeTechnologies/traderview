@@ -92,7 +92,7 @@ pub fn evaluate(positions: &[OpenPosition], now: DateTime<Utc>, stale_threshold_
         }
     }
     // Sort oldest-first.
-    report.rows.sort_by(|a, b| b.age_days.cmp(&a.age_days));
+    report.rows.sort_by_key(|a| std::cmp::Reverse(a.age_days));
     report
 }
 

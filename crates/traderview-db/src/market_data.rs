@@ -55,8 +55,10 @@ pub async fn quote(pool: &PgPool, symbol: &str) -> anyhow::Result<QuoteSnapshot>
     Ok(fresh)
 }
 
+type QuoteCacheRow = (String, Decimal, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<i64>, Option<String>, DateTime<Utc>);
+
 async fn read_quote_cache(pool: &PgPool, symbol: &str) -> anyhow::Result<Option<QuoteSnapshot>> {
-    let row: Option<(String, Decimal, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<i64>, Option<String>, DateTime<Utc>)>
+    let row: Option<QuoteCacheRow>
         = sqlx::query_as(
             "SELECT symbol, price, prev_close, change_pct, day_high, day_low, volume, market_state, fetched_at
                FROM quote_snapshots WHERE symbol = $1",

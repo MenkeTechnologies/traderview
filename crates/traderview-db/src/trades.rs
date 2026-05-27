@@ -125,7 +125,7 @@ pub async fn rollup_account(pool: &PgPool, account_id: Uuid) -> anyhow::Result<u
         .execute(&mut *tx)
         .await?;
     for rt in &trades {
-        insert_rolled(&mut *tx, rt).await?;
+        insert_rolled(&mut tx, rt).await?;
     }
     tx.commit().await?;
     Ok(n)

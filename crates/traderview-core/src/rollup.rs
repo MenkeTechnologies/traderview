@@ -38,13 +38,9 @@ pub struct RolledTrade {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // exec_id/fee_per_unit/executed_at preserved for future leg attribution
 struct OpenLot {
-    exec_id: Uuid,
     qty_open: Decimal,
     price: Decimal,
-    fee_per_unit: Decimal,
-    executed_at: chrono::DateTime<chrono::Utc>,
 }
 
 /// Group key — same (account, symbol, asset_class, option-leg) collapses to
@@ -127,24 +123,20 @@ fn rollup_one_group(
                 // Either opening a long, OR covering an existing short.
                 let mut remaining = e.qty;
                 if !short_lots.is_empty() {
-                    remaining = close_against(
-                        &mut short_lots,
-                        TradeSide::Short,
-                        e,
-                        remaining,
-                        fee_per_unit,
-                        &mut current_short,
+                    remaining = close_against(CloseAgainst {
+                        lots: &mut short_lots,
+                        open_side: TradeSide::Short,
+                        closing_exec: e,
+                        closing_fee_per_unit: fee_per_unit,
+                        current_holder: &mut current_short,
                         out,
                         method,
-                    );
+                    }, remaining);
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
-                        exec_id: e.id,
                         qty_open: remaining,
                         price: e.price,
-                        fee_per_unit,
-                        executed_at: e.executed_at,
                     };
                     if current_long.is_none() {
                         current_long = Some(TradeBuilder::new(e, TradeSide::Long));
@@ -159,24 +151,20 @@ fn rollup_one_group(
             Side::Short => {
                 let mut remaining = e.qty;
                 if !long_lots.is_empty() {
-                    remaining = close_against(
-                        &mut long_lots,
-                        TradeSide::Long,
-                        e,
-                        remaining,
-                        fee_per_unit,
-                        &mut current_long,
+                    remaining = close_against(CloseAgainst {
+                        lots: &mut long_lots,
+                        open_side: TradeSide::Long,
+                        closing_exec: e,
+                        closing_fee_per_unit: fee_per_unit,
+                        current_holder: &mut current_long,
                         out,
                         method,
-                    );
+                    }, remaining);
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
-                        exec_id: e.id,
                         qty_open: remaining,
                         price: e.price,
-                        fee_per_unit,
-                        executed_at: e.executed_at,
                     };
                     if current_short.is_none() {
                         current_short = Some(TradeBuilder::new(e, TradeSide::Short));
@@ -192,25 +180,21 @@ fn rollup_one_group(
                 // Closes long; if it exceeds open longs, the excess starts a short.
                 let mut remaining = e.qty;
                 if !long_lots.is_empty() {
-                    remaining = close_against(
-                        &mut long_lots,
-                        TradeSide::Long,
-                        e,
-                        remaining,
-                        fee_per_unit,
-                        &mut current_long,
+                    remaining = close_against(CloseAgainst {
+                        lots: &mut long_lots,
+                        open_side: TradeSide::Long,
+                        closing_exec: e,
+                        closing_fee_per_unit: fee_per_unit,
+                        current_holder: &mut current_long,
                         out,
                         method,
-                    );
+                    }, remaining);
                 }
                 if remaining > Decimal::ZERO {
                     // Flipped short.
                     let lot = OpenLot {
-                        exec_id: e.id,
                         qty_open: remaining,
                         price: e.price,
-                        fee_per_unit,
-                        executed_at: e.executed_at,
                     };
                     if current_short.is_none() {
                         current_short = Some(TradeBuilder::new(e, TradeSide::Short));
@@ -225,24 +209,20 @@ fn rollup_one_group(
             Side::Cover => {
                 let mut remaining = e.qty;
                 if !short_lots.is_empty() {
-                    remaining = close_against(
-                        &mut short_lots,
-                        TradeSide::Short,
-                        e,
-                        remaining,
-                        fee_per_unit,
-                        &mut current_short,
+                    remaining = close_against(CloseAgainst {
+                        lots: &mut short_lots,
+                        open_side: TradeSide::Short,
+                        closing_exec: e,
+                        closing_fee_per_unit: fee_per_unit,
+                        current_holder: &mut current_short,
                         out,
                         method,
-                    );
+                    }, remaining);
                 }
                 if remaining > Decimal::ZERO {
                     let lot = OpenLot {
-                        exec_id: e.id,
                         qty_open: remaining,
                         price: e.price,
-                        fee_per_unit,
-                        executed_at: e.executed_at,
                     };
                     if current_long.is_none() {
                         current_long = Some(TradeBuilder::new(e, TradeSide::Long));
@@ -270,20 +250,21 @@ fn rollup_one_group(
     }
 }
 
-/// Close `closing_qty` units against `lots` (which represent open positions
-/// in `open_side`). Returns any leftover qty that overflowed (i.e. closed more
-/// than was open — caller treats as a reversal).
-#[allow(clippy::too_many_arguments)]
-fn close_against(
-    lots: &mut VecDeque<OpenLot>,
+struct CloseAgainst<'a> {
+    lots: &'a mut VecDeque<OpenLot>,
     open_side: TradeSide,
-    closing_exec: &Execution,
-    mut closing_qty: Decimal,
+    closing_exec: &'a Execution,
     closing_fee_per_unit: Decimal,
-    current_holder: &mut Option<TradeBuilder>,
-    out: &mut Vec<RolledTrade>,
+    current_holder: &'a mut Option<TradeBuilder>,
+    out: &'a mut Vec<RolledTrade>,
     method: LotMethod,
-) -> Decimal {
+}
+
+/// Close `closing_qty` units against `ca.lots` (which represent open positions
+/// in `ca.open_side`). Returns any leftover qty that overflowed (i.e. closed more
+/// than was open — caller treats as a reversal).
+fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
+    let CloseAgainst { lots, open_side, closing_exec, closing_fee_per_unit, current_holder, out, method } = ca;
     while closing_qty > Decimal::ZERO {
         let lot = match method {
             LotMethod::Fifo => lots.front_mut(),

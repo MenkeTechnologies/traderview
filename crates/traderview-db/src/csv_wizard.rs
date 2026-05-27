@@ -123,7 +123,7 @@ pub async fn commit(
             Ok(r) => r,
             Err(e) => { failures.push(RowError { row_index: row_idx, reason: e.to_string() }); continue; }
         };
-        match build_exec(&r, i_sym, i_side, i_qty, i_pri, i_ts, i_fee, i_oid) {
+        match build_exec(&r, ColIdx { sym: i_sym, side: i_side, qty: i_qty, pri: i_pri, ts: i_ts, fee: i_fee, oid: i_oid }) {
             Ok(p) => {
                 match traderview_db_executions_insert_parsed(pool, account_id, import_id, &p).await {
                     Ok(true)  => inserted += 1,
@@ -148,21 +148,28 @@ async fn traderview_db_executions_insert_parsed(
     crate::executions::insert_parsed(pool, account_id, import_id, p).await
 }
 
-fn build_exec(
-    r: &csv::StringRecord,
-    i_sym: usize, i_side: usize, i_qty: usize, i_pri: usize, i_ts: usize,
-    i_fee: Option<usize>, i_oid: Option<usize>,
-) -> anyhow::Result<ParsedExecution> {
+#[derive(Clone, Copy)]
+struct ColIdx {
+    sym: usize,
+    side: usize,
+    qty: usize,
+    pri: usize,
+    ts: usize,
+    fee: Option<usize>,
+    oid: Option<usize>,
+}
+
+fn build_exec(r: &csv::StringRecord, c: ColIdx) -> anyhow::Result<ParsedExecution> {
     let get = |i: usize| r.get(i).map(|s| s.trim()).unwrap_or("");
-    let symbol = get(i_sym).to_uppercase();
+    let symbol = get(c.sym).to_uppercase();
     if symbol.is_empty() { anyhow::bail!("empty symbol"); }
-    let side = parse_side(get(i_side))?;
-    let qty = parse_decimal(get(i_qty), "qty")?;
-    let price = parse_decimal(get(i_pri), "price")?;
-    let fee = i_fee.map(|i| parse_decimal(get(i), "fee").unwrap_or(Decimal::ZERO))
+    let side = parse_side(get(c.side))?;
+    let qty = parse_decimal(get(c.qty), "qty")?;
+    let price = parse_decimal(get(c.pri), "price")?;
+    let fee = c.fee.map(|i| parse_decimal(get(i), "fee").unwrap_or(Decimal::ZERO))
         .unwrap_or(Decimal::ZERO);
-    let executed_at = parse_dt(get(i_ts))?;
-    let broker_order_id = i_oid.and_then(|i| {
+    let executed_at = parse_dt(get(c.ts))?;
+    let broker_order_id = c.oid.and_then(|i| {
         let v = get(i); if v.is_empty() { None } else { Some(v.to_string()) }
     });
     // Stash the entire row as the audit blob so re-parse / debugging is

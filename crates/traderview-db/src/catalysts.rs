@@ -66,7 +66,7 @@ impl CatalystStore {
     /// Newest first.
     pub fn latest(&self, limit: usize) -> Vec<Catalyst> {
         let mut all: Vec<Catalyst> = self.seen.iter().map(|e| e.value().clone()).collect();
-        all.sort_by(|a, b| b.fetched_at.cmp(&a.fetched_at));
+        all.sort_by_key(|a| std::cmp::Reverse(a.fetched_at));
         all.truncate(limit);
         all
     }
@@ -80,7 +80,7 @@ impl CatalystStore {
             .filter(|e| e.value().tickers.iter().any(|t| t == &sym_upper))
             .map(|e| e.value().clone())
             .collect();
-        hits.sort_by(|a, b| b.fetched_at.cmp(&a.fetched_at));
+        hits.sort_by_key(|a| std::cmp::Reverse(a.fetched_at));
         hits.truncate(limit);
         hits
     }
@@ -289,9 +289,9 @@ fn parse_feed(
                         let tickers = extract_tickers(&body_text);
                         let final_link = if !link.is_empty() {
                             Some(link.clone())
-                        } else if let Some(h) = current_attr_href.take() {
-                            Some(h)
-                        } else { None };
+                        } else {
+                            current_attr_href.take()
+                        };
                         let pub_at = parse_pub_date(&published).unwrap_or_else(Utc::now);
                         out.push(Catalyst {
                             kind,
@@ -309,28 +309,24 @@ fn parse_feed(
                 }
                 current_tag = None;
             }
-            Ok(Event::Text(e)) => {
-                if in_entry {
-                    let txt = e.unescape().unwrap_or_default().to_string();
-                    match current_tag.as_deref() {
-                        Some("title") => title.push_str(&txt),
-                        s if s == Some(summary_tag) => summary.push_str(&txt),
-                        Some("link") => if link.is_empty() { link.push_str(&txt); },
-                        Some("updated") | Some("published") | Some("pubDate") => {
-                            published.push_str(&txt);
-                        }
-                        _ => {}
+            Ok(Event::Text(e)) if in_entry => {
+                let txt = e.unescape().unwrap_or_default().to_string();
+                match current_tag.as_deref() {
+                    Some("title") => title.push_str(&txt),
+                    s if s == Some(summary_tag) => summary.push_str(&txt),
+                    Some("link") if link.is_empty() => link.push_str(&txt),
+                    Some("updated") | Some("published") | Some("pubDate") => {
+                        published.push_str(&txt);
                     }
+                    _ => {}
                 }
             }
-            Ok(Event::CData(e)) => {
-                if in_entry {
-                    let txt = String::from_utf8_lossy(&e).to_string();
-                    match current_tag.as_deref() {
-                        Some("title") => title.push_str(&txt),
-                        s if s == Some(summary_tag) => summary.push_str(&txt),
-                        _ => {}
-                    }
+            Ok(Event::CData(e)) if in_entry => {
+                let txt = String::from_utf8_lossy(&e).to_string();
+                match current_tag.as_deref() {
+                    Some("title") => title.push_str(&txt),
+                    s if s == Some(summary_tag) => summary.push_str(&txt),
+                    _ => {}
                 }
             }
             Ok(Event::Eof) => break,
@@ -406,7 +402,7 @@ pub fn extract_tickers(text: &str) -> Vec<String> {
             if (1..=8).contains(&tk.len()) {
                 out.insert(tk);
             }
-            s = &rest[..];
+            s = rest;
         }
     }
     out.into_iter().collect()

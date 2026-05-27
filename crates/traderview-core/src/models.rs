@@ -59,18 +59,15 @@ pub enum TradeStatus {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum AssetClass {
+    #[default]
     Stock,
     Option,
     Future,
     Forex,
 }
 
-impl Default for AssetClass {
-    fn default() -> Self {
-        AssetClass::Stock
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

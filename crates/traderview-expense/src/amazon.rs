@@ -33,9 +33,9 @@
 //!
 //! Sign convention: amount is set negative (expense). Refunds in the original
 //! export show up with discount in col 6; we follow the simple rule "amount =
-//! -col[7]" because col[7] is the actual charge after discount.
+//! `-col[7]`" because `col[7]` is the actual charge after discount.
 //!
-//! Rows with empty col[0] or non-numeric col[7] are skipped silently — the
+//! Rows with empty `col[0]` or non-numeric `col[7]` are skipped silently — the
 //! file contains blank separator rows interleaving the data.
 
 use crate::{normalize::normalize, sheet, ExpenseSource, ImportError, ParsedTransaction, Parser};
@@ -91,11 +91,7 @@ impl Parser for AmazonParser {
             } else {
                 format!("AMAZON.COM — {}", truncate(&title, 80))
             };
-            let merchant_normalized = normalize(if title.is_empty() {
-                "amazon.com"
-            } else {
-                "amazon.com"
-            });
+            let merchant_normalized = normalize("amazon.com");
 
             let tag = row.get(COL_TAG).cloned().unwrap_or_default();
             let description = build_description(row);

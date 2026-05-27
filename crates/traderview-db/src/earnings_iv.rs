@@ -164,7 +164,7 @@ async fn realized_move(
     let from_ts = earnings_date.and_hms_opt(0, 0, 0).unwrap().and_utc() - Duration::days(10);
     let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from_ts, to_ts).await?;
     if bars.len() < 2 { return Ok(None); }
-    let pre  = bars.iter().filter(|b| b.bar_time.date_naive() < earnings_date).last();
+    let pre  = bars.iter().rev().find(|b| b.bar_time.date_naive() < earnings_date);
     let post = bars.iter().find(|b| b.bar_time.date_naive() > earnings_date);
     if let (Some(p), Some(n)) = (pre, post) {
         let cb = dec(p.close);

@@ -159,7 +159,7 @@ pub async fn submit(
                    limit_price, stop_price, status::text,
                    filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
     )
-    .bind(account_id).bind(&req.symbol.to_uppercase()).bind(side_str)
+    .bind(account_id).bind(req.symbol.to_uppercase()).bind(side_str)
     .bind(req.qty).bind(&req.order_type).bind(req.limit_price).bind(req.stop_price)
     .bind(status).bind(fill_price).bind(fill_price.map(|_| req.qty))
     .bind(filled_at).bind(reject)

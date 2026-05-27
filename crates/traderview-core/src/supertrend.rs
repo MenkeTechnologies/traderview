@@ -47,16 +47,12 @@ pub fn compute(bars: &[Bar], atr: &[f64], multiplier: f64) -> Vec<SupertrendPoin
         let basic_lower = median - multiplier * atr[i];
 
         // Final upper: tighten if prior trend was up.
-        let final_upper = if i == 0 {
-            basic_upper
-        } else if basic_upper < prev_upper || prev_close > prev_upper {
+        let final_upper = if i == 0 || basic_upper < prev_upper || prev_close > prev_upper {
             basic_upper
         } else {
             prev_upper
         };
-        let final_lower = if i == 0 {
-            basic_lower
-        } else if basic_lower > prev_lower || prev_close < prev_lower {
+        let final_lower = if i == 0 || basic_lower > prev_lower || prev_close < prev_lower {
             basic_lower
         } else {
             prev_lower

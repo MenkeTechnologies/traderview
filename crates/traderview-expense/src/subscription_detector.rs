@@ -143,7 +143,7 @@ pub fn detect(txns: &[ParsedTransaction], opts: DetectOptions) -> Vec<Subscripti
         });
     }
     // Largest projected annual first so the user sees the biggest leaks at top.
-    out.sort_by(|a, b| b.projected_annual_cost.cmp(&a.projected_annual_cost));
+    out.sort_by_key(|a| std::cmp::Reverse(a.projected_annual_cost));
     out
 }
 

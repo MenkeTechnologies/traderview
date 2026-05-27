@@ -28,7 +28,7 @@ pub struct ForecastInput {
     pub ytd_net_profit: Decimal,
     /// Day of year through which YTD covers — 1..=365.
     pub days_through_ytd: i32,
-    /// Estimated current-year effective tax rate as a Decimal in [0,1].
+    /// Estimated current-year effective tax rate as a Decimal in `[0,1]`.
     /// Conservative default: 24% federal + 7.65% SE * 0.5 = ~28%.
     pub estimated_effective_tax_rate: Decimal,
     /// Withholding already collected via W-2 / 1099 etc. Reduces the

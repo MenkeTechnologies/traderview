@@ -48,8 +48,10 @@ pub struct LiveSnapshot {
     pub fetched_at: DateTime<Utc>,
 }
 
+type OpenPositionRow = (Uuid, String, String, String, Decimal, Decimal, Decimal, DateTime<Utc>);
+
 pub async fn snapshot(pool: &PgPool, account_id: Uuid) -> anyhow::Result<LiveSnapshot> {
-    let rows: Vec<(Uuid, String, String, String, Decimal, Decimal, Decimal, DateTime<Utc>)> =
+    let rows: Vec<OpenPositionRow> =
         sqlx::query_as(
             "SELECT id, symbol, side::text, asset_class::text, qty, entry_avg, multiplier, opened_at
                FROM trades

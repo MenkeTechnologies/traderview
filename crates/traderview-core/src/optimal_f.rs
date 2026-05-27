@@ -84,7 +84,7 @@ pub fn compute(returns: &[f64]) -> OptimalFReport {
         twr_at_optimal: best_twr,
         half_kelly: best_f / 2.0,
         quarter_kelly: best_f / 4.0,
-        worst_loss: worst_loss,
+        worst_loss,
         note,
     }
 }

@@ -70,8 +70,8 @@ pub fn report(positions: &[OpenPositionAtYearEnd]) -> Mtm475fReport {
         else { total_loss += -gain; losers.push(sale); }
         total += gain;
     }
-    winners.sort_by(|a, b| b.deemed_gain.cmp(&a.deemed_gain));
-    losers.sort_by(|a, b| a.deemed_gain.cmp(&b.deemed_gain));
+    winners.sort_by_key(|a| std::cmp::Reverse(a.deemed_gain));
+    losers.sort_by_key(|a| a.deemed_gain);
     Mtm475fReport {
         total_deemed_gain: total,
         winners,

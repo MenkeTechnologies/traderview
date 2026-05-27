@@ -116,7 +116,7 @@ pub fn parser_for(source: &str) -> Option<Box<dyn Parser>> {
         "fidelity" => Some(Box::new(FidelityParser)),
         "tradezero" => Some(Box::new(TradeZeroParser)),
         "robinhood" => Some(Box::new(RobinhoodParser)),
-        "generic" | "csv" => Some(Box::new(brokers::GenericCsvParser::default())),
+        "generic" | "csv" => Some(Box::new(brokers::GenericCsvParser)),
         _ => None,
     }
 }

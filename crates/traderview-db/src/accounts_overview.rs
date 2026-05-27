@@ -73,9 +73,10 @@ pub async fn report(pool: &PgPool, user_id: Uuid) -> anyhow::Result<OverviewRepo
     let mut summaries = Vec::with_capacity(accounts.len());
     let mut grand = GrandTotal { accounts: accounts.len(), ..Default::default() };
 
+    type AccountAggRow = (i64, i64, i64, Option<f64>, Option<f64>, Option<f64>, Option<f64>);
     for (id, broker, name, ccy) in accounts {
         // Aggregates for closed trades — one CTE-style query per account.
-        let row: (i64, i64, i64, Option<f64>, Option<f64>, Option<f64>, Option<f64>) = sqlx::query_as(
+        let row: AccountAggRow = sqlx::query_as(
             "SELECT
                 COUNT(*)::int8                                                      AS n,
                 COUNT(*) FILTER (WHERE net_pnl > 0)::int8                           AS wins,

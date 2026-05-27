@@ -52,7 +52,7 @@ pub fn stats_by_setup(
         .map(|(setup, ts)| compute_one(setup, &ts))
         .collect();
     // Sort by net_pnl descending — winning setups float to the top.
-    out.sort_by(|a, b| b.net_pnl.cmp(&a.net_pnl));
+    out.sort_by_key(|a| std::cmp::Reverse(a.net_pnl));
     out
 }
 

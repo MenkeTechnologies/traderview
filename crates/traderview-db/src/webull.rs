@@ -9,9 +9,9 @@
 //!   1. Log in to webull.com in a browser (with MFA / trade pin already done)
 //!   2. Open DevTools → Network → click any /api/trade/* request
 //!   3. Copy these three request headers:
-//!        `did`              → device ID
-//!        `access_token`     → session token
-//!        `t_token`          → trade-action token (only required for trading)
+//!      `did`              → device ID
+//!      `access_token`     → session token
+//!      `t_token`          → trade-action token (only required for trading)
 //!   4. Paste into Settings → Webull → Connect
 //!
 //! What this module does:
@@ -29,8 +29,6 @@ use std::time::Duration;
 use tokio::sync::{broadcast, RwLock};
 
 const TRADE_BASE: &str = "https://tradeapi.webullbroker.com";
-#[allow(dead_code)]   // reserved for future profile / region endpoints
-const USER_BASE:  &str = "https://userapi.webull.com";
 
 #[derive(Debug, Clone, Default)]
 pub struct Creds {

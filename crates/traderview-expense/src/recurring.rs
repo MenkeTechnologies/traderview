@@ -52,11 +52,7 @@ pub fn due_in_window(t: &Template, window_start: NaiveDate, window_end: NaiveDat
     if window_end < window_start { return vec![]; }
     let mut out = Vec::new();
     let mut step = 0u32;
-    loop {
-        let date = match advance(t.anchor, t.cadence, step) {
-            Some(d) => d,
-            None => break,
-        };
+    while let Some(date) = advance(t.anchor, t.cadence, step) {
         // Walk forward until we enter or pass the window.
         if date > window_end { break; }
         if let Some(end) = t.end { if date > end { break; } }
@@ -102,7 +98,8 @@ fn add_months(d: NaiveDate, n: i32) -> Option<NaiveDate> {
     let y = (total_months.div_euclid(12)) as i32;
     let m = (total_months.rem_euclid(12)) as u32 + 1;
     // Pick the smaller of (anchor day, last day of target month).
-    let target = NaiveDate::from_ymd_opt(y, m, d.day())
+    
+    NaiveDate::from_ymd_opt(y, m, d.day())
         .or_else(|| {
             // Walk back to find the last valid day.
             for candidate_day in (1..=31u32).rev() {
@@ -111,8 +108,7 @@ fn add_months(d: NaiveDate, n: i32) -> Option<NaiveDate> {
                 }
             }
             None
-        });
-    target
+        })
 }
 
 #[cfg(test)]

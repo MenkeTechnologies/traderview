@@ -404,12 +404,14 @@ struct TxBrief {
     merchant_normalized: String,
 }
 
+type ReceiptOcrRow = (Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>);
+
 async fn receipt_matches(
     State(s): State<AppState>,
     user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<CandidateMatch>>, ApiError> {
-    let row: Option<(Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>)> = sqlx::query_as(
+    let row: Option<ReceiptOcrRow> = sqlx::query_as(
         "SELECT user_id, ocr_merchant, ocr_total, ocr_date FROM receipts WHERE id = $1",
     )
     .bind(id)
@@ -685,8 +687,6 @@ mod tests {
         let safe = sanitize_disposition(bad);
         assert!(!safe.contains('\r'));
         assert!(!safe.contains('\n'));
-        assert!(!safe.contains("Set-Cookie") == false || !safe.contains('\n'),
-            "header chars stripped so Set-Cookie can't smuggle");
     }
 
     #[test]

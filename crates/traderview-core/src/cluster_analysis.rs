@@ -68,14 +68,14 @@ pub fn analyze(features: &[TradeFeature], k: usize, max_iters: usize) -> Cluster
         }
         if !changed { break; }
         // Update centroids.
-        for j in 0..k {
+        for (j, centroid) in centroids.iter_mut().enumerate().take(k) {
             let members: Vec<&TradeFeature> = features.iter().enumerate()
                 .filter(|(i, _)| assignments[*i] == j)
                 .map(|(_, f)| f)
                 .collect();
             if members.is_empty() { continue; }
             let n = members.len() as f64;
-            centroids[j] = Centroid {
+            *centroid = Centroid {
                 entry_minute: members.iter().map(|f| f.entry_minute_of_day).sum::<f64>() / n,
                 hold_minutes: members.iter().map(|f| f.hold_duration_minutes).sum::<f64>() / n,
                 r_multiple: members.iter().map(|f| f.r_multiple).sum::<f64>() / n,
@@ -83,7 +83,7 @@ pub fn analyze(features: &[TradeFeature], k: usize, max_iters: usize) -> Cluster
         }
     }
     // Build per-cluster stats.
-    for j in 0..k {
+    for (j, centroid) in centroids.iter().enumerate().take(k) {
         let idxs: Vec<usize> = (0..features.len()).filter(|i| assignments[*i] == j).collect();
         let size = idxs.len();
         let mean_r = if size > 0 {
@@ -94,7 +94,7 @@ pub fn analyze(features: &[TradeFeature], k: usize, max_iters: usize) -> Cluster
         report.clusters.push(ClusterStat {
             cluster_id: j,
             size,
-            centroid: centroids[j].clone(),
+            centroid: centroid.clone(),
             mean_r,
             win_rate,
         });

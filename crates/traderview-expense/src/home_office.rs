@@ -38,7 +38,7 @@ pub struct HomeOfficeReport {
     pub simplified_deduction: Decimal,
     /// (business_sqft / total_sqft) × total annual expenses.
     pub actual_deduction: Decimal,
-    /// Business-use % as a Decimal in [0,1]. 0 if total_home_sqft <= 0.
+    /// Business-use % as a Decimal in `[0,1]`. 0 if `total_home_sqft <= 0`.
     pub business_pct: Decimal,
     /// Whichever is larger — recommended choice.
     pub recommended_deduction: Decimal,

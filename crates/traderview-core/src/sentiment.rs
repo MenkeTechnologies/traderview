@@ -132,7 +132,7 @@ pub fn score(text: &str) -> f64 {
             if negated_window > 0 { s = -s; }
             sum += s;
         }
-        if negated_window > 0 { negated_window -= 1; }
+        negated_window = negated_window.saturating_sub(1);
         // Reset intensifier after applying.
         if intensifier != 1.0 { intensifier = 1.0; }
     }
@@ -148,15 +148,14 @@ pub fn extract_tickers(text: &str, whitelist: &HashSet<String>) -> Vec<String> {
     let mut out = Vec::new();
     for raw in text.split(|c: char| !c.is_ascii_alphanumeric() && c != '$') {
         let token = raw.trim_start_matches('$').trim();
-        if token.len() < 1 || token.len() > 5 { continue; }
+        if token.is_empty() || token.len() > 5 { continue; }
         if !token.chars().all(|c| c.is_ascii_uppercase()) { continue; }
         // Cashtag ($AAPL) always wins; bare-uppercase only if in whitelist.
         let is_cash = raw.starts_with('$');
-        if is_cash || whitelist.contains(token) {
-            if seen.insert(token.to_string()) {
+        if (is_cash || whitelist.contains(token))
+            && seen.insert(token.to_string()) {
                 out.push(token.to_string());
             }
-        }
     }
     out
 }

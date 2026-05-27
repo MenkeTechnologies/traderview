@@ -49,29 +49,15 @@ pub fn gross_pnl(
 }
 
 /// "Best exit" P&L assuming the trade had exited at the favorable extreme of
-/// `mfe_price`. Used for the Exit Efficiency report.
+/// `mfe_price`. Used for the Exit Efficiency report. Build the `PricePoint`
+/// with `exit = favorable_extreme`.
 pub fn best_exit_pnl(
     asset_class: AssetClass,
     side: TradeSide,
     qty: Decimal,
-    entry: Decimal,
-    favorable_extreme: Decimal,
-    multiplier: Decimal,
-    tick_size: Option<Decimal>,
-    tick_value: Option<Decimal>,
+    favorable: PricePoint,
 ) -> Decimal {
-    gross_pnl(
-        asset_class,
-        side,
-        qty,
-        PricePoint {
-            entry,
-            exit: favorable_extreme,
-            multiplier,
-            tick_size,
-            tick_value,
-        },
-    )
+    gross_pnl(asset_class, side, qty, favorable)
 }
 
 #[cfg(test)]
@@ -162,10 +148,7 @@ mod tests {
     #[test]
     fn best_exit_pnl_delegates_to_gross_pnl() {
         // Should produce the same value as gross_pnl with exit = favorable_extreme.
-        let v1 = best_exit_pnl(
-            AssetClass::Stock, TradeSide::Long, d("100"),
-            d("50"), d("60"), Decimal::ONE, None, None,
-        );
+        let v1 = best_exit_pnl(AssetClass::Stock, TradeSide::Long, d("100"), pp("50", "60"));
         let v2 = gross_pnl(AssetClass::Stock, TradeSide::Long, d("100"), pp("50", "60"));
         assert_eq!(v1, v2);
     }

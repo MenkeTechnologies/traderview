@@ -109,7 +109,7 @@ pub fn reconcile(year: i32, trades: &[Trade], rows: &[B1099Row]) -> ReconReport 
     }
     // Sort by absolute delta descending so user sees the biggest
     // mismatches first.
-    by_symbol.sort_by(|a, b| b.delta.abs().cmp(&a.delta.abs()));
+    by_symbol.sort_by_key(|a| std::cmp::Reverse(a.delta.abs()));
     let flagged_count = by_symbol.iter().filter(|s| s.flagged).count();
 
     ReconReport {

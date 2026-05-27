@@ -8,9 +8,10 @@
 //!
 //! Outputs at each step k = 1..num_trades:
 //!   * mean equity, p5/p25/p50/p75/p95
+//!
 //! Plus two end-of-horizon probabilities:
-//!   * ruin_probability        = P(equity[k] <= ruin_threshold for any k)
-//!   * double_probability      = P(equity[num_trades] >= 2 × starting_equity)
+//!   * `ruin_probability`        = P(`equity[k]` <= `ruin_threshold` for any k)
+//!   * `double_probability`      = P(`equity[num_trades]` >= 2 × `starting_equity`)
 
 use serde::{Deserialize, Serialize};
 use rand::Rng;
@@ -78,8 +79,8 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
     let mean_r = r_samples.iter().sum::<f64>() / n as f64;
     let stdev_r = (r_samples.iter().map(|x| (x - mean_r).powi(2)).sum::<f64>() / n as f64).sqrt();
 
-    let paths = input.num_paths.max(1).min(50_000);
-    let steps = input.num_trades.max(1).min(5_000);
+    let paths = input.num_paths.clamp(1, 50_000);
+    let steps = input.num_trades.clamp(1, 5_000);
     let risk = input.risk_pct_per_trade.clamp(0.0, 1.0);
     let ruin_pct = input.ruin_threshold_pct.unwrap_or(0.5).clamp(0.0, 1.0);
     let ruin_level = input.starting_equity * ruin_pct;
@@ -101,7 +102,7 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
         let mut path = if p < 50 { Vec::with_capacity(steps + 1) } else { Vec::new() };
         if p < 50 { path.push(equity); }
         let mut hit_ruin = false;
-        for k in 0..steps {
+        for col in step_columns.iter_mut().take(steps) {
             if !hit_ruin {
                 let r_idx = rng.gen_range(0..n);
                 let r = r_samples[r_idx];
@@ -112,7 +113,7 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
                     equity = 0.0;
                 }
             }
-            step_columns[k].push(equity);
+            col.push(equity);
             if p < 50 { path.push(equity); }
         }
         if hit_ruin { ruin_count += 1; }
@@ -122,8 +123,7 @@ pub fn forecast(input: &ForecastInput) -> ForecastReport {
 
     // Per-step percentiles + mean.
     let mut steps_stats: Vec<StepStats> = Vec::with_capacity(steps);
-    for k in 0..steps {
-        let col = &mut step_columns[k];
+    for (k, col) in step_columns.iter_mut().enumerate().take(steps) {
         let mean = col.iter().sum::<f64>() / col.len() as f64;
         col.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         steps_stats.push(StepStats {

@@ -39,8 +39,11 @@ pub async fn create(
     Ok(id)
 }
 
+type UserAuthRow = (Uuid, Option<String>, Option<String>, String, bool, chrono::DateTime<chrono::Utc>);
+type UserRow     = (Uuid, Option<String>, String, bool, chrono::DateTime<chrono::Utc>);
+
 pub async fn find_by_email(pool: &PgPool, email: &str) -> anyhow::Result<Option<UserAuth>> {
-    let row: Option<(Uuid, Option<String>, Option<String>, String, bool, chrono::DateTime<chrono::Utc>)> =
+    let row: Option<UserAuthRow> =
         sqlx::query_as(
             "SELECT id, email, password_hash, display_name, is_local, created_at
                FROM users WHERE lower(email) = lower($1) LIMIT 1",
@@ -55,7 +58,7 @@ pub async fn find_by_email(pool: &PgPool, email: &str) -> anyhow::Result<Option<
 }
 
 pub async fn find_by_id(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<User>> {
-    let row: Option<(Uuid, Option<String>, String, bool, chrono::DateTime<chrono::Utc>)> =
+    let row: Option<UserRow> =
         sqlx::query_as(
             "SELECT id, email, display_name, is_local, created_at
                FROM users WHERE id = $1",

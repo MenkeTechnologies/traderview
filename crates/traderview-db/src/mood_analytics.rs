@@ -51,11 +51,14 @@ pub struct MoodReport {
     pub computed_at: DateTime<Utc>,
 }
 
+type MoodDirectRow = (i16, Uuid, String, Decimal, Option<Decimal>, DateTime<Utc>);
+type MoodPerDayRow = (i16, chrono::NaiveDate, Uuid, String, Decimal, Option<Decimal>, DateTime<Utc>);
+
 pub async fn report(pool: &PgPool, user_id: Uuid, account_id: Uuid)
     -> anyhow::Result<MoodReport>
 {
     // Path 1 — per-trade journal entries.
-    let direct: Vec<(i16, Uuid, String, Decimal, Option<Decimal>, DateTime<Utc>)> = sqlx::query_as(
+    let direct: Vec<MoodDirectRow> = sqlx::query_as(
         "SELECT j.mood AS mood, t.id, t.symbol, t.net_pnl, t.risk_amount, t.opened_at
            FROM journal_entries j
            JOIN trades t ON t.id = j.trade_id
@@ -67,7 +70,7 @@ pub async fn report(pool: &PgPool, user_id: Uuid, account_id: Uuid)
     ).bind(user_id).bind(account_id).fetch_all(pool).await?;
 
     // Path 2 — per-day mood × trades opened that day.
-    let per_day: Vec<(i16, chrono::NaiveDate, Uuid, String, Decimal, Option<Decimal>, DateTime<Utc>)> =
+    let per_day: Vec<MoodPerDayRow> =
         sqlx::query_as(
             "SELECT j.mood, j.day, t.id, t.symbol, t.net_pnl, t.risk_amount, t.opened_at
                FROM journal_entries j
