@@ -131,6 +131,7 @@ pub mod symbol_filter;
 pub mod trade_quality;
 pub mod stats;
 pub mod stochastic;
+pub mod stop_loss_backtest;
 pub mod tax_loss_harvest;
 pub mod tilt_detector;
 pub mod time_in_force;
