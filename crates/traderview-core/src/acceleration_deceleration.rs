@@ -58,8 +58,9 @@ pub fn compute(bars: &[HlBar]) -> AcReport {
     for i in (33 + 4)..n {
         let mut sum = 0.0;
         let mut k = 0;
-        for v in ao.iter().take(i + 1).skip(i - 4) {
-            if let Some(x) = v { sum += x; k += 1; }
+        for x in ao.iter().take(i + 1).skip(i - 4).flatten() {
+            sum += x;
+            k += 1;
         }
         if k == 5 {
             ac[i] = Some(ao[i].unwrap() - sum / 5.0);

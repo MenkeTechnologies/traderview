@@ -142,7 +142,8 @@ mod tests {
         let r = detect(&[], &[], &[], &GrabConfig::default());
         assert!(r.events.is_empty());
         let bars = vec![b(100.0, 101.0, 99.0, 100.5); 10];
-        let r = detect(&bars, &vec![1.0; 10], &[], &GrabConfig::default());
+        let atr = [1.0; 10];
+        let r = detect(&bars, &atr, &[], &GrabConfig::default());
         assert!(r.events.is_empty());
     }
 

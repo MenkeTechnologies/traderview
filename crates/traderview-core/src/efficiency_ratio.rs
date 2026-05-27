@@ -4,7 +4,7 @@
 //! average (KAMA). KER is signed (positive = up-trending) and ranges
 //! `[-1, 1]`:
 //!
-//!   KER = (close − close[lookback]) / sum(|close − close[i-1]| for i in lookback)
+//!   `KER = (close − close[lookback]) / sum(|close − close[i-1]| for i in lookback)`
 //!
 //! Magnitude near 1 → strongly trending (price is moving cleanly with
 //! little wiggle); near 0 → fully chopping (lots of motion, no net
