@@ -24,6 +24,7 @@ pub mod monte_carlo;
 pub mod optimal_f;
 pub mod pnl;
 pub mod position_size;
+pub mod per_symbol_slippage;
 pub mod pyramid;
 pub mod rebalance;
 pub mod reconcile_1099b;
@@ -43,6 +44,7 @@ pub mod strategy_alert;
 pub mod trade_quality;
 pub mod stats;
 pub mod tax_loss_harvest;
+pub mod twap;
 pub mod vwap_slippage;
 pub mod wash_sale;
 
