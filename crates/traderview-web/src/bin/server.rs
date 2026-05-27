@@ -82,6 +82,33 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Background strategy-alert evaluator — every 60s.
+    {
+        let pool = pool.clone();
+        let hub = state.hub.clone();
+        tokio::spawn(async move {
+            loop {
+                match traderview_db::strategy_alerts::evaluate_all(&pool).await {
+                    Ok(s) => if s.fired > 0 || s.errors > 0 {
+                        tracing::info!(
+                            evaluated = s.evaluated, fired = s.fired, errors = s.errors,
+                            "strategy alerts evaluated",
+                        );
+                        if s.fired > 0 {
+                            hub.publish(traderview_web::realtime::Event::AlertFired {
+                                rule_id: "strategy".into(),
+                                symbol: String::new(),
+                                message: format!("{} strategy alert(s) fired", s.fired),
+                            });
+                        }
+                    },
+                    Err(e) => tracing::warn!(error = %e, "strategy alert eval failed"),
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            }
+        });
+    }
+
     // Background earnings calendar poller — every 6h over watchlist symbols.
     {
         let pool = pool.clone();

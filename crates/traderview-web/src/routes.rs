@@ -53,6 +53,7 @@ mod sentiment;
 mod settings;
 mod shares;
 mod short_interest;
+mod strategy_alerts;
 mod tags;
 mod tax_lots;
 mod trades;
@@ -121,6 +122,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(position_size::router())
         .merge(live_positions::router())
         .merge(corr_matrix::router())
+        .merge(strategy_alerts::router())
 }
 
 mod helpers {

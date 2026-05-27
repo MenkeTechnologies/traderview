@@ -43,6 +43,7 @@ pub mod sectors;
 pub mod sentiment;
 pub mod settings;
 pub mod short_interest;
+pub mod strategy_alerts;
 pub mod vol;
 pub mod vol_surface;
 pub mod webhooks;

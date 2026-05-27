@@ -381,6 +381,18 @@ export const api = {
     // Live P/L tracker (snapshot of open positions with fresh quotes)
     livePositions: (accountId) => request(`/live-positions/${accountId}`),
 
+    // Strategy alerts (compound AND/OR/NOT rules)
+    listStrategyAlerts: () => request('/strategy-alerts'),
+    createStrategyAlert: (body) =>
+        request('/strategy-alerts', { method: 'POST', body: JSON.stringify(body) }),
+    updateStrategyAlert: (id, body) =>
+        request(`/strategy-alerts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteStrategyAlert: (id) =>
+        request(`/strategy-alerts/${id}`, { method: 'DELETE' }),
+    strategyAlertFires: () => request('/strategy-alerts/fires'),
+    strategyAlertsEvaluateNow: () =>
+        request('/strategy-alerts/evaluate-now', { method: 'POST' }),
+
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>
         request(`/correlation/watchlist/${wid}?days=${days}`),

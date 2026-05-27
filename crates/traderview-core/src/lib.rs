@@ -20,6 +20,7 @@ pub mod scan;
 pub mod sentiment;
 pub mod signals;
 pub mod slug;
+pub mod strategy_alert;
 pub mod stats;
 
 pub use models::*;
