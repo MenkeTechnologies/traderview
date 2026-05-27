@@ -131,6 +131,7 @@ pub mod treynor;
 pub mod triple_screen;
 pub mod trix;
 pub mod twap;
+pub mod var_estimator;
 pub mod volatility_stop;
 pub mod volume_flow;
 pub mod volume_profile;
