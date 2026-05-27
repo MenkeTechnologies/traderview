@@ -113,4 +113,62 @@ mod tests {
         assert_eq!(r.total_bid_size, 0.0);
         assert_eq!(r.imbalance, 0.0);
     }
+
+    #[test]
+    fn boundary_exactly_at_0_3_is_strongly_bid() {
+        // Strict > 0.3 — exactly 0.3 should be Bid, not StronglyBid.
+        // 65/35 = 0.3 imbalance exact: (65-35)/100 = 0.3.
+        let r = compute(&[65.0], &[35.0], 5);
+        assert!((r.imbalance - 0.3).abs() < 1e-12);
+        assert_eq!(r.bias, ObiBias::Bid);    // 0.3 == 0.3 → Bid (strict >)
+    }
+
+    #[test]
+    fn boundary_just_above_0_3_is_strongly_bid() {
+        // 65.01/35 → 0.300077 imbalance → StronglyBid.
+        let r = compute(&[65.01], &[34.99], 5);
+        assert_eq!(r.bias, ObiBias::StronglyBid);
+    }
+
+    #[test]
+    fn boundary_exactly_at_0_1_balanced() {
+        // 55/45 = 0.1 exact. Strict > 0.1 → falls to Balanced.
+        let r = compute(&[55.0], &[45.0], 5);
+        assert!((r.imbalance - 0.1).abs() < 1e-12);
+        assert_eq!(r.bias, ObiBias::Balanced);
+    }
+
+    #[test]
+    fn boundary_negative_0_3_strongly_ask() {
+        // 35/65 = -0.3 exact. Strict < -0.3 → falls to Ask.
+        let r = compute(&[35.0], &[65.0], 5);
+        assert!((r.imbalance + 0.3).abs() < 1e-12);
+        assert_eq!(r.bias, ObiBias::Ask);
+    }
+
+    #[test]
+    fn negative_size_ignored_but_doesnt_panic() {
+        // Negative size could come from malformed data. The function
+        // shouldn't crash; it'll produce a weird-but-valid imbalance.
+        let r = compute(&[-100.0], &[100.0], 5);
+        // Total = 0 → guard kicks in, imbalance = 0.
+        assert_eq!(r.imbalance, 0.0);
+    }
+
+    #[test]
+    fn imbalance_finite_when_inputs_finite() {
+        // Sanity: no NaN/infinity output for normal inputs.
+        let r = compute(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0], 10);
+        assert!(r.imbalance.is_finite());
+        assert!(r.total_bid_size.is_finite());
+        assert!(r.total_ask_size.is_finite());
+    }
+
+    #[test]
+    fn very_small_total_doesnt_blow_up_imbalance() {
+        let r = compute(&[0.0001], &[0.0001], 5);
+        // 0/0.0002 = 0 imbalance, well-defined.
+        assert_eq!(r.imbalance, 0.0);
+        assert_eq!(r.bias, ObiBias::Balanced);
+    }
 }

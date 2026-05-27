@@ -34,8 +34,12 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<AroonPoint> {
         let mut max_h = f64::NEG_INFINITY;
         let mut min_l = f64::INFINITY;
         for (j, b) in window.iter().enumerate() {
-            if b.high > max_h { max_h = b.high; high_at = j; }
-            if b.low < min_l { min_l = b.low; low_at = j; }
+            // Use >= / <= so ties favor the MOST RECENT occurrence,
+            // matching Aroon convention ("days since the N-day high").
+            // Using strict > would lock onto the first tie and produce
+            // stale Aroon Up readings during choppy congestion.
+            if b.high >= max_h { max_h = b.high; high_at = j; }
+            if b.low <= min_l { min_l = b.low; low_at = j; }
         }
         let bars_since_high = period - high_at;
         let bars_since_low = period - low_at;
@@ -83,8 +87,10 @@ mod tests {
     #[test]
     fn most_recent_high_aroon_up_100() {
         // Last bar has the highest high → Aroon Up = 100.
-        let mut bars: Vec<Bar> = (1..=14).map(|i| b(i as f64, 0.0)).collect();
-        bars.push(b(100.0, 0.0));    // huge new high
+        // Distinct lows so the most-recent-tied rule doesn't collapse
+        // Aroon Down to 100 also (which would zero out oscillator).
+        let mut bars: Vec<Bar> = (1..=14).map(|i| b(i as f64, 10.0 - i as f64 * 0.1)).collect();
+        bars.push(b(100.0, 20.0));    // huge new high, NOT lowest low
         let out = compute(&bars, 14);
         let last = &out[14];
         assert_eq!(last.up, 100.0);
@@ -120,6 +126,25 @@ mod tests {
         let out = compute(&bars, 14);
         assert!(out[19].down > out[19].up);
         assert!(out[19].oscillator < -50.0);
+    }
+
+    #[test]
+    fn tied_highs_use_most_recent_occurrence() {
+        // 5 bars all at high=100, period=4. Window has 5 bars all tied.
+        // Most-recent-occurrence convention: high_at = last index (4),
+        // bars_since_high = 0 → Aroon Up = 100.
+        // (With the earlier bug: high_at would lock to 0 and Aroon Up
+        // would underestimate to 0.)
+        let bars = vec![b(100.0, 90.0); 5];
+        let out = compute(&bars, 4);
+        assert_eq!(out[4].up, 100.0, "tied highs must use MOST RECENT occurrence");
+    }
+
+    #[test]
+    fn tied_lows_use_most_recent_occurrence() {
+        let bars = vec![b(110.0, 100.0); 5];
+        let out = compute(&bars, 4);
+        assert_eq!(out[4].down, 100.0);
     }
 
     // ─── classify ──────────────────────────────────────────────────────

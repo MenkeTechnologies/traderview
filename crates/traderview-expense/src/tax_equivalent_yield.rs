@@ -17,6 +17,7 @@
 
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use std::str::FromStr;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
