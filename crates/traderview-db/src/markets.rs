@@ -219,7 +219,15 @@ mod tests {
     async fn cache_expires_after_ttl() {
         let stale = probe(false);
         // Backdate to 2 minutes ago — well beyond CACHE_TTL (60s).
-        let backdated = Instant::now() - std::time::Duration::from_secs(120);
+        // Use checked_sub to avoid panic on CI runners whose process Instant
+        // origin is younger than the backdate amount (observed on
+        // freshly-booted macOS hosts where mach_absolute_time is small).
+        // If the subtraction would underflow, skip the test — the assertion
+        // we want to make (when.elapsed() > CACHE_TTL) cannot be set up.
+        let Some(backdated) = Instant::now().checked_sub(std::time::Duration::from_secs(120))
+        else {
+            return;
+        };
         *CACHE.lock().await = Some((backdated, stale));
 
         // Re-read the cache and verify the freshness check would reject it.
