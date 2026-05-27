@@ -284,3 +284,87 @@ pub fn global() -> HaltStore {
         })
         .clone()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a Halt with a deterministic dedupe key. We embed `i` into
+    /// `halt_time` so observe()'s `(symbol, halt_time, reason_code)` key is
+    /// unique per call — without that, the dedupe in observe() short-circuits
+    /// and we never hit the eviction path.
+    fn halt(i: usize) -> Halt {
+        Halt {
+            symbol: format!("S{i:05}"),
+            issue_name: format!("Issue {i}"),
+            halt_date: "2026-05-27".into(),
+            halt_time: format!("09:{:02}:{:02}", (i / 60) % 60, i % 60),
+            reason_code: "T1".into(),
+            reason_label: "News pending".into(),
+            resumption_date: None,
+            resumption_quote_time: None,
+            resumption_trade_time: None,
+            // Stagger fetched_at by `i` seconds so eviction has an ordering
+            // signal: oldest = smallest i.
+            fetched_at: Utc::now() + chrono::Duration::seconds(i as i64),
+        }
+    }
+
+    #[test]
+    fn observe_caps_at_max_entries() {
+        let store = HaltStore::new();
+        // Insert 500 over the cap and verify we never sit above MAX_ENTRIES.
+        for i in 0..2_500 {
+            store.observe(halt(i));
+            assert!(
+                store.latest.len() <= 2_000,
+                "store grew past cap: {} after {} inserts", store.latest.len(), i + 1
+            );
+        }
+        // After eviction the store should be at or below cap and well above
+        // the post-eviction floor (cap - cap/EVICT_FRACTION = 1500).
+        assert!(store.latest.len() <= 2_000);
+        assert!(store.latest.len() >= 1_500,
+            "post-eviction floor breached: {}", store.latest.len());
+    }
+
+    #[test]
+    fn eviction_drops_oldest_first() {
+        let store = HaltStore::new();
+        // Insert exactly cap+1 to trigger one eviction pass.
+        for i in 0..2_001 {
+            store.observe(halt(i));
+        }
+        // The oldest (i=0..500) should be gone; the newest (i=2000) must survive.
+        let oldest_key = format!("{}|{}|{}", halt(0).symbol, halt(0).halt_time, "T1");
+        let newest_key = format!("{}|{}|{}", halt(2000).symbol, halt(2000).halt_time, "T1");
+        assert!(!store.latest.contains_key(&oldest_key),
+            "oldest entry survived eviction");
+        assert!(store.latest.contains_key(&newest_key),
+            "newest entry was incorrectly evicted");
+    }
+
+    #[test]
+    fn observe_dedupes_identical_halts() {
+        let store = HaltStore::new();
+        let h = halt(42);
+        store.observe(h.clone());
+        store.observe(h.clone());
+        store.observe(h);
+        assert_eq!(store.latest.len(), 1, "duplicate halts were not deduped");
+    }
+
+    #[test]
+    fn latest_returns_newest_first() {
+        let store = HaltStore::new();
+        for i in 0..10 {
+            store.observe(halt(i));
+        }
+        let v = store.latest(3);
+        assert_eq!(v.len(), 3);
+        // halt(i) has fetched_at = now + i seconds, so i=9 is newest.
+        assert_eq!(v[0].symbol, "S00009");
+        assert_eq!(v[1].symbol, "S00008");
+        assert_eq!(v[2].symbol, "S00007");
+    }
+}

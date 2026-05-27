@@ -1,5 +1,6 @@
 // Hotkey engine — listens globally, dispatches to actions.
 import { api } from './api.js';
+import { localToday } from './local_date.js';
 
 let bindings = [];
 
@@ -94,12 +95,4 @@ async function journalQuick() {
     try {
         await api.createJournal({ day: localToday(), body_md: body });
     } catch (e) { alert(e.message); }
-}
-
-function localToday() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
 }

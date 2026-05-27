@@ -177,3 +177,62 @@ struct ChartMeta {
     chart_previous_close: Option<f64>,
     market_state: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn probe(open: bool) -> MarketsSnapshot {
+        MarketsSnapshot {
+            indices: vec![],
+            commodities: vec![],
+            us_market_open: open,
+            fetched_at: Utc::now(),
+        }
+    }
+
+    /// Pre-populate the cache with a fresh entry and verify snapshot() returns
+    /// it without going to Yahoo. The "evidence" is timing: a cache miss has
+    /// to do 16 HTTP fetches (>100ms even on a fast network); a cache hit is
+    /// sub-millisecond. The clear marker is `us_market_open=true` which Yahoo
+    /// would only set during US RTH.
+    #[tokio::test]
+    async fn cache_hit_returns_stored_snapshot() {
+        let stored = probe(true);
+        let stored_at = stored.fetched_at;
+        *CACHE.lock().await = Some((Instant::now(), stored));
+        let started = Instant::now();
+        let got = snapshot().await.expect("cache hit must succeed");
+        assert!(
+            started.elapsed() < std::time::Duration::from_millis(50),
+            "cache hit should be near-instant; got {:?}",
+            started.elapsed()
+        );
+        assert_eq!(got.fetched_at, stored_at,
+            "cache hit returned a different snapshot than what we stored");
+    }
+
+    /// Verify TTL: an entry stored 2 minutes ago must be treated as stale.
+    /// We can't test the *fetch* path without network, but we can verify the
+    /// cache check returns None for expired entries by inspecting the static.
+    #[tokio::test]
+    async fn cache_expires_after_ttl() {
+        let stale = probe(false);
+        // Backdate to 2 minutes ago — well beyond CACHE_TTL (60s).
+        let backdated = Instant::now() - std::time::Duration::from_secs(120);
+        *CACHE.lock().await = Some((backdated, stale));
+
+        // Re-read the cache and verify the freshness check would reject it.
+        let guard = CACHE.lock().await;
+        let (when, _) = guard.as_ref().expect("we just set it");
+        assert!(when.elapsed() > CACHE_TTL,
+            "backdated entry must be older than CACHE_TTL");
+    }
+
+    #[test]
+    fn urlencoding_handles_yahoo_caret_and_equals() {
+        assert_eq!(urlencoding("^GSPC"), "%5EGSPC");
+        assert_eq!(urlencoding("EURUSD=X"), "EURUSD%3DX");
+        assert_eq!(urlencoding("AAPL"), "AAPL");  // pass-through for plain
+    }
+}

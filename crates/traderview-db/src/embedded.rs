@@ -143,3 +143,93 @@ fn load_or_create_password(path: &Path) -> anyhow::Result<String> {
     tracing::info!(path = %path.display(), "generated new embedded postgres password");
     Ok(pw)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    /// Build an isolated temp pg-data dir under the OS temp root, unique per
+    /// test invocation. We don't pull in `tempfile` for one helper.
+    fn temp_pg_data(tag: &str) -> PathBuf {
+        let mut p = std::env::temp_dir();
+        p.push(format!(
+            "traderview-test-{tag}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&p).expect("create temp pg-data");
+        p
+    }
+
+    fn write_pid_file(pg_data: &Path, pid_line: &str) {
+        let mut f = std::fs::File::create(pg_data.join("postmaster.pid"))
+            .expect("create postmaster.pid");
+        f.write_all(pid_line.as_bytes()).expect("write pid");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn clean_stale_lock_removes_dead_pid() {
+        let dir = temp_pg_data("dead-pid");
+        // PID 2^30 — pid_max is typically 2^15 / 2^22 on Linux/macOS so this
+        // is guaranteed dead. Also can't be the init process (PID 1).
+        write_pid_file(&dir, "1073741824\n13434\n1700000000\n5432\n");
+        let pid_file = dir.join("postmaster.pid");
+        assert!(pid_file.exists());
+        clean_stale_lock(&dir);
+        assert!(!pid_file.exists(), "stale lock should have been removed");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn clean_stale_lock_keeps_live_pid() {
+        let dir = temp_pg_data("live-pid");
+        // Use our own PID — guaranteed alive while this test runs.
+        let me = std::process::id();
+        write_pid_file(&dir, &format!("{me}\n13434\n1700000000\n5432\n"));
+        let pid_file = dir.join("postmaster.pid");
+        clean_stale_lock(&dir);
+        assert!(pid_file.exists(), "live PID lockfile should NOT be removed");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn clean_stale_lock_noop_when_file_missing() {
+        let dir = temp_pg_data("missing");
+        // Don't create the file at all.
+        clean_stale_lock(&dir);
+        // Test passes if no panic / no error.
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn clean_stale_lock_noop_when_garbage() {
+        let dir = temp_pg_data("garbage");
+        write_pid_file(&dir, "not-a-number\n");
+        let pid_file = dir.join("postmaster.pid");
+        clean_stale_lock(&dir);
+        // Unparseable PID → leave the file alone; the embedded PG layer will
+        // give the real error message.
+        assert!(pid_file.exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_or_create_password_is_deterministic_across_calls() {
+        let dir = temp_pg_data("pw");
+        let path = dir.join("pg-password");
+        let pw1 = load_or_create_password(&path).expect("first call");
+        let pw2 = load_or_create_password(&path).expect("second call");
+        assert_eq!(pw1, pw2,
+            "load_or_create_password must return the same password \
+             once the file exists — randomizing on relaunch is what \
+             caused the auth-failed crashes in pass 1");
+        assert!(!pw1.is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}

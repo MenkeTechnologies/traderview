@@ -451,4 +451,74 @@ mod tests {
         let v = extract_tickers(t);
         assert!(v.contains(&"NVDA".to_string()));
     }
+
+    fn cat(i: usize) -> Catalyst {
+        Catalyst {
+            kind: CatalystKind::SecFiling,
+            source: "EDGAR".into(),
+            form_type: Some("8-K".into()),
+            title: format!("Filing #{i}"),
+            summary: format!("Summary {i}"),
+            link: None,
+            published_at: Utc::now(),
+            fetched_at: Utc::now() + chrono::Duration::seconds(i as i64),
+            tickers: vec![format!("S{i:05}")],
+        }
+    }
+
+    #[test]
+    fn observe_caps_at_max_entries() {
+        let store = CatalystStore::new();
+        for i in 0..12_500 {
+            store.observe(format!("key-{i}"), cat(i));
+            assert!(
+                store.seen.len() <= 10_000,
+                "store grew past cap: {} after {} inserts", store.seen.len(), i + 1
+            );
+        }
+        assert!(store.seen.len() <= 10_000);
+        assert!(store.seen.len() >= 7_500,
+            "post-eviction floor breached: {}", store.seen.len());
+    }
+
+    #[test]
+    fn eviction_drops_oldest_first() {
+        let store = CatalystStore::new();
+        for i in 0..10_001 {
+            store.observe(format!("key-{i}"), cat(i));
+        }
+        assert!(!store.seen.contains_key("key-0"),
+            "oldest entry survived eviction");
+        assert!(store.seen.contains_key("key-10000"),
+            "newest entry was incorrectly evicted");
+    }
+
+    #[test]
+    fn observe_dedupes_identical_keys() {
+        let store = CatalystStore::new();
+        store.observe("k".into(), cat(1));
+        store.observe("k".into(), cat(2));
+        store.observe("k".into(), cat(3));
+        assert_eq!(store.seen.len(), 1, "duplicate keys were not deduped");
+    }
+
+    #[test]
+    fn latest_for_filters_by_ticker() {
+        let store = CatalystStore::new();
+        // Mix tickers; the per-symbol filter should only return the relevant ones.
+        for i in 0..5 {
+            let mut c = cat(i);
+            c.tickers = vec!["AAPL".into()];
+            store.observe(format!("aapl-{i}"), c);
+        }
+        for i in 0..3 {
+            let mut c = cat(100 + i);
+            c.tickers = vec!["TSLA".into()];
+            store.observe(format!("tsla-{i}"), c);
+        }
+        let aapl = store.latest_for("aapl", 10);  // case-insensitive
+        let tsla = store.latest_for("TSLA", 10);
+        assert_eq!(aapl.len(), 5);
+        assert_eq!(tsla.len(), 3);
+    }
 }

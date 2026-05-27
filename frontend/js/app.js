@@ -232,22 +232,17 @@ export function go(view, params = '') {
     window.location.hash = view + (params ? `/${params}` : '');
 }
 
-// View-token machinery. The #app element is reused across every view, so
-// `mount.isConnected` and `document.body.contains(mount)` are USELESS for
-// detecting navigation. Every dispatch bumps a counter; views capture the
-// counter at start and check `viewIsCurrent(tok)` after every await, in
-// WebSocket reconnect timeouts, and on setInterval ticks. If the user has
-// navigated away, the captured token no longer matches and the pending work
-// bails out instead of crashing into a stale DOM.
-let _viewToken = 0;
-export function currentViewToken() { return _viewToken; }
-export function viewIsCurrent(tok) { return _viewToken === tok; }
+// Re-export the view-token machinery so the 80+ views that already import
+// it from app.js keep working. Implementation lives in `view_token.js` so
+// `node --test` can unit-test the semantics without pulling in the DOM.
+import { bumpViewToken, currentViewToken, viewIsCurrent } from './view_token.js';
+export { currentViewToken, viewIsCurrent };
 
 export async function dispatch() {
     // Invalidate every captured token from the previous view — pending awaits,
     // queued WS reconnects, and setInterval ticks will see a stale token and
     // skip the work that would otherwise reach into the wrong view's DOM.
-    _viewToken++;
+    bumpViewToken();
     const hash = (window.location.hash || '#launcher').slice(1);
     const [view, ...rest] = hash.split('/');
     state.view = view;

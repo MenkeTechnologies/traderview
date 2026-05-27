@@ -4,27 +4,24 @@
 // fire before the token is available, and the backend binds to localhost
 // only.
 
+import { BoundedQueue } from './bounded_queue.js';
+
 let inflight = 0;
 const MAX_INFLIGHT = 4;     // don't fan-out forever if the network is dead
 const MAX_QUEUE = 200;      // bound queue so a console-error loop can't OOM us
-let dropped = 0;
-const queue = [];
+const queue = new BoundedQueue(MAX_QUEUE);
 
 function send(payload) {
     // Always include the current view so we can correlate.
     payload.view = (location.hash || '#?').slice(1);
     payload.href = location.href;
     payload.ua = navigator.userAgent;
-    // Cap the queue. A bug that fires console.error in a hot loop before the
-    // backend is up would otherwise grow `queue` without bound.
-    if (queue.length >= MAX_QUEUE) {
-        queue.shift();          // drop the oldest
-        dropped++;
-        // Periodically rewrite the next outgoing payload's `extra` to surface
-        // that we lost frames — without spamming about the drop itself.
-        if (dropped % 50 === 1) {
-            payload.extra = Object.assign({}, payload.extra || {}, { dropped_total: dropped });
-        }
+    // Periodically rewrite the outgoing payload's `extra` to surface that we
+    // lost frames — without spamming about the drop itself.
+    if (queue.dropped > 0 && queue.dropped % 50 === 1) {
+        payload.extra = Object.assign({}, payload.extra || {}, {
+            dropped_total: queue.dropped,
+        });
     }
     queue.push(payload);
     drain();
