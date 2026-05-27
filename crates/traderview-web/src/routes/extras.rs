@@ -17,14 +17,14 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    alligator, atr_cone, break_of_structure, breakout_detector, change_of_character, crossover,
-    cumulative_delta, daily_loss_limit, displacement, drawdown_throttle, earnings_calendar,
-    equal_levels, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
+    alligator, atr_cone, break_of_structure, breakout_detector, calmar_ratio, change_of_character,
+    crossover, cumulative_delta, daily_loss_limit, displacement, drawdown_throttle,
+    earnings_calendar, equal_levels, fair_value_gap, futures_roll, goal_tracker, holiday_calendar,
     models::{Trade, TradeSide}, mtm_reconciliation, opening_range, options_margin, order_block,
     pair_trade, portfolio_heat, position_aging, position_irr, put_call_ratio, range_contraction,
     reconcile_1099b, risk_reward, rolling_zscore, round_levels, sip_simulator, spread_attribution,
     stop_hunt, strategy_correlation, swing_points, symbol_filter, tax_lot_optimizer,
-    timeframe_confluence, triple_screen, twap, volatility_stop, volume_burst,
+    timeframe_confluence, triple_screen, twap, ulcer_index, volatility_stop, volume_burst, vsa,
 };
 
 pub fn router() -> Router<AppState> {
@@ -100,6 +100,10 @@ pub fn router() -> Router<AppState> {
         .route("/microstructure/cumulative-delta",post(cumulative_delta_route))
         .route("/analytics/displacement",         post(displacement_route))
         .route("/analytics/opening-range",        post(opening_range_route))
+        // ── VSA + risk-adjusted metrics ────────────────────────────────
+        .route("/analytics/vsa",                  post(vsa_route))
+        .route("/analytics/ulcer-index",          post(ulcer_index_route))
+        .route("/analytics/calmar-ratio",         post(calmar_ratio_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -732,4 +736,45 @@ async fn opening_range_route(
     _u: AuthUser, Json(b): Json<OrbBody>,
 ) -> Json<opening_range::OrbReport> {
     Json(opening_range::detect(&b.bars, &b.config))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// VSA + Ulcer Index + Calmar ratio.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct VsaBody {
+    bars: Vec<vsa::VsaBar>,
+    avg_volume: Vec<f64>,
+}
+
+async fn vsa_route(
+    _u: AuthUser, Json(b): Json<VsaBody>,
+) -> Json<vsa::VsaReport> {
+    Json(vsa::classify(&b.bars, &b.avg_volume))
+}
+
+#[derive(Deserialize)]
+struct UlcerBody {
+    equity: Vec<f64>,
+    /// Optional annual return (in %) for Ulcer Performance Index calc.
+    risk_free_rate: Option<f64>,
+}
+
+async fn ulcer_index_route(
+    _u: AuthUser, Json(b): Json<UlcerBody>,
+) -> Json<ulcer_index::UlcerReport> {
+    Json(ulcer_index::compute(&b.equity, b.risk_free_rate))
+}
+
+#[derive(Deserialize)]
+struct CalmarBody {
+    equity: Vec<f64>,
+    years: f64,
+}
+
+async fn calmar_ratio_route(
+    _u: AuthUser, Json(b): Json<CalmarBody>,
+) -> Json<calmar_ratio::CalmarReport> {
+    Json(calmar_ratio::compute(&b.equity, b.years))
 }

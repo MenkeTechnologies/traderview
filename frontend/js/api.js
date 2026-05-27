@@ -941,4 +941,7 @@ export const api = {
     microCumulativeDelta:    (b) => request('/microstructure/cumulative-delta',      { method: 'POST', body: JSON.stringify(b) }),
     anlyDisplacement:        (b) => request('/analytics/displacement',               { method: 'POST', body: JSON.stringify(b) }),
     anlyOpeningRange:        (b) => request('/analytics/opening-range',              { method: 'POST', body: JSON.stringify(b) }),
+    anlyVsa:                 (b) => request('/analytics/vsa',                        { method: 'POST', body: JSON.stringify(b) }),
+    anlyUlcerIndex:          (b) => request('/analytics/ulcer-index',                { method: 'POST', body: JSON.stringify(b) }),
+    anlyCalmarRatio:         (b) => request('/analytics/calmar-ratio',               { method: 'POST', body: JSON.stringify(b) }),
 };
