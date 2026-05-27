@@ -17,7 +17,7 @@ use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::body::Body;
-use axum::extract::{Multipart, Path, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
 use axum::http::{header, StatusCode};
 use axum::response::Response;
 use axum::routing::{get, post};
@@ -30,6 +30,12 @@ use std::path::PathBuf;
 use traderview_ocr::matcher;
 use uuid::Uuid;
 
+/// Per-receipt upload cap. Large enough for high-DPI phone photos + PDFs;
+/// small enough that a malicious or buggy client can't fill the disk on a
+/// single request. Default axum body limit is 2 MB which would reject most
+/// real receipts, so we override per-router.
+const RECEIPT_UPLOAD_MAX_BYTES: usize = 25 * 1024 * 1024;
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_receipts).post(upload_receipt))
@@ -37,6 +43,7 @@ pub fn router() -> Router<AppState> {
         .route("/:id/meta", get(get_receipt_meta))
         .route("/:id/matches", get(receipt_matches))
         .route("/:id/attach", post(attach_receipt))
+        .layer(DefaultBodyLimit::max(RECEIPT_UPLOAD_MAX_BYTES))
 }
 
 // --- types ---------------------------------------------------------------
@@ -207,16 +214,50 @@ async fn upload_receipt(
 
     // Spawn OCR in the background — caller returns immediately, frontend
     // polls `/:id/meta` until `ocr_status` leaves `pending`.
+    //
+    // The task body runs through `AssertUnwindSafe` + `catch_unwind` so a
+    // panic in the OCR engine (tract-onnx has been known to panic on
+    // malformed ONNX or extreme image shapes) marks the row as failed
+    // instead of leaving it stuck at `pending` forever — the frontend's
+    // polling loop would otherwise spin indefinitely.
     let bg_state = s.clone();
     let receipt_id = row.id;
     let mime_owned = mime.clone();
     tokio::spawn(async move {
-        if let Err(e) = run_ocr(bg_state, receipt_id, bytes, mime_owned).await {
-            tracing::error!(receipt = %receipt_id, error = %e, "ocr job failed");
+        let result = std::panic::AssertUnwindSafe(
+            run_ocr(bg_state.clone(), receipt_id, bytes, mime_owned)
+        );
+        match futures_util::FutureExt::catch_unwind(result).await {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => {
+                tracing::error!(receipt = %receipt_id, error = %e, "ocr job failed");
+                mark_ocr_failed(&bg_state, receipt_id, &e.to_string()).await;
+            }
+            Err(panic) => {
+                let msg = if let Some(s) = panic.downcast_ref::<&str>() { (*s).to_string() }
+                    else if let Some(s) = panic.downcast_ref::<String>() { s.clone() }
+                    else { "OCR engine panicked".into() };
+                tracing::error!(receipt = %receipt_id, panic = %msg, "ocr task panicked");
+                mark_ocr_failed(&bg_state, receipt_id, &format!("OCR panic: {msg}")).await;
+            }
         }
     });
 
     Ok(Json(row.into()))
+}
+
+/// Best-effort status update — used by the panic path so a failed task
+/// doesn't leave a receipt stuck at `pending` forever.
+async fn mark_ocr_failed(s: &AppState, id: Uuid, msg: &str) {
+    let _ = sqlx::query(
+        "UPDATE receipts SET ocr_status = 'failed'::ocr_status_t,
+                             error_message = $2
+          WHERE id = $1",
+    )
+    .bind(id)
+    .bind(msg)
+    .execute(&s.pool)
+    .await;
 }
 
 async fn run_ocr(
@@ -300,13 +341,28 @@ async fn get_receipt_blob(
     }
     let abs = s.receipts_dir().join(&rel_path);
     let bytes = tokio::fs::read(&abs).await?;
-    let disposition = format!("inline; filename=\"{}\"", filename.replace('"', "_"));
+    let disposition = format!("inline; filename=\"{}\"", sanitize_disposition(&filename));
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, mime)
         .header(header::CONTENT_DISPOSITION, disposition)
         .body(Body::from(bytes))
         .map_err(|e| ApiError::Internal(anyhow::anyhow!("response build: {e}")))
+}
+
+/// Make a filename safe to interpolate into a Content-Disposition header.
+/// A raw filename from multipart can contain CR/LF (header injection),
+/// embedded quotes (breaks the header parse), or non-ASCII control bytes.
+/// We strip controls + replace quotes — keeps the visible UX intact while
+/// closing the injection surface.
+fn sanitize_disposition(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            '"' | '\\' => '_',
+            c if c.is_control() => '_',     // strips \r, \n, \t, NUL, etc.
+            c => c,
+        })
+        .collect()
 }
 
 async fn get_receipt_meta(
@@ -519,9 +575,136 @@ fn ext_from_mime(mime: &str) -> Option<String> {
 }
 
 fn extension_of(filename: &str) -> String {
-    filename
-        .rsplit('.')
-        .next()
-        .unwrap_or("bin")
-        .to_ascii_lowercase()
+    // `"noext".rsplit('.').next()` returns `Some("noext")` — the whole
+    // string is the first split because there's no separator. That made
+    // every extensionless upload land on disk as `<sha>.noext` (BUG).
+    // Guard explicitly: if there's no `.` in the name, fall back to "bin".
+    match filename.rsplit_once('.') {
+        Some((_, ext)) if !ext.is_empty() => ext.to_ascii_lowercase(),
+        _ => "bin".into(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── extension_of ─────────────────────────────────────────────────────
+
+    #[test]
+    fn extension_of_picks_last_dot_segment() {
+        assert_eq!(extension_of("photo.jpg"), "jpg");
+        assert_eq!(extension_of("scan.tar.gz"), "gz");
+    }
+
+    #[test]
+    fn extension_of_lowercases() {
+        assert_eq!(extension_of("RECEIPT.PDF"), "pdf");
+        assert_eq!(extension_of("phone.JPEG"), "jpeg");
+    }
+
+    #[test]
+    fn extension_of_returns_bin_when_no_dot() {
+        // The bug we just fixed: pre-fix this returned the full filename
+        // because rsplit('.').next() returns the whole string when no
+        // separator is present.
+        assert_eq!(extension_of("noext"), "bin",
+            "extensionless filenames must fall back to bin");
+        assert_eq!(extension_of("scan"), "bin");
+    }
+
+    #[test]
+    fn extension_of_returns_bin_when_filename_ends_with_dot() {
+        // "scan." → empty extension → bin (not "").
+        assert_eq!(extension_of("scan."), "bin");
+    }
+
+    #[test]
+    fn extension_of_handles_empty_string() {
+        assert_eq!(extension_of(""), "bin");
+    }
+
+    // ─── is_acceptable_mime ───────────────────────────────────────────────
+
+    #[test]
+    fn accepts_image_jpeg_png_webp_bmp_and_pdf() {
+        for m in ["image/jpeg", "image/png", "image/webp", "image/bmp", "application/pdf"] {
+            assert!(is_acceptable_mime(m), "must accept {m}");
+        }
+    }
+
+    #[test]
+    fn accepts_mime_with_charset_suffix() {
+        // Browser sometimes appends `; charset=...`.
+        assert!(is_acceptable_mime("image/jpeg; charset=binary"));
+    }
+
+    #[test]
+    fn accepts_case_insensitive_mime() {
+        assert!(is_acceptable_mime("IMAGE/JPEG"));
+        assert!(is_acceptable_mime("Application/PDF"));
+    }
+
+    #[test]
+    fn rejects_unsupported_mimes() {
+        for m in ["text/plain", "image/gif", "image/tiff", "application/zip", "", "video/mp4"] {
+            assert!(!is_acceptable_mime(m), "must reject {m}");
+        }
+    }
+
+    // ─── guess_mime ───────────────────────────────────────────────────────
+
+    #[test]
+    fn guess_mime_handles_known_extensions() {
+        assert_eq!(guess_mime("a.jpg"),  "image/jpeg");
+        assert_eq!(guess_mime("a.jpeg"), "image/jpeg");
+        assert_eq!(guess_mime("a.png"),  "image/png");
+        assert_eq!(guess_mime("a.webp"), "image/webp");
+        assert_eq!(guess_mime("a.bmp"),  "image/bmp");
+        assert_eq!(guess_mime("a.pdf"),  "application/pdf");
+    }
+
+    #[test]
+    fn guess_mime_unknown_falls_back_to_octet_stream() {
+        assert_eq!(guess_mime("notes.txt"), "application/octet-stream");
+        assert_eq!(guess_mime("noext"),     "application/octet-stream");
+    }
+
+    // ─── sanitize_disposition ─────────────────────────────────────────────
+
+    #[test]
+    fn sanitize_disposition_replaces_quotes() {
+        // Embedded `"` would close the header value early.
+        assert_eq!(sanitize_disposition(r#"sneaky".jpg"#), "sneaky_.jpg");
+    }
+
+    #[test]
+    fn sanitize_disposition_strips_crlf_injection() {
+        // CR/LF would inject a new HTTP header.
+        let bad = "evil.jpg\r\nSet-Cookie: pwned=1";
+        let safe = sanitize_disposition(bad);
+        assert!(!safe.contains('\r'));
+        assert!(!safe.contains('\n'));
+        assert!(!safe.contains("Set-Cookie") == false || !safe.contains('\n'),
+            "header chars stripped so Set-Cookie can't smuggle");
+    }
+
+    #[test]
+    fn sanitize_disposition_strips_nul_and_other_controls() {
+        let bad = "weird\x00name\x07.png";
+        let safe = sanitize_disposition(bad);
+        for c in safe.chars() {
+            assert!(!c.is_control(), "leftover control char {c:?}");
+        }
+    }
+
+    #[test]
+    fn sanitize_disposition_preserves_normal_filenames() {
+        // Don't mangle legitimate filenames.
+        assert_eq!(sanitize_disposition("receipt-2026-05-27.jpg"),
+                   "receipt-2026-05-27.jpg");
+        assert_eq!(sanitize_disposition("Café Latté.pdf"),
+                   "Café Latté.pdf",
+            "Unicode letters/spaces must survive — only controls + quotes are sanitized");
+    }
 }

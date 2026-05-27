@@ -48,6 +48,7 @@ clap = { workspace = true }
 bytes = { workspace = true }
 sha2 = { workspace = true }
 regex = { workspace = true }
+futures-util = { workspace = true }
 
 [features]
 # Default OFF: pure-onnx-ocr-sync pulls tract-onnx + ndarray (~5 min cold
