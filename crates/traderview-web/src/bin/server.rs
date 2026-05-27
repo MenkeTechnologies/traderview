@@ -82,6 +82,27 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Background earnings calendar poller — every 6h over watchlist symbols.
+    {
+        let pool = pool.clone();
+        tokio::spawn(async move {
+            loop {
+                match traderview_db::earnings_cal::poll_watchlists(&pool).await {
+                    Ok(s) => if s.events_upserted > 0 || s.reactions_computed > 0 {
+                        tracing::info!(
+                            symbols = s.symbols_polled,
+                            events = s.events_upserted,
+                            reactions = s.reactions_computed,
+                            "earnings polled",
+                        );
+                    },
+                    Err(e) => tracing::warn!(error = %e, "earnings poll failed"),
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(6 * 3600)).await;
+            }
+        });
+    }
+
     // Background news poller — every 5 min over distinct watchlist symbols.
     {
         let pool = pool.clone();

@@ -20,6 +20,7 @@ mod crypto;
 mod dashboards;
 mod darkpool;
 mod disclosures;
+mod earnings_cal;
 mod earnings_iv;
 mod economy;
 mod executions;
@@ -113,6 +114,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(api_tokens::router())
         .merge(dashboards::router())
         .merge(news::router())
+        .merge(earnings_cal::router())
 }
 
 mod helpers {

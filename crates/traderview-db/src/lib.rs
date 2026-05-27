@@ -12,6 +12,7 @@ pub mod crypto;
 pub mod dashboards;
 pub mod darkpool;
 pub mod disclosures;
+pub mod earnings_cal;
 pub mod earnings_iv;
 pub mod economy;
 pub mod embedded;

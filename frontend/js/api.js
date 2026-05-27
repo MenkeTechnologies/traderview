@@ -378,6 +378,13 @@ export const api = {
     // Stock comparison (2-4 symbols side-by-side)
     compare: (symbolsCsv) => request(`/compare?symbols=${encodeURIComponent(symbolsCsv)}`),
 
+    // Earnings calendar + surprise tracking
+    earningsCalendar: (days = 7) => request(`/earnings/calendar?days=${days}`),
+    earningsSurprises: (days = 30) => request(`/earnings/surprises?days=${days}`),
+    earningsPollNow: () => request('/earnings/poll-now', { method: 'POST' }),
+    earningsRefreshSymbol: (sym) =>
+        request(`/earnings/symbol/${encodeURIComponent(sym)}/refresh`, { method: 'POST' }),
+
     // News (sentiment-tagged history + FTS)
     newsBySymbol: (sym, limit = 20) =>
         request(`/news/symbol/${encodeURIComponent(sym)}?limit=${limit}`),

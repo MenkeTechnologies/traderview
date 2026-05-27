@@ -56,6 +56,7 @@ import { renderAiSettings } from './views/journal_ai.js';
 import { renderDeveloper } from './views/api_tokens.js';
 import { renderBoards } from './views/boards.js';
 import { renderNews } from './views/news.js';
+import { renderEarningsCal } from './views/earnings_cal.js';
 import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine, reloadHotkeys } from './hotkey_engine.js';
@@ -232,6 +233,7 @@ export async function dispatch() {
             case 'developer':      await renderDeveloper(mount, state); break;
             case 'boards':         await renderBoards(mount, state, rest[0] || ''); break;
             case 'news':           await renderNews(mount, state); break;
+            case 'earnings-cal':   await renderEarningsCal(mount, state); break;
             case 'trade':       await renderTradeDetail(mount, state, rest[0]); break;
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;

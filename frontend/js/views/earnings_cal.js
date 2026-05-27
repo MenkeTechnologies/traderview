@@ -1,0 +1,139 @@
+// Earnings calendar + surprise leaderboard.
+import { api } from '../api.js';
+import { esc, fmt } from '../util.js';
+
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+export async function renderEarningsCal(mount) {
+    mount.innerHTML = `
+        <h1 class="view-title">// EARNINGS CALENDAR</h1>
+        <p class="muted small">Polls Yahoo's <code>quoteSummary</code> earnings module every 6h
+            across your watchlist symbols. Surprise % = (actual − estimate) / |estimate| × 100.
+            Reaction columns are next-session and 5-session price moves vs the close on / just
+            before the earnings date, computed from cached daily bars.</p>
+
+        <div class="chart-panel">
+            <form class="inline-form" id="e-form">
+                <label>Upcoming days
+                    <input name="days" type="number" min="1" max="30" value="7" style="width:80px;">
+                </label>
+                <label>Surprise lookback (days)
+                    <input name="back" type="number" min="1" max="365" value="30" style="width:90px;">
+                </label>
+                <button class="primary" type="submit">Refresh view</button>
+                <button class="btn" type="button" id="e-poll">Poll now (Yahoo)</button>
+                <span id="e-status" class="muted small"></span>
+            </form>
+        </div>
+
+        <div class="chart-panel">
+            <h2>This week (calendar matrix)</h2>
+            <div id="e-cal"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Biggest surprises (recent)</h2>
+            <div id="e-surp"></div>
+        </div>
+    `;
+    document.getElementById('e-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        refresh();
+    });
+    document.getElementById('e-poll').addEventListener('click', async () => {
+        const status = document.getElementById('e-status');
+        status.textContent = 'polling…';
+        try {
+            const s = await api.earningsPollNow();
+            status.textContent = `${s.symbols_polled} symbols · ${s.events_upserted} events · ${s.reactions_computed} reactions`;
+            await refresh();
+        } catch (err) { status.textContent = 'error: ' + err.message; }
+    });
+    await refresh();
+}
+
+async function refresh() {
+    const form = document.getElementById('e-form');
+    const days = Number(form.days.value) || 7;
+    const back = Number(form.back.value) || 30;
+    try {
+        const [upcoming, surprises] = await Promise.all([
+            api.earningsCalendar(days),
+            api.earningsSurprises(back),
+        ]);
+        renderCalendarMatrix(upcoming, days);
+        renderSurpriseTable(surprises);
+    } catch (e) {
+        document.getElementById('e-cal').innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+    }
+}
+
+function renderCalendarMatrix(events, days) {
+    const el = document.getElementById('e-cal');
+    if (!events.length) {
+        el.innerHTML = `<p class="muted small">No upcoming earnings in the next ${days} days. Hit "Poll now" to seed from Yahoo.</p>`;
+        return;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cols = [];
+    for (let i = 0; i < days; i++) {
+        const d = new Date(today.getTime() + i * 86400_000);
+        cols.push({ date: d, key: d.toISOString().slice(0, 10), events: [] });
+    }
+    for (const ev of events) {
+        const c = cols.find(c => c.key === ev.earnings_date);
+        if (c) c.events.push(ev);
+    }
+    el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(${cols.length}, 1fr);gap:6px;">
+            ${cols.map(c => `<div style="border:1px solid var(--border);padding:6px;min-height:80px;">
+                <div class="small muted" style="border-bottom:1px dashed var(--border);padding-bottom:3px;margin-bottom:4px;">
+                    ${DOW[c.date.getDay()]} ${c.date.getMonth() + 1}/${c.date.getDate()}
+                </div>
+                ${c.events.length === 0
+                    ? '<span class="muted small">—</span>'
+                    : c.events.map(ev => {
+                        const t = (ev.timing || 'unknown');
+                        const tag = t === 'amc' ? '🌙' : t === 'bmo' ? '☀' : '·';
+                        const est = ev.eps_estimate != null ? `est ${Number(ev.eps_estimate).toFixed(2)}` : '';
+                        return `<div style="font-size:11px;padding:2px 0;">
+                            <strong>${esc(ev.symbol)}</strong> ${tag}
+                            <span class="muted">${esc(est)}</span>
+                        </div>`;
+                    }).join('')}
+            </div>`).join('')}
+        </div>
+        <p class="muted small" style="margin-top:6px;">☀ before market open · 🌙 after market close · · timing unknown</p>
+    `;
+}
+
+function renderSurpriseTable(events) {
+    const el = document.getElementById('e-surp');
+    if (!events.length) {
+        el.innerHTML = '<p class="muted small">No surprise data yet.</p>';
+        return;
+    }
+    el.innerHTML = `<table class="trades">
+        <thead><tr>
+            <th>Symbol</th><th>Date</th><th>Est EPS</th><th>Actual EPS</th>
+            <th>Surprise</th><th>Reaction 1d</th><th>Reaction 5d</th>
+        </tr></thead>
+        <tbody>
+        ${events.map(ev => {
+            const sp = ev.surprise_pct;
+            const r1 = ev.reaction_1d_pct;
+            const r5 = ev.reaction_5d_pct;
+            return `<tr>
+                <td>${esc(ev.symbol)}</td>
+                <td class="small">${ev.earnings_date}</td>
+                <td>${ev.eps_estimate != null ? Number(ev.eps_estimate).toFixed(2) : '—'}</td>
+                <td>${ev.eps_actual != null ? Number(ev.eps_actual).toFixed(2) : '—'}</td>
+                <td class="${sp == null ? 'muted' : sp >= 0 ? 'pos' : 'neg'}">${sp == null ? '—' : (sp >= 0 ? '+' : '') + sp.toFixed(1) + '%'}</td>
+                <td class="${r1 == null ? 'muted' : r1 >= 0 ? 'pos' : 'neg'}">${r1 == null ? '—' : (r1 >= 0 ? '+' : '') + r1.toFixed(2) + '%'}</td>
+                <td class="${r5 == null ? 'muted' : r5 >= 0 ? 'pos' : 'neg'}">${r5 == null ? '—' : (r5 >= 0 ? '+' : '') + r5.toFixed(2) + '%'}</td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+    </table>`;
+}
