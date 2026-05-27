@@ -387,6 +387,20 @@ export const api = {
     // Per-trade tape replay (bars + execs timeline)
     tapeReplay: (tradeId) => request(`/tape-replay/${tradeId}`),
 
+    // Backtest preset library (save / share / fork)
+    listMyBacktestPresets: () => request('/backtest-presets'),
+    listPublicBacktestPresets: (limit = 50) =>
+        request(`/backtest-presets/public?limit=${limit}`),
+    getBacktestPresetBySlug: (slug) => request(`/backtest-presets/slug/${slug}`),
+    createBacktestPreset: (body) =>
+        request('/backtest-presets', { method: 'POST', body: JSON.stringify(body) }),
+    updateBacktestPreset: (id, body) =>
+        request(`/backtest-presets/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteBacktestPreset: (id) =>
+        request(`/backtest-presets/${id}`, { method: 'DELETE' }),
+    forkBacktestPreset: (slug) =>
+        request(`/backtest-presets/slug/${slug}/fork`, { method: 'POST' }),
+
     // Portfolio rebalancing
     rebalanceTargetsList: () => request('/rebalance/targets'),
     rebalanceTargetSave: (body) =>

@@ -10,6 +10,7 @@ mod analysis;
 mod api_tokens;
 mod auth;
 mod backtest;
+mod backtest_presets;
 mod breadth;
 mod chart_drawings;
 mod charts;
@@ -129,6 +130,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(rebalance::router())
         .merge(sector_rotation::router())
         .merge(tape_replay::router())
+        .merge(backtest_presets::router())
 }
 
 mod helpers {
