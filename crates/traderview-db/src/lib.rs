@@ -11,6 +11,7 @@ pub mod compare;
 pub mod comments;
 pub mod corr_matrix;
 pub mod crypto;
+pub mod csv_wizard;
 pub mod custom_indicators;
 pub mod dashboards;
 pub mod darkpool;

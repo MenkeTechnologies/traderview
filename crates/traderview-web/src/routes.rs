@@ -19,6 +19,7 @@ mod community;
 mod compare;
 mod corr_matrix;
 mod crypto;
+mod csv_wizard;
 mod custom_indicators;
 mod dashboards;
 mod darkpool;
@@ -149,6 +150,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fill_quality::router())
         .merge(custom_indicators::router())
         .merge(trade_compare::router())
+        .merge(csv_wizard::router())
 }
 
 mod helpers {
