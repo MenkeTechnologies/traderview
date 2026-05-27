@@ -39,6 +39,7 @@ pub mod dpo;
 pub mod drawdown_duration;
 pub mod drawdown_throttle;
 pub mod dynamic_kelly;
+pub mod earnings_calendar;
 pub mod earnings_move;
 pub mod emotion_tags;
 pub mod equity_forecast;
