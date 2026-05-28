@@ -853,4 +853,18 @@ pub mod principal_component_yield_curve;
 pub mod risk_reversal_25_delta_butterfly;
 pub mod vasicek_short_rate_simulator;
 
+pub mod lasso_regression_coordinate_descent;
+pub mod marchenko_pastur_cleaning;
+pub mod optimal_execution_twap_schedule;
+pub mod optimal_execution_vwap_schedule;
+pub mod ridge_regression;
+
+pub mod elastic_net_regression;
+pub mod forward_volatility_implied_bootstrap;
+pub mod kalman_smoother_rts;
+pub mod lowess_smoother;
+pub mod pin_risk_scanner;
+pub mod polynomial_regression;
+pub mod theil_sen_estimator;
+
 pub use models::*;

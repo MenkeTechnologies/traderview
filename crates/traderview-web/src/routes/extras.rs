@@ -76,7 +76,8 @@ use traderview_core::{
     ehlers_decycler_oscillator, ehlers_fisher_cybernetic, ehlers_instant_trendline,
     ehlers_mama_fama, ehrlich_filter,
     eighty_twenty_setup, elder_safezone_stop,
-    elder_thermometer, elliott_wave_oscillator, engulfing_pattern_scanner, equivolume_bars,
+    elastic_net_regression, elder_thermometer, elliott_wave_oscillator,
+    engulfing_pattern_scanner, equivolume_bars,
     empirical_distribution_function, empirical_mode_decomposition,
     engle_granger_2step,
     equal_levels, equal_risk_contribution_portfolio, ergodic_oscillator, evt_value_at_risk,
@@ -89,7 +90,8 @@ use traderview_core::{
     finite_difference_option,
     five_o_pattern, floor_pivots,
     footprint_imbalance, fra,
-    forward_start_option, fractional_brownian_motion_generator, frama_fractal,
+    forward_start_option, forward_volatility_implied_bootstrap,
+    fractional_brownian_motion_generator, frama_fractal,
     friedman_test,
     futures_roll, gain_pain_ratio, gain_to_pain_ratio, gamma_pin_zone, gamma_scalping_pnl,
     gann_fan, gann_high_low_activator, gann_swing_chart, gap_and_go_scanner, gap_classifier,
@@ -116,7 +118,8 @@ use traderview_core::{
     island_reversal, isotonic_regression,
     iv_rank_scanner, iv_skew_scanner, iv_solver, iv_term_structure, jade_lizard, jarque_bera,
     jelly_roll_arbitrage, jump_diffusion_simulator, jurik_ma,
-    kagi_chart, kalman_dynamic_beta, kalman_filter_1d, katsanos_vfi, kelly_criterion,
+    kagi_chart, kalman_dynamic_beta, kalman_filter_1d, kalman_smoother_rts,
+    katsanos_vfi, kelly_criterion,
     kicker_pattern,
     keltner_squeeze, kendall_tau,
     key_rate_duration, key_reversal_bar, klinger_volume_oscillator, know_sure_thing,
@@ -128,7 +131,8 @@ use traderview_core::{
     late_day_ramp_scanner,
     liquidity_pool_detector, liquidity_void_detector,
     liquidity_adjusted_var, liquidity_grab, ljung_box, lookback_option, low_vol_factor,
-    lower_partial_moments, macaulay_duration, madrid_moving_average_ribbon,
+    lower_partial_moments, lowess_smoother,
+    macaulay_duration, madrid_moving_average_ribbon,
     mahalanobis_distance, mann_whitney_u, marginal_var,
     margrabe_spread_option, markov_switching_2state, mat_hold_pattern, matrix_profile,
     max_diversification,
@@ -150,7 +154,8 @@ use traderview_core::{
     pain_index, pair_trade,
     pair_trade_zscore, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
     permutation_entropy, pickands_estimator, pin_bar, pinball_setup, pivot_points,
-    pocket_pivot_buy, point_and_figure, portfolio_heat, position_aging,
+    pin_risk_scanner, pocket_pivot_buy, point_and_figure, polynomial_regression,
+    portfolio_heat, position_aging,
     position_irr, positive_volume_index, post_earnings_drift, power_bar, power_option, pp_test,
     premarket_gap_scanner,
     premier_stochastic, premium_discount, pretty_good_oscillator, price_volume_oscillator,
@@ -192,6 +197,7 @@ use traderview_core::{
     t3_moving_average, t_copula, tail_dependence, tail_ratio, tasuki_gap,
     tape_density, tape_speed, tax_lot_optimizer, td_sequential, ted_spread, term_premium_estimator,
     term_spread,
+    theil_sen_estimator,
     three_bar_reversal,
     three_drive_pattern, three_inside_up_down, three_line_break, three_outside_up_down,
     three_white_soldiers_crows, thrusting_pattern, traders_action_zone,
@@ -854,6 +860,13 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/principal-component-yield-curve", post(principal_component_yield_curve_route))
         .route("/analytics/risk-reversal-25-delta-butterfly", post(risk_reversal_25_delta_butterfly_route))
         .route("/analytics/vasicek-short-rate-simulator", post(vasicek_short_rate_simulator_route))
+        .route("/analytics/elastic-net-regression",    post(elastic_net_regression_route))
+        .route("/analytics/forward-volatility-bootstrap", post(forward_volatility_implied_bootstrap_route))
+        .route("/analytics/kalman-smoother-rts",       post(kalman_smoother_rts_route))
+        .route("/analytics/lowess-smoother",           post(lowess_smoother_route))
+        .route("/analytics/polynomial-regression",     post(polynomial_regression_route))
+        .route("/analytics/theil-sen-estimator",       post(theil_sen_estimator_route))
+        .route("/scans/pin-risk",                      post(pin_risk_scanner_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -9686,4 +9699,223 @@ struct VasicekShortRateSimulatorResponse {
     max_terminal_rate: f64,
     negative_path_fraction: f64,
     paths_run: usize,
+}
+
+#[derive(Deserialize)]
+struct ElasticNetRegressionBody {
+    x: Vec<Vec<f64>>,
+    y: Vec<f64>,
+    alpha: f64,
+    #[serde(default = "default_elastic_l1_ratio")]
+    l1_ratio: f64,
+    #[serde(default = "default_elastic_max_iter")]
+    max_iter: u32,
+    #[serde(default = "default_elastic_tol")]
+    tol: f64,
+}
+
+fn default_elastic_l1_ratio() -> f64 { 0.5 }
+fn default_elastic_max_iter() -> u32 { 1000 }
+fn default_elastic_tol() -> f64 { 1e-6 }
+
+async fn elastic_net_regression_route(
+    _u: AuthUser, Json(b): Json<ElasticNetRegressionBody>,
+) -> Json<Option<ElasticNetRegressionResponse>> {
+    Json(elastic_net_regression::compute(&b.x, &b.y, b.alpha, b.l1_ratio, b.max_iter, b.tol)
+        .map(|r| ElasticNetRegressionResponse {
+            intercept: r.intercept,
+            coefficients: r.coefficients,
+            iterations: r.iterations,
+            converged: r.converged,
+            non_zero_count: r.non_zero_count,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct ElasticNetRegressionResponse {
+    intercept: f64,
+    coefficients: Vec<f64>,
+    iterations: u32,
+    converged: bool,
+    non_zero_count: usize,
+}
+
+#[derive(Deserialize)]
+struct ForwardVolatilityImpliedBootstrapBody {
+    expiries: Vec<f64>,
+    spot_iv: Vec<f64>,
+}
+
+async fn forward_volatility_implied_bootstrap_route(
+    _u: AuthUser, Json(b): Json<ForwardVolatilityImpliedBootstrapBody>,
+) -> Json<Option<ForwardVolatilityImpliedBootstrapResponse>> {
+    Json(forward_volatility_implied_bootstrap::compute(&b.expiries, &b.spot_iv)
+        .map(|r| ForwardVolatilityImpliedBootstrapResponse {
+            forward_vols: r.forward_vols,
+            cumulative_variance: r.cumulative_variance,
+            arbitrage_violations: r.arbitrage_violations,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct ForwardVolatilityImpliedBootstrapResponse {
+    forward_vols: Vec<f64>,
+    cumulative_variance: Vec<f64>,
+    arbitrage_violations: Vec<usize>,
+}
+
+#[derive(Deserialize)]
+struct KalmanSmootherRtsBody {
+    observations: Vec<f64>,
+    process_noise_q: f64,
+    obs_noise_r: f64,
+    #[serde(default)]
+    x0: f64,
+    #[serde(default = "default_rts_p0")]
+    p0: f64,
+}
+
+fn default_rts_p0() -> f64 { 1.0 }
+
+async fn kalman_smoother_rts_route(
+    _u: AuthUser, Json(b): Json<KalmanSmootherRtsBody>,
+) -> Json<Option<KalmanSmootherRtsResponse>> {
+    Json(kalman_smoother_rts::compute(
+        &b.observations, b.process_noise_q, b.obs_noise_r, b.x0, b.p0,
+    ).map(|r| KalmanSmootherRtsResponse {
+        smoothed_state: r.smoothed_state,
+        smoothed_variance: r.smoothed_variance,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct KalmanSmootherRtsResponse {
+    smoothed_state: Vec<f64>,
+    smoothed_variance: Vec<f64>,
+}
+
+#[derive(Deserialize)]
+struct LowessSmootherBody {
+    x: Vec<f64>,
+    y: Vec<f64>,
+    #[serde(default = "default_lowess_frac")]
+    frac: f64,
+    #[serde(default)]
+    robustness_iter: u32,
+}
+
+fn default_lowess_frac() -> f64 { 0.3 }
+
+async fn lowess_smoother_route(
+    _u: AuthUser, Json(b): Json<LowessSmootherBody>,
+) -> Json<Option<Vec<f64>>> {
+    Json(lowess_smoother::compute(&b.x, &b.y, b.frac, b.robustness_iter))
+}
+
+#[derive(Deserialize)]
+struct PolynomialRegressionBody {
+    x: Vec<f64>,
+    y: Vec<f64>,
+    degree: usize,
+}
+
+async fn polynomial_regression_route(
+    _u: AuthUser, Json(b): Json<PolynomialRegressionBody>,
+) -> Json<Option<PolynomialRegressionResponse>> {
+    Json(polynomial_regression::compute(&b.x, &b.y, b.degree)
+        .map(|r| PolynomialRegressionResponse {
+            coefficients: r.coefficients,
+            fitted: r.fitted,
+            r_squared: r.r_squared,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct PolynomialRegressionResponse {
+    coefficients: Vec<f64>,
+    fitted: Vec<f64>,
+    r_squared: f64,
+}
+
+#[derive(Deserialize)]
+struct TheilSenEstimatorBody {
+    x: Vec<f64>,
+    y: Vec<f64>,
+}
+
+async fn theil_sen_estimator_route(
+    _u: AuthUser, Json(b): Json<TheilSenEstimatorBody>,
+) -> Json<Option<TheilSenEstimatorResponse>> {
+    Json(theil_sen_estimator::compute(&b.x, &b.y)
+        .map(|r| TheilSenEstimatorResponse {
+            slope: r.slope,
+            intercept: r.intercept,
+            n_pairs: r.n_pairs,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct TheilSenEstimatorResponse {
+    slope: f64,
+    intercept: f64,
+    n_pairs: usize,
+}
+
+#[derive(Deserialize)]
+struct PinRiskScannerBody {
+    contracts: Vec<PinRiskContract>,
+    #[serde(default)]
+    max_days_to_expiry: Option<f64>,
+    #[serde(default)]
+    atm_band_pct: Option<f64>,
+    #[serde(default)]
+    min_open_interest: Option<u64>,
+}
+
+#[derive(Deserialize)]
+struct PinRiskContract {
+    symbol: String,
+    strike: f64,
+    spot: f64,
+    days_to_expiry: f64,
+    open_interest: u64,
+    kind: String,
+}
+
+async fn pin_risk_scanner_route(
+    _u: AuthUser, Json(b): Json<PinRiskScannerBody>,
+) -> Json<Vec<PinRiskMatch>> {
+    let contracts: Vec<pin_risk_scanner::Contract> = b.contracts.into_iter().map(|c| {
+        pin_risk_scanner::Contract {
+            symbol: c.symbol,
+            strike: c.strike, spot: c.spot,
+            days_to_expiry: c.days_to_expiry,
+            open_interest: c.open_interest,
+            kind: c.kind,
+        }
+    }).collect();
+    let mut cfg = pin_risk_scanner::Config::default();
+    if let Some(v) = b.max_days_to_expiry { cfg.max_days_to_expiry = v; }
+    if let Some(v) = b.atm_band_pct { cfg.atm_band_pct = v; }
+    if let Some(v) = b.min_open_interest { cfg.min_open_interest = v; }
+    Json(pin_risk_scanner::scan(&contracts, cfg).into_iter().map(|m| PinRiskMatch {
+        symbol: m.symbol,
+        strike: m.strike,
+        kind: m.kind,
+        distance_pct: m.distance_pct,
+        open_interest: m.open_interest,
+        days_to_expiry: m.days_to_expiry,
+        score: m.score,
+    }).collect())
+}
+
+#[derive(serde::Serialize)]
+struct PinRiskMatch {
+    symbol: String,
+    strike: f64,
+    kind: String,
+    distance_pct: f64,
+    open_interest: u64,
+    days_to_expiry: f64,
+    score: f64,
 }
