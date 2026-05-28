@@ -380,3 +380,106 @@ pub struct ConnectRequest {
     #[serde(default)]
     pub account_id: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ── num: f64 coercion from heterogeneous Webull JSON ──────────────────
+
+    #[test]
+    fn num_reads_native_floats() {
+        assert_eq!(num(&json!(1.5)), 1.5);
+        assert_eq!(num(&json!(0)), 0.0);
+        assert_eq!(num(&json!(-42.25)), -42.25);
+    }
+
+    #[test]
+    fn num_parses_numeric_strings_webull_style() {
+        // Webull's REST surface routinely returns numbers as strings — costPrice
+        // "150.25", position "100", marketValue "15025.50".
+        assert_eq!(num(&json!("150.25")), 150.25);
+        assert_eq!(num(&json!("0")), 0.0);
+        assert_eq!(num(&json!("-99.5")), -99.5);
+    }
+
+    #[test]
+    fn num_returns_zero_for_null_or_unparseable() {
+        // Defensive: any missing/garbled field falls back to 0 so a single bad
+        // value doesn't blow up the whole positions list.
+        assert_eq!(num(&json!(null)), 0.0);
+        assert_eq!(num(&json!("not-a-number")), 0.0);
+        assert_eq!(num(&json!("")), 0.0);
+        assert_eq!(num(&json!(true)), 0.0);
+        assert_eq!(num(&json!({})), 0.0);
+    }
+
+    #[test]
+    fn num_handles_missing_keys_via_index_default() {
+        // Looking up a missing key in a serde_json::Value returns Value::Null,
+        // which num() must coerce to 0.0 — matches fetch_positions field access.
+        let v = json!({"costPrice": "10.5"});
+        assert_eq!(num(&v["costPrice"]), 10.5);
+        assert_eq!(num(&v["missing"]), 0.0);
+    }
+
+    // ── parse_ms: timestamp parsing across two formats ────────────────────
+
+    #[test]
+    fn parse_ms_handles_epoch_millis() {
+        // Webull "placedTime" / "filledTime" arrive as millisecond epoch strings.
+        // 1700000000000ms = 2023-11-14T22:13:20Z
+        let dt = parse_ms(Some("1700000000000")).unwrap();
+        assert_eq!(dt.timestamp_millis(), 1700000000000);
+    }
+
+    #[test]
+    fn parse_ms_handles_rfc3339() {
+        // Some endpoints return ISO 8601; parse_ms must accept both.
+        let dt = parse_ms(Some("2024-01-15T09:30:00Z")).unwrap();
+        assert_eq!(dt.to_rfc3339(), "2024-01-15T09:30:00+00:00");
+    }
+
+    #[test]
+    fn parse_ms_returns_none_for_none_or_garbage() {
+        assert!(parse_ms(None).is_none());
+        assert!(parse_ms(Some("definitely not a timestamp")).is_none());
+        assert!(parse_ms(Some("")).is_none());
+    }
+
+    #[test]
+    fn parse_ms_normalizes_tz_to_utc() {
+        // RFC3339 with offset must come back as UTC so downstream comparisons
+        // never accidentally compare a naive local time to a UTC value.
+        let dt = parse_ms(Some("2024-01-15T09:30:00-05:00")).unwrap();
+        assert_eq!(dt.to_rfc3339(), "2024-01-15T14:30:00+00:00");
+    }
+
+    // ── Defaults / config wiring ──────────────────────────────────────────
+
+    #[test]
+    fn webull_client_starts_without_creds() {
+        let c = WebullClient::new();
+        // tokio runtime needed for async — use a small block_on. We only test
+        // that the client constructs and reports false before any creds set.
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        assert!(!rt.block_on(c.has_creds()));
+        assert!(c.last_snapshot().is_none());
+    }
+
+    #[test]
+    fn connect_request_round_trips_with_optional_fields() {
+        // The struct is what the HTTP route deserializes, so its serde shape is
+        // load-bearing for the public API contract.
+        let json = r#"{"did":"d1","access_token":"tok"}"#;
+        let r: ConnectRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(r.did, "d1");
+        assert_eq!(r.access_token, "tok");
+        assert!(r.t_token.is_none());
+        assert!(r.account_id.is_none());
+    }
+}
