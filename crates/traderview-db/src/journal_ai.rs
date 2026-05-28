@@ -483,3 +483,125 @@ fn str_array(v: &Value) -> Vec<String> {
         })
         .unwrap_or_default()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── parse_findings: strict json path ──────────────────────────────────
+    #[test]
+    fn parse_findings_parses_strict_json() {
+        let raw = r#"{
+            "summary": "Bad trade.",
+            "mistakes": ["chased entry"],
+            "risk_gaps": ["no stop"],
+            "suggestions": ["wait for setup"],
+            "rule_changes": ["no chases pre-market"]
+        }"#;
+        let f = parse_findings(raw);
+        assert_eq!(f.summary, "Bad trade.");
+        assert_eq!(f.mistakes, vec!["chased entry"]);
+        assert_eq!(f.risk_gaps, vec!["no stop"]);
+        assert_eq!(f.suggestions, vec!["wait for setup"]);
+        assert_eq!(f.rule_changes, vec!["no chases pre-market"]);
+    }
+
+    #[test]
+    fn parse_findings_strips_json_code_fence() {
+        let raw = "```json\n{\"summary\":\"s\",\"mistakes\":[],\"risk_gaps\":[],\
+                   \"suggestions\":[],\"rule_changes\":[]}\n```";
+        let f = parse_findings(raw);
+        assert_eq!(f.summary, "s");
+    }
+
+    #[test]
+    fn parse_findings_strips_bare_code_fence() {
+        let raw = "```\n{\"summary\":\"x\",\"mistakes\":[],\"risk_gaps\":[],\
+                   \"suggestions\":[],\"rule_changes\":[]}\n```";
+        assert_eq!(parse_findings(raw).summary, "x");
+    }
+
+    // ─── parse_findings: lax/coerce path ───────────────────────────────────
+    #[test]
+    fn parse_findings_lax_path_supplies_defaults_for_missing_fields() {
+        // Valid JSON but missing array fields and using wrong types where
+        // possible — should fall through strict and into the value-coerce path.
+        let raw = r#"{ "summary": "only summary present" }"#;
+        let f = parse_findings(raw);
+        assert_eq!(f.summary, "only summary present");
+        assert!(f.mistakes.is_empty());
+        assert!(f.risk_gaps.is_empty());
+        assert!(f.suggestions.is_empty());
+        assert!(f.rule_changes.is_empty());
+    }
+
+    #[test]
+    fn parse_findings_lax_path_uses_no_summary_placeholder_when_missing() {
+        let raw = r#"{ "mistakes": ["m1"] }"#;
+        let f = parse_findings(raw);
+        assert_eq!(f.summary, "(no summary)");
+        assert_eq!(f.mistakes, vec!["m1"]);
+    }
+
+    #[test]
+    fn parse_findings_lax_filters_non_string_array_items() {
+        let raw = r#"{
+            "summary": "s",
+            "mistakes": ["good", 42, null, "also good"]
+        }"#;
+        let f = parse_findings(raw);
+        assert_eq!(f.mistakes, vec!["good", "also good"]);
+    }
+
+    // ─── parse_findings: garbage fallback ──────────────────────────────────
+    #[test]
+    fn parse_findings_garbage_input_becomes_truncated_summary() {
+        let garbage = "this is not json at all, just narrative text";
+        let f = parse_findings(garbage);
+        assert_eq!(f.summary, garbage);
+        assert!(f.mistakes.is_empty());
+    }
+
+    #[test]
+    fn parse_findings_garbage_summary_truncates_to_280_chars() {
+        let huge = "x".repeat(500);
+        let f = parse_findings(&huge);
+        assert_eq!(f.summary.chars().count(), 280);
+    }
+
+    // ─── str_array ─────────────────────────────────────────────────────────
+    #[test]
+    fn str_array_drops_non_strings_silently() {
+        let v: Value = serde_json::from_str(r#"["a", 1, true, "b", null]"#).unwrap();
+        assert_eq!(str_array(&v), vec!["a", "b"]);
+    }
+
+    #[test]
+    fn str_array_on_non_array_returns_empty() {
+        let v: Value = serde_json::from_str(r#"{"x":1}"#).unwrap();
+        assert!(str_array(&v).is_empty());
+        assert!(str_array(&Value::Null).is_empty());
+        assert!(str_array(&Value::String("hi".into())).is_empty());
+    }
+
+    // ─── build_prompt ──────────────────────────────────────────────────────
+    #[test]
+    fn build_prompt_embeds_pretty_json_and_contract_keys() {
+        let ctx = json!({ "trade": { "symbol": "AAPL", "qty": "100" } });
+        let p = build_prompt(&ctx);
+        // All five contract keys must be present.
+        for key in [
+            "summary",
+            "mistakes",
+            "risk_gaps",
+            "suggestions",
+            "rule_changes",
+        ] {
+            assert!(p.contains(key), "prompt missing key: {key}");
+        }
+        // Context must be embedded (pretty-printed includes the symbol).
+        assert!(p.contains("AAPL"));
+        // Explicit "no markdown fences" instruction must survive verbatim.
+        assert!(p.contains("Return ONLY the JSON"));
+    }
+}
