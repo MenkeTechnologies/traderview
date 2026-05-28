@@ -268,3 +268,169 @@ fn compute_stats(rs: &[f64]) -> Stats {
 fn dec(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ===========================================================================
+    // compute_stats — empty input
+    // ===========================================================================
+
+    #[test]
+    fn empty_input_yields_zeroed_stats_with_em_dash_grade() {
+        let s = compute_stats(&[]);
+        assert_eq!(s.samples, 0);
+        assert_eq!(s.mean_r, 0.0);
+        assert_eq!(s.stdev_r, 0.0);
+        assert_eq!(s.sqn, 0.0);
+        // No samples → no grade.
+        assert_eq!(s.sqn_grade, "—");
+        assert_eq!(s.winners, 0);
+        assert_eq!(s.losers, 0);
+        assert_eq!(s.breakevens, 0);
+        assert_eq!(s.win_rate, 0.0);
+        assert_eq!(s.payoff_ratio, 0.0);
+        assert_eq!(s.profit_factor, 0.0);
+    }
+
+    // ===========================================================================
+    // Winner / loser / breakeven classification
+    // ===========================================================================
+
+    #[test]
+    fn breakevens_are_exactly_zero_r() {
+        // 0.0 is neither winner (>0) nor loser (<0).
+        let s = compute_stats(&[1.0, -1.0, 0.0, 0.0]);
+        assert_eq!(s.winners, 1);
+        assert_eq!(s.losers, 1);
+        assert_eq!(s.breakevens, 2);
+        assert_eq!(s.samples, 4);
+    }
+
+    #[test]
+    fn win_rate_excludes_breakevens_from_numerator_only() {
+        // 2 winners, 1 loser, 1 BE. win_rate = 2/4 = 0.5
+        let s = compute_stats(&[1.0, 1.0, -1.0, 0.0]);
+        assert_eq!(s.win_rate, 0.5);
+    }
+
+    #[test]
+    fn mean_r_is_simple_average() {
+        // (2 + -1 + 3) / 3 = 4/3
+        let s = compute_stats(&[2.0, -1.0, 3.0]);
+        assert!((s.mean_r - 4.0 / 3.0).abs() < 1e-9);
+    }
+
+    // ===========================================================================
+    // SQN computation & grade bands
+    // ===========================================================================
+
+    #[test]
+    fn sqn_zero_when_stdev_collapses_to_constant_series() {
+        // All identical → stdev=0 → sqn=0 guard prevents divide-by-zero.
+        let s = compute_stats(&[1.0, 1.0, 1.0, 1.0]);
+        assert_eq!(s.stdev_r, 0.0);
+        assert_eq!(s.sqn, 0.0);
+        assert_eq!(s.sqn_grade, "poor");
+    }
+
+    #[test]
+    fn sqn_grade_poor_band_below_1_6() {
+        // Construct trades with mean 1.0 stdev 1.0 sqrt(2)≈1.41 → sqn≈1.41
+        let s = compute_stats(&[2.0, 0.0]);
+        assert!(s.sqn < 1.6);
+        assert_eq!(s.sqn_grade, "poor");
+    }
+
+    #[test]
+    fn sqn_grade_suspect_above_5() {
+        // Strongly biased mean + tiny stdev × big n → SQN > 5.
+        // mean=10, samples=10, stdev=1 → sqn = sqrt(10)*10/1 ≈ 31.6
+        let r: Vec<f64> = (0..10).map(|i| 10.0 + (i % 2) as f64 - 0.5).collect();
+        let s = compute_stats(&r);
+        assert!(s.sqn > 5.0);
+        assert_eq!(s.sqn_grade, "suspect");
+    }
+
+    #[test]
+    fn sqn_grade_excellent_when_3_to_5() {
+        // mean=1, stdev≈0.5, n=9 → sqn=sqrt(9)*1/0.5=6 (too high)
+        // Use mean=1, stdev=1, n=16 → sqn=sqrt(16)*1/1=4 ∈ [3,5] → "excellent".
+        let mut r: Vec<f64> = vec![0.0_f64; 8];
+        r.extend(vec![2.0_f64; 8]);
+        // mean = 1, var = 1, stdev = 1, n = 16, sqn = 4.0
+        let s = compute_stats(&r);
+        assert!((s.mean_r - 1.0).abs() < 1e-9);
+        assert!((s.stdev_r - 1.0).abs() < 1e-9);
+        assert!((s.sqn - 4.0).abs() < 1e-9);
+        assert_eq!(s.sqn_grade, "excellent");
+    }
+
+    // ===========================================================================
+    // Payoff & profit factor
+    // ===========================================================================
+
+    #[test]
+    fn payoff_ratio_is_avg_win_over_abs_avg_loss() {
+        // wins: 2, 4 → avg 3; losses: -1, -3 → avg -2 → |2|. payoff = 3/2 = 1.5
+        let s = compute_stats(&[2.0, 4.0, -1.0, -3.0]);
+        assert!((s.payoff_ratio - 1.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn payoff_ratio_zero_when_no_losers() {
+        // No losers: avg_loser_r stays 0.0, payoff guard returns 0.0.
+        let s = compute_stats(&[1.0, 2.0, 3.0]);
+        assert_eq!(s.payoff_ratio, 0.0);
+    }
+
+    #[test]
+    fn profit_factor_is_sum_wins_over_abs_sum_losses() {
+        // wins sum = 6; losses sum = -4, |abs|=4. PF = 1.5.
+        let s = compute_stats(&[2.0, 4.0, -1.0, -3.0]);
+        assert!((s.profit_factor - 1.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn profit_factor_zero_when_no_losses() {
+        // sum_l = 0 → guard returns 0.
+        let s = compute_stats(&[1.0, 2.0, 3.0]);
+        assert_eq!(s.profit_factor, 0.0);
+    }
+
+    // ===========================================================================
+    // Max winner / max loser
+    // ===========================================================================
+
+    #[test]
+    fn max_winner_and_max_loser_extremes() {
+        let s = compute_stats(&[1.5, 4.0, -2.5, -0.3, 2.0]);
+        assert_eq!(s.max_winner_r, 4.0);
+        assert_eq!(s.max_loser_r, -2.5);
+    }
+
+    #[test]
+    fn max_winner_zero_when_all_losses() {
+        // No winners → fold start at 0.0 stays 0.
+        let s = compute_stats(&[-1.0, -2.0, -3.0]);
+        assert_eq!(s.max_winner_r, 0.0);
+    }
+
+    #[test]
+    fn max_loser_zero_when_all_winners() {
+        let s = compute_stats(&[1.0, 2.0, 3.0]);
+        assert_eq!(s.max_loser_r, 0.0);
+    }
+
+    // ===========================================================================
+    // dec helper
+    // ===========================================================================
+
+    #[test]
+    fn dec_handles_zero_and_negative() {
+        assert_eq!(dec(Decimal::ZERO), 0.0);
+        assert_eq!(dec(Decimal::from(-7)), -7.0);
+        assert!((dec(Decimal::new(125, 2)) - 1.25).abs() < 1e-9);
+    }
+}
