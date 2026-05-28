@@ -182,3 +182,96 @@ async fn top(
         hits,
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use traderview_core::signals::IndicatorSnapshot;
+
+    fn make_report(score: i32, summary: &'static str) -> SignalReport {
+        SignalReport {
+            symbol: "AAPL".into(),
+            score,
+            summary,
+            last_close: 150.0,
+            indicators: IndicatorSnapshot {
+                sma20: Some(149.0),
+                sma50: Some(148.0),
+                sma200: Some(140.0),
+                ema12: Some(149.5),
+                ema26: Some(148.5),
+                macd_line: Some(1.0),
+                macd_signal: Some(0.8),
+                macd_hist: Some(0.2),
+                rsi14: Some(55.0),
+                adx14: Some(25.0),
+                plus_di: Some(20.0),
+                minus_di: Some(15.0),
+                stoch_k: Some(60.0),
+                stoch_d: Some(55.0),
+                bb_upper: Some(155.0),
+                bb_middle: Some(150.0),
+                bb_lower: Some(145.0),
+            },
+            signals: vec![],
+            pivots: None,
+        }
+    }
+
+    // ── project: SignalReport → ScreenerHit field plumbing ────────────────
+
+    #[test]
+    fn project_copies_score_summary_and_close() {
+        let h = project(make_report(7, "buy"));
+        assert_eq!(h.score, 7);
+        assert_eq!(h.summary, "buy");
+        assert_eq!(h.last_close, 150.0);
+        assert_eq!(h.symbol, "AAPL");
+    }
+
+    #[test]
+    fn project_lifts_individual_indicator_fields() {
+        // The frontend reads rsi14/sma50/sma200/macd_hist directly off the hit;
+        // wiring any of these to the wrong source field gives misleading
+        // screener results.
+        let h = project(make_report(5, "hold"));
+        assert_eq!(h.rsi14, Some(55.0));
+        assert_eq!(h.sma50, Some(148.0));
+        assert_eq!(h.sma200, Some(140.0));
+        assert_eq!(h.macd_hist, Some(0.2));
+    }
+
+    #[test]
+    fn project_records_signal_count_not_signal_payload() {
+        // We deliberately don't ship every individual signal into the screener
+        // response — the frontend just wants a count for the badge.
+        let h = project(make_report(3, "buy"));
+        assert_eq!(h.signal_count, 0);
+    }
+
+    // ── default_* query parameter defaults ────────────────────────────────
+
+    #[test]
+    fn default_days_matches_365_one_year_window() {
+        // The screener defaults to a one-year lookback; if this slips to 30/90
+        // every indicator that needs sma200 silently goes None.
+        assert_eq!(default_days(), 365);
+    }
+
+    #[test]
+    fn default_limit_matches_50_screener_result_cap() {
+        assert_eq!(default_limit(), 50);
+    }
+
+    #[test]
+    fn default_side_matches_buy() {
+        // /screener/top defaults to the buy side — the sell sort branch is
+        // opt-in via ?side=sell.
+        assert_eq!(default_side(), "buy");
+    }
+
+    #[test]
+    fn default_top_matches_25_top_list_cap() {
+        assert_eq!(default_top(), 25);
+    }
+}
