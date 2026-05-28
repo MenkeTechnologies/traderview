@@ -38,21 +38,34 @@ pub fn compute(cash_flows: &[CashFlow], ytm: f64, compounding_per_year: usize) -
         return report;
     }
     let m = compounding_per_year.max(1) as f64;
+    let one_plus = 1.0 + ytm / m;
+    // PV factor is (1+y/m)^(t·m) — if (1+y/m) is ≤ 0 the powf result is NaN
+    // for non-integer exponents (negative base + fractional exp), which then
+    // poisons the entire report. Realistic negative-yield inputs (JP/CH
+    // markets have flirted with rates near -1) keep one_plus > 0; we only
+    // refuse the degenerate case where it isn't strictly positive.
+    if !one_plus.is_finite() || one_plus <= 0.0 {
+        return report;
+    }
     let mut price = 0.0;
     let mut weighted_time = 0.0;
     for cf in cash_flows {
-        // PV factor: (1 + y/m)^(t × m).
-        let factor = (1.0 + ytm / m).powf(cf.time_years * m);
+        let factor = one_plus.powf(cf.time_years * m);
+        if factor == 0.0 || !factor.is_finite() {
+            // Long-dated CF with extreme yield can underflow factor to 0
+            // (→ Inf PV) or overflow to Inf (→ 0 PV); either way skip it.
+            continue;
+        }
         let pv = cf.amount / factor;
         price += pv;
         weighted_time += cf.time_years * pv;
     }
-    if price <= 0.0 {
+    if price <= 0.0 || !price.is_finite() {
         return report;
     }
     report.price = price;
     report.macaulay_duration = weighted_time / price;
-    report.modified_duration = report.macaulay_duration / (1.0 + ytm / m);
+    report.modified_duration = report.macaulay_duration / one_plus;
     report
 }
 

@@ -12,15 +12,18 @@
 #![allow(clippy::unusual_byte_groupings, clippy::manual_is_multiple_of)]
 
 use traderview_core::{
-    acceleration_deceleration, arms_index, atr_cone, breakout_detector,
-    choppiness, coppock, correlation, cusum, displacement, dynamic_kelly,
-    equity_regime, fair_value_gap, futures_roll, gap_fill_stats, indicators,
+    acceleration_deceleration, anchored_vwap, arms_index, atr_cone,
+    awesome_oscillator, bond_duration, breakout_detector, choppiness, coppock,
+    correlation, cusum, displacement, dynamic_kelly, equity_regime,
+    fair_value_gap, futures_roll, gap_fill_stats, indicators,
     inside_bar_breakout, liquidity_grab, mcclellan_oscillator, monte_carlo,
-    order_block, pair_trade, portfolio_heat, premium_discount, put_call_ratio,
-    random_walk_index, range_contraction, range_expansion, rolling_zscore,
-    sharpe_by_window, sortino, stop_hunt, swing_points, three_bar_reversal,
-    treynor, ulcer_index, volume_burst, vsa, wyckoff,
+    opening_range, order_block, pair_trade, portfolio_heat, premium_discount,
+    put_call_ratio, random_walk_index, range_contraction, range_expansion,
+    rolling_zscore, round_levels, sharpe_by_window, sortino, stop_hunt,
+    supertrend, swing_points, three_bar_reversal, treynor, ulcer_index,
+    volatility_stop, volume_burst, vsa, wyckoff,
 };
+use traderview_core::models::TradeSide;
 use chrono::{NaiveDate, TimeZone, Utc};
 
 const ITERS: usize = 20_000;
@@ -1127,6 +1130,219 @@ fn fuzz_range_contraction() {
             assert!(h.bar_index < n, "iter {it}");
             assert!(h.range.is_finite() && h.range >= 0.0, "iter {it} range {}", h.range);
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// volatility_stop — fuzz the just-added mismatched-ATR length panic guard
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_volatility_stop() {
+    let mut rng = Lcg::new(0x_5_70_44_70);
+    for it in 0..ITERS {
+        let n = rng.range_usize(64);
+        let bars: Vec<volatility_stop::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            volatility_stop::Bar { high: h, low: l, close: c }
+        }).collect();
+        // Deliberately desync ATR length from bars half the time to make
+        // sure the new guard catches mismatched arrays without panicking.
+        let atr: Vec<f64> = if rng.next_u64() & 1 == 0 {
+            (0..n).map(|_| rng.f64_range(0.1, 5.0)).collect()
+        } else {
+            (0..rng.range_usize(n.max(1) * 2)).map(|_| rng.f64_range(0.1, 5.0)).collect()
+        };
+        let cfg = volatility_stop::StopConfig {
+            lookback: match rng.next_u64() % 12 {
+                0 => 0,
+                1 => usize::MAX,
+                _ => rng.range_usize(20),
+            },
+            atr_multiplier: rng.f64_range(-1.0, 5.0),
+        };
+        let side = if rng.next_u64() & 1 == 0 { TradeSide::Long } else { TradeSide::Short };
+        let _ = volatility_stop::chandelier(&bars, &atr, side, &cfg);
+        let _ = volatility_stop::vol_stop_close(&bars, &atr, side, &cfg);
+        let _ = it;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// anchored_vwap
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_anchored_vwap() {
+    let mut rng = Lcg::new(0x_A_57_D7);
+    for it in 0..ITERS {
+        let n = rng.range_usize(64);
+        let bars: Vec<anchored_vwap::Bar> = (0..n).map(|_| {
+            anchored_vwap::Bar {
+                typical: rng.f64_range(10.0, 500.0),
+                volume: rng.f64_range(-1000.0, 100_000.0),
+            }
+        }).collect();
+        let anchor = match rng.next_u64() % 10 {
+            0 => usize::MAX,
+            1 => 0,
+            _ => rng.range_usize(n.max(1) * 2),
+        };
+        let out = anchored_vwap::compute(&bars, anchor);
+        assert_eq!(out.len(), bars.len(), "iter {it}");
+        for p in &out {
+            assert!(p.vwap.is_finite(), "iter {it} vwap {}", p.vwap);
+            assert!(p.upper_1sd.is_finite(), "iter {it} upper");
+            assert!(p.lower_1sd.is_finite(), "iter {it} lower");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// awesome_oscillator
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_awesome_oscillator() {
+    let mut rng = Lcg::new(0x_A_05_C);
+    for it in 0..ITERS {
+        let n = rng.range_usize(80);
+        let bars: Vec<awesome_oscillator::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            awesome_oscillator::Bar { high: h, low: l }
+        }).collect();
+        let short_p = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(10) + 1,
+        };
+        let long_p = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(40) + 1,
+        };
+        let out = awesome_oscillator::compute(&bars, short_p, long_p);
+        assert_eq!(out.len(), n, "iter {it}");
+        for v in &out {
+            assert!(v.is_finite(), "iter {it} ao {}", v);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// opening_range — usize::MAX opening_bars + ATR
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_opening_range() {
+    let mut rng = Lcg::new(0x_0_5B_07);
+    for it in 0..ITERS {
+        let n = rng.range_usize(64);
+        let bars: Vec<opening_range::OhlcBar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            opening_range::OhlcBar { high: h, low: l, close: c }
+        }).collect();
+        let cfg = opening_range::OrbConfig {
+            opening_bars: match rng.next_u64() % 12 {
+                0 => 0, 1 => usize::MAX, _ => rng.range_usize(20),
+            },
+            atr: rng.pick_pathological_f64(),
+            close_only: rng.next_u64() & 1 == 0,
+        };
+        let r = opening_range::detect(&bars, &cfg);
+        if let Some(b) = r.upper_break { assert!(b.bar_index < n, "iter {it}"); }
+        if let Some(b) = r.lower_break { assert!(b.bar_index < n, "iter {it}"); }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// supertrend — has atr.len() guard; verify no leaks
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_supertrend() {
+    let mut rng = Lcg::new(0x_5_F0_E4);
+    for it in 0..ITERS {
+        let n = rng.range_usize(64);
+        let bars: Vec<supertrend::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            supertrend::Bar { high: h, low: l, close: c }
+        }).collect();
+        let atr: Vec<f64> = if rng.next_u64() & 1 == 0 {
+            (0..n).map(|_| rng.f64_range(0.1, 5.0)).collect()
+        } else {
+            (0..rng.range_usize(n.max(1) * 2)).map(|_| rng.f64_range(0.1, 5.0)).collect()
+        };
+        let mult = rng.f64_range(-1.0, 5.0);
+        let out = supertrend::compute(&bars, &atr, mult);
+        assert_eq!(out.len(), n, "iter {it}");
+        for p in &out {
+            assert!(p.upper_band.is_finite(), "iter {it} upper");
+            assert!(p.lower_band.is_finite(), "iter {it} lower");
+            assert!(p.super_trend.is_finite(), "iter {it} st");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// round_levels
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_round_levels() {
+    let mut rng = Lcg::new(0x_4_0_F1_5);
+    for it in 0..ITERS {
+        let cur = rng.pick_pathological_f64();
+        let atr = if rng.next_u64() & 1 == 0 { None } else { Some(rng.pick_pathological_f64()) };
+        let cfg = round_levels::LevelsConfig {
+            window: rng.f64_range(-100.0, 200_000.0),
+            min_weight: match rng.next_u64() % 3 {
+                0 => round_levels::LevelWeight::Major,
+                1 => round_levels::LevelWeight::Medium,
+                _ => round_levels::LevelWeight::Minor,
+            },
+        };
+        let r = round_levels::detect(cur, atr, &cfg);
+        // No panic; levels must be finite when present.
+        for l in &r.levels {
+            assert!(l.price.is_finite(), "iter {it} price");
+            assert!(l.distance.is_finite(), "iter {it} distance");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// bond_duration — negative-yield + extreme YTM safety
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_bond_duration() {
+    let mut rng = Lcg::new(0x_B_0_07_D);
+    for it in 0..ITERS {
+        let n = rng.range_usize(20);
+        let cfs: Vec<bond_duration::CashFlow> = (0..n).map(|i| {
+            bond_duration::CashFlow {
+                time_years: (i as f64 + 1.0) + rng.f64_range(-0.5, 0.5),
+                amount: rng.f64_range(1.0, 200.0),
+            }
+        }).collect();
+        // Include adversarial yields: -m (which would have given NaN via
+        // 0^positive before the fix), extreme positive, etc.
+        let ytm = match rng.next_u64() % 8 {
+            0 => -2.0,
+            1 => -0.99,
+            2 => 100.0,
+            3 => 1e9,
+            4 => 0.0,
+            _ => rng.f64_range(-0.5, 0.20),
+        };
+        let m = match rng.next_u64() % 5 {
+            0 => 0, 1 => 1, 2 => 2, 3 => 12, _ => 4,
+        };
+        let r = bond_duration::compute(&cfs, ytm, m);
+        // After the guard, all numeric fields must be finite.
+        assert!(r.price.is_finite(),
+            "iter {it} price non-finite (ytm={ytm}, m={m}): {}", r.price);
+        assert!(r.macaulay_duration.is_finite(),
+            "iter {it} mac dur non-finite: {}", r.macaulay_duration);
+        assert!(r.modified_duration.is_finite(),
+            "iter {it} mod dur non-finite: {}", r.modified_duration);
     }
 }
 

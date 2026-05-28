@@ -43,7 +43,10 @@ pub struct StopPoint {
 pub fn chandelier(bars: &[Bar], atr: &[f64], side: TradeSide, cfg: &StopConfig) -> Vec<StopPoint> {
     let n = bars.len();
     let mut out = vec![StopPoint::default(); n];
-    if n < cfg.lookback || cfg.lookback == 0 {
+    // ATR mismatch used to fall through and panic on `atr[i]`. The route
+    // hands these in as separate JSON arrays so a hostile (or buggy)
+    // client can trivially send mismatched lengths.
+    if n < cfg.lookback || cfg.lookback == 0 || atr.len() != n {
         return out;
     }
     for i in (cfg.lookback - 1)..n {
@@ -81,7 +84,7 @@ pub fn vol_stop_close(
 ) -> Vec<StopPoint> {
     let n = bars.len();
     let mut out = vec![StopPoint::default(); n];
-    if n < cfg.lookback || cfg.lookback == 0 {
+    if n < cfg.lookback || cfg.lookback == 0 || atr.len() != n {
         return out;
     }
     for i in (cfg.lookback - 1)..n {
