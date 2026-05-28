@@ -297,3 +297,109 @@ async fn ret20(
 fn dec(d: rust_decimal::Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ===========================================================================
+    // label_for — score band boundaries
+    // ===========================================================================
+
+    #[test]
+    fn label_extreme_fear_at_low_end_inclusive_of_24() {
+        assert_eq!(label_for(0), "Extreme Fear");
+        assert_eq!(label_for(10), "Extreme Fear");
+        assert_eq!(label_for(24), "Extreme Fear");
+    }
+
+    #[test]
+    fn label_fear_band_25_to_44() {
+        assert_eq!(label_for(25), "Fear");
+        assert_eq!(label_for(35), "Fear");
+        assert_eq!(label_for(44), "Fear");
+    }
+
+    #[test]
+    fn label_neutral_band_45_to_55() {
+        assert_eq!(label_for(45), "Neutral");
+        assert_eq!(label_for(50), "Neutral");
+        assert_eq!(label_for(55), "Neutral");
+    }
+
+    #[test]
+    fn label_greed_band_56_to_74() {
+        assert_eq!(label_for(56), "Greed");
+        assert_eq!(label_for(65), "Greed");
+        assert_eq!(label_for(74), "Greed");
+    }
+
+    #[test]
+    fn label_extreme_greed_at_75_and_above() {
+        assert_eq!(label_for(75), "Extreme Greed");
+        assert_eq!(label_for(100), "Extreme Greed");
+        // Sanity: even malformed >100 still classifies as Extreme Greed.
+        assert_eq!(label_for(150), "Extreme Greed");
+    }
+
+    #[test]
+    fn label_negative_score_falls_into_extreme_fear() {
+        // Defensive: negative caller bug should land in Extreme Fear, not panic.
+        assert_eq!(label_for(-10), "Extreme Fear");
+    }
+
+    // ===========================================================================
+    // clamp_score — 0..100 range, integer truncation
+    // ===========================================================================
+
+    #[test]
+    fn clamp_score_clips_below_zero_to_zero() {
+        assert_eq!(clamp_score(-50.0), 0);
+        assert_eq!(clamp_score(-0.5), 0);
+    }
+
+    #[test]
+    fn clamp_score_clips_above_100_to_100() {
+        assert_eq!(clamp_score(150.0), 100);
+        assert_eq!(clamp_score(100.5), 100);
+    }
+
+    #[test]
+    fn clamp_score_passes_through_in_range_values() {
+        assert_eq!(clamp_score(0.0), 0);
+        assert_eq!(clamp_score(50.0), 50);
+        assert_eq!(clamp_score(100.0), 100);
+    }
+
+    #[test]
+    fn clamp_score_truncates_fractional_part_toward_zero() {
+        // `as i32` truncates toward zero (Rust spec for f64 → i32).
+        assert_eq!(clamp_score(49.9), 49);
+        assert_eq!(clamp_score(99.99), 99);
+    }
+
+    #[test]
+    fn clamp_score_nan_clamps_to_zero() {
+        // f64::NAN goes through clamp which returns NAN; `as i32` of NAN is 0
+        // (Rust spec: saturating cast).
+        assert_eq!(clamp_score(f64::NAN), 0);
+    }
+
+    #[test]
+    fn clamp_score_infinity_clipped_to_100() {
+        assert_eq!(clamp_score(f64::INFINITY), 100);
+        assert_eq!(clamp_score(f64::NEG_INFINITY), 0);
+    }
+
+    // ===========================================================================
+    // dec — Decimal → f64
+    // ===========================================================================
+
+    #[test]
+    fn dec_handles_zero_and_negatives() {
+        use rust_decimal::Decimal;
+        assert_eq!(dec(Decimal::ZERO), 0.0);
+        assert_eq!(dec(Decimal::from(-42)), -42.0);
+        assert!((dec(Decimal::new(255, 2)) - 2.55).abs() < 1e-9);
+    }
+}
