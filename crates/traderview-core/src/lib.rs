@@ -837,4 +837,20 @@ pub mod multi_leg_option_pricer;
 pub mod svi_volatility_smile;
 pub mod wavelet_decomposition_haar;
 
+pub mod american_option_lsmc;
+pub mod equal_risk_contribution_portfolio;
+pub mod garman_kohlhagen_fx_option;
+pub mod kendall_tau;
+pub mod kou_jump_diffusion_simulator;
+pub mod matrix_profile;
+pub mod singular_spectrum_analysis;
+
+pub mod empirical_mode_decomposition;
+pub mod gap_and_go_scanner;
+pub mod late_day_ramp_scanner;
+pub mod optimal_execution_pov_schedule;
+pub mod principal_component_yield_curve;
+pub mod risk_reversal_25_delta_butterfly;
+pub mod vasicek_short_rate_simulator;
+
 pub use models::*;

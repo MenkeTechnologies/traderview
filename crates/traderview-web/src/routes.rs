@@ -177,6 +177,17 @@ pub fn api_router() -> Router<AppState> {
         .merge(accounts_overview::router())
 }
 
+#[cfg(test)]
+mod router_smoke {
+    /// Constructs the full api_router so axum's panicking duplicate-route
+    /// check fires at test time instead of at server boot. Any future
+    /// `.route("/x", ...)` collision will surface here as a test failure.
+    #[test]
+    fn api_router_builds_without_duplicate_routes() {
+        let _ = super::api_router();
+    }
+}
+
 mod helpers {
     use crate::error::ApiError;
     use crate::state::AppState;

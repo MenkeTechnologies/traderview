@@ -46,7 +46,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/profit-factor",        post(profit_factor_route))
         .route("/analytics/sortino",              post(sortino_route))
         .route("/analytics/treynor",              post(treynor_route))
-        .route("/analytics/information-ratio",    post(information_ratio_route))
         .route("/analytics/sharpe-by-window",     post(sharpe_by_window_route))
         .route("/analytics/high-water-mark",      post(high_water_mark_route))
         .route("/analytics/drawdown-duration",    post(drawdown_duration_route))
@@ -241,23 +240,6 @@ async fn treynor_route(
     _u: AuthUser, Json(b): Json<TreynorBody>,
 ) -> Json<treynor::TreynorReport> {
     Json(treynor::treynor(&b.portfolio_returns, b.risk_free_per_period, b.beta))
-}
-
-#[derive(Deserialize)]
-struct InfoRatioBody {
-    portfolio: Vec<f64>,
-    benchmark: Vec<f64>,
-    annualization: f64,
-}
-
-async fn information_ratio_route(
-    _u: AuthUser, Json(b): Json<InfoRatioBody>,
-) -> Result<Json<treynor::InfoRatioReport>, ApiError> {
-    treynor::information_ratio(&b.portfolio, &b.benchmark, b.annualization)
-        .ok_or_else(|| ApiError::BadRequest(
-            "portfolio + benchmark must be the same length and at least 2 long".into()
-        ))
-        .map(Json)
 }
 
 #[derive(Deserialize)]

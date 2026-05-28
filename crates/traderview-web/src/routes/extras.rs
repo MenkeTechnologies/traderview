@@ -24,7 +24,8 @@ use traderview_core::{
     active_share,
     adf_standalone,
     alligator, alma_legoux, almgren_chriss, alphatrend,
-    american_binomial, amihud_illiquidity, anchored_momentum, andrews_pitchfork,
+    american_binomial, american_option_lsmc, amihud_illiquidity, anchored_momentum,
+    andrews_pitchfork,
     anderson_darling_normality, anti_setup,
     arch_lm_test, arima_111, arms_high_low_index, arms_index, aroon_indicator, asian_option,
     asset_swap_spread, atr_channel, atr_trailing_stop,
@@ -76,9 +77,10 @@ use traderview_core::{
     ehlers_mama_fama, ehrlich_filter,
     eighty_twenty_setup, elder_safezone_stop,
     elder_thermometer, elliott_wave_oscillator, engulfing_pattern_scanner, equivolume_bars,
-    empirical_distribution_function,
+    empirical_distribution_function, empirical_mode_decomposition,
     engle_granger_2step,
-    equal_levels, ergodic_oscillator, evt_value_at_risk, ewma_volatility,
+    equal_levels, equal_risk_contribution_portfolio, ergodic_oscillator, evt_value_at_risk,
+    ewma_volatility,
     expectancy_per_trade, expected_calibration_error, expected_drawdown,
     expected_shortfall_contribution, factor_models, factor_neutralization,
     fama_french_3factor,
@@ -90,9 +92,11 @@ use traderview_core::{
     forward_start_option, fractional_brownian_motion_generator, frama_fractal,
     friedman_test,
     futures_roll, gain_pain_ratio, gain_to_pain_ratio, gamma_pin_zone, gamma_scalping_pnl,
-    gann_fan, gann_high_low_activator, gann_swing_chart, gap_classifier, gap_option,
+    gann_fan, gann_high_low_activator, gann_swing_chart, gap_and_go_scanner, gap_classifier,
+    gap_option,
     gartley_pattern,
-    garch_1_1, gap_fill_stats, gator_oscillator, gaussian_copula, gbm_path_simulator,
+    garch_1_1, garman_kohlhagen_fx_option, gap_fill_stats, gator_oscillator, gaussian_copula,
+    gbm_path_simulator,
     gex_scanner, gjr_garch,
     goal_tracker,
     gonzalo_granger_decomposition, gpd_tail_fit, granger_causality,
@@ -114,18 +118,20 @@ use traderview_core::{
     jelly_roll_arbitrage, jump_diffusion_simulator, jurik_ma,
     kagi_chart, kalman_dynamic_beta, kalman_filter_1d, katsanos_vfi, kelly_criterion,
     kicker_pattern,
-    keltner_squeeze,
+    keltner_squeeze, kendall_tau,
     key_rate_duration, key_reversal_bar, klinger_volume_oscillator, know_sure_thing,
-    kolmogorov_smirnov_2sample, kpss_test,
+    kolmogorov_smirnov_2sample, kou_jump_diffusion_simulator, kpss_test,
     kullback_leibler_divergence, kyles_lambda, ladder_bottom_top, ledoit_wolf, lee_ready,
     levene_test,
     libor_ois_spread, linda_raschke_3_10, linear_regression_channel,
     linear_regression_curve, linear_regression_r_squared, linear_regression_slope,
+    late_day_ramp_scanner,
     liquidity_pool_detector, liquidity_void_detector,
     liquidity_adjusted_var, liquidity_grab, ljung_box, lookback_option, low_vol_factor,
     lower_partial_moments, macaulay_duration, madrid_moving_average_ribbon,
     mahalanobis_distance, mann_whitney_u, marginal_var,
-    margrabe_spread_option, markov_switching_2state, mat_hold_pattern, max_diversification,
+    margrabe_spread_option, markov_switching_2state, mat_hold_pattern, matrix_profile,
+    max_diversification,
     mcclellan_oscillator,
     median_price,
     median_realized_variance, meeting_lines, mesa_sine_wave,
@@ -139,7 +145,7 @@ use traderview_core::{
     nadaraya_watson,
     negative_volume_index, nelson_siegel, nelson_siegel_svensson,
     newey_west, noise_to_signal_ratio, nyse_tick, omega_ratio, on_balance_volume, on_neck_in_neck,
-    opening_range,
+    opening_range, optimal_execution_pov_schedule,
     option_open_interest_distribution, option_payoff_diagram, options_margin, order_block, ornstein_uhlenbeck,
     pain_index, pair_trade,
     pair_trade_zscore, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
@@ -149,6 +155,7 @@ use traderview_core::{
     premarket_gap_scanner,
     premier_stochastic, premium_discount, pretty_good_oscillator, price_volume_oscillator,
     price_volume_trend,
+    principal_component_yield_curve,
     probability_of_informed_trading, put_call_ratio,
     qstick, quality_factor,
     quantile_regression, quanto_option, ramsey_reset, random_walk_index,
@@ -162,7 +169,8 @@ use traderview_core::{
     relative_volume_scanner, relative_volume_zscore, repo_rate_spread,
     rising_falling_three_methods,
     risk_adjusted_ratios,
-    risk_parity_weights, risk_reward, roll_spread, rolling_beta, rolling_drawdown,
+    risk_parity_weights, risk_reversal_25_delta_butterfly, risk_reward, roll_spread,
+    rolling_beta, rolling_drawdown,
     ross_hook,
     rolling_quantile, rolling_sharpe, rolling_sortino, rolling_zscore, roofing_filter,
     round_levels,
@@ -171,7 +179,8 @@ use traderview_core::{
     sample_entropy, savitzky_golay, scan_orchestrator, second_order_greeks, sector_rotation,
     separating_lines, session_vwap, side_by_side_white_lines, sperandeo_1_2_3,
     spinning_top_marubozu,
-    shark_pattern, short_interest_scanner, sip_simulator, spearman_correlation,
+    shark_pattern, short_interest_scanner, singular_spectrum_analysis, sip_simulator,
+    spearman_correlation,
     spread_attribution, spread_chart,
     standard_error_bands, starc_bands, stick_sandwich, stochastic_momentum_index,
     sterling_ratio, stochastic_rsi, stop_hunt, straddle, strangle, strategy_correlation,
@@ -200,6 +209,7 @@ use traderview_core::{
     value_at_risk_historical, value_factor,
     var_backtest_christoffersen,
     var_backtest_kupiec, variance_ratio_test, variance_swap, variance_swap_strike, vasicek,
+    vasicek_short_rate_simulator,
     vcp_pattern, vector_autoregression, velocity_indicator, vix_basis, vix_skew_smirk,
     vol_risk_premium, vol_targeting_sizer, volatility_smile,
     volatility_breakout_system, volatility_managed_portfolio, volatility_quality_index,
@@ -830,6 +840,20 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/dupire-local-volatility",   post(dupire_local_volatility_route))
         .route("/analytics/dynamic-time-warping",      post(dynamic_time_warping_route))
         .route("/analytics/wavelet-decomposition-haar", post(wavelet_decomposition_haar_route))
+        .route("/analytics/american-option-lsmc",      post(american_option_lsmc_route))
+        .route("/analytics/equal-risk-contribution-portfolio", post(equal_risk_contribution_portfolio_route))
+        .route("/analytics/garman-kohlhagen-fx-option", post(garman_kohlhagen_fx_option_route))
+        .route("/analytics/kendall-tau",               post(kendall_tau_route))
+        .route("/analytics/kou-jump-diffusion-simulator", post(kou_jump_diffusion_simulator_route))
+        .route("/analytics/matrix-profile",            post(matrix_profile_route))
+        .route("/analytics/singular-spectrum-analysis", post(singular_spectrum_analysis_route))
+        .route("/analytics/empirical-mode-decomposition", post(empirical_mode_decomposition_route))
+        .route("/scans/gap-and-go",                    post(gap_and_go_scanner_route))
+        .route("/scans/late-day-ramp",                 post(late_day_ramp_scanner_route))
+        .route("/analytics/optimal-execution-pov",     post(optimal_execution_pov_schedule_route))
+        .route("/analytics/principal-component-yield-curve", post(principal_component_yield_curve_route))
+        .route("/analytics/risk-reversal-25-delta-butterfly", post(risk_reversal_25_delta_butterfly_route))
+        .route("/analytics/vasicek-short-rate-simulator", post(vasicek_short_rate_simulator_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -9118,4 +9142,548 @@ struct WaveletDecompositionHaarResponse {
     details: Vec<Vec<f64>>,
     levels: u32,
     used_length: usize,
+}
+
+#[derive(Deserialize)]
+struct AmericanOptionLsmcBody {
+    kind: String,
+    spot: f64,
+    strike: f64,
+    t_years: f64,
+    rate: f64,
+    #[serde(default)]
+    dividend: f64,
+    sigma: f64,
+    #[serde(default = "default_lsmc_steps")]
+    steps: usize,
+    #[serde(default = "default_lsmc_paths")]
+    paths: usize,
+    #[serde(default)]
+    seed: u64,
+}
+
+fn default_lsmc_steps() -> usize { 50 }
+fn default_lsmc_paths() -> usize { 5000 }
+
+async fn american_option_lsmc_route(
+    _u: AuthUser, Json(b): Json<AmericanOptionLsmcBody>,
+) -> Json<Option<AmericanOptionLsmcResponse>> {
+    let kind = match b.kind.to_lowercase().as_str() {
+        "put" => american_option_lsmc::OptionKind::Put,
+        _ => american_option_lsmc::OptionKind::Call,
+    };
+    Json(american_option_lsmc::compute(
+        kind, b.spot, b.strike, b.t_years, b.rate, b.dividend, b.sigma,
+        b.steps, b.paths, b.seed,
+    ).map(|r| AmericanOptionLsmcResponse {
+        price: r.price,
+        standard_error: r.standard_error,
+        ci_lower: r.ci_lower,
+        ci_upper: r.ci_upper,
+        paths_run: r.paths_run,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct AmericanOptionLsmcResponse {
+    price: f64,
+    standard_error: f64,
+    ci_lower: f64,
+    ci_upper: f64,
+    paths_run: usize,
+}
+
+#[derive(Deserialize)]
+struct EqualRiskContributionPortfolioBody {
+    cov: Vec<Vec<f64>>,
+    #[serde(default = "default_erc_max_iter")]
+    max_iter: u32,
+}
+
+fn default_erc_max_iter() -> u32 { 500 }
+
+async fn equal_risk_contribution_portfolio_route(
+    _u: AuthUser, Json(b): Json<EqualRiskContributionPortfolioBody>,
+) -> Json<Option<EqualRiskContributionPortfolioResponse>> {
+    Json(equal_risk_contribution_portfolio::compute(&b.cov, b.max_iter)
+        .map(|r| EqualRiskContributionPortfolioResponse {
+            weights: r.weights,
+            risk_contributions: r.risk_contributions,
+            portfolio_variance: r.portfolio_variance,
+            portfolio_stdev: r.portfolio_stdev,
+            iterations: r.iterations,
+            converged: r.converged,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct EqualRiskContributionPortfolioResponse {
+    weights: Vec<f64>,
+    risk_contributions: Vec<f64>,
+    portfolio_variance: f64,
+    portfolio_stdev: f64,
+    iterations: u32,
+    converged: bool,
+}
+
+#[derive(Deserialize)]
+struct GarmanKohlhagenFxOptionBody {
+    kind: String,
+    spot: f64,
+    strike: f64,
+    t_years: f64,
+    rate_dom: f64,
+    rate_for: f64,
+    sigma: f64,
+}
+
+async fn garman_kohlhagen_fx_option_route(
+    _u: AuthUser, Json(b): Json<GarmanKohlhagenFxOptionBody>,
+) -> Json<Option<GarmanKohlhagenFxOptionResponse>> {
+    let kind = match b.kind.to_lowercase().as_str() {
+        "put" => garman_kohlhagen_fx_option::OptionKind::Put,
+        _ => garman_kohlhagen_fx_option::OptionKind::Call,
+    };
+    Json(garman_kohlhagen_fx_option::compute(
+        kind, b.spot, b.strike, b.t_years, b.rate_dom, b.rate_for, b.sigma,
+    ).map(|r| GarmanKohlhagenFxOptionResponse {
+        price: r.price, delta: r.delta, gamma: r.gamma,
+        vega: r.vega, theta: r.theta,
+        rho_domestic: r.rho_domestic, rho_foreign: r.rho_foreign,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct GarmanKohlhagenFxOptionResponse {
+    price: f64,
+    delta: f64,
+    gamma: f64,
+    vega: f64,
+    theta: f64,
+    rho_domestic: f64,
+    rho_foreign: f64,
+}
+
+#[derive(Deserialize)]
+struct KendallTauBody {
+    x: Vec<f64>,
+    y: Vec<f64>,
+}
+
+async fn kendall_tau_route(
+    _u: AuthUser, Json(b): Json<KendallTauBody>,
+) -> Json<Option<KendallTauResponse>> {
+    Json(kendall_tau::compute(&b.x, &b.y).map(|r| KendallTauResponse {
+        tau_b: r.tau_b,
+        concordant: r.concordant,
+        discordant: r.discordant,
+        ties_x: r.ties_x,
+        ties_y: r.ties_y,
+        n: r.n,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct KendallTauResponse {
+    tau_b: f64,
+    concordant: u64,
+    discordant: u64,
+    ties_x: u64,
+    ties_y: u64,
+    n: usize,
+}
+
+#[derive(Deserialize)]
+struct KouJumpDiffusionSimulatorBody {
+    s0: f64,
+    mu: f64,
+    sigma: f64,
+    jump_lambda: f64,
+    up_prob: f64,
+    eta_up: f64,
+    eta_down: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    #[serde(default)]
+    seed: u64,
+}
+
+async fn kou_jump_diffusion_simulator_route(
+    _u: AuthUser, Json(b): Json<KouJumpDiffusionSimulatorBody>,
+) -> Json<Option<KouJumpDiffusionSimulatorResponse>> {
+    Json(kou_jump_diffusion_simulator::compute(
+        b.s0, b.mu, b.sigma,
+        b.jump_lambda, b.up_prob, b.eta_up, b.eta_down,
+        b.dt, b.steps, b.paths, b.seed,
+    ).map(|r| KouJumpDiffusionSimulatorResponse {
+        mean_terminal: r.mean_terminal,
+        stdev_terminal: r.stdev_terminal,
+        mean_log_return: r.mean_log_return,
+        skew_log_return: r.skew_log_return,
+        up_jumps: r.up_jumps,
+        down_jumps: r.down_jumps,
+        paths_run: r.paths_run,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct KouJumpDiffusionSimulatorResponse {
+    mean_terminal: f64,
+    stdev_terminal: f64,
+    mean_log_return: f64,
+    skew_log_return: f64,
+    up_jumps: u64,
+    down_jumps: u64,
+    paths_run: usize,
+}
+
+#[derive(Deserialize)]
+struct MatrixProfileBody {
+    series: Vec<f64>,
+    m: usize,
+    #[serde(default = "default_matrix_profile_top_k")]
+    top_k_discords: usize,
+}
+
+fn default_matrix_profile_top_k() -> usize { 3 }
+
+async fn matrix_profile_route(
+    _u: AuthUser, Json(b): Json<MatrixProfileBody>,
+) -> Json<Option<MatrixProfileResponse>> {
+    Json(matrix_profile::compute(&b.series, b.m, b.top_k_discords)
+        .map(|r| MatrixProfileResponse {
+            profile: r.profile,
+            indices: r.indices,
+            top_discords: r.top_discords,
+            top_motif_pair: r.top_motif_pair,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct MatrixProfileResponse {
+    profile: Vec<f64>,
+    indices: Vec<usize>,
+    top_discords: Vec<(usize, f64)>,
+    top_motif_pair: Option<(usize, usize, f64)>,
+}
+
+#[derive(Deserialize)]
+struct SingularSpectrumAnalysisBody {
+    series: Vec<f64>,
+    window: usize,
+}
+
+async fn singular_spectrum_analysis_route(
+    _u: AuthUser, Json(b): Json<SingularSpectrumAnalysisBody>,
+) -> Json<Option<SingularSpectrumAnalysisResponse>> {
+    Json(singular_spectrum_analysis::compute(&b.series, b.window)
+        .map(|r| SingularSpectrumAnalysisResponse {
+            trend: r.trend,
+            noise: r.noise,
+            singular_values: r.singular_values,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct SingularSpectrumAnalysisResponse {
+    trend: Vec<f64>,
+    noise: Vec<f64>,
+    singular_values: Vec<f64>,
+}
+
+#[derive(Deserialize)]
+struct EmpiricalModeDecompositionBody {
+    series: Vec<f64>,
+    #[serde(default = "default_emd_max_imfs")]
+    max_imfs: usize,
+    #[serde(default = "default_emd_max_sift_iter")]
+    max_sift_iter: u32,
+}
+
+fn default_emd_max_imfs() -> usize { 5 }
+fn default_emd_max_sift_iter() -> u32 { 50 }
+
+async fn empirical_mode_decomposition_route(
+    _u: AuthUser, Json(b): Json<EmpiricalModeDecompositionBody>,
+) -> Json<Option<EmpiricalModeDecompositionResponse>> {
+    Json(empirical_mode_decomposition::compute(&b.series, b.max_imfs, b.max_sift_iter)
+        .map(|r| EmpiricalModeDecompositionResponse {
+            imfs: r.imfs,
+            residual: r.residual,
+            iterations: r.iterations,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct EmpiricalModeDecompositionResponse {
+    imfs: Vec<Vec<f64>>,
+    residual: Vec<f64>,
+    iterations: Vec<u32>,
+}
+
+#[derive(Deserialize)]
+struct GapAndGoScannerBody {
+    symbols: Vec<GapAndGoSymbol>,
+    #[serde(default)]
+    min_gap_pct: Option<f64>,
+    #[serde(default)]
+    volume_ratio_min: Option<f64>,
+    #[serde(default)]
+    min_range_pct: Option<f64>,
+}
+
+#[derive(Deserialize)]
+struct GapAndGoSymbol {
+    symbol: String,
+    prior_close: f64,
+    first_bar_open: f64,
+    first_bar_high: f64,
+    first_bar_low: f64,
+    first_bar_close: f64,
+    first_bar_volume: f64,
+    avg_first_bar_volume: f64,
+}
+
+async fn gap_and_go_scanner_route(
+    _u: AuthUser, Json(b): Json<GapAndGoScannerBody>,
+) -> Json<Vec<GapAndGoMatch>> {
+    let symbols: Vec<gap_and_go_scanner::Symbol> = b.symbols.into_iter().map(|s| {
+        gap_and_go_scanner::Symbol {
+            symbol: s.symbol,
+            prior_close: s.prior_close,
+            first_bar_open: s.first_bar_open,
+            first_bar_high: s.first_bar_high,
+            first_bar_low: s.first_bar_low,
+            first_bar_close: s.first_bar_close,
+            first_bar_volume: s.first_bar_volume,
+            avg_first_bar_volume: s.avg_first_bar_volume,
+        }
+    }).collect();
+    let mut cfg = gap_and_go_scanner::Config::default();
+    if let Some(v) = b.min_gap_pct { cfg.min_gap_pct = v; }
+    if let Some(v) = b.volume_ratio_min { cfg.volume_ratio_min = v; }
+    if let Some(v) = b.min_range_pct { cfg.min_range_pct = v; }
+    Json(gap_and_go_scanner::scan(&symbols, cfg).into_iter().map(|m| GapAndGoMatch {
+        symbol: m.symbol,
+        gap_pct: m.gap_pct,
+        volume_ratio: m.volume_ratio,
+        range_pct: m.range_pct,
+        score: m.score,
+    }).collect())
+}
+
+#[derive(serde::Serialize)]
+struct GapAndGoMatch {
+    symbol: String,
+    gap_pct: f64,
+    volume_ratio: f64,
+    range_pct: f64,
+    score: f64,
+}
+
+#[derive(Deserialize)]
+struct LateDayRampScannerBody {
+    symbols: Vec<LateDayRampSymbol>,
+    #[serde(default)]
+    tolerance_of_extreme: Option<f64>,
+    #[serde(default)]
+    volume_ratio_min: Option<f64>,
+    #[serde(default)]
+    min_move_pct: Option<f64>,
+}
+
+#[derive(Deserialize)]
+struct LateDayRampSymbol {
+    symbol: String,
+    day_high: f64,
+    day_low: f64,
+    closing_hour_open: f64,
+    closing_hour_high: f64,
+    closing_hour_low: f64,
+    close: f64,
+    closing_hour_volume: f64,
+    avg_close_hour_volume: f64,
+}
+
+async fn late_day_ramp_scanner_route(
+    _u: AuthUser, Json(b): Json<LateDayRampScannerBody>,
+) -> Json<Vec<LateDayRampMatch>> {
+    let symbols: Vec<late_day_ramp_scanner::Symbol> = b.symbols.into_iter().map(|s| {
+        late_day_ramp_scanner::Symbol {
+            symbol: s.symbol,
+            day_high: s.day_high,
+            day_low: s.day_low,
+            closing_hour_open: s.closing_hour_open,
+            closing_hour_high: s.closing_hour_high,
+            closing_hour_low: s.closing_hour_low,
+            close: s.close,
+            closing_hour_volume: s.closing_hour_volume,
+            avg_close_hour_volume: s.avg_close_hour_volume,
+        }
+    }).collect();
+    let mut cfg = late_day_ramp_scanner::Config::default();
+    if let Some(v) = b.tolerance_of_extreme { cfg.tolerance_of_extreme = v; }
+    if let Some(v) = b.volume_ratio_min { cfg.volume_ratio_min = v; }
+    if let Some(v) = b.min_move_pct { cfg.min_move_pct = v; }
+    Json(late_day_ramp_scanner::scan(&symbols, cfg).into_iter().map(|m| LateDayRampMatch {
+        symbol: m.symbol,
+        side: match m.side {
+            late_day_ramp_scanner::Side::Long => "long".into(),
+            late_day_ramp_scanner::Side::Short => "short".into(),
+        },
+        move_pct: m.move_pct,
+        volume_ratio: m.volume_ratio,
+        score: m.score,
+    }).collect())
+}
+
+#[derive(serde::Serialize)]
+struct LateDayRampMatch {
+    symbol: String,
+    side: String,
+    move_pct: f64,
+    volume_ratio: f64,
+    score: f64,
+}
+
+#[derive(Deserialize)]
+struct OptimalExecutionPovScheduleBody {
+    total_order_size: f64,
+    volume_curve: Vec<f64>,
+    participation_rate: f64,
+}
+
+async fn optimal_execution_pov_schedule_route(
+    _u: AuthUser, Json(b): Json<OptimalExecutionPovScheduleBody>,
+) -> Json<Option<OptimalExecutionPovScheduleResponse>> {
+    Json(optimal_execution_pov_schedule::compute(
+        b.total_order_size, &b.volume_curve, b.participation_rate,
+    ).map(|r| OptimalExecutionPovScheduleResponse {
+        slices: r.slices,
+        cumulative_fill: r.cumulative_fill,
+        completion_bar: r.completion_bar,
+        shortfall: r.shortfall,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct OptimalExecutionPovScheduleResponse {
+    slices: Vec<f64>,
+    cumulative_fill: Vec<f64>,
+    completion_bar: Option<usize>,
+    shortfall: f64,
+}
+
+#[derive(Deserialize)]
+struct PrincipalComponentYieldCurveBody {
+    curves: Vec<Vec<f64>>,
+    #[serde(default = "default_pc_top_k")]
+    top_k: usize,
+}
+
+fn default_pc_top_k() -> usize { 3 }
+
+async fn principal_component_yield_curve_route(
+    _u: AuthUser, Json(b): Json<PrincipalComponentYieldCurveBody>,
+) -> Json<Option<PrincipalComponentYieldCurveResponse>> {
+    Json(principal_component_yield_curve::compute(&b.curves, b.top_k)
+        .map(|r| PrincipalComponentYieldCurveResponse {
+            loadings: r.loadings,
+            variance_explained: r.variance_explained,
+            cumulative_variance: r.cumulative_variance,
+            eigenvalues: r.eigenvalues,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct PrincipalComponentYieldCurveResponse {
+    loadings: Vec<Vec<f64>>,
+    variance_explained: Vec<f64>,
+    cumulative_variance: Vec<f64>,
+    eigenvalues: Vec<f64>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum RiskReversalBfBody {
+    Decompose { sigma_25_call: f64, sigma_25_put: f64, sigma_atm: f64 },
+    Reconstruct { atm: f64, rr: f64, bf: f64 },
+}
+
+async fn risk_reversal_25_delta_butterfly_route(
+    _u: AuthUser, Json(b): Json<RiskReversalBfBody>,
+) -> Json<Option<RiskReversalBfResponse>> {
+    Json(match b {
+        RiskReversalBfBody::Decompose { sigma_25_call, sigma_25_put, sigma_atm } => {
+            risk_reversal_25_delta_butterfly::decompose(sigma_25_call, sigma_25_put, sigma_atm)
+                .map(|d| RiskReversalBfResponse {
+                    atm: Some(d.atm),
+                    risk_reversal: Some(d.risk_reversal),
+                    butterfly: Some(d.butterfly),
+                    skew_zscore: Some(d.skew_zscore),
+                    sigma_25_call: None,
+                    sigma_25_put: None,
+                })
+        }
+        RiskReversalBfBody::Reconstruct { atm, rr, bf } => {
+            risk_reversal_25_delta_butterfly::from_atm_rr_bf(atm, rr, bf)
+                .map(|w| RiskReversalBfResponse {
+                    atm: None,
+                    risk_reversal: None,
+                    butterfly: None,
+                    skew_zscore: None,
+                    sigma_25_call: Some(w.sigma_25_call),
+                    sigma_25_put: Some(w.sigma_25_put),
+                })
+        }
+    })
+}
+
+#[derive(serde::Serialize)]
+struct RiskReversalBfResponse {
+    atm: Option<f64>,
+    risk_reversal: Option<f64>,
+    butterfly: Option<f64>,
+    skew_zscore: Option<f64>,
+    sigma_25_call: Option<f64>,
+    sigma_25_put: Option<f64>,
+}
+
+#[derive(Deserialize)]
+struct VasicekShortRateSimulatorBody {
+    r0: f64,
+    a: f64,
+    b: f64,
+    sigma: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    #[serde(default)]
+    seed: u64,
+}
+
+async fn vasicek_short_rate_simulator_route(
+    _u: AuthUser, Json(b): Json<VasicekShortRateSimulatorBody>,
+) -> Json<Option<VasicekShortRateSimulatorResponse>> {
+    Json(vasicek_short_rate_simulator::compute(
+        b.r0, b.a, b.b, b.sigma, b.dt, b.steps, b.paths, b.seed,
+    ).map(|r| VasicekShortRateSimulatorResponse {
+        mean_terminal_rate: r.mean_terminal_rate,
+        stdev_terminal_rate: r.stdev_terminal_rate,
+        min_terminal_rate: r.min_terminal_rate,
+        max_terminal_rate: r.max_terminal_rate,
+        negative_path_fraction: r.negative_path_fraction,
+        paths_run: r.paths_run,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct VasicekShortRateSimulatorResponse {
+    mean_terminal_rate: f64,
+    stdev_terminal_rate: f64,
+    min_terminal_rate: f64,
+    max_terminal_rate: f64,
+    negative_path_fraction: f64,
+    paths_run: usize,
 }
