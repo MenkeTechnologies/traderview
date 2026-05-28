@@ -76,13 +76,18 @@ static CACHE: Lazy<Mutex<Option<(Instant, MarketsSnapshot)>>> = Lazy::new(|| Mut
 /// Fetch the latest snapshot. Hits Yahoo's v8 chart endpoint for each pin
 /// concurrently. Result is cached in-process for 60s; subsequent calls within
 /// the window return the cached value immediately (sub-millisecond).
+///
+/// Single-flight: the cache lock is held for the entire fetch. Concurrent
+/// callers that arrive during a fetch await the lock and then observe the
+/// freshly-written cache entry, so N concurrent requests cause exactly one
+/// fan-out to Yahoo instead of N. Without this the prior implementation
+/// dropped the lock before fetching, letting N callers each issue 16
+/// concurrent Yahoo requests (16×N) when the cache had just expired.
 pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
-    {
-        let cache = CACHE.lock().await;
-        if let Some((stored_at, snap)) = cache.as_ref() {
-            if stored_at.elapsed() < CACHE_TTL {
-                return Ok(snap.clone());
-            }
+    let mut cache = CACHE.lock().await;
+    if let Some((stored_at, snap)) = cache.as_ref() {
+        if stored_at.elapsed() < CACHE_TTL {
+            return Ok(snap.clone());
         }
     }
 
@@ -102,7 +107,7 @@ pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
         if r.symbol == "^GSPC" && r.market_state == "REGULAR" {
             us_market_open = true;
         }
-        if PINS.iter().find(|p| p.symbol == r.symbol).map(|p| p.is_index).unwrap_or(false) {
+        if PINS.iter().any(|p| p.symbol == r.symbol && p.is_index) {
             indices.push(r);
         } else {
             commodities.push(r);
@@ -114,7 +119,7 @@ pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
         us_market_open,
         fetched_at: Utc::now(),
     };
-    *CACHE.lock().await = Some((Instant::now(), snap.clone()));
+    *cache = Some((Instant::now(), snap.clone()));
     Ok(snap)
 }
 
@@ -182,6 +187,13 @@ struct ChartMeta {
 mod tests {
     use super::*;
 
+    // Both async tests below mutate the global `CACHE` static. Without
+    // serialization they race: cache_expires_after_ttl's backdated write can
+    // land between cache_hit_returns_stored_snapshot's setup and its
+    // snapshot() call, causing the latter to fall into the network-fetch
+    // path and blow past its 50ms timing assert.
+    static TEST_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
     fn probe(open: bool) -> MarketsSnapshot {
         MarketsSnapshot {
             indices: vec![],
@@ -198,6 +210,7 @@ mod tests {
     /// would only set during US RTH.
     #[tokio::test]
     async fn cache_hit_returns_stored_snapshot() {
+        let _guard = TEST_LOCK.lock().await;
         let stored = probe(true);
         let stored_at = stored.fetched_at;
         *CACHE.lock().await = Some((Instant::now(), stored));
@@ -220,6 +233,7 @@ mod tests {
     /// cache check returns None for expired entries by inspecting the static.
     #[tokio::test]
     async fn cache_expires_after_ttl() {
+        let _guard = TEST_LOCK.lock().await;
         let stale = probe(false);
         // Backdate to 2 minutes ago — well beyond CACHE_TTL (60s).
         // Use checked_sub to avoid panic on CI runners whose process Instant

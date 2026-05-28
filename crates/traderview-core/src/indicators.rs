@@ -288,12 +288,18 @@ pub fn stochastic(
             k[i] = Some(100.0 * (closes[i] - lo) / (hi - lo));
         }
     }
-    let k_vals: Vec<f64> = k.iter().filter_map(|x| *x).collect();
-    let d_compact = sma(&k_vals, d_period);
+    // %D is the SMA of %K. The previous compact-then-shift implementation
+    // dropped Nones and then offset-rewrote, which silently produced wrong
+    // values whenever %K had a None mid-series (e.g., a zero-range bar
+    // setting k[i]=None). Do an Option-aware window scan instead.
     let mut d = vec![None; n];
-    let offset = n - k_vals.len();
-    for (i, v) in d_compact.iter().enumerate() {
-        d[offset + i] = *v;
+    if d_period > 0 && d_period <= n {
+        for i in (d_period - 1)..n {
+            let window = &k[i + 1 - d_period..=i];
+            if let Some(sum) = window.iter().try_fold(0.0_f64, |s, x| x.map(|v| s + v)) {
+                d[i] = Some(sum / d_period as f64);
+            }
+        }
     }
     Stoch { k, d }
 }
@@ -429,6 +435,35 @@ mod tests {
         let closes: Vec<f64> = (1..=10).map(|x| x as f64).collect();
         let s = stochastic(&highs, &lows, &closes, 5, 3);
         assert!(s.k[9].unwrap() > 90.0);
+    }
+
+    #[test]
+    fn stochastic_d_handles_mid_series_none_in_k() {
+        // %K is None when the *entire k-window* has zero range
+        // (max(highs)==min(lows) across the window). Construct a 3-bar
+        // flat patch at indices 5-7 so the k_period=3 window at i=7 is
+        // fully flat → k[7]=None. The previous compact-then-shift impl
+        // dropped k[7] from k_vals and silently produced %D values at
+        // indices 8 and 9 that read across the missing slot, yielding
+        // wrong numbers. After the fix, any d[i] whose window contains
+        // k[7] must be None.
+        let highs  = vec![10.0, 11.0, 12.0, 13.0, 14.0, 7.0, 7.0, 7.0, 18.0, 19.0];
+        let lows   = vec![ 5.0,  6.0,  7.0,  8.0,  9.0, 7.0, 7.0, 7.0, 13.0, 14.0];
+        let closes = vec![ 7.0,  8.0,  9.0, 10.0, 11.0, 7.0, 7.0, 7.0, 15.0, 16.0];
+        let s = stochastic(&highs, &lows, &closes, 3, 3);
+        // Only the i=7 window [5,6,7] is fully flat → only k[7] is None.
+        assert!(s.k[5].is_some());
+        assert!(s.k[6].is_some());
+        assert!(s.k[7].is_none(), "fully-flat window must yield k=None at i=7");
+        assert!(s.k[8].is_some());
+        assert!(s.k[9].is_some());
+        // d windows containing k[7]: d[7] = [5,6,7], d[8] = [6,7,8], d[9] = [7,8,9].
+        assert!(s.d[7].is_none(), "d[7] window includes k[7]=None");
+        assert!(s.d[8].is_none(), "d[8] window includes k[7]=None");
+        assert!(s.d[9].is_none(), "d[9] window includes k[7]=None");
+        // d[5] and d[6] don't touch index 7 and have full Some windows → Some.
+        assert!(s.d[5].is_some());
+        assert!(s.d[6].is_some());
     }
 
     #[test]

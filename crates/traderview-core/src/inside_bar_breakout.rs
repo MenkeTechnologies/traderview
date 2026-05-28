@@ -72,8 +72,10 @@ pub fn detect(bars: &[OhlcBar], cfg: &IbConfig) -> IbReport {
         if mother_range <= 0.0 { continue; }
         let ratio = cur_range / mother_range;
         if ratio > cfg.max_range_ratio { continue; }
-        // Scan forward for the breakout.
-        let end = (i + cfg.confirm_within).min(n - 1);
+        // Scan forward for the breakout. `confirm_within` is deserialized
+        // from JSON so saturating_add guards against attacker-supplied
+        // usize::MAX wrapping i+confirm_within to 0.
+        let end = i.saturating_add(cfg.confirm_within).min(n - 1);
         let mut direction = BreakoutDirection::None;
         let mut breakout_at: Option<usize> = None;
         for (j, bar) in bars.iter().enumerate().take(end + 1).skip(i + 1) {
@@ -201,5 +203,23 @@ mod tests {
             b(100.0, 100.0, 100.0, 100.0),    // would-be inside
         ];
         assert_eq!(detect(&bars, &IbConfig::default()).n_events, 0);
+    }
+
+    #[test]
+    fn confirm_within_usize_max_does_not_overflow() {
+        // Prior code did `(i + cfg.confirm_within).min(n - 1)`. With
+        // confirm_within = usize::MAX the addition wraps to a tiny value
+        // and the breakout scan is silently empty. Saturating_add fixes it.
+        let cfg = IbConfig { confirm_within: usize::MAX, max_range_ratio: 0.8 };
+        let bars = vec![
+            b(100.0, 105.0,  95.0, 102.0),    // mother
+            b(102.0, 103.0,  98.0, 100.0),    // inside
+            b(100.0, 104.0,  99.0, 103.0),
+            b(103.0, 107.0, 102.0, 106.0),    // close 106 > 105 → up breakout
+        ];
+        let r = detect(&bars, &cfg);
+        assert_eq!(r.events.len(), 1);
+        assert_eq!(r.events[0].breakout_bar, Some(3));
+        assert!(matches!(r.events[0].direction, BreakoutDirection::Up));
     }
 }

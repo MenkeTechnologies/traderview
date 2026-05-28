@@ -3,10 +3,12 @@
 //! Formula:
 //!   `TRIN = (advancing_issues / declining_issues) / (advancing_volume / declining_volume)`
 //!
-//! Reading conventions:
-//!   - `TRIN < 0.8`  → strong buying (advancing volume disproportionately high)
-//!   - `TRIN > 1.2`  → strong selling
-//!   - `TRIN ≈ 1.0`  → neutral / balanced market
+//! Reading conventions (5-tier classification, see `TrinSignal`):
+//!   - `TRIN < 0.5`           → StrongBuy   (advancing volume overwhelmingly dominant)
+//!   - `0.5 ≤ TRIN < 0.8`     → Buy         (advancing volume disproportionately high)
+//!   - `0.8 ≤ TRIN ≤ 1.2`     → Neutral     (balanced market)
+//!   - `1.2 < TRIN ≤ 2.0`     → Sell        (declining volume disproportionately high)
+//!   - `TRIN > 2.0`           → StrongSell  (declining volume overwhelmingly dominant)
 //!
 //! Inputs are per-bar breadth counts. Caller decides cadence
 //! (typically daily or intraday market-wide).
@@ -46,13 +48,17 @@ pub fn compute(bars: &[BreadthBar]) -> TrinReport {
         return TrinReport::default();
     }
     let series: Vec<Option<f64>> = bars.iter().map(|b| {
-        // Guard against division-by-zero in either ratio.
-        if b.declining_issues == 0 || b.declining_volume <= 0.0 || b.advancing_volume <= 0.0 {
+        // Guard against division-by-zero AND NaN/Inf inputs. The naive
+        // `<= 0.0` guards used to slip NaN through (every NaN comparison
+        // is false), producing Some(NaN) in the report.
+        if b.declining_issues == 0
+            || !b.declining_volume.is_finite() || b.declining_volume <= 0.0
+            || !b.advancing_volume.is_finite() || b.advancing_volume <= 0.0
+        {
             return None;
         }
         let issues_ratio = b.advancing_issues as f64 / b.declining_issues as f64;
         let volume_ratio = b.advancing_volume / b.declining_volume;
-        if volume_ratio <= 0.0 { return None; }
         Some(issues_ratio / volume_ratio)
     }).collect();
     let latest = series.last().copied().flatten();
@@ -123,6 +129,18 @@ mod tests {
         assert!(compute(&bars).latest.is_none());
         let bars = vec![bar(1500, 1500, 100.0, 0.0)];
         assert!(compute(&bars).latest.is_none());
+    }
+
+    #[test]
+    fn nan_or_inf_volume_returns_none() {
+        // Prior implementation let NaN slip through both guards because
+        // `NaN <= 0.0` is false, producing Some(NaN) in the report.
+        for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(compute(&[bar(1500, 1500, bad, 100.0)]).latest.is_none(),
+                "advancing_volume={bad:?} should yield None");
+            assert!(compute(&[bar(1500, 1500, 100.0, bad)]).latest.is_none(),
+                "declining_volume={bad:?} should yield None");
+        }
     }
 
     #[test]

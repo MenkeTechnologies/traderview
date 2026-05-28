@@ -86,7 +86,10 @@ pub fn detect(
             if !swept { continue; }
             // Confirmation: reversal close past the sweeping bar's open.
             let mut confirm_at: Option<usize> = None;
-            let end = (i + cfg.confirm_within).min(n.saturating_sub(1));
+            // saturating_add on the i side mirrors saturating_sub on the n
+            // side — both endpoints are JSON-controlled and could overflow
+            // usize on a hostile payload.
+            let end = i.saturating_add(cfg.confirm_within).min(n.saturating_sub(1));
             for j in (i + 1)..=end {
                 let reversed = if is_high {
                     bars[j].close < bars[i].open && bars[j].close < level
