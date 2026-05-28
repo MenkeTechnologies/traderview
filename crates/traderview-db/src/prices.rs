@@ -303,3 +303,62 @@ struct YahooQuote {
     #[serde(default)]
     volume: Vec<Option<i64>>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── parse_interval: db label → enum ───────────────────────────────────
+    #[test]
+    fn parse_interval_maps_each_label() {
+        assert!(matches!(parse_interval("1m"), BarInterval::M1));
+        assert!(matches!(parse_interval("5m"), BarInterval::M5));
+        assert!(matches!(parse_interval("15m"), BarInterval::M15));
+        assert!(matches!(parse_interval("1h"), BarInterval::H1));
+        assert!(matches!(parse_interval("1w"), BarInterval::W1));
+        assert!(matches!(parse_interval("1d"), BarInterval::D1));
+    }
+
+    #[test]
+    fn parse_interval_defaults_unknown_to_daily() {
+        // Anything we don't recognize (including future enum additions or
+        // a corrupted DB row) falls back to D1 rather than panicking.
+        assert!(matches!(parse_interval(""), BarInterval::D1));
+        assert!(matches!(parse_interval("garbage"), BarInterval::D1));
+        assert!(matches!(parse_interval("1d"), BarInterval::D1));
+    }
+
+    #[test]
+    fn parse_interval_roundtrips_with_label_for_known_values() {
+        // Every interval that has a unique label must roundtrip:
+        // parse(label(x)) == x. Excludes D1 since it's also the fallback.
+        for iv in [
+            BarInterval::M1,
+            BarInterval::M5,
+            BarInterval::M15,
+            BarInterval::H1,
+            BarInterval::W1,
+        ] {
+            let parsed = parse_interval(iv.label());
+            assert_eq!(
+                std::mem::discriminant(&parsed),
+                std::mem::discriminant(&iv),
+                "roundtrip failed for {:?}",
+                iv
+            );
+        }
+    }
+
+    // ─── yahoo_interval: enum → Yahoo API string ──────────────────────────
+    #[test]
+    fn yahoo_interval_emits_yahoo_specific_codes() {
+        assert_eq!(yahoo_interval(BarInterval::M1), "1m");
+        assert_eq!(yahoo_interval(BarInterval::M5), "5m");
+        assert_eq!(yahoo_interval(BarInterval::M15), "15m");
+        // Hourly is "60m" in Yahoo's API, not "1h" — pins this contract.
+        assert_eq!(yahoo_interval(BarInterval::H1), "60m");
+        assert_eq!(yahoo_interval(BarInterval::D1), "1d");
+        // Weekly is "1wk" in Yahoo (not "1w" like our internal label).
+        assert_eq!(yahoo_interval(BarInterval::W1), "1wk");
+    }
+}
