@@ -13,15 +13,16 @@
 
 use traderview_core::{
     acceleration_deceleration, anchored_vwap, aroon, arms_index, atr_cone,
-    awesome_oscillator, bond_duration, breakout_detector, choppiness, coppock,
-    correlation, cusum, displacement, dynamic_kelly, equity_regime,
-    fair_value_gap, futures_roll, gap_fill_stats, indicators,
-    inside_bar_breakout, liquidity_grab, mass_index, mcclellan_oscillator,
-    monte_carlo, opening_range, order_block, pair_trade, portfolio_heat,
-    premium_discount, put_call_ratio, random_walk_index, range_contraction,
-    range_expansion, rolling_zscore, round_levels, sharpe_by_window, sortino,
-    stochastic, stop_hunt, supertrend, swing_points, three_bar_reversal,
-    treynor, ulcer_index, volatility_stop, volume_burst, vortex, vsa, wyckoff,
+    awesome_oscillator, bond_duration, breakout_detector, chaikin_money_flow,
+    choppiness, coppock, correlation, cusum, dema, displacement, dynamic_kelly,
+    elder_ray, equity_regime, fair_value_gap, futures_roll, gap_fill_stats,
+    hull_ma, indicators, inside_bar_breakout, kama, liquidity_grab, mass_index,
+    mcclellan_oscillator, monte_carlo, opening_range, order_block, pair_trade,
+    portfolio_heat, ppo, premium_discount, put_call_ratio, random_walk_index,
+    range_contraction, range_expansion, rolling_zscore, round_levels,
+    sharpe_by_window, sortino, stoch_rsi, stochastic, stop_hunt, supertrend,
+    swing_points, tema, three_bar_reversal, treynor, tsi, ulcer_index,
+    ultimate_oscillator, volatility_stop, volume_burst, vortex, vsa, wyckoff,
 };
 use traderview_core::models::TradeSide;
 use chrono::{NaiveDate, TimeZone, Utc};
@@ -1493,6 +1494,158 @@ fn fuzz_stochastic_compute() {
             assert!(p.slow_k.is_finite() || p.slow_k == 0.0, "iter {it} slow_k");
             assert!(p.slow_d.is_finite() || p.slow_d == 0.0, "iter {it} slow_d");
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Batch fuzz coverage for the 10 newly-added indicators
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_new_moving_averages() {
+    let mut rng = Lcg::new(0x_4A_4A_4A);
+    for it in 0..ITERS / 2 {
+        let n = rng.range_usize(80);
+        let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
+        let period = match rng.next_u64() % 10 {
+            0 => 0, 1 => 1, 2 => usize::MAX, _ => rng.range_usize(20) + 2,
+        };
+        for v in &hull_ma::compute(&closes, period) { assert_finite_opt(v, "hull"); }
+        for v in &tema::compute(&closes, period)    { assert_finite_opt(v, "tema"); }
+        for v in &dema::compute(&closes, period)    { assert_finite_opt(v, "dema"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_kama() {
+    let mut rng = Lcg::new(0x_4A_AA);
+    for it in 0..ITERS / 2 {
+        let n = rng.range_usize(80);
+        let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
+        let er = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(15) + 1,
+        };
+        let fp = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(5) + 1,
+        };
+        let sp = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(40) + 1,
+        };
+        let out = kama::compute(&closes, er, fp, sp);
+        for v in &out { assert_finite_opt(v, "kama"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_stoch_rsi() {
+    let mut rng = Lcg::new(0x_57_4F_45);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(80);
+        let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
+        let rp = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
+        let sp = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
+        let sk = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(5) + 1 };
+        let sd = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(5) + 1 };
+        let r = stoch_rsi::compute(&closes, rp, sp, sk, sd);
+        for v in &r.raw { assert_finite_opt(v, "raw"); }
+        for v in &r.k   { assert_finite_opt(v, "k"); }
+        for v in &r.d   { assert_finite_opt(v, "d"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_ultimate_oscillator() {
+    let mut rng = Lcg::new(0x_007_F1);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(80);
+        let bars: Vec<ultimate_oscillator::OhlcBar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            ultimate_oscillator::OhlcBar { high: h, low: l, close: c }
+        }).collect();
+        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(15)+1 };
+        let m = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
+        let l = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
+        let out = ultimate_oscillator::compute(&bars, s, m, l);
+        for v in &out { assert_finite_opt(v, "uo"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_tsi() {
+    let mut rng = Lcg::new(0x_751_E);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(80);
+        let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
+        let r = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
+        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
+        let out = tsi::compute(&closes, r, s);
+        for v in &out { assert_finite_opt(v, "tsi"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_chaikin_money_flow() {
+    let mut rng = Lcg::new(0x_C_4_F_4);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(64);
+        let bars: Vec<chaikin_money_flow::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            chaikin_money_flow::Bar { high: h, low: l, close: c, volume: rng.f64_range(0.0, 1e6) }
+        }).collect();
+        let period = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+        };
+        let out = chaikin_money_flow::compute(&bars, period);
+        for x in out.iter().flatten() {
+            assert!(x.is_finite() && (-1.0 - 1e-9..=1.0 + 1e-9).contains(x),
+                "iter {it} cmf out of [-1,1]: {x}");
+        }
+    }
+}
+
+#[test]
+fn fuzz_ppo() {
+    let mut rng = Lcg::new(0x_88_0F);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(120);
+        let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
+        let f = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(15)+1 };
+        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
+        let g = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(15)+1 };
+        let r = ppo::compute(&closes, f, s, g);
+        for v in &r.line      { assert_finite_opt(v, "ppo"); }
+        for v in &r.signal    { assert_finite_opt(v, "ppo signal"); }
+        for v in &r.histogram { assert_finite_opt(v, "ppo hist"); }
+        let _ = it;
+    }
+}
+
+#[test]
+fn fuzz_elder_ray() {
+    let mut rng = Lcg::new(0x_E_1_DE);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(80);
+        let bars: Vec<elder_ray::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            elder_ray::Bar { high: h, low: l, close: c }
+        }).collect();
+        let period = match rng.next_u64() % 8 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+        };
+        let r = elder_ray::compute(&bars, period);
+        for v in &r.bull_power { assert_finite_opt(v, "bull"); }
+        for v in &r.bear_power { assert_finite_opt(v, "bear"); }
+        let _ = it;
     }
 }
 

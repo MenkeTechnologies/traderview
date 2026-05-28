@@ -17,10 +17,15 @@ use chrono::{DateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    anchored_vwap, aroon, awesome_oscillator, bb_squeeze, cci, chaikin_volatility, coppock,
-    donchian, dpo, force_index, indicators, keltner, mass_index, mfi, parabolic_sar, roc,
-    rsi_divergence, schaff_trend, swing_points, trend_channel, trix, volume_flow, vortex,
-    vwap_bands, williams_r, BarInterval, PriceBar,
+    anchored_vwap, aroon, aroon_oscillator, awesome_oscillator, bb_squeeze, cci,
+    center_of_gravity, chaikin_money_flow, chaikin_volatility, cmo, connors_rsi, coppock, dema,
+    demarker, donchian, dpo, ease_of_movement, ehlers_decycler, ehlers_super_smoother,
+    elder_force, elder_ray, fisher_transform, force_index, fractals, frama, hull_ma,
+    indicators, kama, keltner, klinger_oscillator, mass_index, mcginley_dynamic, mfi,
+    parabolic_sar, ppo, qqe, relative_vigor_index, relative_volume, roc, rsi_divergence,
+    schaff_trend, squeeze_momentum, stoch_rsi, swing_index, swing_points, t3_ma, tema,
+    trend_channel, trix, tsi, ultimate_oscillator, vhf, vidya, volume_flow, volume_indices,
+    vortex, vwap_bands, williams_r, wma, zigzag, zlema, BarInterval, PriceBar,
 };
 
 pub fn router() -> Router<AppState> {
@@ -61,6 +66,50 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/bb-squeeze",           get(bb_squeeze_route))
         .route("/bars/:symbol/rsi-divergence",       get(rsi_divergence_route))
         .route("/bars/:symbol/trend-channel",        get(trend_channel_route))
+        // === Batch added: canonical indicators that were missing.
+        .route("/bars/:symbol/hull-ma",              get(hull_ma_route))
+        .route("/bars/:symbol/tema",                 get(tema_route))
+        .route("/bars/:symbol/dema",                 get(dema_route))
+        .route("/bars/:symbol/kama",                 get(kama_route))
+        .route("/bars/:symbol/stoch-rsi",            get(stoch_rsi_route))
+        .route("/bars/:symbol/ultimate-oscillator",  get(ultimate_oscillator_route))
+        .route("/bars/:symbol/tsi",                  get(tsi_route))
+        .route("/bars/:symbol/chaikin-money-flow",   get(chaikin_money_flow_route))
+        .route("/bars/:symbol/ppo",                  get(ppo_route))
+        .route("/bars/:symbol/elder-ray",            get(elder_ray_route))
+        // === Batch 2: 11 more.
+        .route("/bars/:symbol/wma",                  get(wma_route))
+        .route("/bars/:symbol/zlema",                get(zlema_route))
+        .route("/bars/:symbol/t3",                   get(t3_route))
+        .route("/bars/:symbol/connors-rsi",          get(connors_rsi_route))
+        .route("/bars/:symbol/klinger-oscillator",   get(klinger_oscillator_route))
+        .route("/bars/:symbol/ease-of-movement",     get(ease_of_movement_route))
+        .route("/bars/:symbol/nvi",                  get(nvi_route))
+        .route("/bars/:symbol/pvi",                  get(pvi_route))
+        .route("/bars/:symbol/pvt",                  get(pvt_route))
+        .route("/bars/:symbol/aroon-oscillator",     get(aroon_oscillator_route))
+        .route("/bars/:symbol/center-of-gravity",    get(center_of_gravity_route))
+        .route("/bars/:symbol/fisher-transform",     get(fisher_transform_route))
+        .route("/bars/:symbol/qqe",                  get(qqe_route))
+        // === Batch 3 chart routes ===
+        .route("/bars/:symbol/demarker",             get(demarker_route))
+        .route("/bars/:symbol/vhf",                  get(vhf_route))
+        .route("/bars/:symbol/fractals",             get(fractals_route))
+        .route("/bars/:symbol/squeeze-momentum",     get(squeeze_momentum_route))
+        .route("/bars/:symbol/swing-index",          get(swing_index_route))
+        // === Batch 6 chart routes ===
+        .route("/bars/:symbol/mcginley-dynamic",     get(mcginley_dynamic_route))
+        .route("/bars/:symbol/vidya",                get(vidya_route))
+        .route("/bars/:symbol/frama",                get(frama_route))
+        .route("/bars/:symbol/super-smoother",       get(super_smoother_route))
+        // === Batch 7 chart routes ===
+        .route("/bars/:symbol/rvi",                  get(rvi_route))
+        .route("/bars/:symbol/cmo",                  get(cmo_route))
+        .route("/bars/:symbol/ehlers-decycler",      get(ehlers_decycler_route))
+        // === Batch 8 chart routes ===
+        .route("/bars/:symbol/elder-force",          get(elder_force_route))
+        .route("/bars/:symbol/relative-volume",      get(relative_volume_route))
+        .route("/bars/:symbol/zigzag",               get(zigzag_route))
 }
 
 #[derive(Deserialize)]
@@ -806,6 +855,693 @@ async fn trend_channel_route(
             "not enough swing points to fit a channel — try widening the window or shrinking swing_lookback".into()
         ))?;
     Ok(Json(report))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Batch-added route handlers for the 10 new indicators. Each follows the
+// established pattern: pull bars, build per-module inputs, run compute,
+// emit the (t, value) shape the frontend overlay code expects.
+// ──────────────────────────────────────────────────────────────────────
+
+async fn hull_ma_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = hull_ma::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn tema_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = tema::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn dema_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = dema::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct KamaQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_kama_er")]   er_period: usize,
+    #[serde(default = "default_kama_fast")] fast_period: usize,
+    #[serde(default = "default_kama_slow")] slow_period: usize,
+}
+fn default_kama_er() -> usize { 10 }
+fn default_kama_fast() -> usize { 2 }
+fn default_kama_slow() -> usize { 30 }
+
+async fn kama_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<KamaQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = kama::compute(&closes, q.er_period, q.fast_period, q.slow_period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct StochRsiQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_srsi_rsi")]   rsi_period: usize,
+    #[serde(default = "default_srsi_stoch")] stoch_period: usize,
+    #[serde(default = "default_srsi_k")]     smooth_k: usize,
+    #[serde(default = "default_srsi_d")]     smooth_d: usize,
+}
+fn default_srsi_rsi() -> usize { 14 }
+fn default_srsi_stoch() -> usize { 14 }
+fn default_srsi_k() -> usize { 3 }
+fn default_srsi_d() -> usize { 3 }
+
+#[derive(Serialize)]
+struct StochRsiResponse {
+    t: Vec<DateTime<Utc>>,
+    raw: Vec<Option<f64>>,
+    k: Vec<Option<f64>>,
+    d: Vec<Option<f64>>,
+}
+
+async fn stoch_rsi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<StochRsiQ>,
+) -> Result<Json<StochRsiResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let r = stoch_rsi::compute(&closes, q.rsi_period, q.stoch_period, q.smooth_k, q.smooth_d);
+    Ok(Json(StochRsiResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        raw: r.raw, k: r.k, d: r.d,
+    }))
+}
+
+#[derive(Deserialize)]
+struct UltimateOscQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_uo_short")] short: usize,
+    #[serde(default = "default_uo_mid")]   mid: usize,
+    #[serde(default = "default_uo_long")]  long: usize,
+}
+fn default_uo_short() -> usize { 7 }
+fn default_uo_mid()   -> usize { 14 }
+fn default_uo_long()  -> usize { 28 }
+
+async fn ultimate_oscillator_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<UltimateOscQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<ultimate_oscillator::OhlcBar> = bars.iter().map(|b| {
+        ultimate_oscillator::OhlcBar {
+            high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
+        }
+    }).collect();
+    let v = ultimate_oscillator::compute(&inputs, q.short, q.mid, q.long);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct TsiQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_tsi_r")] r_period: usize,
+    #[serde(default = "default_tsi_s")] s_period: usize,
+}
+fn default_tsi_r() -> usize { 25 }
+fn default_tsi_s() -> usize { 13 }
+
+async fn tsi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<TsiQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = tsi::compute(&closes, q.r_period, q.s_period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct CmfQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_cmf_period")] period: usize,
+}
+fn default_cmf_period() -> usize { 21 }
+
+async fn chaikin_money_flow_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<CmfQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<chaikin_money_flow::Bar> = bars.iter().map(|b| chaikin_money_flow::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low),
+        close: dec_f64(b.close), volume: dec_f64(b.volume),
+    }).collect();
+    let v = chaikin_money_flow::compute(&inputs, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct PpoQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_ppo_fast")]   fast: usize,
+    #[serde(default = "default_ppo_slow")]   slow: usize,
+    #[serde(default = "default_ppo_signal")] signal: usize,
+}
+fn default_ppo_fast()   -> usize { 12 }
+fn default_ppo_slow()   -> usize { 26 }
+fn default_ppo_signal() -> usize { 9 }
+
+#[derive(Serialize)]
+struct PpoResponse {
+    t: Vec<DateTime<Utc>>,
+    line: Vec<Option<f64>>,
+    signal: Vec<Option<f64>>,
+    histogram: Vec<Option<f64>>,
+}
+
+async fn ppo_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PpoQ>,
+) -> Result<Json<PpoResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let r = ppo::compute(&closes, q.fast, q.slow, q.signal);
+    Ok(Json(PpoResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        line: r.line, signal: r.signal, histogram: r.histogram,
+    }))
+}
+
+#[derive(Deserialize)]
+struct ElderRayQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_elder_period")] period: usize,
+}
+fn default_elder_period() -> usize { 13 }
+
+#[derive(Serialize)]
+struct ElderRayResponse {
+    t: Vec<DateTime<Utc>>,
+    bull_power: Vec<Option<f64>>,
+    bear_power: Vec<Option<f64>>,
+}
+
+async fn elder_ray_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<ElderRayQ>,
+) -> Result<Json<ElderRayResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<elder_ray::Bar> = bars.iter().map(|b| elder_ray::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
+    }).collect();
+    let r = elder_ray::compute(&inputs, q.period);
+    Ok(Json(ElderRayResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        bull_power: r.bull_power, bear_power: r.bear_power,
+    }))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Batch 2 handlers (11 indicators / 13 routes — NVI/PVI/PVT split into
+// three routes from the single `volume_indices` module).
+// ──────────────────────────────────────────────────────────────────────
+
+async fn wma_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = wma::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn zlema_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = zlema::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct T3Q {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_t3_period")] period: usize,
+    #[serde(default = "default_t3_v")]      v_factor: f64,
+}
+fn default_t3_period() -> usize { 5 }
+fn default_t3_v() -> f64 { 0.7 }
+
+async fn t3_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<T3Q>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = t3_ma::compute(&closes, q.period, q.v_factor);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct CrsiQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_crsi_rsi")]    rsi_period: usize,
+    #[serde(default = "default_crsi_streak")] streak_period: usize,
+    #[serde(default = "default_crsi_rank")]   rank_period: usize,
+}
+fn default_crsi_rsi()    -> usize { 3 }
+fn default_crsi_streak() -> usize { 2 }
+fn default_crsi_rank()   -> usize { 100 }
+
+async fn connors_rsi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<CrsiQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = connors_rsi::compute(&closes, q.rsi_period, q.streak_period, q.rank_period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct KvoQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_kvo_fast")]   fast: usize,
+    #[serde(default = "default_kvo_slow")]   slow: usize,
+    #[serde(default = "default_kvo_signal")] signal: usize,
+}
+fn default_kvo_fast()   -> usize { 34 }
+fn default_kvo_slow()   -> usize { 55 }
+fn default_kvo_signal() -> usize { 13 }
+
+#[derive(Serialize)]
+struct KvoResponse {
+    t: Vec<DateTime<Utc>>,
+    line: Vec<Option<f64>>,
+    signal: Vec<Option<f64>>,
+    histogram: Vec<Option<f64>>,
+}
+
+async fn klinger_oscillator_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<KvoQ>,
+) -> Result<Json<KvoResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<klinger_oscillator::Bar> = bars.iter().map(|b| klinger_oscillator::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low),
+        close: dec_f64(b.close), volume: dec_f64(b.volume),
+    }).collect();
+    let r = klinger_oscillator::compute(&inputs, q.fast, q.slow, q.signal);
+    Ok(Json(KvoResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        line: r.line, signal: r.signal, histogram: r.histogram,
+    }))
+}
+
+async fn ease_of_movement_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<ease_of_movement::Bar> = bars.iter().map(|b| ease_of_movement::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low), volume: dec_f64(b.volume),
+    }).collect();
+    let v = ease_of_movement::compute(&inputs, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+fn volume_indices_inputs(bars: &[PriceBar]) -> Vec<volume_indices::PvBar> {
+    bars.iter().map(|b| volume_indices::PvBar {
+        close: dec_f64(b.close), volume: dec_f64(b.volume),
+    }).collect()
+}
+
+async fn nvi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<WindowQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let v = volume_indices::nvi(&volume_indices_inputs(&bars));
+    Ok(Json(PlainSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn pvi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<WindowQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let v = volume_indices::pvi(&volume_indices_inputs(&bars));
+    Ok(Json(PlainSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn pvt_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<WindowQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let v = volume_indices::pvt(&volume_indices_inputs(&bars));
+    Ok(Json(PlainSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn aroon_oscillator_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<aroon::Bar> = bars.iter().map(|b| aroon::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low),
+    }).collect();
+    let v = aroon_oscillator::compute(&inputs, q.period);
+    Ok(Json(PlainSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn center_of_gravity_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = center_of_gravity::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Serialize)]
+struct FisherResponse {
+    t: Vec<DateTime<Utc>>,
+    fisher: Vec<Option<f64>>,
+    trigger: Vec<Option<f64>>,
+}
+
+async fn fisher_transform_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<FisherResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<fisher_transform::Bar> = bars.iter().map(|b| fisher_transform::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low),
+    }).collect();
+    let r = fisher_transform::compute(&inputs, q.period);
+    Ok(Json(FisherResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        fisher: r.fisher, trigger: r.trigger,
+    }))
+}
+
+#[derive(Deserialize)]
+struct QqeQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_qqe_rsi")]    rsi_period: usize,
+    #[serde(default = "default_qqe_smooth")] smooth_factor: usize,
+    #[serde(default = "default_qqe_factor")] qqe_factor: f64,
+}
+fn default_qqe_rsi()    -> usize { 14 }
+fn default_qqe_smooth() -> usize { 5 }
+fn default_qqe_factor() -> f64 { 4.236 }
+
+#[derive(Serialize)]
+struct QqeResponse {
+    t: Vec<DateTime<Utc>>,
+    rsi_ma: Vec<Option<f64>>,
+    fast_atr: Vec<Option<f64>>,
+}
+
+async fn qqe_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<QqeQ>,
+) -> Result<Json<QqeResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let r = qqe::compute(&closes, q.rsi_period, q.smooth_factor, q.qqe_factor);
+    Ok(Json(QqeResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        rsi_ma: r.rsi_ma, fast_atr: r.fast_atr,
+    }))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Batch 3 chart handlers.
+// ──────────────────────────────────────────────────────────────────────
+
+async fn demarker_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let highs:  Vec<f64> = bars.iter().map(|b| dec_f64(b.high)).collect();
+    let lows:   Vec<f64> = bars.iter().map(|b| dec_f64(b.low)).collect();
+    let v = demarker::compute(&highs, &lows, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn vhf_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = vhf::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Serialize)]
+struct FractalOut {
+    bar_index: usize,
+    t: DateTime<Utc>,
+    kind: fractals::FractalKind,
+    price: f64,
+}
+
+async fn fractals_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<WindowQ>,
+) -> Result<Json<Vec<FractalOut>>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<fractals::Bar> = bars.iter().map(|b| fractals::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low),
+    }).collect();
+    let fr = fractals::detect(&inputs);
+    let out: Vec<FractalOut> = fr.iter().map(|f| FractalOut {
+        bar_index: f.bar_index,
+        t: bars[f.bar_index].bar_time,
+        kind: f.kind,
+        price: f.price,
+    }).collect();
+    Ok(Json(out))
+}
+
+#[derive(Deserialize)]
+struct SqueezeMomentumQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_sqmom_period")] period: usize,
+    #[serde(default = "default_sqmom_bb_k")]    bb_k: f64,
+    #[serde(default = "default_sqmom_kc_k")]    kc_k: f64,
+}
+fn default_sqmom_period() -> usize { 20 }
+fn default_sqmom_bb_k()   -> f64 { 2.0 }
+fn default_sqmom_kc_k()   -> f64 { 1.5 }
+
+#[derive(Serialize)]
+struct SqueezeMomentumResponse {
+    t: Vec<DateTime<Utc>>,
+    momentum: Vec<Option<f64>>,
+    state: Vec<Option<traderview_core::bb_squeeze::SqueezeState>>,
+}
+
+async fn squeeze_momentum_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<SqueezeMomentumQ>,
+) -> Result<Json<SqueezeMomentumResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<squeeze_momentum::Bar> = bars.iter().map(|b| squeeze_momentum::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
+    }).collect();
+    let r = squeeze_momentum::compute(&inputs, q.period, q.bb_k, q.kc_k);
+    Ok(Json(SqueezeMomentumResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        momentum: r.momentum, state: r.state,
+    }))
+}
+
+#[derive(Deserialize)]
+struct SwingIndexQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_si_limit")] limit_move: f64,
+}
+fn default_si_limit() -> f64 { 3.0 }
+
+#[derive(Serialize)]
+struct SwingIndexResponse {
+    t: Vec<DateTime<Utc>>,
+    si: Vec<Option<f64>>,
+    asi: Vec<Option<f64>>,
+}
+
+async fn swing_index_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<SwingIndexQ>,
+) -> Result<Json<SwingIndexResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<swing_index::Bar> = bars.iter().map(|b| swing_index::Bar {
+        open: dec_f64(b.open), high: dec_f64(b.high),
+        low: dec_f64(b.low), close: dec_f64(b.close),
+    }).collect();
+    let r = swing_index::compute(&inputs, q.limit_move);
+    Ok(Json(SwingIndexResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        si: r.si, asi: r.asi,
+    }))
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Batch 6 chart handlers.
+// ──────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct McGinleyQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_md_period")] period: usize,
+    #[serde(default = "default_md_k")]      k: f64,
+}
+fn default_md_period() -> usize { 14 }
+fn default_md_k() -> f64 { 0.6 }
+
+async fn mcginley_dynamic_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<McGinleyQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = mcginley_dynamic::compute(&closes, q.period, q.k);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct VidyaQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_vidya_period")] period: usize,
+    #[serde(default = "default_vidya_short")]  short_stdev_period: usize,
+    #[serde(default = "default_vidya_long")]   long_stdev_period: usize,
+}
+fn default_vidya_period() -> usize { 9 }
+fn default_vidya_short()  -> usize { 5 }
+fn default_vidya_long()   -> usize { 20 }
+
+async fn vidya_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<VidyaQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = vidya::compute(&closes, q.period, q.short_stdev_period, q.long_stdev_period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn frama_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<frama::Bar> = bars.iter().map(|b| frama::Bar {
+        high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
+    }).collect();
+    let v = frama::compute(&inputs, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn super_smoother_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = ehlers_super_smoother::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Serialize)]
+struct RviResponse {
+    t: Vec<DateTime<Utc>>,
+    line: Vec<Option<f64>>,
+    signal: Vec<Option<f64>>,
+}
+
+async fn rvi_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<RviResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let inputs: Vec<relative_vigor_index::Bar> = bars.iter().map(|b| relative_vigor_index::Bar {
+        open: dec_f64(b.open), high: dec_f64(b.high),
+        low:  dec_f64(b.low),  close: dec_f64(b.close),
+    }).collect();
+    let r = relative_vigor_index::compute(&inputs, q.period);
+    Ok(Json(RviResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        line: r.line, signal: r.signal,
+    }))
+}
+
+async fn cmo_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = cmo::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn ehlers_decycler_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = ehlers_decycler::compute(&closes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct ElderForceQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_elder_force_period")] period: usize,
+}
+fn default_elder_force_period() -> usize { 13 }
+
+async fn elder_force_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<ElderForceQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let volumes: Vec<f64> = bars.iter().map(|b| dec_f64(b.volume)).collect();
+    let v = elder_force::compute(&closes, &volumes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+async fn relative_volume_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let volumes: Vec<f64> = bars.iter().map(|b| dec_f64(b.volume)).collect();
+    let v = relative_volume::compute(&volumes, q.period);
+    Ok(Json(ScalarSeries { t: bars.iter().map(|b| b.bar_time).collect(), v }))
+}
+
+#[derive(Deserialize)]
+struct ZigZagQ {
+    interval: String, from: i64, to: i64,
+    #[serde(default = "default_zigzag_reversal")] reversal_pct: f64,
+}
+fn default_zigzag_reversal() -> f64 { 5.0 }
+
+#[derive(Serialize)]
+struct ZigZagPoint {
+    kind: String,
+    price: f64,
+}
+#[derive(Serialize)]
+struct ZigZagResponse {
+    t: Vec<DateTime<Utc>>,
+    pivots: Vec<Option<ZigZagPoint>>,
+}
+
+async fn zigzag_route(
+    State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<ZigZagQ>,
+) -> Result<Json<ZigZagResponse>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let pivots = zigzag::compute(&closes, q.reversal_pct);
+    let mapped: Vec<Option<ZigZagPoint>> = pivots.iter().map(|p| p.map(|pv| ZigZagPoint {
+        kind: match pv.kind {
+            zigzag::PivotKind::High => "high".into(),
+            zigzag::PivotKind::Low  => "low".into(),
+        },
+        price: pv.price,
+    })).collect();
+    Ok(Json(ZigZagResponse {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        pivots: mapped,
+    }))
 }
 
 // ──────────────────────────────────────────────────────────────────────

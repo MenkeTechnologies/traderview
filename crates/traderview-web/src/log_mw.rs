@@ -179,7 +179,7 @@ mod tests {
         // ({"error":"..."}). Snipped should keep the head, drop the tail.
         let mut bytes = Vec::with_capacity(MAX_BODY_SNIPPET + 100);
         bytes.extend_from_slice(b"{\"error\":\"first\"");
-        bytes.extend(std::iter::repeat(b'X').take(MAX_BODY_SNIPPET));
+        bytes.extend(std::iter::repeat_n(b'X', MAX_BODY_SNIPPET));
         let b = Bytes::from(bytes);
         let s = snippet_for_log(&b);
         assert!(s.starts_with("{\"error\":\"first\""));

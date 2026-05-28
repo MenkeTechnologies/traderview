@@ -124,6 +124,15 @@ pub enum Preset {
     Breakdown,        // change_pct <= -5%
     Breakout,         // close above 20-day high
     OversoldBounce,   // close > yesterday close AND yesterday was -5% or worse
+    // === Batch added presets ===
+    GapAndGo,         // gap up >= 3% AND close above open AND closed near HOD (+volume)
+    GapAndFade,       // gap up >= 3% BUT close < open (fade) AND closed near LOD
+    InsideDayLow,     // close <= day_low + 0.5% — could break down tomorrow
+    InsideDayHigh,    // close near HOD AND barely off prev close (coiling at extreme)
+    RangeContractionDay, // tight range vs avg: day_pct + gap_pct both near zero, rel_vol low
+    DistributionDay,  // close down >= 2% on rel_volume >= 1.5x
+    AccumulationDay,  // close up >= 2% on rel_volume >= 1.5x
+    NearYearHighLowVol, // within 1% of 52w high BUT rel_volume < 1 (no real buying interest)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -138,6 +147,27 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::Breakdown => hit.change_pct <= -5.0,
         Preset::Breakout => hit.day_pct > 0.0 && hit.hod_dist_pct.abs() <= 0.5,
         Preset::OversoldBounce => hit.change_pct > 0.0, // simplified — needs prior bar context
+        Preset::GapAndGo => {
+            hit.gap_pct >= 3.0
+                && hit.day_pct > 0.0
+                && hit.hod_dist_pct.abs() <= 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapAndFade => {
+            hit.gap_pct >= 3.0
+                && hit.day_pct < 0.0
+                && hit.lod_dist_pct.abs() <= 1.0
+        }
+        Preset::InsideDayLow => hit.lod_dist_pct.abs() <= 0.5,
+        Preset::InsideDayHigh => {
+            hit.hod_dist_pct.abs() <= 0.5 && hit.change_pct.abs() <= 1.0
+        }
+        Preset::RangeContractionDay => {
+            hit.day_pct.abs() <= 0.5 && hit.gap_pct.abs() <= 0.5 && hit.rel_volume <= 0.7
+        }
+        Preset::DistributionDay => hit.change_pct <= -2.0 && hit.rel_volume >= 1.5,
+        Preset::AccumulationDay => hit.change_pct >= 2.0 && hit.rel_volume >= 1.5,
+        Preset::NearYearHighLowVol => hit.year_high_pct >= -1.0 && hit.rel_volume < 1.0,
     }
 }
 
@@ -153,6 +183,14 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Breakdown => "Breakdown",
         Preset::Breakout => "Breakout",
         Preset::OversoldBounce => "Oversold Bounce",
+        Preset::GapAndGo => "Gap & Go",
+        Preset::GapAndFade => "Gap & Fade",
+        Preset::InsideDayLow => "Near Day Low",
+        Preset::InsideDayHigh => "Coiling at HOD",
+        Preset::RangeContractionDay => "Range Contraction",
+        Preset::DistributionDay => "Distribution Day",
+        Preset::AccumulationDay => "Accumulation Day",
+        Preset::NearYearHighLowVol => "52w High, No Volume",
     }
 }
 
@@ -184,6 +222,65 @@ mod tests {
         ];
         let hit = stats_for("X", &bars).unwrap();
         assert!(matches(&hit, Preset::PremarketGappers));
+    }
+
+    #[test]
+    fn gap_and_go_fires_on_upgap_with_strong_close_at_hod() {
+        // Prior close 100. Open gaps to 105 (5% gap up).
+        // Closes near day's high (108 vs HOD 108).
+        // Need rel_volume >= 1.5 — build a 5-bar baseline at 1M then today at 2M.
+        let bars = vec![
+            bar(100, 101, 99,  100, 1_000_000, 1),
+            bar(100, 101, 99,  100, 1_000_000, 2),
+            bar(100, 101, 99,  100, 1_000_000, 3),
+            bar(100, 101, 99,  100, 1_000_000, 4),
+            bar(105, 108, 104, 108, 2_000_000, 5),
+        ];
+        let hit = stats_for("X", &bars).unwrap();
+        assert!(matches(&hit, Preset::GapAndGo),
+            "gap={} day_pct={} hod_dist={} rel_vol={}",
+            hit.gap_pct, hit.day_pct, hit.hod_dist_pct, hit.rel_volume);
+    }
+
+    #[test]
+    fn distribution_day_fires_on_2pct_down_with_high_volume() {
+        let bars = vec![
+            bar(100, 101, 99, 100, 1_000_000, 1),
+            bar(100, 101, 99, 100, 1_000_000, 2),
+            bar(100, 101, 99, 100, 1_000_000, 3),
+            bar(100, 101, 99, 100, 1_000_000, 4),
+            bar(100, 100, 95,  97, 2_000_000, 5),    // close -3%, vol 2x avg
+        ];
+        let hit = stats_for("X", &bars).unwrap();
+        assert!(matches(&hit, Preset::DistributionDay));
+    }
+
+    #[test]
+    fn accumulation_day_fires_on_2pct_up_with_high_volume() {
+        let bars = vec![
+            bar(100, 101, 99, 100, 1_000_000, 1),
+            bar(100, 101, 99, 100, 1_000_000, 2),
+            bar(100, 101, 99, 100, 1_000_000, 3),
+            bar(100, 101, 99, 100, 1_000_000, 4),
+            bar(100, 104, 100, 103, 2_000_000, 5),
+        ];
+        let hit = stats_for("X", &bars).unwrap();
+        assert!(matches(&hit, Preset::AccumulationDay));
+    }
+
+    #[test]
+    fn range_contraction_fires_on_tiny_day_with_low_volume() {
+        let bars = vec![
+            bar(100, 105, 95, 100, 2_000_000, 1),
+            bar(100, 105, 95, 100, 2_000_000, 2),
+            bar(100, 105, 95, 100, 2_000_000, 3),
+            bar(100, 105, 95, 100, 2_000_000, 4),
+            bar(100, 100, 100, 100, 1_000_000, 5),    // doji-like, half avg vol
+        ];
+        let hit = stats_for("X", &bars).unwrap();
+        assert!(matches(&hit, Preset::RangeContractionDay),
+            "day_pct={} gap_pct={} rel_vol={}",
+            hit.day_pct, hit.gap_pct, hit.rel_volume);
     }
 
     #[test]
