@@ -258,3 +258,163 @@ pub fn validate(def: &Value) -> anyhow::Result<()> {
 fn dec(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ===========================================================================
+    // validate — kind required
+    // ===========================================================================
+
+    #[test]
+    fn validate_rejects_missing_kind() {
+        let def = json!({"params": {"period": 20}});
+        let err = validate(&def).unwrap_err().to_string();
+        assert!(err.contains("kind required"));
+    }
+
+    #[test]
+    fn validate_rejects_unknown_kind() {
+        let def = json!({"kind": "supertrend", "params": {}});
+        let err = validate(&def).unwrap_err().to_string();
+        assert!(err.contains("unknown kind"));
+    }
+
+    // ===========================================================================
+    // validate — sma / ema / rsi share the 2..=400 period bound
+    // ===========================================================================
+
+    #[test]
+    fn validate_sma_accepts_period_in_range() {
+        for p in [2_u64, 20, 200, 400] {
+            let def = json!({"kind": "sma", "params": {"period": p}});
+            assert!(validate(&def).is_ok(), "sma period {} should validate", p);
+        }
+    }
+
+    #[test]
+    fn validate_sma_rejects_period_below_2_or_above_400() {
+        for p in [0_u64, 1, 401, 1000] {
+            let def = json!({"kind": "sma", "params": {"period": p}});
+            assert!(
+                validate(&def).is_err(),
+                "sma period {} should be rejected",
+                p
+            );
+        }
+    }
+
+    #[test]
+    fn validate_ema_period_uses_same_bounds_as_sma() {
+        let bad = json!({"kind": "ema", "params": {"period": 1}});
+        assert!(validate(&bad).is_err());
+        let good = json!({"kind": "ema", "params": {"period": 50}});
+        assert!(validate(&good).is_ok());
+    }
+
+    #[test]
+    fn validate_rsi_period_uses_same_bounds_as_sma() {
+        let bad = json!({"kind": "rsi", "params": {"period": 401}});
+        assert!(validate(&bad).is_err());
+        let good = json!({"kind": "rsi", "params": {"period": 14}});
+        assert!(validate(&good).is_ok());
+    }
+
+    #[test]
+    fn validate_period_missing_defaults_to_zero_and_fails() {
+        // Without params.period, default is 0 which is outside 2..=400.
+        let def = json!({"kind": "sma", "params": {}});
+        assert!(validate(&def).is_err());
+    }
+
+    // ===========================================================================
+    // validate — bollinger needs period AND k
+    // ===========================================================================
+
+    #[test]
+    fn validate_bollinger_accepts_typical_settings() {
+        let def = json!({"kind": "bollinger", "params": {"period": 20, "k": 2.0}});
+        assert!(validate(&def).is_ok());
+    }
+
+    #[test]
+    fn validate_bollinger_rejects_k_below_min() {
+        let def = json!({"kind": "bollinger", "params": {"period": 20, "k": 0.05}});
+        let err = validate(&def).unwrap_err().to_string();
+        assert!(err.contains("k must be"));
+    }
+
+    #[test]
+    fn validate_bollinger_rejects_k_above_max() {
+        let def = json!({"kind": "bollinger", "params": {"period": 20, "k": 5.5}});
+        assert!(validate(&def).is_err());
+    }
+
+    #[test]
+    fn validate_bollinger_accepts_k_at_boundaries() {
+        let lo = json!({"kind": "bollinger", "params": {"period": 20, "k": 0.1}});
+        let hi = json!({"kind": "bollinger", "params": {"period": 20, "k": 5.0}});
+        assert!(validate(&lo).is_ok());
+        assert!(validate(&hi).is_ok());
+    }
+
+    #[test]
+    fn validate_bollinger_rejects_bad_period_even_if_k_ok() {
+        let def = json!({"kind": "bollinger", "params": {"period": 0, "k": 2.0}});
+        assert!(validate(&def).is_err());
+    }
+
+    // ===========================================================================
+    // validate — macd requires fast / slow / signal in 2..=200
+    // ===========================================================================
+
+    #[test]
+    fn validate_macd_accepts_classic_12_26_9() {
+        let def = json!({"kind": "macd", "params": {"fast": 12, "slow": 26, "signal": 9}});
+        assert!(validate(&def).is_ok());
+    }
+
+    #[test]
+    fn validate_macd_rejects_any_param_out_of_range() {
+        for (k, v) in [("fast", 1_u64), ("slow", 201), ("signal", 0)] {
+            let mut params = json!({"fast": 12, "slow": 26, "signal": 9});
+            params[k] = json!(v);
+            let def = json!({"kind": "macd", "params": params});
+            let err = validate(&def).unwrap_err().to_string();
+            assert!(
+                err.contains(k),
+                "{k}={v} should fail with msg containing {k}"
+            );
+        }
+    }
+
+    #[test]
+    fn validate_macd_missing_param_is_treated_as_zero_and_fails() {
+        let def = json!({"kind": "macd", "params": {"fast": 12, "slow": 26}});
+        // signal missing → 0 → rejected.
+        assert!(validate(&def).is_err());
+    }
+
+    // ===========================================================================
+    // dec helper
+    // ===========================================================================
+
+    #[test]
+    fn dec_handles_zero_and_negative() {
+        assert_eq!(dec(Decimal::ZERO), 0.0);
+        assert_eq!(dec(Decimal::from(-200)), -200.0);
+        assert!((dec(Decimal::new(100001, 3)) - 100.001).abs() < 1e-9);
+    }
+
+    // ===========================================================================
+    // default_color
+    // ===========================================================================
+
+    #[test]
+    fn default_color_is_cyan_hex() {
+        // The frontend chart palette expects #00e5ff specifically.
+        assert_eq!(default_color(), "#00e5ff");
+    }
+}
