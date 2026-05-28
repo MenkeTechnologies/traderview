@@ -174,3 +174,158 @@ pub async fn verify_pat(app: &AppState, rest: &str) -> Result<Uuid, ApiError> {
     });
     Ok(row.user_id)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ===========================================================================
+    // hash_password / verify_password — Argon2 round-trip
+    // ===========================================================================
+
+    #[test]
+    fn hashing_produces_argon2_phc_format() {
+        let h = hash_password("hunter2").unwrap();
+        // Argon2 PHC strings always start with "$argon2".
+        assert!(h.starts_with("$argon2"), "got {}", h);
+    }
+
+    #[test]
+    fn hashing_is_salted_so_same_password_yields_different_hash() {
+        let h1 = hash_password("samepw").unwrap();
+        let h2 = hash_password("samepw").unwrap();
+        assert_ne!(h1, h2, "argon2 must use a fresh salt per hash");
+    }
+
+    #[test]
+    fn verify_returns_true_for_correct_password() {
+        let h = hash_password("correct horse battery staple").unwrap();
+        assert!(verify_password("correct horse battery staple", &h).unwrap());
+    }
+
+    #[test]
+    fn verify_returns_false_for_wrong_password() {
+        let h = hash_password("hunter2").unwrap();
+        assert!(!verify_password("hunter3", &h).unwrap());
+    }
+
+    #[test]
+    fn verify_returns_false_for_empty_password_against_real_hash() {
+        let h = hash_password("nonempty").unwrap();
+        assert!(!verify_password("", &h).unwrap());
+    }
+
+    #[test]
+    fn verify_errors_on_malformed_hash_string() {
+        // PasswordHash::new fails parse → Internal error.
+        let err = verify_password("any", "not-a-real-hash");
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn hash_password_accepts_empty_string() {
+        // Argon2 doesn't require non-empty input; we mirror that here.
+        let h = hash_password("").unwrap();
+        assert!(h.starts_with("$argon2"));
+        assert!(verify_password("", &h).unwrap());
+    }
+
+    // ===========================================================================
+    // issue_token / decode_token — JWT round-trip
+    // ===========================================================================
+
+    #[test]
+    fn issued_token_decodes_back_to_same_user_id() {
+        let secret = b"a-very-secret-key-only-for-tests";
+        let id = Uuid::new_v4();
+        let tok = issue_token(secret, id, 1).unwrap();
+        let claims = decode_token(secret, &tok).unwrap();
+        assert_eq!(claims.sub, id);
+    }
+
+    #[test]
+    fn issued_token_includes_exp_in_the_future() {
+        let secret = b"another-secret";
+        let id = Uuid::new_v4();
+        let before = Utc::now().timestamp();
+        let tok = issue_token(secret, id, 24).unwrap();
+        let claims = decode_token(secret, &tok).unwrap();
+        // exp should be roughly 24h ahead — at minimum 23.5h to leave slack.
+        assert!(claims.exp - before >= 23 * 3600 + 1800);
+        assert!(claims.exp - before <= 25 * 3600);
+        assert!(claims.iat >= before);
+    }
+
+    #[test]
+    fn decode_rejects_token_signed_with_different_secret() {
+        let id = Uuid::new_v4();
+        let tok = issue_token(b"secret-A", id, 1).unwrap();
+        let err = decode_token(b"secret-B", &tok);
+        assert!(matches!(err, Err(ApiError::Unauthorized)));
+    }
+
+    #[test]
+    fn decode_rejects_garbage_token() {
+        let err = decode_token(b"any", "definitely-not-a-jwt");
+        assert!(matches!(err, Err(ApiError::Unauthorized)));
+    }
+
+    #[test]
+    fn decode_rejects_expired_token() {
+        // Negative TTL → exp in the past → jsonwebtoken Validation rejects it.
+        let secret = b"secret";
+        let id = Uuid::new_v4();
+        let tok = issue_token(secret, id, -1).unwrap();
+        let err = decode_token(secret, &tok);
+        assert!(matches!(err, Err(ApiError::Unauthorized)));
+    }
+
+    // ===========================================================================
+    // generate_pat — shape, prefix length, hash verifies
+    // ===========================================================================
+
+    #[test]
+    fn generate_pat_returns_24_char_prefix_and_32_char_secret() {
+        let (prefix, secret, _, _) = generate_pat().unwrap();
+        assert_eq!(prefix.len(), PAT_PREFIX_LEN);
+        assert_eq!(secret.len(), PAT_SECRET_LEN);
+    }
+
+    #[test]
+    fn generate_pat_wire_token_is_pat_underscore_format() {
+        let (prefix, secret, wire, _) = generate_pat().unwrap();
+        let expected = format!("pat_{}_{}", prefix, secret);
+        assert_eq!(wire, expected);
+        assert!(wire.starts_with("pat_"));
+    }
+
+    #[test]
+    fn generate_pat_hash_verifies_against_prefix_secret_concatenation() {
+        let (prefix, secret, _, hash) = generate_pat().unwrap();
+        let candidate = format!("{}_{}", prefix, secret);
+        assert!(verify_password(&candidate, &hash).unwrap());
+    }
+
+    #[test]
+    fn generate_pat_hash_rejects_wire_token_directly() {
+        // The hash is keyed on `{prefix}_{secret}` — NOT the full `pat_...`
+        // wire form. Verifies the contract documented in verify_pat().
+        let (_, _, wire, hash) = generate_pat().unwrap();
+        assert!(!verify_password(&wire, &hash).unwrap());
+    }
+
+    #[test]
+    fn generate_pat_uses_only_alphanumeric_characters() {
+        let (prefix, secret, _, _) = generate_pat().unwrap();
+        assert!(prefix.chars().all(|c| c.is_ascii_alphanumeric()));
+        assert!(secret.chars().all(|c| c.is_ascii_alphanumeric()));
+    }
+
+    #[test]
+    fn generate_pat_produces_unique_tokens_across_calls() {
+        // 56 alnum chars from rand — collision probability is astronomically low.
+        let (p1, s1, _, _) = generate_pat().unwrap();
+        let (p2, s2, _, _) = generate_pat().unwrap();
+        assert_ne!((p1, s1), (p2, s2));
+    }
+}
