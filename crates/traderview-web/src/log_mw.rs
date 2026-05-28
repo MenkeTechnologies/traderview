@@ -106,3 +106,82 @@ fn snippet_for_log(bytes: &Bytes) -> String {
         text
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── snippet_for_log: error-body truncation for log lines ──────────────
+
+    #[test]
+    fn short_body_passes_through_unchanged() {
+        let b = Bytes::from_static(b"{\"error\":\"bad request\"}");
+        let s = snippet_for_log(&b);
+        assert_eq!(s, r#"{"error":"bad request"}"#);
+    }
+
+    #[test]
+    fn empty_body_yields_empty_string() {
+        let b = Bytes::new();
+        assert_eq!(snippet_for_log(&b), "");
+    }
+
+    #[test]
+    fn body_at_exact_cap_is_not_truncated() {
+        // The cap is the inclusive boundary — bodies of exactly MAX_BODY_SNIPPET
+        // bytes must NOT get the truncation suffix because there's nothing left
+        // to drop. Off-by-one here would mislead log readers.
+        let b = Bytes::from(vec![b'x'; MAX_BODY_SNIPPET]);
+        let s = snippet_for_log(&b);
+        assert_eq!(s.len(), MAX_BODY_SNIPPET);
+        assert!(!s.contains("…[+"));
+    }
+
+    #[test]
+    fn oversized_body_truncates_and_reports_overflow() {
+        let extra = 1234usize;
+        let total = MAX_BODY_SNIPPET + extra;
+        let b = Bytes::from(vec![b'a'; total]);
+        let s = snippet_for_log(&b);
+        // Suffix format is "…[+N bytes]" — the count must equal exact overflow.
+        assert!(
+            s.ends_with(&format!("…[+{extra} bytes]")),
+            "suffix wrong: {s}"
+        );
+        // Visible body content is exactly MAX_BODY_SNIPPET bytes of 'a'.
+        let prefix = &s[..MAX_BODY_SNIPPET];
+        assert!(prefix.bytes().all(|c| c == b'a'));
+    }
+
+    #[test]
+    fn invalid_utf8_does_not_panic_and_uses_replacement_chars() {
+        // 4xx/5xx bodies may include binary or mis-encoded data — must never
+        // panic the logger middleware.
+        let b = Bytes::from_static(&[0xff, 0xfe, 0xfd, b'!']);
+        let s = snippet_for_log(&b);
+        // from_utf8_lossy emits U+FFFD for each bad byte.
+        assert!(s.contains('\u{FFFD}'));
+        assert!(s.ends_with('!'));
+    }
+
+    #[test]
+    fn cap_constants_match_documented_limits() {
+        // The README and module docstring promise 4 KB snippet / 4 MB buffer
+        // caps. If anyone tunes these by accident, the log format changes for
+        // every error in production — this pins the contract.
+        assert_eq!(MAX_BODY_SNIPPET, 4096);
+        assert_eq!(MAX_BODY_BUFFER, 4 * 1024 * 1024);
+    }
+
+    #[test]
+    fn truncation_preserves_leading_bytes_not_trailing() {
+        // The first bytes of a JSON error body are typically the most useful
+        // ({"error":"..."}). Snipped should keep the head, drop the tail.
+        let mut bytes = Vec::with_capacity(MAX_BODY_SNIPPET + 100);
+        bytes.extend_from_slice(b"{\"error\":\"first\"");
+        bytes.extend(std::iter::repeat(b'X').take(MAX_BODY_SNIPPET));
+        let b = Bytes::from(bytes);
+        let s = snippet_for_log(&b);
+        assert!(s.starts_with("{\"error\":\"first\""));
+    }
+}
