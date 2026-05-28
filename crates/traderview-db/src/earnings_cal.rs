@@ -314,3 +314,100 @@ fn f_opt(v: &Value) -> Option<f64> {
 fn dec(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ─── pick_date ─────────────────────────────────────────────────────────
+    #[test]
+    fn pick_date_prefers_fmt_when_present() {
+        let v = json!({ "fmt": "2024-03-15", "raw": 0 });
+        assert_eq!(
+            pick_date(&v),
+            Some(NaiveDate::from_ymd_opt(2024, 3, 15).unwrap())
+        );
+    }
+
+    #[test]
+    fn pick_date_falls_back_to_raw_epoch_when_fmt_missing() {
+        // 2024-01-02 00:00:00 UTC = 1704153600.
+        let v = json!({ "raw": 1704153600i64 });
+        assert_eq!(
+            pick_date(&v),
+            Some(NaiveDate::from_ymd_opt(2024, 1, 2).unwrap())
+        );
+    }
+
+    #[test]
+    fn pick_date_returns_none_when_neither_field_usable() {
+        assert!(pick_date(&json!({})).is_none());
+        assert!(pick_date(&json!({ "fmt": "not-a-date" })).is_none());
+        assert!(pick_date(&json!({ "raw": "stringy" })).is_none());
+    }
+
+    #[test]
+    fn pick_date_falls_through_to_raw_when_fmt_unparseable() {
+        let v = json!({ "fmt": "bogus", "raw": 1704153600i64 });
+        assert_eq!(
+            pick_date(&v),
+            Some(NaiveDate::from_ymd_opt(2024, 1, 2).unwrap())
+        );
+    }
+
+    // ─── guess_timing ──────────────────────────────────────────────────────
+    #[test]
+    fn guess_timing_classifies_amc_when_et_hour_ge_16() {
+        // 2024-01-02 21:30 UTC = 16:30 ET (winter, UTC-5) → AMC.
+        let ts = 1704231000i64;
+        let v = json!({ "raw": ts });
+        assert_eq!(guess_timing(&v).as_deref(), Some("amc"));
+    }
+
+    #[test]
+    fn guess_timing_classifies_bmo_when_et_hour_lt_9() {
+        // 2024-01-02 13:00 UTC = 08:00 ET → BMO.
+        let ts = 1704200400i64;
+        let v = json!({ "raw": ts });
+        assert_eq!(guess_timing(&v).as_deref(), Some("bmo"));
+    }
+
+    #[test]
+    fn guess_timing_returns_unknown_for_midday_hours() {
+        // 2024-01-02 17:00 UTC = 12:00 ET → unknown.
+        let ts = 1704214800i64;
+        let v = json!({ "raw": ts });
+        assert_eq!(guess_timing(&v).as_deref(), Some("unknown"));
+    }
+
+    #[test]
+    fn guess_timing_returns_none_without_raw_timestamp() {
+        assert!(guess_timing(&json!({})).is_none());
+        assert!(guess_timing(&json!({ "fmt": "2024-01-01" })).is_none());
+    }
+
+    // ─── f_opt ─────────────────────────────────────────────────────────────
+    #[test]
+    fn f_opt_extracts_floats_and_ints_from_raw() {
+        assert_eq!(f_opt(&json!({ "raw": 1.5 })), Some(1.5));
+        assert_eq!(f_opt(&json!({ "raw": 42 })), Some(42.0));
+        assert_eq!(f_opt(&json!({ "raw": -3 })), Some(-3.0));
+    }
+
+    #[test]
+    fn f_opt_returns_none_when_raw_missing_or_non_numeric() {
+        assert!(f_opt(&json!({})).is_none());
+        assert!(f_opt(&json!({ "raw": "1.5" })).is_none());
+        assert!(f_opt(&json!({ "raw": null })).is_none());
+    }
+
+    // ─── dec ───────────────────────────────────────────────────────────────
+    #[test]
+    fn dec_roundtrips_decimal_to_f64() {
+        use std::str::FromStr;
+        assert_eq!(dec(Decimal::from_str("1.23").unwrap()), 1.23);
+        assert_eq!(dec(Decimal::from_str("-100.5").unwrap()), -100.5);
+        assert_eq!(dec(Decimal::ZERO), 0.0);
+    }
+}
