@@ -24,6 +24,12 @@ pub struct DynamicKellyPoint {
 /// from the last `window` trades (ending at trade `i`). Earlier indices
 /// emit `None` for kelly_fraction.
 pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
+    // window == 0 is undefined — a Kelly with no history is meaningless,
+    // and the per-point math divides by `window as f64` which would emit
+    // NaN/Inf in `window_win_rate`. Refuse it explicitly.
+    if window == 0 {
+        return Vec::new();
+    }
     let mut out = Vec::with_capacity(trade_pnls.len());
     for i in 0..trade_pnls.len() {
         if i + 1 < window {
@@ -31,8 +37,12 @@ pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
             continue;
         }
         let w = &trade_pnls[(i + 1 - window)..=i];
-        let wins: Vec<f64> = w.iter().filter(|p| **p > 0.0).cloned().collect();
-        let losses: Vec<f64> = w.iter().filter(|p| **p < 0.0).map(|p| -p).collect();
+        // Filter non-finite values out of both buckets. With Inf in wins
+        // the avg/payoff escape as Inf; with NaN every comparison is
+        // false so NaN trades silently get treated as zero-pnl, but a
+        // mix of NaN+Inf in the same window would produce NaN payoff.
+        let wins: Vec<f64> = w.iter().filter(|p| p.is_finite() && **p > 0.0).cloned().collect();
+        let losses: Vec<f64> = w.iter().filter(|p| p.is_finite() && **p < 0.0).map(|p| -p).collect();
         let wr = wins.len() as f64 / window as f64;
         let payoff = if losses.is_empty() {
             None
@@ -42,7 +52,10 @@ pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
             let avg_win = wins.iter().sum::<f64>() / wins.len() as f64;
             let avg_loss = losses.iter().sum::<f64>() / losses.len() as f64;
             if avg_loss > 0.0 {
-                Some(avg_win / avg_loss)
+                let p = avg_win / avg_loss;
+                // Subnormal avg_loss can make the ratio overflow to Inf
+                // even when both numerator and denominator are finite.
+                if p.is_finite() { Some(p) } else { None }
             } else {
                 None
             }
@@ -71,6 +84,15 @@ mod tests {
     #[test]
     fn empty_returns_empty() {
         assert!(compute(&[], 10).is_empty());
+    }
+
+    #[test]
+    fn zero_window_returns_empty_no_division_by_zero() {
+        // Prior implementation divided wins.len() by `window as f64`,
+        // producing NaN in window_win_rate for every output point. The
+        // empty-vec return makes window==0 an explicit error case.
+        let r = compute(&[100.0, -50.0, 100.0], 0);
+        assert!(r.is_empty(), "window=0 must yield no points, got {} pts", r.len());
     }
 
     #[test]

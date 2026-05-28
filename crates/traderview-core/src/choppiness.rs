@@ -42,9 +42,13 @@ pub struct ChopReport {
 
 pub fn compute(bars: &[OhlcBar], period: usize) -> ChopReport {
     let n = bars.len();
-    if n == 0 || period < 2 || n < period + 1 {
+    if n == 0 || period < 2 || n < period.saturating_add(1) {
+        // Preserve the input-aligned `series.len() == bars.len()` invariant
+        // the populated path honors. Returning Default's empty Vec broke
+        // callers indexing the series by bar position.
         return ChopReport {
-            note: format!("need ≥ {} bars, got {}", period + 1, n),
+            series: vec![None; n],
+            note: format!("need ≥ {} bars, got {}", period.saturating_add(1), n),
             ..Default::default()
         };
     }

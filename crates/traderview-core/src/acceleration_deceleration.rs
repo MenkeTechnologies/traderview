@@ -45,7 +45,14 @@ fn sma_window(slice: &[f64]) -> f64 {
 pub fn compute(bars: &[HlBar]) -> AcReport {
     let n = bars.len();
     if n < 34 + 5 {
-        return AcReport::default();
+        // Preserve the input-aligned length invariant the post-warmup path
+        // honors (`ao.len() == ac.len() == bars.len()`), otherwise callers
+        // indexing the series by bar index walk off the end on short input.
+        return AcReport {
+            ao: vec![None; n],
+            ac: vec![None; n],
+            ..AcReport::default()
+        };
     }
     let mp: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
     let mut ao: Vec<Option<f64>> = vec![None; n];

@@ -66,9 +66,19 @@ pub fn detect(bars: &[OhlcBar], atr: &[f64], cfg: &DisplacementConfig) -> Displa
         let a = atr[i];
         if !(a.is_finite() && a > 0.0) { continue; }
         let bar = bars[i];
+        // Reject bars with non-finite OHLC — they produce NaN body_atrs
+        // / close_position that slip past the numeric guards below
+        // (every NaN comparison is false), emitting NaN events.
+        if !(bar.open.is_finite() && bar.high.is_finite()
+            && bar.low.is_finite() && bar.close.is_finite())
+        {
+            continue;
+        }
         let body = (bar.close - bar.open).abs();
         let body_atrs = body / a;
-        if body_atrs < cfg.min_atrs { continue; }
+        // Subnormal `a` can overflow body/a to Inf even when both
+        // numerator and denominator are individually finite.
+        if !body_atrs.is_finite() || body_atrs < cfg.min_atrs { continue; }
         let range = bar.high - bar.low;
         if range <= 0.0 { continue; }
         // Close position: 0 = low, 1 = high.

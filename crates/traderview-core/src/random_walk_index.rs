@@ -45,7 +45,13 @@ pub struct RwiReport {
 pub fn compute(bars: &[OhlcBar], max_n: usize) -> RwiReport {
     let n = bars.len();
     if n == 0 || max_n < 2 || n <= max_n {
-        return RwiReport::default();
+        // Preserve the input-aligned `rwi_high.len() == bars.len()`
+        // invariant the populated path honors.
+        return RwiReport {
+            rwi_high: vec![None; n],
+            rwi_low: vec![None; n],
+            ..RwiReport::default()
+        };
     }
     // Pre-compute true-range series.
     let tr: Vec<f64> = (0..n).map(|i| {

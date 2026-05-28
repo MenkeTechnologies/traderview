@@ -55,11 +55,14 @@ pub fn schedule(
     let mut report = RollReport::default();
     for p in positions {
         let days = (p.expiration - today).num_days();
+        // saturating_mul: roll_window_days is JSON-supplied, so i64::MAX*2
+        // would panic in debug / wrap in release with the naive `* 2`.
+        let soon_threshold = roll_window_days.saturating_mul(2);
         let urgency = if days < 0 {
             RollUrgency::Expired
         } else if days <= roll_window_days {
             RollUrgency::Now
-        } else if days <= roll_window_days * 2 {
+        } else if days <= soon_threshold {
             RollUrgency::Soon
         } else {
             RollUrgency::Comfortable

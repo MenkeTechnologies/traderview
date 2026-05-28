@@ -93,7 +93,7 @@ pub fn compute(eq: &[EquityPoint], periods_per_year: f64) -> RiskMetrics {
 /// per-trade edge (avg_R) and a stop multiple (1R-loss). Uses the
 /// closed-form Kelly-based RoR formula:
 ///
-///     RoR = ((1 - edge) / (1 + edge))^(units)
+/// `RoR = ((1 - edge) / (1 + edge)).powf(units)`
 ///
 /// where `edge` is avg_R per trade (positive bullish) and `units` is
 /// the bankroll expressed in R-multiples (i.e. how many full stops can

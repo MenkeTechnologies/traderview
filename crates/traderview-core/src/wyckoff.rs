@@ -57,19 +57,24 @@ pub struct WyckoffReport {
 
 pub fn classify(closes: &[f64], cfg: &WyckoffConfig) -> WyckoffReport {
     let n = closes.len();
-    if n < cfg.lookback.max(3) {
+    // Floor the lookback at 3 — same minimum used by the guard below.
+    // Without this binding the early-exit checks against `lookback.max(3)`
+    // but then slices with raw `cfg.lookback`, so `lookback == 0` panics
+    // at `slice.last().expect("non-empty slice")` on any n ≥ 3.
+    let lookback = cfg.lookback.max(3);
+    if n < lookback {
         return WyckoffReport {
-            note: format!("need ≥ {} closes, got {}", cfg.lookback.max(3), n),
+            note: format!("need ≥ {lookback} closes, got {n}"),
             ..Default::default()
         };
     }
-    let slice = &closes[n - cfg.lookback..];
-    let mean: f64 = slice.iter().sum::<f64>() / cfg.lookback as f64;
+    let slice = &closes[n - lookback..];
+    let mean: f64 = slice.iter().sum::<f64>() / lookback as f64;
     if mean <= 0.0 {
         return WyckoffReport { note: "non-positive mean price".into(), ..Default::default() };
     }
     // Linear-regression slope of price vs index.
-    let mean_x = (cfg.lookback as f64 - 1.0) / 2.0;
+    let mean_x = (lookback as f64 - 1.0) / 2.0;
     let (mut num, mut den) = (0.0_f64, 0.0_f64);
     for (i, &p) in slice.iter().enumerate() {
         let dx = i as f64 - mean_x;

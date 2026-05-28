@@ -79,7 +79,10 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrderBlockConfig) -> OrderBlockReport {
         let cand_range = cand.high - cand.low;
         if cand_range <= 0.0 { continue; }
         let need = cand_range * cfg.expansion_multiple;
-        let end = (i + 1 + cfg.expansion_window).min(n);
+        // saturating_add against a hostile JSON expansion_window of
+        // usize::MAX which would otherwise wrap and produce `end < i+1`,
+        // panicking the subsequent `bars[i+1..end]` slice.
+        let end = i.saturating_add(1).saturating_add(cfg.expansion_window).min(n);
         // Bullish order block: candidate is a DOWN candle, expansion is UP.
         if cand.close < cand.open {
             let post_high = bars[i + 1..end].iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);

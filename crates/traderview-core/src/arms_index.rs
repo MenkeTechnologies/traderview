@@ -153,6 +153,58 @@ mod tests {
         assert!(matches!(r.signal, TrinSignal::Neutral));
     }
 
+    /// Deterministic linear-congruential RNG so the fuzz test is reproducible
+    /// and adds no dev-dependencies.
+    struct Lcg(u64);
+    impl Lcg {
+        fn new(seed: u64) -> Self { Self(seed) }
+        fn next_u64(&mut self) -> u64 {
+            self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            self.0
+        }
+        fn f64_range(&mut self, lo: f64, hi: f64) -> f64 {
+            let r = (self.next_u64() >> 11) as f64 / (1u64 << 53) as f64;
+            lo + (hi - lo) * r
+        }
+        fn pick_bad_f64(&mut self) -> f64 {
+            match self.next_u64() % 6 {
+                0 => f64::NAN,
+                1 => f64::INFINITY,
+                2 => f64::NEG_INFINITY,
+                3 => -1.0e9,
+                4 => 0.0,
+                _ => self.f64_range(1.0, 1.0e9),
+            }
+        }
+    }
+
+    #[test]
+    fn fuzz_compute_never_panics_or_emits_nonfinite() {
+        let mut rng = Lcg::new(0xDEAD_BEEF_CAFE_F00D);
+        for _ in 0..20_000 {
+            let n = (rng.next_u64() % 64) as usize;
+            let bars: Vec<BreadthBar> = (0..n).map(|_| BreadthBar {
+                advancing_issues: rng.next_u64() % 1_000_000,
+                declining_issues: rng.next_u64() % 1_000_000,
+                advancing_volume: rng.pick_bad_f64(),
+                declining_volume: rng.pick_bad_f64(),
+            }).collect();
+            let r = compute(&bars);
+            // Series length must match input.
+            assert_eq!(r.series.len(), bars.len());
+            // Every populated value must be a finite real (no NaN, no Inf).
+            for (i, v) in r.series.iter().enumerate() {
+                if let Some(x) = v {
+                    assert!(x.is_finite(),
+                        "bar {i} produced non-finite TRIN {x} from bar {:?}", bars[i]);
+                }
+            }
+            if let Some(v) = r.latest {
+                assert!(v.is_finite(), "latest must be finite, got {v}");
+            }
+        }
+    }
+
     #[test]
     fn multi_bar_series_preserved() {
         let bars = vec![

@@ -22,9 +22,15 @@ pub struct ConePoint {
     pub lower_2sd: f64,
 }
 
+/// Hard cap on horizon to prevent unbounded allocation when the JSON route
+/// hands us a hostile `horizon_days` (e.g. `usize::MAX`). 1000 bars covers
+/// ~4 trading years which is far beyond any reasonable cone projection.
+const MAX_HORIZON_DAYS: usize = 1000;
+
 pub fn project(entry: f64, daily_atr: f64, horizon_days: usize) -> Vec<ConePoint> {
-    let mut out = Vec::with_capacity(horizon_days + 1);
-    for d in 0..=horizon_days {
+    let horizon = horizon_days.min(MAX_HORIZON_DAYS);
+    let mut out = Vec::with_capacity(horizon + 1);
+    for d in 0..=horizon {
         let sigma = daily_atr * (d as f64).sqrt();
         out.push(ConePoint {
             days_forward: d,
@@ -126,5 +132,22 @@ mod tests {
         assert_eq!(out.len(), 31);
         assert_eq!(out[0].days_forward, 0);
         assert_eq!(out[30].days_forward, 30);
+    }
+
+    #[test]
+    fn huge_horizon_capped_no_oom_no_overflow() {
+        // Prior implementation would allocate ~`usize::MAX + 1` ConePoints
+        // and overflow the addition in Vec::with_capacity. After the cap
+        // the worst case is bounded by MAX_HORIZON_DAYS+1 entries.
+        let out = project(100.0, 1.0, usize::MAX);
+        assert_eq!(out.len(), MAX_HORIZON_DAYS + 1);
+        assert_eq!(out.last().unwrap().days_forward, MAX_HORIZON_DAYS);
+    }
+
+    #[test]
+    fn over_cap_silently_truncates() {
+        // 10_000 > 1_000 → capped to 1_001 entries.
+        let out = project(100.0, 1.0, 10_000);
+        assert_eq!(out.len(), MAX_HORIZON_DAYS + 1);
     }
 }

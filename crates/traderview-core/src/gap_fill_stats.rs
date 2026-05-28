@@ -55,6 +55,14 @@ pub fn analyze(bars: &[OhlcBar], atr: &[f64]) -> GapStatsReport {
         let prev = bars[i - 1];
         let cur = bars[i];
         let a = atr[i];
+        // Skip bars with non-finite OHLC — they produce Inf gap sizes,
+        // misleading downstream consumers. Real market data never carries
+        // NaN/Inf; this is defensive against pathological JSON inputs.
+        if !(prev.high.is_finite() && prev.low.is_finite()
+            && cur.open.is_finite() && cur.high.is_finite() && cur.low.is_finite())
+        {
+            continue;
+        }
         let direction = if cur.open > prev.high {
             Some(GapDirection::Up)
         } else if cur.open < prev.low {

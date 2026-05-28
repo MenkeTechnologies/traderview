@@ -68,6 +68,14 @@ pub fn detect(bars: &[OhlcBar], cfg: &BreakoutConfig) -> BreakoutReport {
         let window = &bars[(i - cfg.lookback)..i];
         let prior_high = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
         let prior_low  = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+        // Skip windows where every bar's high/low was non-finite — the
+        // fold seeds (NEG_INFINITY / INFINITY) would otherwise treat any
+        // finite probe price as a breakout, spuriously firing on every
+        // following bar. Real data never trips this; defensive against
+        // hostile JSON.
+        if !prior_high.is_finite() || !prior_low.is_finite() {
+            continue;
+        }
         let cur = bars[i];
         let probe_up   = if cfg.close_only { cur.close } else { cur.high };
         let probe_down = if cfg.close_only { cur.close } else { cur.low };

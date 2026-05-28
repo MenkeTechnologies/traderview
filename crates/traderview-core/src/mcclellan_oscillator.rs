@@ -57,8 +57,12 @@ pub fn compute(bars: &[BreadthBar]) -> McClellanReport {
     }
     let k_short = ema_smoothing(19);
     let k_long = ema_smoothing(39);
+    // Compute net advances in f64 to avoid an i64 subtraction overflow on
+    // pathological JSON inputs (e.g. advancing_issues=i64::MIN paired with
+    // a positive declining_issues panics in debug, wraps in release).
+    // Real exchange data is tiny so this is purely a hardening fix.
     let net: Vec<f64> = bars.iter()
-        .map(|b| (b.advancing_issues - b.declining_issues) as f64)
+        .map(|b| b.advancing_issues as f64 - b.declining_issues as f64)
         .collect();
     // Seed both EMAs with the first net-advances value.
     let mut ema_short = net[0];
