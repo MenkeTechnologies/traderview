@@ -465,9 +465,9 @@ mod tests {
 
     #[test]
     fn dec_converts_fractional_decimal() {
-        // 3.14
-        let d = Decimal::new(314, 2);
-        assert!((dec(d) - 3.14).abs() < 1e-9);
+        // 4.25
+        let d = Decimal::new(425, 2);
+        assert!((dec(d) - 4.25).abs() < 1e-9);
     }
 
     #[test]

@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn f_extracts_bare_f64_number() {
-        assert_eq!(f(&json!(3.14)), Some(3.14));
+        assert_eq!(f(&json!(4.25)), Some(4.25));
     }
 
     #[test]
