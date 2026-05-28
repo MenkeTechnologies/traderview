@@ -257,3 +257,169 @@ fn nearest_strike(contracts: &[OptionContract], target: f64) -> Option<OptionCon
         })
         .cloned()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ===========================================================================
+    // Fixture builder
+    // ===========================================================================
+
+    fn c(strike: f64, iv: Option<f64>) -> OptionContract {
+        OptionContract {
+            strike,
+            bid: None,
+            ask: None,
+            last_price: None,
+            implied_vol: iv,
+            volume: None,
+            open_interest: None,
+            in_the_money: false,
+        }
+    }
+
+    fn c_with_quotes(strike: f64, bid: f64, ask: f64) -> OptionContract {
+        OptionContract {
+            strike,
+            bid: Some(bid),
+            ask: Some(ask),
+            last_price: None,
+            implied_vol: None,
+            volume: None,
+            open_interest: None,
+            in_the_money: false,
+        }
+    }
+
+    // ===========================================================================
+    // mid — quote priority
+    // ===========================================================================
+
+    #[test]
+    fn mid_averages_bid_and_ask_when_both_positive() {
+        let q = c_with_quotes(100.0, 2.0, 4.0);
+        assert_eq!(mid(&q), Some(3.0));
+    }
+
+    #[test]
+    fn mid_falls_back_to_last_price_when_quotes_missing() {
+        let mut q = c(100.0, None);
+        q.last_price = Some(5.5);
+        assert_eq!(mid(&q), Some(5.5));
+    }
+
+    #[test]
+    fn mid_returns_none_when_bid_or_ask_is_zero() {
+        // bid=0 → not both positive → fall through to last_price (also None).
+        let q = c_with_quotes(100.0, 0.0, 4.0);
+        assert_eq!(mid(&q), None);
+    }
+
+    #[test]
+    fn mid_returns_none_when_last_price_is_zero() {
+        let mut q = c(100.0, None);
+        q.last_price = Some(0.0);
+        assert_eq!(mid(&q), None);
+    }
+
+    #[test]
+    fn mid_returns_none_when_no_quotes_or_last_price() {
+        assert_eq!(mid(&c(100.0, None)), None);
+    }
+
+    // ===========================================================================
+    // nearest_strike — minimum absolute distance
+    // ===========================================================================
+
+    #[test]
+    fn nearest_strike_returns_none_on_empty_input() {
+        assert!(nearest_strike(&[], 100.0).is_none());
+    }
+
+    #[test]
+    fn nearest_strike_picks_closest_to_target() {
+        let contracts = vec![c(90.0, None), c(95.0, None), c(105.0, None), c(120.0, None)];
+        let n = nearest_strike(&contracts, 100.0).unwrap();
+        // 95 and 105 are equidistant; min_by returns the first equal element (95).
+        assert_eq!(n.strike, 95.0);
+    }
+
+    #[test]
+    fn nearest_strike_handles_exact_match() {
+        let contracts = vec![c(95.0, None), c(100.0, None), c(105.0, None)];
+        let n = nearest_strike(&contracts, 100.0).unwrap();
+        assert_eq!(n.strike, 100.0);
+    }
+
+    #[test]
+    fn nearest_strike_handles_target_below_min() {
+        let contracts = vec![c(100.0, None), c(110.0, None)];
+        let n = nearest_strike(&contracts, 50.0).unwrap();
+        assert_eq!(n.strike, 100.0);
+    }
+
+    #[test]
+    fn nearest_strike_handles_target_above_max() {
+        let contracts = vec![c(100.0, None), c(110.0, None)];
+        let n = nearest_strike(&contracts, 999.0).unwrap();
+        assert_eq!(n.strike, 110.0);
+    }
+
+    // ===========================================================================
+    // iv_at_strike — interpolation between brackets
+    // ===========================================================================
+
+    #[test]
+    fn iv_at_strike_returns_none_on_empty_chain() {
+        let r = iv_at_strike(&[], OptKind::Call, 100.0, 100.0, 0.25);
+        assert!(r.is_none());
+    }
+
+    #[test]
+    fn iv_at_strike_returns_exact_iv_when_target_matches_strike() {
+        // Single contract → lo == hi → no interpolation, returns lo_iv directly.
+        let contracts = vec![c(100.0, Some(0.30))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 100.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.30).abs() < 1e-9);
+    }
+
+    #[test]
+    fn iv_at_strike_linearly_interpolates_between_two_strikes() {
+        // strikes: 90 (IV 0.20), 110 (IV 0.40). Target 100 → IV = 0.30.
+        let contracts = vec![c(90.0, Some(0.20)), c(110.0, Some(0.40))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 100.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.30).abs() < 1e-9);
+    }
+
+    #[test]
+    fn iv_at_strike_quarter_weight_on_lower_strike() {
+        // strikes: 90 (IV 0.20), 110 (IV 0.40). Target 95 → w=0.25 → IV=0.25.
+        let contracts = vec![c(90.0, Some(0.20)), c(110.0, Some(0.40))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 95.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn iv_at_strike_target_above_all_strikes_uses_highest_strike_iv() {
+        // No bracket above; lo = highest, hi = lo via (Some, None) branch → returns lo_iv.
+        let contracts = vec![c(90.0, Some(0.20)), c(100.0, Some(0.25))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 200.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn iv_at_strike_target_below_all_strikes_uses_lowest_strike_iv() {
+        let contracts = vec![c(100.0, Some(0.25)), c(110.0, Some(0.30))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 50.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn iv_at_strike_sorts_contracts_so_input_order_does_not_matter() {
+        // Same input as the interpolation test, but reversed order.
+        let contracts = vec![c(110.0, Some(0.40)), c(90.0, Some(0.20))];
+        let r = iv_at_strike(&contracts, OptKind::Call, 100.0, 100.0, 0.25);
+        assert!((r.unwrap() - 0.30).abs() < 1e-9);
+    }
+}
