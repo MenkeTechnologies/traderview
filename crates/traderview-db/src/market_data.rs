@@ -340,3 +340,93 @@ fn dec_f64(d: Decimal) -> f64 {
 fn enc(s: &str) -> String {
     s.replace('^', "%5E").replace('=', "%3D")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── dec_f64: Decimal → f64 via string round-trip ──────────────────────
+
+    #[test]
+    fn dec_f64_round_trips_simple_decimal() {
+        assert_eq!(dec_f64(Decimal::from(42)), 42.0);
+        assert_eq!(dec_f64(Decimal::ZERO), 0.0);
+        assert_eq!(dec_f64(Decimal::from(-7)), -7.0);
+    }
+
+    #[test]
+    fn dec_f64_preserves_fractional_quote_prices() {
+        // Quote snapshots store prices as Decimal in the DB; the f64 surface
+        // is what hits the JSON response. Must not drift on representative
+        // tick sizes.
+        let d = Decimal::from_str("150.25").unwrap();
+        assert_eq!(dec_f64(d), 150.25);
+        let d = Decimal::from_str("0.01").unwrap();
+        assert_eq!(dec_f64(d), 0.01);
+    }
+
+    #[test]
+    fn dec_f64_handles_high_precision() {
+        // rust_decimal supports up to 28 fractional digits — verify we don't
+        // truncate aggressively on values that f64 can still represent.
+        let d = Decimal::from_str("4.25").unwrap();
+        assert!((dec_f64(d) - 4.25).abs() < 1e-12);
+    }
+
+    // ── enc: URL escape symbol-name special characters ────────────────────
+
+    #[test]
+    fn enc_escapes_caret_for_indices() {
+        // Yahoo uses ^GSPC, ^VIX, ^DJI; the caret must be percent-encoded.
+        assert_eq!(enc("^GSPC"), "%5EGSPC");
+        assert_eq!(enc("^VIX"), "%5EVIX");
+    }
+
+    #[test]
+    fn enc_escapes_equals_for_futures_and_fx() {
+        // Yahoo futures (ES=F, CL=F) and FX (EURUSD=X) use '=' in the symbol.
+        assert_eq!(enc("ES=F"), "ES%3DF");
+        assert_eq!(enc("EURUSD=X"), "EURUSD%3DX");
+    }
+
+    #[test]
+    fn enc_leaves_plain_tickers_untouched() {
+        // The common case — equities should be a no-op through the encoder.
+        assert_eq!(enc("AAPL"), "AAPL");
+        assert_eq!(enc("MSFT"), "MSFT");
+        assert_eq!(enc("BRK-B"), "BRK-B");
+    }
+
+    #[test]
+    fn enc_handles_both_chars_in_one_symbol() {
+        // Pathological but valid — caret AND equals in the same symbol must
+        // both be escaped independently.
+        assert_eq!(enc("^FOO=BAR"), "%5EFOO%3DBAR");
+    }
+
+    #[test]
+    fn enc_returns_empty_for_empty_input() {
+        // Defensive: empty symbol is a caller bug but must not panic.
+        assert_eq!(enc(""), "");
+    }
+
+    // ── NewsItem serde round-trip pins public API shape ───────────────────
+
+    #[test]
+    fn news_item_serializes_with_snake_case_fields() {
+        let item = NewsItem {
+            uuid: Some("abc".into()),
+            title: Some("Headline".into()),
+            publisher: Some("Reuters".into()),
+            link: Some("https://example.com".into()),
+            provider_publish_time: Some(1700000000),
+            thumbnail: None,
+        };
+        let v = serde_json::to_value(&item).unwrap();
+        // The frontend keys these fields exactly — renaming would break it.
+        assert_eq!(v["uuid"], "abc");
+        assert_eq!(v["title"], "Headline");
+        assert_eq!(v["provider_publish_time"], 1700000000);
+        assert!(v["thumbnail"].is_null());
+    }
+}
