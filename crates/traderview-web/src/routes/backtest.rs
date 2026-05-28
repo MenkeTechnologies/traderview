@@ -133,3 +133,83 @@ async fn walk_forward_handler(
     );
     Ok(Json(r))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Single-backtest defaults ──────────────────────────────────────────
+
+    #[test]
+    fn default_days_matches_2_year_lookback() {
+        // 730d gives roughly two years of trading bars — enough warm-up for
+        // every Preset's longest indicator (sma200, breakout-channel windows).
+        // Shorter defaults silently produce empty equity curves for new tickers.
+        assert_eq!(default_days(), 730);
+    }
+
+    #[test]
+    fn default_capital_matches_10k_starting_equity() {
+        // The frontend renders all R-multiples / drawdown % against this base
+        // when no capital is sent. Changing the number reshapes every chart.
+        assert_eq!(default_capital(), 10_000.0);
+    }
+
+    // ── Walk-forward defaults ─────────────────────────────────────────────
+
+    #[test]
+    fn default_wf_days_matches_5_year_window() {
+        // Walk-forward needs at least is_bars + oos_bars + step bars; 1825d
+        // (~5y) is the smallest window that lets the default 252/63 split run
+        // multiple oos folds without padding.
+        assert_eq!(default_wf_days(), 1825);
+    }
+
+    #[test]
+    fn default_is_bars_matches_roughly_one_trading_year() {
+        // 252 = approximate US trading days per year. Anchoring to 252 keeps
+        // is/oos ratios sane across symbols regardless of holiday count.
+        assert_eq!(default_is_bars(), 252);
+    }
+
+    #[test]
+    fn default_oos_bars_matches_roughly_one_quarter() {
+        // ~63 trading days per quarter — picked so the WF gets ~4 oos folds
+        // per is window.
+        assert_eq!(default_oos_bars(), 63);
+    }
+
+    #[test]
+    fn default_metric_is_return_not_sharpe() {
+        // Return is the default optimization metric so first-time users see
+        // the most intuitive number. Sharpe/Sortino are explicit opt-ins.
+        assert!(matches!(default_metric(), OptMetric::Return));
+    }
+
+    #[test]
+    fn defaults_combine_to_a_runnable_wf_window() {
+        // is + oos must fit inside default_wf_days × ~252/365 trading days.
+        // If anyone shrinks days OR grows is/oos, this guard catches it.
+        let trading_days = (default_wf_days() as f64 * 252.0 / 365.0) as usize;
+        assert!(
+            default_is_bars() + default_oos_bars() <= trading_days,
+            "is_bars ({}) + oos_bars ({}) won't fit in {} trading days",
+            default_is_bars(),
+            default_oos_bars(),
+            trading_days
+        );
+    }
+
+    // ── Body deserialization picks up defaults when fields omitted ────────
+
+    #[test]
+    fn body_fills_defaults_when_only_required_fields_sent() {
+        // Preset is serde-renamed to snake_case; preset shape matches what the
+        // frontend sends so the defaults wiring is exercised end-to-end.
+        let json = r#"{"symbol":"AAPL","preset":{"sma_cross":{"fast":10,"slow":30}}}"#;
+        let b: Body = serde_json::from_str(json).expect("parse");
+        assert_eq!(b.days, 730);
+        assert_eq!(b.initial_capital, 10_000.0);
+        assert_eq!(b.fee_per_trade, 0.0);
+    }
+}
