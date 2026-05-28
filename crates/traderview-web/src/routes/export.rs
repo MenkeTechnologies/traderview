@@ -62,6 +62,104 @@ fn dec_opt(d: Option<rust_decimal::Decimal>) -> String {
     d.map(dec_to_string).unwrap_or_default()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rust_decimal::Decimal;
+
+    // ===========================================================================
+    // csv_cell — RFC 4180 quoting rules
+    // ===========================================================================
+
+    #[test]
+    fn csv_cell_passes_through_simple_text_unquoted() {
+        assert_eq!(csv_cell("hello"), "hello");
+        assert_eq!(csv_cell(""), "");
+        assert_eq!(csv_cell("123.45"), "123.45");
+    }
+
+    #[test]
+    fn csv_cell_quotes_when_comma_present() {
+        assert_eq!(csv_cell("a,b"), "\"a,b\"");
+    }
+
+    #[test]
+    fn csv_cell_quotes_when_newline_present() {
+        assert_eq!(csv_cell("a\nb"), "\"a\nb\"");
+        assert_eq!(csv_cell("a\rb"), "\"a\rb\"");
+    }
+
+    #[test]
+    fn csv_cell_quotes_and_doubles_internal_quotes() {
+        // RFC 4180: an embedded `"` becomes `""` inside the quoted cell.
+        assert_eq!(csv_cell("say \"hi\""), "\"say \"\"hi\"\"\"");
+    }
+
+    #[test]
+    fn csv_cell_quote_only_string_is_quoted_and_doubled() {
+        assert_eq!(csv_cell("\""), "\"\"\"\"");
+    }
+
+    #[test]
+    fn csv_cell_handles_multi_char_quoted_payloads() {
+        // Note name with comma + embedded quotes — common in broker exports.
+        assert_eq!(
+            csv_cell(r#"Smith, "Bull Trap" exit"#),
+            "\"Smith, \"\"Bull Trap\"\" exit\""
+        );
+    }
+
+    // ===========================================================================
+    // csv_row — joins cells with commas, escapes per-cell
+    // ===========================================================================
+
+    #[test]
+    fn csv_row_joins_simple_cells_with_commas() {
+        let cells = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        assert_eq!(csv_row(&cells), "a,b,c");
+    }
+
+    #[test]
+    fn csv_row_empty_input_yields_empty_string() {
+        assert_eq!(csv_row(&[]), "");
+    }
+
+    #[test]
+    fn csv_row_escapes_each_cell_independently() {
+        let cells = vec!["a,b".to_string(), "plain".to_string(), "a\"b".to_string()];
+        assert_eq!(csv_row(&cells), "\"a,b\",plain,\"a\"\"b\"");
+    }
+
+    #[test]
+    fn csv_row_preserves_empty_cells_as_consecutive_commas() {
+        let cells = vec!["a".to_string(), "".to_string(), "c".to_string()];
+        assert_eq!(csv_row(&cells), "a,,c");
+    }
+
+    // ===========================================================================
+    // dec_to_string / dec_opt
+    // ===========================================================================
+
+    #[test]
+    fn dec_to_string_uses_decimal_canonical_form() {
+        // rust_decimal preserves scale: 1.50 stays "1.50".
+        assert_eq!(dec_to_string(Decimal::new(150, 2)), "1.50");
+        assert_eq!(dec_to_string(Decimal::ZERO), "0");
+        assert_eq!(dec_to_string(Decimal::from(-42)), "-42");
+    }
+
+    #[test]
+    fn dec_opt_some_renders_inner_decimal() {
+        assert_eq!(dec_opt(Some(Decimal::from(100))), "100");
+    }
+
+    #[test]
+    fn dec_opt_none_renders_empty_string() {
+        // Empty string in a CSV column = NULL by convention.
+        assert_eq!(dec_opt(None), "");
+    }
+}
+
 fn csv_response(filename: &str, body: String) -> impl IntoResponse {
     (
         StatusCode::OK,
