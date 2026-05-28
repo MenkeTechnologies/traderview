@@ -43,3 +43,81 @@ impl AppState {
         self.data_dir.join("models").join("paddleocr")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── AppMode is small but its identity is load-bearing ─────────────────
+
+    #[test]
+    fn app_mode_variants_are_distinct() {
+        // The auth middleware switches on this enum — Web demands credentials,
+        // Desktop auto-issues. Conflating them is a security regression.
+        assert_ne!(AppMode::Web, AppMode::Desktop);
+        assert_eq!(AppMode::Web, AppMode::Web);
+        assert_eq!(AppMode::Desktop, AppMode::Desktop);
+    }
+
+    #[test]
+    fn app_mode_is_copy_so_propagation_is_cheap() {
+        // Copy is part of the contract — handlers read `state.mode` directly
+        // without needing to clone. Removing Copy would silently regress hot
+        // request paths to allocate (or fail to compile in many places).
+        fn assert_copy<T: Copy>() {}
+        assert_copy::<AppMode>();
+    }
+
+    // ── data_dir-derived paths ────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn receipts_dir_appends_receipts_segment() {
+        let st = build_dummy_state(PathBuf::from("/tmp/tv"));
+        assert_eq!(st.receipts_dir(), PathBuf::from("/tmp/tv/receipts"));
+    }
+
+    #[tokio::test]
+    async fn ocr_model_dir_lands_under_models_paddleocr() {
+        // receipt_routes.rs + the PaddleOCR loader both reach into the exact
+        // path "{data_dir}/models/paddleocr". Renaming either segment moves
+        // the on-disk model files and breaks first-run OCR until reinstall.
+        let st = build_dummy_state(PathBuf::from("/var/lib/tv"));
+        assert_eq!(
+            st.ocr_model_dir(),
+            PathBuf::from("/var/lib/tv/models/paddleocr")
+        );
+    }
+
+    #[tokio::test]
+    async fn paths_handle_nested_data_dir() {
+        let st = build_dummy_state(PathBuf::from("/Users/alice/Library/App/traderview"));
+        assert!(st
+            .receipts_dir()
+            .to_string_lossy()
+            .ends_with("/traderview/receipts"));
+        assert!(st
+            .ocr_model_dir()
+            .to_string_lossy()
+            .ends_with("/traderview/models/paddleocr"));
+    }
+
+    #[tokio::test]
+    async fn paths_are_distinct_under_same_data_dir() {
+        // Two separate subdirectories — should never collide regardless of
+        // data_dir shape.
+        let st = build_dummy_state(PathBuf::from("/tmp/x"));
+        assert_ne!(st.receipts_dir(), st.ocr_model_dir());
+    }
+
+    // ── Build a state without touching a real PgPool (which requires a
+    //    running Postgres). connect_lazy needs a tokio context, hence
+    //    #[tokio::test] on the call sites.
+
+    fn build_dummy_state(data_dir: PathBuf) -> AppState {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://localhost/none")
+            .expect("lazy connect cannot fail");
+        AppState::new(pool, AppMode::Desktop, vec![0u8; 32], data_dir)
+    }
+}
