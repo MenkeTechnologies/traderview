@@ -17,7 +17,8 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    abc_pattern, abcd_pattern, absorption_detector, acceleration_deceleration,
+    abandoned_baby, abc_pattern, abcd_pattern, absorption_detector,
+    acceleration_deceleration,
     accumulation_distribution_line,
     accumulation_distribution_oscillator, accumulation_swing_index, accumulation_volume_pattern,
     active_share,
@@ -26,17 +27,20 @@ use traderview_core::{
     american_binomial, amihud_illiquidity, anchored_momentum, andrews_pitchfork,
     anderson_darling_normality, anti_setup,
     arch_lm_test, arima_111, arms_high_low_index, arms_index, aroon_indicator, asian_option,
-    asset_swap_spread,
+    asset_swap_spread, atr_channel, atr_trailing_stop,
     atr_cone, autocorrelation_function,
     bachelier, backtest_sweep, balance_of_power, barrier_option, bartlett_variance_test,
-    bat_pattern, bermudan_binomial,
-    beta_shrinkage, bipower_variation,
+    bat_pattern, bayesian_change_point_detector, belkhayate_timing, belt_hold_pattern,
+    bermudan_binomial,
+    beta_shrinkage, bid_ask_volume_ratio, bipower_variation,
     black76, black_litterman, breeden_litzenberger,
-    block_bootstrap, bollinger_band_width, bollinger_bandwidth_percentile,
+    block_bootstrap, bollinger_band_distance, bollinger_band_width,
+    bollinger_bandwidth_percentile,
     bollinger_oscillators, bollinger_percent_b,
-    bollinger_squeeze, bond_convexity, bootstrap_pnl,
+    bollinger_squeeze, bond_convexity, bootstrap_pnl, borrow_rate_indicator,
     box_spread,
-    break_of_structure, breadth_lines, breakeven_inflation, breakout_52w_scanner,
+    break_of_structure, breadth_lines, breadth_thrust, breakaway_pattern, breakeven_inflation,
+    breakout_52w_scanner,
     breusch_godfrey, breusch_pagan_test, brier_score, bump_and_run, burke_ratio,
     breakout_detector, bressert_dss, brinson_attribution, butterfly_pattern, butterfly_spread,
     calendar_spread, calmar_ratio,
@@ -44,133 +48,172 @@ use traderview_core::{
     candle_patterns, candle_strength_index, caplet_black76, carry_roll_decomposition,
     cds_pricing, chaikin_oscillator,
     chande_dynamic_momentum_index, chande_kroll_stop, chande_momentum_oscillator,
-    chande_trend_index, chandelier_exit,
+    chande_trend_index, chande_volatility_index, chandelier_exit,
     change_of_character, chop_zone_indicator, choppiness, choppy_market_index, cholesky, chow_test, corwin_schultz_spread,
     chooser_option, cir, cliquet_option, cointegration, collar, component_var,
-    composite_factor_scoring,
+    composite_factor_scoring, compound_pivots,
     compound_option, conditional_drawdown, conditional_var,
     continuous_ranked_probability_score, convertible_bond, coppock_curve,
     cornish_fisher,
-    cot_report, crab_pattern, crossover, cross_currency_basis, cumulative_delta,
-    cumulative_tick_trin,
+    cot_report, counter_attack_lines, crab_pattern, crossover, cross_currency_basis,
+    cumulative_delta,
+    cumulative_tick_trin, cumulative_tick_zscore, cumulative_volume_delta_zscore,
     cup_and_handle, cusum, cypher_pattern,
-    daily_loss_limit, damiani_volatmeter, dark_pool_index, darvas_box,
+    daily_loss_limit, damiani_volatmeter, dark_cloud_piercing, dark_pool_index, darvas_box,
+    day_of_week_seasonality,
     decile_long_short_signal,
     deflated_sharpe, demark_pivots, demarker_oscillator, depth_imbalance,
+    developing_poc, developing_value_area, dividend_yield_curve,
     detrended_price_oscillator, detrended_synthetic_price, detrended_volatility_oscillator,
     dfa, diamond_pattern, diebold_mariano, digital_option,
-    disparity_index, displacement, distance_correlation, divergence_detector, donchian_channels,
-    drawdown_throttle, earnings_calendar,
-    earnings_revision_scanner, effective_spread, efficiency_ratio,
+    disparity_index, displacement, distance_correlation, divergence_detector, doji_variants,
+    dollar_bar_chart, donchian_channels, donchian_oscillator,
+    drawdown_throttle, dupire_local_volatility, dynamic_time_warping,
+    earnings_calendar,
+    earnings_revision_scanner, earnings_surprise_indicator, effective_spread, efficiency_ratio,
     ehlers_centered_smoothed_momentum, ehlers_correlation_trend_indicator,
-    ehlers_decycler_oscillator, ehlers_instant_trendline,
-    ehlers_mama_fama,
+    ehlers_decycler_oscillator, ehlers_fisher_cybernetic, ehlers_instant_trendline,
+    ehlers_mama_fama, ehrlich_filter,
     eighty_twenty_setup, elder_safezone_stop,
-    elder_thermometer, elliott_wave_oscillator, engulfing_pattern_scanner,
+    elder_thermometer, elliott_wave_oscillator, engulfing_pattern_scanner, equivolume_bars,
     empirical_distribution_function,
     engle_granger_2step,
-    equal_levels, evt_value_at_risk, ewma_volatility,
+    equal_levels, ergodic_oscillator, evt_value_at_risk, ewma_volatility,
     expectancy_per_trade, expected_calibration_error, expected_drawdown,
     expected_shortfall_contribution, factor_models, factor_neutralization,
     fama_french_3factor,
-    fair_value_gap, fibonacci_pivots, fibonacci_retracements, fifty_two_week_high_low_scanner,
+    fair_value_gap, fibonacci_extensions, fibonacci_pivots, fibonacci_retracements,
+    fifty_two_week_high_low_scanner,
     finite_difference_option,
     five_o_pattern, floor_pivots,
     footprint_imbalance, fra,
-    forward_start_option, frama_fractal,
+    forward_start_option, fractional_brownian_motion_generator, frama_fractal,
     friedman_test,
-    futures_roll, gain_pain_ratio, gain_to_pain_ratio, gamma_scalping_pnl,
-    gann_fan, gann_high_low_activator, gap_option, gartley_pattern,
-    garch_1_1, gap_fill_stats, gator_oscillator, gaussian_copula, gex_scanner, gjr_garch,
+    futures_roll, gain_pain_ratio, gain_to_pain_ratio, gamma_pin_zone, gamma_scalping_pnl,
+    gann_fan, gann_high_low_activator, gann_swing_chart, gap_classifier, gap_option,
+    gartley_pattern,
+    garch_1_1, gap_fill_stats, gator_oscillator, gaussian_copula, gbm_path_simulator,
+    gex_scanner, gjr_garch,
     goal_tracker,
     gonzalo_granger_decomposition, gpd_tail_fit, granger_causality,
     greeks_profile, guppy_mma,
-    halt_resume_monitor, hampel_filter, har_volatility, harmonic_patterns, hawkes_intensity,
-    hawkins_dynamic_zones, head_shoulders,
+    halt_resume_monitor, hampel_filter, hanging_man_shooting_star, har_volatility,
+    harami_pattern, harmonic_patterns, hawkes_intensity,
+    hawkins_dynamic_zones, head_shoulders, hikkake_pattern,
     heikin_ashi_reversal, henriksson_merton, herfindahl, hierarchical_risk_parity, hill_estimator,
-    hilbert_transform, hindenburg_omen, hodrick_prescott, holiday_calendar, holt_winters, hull_white,
-    holy_grail, hurst_exponent, iceberg_detector, impulse_system, information_coefficient,
+    hilbert_transform, hindenburg_omen, hodrick_prescott, holiday_calendar, holiday_seasonality,
+    holt_winters, hull_white,
+    holy_grail, hurst_exponent, iceberg_detector, imbalance_bar_chart, impulse_system,
+    information_coefficient,
     information_ratio,
     inside_bar_breakout,
-    insider_buying_scanner, intraday_intensity_index, iron_butterfly, iron_condor,
+    insider_buying_scanner, intraday_intensity_index, intraday_seasonality,
+    iron_butterfly, iron_condor,
     island_reversal, isotonic_regression,
     iv_rank_scanner, iv_skew_scanner, iv_solver, iv_term_structure, jade_lizard, jarque_bera,
-    jelly_roll_arbitrage, jurik_ma, kalman_filter_1d, katsanos_vfi, kelly_criterion,
+    jelly_roll_arbitrage, jump_diffusion_simulator, jurik_ma,
+    kagi_chart, kalman_dynamic_beta, kalman_filter_1d, katsanos_vfi, kelly_criterion,
+    kicker_pattern,
     keltner_squeeze,
     key_rate_duration, key_reversal_bar, klinger_volume_oscillator, know_sure_thing,
     kolmogorov_smirnov_2sample, kpss_test,
-    kullback_leibler_divergence, kyles_lambda, ledoit_wolf, lee_ready, levene_test,
+    kullback_leibler_divergence, kyles_lambda, ladder_bottom_top, ledoit_wolf, lee_ready,
+    levene_test,
     libor_ois_spread, linda_raschke_3_10, linear_regression_channel,
-    linear_regression_curve, linear_regression_slope, liquidity_pool_detector,
+    linear_regression_curve, linear_regression_r_squared, linear_regression_slope,
+    liquidity_pool_detector, liquidity_void_detector,
     liquidity_adjusted_var, liquidity_grab, ljung_box, lookback_option, low_vol_factor,
     lower_partial_moments, macaulay_duration, madrid_moving_average_ribbon,
     mahalanobis_distance, mann_whitney_u, marginal_var,
-    margrabe_spread_option, max_diversification, mcclellan_oscillator, median_price,
-    median_realized_variance,
-    megaphone_pattern,
+    margrabe_spread_option, markov_switching_2state, mat_hold_pattern, max_diversification,
+    mcclellan_oscillator,
+    median_price,
+    median_realized_variance, meeting_lines, mesa_sine_wave,
+    megaphone_pattern, microprice_stoikov,
     min_variance_portfolio, minervini_trend_template, models::{PriceBar, Trade, TradeSide},
-    modigliani_m2, momentum_12_1, momentum_crash_protection, monte_carlo_option,
-    monte_carlo_var, mortgage_psa, moving_average_envelope, mtm_reconciliation, murrey_math,
+    modigliani_m2, momentum_12_1, momentum_crash_protection, momentum_persistence_index,
+    momentum_quality_score, monte_carlo_option,
+    monthly_seasonality, morning_evening_star, moving_correlation,
+    monte_carlo_var, mortgage_psa, moving_average_envelope, mtm_reconciliation,
+    multi_leg_option_pricer, murrey_math,
     nadaraya_watson,
     negative_volume_index, nelson_siegel, nelson_siegel_svensson,
-    newey_west, noise_to_signal_ratio, omega_ratio, on_balance_volume, opening_range,
-    options_margin, order_block, ornstein_uhlenbeck, pain_index, pair_trade,
+    newey_west, noise_to_signal_ratio, nyse_tick, omega_ratio, on_balance_volume, on_neck_in_neck,
+    opening_range,
+    option_open_interest_distribution, option_payoff_diagram, options_margin, order_block, ornstein_uhlenbeck,
+    pain_index, pair_trade,
     pair_trade_zscore, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
-    permutation_entropy, pickands_estimator, pinball_setup, pivot_points,
+    permutation_entropy, pickands_estimator, pin_bar, pinball_setup, pivot_points,
     pocket_pivot_buy, point_and_figure, portfolio_heat, position_aging,
-    position_irr, positive_volume_index, post_earnings_drift, power_option, pp_test,
+    position_irr, positive_volume_index, post_earnings_drift, power_bar, power_option, pp_test,
     premarket_gap_scanner,
-    premier_stochastic, premium_discount, pretty_good_oscillator, price_volume_trend,
+    premier_stochastic, premium_discount, pretty_good_oscillator, price_volume_oscillator,
+    price_volume_trend,
     probability_of_informed_trading, put_call_ratio,
     qstick, quality_factor,
     quantile_regression, quanto_option, ramsey_reset, random_walk_index,
-    range_contraction, range_expansion, range_filter, range_volatility, rank_correlation,
-    ratio_chart,
+    range_bar_chart, range_contraction, range_expansion, range_filter, range_volatility,
+    rank_correlation, ratio_chart,
     realized_correlation, realized_higher_moments, realized_kernel, realized_quarticity,
     realized_semivariance, realized_skewness, realized_volatility, recursive_ma,
-    recovery_factor, reconcile_1099b, relative_strength, relative_strength_vs_market,
+    recovery_factor, reconcile_1099b, regime_classifier, relative_strength,
+    relative_strength_vs_market,
     relative_volatility_index,
-    relative_volume_scanner,
+    relative_volume_scanner, relative_volume_zscore, repo_rate_spread,
+    rising_falling_three_methods,
     risk_adjusted_ratios,
     risk_parity_weights, risk_reward, roll_spread, rolling_beta, rolling_drawdown,
-    rolling_sharpe, rolling_sortino, rolling_zscore, roofing_filter, round_levels,
+    ross_hook,
+    rolling_quantile, rolling_sharpe, rolling_sortino, rolling_zscore, roofing_filter,
+    round_levels,
     rounding_pattern, runs_test,
     sabr,
     sample_entropy, savitzky_golay, scan_orchestrator, second_order_greeks, sector_rotation,
-    session_vwap,
+    separating_lines, session_vwap, side_by_side_white_lines, sperandeo_1_2_3,
+    spinning_top_marubozu,
     shark_pattern, short_interest_scanner, sip_simulator, spearman_correlation,
     spread_attribution, spread_chart,
-    standard_error_bands, starc_bands, stochastic_momentum_index,
+    standard_error_bands, starc_bands, stick_sandwich, stochastic_momentum_index,
     sterling_ratio, stochastic_rsi, stop_hunt, straddle, strangle, strategy_correlation,
-    subsampled_realized_variance,
+    subsampled_realized_variance, swing_failure_pattern,
     summation_index,
-    supertrend_dual, survival_probability, swap_valuation, swaption_black, swing_points,
-    symbol_filter,
-    t3_moving_average, t_copula, tail_dependence, tail_ratio,
-    tape_density, tape_speed, tax_lot_optimizer, td_sequential, ted_spread,
+    supertrend_dual, survival_probability, svi_volatility_smile,
+    swap_rate_curve, swap_valuation, swaption_black,
+    swing_points, swing_strength_index, symbol_filter,
+    t3_moving_average, t_copula, tail_dependence, tail_ratio, tasuki_gap,
+    tape_density, tape_speed, tax_lot_optimizer, td_sequential, ted_spread, term_premium_estimator,
+    term_spread,
     three_bar_reversal,
-    three_drive_pattern, traders_action_zone, traders_dynamic_index,
-    tick_extreme, timeframe_confluence, tpo_profile, trade_quality_stats, tracking_error,
+    three_drive_pattern, three_inside_up_down, three_line_break, three_outside_up_down,
+    three_white_soldiers_crows, thrusting_pattern, traders_action_zone,
+    traders_dynamic_index,
+    tick_bar_chart, tick_extreme, timeframe_confluence, tpo_profile, trade_quality_stats,
+    tracking_error,
     treynor_black,
     treynor_jensen, treynor_mazuy, triangular_ma, trinomial_tree, triple_screen,
-    triple_top_bottom, ttm_squeeze, ttm_trend, turtle_soup, twap, twiggs_money_flow,
+    triple_top_bottom, ttm_squeeze, ttm_trend, turtle_soup, tweezer_top_bottom, twap,
+    twiggs_money_flow,
     typical_price,
     two_scales_realized_variance,
     ulcer_index, ulcer_performance_index, ultimate_smoother, unusual_options_activity,
-    up_down_capture, value_factor,
+    up_down_capture, upside_gap_two_crows, value_at_risk_filtered_historical,
+    value_at_risk_historical, value_factor,
     var_backtest_christoffersen,
     var_backtest_kupiec, variance_ratio_test, variance_swap, variance_swap_strike, vasicek,
-    vcp_pattern, vector_autoregression, velocity_indicator, vol_risk_premium,
-    vol_targeting_sizer,
+    vcp_pattern, vector_autoregression, velocity_indicator, vix_basis, vix_skew_smirk,
+    vol_risk_premium, vol_targeting_sizer, volatility_smile,
     volatility_breakout_system, volatility_managed_portfolio, volatility_quality_index,
     volatility_stop, volatility_swap,
-    volume_burst, volume_oscillator, volume_zone_oscillator, vortex_indicator, vpin, vsa,
-    vwema, walk_forward, wasserstein_1d,
+    volume_at_price, volume_bar_chart, volume_burst, volume_climax_pattern,
+    volume_force_index,
+    volume_oscillator, volume_weighted_macd,
+    volume_zone_oscillator, vortex_indicator, vpin, vsa,
+    vwema, walk_forward, wasserstein_1d, wavelet_decomposition_haar,
     weighted_close, weighted_midprice, weinstein_stages, weiss_wave, welch_periodogram,
     white_robust_se,
     wilcoxon_signed_rank, williams_accumulation_distribution, woodie_pivots, woodies_cci,
     wyckoff,
-    yield_curve_bootstrap, z_score_indicator, z_spread,
+    yield_curve_bootstrap, z_score_indicator, z_spread, zero_lag_macd,
 };
 
 pub fn router() -> Router<AppState> {
@@ -288,29 +331,24 @@ pub fn router() -> Router<AppState> {
         .route("/backtest/sweep-sma-cross",            post(sweep_sma_cross_route))
         .route("/backtest/sweep-bb-breakout",          post(sweep_bb_breakout_route))
         .route("/backtest/walk-forward-sma-cross",     post(walk_forward_sma_cross_route))
-        // ── Batch 7: market internals + scanners ────────────────────
         .route("/internals/breadth-lines",             post(breadth_lines_route))
         .route("/internals/dark-pool-index",           post(dark_pool_index_route))
         .route("/scanner/post-earnings-drift",         post(post_earnings_drift_route))
         .route("/scanner/short-interest",              post(short_interest_route))
         .route("/scanner/relative-strength",           post(relative_strength_route))
-        // ── Batch 8: TTM squeeze + divergence detector ─────────────
         .route("/analytics/keltner-squeeze",           post(keltner_squeeze_route))
         .route("/analytics/divergence-detect",         post(divergence_detect_route))
-        // ── Batch 9: market internals + premarket/halt scanners ────
         .route("/internals/cumulative-tick-trin",      post(cumulative_tick_trin_route))
         .route("/internals/summation-index",           post(summation_index_route))
         .route("/internals/hindenburg-omen",           post(hindenburg_omen_route))
         .route("/scanner/premarket-gap",               post(premarket_gap_route))
         .route("/scanner/halt-resume",                 post(halt_resume_route))
-        // ── Batch 10: 2nd-order greeks + VPIN + patterns + scanners ─
         .route("/options/calc/second-order-greeks",    post(second_order_greeks_route))
         .route("/microstructure/vpin",                 post(vpin_route))
         .route("/analytics/cup-and-handle",            post(cup_and_handle_route))
         .route("/analytics/head-shoulders",            post(head_shoulders_route))
         .route("/scanner/breakout-52w",                post(breakout_52w_route))
         .route("/analytics/ewma-volatility",           post(ewma_volatility_route))
-        // ── Batch 11: COT, spreads, VaR, liquidity, microstructure ──
         .route("/futures/cot-report",                  post(cot_report_route))
         .route("/options/calc/calendar-spread",        post(calendar_spread_route))
         .route("/options/calc/iron-condor",            post(iron_condor_route))
@@ -318,7 +356,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/realized-volatility",       post(realized_volatility_route))
         .route("/analytics/amihud-illiquidity",        post(amihud_illiquidity_route))
         .route("/microstructure/kyles-lambda",         post(kyles_lambda_route))
-        // ── Batch 12: TPO, Omega, Hurst, GARCH, coint, TM, OU ──────
         .route("/analytics/tpo-profile",               post(tpo_profile_route))
         .route("/analytics/omega-ratio",               post(omega_ratio_route))
         .route("/analytics/hurst-exponent",            post(hurst_exponent_route))
@@ -326,7 +363,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/cointegration",             post(cointegration_route))
         .route("/analytics/treynor-mazuy",             post(treynor_mazuy_route))
         .route("/analytics/ornstein-uhlenbeck",        post(ornstein_uhlenbeck_route))
-        // ── Batch 13: range-vol, Roll, Lee-Ready, varswap, TD, pitchfork
         .route("/analytics/range-volatility",          post(range_volatility_route))
         .route("/microstructure/roll-spread",          post(roll_spread_route))
         .route("/microstructure/lee-ready",            post(lee_ready_route))
@@ -334,7 +370,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/td-sequential",             post(td_sequential_route))
         .route("/analytics/andrews-pitchfork",         post(andrews_pitchfork_route))
         .route("/analytics/anchored-momentum",         post(anchored_momentum_route))
-        // ── Batch 14: IR, gain-pain, HM, IV, B-76, DSR, Murrey ─────
         .route("/analytics/information-ratio",         post(information_ratio_route))
         .route("/analytics/gain-pain-ratio",           post(gain_pain_ratio_route))
         .route("/analytics/henriksson-merton",         post(henriksson_merton_route))
@@ -342,7 +377,6 @@ pub fn router() -> Router<AppState> {
         .route("/options/calc/black-76",               post(black76_route))
         .route("/analytics/deflated-sharpe",           post(deflated_sharpe_route))
         .route("/charts/murrey-math",                  post(murrey_math_route))
-        // ── Batch 15: CVaR, FF3/Carhart4, pair-zscore, options, corr ─
         .route("/analytics/conditional-var",           post(conditional_var_route))
         .route("/analytics/fama-french-3",             post(fama_french_3_route))
         .route("/analytics/carhart-4",                 post(carhart_4_route))
@@ -350,8 +384,6 @@ pub fn router() -> Router<AppState> {
         .route("/options/calc/butterfly-spread",       post(butterfly_spread_route))
         .route("/options/calc/jade-lizard",            post(jade_lizard_route))
         .route("/analytics/realized-correlation",      post(realized_correlation_route))
-        // ── Batch 16: Cornish-Fisher VaR, bond duration, yield curve,
-        //              HHI, Treynor/Jensen, risk parity, Brinson ─────
         .route("/analytics/cornish-fisher-var",        post(cornish_fisher_var_route))
         .route("/bonds/calc/macaulay-duration",        post(macaulay_duration_route))
         .route("/bonds/calc/yield-curve-bootstrap",    post(yield_curve_bootstrap_route))
@@ -359,8 +391,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/treynor-jensen",            post(treynor_jensen_route))
         .route("/portfolio/risk-parity-weights",       post(risk_parity_weights_route))
         .route("/portfolio/brinson-attribution",       post(brinson_attribution_route))
-        // ── Batch 17: NS curve fit, options (Margrabe/Asian/barrier),
-        //              Vasicek, Black-Litterman, LVaR ───────────────
         .route("/bonds/calc/nelson-siegel-fit",        post(nelson_siegel_fit_route))
         .route("/bonds/calc/svensson-fit",             post(svensson_fit_route))
         .route("/options/calc/margrabe-spread",        post(margrabe_spread_route))
@@ -369,7 +399,6 @@ pub fn router() -> Router<AppState> {
         .route("/bonds/calc/vasicek-zcb",              post(vasicek_zcb_route))
         .route("/portfolio/black-litterman",           post(black_litterman_route))
         .route("/analytics/liquidity-adjusted-var",    post(liquidity_adjusted_var_route))
-        // ── Batch 18: CIR, SABR, lookback, digital, Granger, LW, AC ─
         .route("/bonds/calc/cir-zcb",                  post(cir_zcb_route))
         .route("/options/calc/sabr-vol",               post(sabr_vol_route))
         .route("/options/calc/lookback",               post(lookback_option_route))
@@ -377,7 +406,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/granger-causality",         post(granger_causality_route))
         .route("/portfolio/ledoit-wolf-shrinkage",     post(ledoit_wolf_route))
         .route("/microstructure/almgren-chriss",       post(almgren_chriss_route))
-        // ── Batch 19: HW, compound, quanto, cliquet, ranks, tail, VAR
         .route("/bonds/calc/hull-white-zcb",           post(hull_white_zcb_route))
         .route("/options/calc/compound",               post(compound_option_route))
         .route("/options/calc/quanto",                 post(quanto_option_route))
@@ -385,7 +413,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/rank-correlation",          post(rank_correlation_route))
         .route("/analytics/tail-dependence",           post(tail_dependence_route))
         .route("/analytics/vector-autoregression",     post(vector_autoregression_route))
-        // ── Batch 20: Cholesky, PCA, power, gap, FRA, caplet, journal ─
         .route("/analytics/cholesky",                  post(cholesky_route))
         .route("/analytics/pca",                       post(pca_route))
         .route("/options/calc/power",                  post(power_option_route))
@@ -393,7 +420,6 @@ pub fn router() -> Router<AppState> {
         .route("/rates/calc/fra",                      post(fra_route))
         .route("/rates/calc/caplet-black76",           post(caplet_black76_route))
         .route("/portfolio/trade-quality-stats",       post(trade_quality_stats_route))
-        // ── Batch 21: chooser, CDaR, risk ratios, pain, micro, spread, mom
         .route("/options/calc/chooser",                post(chooser_option_route))
         .route("/analytics/conditional-drawdown",      post(conditional_drawdown_route))
         .route("/analytics/risk-adjusted-ratios",      post(risk_adjusted_ratios_route))
@@ -401,7 +427,6 @@ pub fn router() -> Router<AppState> {
         .route("/microstructure/weighted-midprice",    post(weighted_midprice_route))
         .route("/microstructure/effective-spread",     post(effective_spread_route))
         .route("/scanner/momentum-12-1",               post(momentum_12_1_route))
-        // ── Batch 22: Bachelier, swaption, CDS, ASW, HW, VWEMA, SMI ────
         .route("/options/calc/bachelier",              post(bachelier_route))
         .route("/options/calc/swaption-black",         post(swaption_black_route))
         .route("/credit/calc/cds",                     post(cds_pricing_route))
@@ -409,7 +434,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/holt-winters",              post(holt_winters_route))
         .route("/analytics/vwema",                     post(vwema_route))
         .route("/analytics/smi",                       post(stochastic_momentum_index_route))
-        // ── Batch 23: American/Bermudan/Convertible, HRP, Hawkes, ARIMA
         .route("/options/calc/american",               post(american_binomial_route))
         .route("/options/calc/bermudan",               post(bermudan_binomial_route))
         .route("/options/calc/convertible-bond",       post(convertible_bond_route))
@@ -417,7 +441,6 @@ pub fn router() -> Router<AppState> {
         .route("/microstructure/hawkes-intensity",     post(hawkes_intensity_route))
         .route("/analytics/arima-111",                 post(arima_111_route))
         .route("/options/calc/greeks-profile",         post(greeks_profile_route))
-        // ── Batch 24: trinomial, ARCH-LM, Ljung-Box, MV/tangency, …
         .route("/options/calc/trinomial",              post(trinomial_tree_route))
         .route("/analytics/arch-lm-test",              post(arch_lm_test_route))
         .route("/analytics/ljung-box",                 post(ljung_box_route))
@@ -425,7 +448,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/candle-patterns",           post(candle_patterns_route))
         .route("/analytics/adf-test",                  post(adf_standalone_route))
         .route("/analytics/bollinger-oscillators",     post(bollinger_oscillators_route))
-        // ── Batch 25: VaR backtests, factor scanners, survival prob ───
         .route("/analytics/var-backtest-kupiec",       post(var_backtest_kupiec_route))
         .route("/analytics/var-backtest-christoffersen", post(var_backtest_christoffersen_route))
         .route("/scanner/value-factor",                post(value_factor_route))
@@ -433,7 +455,6 @@ pub fn router() -> Router<AppState> {
         .route("/scanner/low-vol-factor",              post(low_vol_factor_route))
         .route("/scanner/composite-factor-scoring",    post(composite_factor_scoring_route))
         .route("/credit/calc/survival-probability",    post(survival_probability_route))
-        // ── Batch 26: 4 option-strategy P&Ls, HP, Kalman, bootstrap ──
         .route("/options/calc/straddle",               post(straddle_route))
         .route("/options/calc/strangle",               post(strangle_route))
         .route("/options/calc/iron-butterfly",         post(iron_butterfly_route))
@@ -441,7 +462,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/hodrick-prescott",          post(hodrick_prescott_route))
         .route("/analytics/kalman-filter-1d",          post(kalman_filter_1d_route))
         .route("/analytics/block-bootstrap",           post(block_bootstrap_route))
-        // ── Batch 27: higher moments, LPM, DFA, entropies, pattern, MDR ──
         .route("/analytics/realized-higher-moments",   post(realized_higher_moments_route))
         .route("/analytics/lower-partial-moments",     post(lower_partial_moments_route))
         .route("/analytics/dfa",                       post(dfa_route))
@@ -449,7 +469,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/permutation-entropy",       post(permutation_entropy_route))
         .route("/patterns/triple-top-bottom",          post(triple_top_bottom_route))
         .route("/portfolio/max-diversification",       post(max_diversification_route))
-        // ── Batch 28: perf attribution, advanced risk metrics ─────────
         .route("/analytics/realized-semivariance",     post(realized_semivariance_route))
         .route("/analytics/bipower-variation",         post(bipower_variation_route))
         .route("/analytics/up-down-capture",           post(up_down_capture_route))
@@ -457,7 +476,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/beta-shrinkage",            post(beta_shrinkage_route))
         .route("/credit/calc/key-rate-duration",       post(key_rate_duration_route))
         .route("/portfolio/treynor-black",             post(treynor_black_route))
-        // ── Batch 29: classic indicators + bond convexity ─────────────
         .route("/analytics/vortex-indicator",          post(vortex_indicator_route))
         .route("/analytics/pivot-points",              post(pivot_points_route))
         .route("/analytics/aroon-indicator",           post(aroon_indicator_route))
@@ -465,7 +483,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/stochastic-rsi",            post(stochastic_rsi_route))
         .route("/analytics/bollinger-band-width",      post(bollinger_band_width_route))
         .route("/credit/calc/bond-convexity",          post(bond_convexity_route))
-        // ── Batch 30: volume-flow indicators + tail/component risk ────
         .route("/analytics/accumulation-distribution-line", post(adl_route))
         .route("/analytics/on-balance-volume",         post(obv_route))
         .route("/analytics/chaikin-oscillator",        post(chaikin_oscillator_route))
@@ -473,7 +490,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/chande-momentum-oscillator", post(chande_momentum_oscillator_route))
         .route("/analytics/hill-estimator",            post(hill_estimator_route))
         .route("/analytics/component-var",             post(component_var_route))
-        // ── Batch 31: adaptive MAs + curve features + ES decomp ───────
         .route("/analytics/alma",                      post(alma_route))
         .route("/analytics/t3-moving-average",         post(t3_route))
         .route("/analytics/frama",                     post(frama_route))
@@ -481,7 +497,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/detrended-price-oscillator", post(dpo_route))
         .route("/analytics/fibonacci-retracements",    post(fibonacci_retracements_route))
         .route("/analytics/expected-shortfall-contribution", post(es_contribution_route))
-        // ── Batch 32: rates spread/swap + options flow + GARCH + FF3 ──
         .route("/credit/calc/z-spread",                post(z_spread_route))
         .route("/credit/calc/swap-valuation",          post(swap_valuation_route))
         .route("/credit/calc/cross-currency-basis",    post(cross_currency_basis_route))
@@ -489,7 +504,6 @@ pub fn router() -> Router<AppState> {
         .route("/scanner/unusual-options-activity",    post(unusual_options_activity_route))
         .route("/analytics/gjr-garch",                 post(gjr_garch_route))
         .route("/analytics/fama-french-3factor",       post(fama_french_3factor_route))
-        // ── Batch 33: MBS, smoothers, scanners, patterns, PIN ─────────
         .route("/credit/calc/mortgage-psa",            post(mortgage_psa_route))
         .route("/analytics/nadaraya-watson",           post(nadaraya_watson_route))
         .route("/scanner/insider-buying",              post(insider_buying_route))
@@ -497,7 +511,6 @@ pub fn router() -> Router<AppState> {
         .route("/patterns/bump-and-run",               post(bump_and_run_route))
         .route("/patterns/diamond",                    post(diamond_pattern_route))
         .route("/analytics/probability-of-informed-trading", post(pin_route))
-        // ── Batch 34: TS diagnostics + chart quantization + overlays ──
         .route("/analytics/mahalanobis-distance",      post(mahalanobis_distance_route))
         .route("/analytics/autocorrelation-function",  post(acf_route))
         .route("/analytics/partial-autocorrelation",   post(pacf_route))
@@ -505,7 +518,6 @@ pub fn router() -> Router<AppState> {
         .route("/patterns/darvas-box",                 post(darvas_box_route))
         .route("/analytics/supertrend-dual",           post(supertrend_dual_route))
         .route("/analytics/hilbert-transform",         post(hilbert_transform_route))
-        // ── Batch 35: stat tests + vol modeling + copula ──────────────
         .route("/analytics/jarque-bera",               post(jarque_bera_route))
         .route("/analytics/spearman-correlation",      post(spearman_correlation_route))
         .route("/analytics/har-volatility",            post(har_volatility_route))
@@ -513,7 +525,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/gaussian-copula",           post(gaussian_copula_route))
         .route("/analytics/chow-test",                 post(chow_test_route))
         .route("/analytics/breusch-godfrey",           post(breusch_godfrey_route))
-        // ── Batch 36: randomness, microstructure, robust, FI, sizing ──
         .route("/analytics/variance-ratio-test",       post(variance_ratio_test_route))
         .route("/analytics/runs-test",                 post(runs_test_route))
         .route("/analytics/corwin-schultz-spread",     post(corwin_schultz_spread_route))
@@ -521,7 +532,6 @@ pub fn router() -> Router<AppState> {
         .route("/credit/calc/breakeven-inflation",     post(breakeven_inflation_route))
         .route("/credit/calc/carry-roll-decomposition", post(carry_roll_decomposition_route))
         .route("/portfolio/vol-targeting-sizer",       post(vol_targeting_sizer_route))
-        // ── Batch 37: distributional + stationarity + skew screening ──
         .route("/analytics/kolmogorov-smirnov-2sample", post(ks_2sample_route))
         .route("/analytics/anderson-darling-normality", post(ad_normality_route))
         .route("/analytics/kpss-test",                 post(kpss_test_route))
@@ -529,7 +539,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/kullback-leibler-divergence", post(kl_divergence_route))
         .route("/analytics/wasserstein-1d",            post(wasserstein_1d_route))
         .route("/scanner/iv-skew",                     post(iv_skew_scanner_route))
-        // ── Batch 38: noise-robust RV family + higher-moment realized ──
         .route("/analytics/two-scales-realized-variance", post(tsrv_route))
         .route("/analytics/subsampled-realized-variance", post(subsampled_rv_route))
         .route("/analytics/realized-kernel",           post(realized_kernel_route))
@@ -537,7 +546,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/realized-skewness",         post(realized_skewness_route))
         .route("/analytics/realized-quarticity",       post(realized_quarticity_route))
         .route("/analytics/median-realized-variance",  post(median_rv_route))
-        // ── Batch 39: nonparam tests + RVOL/IV-term scanners + dCor ───
         .route("/analytics/mann-whitney-u",            post(mann_whitney_u_route))
         .route("/analytics/wilcoxon-signed-rank",      post(wilcoxon_signed_rank_route))
         .route("/analytics/levene-test",               post(levene_test_route))
@@ -545,7 +553,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/iv-term-structure",         post(iv_term_structure_route))
         .route("/analytics/ramsey-reset",              post(ramsey_reset_route))
         .route("/analytics/distance-correlation",      post(distance_correlation_route))
-        // ── Batch 40: signal quality + options arbitrage + forecasts ──
         .route("/analytics/information-coefficient",   post(information_coefficient_route))
         .route("/options/calc/box-spread",             post(box_spread_route))
         .route("/options/calc/jelly-roll-arbitrage",   post(jelly_roll_arbitrage_route))
@@ -553,7 +560,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/crps",                      post(crps_route))
         .route("/analytics/brier-score",               post(brier_score_route))
         .route("/analytics/decile-long-short",         post(decile_long_short_route))
-        // ── Batch 41: HAC/HC + DM + gamma scalp + density + VRP ───────
         .route("/analytics/newey-west",                post(newey_west_route))
         .route("/analytics/diebold-mariano",           post(diebold_mariano_route))
         .route("/options/calc/gamma-scalping-pnl",     post(gamma_scalping_pnl_route))
@@ -561,7 +567,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/white-robust-se",           post(white_robust_se_route))
         .route("/analytics/expected-calibration-error", post(ece_route))
         .route("/analytics/vol-risk-premium",          post(vol_risk_premium_route))
-        // ── Batch 42: LIBOR-OIS, Bartlett/Friedman, PAVA, PELT, MC VaR ─
         .route("/credit/calc/libor-ois-spread",        post(libor_ois_spread_route))
         .route("/analytics/bartlett-variance-test",    post(bartlett_variance_test_route))
         .route("/analytics/friedman-test",             post(friedman_test_route))
@@ -569,7 +574,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/pelt-segmentation",         post(pelt_segmentation_route))
         .route("/analytics/gonzalo-granger-decomposition", post(gonzalo_granger_route))
         .route("/analytics/monte-carlo-var",           post(monte_carlo_var_route))
-        // ── Batch 43: EVT toolkit + quantile reg + ECDF + megaphone ───
         .route("/analytics/gpd-tail-fit",              post(gpd_tail_fit_route))
         .route("/analytics/peaks-over-threshold",      post(peaks_over_threshold_route))
         .route("/analytics/evt-value-at-risk",         post(evt_value_at_risk_route))
@@ -577,7 +581,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/empirical-distribution-function", post(ecdf_route))
         .route("/analytics/quantile-regression",       post(quantile_regression_route))
         .route("/patterns/megaphone",                  post(megaphone_pattern_route))
-        // ── Batch 44: rolling perf + Engle-Granger + E[MDD] + VCP ─────
         .route("/analytics/rolling-drawdown",          post(rolling_drawdown_route))
         .route("/analytics/rolling-sharpe",            post(rolling_sharpe_route))
         .route("/analytics/rolling-sortino",           post(rolling_sortino_route))
@@ -585,7 +588,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/expected-drawdown",         post(expected_drawdown_route))
         .route("/analytics/engle-granger-2step",       post(engle_granger_2step_route))
         .route("/patterns/vcp",                        post(vcp_pattern_route))
-        // ── Batch 45: drawdown-adjusted perf + Weinstein + expectancy ─
         .route("/analytics/burke-ratio",               post(burke_ratio_route))
         .route("/analytics/sterling-ratio",            post(sterling_ratio_route))
         .route("/analytics/recovery-factor",           post(recovery_factor_route))
@@ -593,7 +595,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/tail-ratio",                post(tail_ratio_route))
         .route("/analytics/weinstein-stages",          post(weinstein_stages_route))
         .route("/analytics/expectancy-per-trade",      post(expectancy_per_trade_route))
-        // ── Batch 46: Kelly + TE/AS + SG + Minervini/Pocket + boot ────
         .route("/portfolio/kelly-criterion-discrete",  post(kelly_discrete_route))
         .route("/portfolio/kelly-criterion-continuous", post(kelly_continuous_route))
         .route("/analytics/tracking-error",            post(tracking_error_route))
@@ -602,7 +603,6 @@ pub fn router() -> Router<AppState> {
         .route("/scanner/minervini-trend-template",    post(minervini_route))
         .route("/scanner/pocket-pivot-buy",            post(pocket_pivot_route))
         .route("/analytics/bootstrap-pnl",             post(bootstrap_pnl_route))
-        // ── Batch 47: PDE/MC options + patterns + TED + vol-managed ───
         .route("/options/calc/finite-difference",      post(finite_difference_option_route))
         .route("/options/calc/monte-carlo",            post(monte_carlo_option_route))
         .route("/options/calc/forward-start",          post(forward_start_option_route))
@@ -610,7 +610,6 @@ pub fn router() -> Router<AppState> {
         .route("/patterns/island-reversal",            post(island_reversal_route))
         .route("/credit/calc/ted-spread",              post(ted_spread_route))
         .route("/portfolio/volatility-managed",        post(volatility_managed_portfolio_route))
-        // ── Batch 48: vol-swap + NSS + PP + KRB + crash + t-cop + Welch ─
         .route("/options/calc/volatility-swap",        post(volatility_swap_route))
         .route("/credit/calc/nelson-siegel-svensson",  post(nelson_siegel_svensson_route))
         .route("/analytics/pp-test",                   post(pp_test_route))
@@ -618,7 +617,6 @@ pub fn router() -> Router<AppState> {
         .route("/portfolio/momentum-crash-protection", post(momentum_crash_protection_route))
         .route("/analytics/t-copula",                  post(t_copula_route))
         .route("/analytics/welch-periodogram",         post(welch_periodogram_route))
-        // ── Batch 49: Williams A/D + CTI + BoP + RVI + DeMarker + Woodies + PSO ─
         .route("/analytics/williams-ad",               post(williams_accumulation_distribution_route))
         .route("/analytics/chande-trend-index",        post(chande_trend_index_route))
         .route("/analytics/balance-of-power",          post(balance_of_power_route))
@@ -626,7 +624,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/demarker-oscillator",       post(demarker_oscillator_route))
         .route("/analytics/woodies-cci",               post(woodies_cci_route))
         .route("/analytics/premier-stochastic",        post(premier_stochastic_route))
-        // ── Batch 50: QStick + KST + DI + Camarilla + LR-channel + Gator + TMA ─
         .route("/analytics/qstick",                    post(qstick_route))
         .route("/analytics/know-sure-thing",           post(know_sure_thing_route))
         .route("/analytics/disparity-index",           post(disparity_index_route))
@@ -634,7 +631,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/linear-regression-channel", post(linear_regression_channel_route))
         .route("/analytics/gator-oscillator",          post(gator_oscillator_route))
         .route("/analytics/triangular-ma",             post(triangular_ma_route))
-        // ── Batch 51: PVT + NVI + PVI + STARC + GMMA + ASI + TMF + safezone ─
         .route("/analytics/price-volume-trend",        post(price_volume_trend_route))
         .route("/analytics/negative-volume-index",     post(negative_volume_index_route))
         .route("/analytics/positive-volume-index",     post(positive_volume_index_route))
@@ -643,7 +639,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/accumulation-swing-index",  post(accumulation_swing_index_route))
         .route("/analytics/twiggs-money-flow",         post(twiggs_money_flow_route))
         .route("/analytics/elder-safezone-stop",       post(elder_safezone_stop_route))
-        // ── Batch 52: JMA + CK-stop + Elder thermo + Floor pivots + TDI + TTM + EWO ─
         .route("/analytics/jurik-ma",                  post(jurik_ma_route))
         .route("/analytics/chande-kroll-stop",         post(chande_kroll_stop_route))
         .route("/analytics/elder-thermometer",         post(elder_thermometer_route))
@@ -651,7 +646,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/traders-dynamic-index",     post(traders_dynamic_index_route))
         .route("/analytics/ttm-squeeze",               post(ttm_squeeze_route))
         .route("/analytics/elliott-wave-oscillator",   post(elliott_wave_oscillator_route))
-        // ── Batch 53: Woodie + Fib pivots + PGO + Roofing + Weis + TTM trend + VQI ─
         .route("/analytics/woodie-pivots",             post(woodie_pivots_route))
         .route("/analytics/fibonacci-pivots",          post(fibonacci_pivots_route))
         .route("/analytics/pretty-good-oscillator",    post(pretty_good_oscillator_route))
@@ -659,7 +653,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/weiss-wave",                post(weiss_wave_route))
         .route("/analytics/ttm-trend",                 post(ttm_trend_route))
         .route("/analytics/volatility-quality-index",  post(volatility_quality_index_route))
-        // ── Batch 54: DeMark + Gann HLA + Elder Impulse + Damiani + ITrend + RF + 3-10 ─
         .route("/analytics/demark-pivots",             post(demark_pivots_route))
         .route("/analytics/gann-high-low-activator",   post(gann_high_low_activator_route))
         .route("/analytics/impulse-system",            post(impulse_system_route))
@@ -667,7 +660,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/ehlers-instant-trendline",  post(ehlers_instant_trendline_route))
         .route("/analytics/range-filter",              post(range_filter_route))
         .route("/analytics/linda-raschke-3-10",        post(linda_raschke_3_10_route))
-        // ── Batch 55: MAMA/FAMA + DSS + TAZ + III + DMI + SE bands + CTI ─
         .route("/analytics/ehlers-mama-fama",          post(ehlers_mama_fama_route))
         .route("/analytics/bressert-dss",              post(bressert_dss_route))
         .route("/analytics/traders-action-zone",       post(traders_action_zone_route))
@@ -675,7 +667,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/chande-dynamic-momentum",   post(chande_dynamic_momentum_index_route))
         .route("/analytics/standard-error-bands",      post(standard_error_bands_route))
         .route("/analytics/ehlers-cti",                post(ehlers_correlation_trend_indicator_route))
-        // ── Batch 56: Chandelier + Holy Grail + VO + Chop Zone + AlphaTrend + LRS + UPI ─
         .route("/analytics/chandelier-exit",           post(chandelier_exit_route))
         .route("/patterns/holy-grail",                 post(holy_grail_route))
         .route("/analytics/volume-oscillator",         post(volume_oscillator_route))
@@ -683,7 +674,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/alphatrend",                post(alphatrend_route))
         .route("/analytics/linear-regression-slope",   post(linear_regression_slope_route))
         .route("/analytics/ulcer-performance-index",   post(ulcer_performance_index_route))
-        // ── Batch 57: %B + VZO + Gartley + Pinball + AVP + RMA + DSP ─
         .route("/analytics/bollinger-percent-b",       post(bollinger_percent_b_route))
         .route("/analytics/volume-zone-oscillator",    post(volume_zone_oscillator_route))
         .route("/patterns/gartley",                    post(gartley_pattern_route))
@@ -691,7 +681,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/accumulation-volume-pattern", post(accumulation_volume_pattern_route))
         .route("/analytics/recursive-ma",              post(recursive_ma_route))
         .route("/analytics/detrended-synthetic-price", post(detrended_synthetic_price_route))
-        // ── Batch 58: Bat + Butterfly + Crab + Cypher + Shark + Turtle Soup + 80-20 ─
         .route("/patterns/bat",                        post(bat_pattern_route))
         .route("/patterns/butterfly",                  post(butterfly_pattern_route))
         .route("/patterns/crab",                       post(crab_pattern_route))
@@ -699,7 +688,6 @@ pub fn router() -> Router<AppState> {
         .route("/patterns/shark",                      post(shark_pattern_route))
         .route("/patterns/turtle-soup",                post(turtle_soup_route))
         .route("/patterns/eighty-twenty",              post(eighty_twenty_setup_route))
-        // ── Batch 59: z-score + VFI + LRC + MA envelope + BB squeeze + Anti + CMI ─
         .route("/analytics/z-score-indicator",         post(z_score_indicator_route))
         .route("/analytics/katsanos-vfi",              post(katsanos_vfi_route))
         .route("/analytics/linear-regression-curve",   post(linear_regression_curve_route))
@@ -707,7 +695,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/bollinger-squeeze",         post(bollinger_squeeze_route))
         .route("/patterns/anti-setup",                 post(anti_setup_route))
         .route("/analytics/choppy-market-index",       post(choppy_market_index_route))
-        // ── Batch 60: Madrid + Velocity + VBS + DVO + AD-osc + CSI + Hawkins ─
         .route("/analytics/madrid-ribbon",             post(madrid_moving_average_ribbon_route))
         .route("/analytics/velocity-indicator",        post(velocity_indicator_route))
         .route("/analytics/volatility-breakout-system", post(volatility_breakout_system_route))
@@ -715,7 +702,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/ad-oscillator",             post(accumulation_distribution_oscillator_route))
         .route("/analytics/candle-strength-index",     post(candle_strength_index_route))
         .route("/analytics/hawkins-dynamic-zones",     post(hawkins_dynamic_zones_route))
-        // ── Batch 61: DSO + ABCD + Gann fan + ratio/spread + BBWP + RS-vs-mkt ─
         .route("/analytics/ehlers-decycler-oscillator", post(ehlers_decycler_oscillator_route))
         .route("/patterns/abcd",                       post(abcd_pattern_route))
         .route("/analytics/gann-fan",                  post(gann_fan_route))
@@ -723,7 +709,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/spread-chart",              post(spread_chart_route))
         .route("/analytics/bollinger-bandwidth-percentile", post(bollinger_bandwidth_percentile_route))
         .route("/analytics/relative-strength-vs-market", post(relative_strength_vs_market_route))
-        // ── Batch 62: Ultimate Smoother + CSM + 5-0 + TP/WC + engulfing + 52w ─
         .route("/analytics/ultimate-smoother",         post(ultimate_smoother_route))
         .route("/analytics/centered-smoothed-momentum", post(ehlers_centered_smoothed_momentum_route))
         .route("/patterns/five-o",                     post(five_o_pattern_route))
@@ -731,7 +716,6 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/weighted-close",            post(weighted_close_route))
         .route("/patterns/engulfing-scanner",          post(engulfing_pattern_scanner_route))
         .route("/scanner/fifty-two-week-high-low",     post(fifty_two_week_high_low_scanner_route))
-        // ── Batch 63: session VWAP + tape speed + liquidity / absorption / iceberg + MP + AHLI ─
         .route("/analytics/session-vwap",              post(session_vwap_route))
         .route("/analytics/tape-speed",                post(tape_speed_route))
         .route("/analytics/liquidity-pools",           post(liquidity_pool_detector_route))
@@ -739,6 +723,113 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/iceberg-detector",          post(iceberg_detector_route))
         .route("/analytics/median-price",              post(median_price_route))
         .route("/analytics/arms-high-low-index",       post(arms_high_low_index_route))
+        .route("/analytics/fibonacci-extensions",      post(fibonacci_extensions_route))
+        .route("/analytics/donchian-oscillator",       post(donchian_oscillator_route))
+        .route("/analytics/mesa-sine-wave",            post(mesa_sine_wave_route))
+        .route("/analytics/cybernetic-fisher",         post(ehlers_fisher_cybernetic_route))
+        .route("/analytics/bid-ask-volume-ratio",      post(bid_ask_volume_ratio_route))
+        .route("/analytics/nyse-tick",                 post(nyse_tick_route))
+        .route("/analytics/chande-volatility-index",   post(chande_volatility_index_route))
+        .route("/patterns/gann-swing-chart",           post(gann_swing_chart_route))
+        .route("/analytics/vix-basis",                 post(vix_basis_route))
+        .route("/analytics/vix-skew-smirk",            post(vix_skew_smirk_route))
+        .route("/options/calc/gamma-pin-zone",         post(gamma_pin_zone_route))
+        .route("/analytics/borrow-rate-indicator",     post(borrow_rate_indicator_route))
+        .route("/analytics/earnings-surprise-indicator", post(earnings_surprise_indicator_route))
+        .route("/analytics/liquidity-void-detector",   post(liquidity_void_detector_route))
+        .route("/patterns/three-white-soldiers-crows", post(three_white_soldiers_crows_route))
+        .route("/patterns/morning-evening-star",       post(morning_evening_star_route))
+        .route("/patterns/dark-cloud-piercing",        post(dark_cloud_piercing_route))
+        .route("/patterns/hanging-man-shooting-star",  post(hanging_man_shooting_star_route))
+        .route("/analytics/term-spread",               post(term_spread_route))
+        .route("/analytics/volume-weighted-macd",      post(volume_weighted_macd_route))
+        .route("/analytics/cvd-zscore",                post(cumulative_volume_delta_zscore_route))
+        .route("/patterns/doji-variants",              post(doji_variants_route))
+        .route("/patterns/harami",                     post(harami_pattern_route))
+        .route("/patterns/tweezer",                    post(tweezer_top_bottom_route))
+        .route("/patterns/hikkake",                    post(hikkake_pattern_route))
+        .route("/patterns/sperandeo-1-2-3",            post(sperandeo_1_2_3_route))
+        .route("/analytics/breadth-thrust",            post(breadth_thrust_route))
+        .route("/patterns/abandoned-baby",             post(abandoned_baby_route))
+        .route("/patterns/spinning-top-marubozu",      post(spinning_top_marubozu_route))
+        .route("/patterns/kicker",                     post(kicker_pattern_route))
+        .route("/patterns/three-inside-up-down",       post(three_inside_up_down_route))
+        .route("/patterns/three-outside-up-down",      post(three_outside_up_down_route))
+        .route("/patterns/belt-hold",                  post(belt_hold_pattern_route))
+        .route("/analytics/gap-classifier",            post(gap_classifier_route))
+        .route("/analytics/linear-regression-r-squared", post(linear_regression_r_squared_route))
+        .route("/analytics/price-volume-oscillator",   post(price_volume_oscillator_route))
+        .route("/patterns/rising-falling-three-methods", post(rising_falling_three_methods_route))
+        .route("/patterns/mat-hold",                   post(mat_hold_pattern_route))
+        .route("/patterns/on-neck-in-neck",            post(on_neck_in_neck_route))
+        .route("/patterns/tasuki-gap",                 post(tasuki_gap_route))
+        .route("/patterns/breakaway",                  post(breakaway_pattern_route))
+        .route("/patterns/volume-climax",              post(volume_climax_pattern_route))
+        .route("/patterns/ladder-bottom-top",          post(ladder_bottom_top_route))
+        .route("/patterns/counter-attack",             post(counter_attack_lines_route))
+        .route("/patterns/thrusting",                  post(thrusting_pattern_route))
+        .route("/patterns/stick-sandwich",             post(stick_sandwich_route))
+        .route("/patterns/side-by-side-white-lines",   post(side_by_side_white_lines_route))
+        .route("/patterns/upside-gap-two-crows",       post(upside_gap_two_crows_route))
+        .route("/patterns/swing-failure",              post(swing_failure_pattern_route))
+        .route("/patterns/ross-hook",                  post(ross_hook_route))
+        .route("/patterns/separating-lines",           post(separating_lines_route))
+        .route("/charts/kagi",                         post(kagi_chart_route))
+        .route("/charts/three-line-break",             post(three_line_break_route))
+        .route("/patterns/meeting-lines",              post(meeting_lines_route))
+        .route("/charts/volume-at-price",              post(volume_at_price_route))
+        .route("/charts/equivolume-bars",              post(equivolume_bars_route))
+        .route("/analytics/ehrlich-filter",            post(ehrlich_filter_route))
+        .route("/analytics/belkhayate-timing",         post(belkhayate_timing_route))
+        .route("/charts/range-bar",                    post(range_bar_chart_route))
+        .route("/charts/tick-bar",                     post(tick_bar_chart_route))
+        .route("/charts/volume-bar",                   post(volume_bar_chart_route))
+        .route("/charts/dollar-bar",                   post(dollar_bar_chart_route))
+        .route("/options/volatility-smile",            post(volatility_smile_route))
+        .route("/analytics/monthly-seasonality",       post(monthly_seasonality_route))
+        .route("/analytics/intraday-seasonality",      post(intraday_seasonality_route))
+        .route("/analytics/holiday-seasonality",       post(holiday_seasonality_route))
+        .route("/analytics/day-of-week-seasonality",   post(day_of_week_seasonality_route))
+        .route("/analytics/developing-value-area",     post(developing_value_area_route))
+        .route("/analytics/developing-poc",            post(developing_poc_route))
+        .route("/options/oi-distribution",             post(option_open_interest_distribution_route))
+        .route("/analytics/moving-correlation",        post(moving_correlation_route))
+        .route("/charts/imbalance-bar",                post(imbalance_bar_chart_route))
+        .route("/patterns/pin-bar",                    post(pin_bar_route))
+        .route("/analytics/atr-trailing-stop",         post(atr_trailing_stop_route))
+        .route("/analytics/atr-channel",               post(atr_channel_route))
+        .route("/analytics/relative-volume-zscore",    post(relative_volume_zscore_route))
+        .route("/patterns/power-bar",                  post(power_bar_route))
+        .route("/analytics/bollinger-band-distance",   post(bollinger_band_distance_route))
+        .route("/analytics/volume-force-index",        post(volume_force_index_route))
+        .route("/analytics/zero-lag-macd",             post(zero_lag_macd_route))
+        .route("/analytics/compound-pivots",           post(compound_pivots_route))
+        .route("/analytics/ergodic-oscillator",        post(ergodic_oscillator_route))
+        .route("/analytics/momentum-quality-score",    post(momentum_quality_score_route))
+        .route("/analytics/swing-strength-index",      post(swing_strength_index_route))
+        .route("/analytics/momentum-persistence-index", post(momentum_persistence_index_route))
+        .route("/analytics/cumulative-tick-zscore",    post(cumulative_tick_zscore_route))
+        .route("/analytics/regime-classifier",         post(regime_classifier_route))
+        .route("/analytics/bayesian-change-point",     post(bayesian_change_point_detector_route))
+        .route("/analytics/dividend-yield-curve",      post(dividend_yield_curve_route))
+        .route("/analytics/repo-rate-spread",          post(repo_rate_spread_route))
+        .route("/analytics/term-premium",              post(term_premium_estimator_route))
+        .route("/analytics/swap-rate-curve",           post(swap_rate_curve_route))
+        .route("/analytics/rolling-quantile",          post(rolling_quantile_route))
+        .route("/analytics/option-payoff-diagram",     post(option_payoff_diagram_route))
+        .route("/analytics/var-historical",            post(value_at_risk_historical_route))
+        .route("/analytics/var-filtered-historical",   post(value_at_risk_filtered_historical_route))
+        .route("/analytics/kalman-dynamic-beta",       post(kalman_dynamic_beta_route))
+        .route("/analytics/gbm-simulator",             post(gbm_path_simulator_route))
+        .route("/analytics/jump-diffusion-simulator",  post(jump_diffusion_simulator_route))
+        .route("/analytics/fbm-generator",             post(fractional_brownian_motion_generator_route))
+        .route("/analytics/multi-leg-option-pricer",   post(multi_leg_option_pricer_route))
+        .route("/analytics/markov-switching-2state",   post(markov_switching_2state_route))
+        .route("/analytics/microprice-stoikov",        post(microprice_stoikov_route))
+        .route("/analytics/svi-volatility-smile",      post(svi_volatility_smile_route))
+        .route("/analytics/dupire-local-volatility",   post(dupire_local_volatility_route))
+        .route("/analytics/dynamic-time-warping",      post(dynamic_time_warping_route))
+        .route("/analytics/wavelet-decomposition-haar", post(wavelet_decomposition_haar_route))
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -1809,8 +1900,6 @@ async fn walk_forward_sma_cross_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 7
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct BreadthLinesBody {
@@ -1877,8 +1966,6 @@ async fn relative_strength_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 8
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct KeltnerSqueezeBody {
@@ -1908,8 +1995,6 @@ async fn divergence_detect_route(
     Json(divergence_detector::detect(&b.prices, &b.indicator, b.lookback))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 9
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -1975,8 +2060,6 @@ async fn halt_resume_route(
     Json(halt_resume_monitor::analyze(&b.events, &b.config))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 10
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2063,8 +2146,6 @@ async fn ewma_volatility_route(
     Json(ewma_volatility::compute(&b.closes, b.lambda))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 11
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2167,8 +2248,6 @@ async fn kyles_lambda_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 12
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct TpoBody {
@@ -2260,8 +2339,6 @@ async fn ornstein_uhlenbeck_route(
     Json(ornstein_uhlenbeck::fit(&b.series))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 13
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2367,8 +2444,6 @@ async fn anchored_momentum_route(
     Json(anchored_momentum::compute(&b.closes, b.anchor, b.smooth_period))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 14
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2487,8 +2562,6 @@ async fn murrey_math_route(
     Json(murrey_math::compute(&b.bars, b.lookback_bars))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 15
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2620,8 +2693,6 @@ async fn realized_correlation_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 16
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct CornishFisherBody {
@@ -2710,8 +2781,6 @@ async fn brinson_attribution_route(
     Json(brinson_attribution::analyze(&b.inputs))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 17
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -2850,8 +2919,6 @@ async fn liquidity_adjusted_var_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 18
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct CirZcbBody {
@@ -2966,8 +3033,6 @@ async fn almgren_chriss_route(
     Json(almgren_chriss::solve(&b.params))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 19
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -3087,8 +3152,6 @@ async fn vector_autoregression_route(
     Json(vector_autoregression::estimate(&b.series, b.lags))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 20
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -3212,8 +3275,6 @@ async fn trade_quality_stats_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 21
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct ChooserOptionBody {
@@ -3324,8 +3385,6 @@ async fn momentum_12_1_route(
     Json(momentum_12_1::scan(&b.symbols))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 22
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -3451,8 +3510,6 @@ async fn stochastic_momentum_index_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 23
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct AmericanBinomialBody {
@@ -3563,8 +3620,6 @@ async fn greeks_profile_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 24
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct TrinomialBody {
@@ -3664,8 +3719,6 @@ async fn bollinger_oscillators_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 25
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct VarBacktestBody {
@@ -3746,8 +3799,6 @@ async fn survival_probability_route(
     Json(survival_probability::build_curve(&b.segments, &b.query_times))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 26
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -3873,8 +3924,6 @@ async fn block_bootstrap_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 27
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct RealizedHigherMomentsBody {
@@ -3970,8 +4019,6 @@ async fn max_diversification_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 28
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct RealizedSemivarianceBody {
@@ -4060,8 +4107,6 @@ async fn treynor_black_route(
     Json(treynor_black::solve(&b.securities, b.market_excess_return, b.market_variance))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 29
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -4163,8 +4208,6 @@ async fn bond_convexity_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 30
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct AdlBody { bars: Vec<accumulation_distribution_line::Bar> }
@@ -4256,8 +4299,6 @@ async fn component_var_route(
     Json(component_var::compute(&b.weights, &b.covariance, b.confidence))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 31
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -4359,8 +4400,6 @@ async fn es_contribution_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 32
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct ZSpreadBody {
@@ -4458,8 +4497,6 @@ async fn fama_french_3factor_route(
     Json(fama_french_3factor::estimate(&b.excess_returns, &b.mkt, &b.smb, &b.hml))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 33
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -4559,8 +4596,6 @@ async fn pin_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 34
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct MahalanobisBody { observations: Vec<Vec<f64>> }
@@ -4656,8 +4691,6 @@ async fn hilbert_transform_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 35
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct JarqueBeraBody { sample: Vec<f64> }
@@ -4734,8 +4767,6 @@ async fn breusch_godfrey_route(
     Json(breusch_godfrey::test(&b.x, &b.y, b.lag_order))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 36
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -4852,8 +4883,6 @@ async fn vol_targeting_sizer_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 37
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct Ks2SampleBody { sample_a: Vec<f64>, sample_b: Vec<f64> }
@@ -4925,8 +4954,6 @@ async fn iv_skew_scanner_route(
     Json(iv_skew_scanner::scan(&b.strips, &cfg))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 38
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5005,8 +5032,6 @@ async fn median_rv_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 39
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct MannWhitneyBody { sample_a: Vec<f64>, sample_b: Vec<f64> }
@@ -5075,8 +5100,6 @@ async fn distance_correlation_route(
     Json(distance_correlation::compute(&b.x, &b.y))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 40
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5191,8 +5214,6 @@ async fn decile_long_short_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 41
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct NeweyWestBody {
@@ -5293,8 +5314,6 @@ async fn vol_risk_premium_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 42
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct LiborOisBody { daily_rates: Vec<libor_ois_spread::DailyRate> }
@@ -5378,8 +5397,6 @@ async fn monte_carlo_var_route(
     ))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 43
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5478,8 +5495,6 @@ async fn megaphone_pattern_route(
     Json(megaphone_pattern::detect(&b.bars, &cfg))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 44
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5591,8 +5606,6 @@ async fn vcp_pattern_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 45
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct BurkeBody {
@@ -5688,8 +5701,6 @@ async fn expectancy_per_trade_route(
     Json(expectancy_per_trade::compute(&b.trade_pnls))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 46
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5793,8 +5804,6 @@ async fn bootstrap_pnl_route(
     Json(bootstrap_pnl::bootstrap(&b.trade_pnls, b.n_resamples, b.seed))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 47
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -5925,8 +5934,6 @@ async fn volatility_managed_portfolio_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 48
-// ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 struct VolSwapBody {
@@ -6036,7 +6043,6 @@ async fn welch_periodogram_route(
     Json(welch_periodogram::compute(&b.series, b.segment_length, b.overlap_fraction))
 }
 
-// Batch 49
 
 #[derive(Deserialize)]
 struct WilliamsAdBody { bars: Vec<williams_accumulation_distribution::Bar> }
@@ -6136,7 +6142,6 @@ async fn premier_stochastic_route(
     Json(premier_stochastic::compute(&b.bars, b.stoch_period, b.smoothing_1, b.smoothing_2))
 }
 
-// Batch 50
 
 #[derive(Deserialize)]
 struct QStickBody {
@@ -6237,7 +6242,6 @@ async fn triangular_ma_route(
     Json(triangular_ma::compute(&b.closes, b.period))
 }
 
-// Batch 51
 
 #[derive(Deserialize)]
 struct PvtBody { bars: Vec<price_volume_trend::Bar> }
@@ -6332,7 +6336,6 @@ async fn elder_safezone_stop_route(
     Json(elder_safezone_stop::compute(&b.bars, b.period, b.k_multiplier))
 }
 
-// Batch 52
 
 #[derive(Deserialize)]
 struct JmaBody {
@@ -6444,7 +6447,6 @@ async fn elliott_wave_oscillator_route(
     Json(elliott_wave_oscillator::compute(&b.bars, b.fast, b.slow))
 }
 
-// Batch 53
 
 #[derive(Deserialize)]
 struct WoodieBody { session: woodie_pivots::PriorSession }
@@ -6531,7 +6533,6 @@ async fn volatility_quality_index_route(
     Json(volatility_quality_index::compute(&b.bars, b.normalization_period))
 }
 
-// Batch 54
 
 #[derive(Deserialize)]
 struct DemarkPivotsBody { session: demark_pivots::PriorSession }
@@ -6638,7 +6639,6 @@ async fn linda_raschke_3_10_route(
         b.slow_period, b.signal_period))
 }
 
-// Batch 55
 
 #[derive(Deserialize)]
 struct MamaFamaBody {
@@ -6744,7 +6744,6 @@ async fn ehlers_correlation_trend_indicator_route(
     Json(ehlers_correlation_trend_indicator::compute(&b.closes, b.period))
 }
 
-// Batch 56
 
 #[derive(Deserialize)]
 struct ChandelierExitBody {
@@ -6848,7 +6847,6 @@ async fn ulcer_performance_index_route(
     Json(ulcer_performance_index::compute(&b.equity_curve, b.risk_free_rate, b.periods_per_year))
 }
 
-// Batch 57
 
 #[derive(Deserialize)]
 struct BbPercentBBody {
@@ -6945,7 +6943,6 @@ async fn detrended_synthetic_price_route(
     Json(detrended_synthetic_price::compute(&b.closes, b.period))
 }
 
-// Batch 58
 
 #[derive(Deserialize)]
 struct HarmonicPatternBody {
@@ -7012,7 +7009,6 @@ async fn eighty_twenty_setup_route(
     Json(eighty_twenty_setup::compute(&b.bars, b.lookback))
 }
 
-// Batch 59
 
 #[derive(Deserialize)]
 struct ZScoreBody {
@@ -7125,7 +7121,6 @@ async fn choppy_market_index_route(
     Json(choppy_market_index::compute(&b.bars, b.period))
 }
 
-// Batch 60
 
 #[derive(Deserialize)]
 struct MadridBody { closes: Vec<f64> }
@@ -7220,7 +7215,6 @@ async fn hawkins_dynamic_zones_route(
     Json(hawkins_dynamic_zones::compute(&b.oscillator, b.period, b.pct))
 }
 
-// Batch 61
 
 #[derive(Deserialize)]
 struct DsoBody {
@@ -7319,7 +7313,6 @@ async fn relative_strength_vs_market_route(
     Json(relative_strength_vs_market::compute(&b.stock_closes, &b.benchmark_closes, b.period))
 }
 
-// Batch 62
 
 #[derive(Deserialize)]
 struct UltimateSmootherBody {
@@ -7407,7 +7400,6 @@ async fn fifty_two_week_high_low_scanner_route(
     Json(fifty_two_week_high_low_scanner::compute(&b.bars, b.lookback))
 }
 
-// Batch 63
 
 #[derive(Deserialize)]
 struct SessionVwapBody { bars: Vec<session_vwap::Bar> }
@@ -7503,4 +7495,1627 @@ async fn arms_high_low_index_route(
     _u: AuthUser, Json(b): Json<ArmsHighLowBody>,
 ) -> Json<arms_high_low_index::ArmsHighLowReport> {
     Json(arms_high_low_index::compute(&b.breadth, b.period))
+}
+
+
+#[derive(Deserialize)]
+struct FibExtBody {
+    a: f64,
+    b: f64,
+    retracement_base: f64,
+    #[serde(default)] bullish: bool,
+}
+
+async fn fibonacci_extensions_route(
+    _u: AuthUser, Json(b): Json<FibExtBody>,
+) -> Json<Option<fibonacci_extensions::FibonacciExtensionLevels>> {
+    Json(fibonacci_extensions::compute(b.a, b.b, b.retracement_base, b.bullish))
+}
+
+#[derive(Deserialize)]
+struct DonchianOscBody {
+    bars: Vec<donchian_oscillator::Bar>,
+    #[serde(default = "default_donchian_osc_period")] period: usize,
+}
+fn default_donchian_osc_period() -> usize { 20 }
+
+async fn donchian_oscillator_route(
+    _u: AuthUser, Json(b): Json<DonchianOscBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(donchian_oscillator::compute(&b.bars, b.period))
+}
+
+#[derive(Deserialize)]
+struct MesaSineBody { series: Vec<f64> }
+
+async fn mesa_sine_wave_route(
+    _u: AuthUser, Json(b): Json<MesaSineBody>,
+) -> Json<mesa_sine_wave::SineWaveReport> {
+    Json(mesa_sine_wave::compute(&b.series))
+}
+
+#[derive(Deserialize)]
+struct CyberneticFisherBody {
+    bars: Vec<ehlers_fisher_cybernetic::Bar>,
+    #[serde(default = "default_cyber_fisher_period")] period: usize,
+}
+fn default_cyber_fisher_period() -> usize { 10 }
+
+async fn ehlers_fisher_cybernetic_route(
+    _u: AuthUser, Json(b): Json<CyberneticFisherBody>,
+) -> Json<ehlers_fisher_cybernetic::CyberneticFisherReport> {
+    Json(ehlers_fisher_cybernetic::compute(&b.bars, b.period))
+}
+
+#[derive(Deserialize)]
+struct BidAskVolBody {
+    bars: Vec<bid_ask_volume_ratio::Bar>,
+    #[serde(default = "default_bav_period")] period: usize,
+}
+fn default_bav_period() -> usize { 60 }
+
+async fn bid_ask_volume_ratio_route(
+    _u: AuthUser, Json(b): Json<BidAskVolBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(bid_ask_volume_ratio::compute(&b.bars, b.period))
+}
+
+#[derive(Deserialize)]
+struct NyseTickBody {
+    tick: Vec<f64>,
+    #[serde(default = "default_tick_ema")] ema_period: usize,
+    #[serde(default = "default_tick_ext")] ext_threshold: f64,
+}
+fn default_tick_ema() -> usize { 14 }
+fn default_tick_ext() -> f64 { 1000.0 }
+
+async fn nyse_tick_route(
+    _u: AuthUser, Json(b): Json<NyseTickBody>,
+) -> Json<nyse_tick::NyseTickReport> {
+    Json(nyse_tick::compute(&b.tick, b.ema_period, b.ext_threshold))
+}
+
+#[derive(Deserialize)]
+struct CviBarBody {
+    bars: Vec<chande_volatility_index::Bar>,
+    #[serde(default = "default_cvi_ema")] ema_period: usize,
+    #[serde(default = "default_cvi_roc")] roc_period: usize,
+}
+fn default_cvi_ema() -> usize { 10 }
+fn default_cvi_roc() -> usize { 10 }
+
+async fn chande_volatility_index_route(
+    _u: AuthUser, Json(b): Json<CviBarBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(chande_volatility_index::compute(&b.bars, b.ema_period, b.roc_period))
+}
+
+
+#[derive(Deserialize)]
+struct GannSwingBody {
+    bars: Vec<gann_swing_chart::Bar>,
+    #[serde(default = "default_gann_swing_bars")] reversal_bars: usize,
+}
+fn default_gann_swing_bars() -> usize { 2 }
+
+async fn gann_swing_chart_route(
+    _u: AuthUser, Json(b): Json<GannSwingBody>,
+) -> Json<gann_swing_chart::GannSwingReport> {
+    Json(gann_swing_chart::compute(&b.bars, b.reversal_bars))
+}
+
+#[derive(Deserialize)]
+struct VixBasisBody { vix_spot: Vec<f64>, vx_front: Vec<f64> }
+
+async fn vix_basis_route(
+    _u: AuthUser, Json(b): Json<VixBasisBody>,
+) -> Json<vix_basis::VixBasisReport> {
+    Json(vix_basis::compute(&b.vix_spot, &b.vx_front))
+}
+
+#[derive(Deserialize)]
+struct VixSkewBody {
+    iv_25d_put: Vec<f64>,
+    iv_25d_call: Vec<f64>,
+    iv_atm: Vec<f64>,
+    #[serde(default = "default_vix_skew_threshold")] smirk_threshold: f64,
+}
+fn default_vix_skew_threshold() -> f64 { 5.0 }
+
+async fn vix_skew_smirk_route(
+    _u: AuthUser, Json(b): Json<VixSkewBody>,
+) -> Json<vix_skew_smirk::VixSkewReport> {
+    Json(vix_skew_smirk::compute(&b.iv_25d_put, &b.iv_25d_call, &b.iv_atm, b.smirk_threshold))
+}
+
+#[derive(Deserialize)]
+struct GammaPinBody {
+    strike_gex: Vec<gamma_pin_zone::StrikeGex>,
+    spot: f64,
+    #[serde(default = "default_pin_radius")] pin_radius_pct: f64,
+}
+fn default_pin_radius() -> f64 { 5.0 }
+
+async fn gamma_pin_zone_route(
+    _u: AuthUser, Json(b): Json<GammaPinBody>,
+) -> Json<Option<gamma_pin_zone::GammaPinReport>> {
+    Json(gamma_pin_zone::compute(&b.strike_gex, b.spot, b.pin_radius_pct))
+}
+
+#[derive(Deserialize)]
+struct BorrowRateBody {
+    rates_pct: Vec<f64>,
+    #[serde(default = "default_borrow_period")] period: usize,
+}
+fn default_borrow_period() -> usize { 5 }
+
+async fn borrow_rate_indicator_route(
+    _u: AuthUser, Json(b): Json<BorrowRateBody>,
+) -> Json<borrow_rate_indicator::BorrowRateReport> {
+    Json(borrow_rate_indicator::compute(&b.rates_pct, b.period))
+}
+
+#[derive(Deserialize)]
+struct EarningsSurpriseBody { report: earnings_surprise_indicator::EarningsReport }
+
+async fn earnings_surprise_indicator_route(
+    _u: AuthUser, Json(b): Json<EarningsSurpriseBody>,
+) -> Json<Option<earnings_surprise_indicator::EarningsSurpriseReport>> {
+    Json(earnings_surprise_indicator::compute(b.report))
+}
+
+#[derive(Deserialize)]
+struct LiquidityVoidBody {
+    bars: Vec<liquidity_void_detector::Bar>,
+    #[serde(default = "default_lv_period")] period: usize,
+    #[serde(default = "default_lv_range_mult")] range_multiplier: f64,
+    #[serde(default = "default_lv_vol_mult")] vol_multiplier: f64,
+}
+fn default_lv_period() -> usize { 20 }
+fn default_lv_range_mult() -> f64 { 2.0 }
+fn default_lv_vol_mult() -> f64 { 0.5 }
+
+async fn liquidity_void_detector_route(
+    _u: AuthUser, Json(b): Json<LiquidityVoidBody>,
+) -> Json<Vec<liquidity_void_detector::LiquidityVoid>> {
+    Json(liquidity_void_detector::detect(&b.bars, b.period, b.range_multiplier, b.vol_multiplier))
+}
+
+
+#[derive(Deserialize)]
+struct ThreeBarBody { bars: Vec<three_white_soldiers_crows::Bar> }
+
+async fn three_white_soldiers_crows_route(
+    _u: AuthUser, Json(b): Json<ThreeBarBody>,
+) -> Json<three_white_soldiers_crows::ThreeWhiteSoldiersReport> {
+    Json(three_white_soldiers_crows::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct MorningStarBody { bars: Vec<morning_evening_star::Bar> }
+
+async fn morning_evening_star_route(
+    _u: AuthUser, Json(b): Json<MorningStarBody>,
+) -> Json<morning_evening_star::StarPatternReport> {
+    Json(morning_evening_star::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct DarkCloudBody { bars: Vec<dark_cloud_piercing::Bar> }
+
+async fn dark_cloud_piercing_route(
+    _u: AuthUser, Json(b): Json<DarkCloudBody>,
+) -> Json<dark_cloud_piercing::DarkCloudPiercingReport> {
+    Json(dark_cloud_piercing::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct HangingManBody {
+    bars: Vec<hanging_man_shooting_star::Bar>,
+    #[serde(default = "default_hms_trend")] trend_period: usize,
+}
+fn default_hms_trend() -> usize { 5 }
+
+async fn hanging_man_shooting_star_route(
+    _u: AuthUser, Json(b): Json<HangingManBody>,
+) -> Json<hanging_man_shooting_star::HangingShootingReport> {
+    Json(hanging_man_shooting_star::compute(&b.bars, b.trend_period))
+}
+
+#[derive(Deserialize)]
+struct TermSpreadBody { short_yield_pct: Vec<f64>, long_yield_pct: Vec<f64> }
+
+async fn term_spread_route(
+    _u: AuthUser, Json(b): Json<TermSpreadBody>,
+) -> Json<term_spread::TermSpreadReport> {
+    Json(term_spread::compute(&b.short_yield_pct, &b.long_yield_pct))
+}
+
+#[derive(Deserialize)]
+struct VwMacdBody {
+    bars: Vec<volume_weighted_macd::Bar>,
+    #[serde(default = "default_vwmacd_fast")] fast_period: usize,
+    #[serde(default = "default_vwmacd_slow")] slow_period: usize,
+    #[serde(default = "default_vwmacd_signal")] signal_period: usize,
+}
+fn default_vwmacd_fast() -> usize { 12 }
+fn default_vwmacd_slow() -> usize { 26 }
+fn default_vwmacd_signal() -> usize { 9 }
+
+async fn volume_weighted_macd_route(
+    _u: AuthUser, Json(b): Json<VwMacdBody>,
+) -> Json<volume_weighted_macd::VolumeWeightedMacdReport> {
+    Json(volume_weighted_macd::compute(&b.bars, b.fast_period, b.slow_period, b.signal_period))
+}
+
+#[derive(Deserialize)]
+struct CvdZScoreBody {
+    cvd: Vec<f64>,
+    #[serde(default = "default_cvd_zscore_period")] period: usize,
+}
+fn default_cvd_zscore_period() -> usize { 60 }
+
+async fn cumulative_volume_delta_zscore_route(
+    _u: AuthUser, Json(b): Json<CvdZScoreBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(cumulative_volume_delta_zscore::compute(&b.cvd, b.period))
+}
+
+
+#[derive(Deserialize)]
+struct DojiVariantsBody {
+    bars: Vec<doji_variants::Bar>,
+    #[serde(default = "default_doji_pct")] doji_pct: f64,
+}
+fn default_doji_pct() -> f64 { 0.1 }
+
+async fn doji_variants_route(
+    _u: AuthUser, Json(b): Json<DojiVariantsBody>,
+) -> Json<doji_variants::DojiVariantsReport> {
+    Json(doji_variants::compute(&b.bars, b.doji_pct))
+}
+
+#[derive(Deserialize)]
+struct HaramiBody { bars: Vec<harami_pattern::Bar> }
+
+async fn harami_pattern_route(
+    _u: AuthUser, Json(b): Json<HaramiBody>,
+) -> Json<harami_pattern::HaramiReport> {
+    Json(harami_pattern::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct TweezerBody {
+    bars: Vec<tweezer_top_bottom::Bar>,
+    #[serde(default = "default_tweezer_tol")] tolerance_pct: f64,
+}
+fn default_tweezer_tol() -> f64 { 0.05 }
+
+async fn tweezer_top_bottom_route(
+    _u: AuthUser, Json(b): Json<TweezerBody>,
+) -> Json<tweezer_top_bottom::TweezerReport> {
+    Json(tweezer_top_bottom::compute(&b.bars, b.tolerance_pct))
+}
+
+#[derive(Deserialize)]
+struct HikkakeBody {
+    bars: Vec<hikkake_pattern::Bar>,
+    #[serde(default = "default_hikkake_confirm")] confirm_bars: usize,
+}
+fn default_hikkake_confirm() -> usize { 3 }
+
+async fn hikkake_pattern_route(
+    _u: AuthUser, Json(b): Json<HikkakeBody>,
+) -> Json<hikkake_pattern::HikkakeReport> {
+    Json(hikkake_pattern::compute(&b.bars, b.confirm_bars))
+}
+
+#[derive(Deserialize)]
+struct Sperandeo123Body {
+    pivots: Vec<gartley_pattern::Pivot>,
+    closes: Vec<f64>,
+    #[serde(default = "default_sperandeo_lookahead")] max_confirmation_lookahead: usize,
+}
+fn default_sperandeo_lookahead() -> usize { 20 }
+
+async fn sperandeo_1_2_3_route(
+    _u: AuthUser, Json(b): Json<Sperandeo123Body>,
+) -> Json<Vec<sperandeo_1_2_3::SperandoMatch>> {
+    Json(sperandeo_1_2_3::detect(&b.pivots, &b.closes, b.max_confirmation_lookahead))
+}
+
+#[derive(Deserialize)]
+struct BreadthThrustBody {
+    breadth: Vec<breadth_thrust::DailyBreadth>,
+    #[serde(default = "default_thrust_ema")] ema_period: usize,
+    #[serde(default = "default_thrust_window")] max_window_bars: usize,
+    #[serde(default = "default_thrust_low")] low_threshold: f64,
+    #[serde(default = "default_thrust_high")] high_threshold: f64,
+}
+fn default_thrust_ema() -> usize { 10 }
+fn default_thrust_window() -> usize { 10 }
+fn default_thrust_low() -> f64 { 0.40 }
+fn default_thrust_high() -> f64 { 0.615 }
+
+async fn breadth_thrust_route(
+    _u: AuthUser, Json(b): Json<BreadthThrustBody>,
+) -> Json<breadth_thrust::BreadthThrustReport> {
+    Json(breadth_thrust::compute(&b.breadth, b.ema_period, b.max_window_bars,
+        b.low_threshold, b.high_threshold))
+}
+
+#[derive(Deserialize)]
+struct AbandonedBabyBody {
+    bars: Vec<abandoned_baby::Bar>,
+    #[serde(default = "default_ab_doji_pct")] doji_pct: f64,
+}
+fn default_ab_doji_pct() -> f64 { 0.1 }
+
+async fn abandoned_baby_route(
+    _u: AuthUser, Json(b): Json<AbandonedBabyBody>,
+) -> Json<abandoned_baby::AbandonedBabyReport> {
+    Json(abandoned_baby::compute(&b.bars, b.doji_pct))
+}
+
+#[derive(Deserialize)]
+struct SpinningMarubozuBody { bars: Vec<spinning_top_marubozu::Bar> }
+
+async fn spinning_top_marubozu_route(
+    _u: AuthUser, Json(b): Json<SpinningMarubozuBody>,
+) -> Json<spinning_top_marubozu::SpinningTopMarubozuReport> {
+    Json(spinning_top_marubozu::compute(&b.bars))
+}
+
+
+#[derive(Deserialize)]
+struct KickerBody { bars: Vec<kicker_pattern::Bar> }
+
+async fn kicker_pattern_route(
+    _u: AuthUser, Json(b): Json<KickerBody>,
+) -> Json<kicker_pattern::KickerReport> {
+    Json(kicker_pattern::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct ThreeInsideBody { bars: Vec<three_inside_up_down::Bar> }
+
+async fn three_inside_up_down_route(
+    _u: AuthUser, Json(b): Json<ThreeInsideBody>,
+) -> Json<three_inside_up_down::ThreeInsideReport> {
+    Json(three_inside_up_down::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct ThreeOutsideBody { bars: Vec<three_outside_up_down::Bar> }
+
+async fn three_outside_up_down_route(
+    _u: AuthUser, Json(b): Json<ThreeOutsideBody>,
+) -> Json<three_outside_up_down::ThreeOutsideReport> {
+    Json(three_outside_up_down::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct BeltHoldBody {
+    bars: Vec<belt_hold_pattern::Bar>,
+    #[serde(default = "default_belt_hold_trend")] trend_period: usize,
+    #[serde(default = "default_belt_hold_wick")] wick_pct: f64,
+}
+fn default_belt_hold_trend() -> usize { 5 }
+fn default_belt_hold_wick() -> f64 { 0.05 }
+
+async fn belt_hold_pattern_route(
+    _u: AuthUser, Json(b): Json<BeltHoldBody>,
+) -> Json<belt_hold_pattern::BeltHoldReport> {
+    Json(belt_hold_pattern::compute(&b.bars, b.trend_period, b.wick_pct))
+}
+
+#[derive(Deserialize)]
+struct GapClassifierBody {
+    bars: Vec<gap_classifier::Bar>,
+    #[serde(default = "default_gap_lookback")] lookback: usize,
+    #[serde(default = "default_gap_fill_bars")] fill_bars: usize,
+}
+fn default_gap_lookback() -> usize { 20 }
+fn default_gap_fill_bars() -> usize { 5 }
+
+async fn gap_classifier_route(
+    _u: AuthUser, Json(b): Json<GapClassifierBody>,
+) -> Json<gap_classifier::GapClassifierReport> {
+    Json(gap_classifier::compute(&b.bars, b.lookback, b.fill_bars))
+}
+
+#[derive(Deserialize)]
+struct LrR2Body {
+    closes: Vec<f64>,
+    #[serde(default = "default_lr_r2_period")] period: usize,
+}
+fn default_lr_r2_period() -> usize { 14 }
+
+async fn linear_regression_r_squared_route(
+    _u: AuthUser, Json(b): Json<LrR2Body>,
+) -> Json<Vec<Option<f64>>> {
+    Json(linear_regression_r_squared::compute(&b.closes, b.period))
+}
+
+#[derive(Deserialize)]
+struct PvoBody {
+    bars: Vec<price_volume_oscillator::Bar>,
+    #[serde(default = "default_pvo_fast")] fast_period: usize,
+    #[serde(default = "default_pvo_slow")] slow_period: usize,
+    #[serde(default = "default_pvo_signal")] signal_period: usize,
+}
+fn default_pvo_fast() -> usize { 12 }
+fn default_pvo_slow() -> usize { 26 }
+fn default_pvo_signal() -> usize { 9 }
+
+async fn price_volume_oscillator_route(
+    _u: AuthUser, Json(b): Json<PvoBody>,
+) -> Json<price_volume_oscillator::PvoReport> {
+    Json(price_volume_oscillator::compute(&b.bars, b.fast_period, b.slow_period, b.signal_period))
+}
+
+
+#[derive(Deserialize)]
+struct ThreeMethodsBody { bars: Vec<rising_falling_three_methods::Bar> }
+
+async fn rising_falling_three_methods_route(
+    _u: AuthUser, Json(b): Json<ThreeMethodsBody>,
+) -> Json<rising_falling_three_methods::ThreeMethodsReport> {
+    Json(rising_falling_three_methods::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct MatHoldBody { bars: Vec<mat_hold_pattern::Bar> }
+
+async fn mat_hold_pattern_route(
+    _u: AuthUser, Json(b): Json<MatHoldBody>,
+) -> Json<mat_hold_pattern::MatHoldReport> {
+    Json(mat_hold_pattern::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct OnNeckBody {
+    bars: Vec<on_neck_in_neck::Bar>,
+    #[serde(default = "default_on_neck_tol")] tolerance_pct: f64,
+}
+fn default_on_neck_tol() -> f64 { 0.5 }
+
+async fn on_neck_in_neck_route(
+    _u: AuthUser, Json(b): Json<OnNeckBody>,
+) -> Json<on_neck_in_neck::NeckPatternReport> {
+    Json(on_neck_in_neck::compute(&b.bars, b.tolerance_pct))
+}
+
+#[derive(Deserialize)]
+struct TasukiBody { bars: Vec<tasuki_gap::Bar> }
+
+async fn tasuki_gap_route(
+    _u: AuthUser, Json(b): Json<TasukiBody>,
+) -> Json<tasuki_gap::TasukiGapReport> {
+    Json(tasuki_gap::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct BreakawayBody { bars: Vec<breakaway_pattern::Bar> }
+
+async fn breakaway_pattern_route(
+    _u: AuthUser, Json(b): Json<BreakawayBody>,
+) -> Json<breakaway_pattern::BreakawayReport> {
+    Json(breakaway_pattern::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct VolumeClimaxBody {
+    bars: Vec<volume_climax_pattern::Bar>,
+    #[serde(default = "default_vclimax_period")] period: usize,
+    #[serde(default = "default_vclimax_lookback")] lookback: usize,
+    #[serde(default = "default_vclimax_vol")] vol_multiplier: f64,
+    #[serde(default = "default_vclimax_range")] range_multiplier: f64,
+}
+fn default_vclimax_period() -> usize { 20 }
+fn default_vclimax_lookback() -> usize { 20 }
+fn default_vclimax_vol() -> f64 { 2.0 }
+fn default_vclimax_range() -> f64 { 1.5 }
+
+async fn volume_climax_pattern_route(
+    _u: AuthUser, Json(b): Json<VolumeClimaxBody>,
+) -> Json<volume_climax_pattern::VolumeClimaxReport> {
+    Json(volume_climax_pattern::compute(&b.bars, b.period, b.lookback,
+        b.vol_multiplier, b.range_multiplier))
+}
+
+#[derive(Deserialize)]
+struct LadderBody { bars: Vec<ladder_bottom_top::Bar> }
+
+async fn ladder_bottom_top_route(
+    _u: AuthUser, Json(b): Json<LadderBody>,
+) -> Json<ladder_bottom_top::LadderReport> {
+    Json(ladder_bottom_top::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct CounterAttackBody {
+    bars: Vec<counter_attack_lines::Bar>,
+    #[serde(default = "default_counter_attack_tol")] tolerance_pct: f64,
+}
+fn default_counter_attack_tol() -> f64 { 0.3 }
+
+async fn counter_attack_lines_route(
+    _u: AuthUser, Json(b): Json<CounterAttackBody>,
+) -> Json<counter_attack_lines::CounterAttackReport> {
+    Json(counter_attack_lines::compute(&b.bars, b.tolerance_pct))
+}
+
+
+#[derive(Deserialize)]
+struct ThrustingBody { bars: Vec<thrusting_pattern::Bar> }
+
+async fn thrusting_pattern_route(
+    _u: AuthUser, Json(b): Json<ThrustingBody>,
+) -> Json<thrusting_pattern::ThrustingReport> {
+    Json(thrusting_pattern::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct StickSandwichBody {
+    bars: Vec<stick_sandwich::Bar>,
+    #[serde(default = "default_stick_tol")] tolerance_pct: f64,
+}
+fn default_stick_tol() -> f64 { 0.3 }
+
+async fn stick_sandwich_route(
+    _u: AuthUser, Json(b): Json<StickSandwichBody>,
+) -> Json<stick_sandwich::StickSandwichReport> {
+    Json(stick_sandwich::compute(&b.bars, b.tolerance_pct))
+}
+
+#[derive(Deserialize)]
+struct SideBySideBody {
+    bars: Vec<side_by_side_white_lines::Bar>,
+    #[serde(default = "default_side_by_side_tol")] tolerance_pct: f64,
+}
+fn default_side_by_side_tol() -> f64 { 0.3 }
+
+async fn side_by_side_white_lines_route(
+    _u: AuthUser, Json(b): Json<SideBySideBody>,
+) -> Json<side_by_side_white_lines::SideBySideReport> {
+    Json(side_by_side_white_lines::compute(&b.bars, b.tolerance_pct))
+}
+
+#[derive(Deserialize)]
+struct UpsideGap2CrowsBody { bars: Vec<upside_gap_two_crows::Bar> }
+
+async fn upside_gap_two_crows_route(
+    _u: AuthUser, Json(b): Json<UpsideGap2CrowsBody>,
+) -> Json<Vec<bool>> {
+    Json(upside_gap_two_crows::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct SfpBody {
+    bars: Vec<swing_failure_pattern::Bar>,
+    #[serde(default = "default_sfp_lookback")] lookback: usize,
+}
+fn default_sfp_lookback() -> usize { 20 }
+
+async fn swing_failure_pattern_route(
+    _u: AuthUser, Json(b): Json<SfpBody>,
+) -> Json<swing_failure_pattern::SfpReport> {
+    Json(swing_failure_pattern::compute(&b.bars, b.lookback))
+}
+
+#[derive(Deserialize)]
+struct RossHookBody {
+    bars: Vec<ross_hook::Bar>,
+    #[serde(default = "default_ross_lookback")] trend_lookback: usize,
+}
+fn default_ross_lookback() -> usize { 5 }
+
+async fn ross_hook_route(
+    _u: AuthUser, Json(b): Json<RossHookBody>,
+) -> Json<ross_hook::RossHookReport> {
+    Json(ross_hook::compute(&b.bars, b.trend_lookback))
+}
+
+#[derive(Deserialize)]
+struct SeparatingLinesBody {
+    bars: Vec<separating_lines::Bar>,
+    #[serde(default = "default_separating_trend")] trend_period: usize,
+    #[serde(default = "default_separating_tol")] tolerance_pct: f64,
+}
+fn default_separating_trend() -> usize { 5 }
+fn default_separating_tol() -> f64 { 0.3 }
+
+async fn separating_lines_route(
+    _u: AuthUser, Json(b): Json<SeparatingLinesBody>,
+) -> Json<separating_lines::SeparatingLinesReport> {
+    Json(separating_lines::compute(&b.bars, b.trend_period, b.tolerance_pct))
+}
+
+
+#[derive(Deserialize)]
+struct KagiBody {
+    closes: Vec<f64>,
+    reversal: f64,
+    #[serde(default = "default_kagi_kind")] kind: kagi_chart::AmountKind,
+}
+fn default_kagi_kind() -> kagi_chart::AmountKind { kagi_chart::AmountKind::Absolute }
+
+async fn kagi_chart_route(
+    _u: AuthUser, Json(b): Json<KagiBody>,
+) -> Json<Vec<kagi_chart::KagiLine>> {
+    Json(kagi_chart::compute(&b.closes, b.reversal, b.kind))
+}
+
+#[derive(Deserialize)]
+struct TlbBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_tlb_lines")] num_lines: usize,
+}
+fn default_tlb_lines() -> usize { 3 }
+
+async fn three_line_break_route(
+    _u: AuthUser, Json(b): Json<TlbBody>,
+) -> Json<Vec<three_line_break::TlbLine>> {
+    Json(three_line_break::compute(&b.closes, b.num_lines))
+}
+
+#[derive(Deserialize)]
+struct MeetingLinesBody {
+    bars: Vec<meeting_lines::Bar>,
+    #[serde(default = "default_meeting_tol")] tolerance_pct: f64,
+}
+fn default_meeting_tol() -> f64 { 0.3 }
+
+async fn meeting_lines_route(
+    _u: AuthUser, Json(b): Json<MeetingLinesBody>,
+) -> Json<meeting_lines::MeetingLinesReport> {
+    Json(meeting_lines::compute(&b.bars, b.tolerance_pct))
+}
+
+#[derive(Deserialize)]
+struct VolumeAtPriceBody {
+    bars: Vec<volume_at_price::Bar>,
+    #[serde(default = "default_vap_bins")] num_bins: usize,
+    #[serde(default = "default_vap_va")] value_area_pct: f64,
+}
+fn default_vap_bins() -> usize { 50 }
+fn default_vap_va() -> f64 { 70.0 }
+
+async fn volume_at_price_route(
+    _u: AuthUser, Json(b): Json<VolumeAtPriceBody>,
+) -> Json<volume_at_price::VolumeAtPriceReport> {
+    Json(volume_at_price::compute(&b.bars, b.num_bins, b.value_area_pct))
+}
+
+#[derive(Deserialize)]
+struct EquivolumeBody {
+    bars: Vec<equivolume_bars::Bar>,
+    #[serde(default = "default_equivolume_width")] total_width: f64,
+}
+fn default_equivolume_width() -> f64 { 1000.0 }
+
+async fn equivolume_bars_route(
+    _u: AuthUser, Json(b): Json<EquivolumeBody>,
+) -> Json<equivolume_bars::EquivolumeReport> {
+    Json(equivolume_bars::compute(&b.bars, b.total_width))
+}
+
+#[derive(Deserialize)]
+struct EhrlichBody {
+    bars: Vec<ehrlich_filter::Bar>,
+    #[serde(default = "default_ehrlich_period")] period: usize,
+}
+fn default_ehrlich_period() -> usize { 14 }
+
+async fn ehrlich_filter_route(
+    _u: AuthUser, Json(b): Json<EhrlichBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(ehrlich_filter::compute(&b.bars, b.period))
+}
+
+#[derive(Deserialize)]
+struct BelkhayateBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_belkhayate_period")] period: usize,
+}
+fn default_belkhayate_period() -> usize { 30 }
+
+async fn belkhayate_timing_route(
+    _u: AuthUser, Json(b): Json<BelkhayateBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(belkhayate_timing::compute(&b.closes, b.period))
+}
+
+
+#[derive(Deserialize)]
+struct RangeBarBody { prints: Vec<range_bar_chart::Print>, target_range: f64 }
+
+async fn range_bar_chart_route(
+    _u: AuthUser, Json(b): Json<RangeBarBody>,
+) -> Json<Vec<range_bar_chart::RangeBar>> {
+    Json(range_bar_chart::compute(&b.prints, b.target_range))
+}
+
+#[derive(Deserialize)]
+struct TickBarBody { prints: Vec<tick_bar_chart::Print>, ticks_per_bar: u32 }
+
+async fn tick_bar_chart_route(
+    _u: AuthUser, Json(b): Json<TickBarBody>,
+) -> Json<Vec<tick_bar_chart::TickBar>> {
+    Json(tick_bar_chart::compute(&b.prints, b.ticks_per_bar))
+}
+
+#[derive(Deserialize)]
+struct VolumeBarBody { prints: Vec<volume_bar_chart::Print>, volume_per_bar: f64 }
+
+async fn volume_bar_chart_route(
+    _u: AuthUser, Json(b): Json<VolumeBarBody>,
+) -> Json<Vec<volume_bar_chart::VolumeBar>> {
+    Json(volume_bar_chart::compute(&b.prints, b.volume_per_bar))
+}
+
+#[derive(Deserialize)]
+struct DollarBarBody { prints: Vec<dollar_bar_chart::Print>, dollars_per_bar: f64 }
+
+async fn dollar_bar_chart_route(
+    _u: AuthUser, Json(b): Json<DollarBarBody>,
+) -> Json<Vec<dollar_bar_chart::DollarBar>> {
+    Json(dollar_bar_chart::compute(&b.prints, b.dollars_per_bar))
+}
+
+#[derive(Deserialize)]
+struct VolSmileBody {
+    strike_iv: Vec<volatility_smile::StrikeIv>,
+    spot: f64,
+    put_25d_strike: f64,
+    call_25d_strike: f64,
+}
+
+async fn volatility_smile_route(
+    _u: AuthUser, Json(b): Json<VolSmileBody>,
+) -> Json<Option<volatility_smile::VolatilitySmileReport>> {
+    Json(volatility_smile::compute(&b.strike_iv, b.spot,
+        b.put_25d_strike, b.call_25d_strike))
+}
+
+#[derive(Deserialize)]
+struct MonthlySeasonalityBody { closes: Vec<monthly_seasonality::DailyClose> }
+
+async fn monthly_seasonality_route(
+    _u: AuthUser, Json(b): Json<MonthlySeasonalityBody>,
+) -> Json<Option<monthly_seasonality::MonthlySeasonalityReport>> {
+    Json(monthly_seasonality::compute(&b.closes))
+}
+
+#[derive(Deserialize)]
+struct IntradaySeasonalityBody { bars: Vec<intraday_seasonality::IntradayBar> }
+
+async fn intraday_seasonality_route(
+    _u: AuthUser, Json(b): Json<IntradaySeasonalityBody>,
+) -> Json<Option<intraday_seasonality::IntradaySeasonalityReport>> {
+    Json(intraday_seasonality::compute(&b.bars))
+}
+
+
+#[derive(Deserialize)]
+struct HolidaySeasonalityBody {
+    days: Vec<holiday_seasonality::TradingDay>,
+    holiday_indices: Vec<u32>,
+    #[serde(default = "default_holiday_window")] window_before: u32,
+    #[serde(default = "default_holiday_window")] window_after: u32,
+}
+fn default_holiday_window() -> u32 { 5 }
+
+async fn holiday_seasonality_route(
+    _u: AuthUser, Json(b): Json<HolidaySeasonalityBody>,
+) -> Json<Option<holiday_seasonality::HolidaySeasonalityReport>> {
+    Json(holiday_seasonality::compute(&b.days, &b.holiday_indices,
+        b.window_before, b.window_after))
+}
+
+#[derive(Deserialize)]
+struct DowSeasonalityBody { closes: Vec<day_of_week_seasonality::DailyClose> }
+
+async fn day_of_week_seasonality_route(
+    _u: AuthUser, Json(b): Json<DowSeasonalityBody>,
+) -> Json<Option<day_of_week_seasonality::DayOfWeekSeasonalityReport>> {
+    Json(day_of_week_seasonality::compute(&b.closes))
+}
+
+#[derive(Deserialize)]
+struct DevelopingValueAreaBody {
+    bars: Vec<developing_value_area::Bar>,
+    #[serde(default = "default_dev_va_bins")] num_bins: usize,
+    #[serde(default = "default_dev_va_va")] value_area_pct: f64,
+}
+fn default_dev_va_bins() -> usize { 50 }
+fn default_dev_va_va() -> f64 { 70.0 }
+
+async fn developing_value_area_route(
+    _u: AuthUser, Json(b): Json<DevelopingValueAreaBody>,
+) -> Json<developing_value_area::DevelopingValueAreaReport> {
+    Json(developing_value_area::compute(&b.bars, b.num_bins, b.value_area_pct))
+}
+
+#[derive(Deserialize)]
+struct DevelopingPocBody {
+    bars: Vec<developing_poc::Bar>,
+    #[serde(default = "default_dev_poc_bins")] num_bins: usize,
+}
+fn default_dev_poc_bins() -> usize { 50 }
+
+async fn developing_poc_route(
+    _u: AuthUser, Json(b): Json<DevelopingPocBody>,
+) -> Json<developing_poc::DevelopingPocReport> {
+    Json(developing_poc::compute(&b.bars, b.num_bins))
+}
+
+#[derive(Deserialize)]
+struct OiDistBody { strikes: Vec<option_open_interest_distribution::StrikeOi> }
+
+async fn option_open_interest_distribution_route(
+    _u: AuthUser, Json(b): Json<OiDistBody>,
+) -> Json<Option<option_open_interest_distribution::OptionOiReport>> {
+    Json(option_open_interest_distribution::compute(&b.strikes))
+}
+
+#[derive(Deserialize)]
+struct MovingCorrelationBody {
+    series_x: Vec<f64>,
+    series_y: Vec<f64>,
+    #[serde(default = "default_corr_period")] period: usize,
+}
+fn default_corr_period() -> usize { 30 }
+
+async fn moving_correlation_route(
+    _u: AuthUser, Json(b): Json<MovingCorrelationBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(moving_correlation::compute(&b.series_x, &b.series_y, b.period))
+}
+
+#[derive(Deserialize)]
+struct ImbalanceBarBody {
+    prints: Vec<imbalance_bar_chart::Print>,
+    imbalance_threshold: f64,
+}
+
+async fn imbalance_bar_chart_route(
+    _u: AuthUser, Json(b): Json<ImbalanceBarBody>,
+) -> Json<Vec<imbalance_bar_chart::ImbalanceBar>> {
+    Json(imbalance_bar_chart::compute(&b.prints, b.imbalance_threshold))
+}
+
+
+#[derive(Deserialize)]
+struct PinBarBody { bars: Vec<pin_bar::Bar> }
+
+async fn pin_bar_route(
+    _u: AuthUser, Json(b): Json<PinBarBody>,
+) -> Json<pin_bar::PinBarReport> {
+    Json(pin_bar::compute(&b.bars))
+}
+
+#[derive(Deserialize)]
+struct AtrTrailingStopBody {
+    bars: Vec<atr_trailing_stop::Bar>,
+    #[serde(default = "default_atrts_period")] period: usize,
+    #[serde(default = "default_atrts_mult")] multiplier: f64,
+}
+fn default_atrts_period() -> usize { 14 }
+fn default_atrts_mult() -> f64 { 3.0 }
+
+async fn atr_trailing_stop_route(
+    _u: AuthUser, Json(b): Json<AtrTrailingStopBody>,
+) -> Json<atr_trailing_stop::AtrTrailingStopReport> {
+    Json(atr_trailing_stop::compute(&b.bars, b.period, b.multiplier))
+}
+
+#[derive(Deserialize)]
+struct AtrChannelBody {
+    bars: Vec<atr_channel::Bar>,
+    #[serde(default = "default_atrc_period")] period: usize,
+    #[serde(default = "default_atrc_mult")] multiplier: f64,
+    #[serde(default = "default_atrc_use_ema")] use_ema: bool,
+}
+fn default_atrc_period() -> usize { 20 }
+fn default_atrc_mult() -> f64 { 2.0 }
+fn default_atrc_use_ema() -> bool { true }
+
+async fn atr_channel_route(
+    _u: AuthUser, Json(b): Json<AtrChannelBody>,
+) -> Json<atr_channel::AtrChannelReport> {
+    Json(atr_channel::compute(&b.bars, b.period, b.multiplier, b.use_ema))
+}
+
+#[derive(Deserialize)]
+struct RvolZBody {
+    volumes: Vec<f64>,
+    #[serde(default = "default_rvolz_p")] rvol_period: usize,
+    #[serde(default = "default_rvolz_z")] zscore_period: usize,
+}
+fn default_rvolz_p() -> usize { 20 }
+fn default_rvolz_z() -> usize { 60 }
+
+async fn relative_volume_zscore_route(
+    _u: AuthUser, Json(b): Json<RvolZBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(relative_volume_zscore::compute(&b.volumes, b.rvol_period, b.zscore_period))
+}
+
+#[derive(Deserialize)]
+struct PowerBarBody {
+    bars: Vec<power_bar::Bar>,
+    #[serde(default = "default_powerbar_body")] body_threshold: f64,
+    #[serde(default = "default_powerbar_close")] close_at_extreme_threshold: f64,
+}
+fn default_powerbar_body() -> f64 { 0.7 }
+fn default_powerbar_close() -> f64 { 0.85 }
+
+async fn power_bar_route(
+    _u: AuthUser, Json(b): Json<PowerBarBody>,
+) -> Json<power_bar::PowerBarReport> {
+    Json(power_bar::compute(&b.bars, b.body_threshold, b.close_at_extreme_threshold))
+}
+
+#[derive(Deserialize)]
+struct BbDistBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_bbdist_period")] period: usize,
+    #[serde(default = "default_bbdist_stdev")] n_stdev: f64,
+}
+fn default_bbdist_period() -> usize { 20 }
+fn default_bbdist_stdev() -> f64 { 2.0 }
+
+async fn bollinger_band_distance_route(
+    _u: AuthUser, Json(b): Json<BbDistBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(bollinger_band_distance::compute(&b.closes, b.period, b.n_stdev))
+}
+
+#[derive(Deserialize)]
+struct VfiBarsBody {
+    bars: Vec<volume_force_index::Bar>,
+    #[serde(default = "default_vfi_short")] short_period: usize,
+    #[serde(default = "default_vfi_long")] long_period: usize,
+}
+fn default_vfi_short() -> usize { 2 }
+fn default_vfi_long() -> usize { 13 }
+
+async fn volume_force_index_route(
+    _u: AuthUser, Json(b): Json<VfiBarsBody>,
+) -> Json<volume_force_index::VolumeForceIndexReport> {
+    Json(volume_force_index::compute(&b.bars, b.short_period, b.long_period))
+}
+
+
+#[derive(Deserialize)]
+struct ZeroLagMacdBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_zlmacd_fast")] fast_period: usize,
+    #[serde(default = "default_zlmacd_slow")] slow_period: usize,
+    #[serde(default = "default_zlmacd_signal")] signal_period: usize,
+}
+fn default_zlmacd_fast() -> usize { 12 }
+fn default_zlmacd_slow() -> usize { 26 }
+fn default_zlmacd_signal() -> usize { 9 }
+
+async fn zero_lag_macd_route(
+    _u: AuthUser, Json(b): Json<ZeroLagMacdBody>,
+) -> Json<zero_lag_macd::ZeroLagMacdReport> {
+    Json(zero_lag_macd::compute(&b.closes, b.fast_period, b.slow_period, b.signal_period))
+}
+
+#[derive(Deserialize)]
+struct CompoundPivotsBody {
+    daily: Option<compound_pivots::PriorSession>,
+    weekly: Option<compound_pivots::PriorSession>,
+    monthly: Option<compound_pivots::PriorSession>,
+}
+
+async fn compound_pivots_route(
+    _u: AuthUser, Json(b): Json<CompoundPivotsBody>,
+) -> Json<compound_pivots::CompoundPivotsReport> {
+    Json(compound_pivots::compute(b.daily, b.weekly, b.monthly))
+}
+
+#[derive(Deserialize)]
+struct ErgodicBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_ergodic_r")] r_period: usize,
+    #[serde(default = "default_ergodic_s")] s_period: usize,
+    #[serde(default = "default_ergodic_sig")] signal_period: usize,
+}
+fn default_ergodic_r() -> usize { 25 }
+fn default_ergodic_s() -> usize { 13 }
+fn default_ergodic_sig() -> usize { 7 }
+
+async fn ergodic_oscillator_route(
+    _u: AuthUser, Json(b): Json<ErgodicBody>,
+) -> Json<ergodic_oscillator::ErgodicReport> {
+    Json(ergodic_oscillator::compute(&b.closes, b.r_period, b.s_period, b.signal_period))
+}
+
+#[derive(Deserialize)]
+struct MomentumQualityBody {
+    bars: Vec<momentum_quality_score::Bar>,
+    #[serde(default = "default_mq_period")] period: usize,
+    #[serde(default = "default_mq_z")] z_period: usize,
+}
+fn default_mq_period() -> usize { 14 }
+fn default_mq_z() -> usize { 60 }
+
+async fn momentum_quality_score_route(
+    _u: AuthUser, Json(b): Json<MomentumQualityBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(momentum_quality_score::compute(&b.bars, b.period, b.z_period))
+}
+
+#[derive(Deserialize)]
+struct SwingStrengthBody {
+    pivots: Vec<gartley_pattern::Pivot>,
+    #[serde(default = "default_ss_z")] z_period: usize,
+}
+fn default_ss_z() -> usize { 10 }
+
+async fn swing_strength_index_route(
+    _u: AuthUser, Json(b): Json<SwingStrengthBody>,
+) -> Json<swing_strength_index::SwingStrengthReport> {
+    Json(swing_strength_index::compute(&b.pivots, b.z_period))
+}
+
+#[derive(Deserialize)]
+struct MomentumPersistenceBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_mp_period")] period: usize,
+}
+fn default_mp_period() -> usize { 20 }
+
+async fn momentum_persistence_index_route(
+    _u: AuthUser, Json(b): Json<MomentumPersistenceBody>,
+) -> Json<momentum_persistence_index::MomentumPersistenceReport> {
+    Json(momentum_persistence_index::compute(&b.closes, b.period))
+}
+
+#[derive(Deserialize)]
+struct CumTickZBody {
+    tick: Vec<f64>,
+    #[serde(default = "default_ctz_period")] period: usize,
+}
+fn default_ctz_period() -> usize { 60 }
+
+async fn cumulative_tick_zscore_route(
+    _u: AuthUser, Json(b): Json<CumTickZBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(cumulative_tick_zscore::compute(&b.tick, b.period))
+}
+
+
+#[derive(Deserialize)]
+struct RegimeClassifierBody {
+    closes: Vec<f64>,
+    #[serde(default = "default_regime_period")] period: usize,
+}
+fn default_regime_period() -> usize { 20 }
+
+async fn regime_classifier_route(
+    _u: AuthUser, Json(b): Json<RegimeClassifierBody>,
+) -> Json<regime_classifier::RegimeClassifierReport> {
+    Json(regime_classifier::compute(&b.closes, b.period))
+}
+
+#[derive(Deserialize)]
+struct BocpdBody {
+    returns: Vec<f64>,
+    #[serde(default = "default_bocpd_hazard")] hazard: f64,
+}
+fn default_bocpd_hazard() -> f64 { 0.01 }
+
+async fn bayesian_change_point_detector_route(
+    _u: AuthUser, Json(b): Json<BocpdBody>,
+) -> Json<bayesian_change_point_detector::BocpdReport> {
+    Json(bayesian_change_point_detector::compute(&b.returns, b.hazard))
+}
+
+#[derive(Deserialize)]
+struct DividendYieldBody { observations: Vec<dividend_yield_curve::DividendObservation> }
+
+async fn dividend_yield_curve_route(
+    _u: AuthUser, Json(b): Json<DividendYieldBody>,
+) -> Json<Option<dividend_yield_curve::DividendYieldCurveReport>> {
+    Json(dividend_yield_curve::compute(&b.observations))
+}
+
+#[derive(Deserialize)]
+struct RepoSpreadBody { repo_rate: Vec<f64>, target_rate: Vec<f64> }
+
+async fn repo_rate_spread_route(
+    _u: AuthUser, Json(b): Json<RepoSpreadBody>,
+) -> Json<repo_rate_spread::RepoRateSpreadReport> {
+    Json(repo_rate_spread::compute(&b.repo_rate, &b.target_rate))
+}
+
+#[derive(Deserialize)]
+struct TermPremiumBody {
+    long_yield_pct: Vec<f64>,
+    short_yield_pct: Vec<f64>,
+    #[serde(default = "default_term_premium_lookback")] lookback: usize,
+}
+fn default_term_premium_lookback() -> usize { 60 }
+
+async fn term_premium_estimator_route(
+    _u: AuthUser, Json(b): Json<TermPremiumBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(term_premium_estimator::compute(&b.long_yield_pct, &b.short_yield_pct, b.lookback))
+}
+
+#[derive(Deserialize)]
+struct SwapCurveBody { points: Vec<swap_rate_curve::SwapPoint> }
+
+async fn swap_rate_curve_route(
+    _u: AuthUser, Json(b): Json<SwapCurveBody>,
+) -> Json<Option<swap_rate_curve::SwapRateCurveReport>> {
+    Json(swap_rate_curve::compute(&b.points))
+}
+
+#[derive(Deserialize)]
+struct RollingQuantileBody {
+    series: Vec<f64>,
+    period: usize,
+    q: f64,
+}
+
+async fn rolling_quantile_route(
+    _u: AuthUser, Json(b): Json<RollingQuantileBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(rolling_quantile::compute(&b.series, b.period, b.q))
+}
+
+#[derive(Deserialize)]
+struct OptionPayoffDiagramBody {
+    legs: Vec<OptionLeg>,
+    spot_min: f64,
+    spot_max: f64,
+    steps: usize,
+}
+
+#[derive(Deserialize)]
+struct OptionLeg {
+    kind: String,
+    strike: f64,
+    premium: f64,
+    qty: f64,
+}
+
+async fn option_payoff_diagram_route(
+    _u: AuthUser, Json(b): Json<OptionPayoffDiagramBody>,
+) -> Json<Option<OptionPayoffDiagramResponse>> {
+    let legs: Vec<option_payoff_diagram::Leg> = b.legs.iter().map(|l| {
+        let kind = match l.kind.to_lowercase().as_str() {
+            "call" => option_payoff_diagram::LegKind::Call,
+            "put" => option_payoff_diagram::LegKind::Put,
+            _ => option_payoff_diagram::LegKind::Underlying,
+        };
+        option_payoff_diagram::Leg { kind, strike: l.strike, premium: l.premium, qty: l.qty }
+    }).collect();
+    Json(option_payoff_diagram::compute(&legs, b.spot_min, b.spot_max, b.steps)
+        .map(|r| OptionPayoffDiagramResponse {
+            spots: r.points.iter().map(|p| p.spot).collect(),
+            pnls: r.points.iter().map(|p| p.pnl).collect(),
+            max_profit: r.max_profit,
+            max_loss: r.max_loss,
+            breakevens: r.breakevens,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct OptionPayoffDiagramResponse {
+    spots: Vec<f64>,
+    pnls: Vec<f64>,
+    max_profit: f64,
+    max_loss: f64,
+    breakevens: Vec<f64>,
+}
+
+#[derive(Deserialize)]
+struct ValueAtRiskHistoricalBody {
+    returns: Vec<f64>,
+    #[serde(default = "default_hs_var_confidence")]
+    confidence: f64,
+}
+
+fn default_hs_var_confidence() -> f64 { 0.95 }
+
+async fn value_at_risk_historical_route(
+    _u: AuthUser, Json(b): Json<ValueAtRiskHistoricalBody>,
+) -> Json<Option<ValueAtRiskHistoricalResponse>> {
+    Json(value_at_risk_historical::compute(&b.returns, b.confidence)
+        .map(|r| ValueAtRiskHistoricalResponse {
+            var: r.var,
+            expected_shortfall: r.expected_shortfall,
+            n: r.n,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct ValueAtRiskHistoricalResponse {
+    var: f64,
+    expected_shortfall: f64,
+    n: usize,
+}
+
+#[derive(Deserialize)]
+struct ValueAtRiskFilteredHistoricalBody {
+    returns: Vec<f64>,
+    #[serde(default = "default_fhs_var_confidence")]
+    confidence: f64,
+    #[serde(default = "default_fhs_ewma_lambda")]
+    lambda: f64,
+}
+
+fn default_fhs_var_confidence() -> f64 { 0.95 }
+fn default_fhs_ewma_lambda() -> f64 { 0.94 }
+
+async fn value_at_risk_filtered_historical_route(
+    _u: AuthUser, Json(b): Json<ValueAtRiskFilteredHistoricalBody>,
+) -> Json<Option<ValueAtRiskFilteredHistoricalResponse>> {
+    Json(value_at_risk_filtered_historical::compute(&b.returns, b.confidence, b.lambda)
+        .map(|r| ValueAtRiskFilteredHistoricalResponse {
+            var: r.var,
+            expected_shortfall: r.expected_shortfall,
+            current_sigma: r.current_sigma,
+            n: r.n,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct ValueAtRiskFilteredHistoricalResponse {
+    var: f64,
+    expected_shortfall: f64,
+    current_sigma: f64,
+    n: usize,
+}
+
+#[derive(Deserialize)]
+struct KalmanDynamicBetaBody {
+    asset: Vec<f64>,
+    bench: Vec<f64>,
+    #[serde(default = "default_kalman_q")]
+    process_noise_q: f64,
+    #[serde(default = "default_kalman_r")]
+    obs_noise_r: f64,
+    #[serde(default = "default_kalman_beta0")]
+    beta0: f64,
+    #[serde(default = "default_kalman_p0")]
+    p0: f64,
+}
+
+fn default_kalman_q() -> f64 { 1e-6 }
+fn default_kalman_r() -> f64 { 1e-4 }
+fn default_kalman_beta0() -> f64 { 1.0 }
+fn default_kalman_p0() -> f64 { 1.0 }
+
+async fn kalman_dynamic_beta_route(
+    _u: AuthUser, Json(b): Json<KalmanDynamicBetaBody>,
+) -> Json<Vec<Option<f64>>> {
+    Json(kalman_dynamic_beta::compute(
+        &b.asset, &b.bench,
+        b.process_noise_q, b.obs_noise_r,
+        b.beta0, b.p0,
+    ))
+}
+
+#[derive(Deserialize)]
+struct GbmPathSimulatorBody {
+    s0: f64,
+    mu: f64,
+    sigma: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    #[serde(default)]
+    seed: u64,
+}
+
+async fn gbm_path_simulator_route(
+    _u: AuthUser, Json(b): Json<GbmPathSimulatorBody>,
+) -> Json<Option<GbmPathSimulatorResponse>> {
+    Json(gbm_path_simulator::compute(b.s0, b.mu, b.sigma, b.dt, b.steps, b.paths, b.seed)
+        .map(|r| GbmPathSimulatorResponse {
+            mean_terminal: r.mean_terminal,
+            stdev_terminal: r.stdev_terminal,
+            min_terminal: r.min_terminal,
+            max_terminal: r.max_terminal,
+            paths_run: r.paths_run,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct GbmPathSimulatorResponse {
+    mean_terminal: f64,
+    stdev_terminal: f64,
+    min_terminal: f64,
+    max_terminal: f64,
+    paths_run: usize,
+}
+
+#[derive(Deserialize)]
+struct JumpDiffusionSimulatorBody {
+    s0: f64,
+    mu: f64,
+    sigma: f64,
+    jump_lambda: f64,
+    jump_mean: f64,
+    jump_stdev: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    #[serde(default)]
+    seed: u64,
+}
+
+async fn jump_diffusion_simulator_route(
+    _u: AuthUser, Json(b): Json<JumpDiffusionSimulatorBody>,
+) -> Json<Option<JumpDiffusionSimulatorResponse>> {
+    Json(jump_diffusion_simulator::compute(
+        b.s0, b.mu, b.sigma,
+        b.jump_lambda, b.jump_mean, b.jump_stdev,
+        b.dt, b.steps, b.paths, b.seed,
+    ).map(|r| JumpDiffusionSimulatorResponse {
+        mean_terminal: r.mean_terminal,
+        stdev_terminal: r.stdev_terminal,
+        mean_log_return: r.mean_log_return,
+        skew_log_return: r.skew_log_return,
+        jump_count_total: r.jump_count_total,
+        paths_run: r.paths_run,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct JumpDiffusionSimulatorResponse {
+    mean_terminal: f64,
+    stdev_terminal: f64,
+    mean_log_return: f64,
+    skew_log_return: f64,
+    jump_count_total: u64,
+    paths_run: usize,
+}
+
+#[derive(Deserialize)]
+struct FbmGeneratorBody {
+    hurst: f64,
+    #[serde(default = "default_fbm_sigma")]
+    sigma0: f64,
+    #[serde(default = "default_fbm_levels")]
+    levels: u32,
+    #[serde(default)]
+    seed: u64,
+}
+
+fn default_fbm_sigma() -> f64 { 1.0 }
+fn default_fbm_levels() -> u32 { 10 }
+
+async fn fractional_brownian_motion_generator_route(
+    _u: AuthUser, Json(b): Json<FbmGeneratorBody>,
+) -> Json<Option<Vec<f64>>> {
+    Json(fractional_brownian_motion_generator::compute(b.hurst, b.sigma0, b.levels, b.seed))
+}
+
+#[derive(Deserialize)]
+struct MultiLegOptionPricerBody {
+    legs: Vec<MultiLegOptionLeg>,
+    spot: f64,
+    t_to_expiry: f64,
+    rate: f64,
+    div_yield: f64,
+    sigma: f64,
+}
+
+#[derive(Deserialize)]
+struct MultiLegOptionLeg {
+    kind: String,
+    strike: f64,
+    premium: f64,
+    qty: f64,
+}
+
+async fn multi_leg_option_pricer_route(
+    _u: AuthUser, Json(b): Json<MultiLegOptionPricerBody>,
+) -> Json<Option<MultiLegOptionPricerResponse>> {
+    let legs: Vec<multi_leg_option_pricer::Leg> = b.legs.iter().map(|l| {
+        let kind = match l.kind.to_lowercase().as_str() {
+            "call" => multi_leg_option_pricer::LegKind::Call,
+            "put" => multi_leg_option_pricer::LegKind::Put,
+            _ => multi_leg_option_pricer::LegKind::Underlying,
+        };
+        multi_leg_option_pricer::Leg { kind, strike: l.strike, premium: l.premium, qty: l.qty }
+    }).collect();
+    Json(multi_leg_option_pricer::compute(
+        &legs, b.spot, b.t_to_expiry, b.rate, b.div_yield, b.sigma,
+    ).map(|r| MultiLegOptionPricerResponse {
+        strategy_value: r.strategy_value,
+        strategy_pnl: r.strategy_pnl,
+        leg_values: r.leg_values,
+        leg_pnls: r.leg_pnls,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct MultiLegOptionPricerResponse {
+    strategy_value: f64,
+    strategy_pnl: f64,
+    leg_values: Vec<f64>,
+    leg_pnls: Vec<f64>,
+}
+
+#[derive(Deserialize)]
+struct MarkovSwitching2StateBody {
+    returns: Vec<f64>,
+}
+
+async fn markov_switching_2state_route(
+    _u: AuthUser, Json(b): Json<MarkovSwitching2StateBody>,
+) -> Json<Option<MarkovSwitching2StateResponse>> {
+    Json(markov_switching_2state::compute(&b.returns).map(|r| MarkovSwitching2StateResponse {
+        prob_state1: r.prob_state1,
+        mu0: r.mu0, mu1: r.mu1,
+        sigma0: r.sigma0, sigma1: r.sigma1,
+        p00: r.p00, p11: r.p11,
+        log_likelihood: r.log_likelihood,
+        iterations: r.iterations,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct MarkovSwitching2StateResponse {
+    prob_state1: Vec<f64>,
+    mu0: f64, mu1: f64,
+    sigma0: f64, sigma1: f64,
+    p00: f64, p11: f64,
+    log_likelihood: f64,
+    iterations: u32,
+}
+
+#[derive(Deserialize)]
+struct MicropriceStoikovBody {
+    quotes: Vec<MicropriceStoikovQuote>,
+}
+
+#[derive(Deserialize)]
+struct MicropriceStoikovQuote {
+    bid: f64,
+    ask: f64,
+    bid_size: f64,
+    ask_size: f64,
+}
+
+async fn microprice_stoikov_route(
+    _u: AuthUser, Json(b): Json<MicropriceStoikovBody>,
+) -> Json<Vec<Option<MicropriceStoikovBar>>> {
+    let quotes: Vec<microprice_stoikov::L1Quote> = b.quotes.iter().map(|q| {
+        microprice_stoikov::L1Quote {
+            bid: q.bid, ask: q.ask, bid_size: q.bid_size, ask_size: q.ask_size,
+        }
+    }).collect();
+    let out = microprice_stoikov::compute(&quotes);
+    Json(out.into_iter().map(|opt| opt.map(|b| MicropriceStoikovBar {
+        microprice: b.microprice,
+        midpoint: b.midpoint,
+        imbalance: b.imbalance,
+        bias_bps: b.bias_bps,
+    })).collect())
+}
+
+#[derive(serde::Serialize)]
+struct MicropriceStoikovBar {
+    microprice: f64,
+    midpoint: f64,
+    imbalance: f64,
+    bias_bps: f64,
+}
+
+#[derive(Deserialize)]
+struct SviVolatilitySmileBody {
+    log_moneyness: Vec<f64>,
+    total_variance: Vec<f64>,
+    expiry_years: f64,
+}
+
+async fn svi_volatility_smile_route(
+    _u: AuthUser, Json(b): Json<SviVolatilitySmileBody>,
+) -> Json<Option<SviVolatilitySmileResponse>> {
+    Json(svi_volatility_smile::compute(&b.log_moneyness, &b.total_variance, b.expiry_years)
+        .map(|r| SviVolatilitySmileResponse {
+            a: r.params.a, b: r.params.b, rho: r.params.rho, m: r.params.m, sigma: r.params.sigma,
+            fitted_total_var: r.fitted_total_var,
+            fitted_iv: r.fitted_iv,
+            rmse_total_var: r.rmse_total_var,
+            arbitrage_ok: r.arbitrage_ok,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct SviVolatilitySmileResponse {
+    a: f64, b: f64, rho: f64, m: f64, sigma: f64,
+    fitted_total_var: Vec<f64>,
+    fitted_iv: Vec<f64>,
+    rmse_total_var: f64,
+    arbitrage_ok: bool,
+}
+
+#[derive(Deserialize)]
+struct DupireLocalVolatilityBody {
+    call_prices: Vec<Vec<f64>>,
+    strikes: Vec<f64>,
+    expiries: Vec<f64>,
+    risk_free_rate: f64,
+}
+
+async fn dupire_local_volatility_route(
+    _u: AuthUser, Json(b): Json<DupireLocalVolatilityBody>,
+) -> Json<Option<DupireLocalVolatilityResponse>> {
+    Json(dupire_local_volatility::compute(&b.call_prices, &b.strikes, &b.expiries, b.risk_free_rate)
+        .map(|r| DupireLocalVolatilityResponse {
+            local_var: r.local_var,
+            local_vol: r.local_vol,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct DupireLocalVolatilityResponse {
+    local_var: Vec<Vec<Option<f64>>>,
+    local_vol: Vec<Vec<Option<f64>>>,
+}
+
+#[derive(Deserialize)]
+struct DynamicTimeWarpingBody {
+    a: Vec<f64>,
+    b: Vec<f64>,
+    #[serde(default)]
+    band_radius: usize,
+}
+
+async fn dynamic_time_warping_route(
+    _u: AuthUser, Json(req): Json<DynamicTimeWarpingBody>,
+) -> Json<Option<DynamicTimeWarpingResponse>> {
+    Json(dynamic_time_warping::compute(&req.a, &req.b, req.band_radius)
+        .map(|r| DynamicTimeWarpingResponse {
+            distance: r.distance,
+            path: r.path,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct DynamicTimeWarpingResponse {
+    distance: f64,
+    path: Vec<(usize, usize)>,
+}
+
+#[derive(Deserialize)]
+struct WaveletDecompositionHaarBody {
+    series: Vec<f64>,
+    #[serde(default = "default_haar_levels")]
+    levels: u32,
+}
+
+fn default_haar_levels() -> u32 { 4 }
+
+async fn wavelet_decomposition_haar_route(
+    _u: AuthUser, Json(b): Json<WaveletDecompositionHaarBody>,
+) -> Json<Option<WaveletDecompositionHaarResponse>> {
+    Json(wavelet_decomposition_haar::compute(&b.series, b.levels)
+        .map(|r| WaveletDecompositionHaarResponse {
+            approximation: r.approximation,
+            details: r.details,
+            levels: r.levels,
+            used_length: r.used_length,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct WaveletDecompositionHaarResponse {
+    approximation: Vec<f64>,
+    details: Vec<Vec<f64>>,
+    levels: u32,
+    used_length: usize,
 }

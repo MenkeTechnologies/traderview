@@ -77,7 +77,6 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/chaikin-money-flow",   get(chaikin_money_flow_route))
         .route("/bars/:symbol/ppo",                  get(ppo_route))
         .route("/bars/:symbol/elder-ray",            get(elder_ray_route))
-        // === Batch 2: 11 more.
         .route("/bars/:symbol/wma",                  get(wma_route))
         .route("/bars/:symbol/zlema",                get(zlema_route))
         .route("/bars/:symbol/t3",                   get(t3_route))
@@ -91,22 +90,18 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/center-of-gravity",    get(center_of_gravity_route))
         .route("/bars/:symbol/fisher-transform",     get(fisher_transform_route))
         .route("/bars/:symbol/qqe",                  get(qqe_route))
-        // === Batch 3 chart routes ===
         .route("/bars/:symbol/demarker",             get(demarker_route))
         .route("/bars/:symbol/vhf",                  get(vhf_route))
         .route("/bars/:symbol/fractals",             get(fractals_route))
         .route("/bars/:symbol/squeeze-momentum",     get(squeeze_momentum_route))
         .route("/bars/:symbol/swing-index",          get(swing_index_route))
-        // === Batch 6 chart routes ===
         .route("/bars/:symbol/mcginley-dynamic",     get(mcginley_dynamic_route))
         .route("/bars/:symbol/vidya",                get(vidya_route))
         .route("/bars/:symbol/frama",                get(frama_route))
         .route("/bars/:symbol/super-smoother",       get(super_smoother_route))
-        // === Batch 7 chart routes ===
         .route("/bars/:symbol/rvi",                  get(rvi_route))
         .route("/bars/:symbol/cmo",                  get(cmo_route))
         .route("/bars/:symbol/ehlers-decycler",      get(ehlers_decycler_route))
-        // === Batch 8 chart routes ===
         .route("/bars/:symbol/elder-force",          get(elder_force_route))
         .route("/bars/:symbol/relative-volume",      get(relative_volume_route))
         .route("/bars/:symbol/zigzag",               get(zigzag_route))
@@ -1064,9 +1059,6 @@ async fn elder_ray_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 2 handlers (11 indicators / 13 routes — NVI/PVI/PVT split into
-// three routes from the single `volume_indices` module).
-// ──────────────────────────────────────────────────────────────────────
 
 async fn wma_route(
     State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
@@ -1271,8 +1263,6 @@ async fn qqe_route(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Batch 3 chart handlers.
-// ──────────────────────────────────────────────────────────────────────
 
 async fn demarker_route(
     State(s): State<AppState>, Path(sym): Path<String>, Query(q): Query<PeriodQ>,
@@ -1379,8 +1369,6 @@ async fn swing_index_route(
     }))
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Batch 6 chart handlers.
 // ──────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
