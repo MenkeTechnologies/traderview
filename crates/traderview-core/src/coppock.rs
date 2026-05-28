@@ -19,15 +19,28 @@ pub fn compute(closes: &[f64], roc1: usize, roc2: usize, wma_period: usize) -> V
     if n <= max_roc {
         return out;
     }
-    // ROC series.
+    // ROC series. ROC is undefined when the base price is zero or
+    // negative — division by zero (or by negative, which flips the sign
+    // of the rate-of-change) would emit Inf/NaN that poisons the WMA
+    // downstream. Leave such bars at 0.0 (the pre-warmup default).
     let mut combined = vec![0.0; n];
     for i in max_roc..n {
-        let r1 = (closes[i] - closes[i - roc1]) / closes[i - roc1] * 100.0;
-        let r2 = (closes[i] - closes[i - roc2]) / closes[i - roc2] * 100.0;
+        let base1 = closes[i - roc1];
+        let base2 = closes[i - roc2];
+        if base1 <= 0.0 || base2 <= 0.0
+            || !base1.is_finite() || !base2.is_finite()
+            || !closes[i].is_finite()
+        {
+            continue;
+        }
+        let r1 = (closes[i] - base1) / base1 * 100.0;
+        let r2 = (closes[i] - base2) / base2 * 100.0;
         combined[i] = r1 + r2;
     }
-    // Weighted MA of combined ROC.
-    for i in (max_roc + wma_period - 1)..n {
+    // Weighted MA of combined ROC. Saturating math against hostile JSON
+    // `wma_period == usize::MAX` which would otherwise panic in debug.
+    let start = max_roc.saturating_add(wma_period).saturating_sub(1);
+    for i in start..n {
         let mut sum = 0.0;
         let mut weight_total = 0.0;
         for k in 0..wma_period {

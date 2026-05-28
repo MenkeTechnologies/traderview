@@ -52,6 +52,9 @@ pub fn compute(returns: &[f64], mar: f64, annualization: f64) -> SortinoReport {
         .sum();
     let downside_dev = (downside_sum / n as f64).sqrt();
     let downside_obs = returns.iter().filter(|r| **r < mar).count();
+    // Floor annualization at 0 so a negative JSON value doesn't produce
+    // NaN via sqrt(-x) and silently poison the ratio.
+    let ann_sqrt = annualization.max(0.0).sqrt();
     let sortino = if downside_dev == 0.0 {
         if mean > mar {
             f64::INFINITY
@@ -59,7 +62,7 @@ pub fn compute(returns: &[f64], mar: f64, annualization: f64) -> SortinoReport {
             0.0
         }
     } else {
-        (mean - mar) / downside_dev * annualization.sqrt()
+        (mean - mar) / downside_dev * ann_sqrt
     };
     SortinoReport {
         mean_return: mean,

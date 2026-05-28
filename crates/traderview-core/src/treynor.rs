@@ -73,10 +73,13 @@ pub fn information_ratio(
     let mean = active.iter().sum::<f64>() / n as f64;
     let var = active.iter().map(|a| (a - mean).powi(2)).sum::<f64>() / n as f64;
     let te = var.sqrt();
+    // Floor annualization at 0 — a negative JSON value would produce NaN
+    // via sqrt(-x) and silently poison the ratio.
+    let ann_sqrt = annualization.max(0.0).sqrt();
     let ir = if te == 0.0 {
         0.0
     } else {
-        mean / te * annualization.sqrt()
+        mean / te * ann_sqrt
     };
     Some(InfoRatioReport {
         n,

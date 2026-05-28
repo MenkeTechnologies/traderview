@@ -119,10 +119,13 @@ fn stats_for(label: String, vals: Vec<f64>, annualization: f64) -> WindowStats {
     let mean = sum / n as f64;
     let var = vals.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
     let stdev = var.sqrt();
+    // Floor annualization at 0 — a negative JSON value would produce NaN
+    // via sqrt(-x) and silently poison the ratio.
+    let ann_sqrt = annualization.max(0.0).sqrt();
     let sharpe = if stdev == 0.0 {
         0.0
     } else {
-        mean / stdev * annualization.sqrt()
+        mean / stdev * ann_sqrt
     };
     WindowStats {
         label,
