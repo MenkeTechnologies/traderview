@@ -448,3 +448,164 @@ pub async fn delete_watcher(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::R
         .await?;
     Ok(r.rows_affected() > 0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── strip_html ────────────────────────────────────────────────────────
+    #[test]
+    fn strip_html_removes_simple_tags() {
+        assert_eq!(strip_html("<b>hi</b>"), "hi");
+        assert_eq!(strip_html("a<br/>b"), "ab");
+    }
+
+    #[test]
+    fn strip_html_handles_nested_and_attributes() {
+        assert_eq!(
+            strip_html("<a href=\"x\">click <span class='c'>me</span></a>"),
+            "click me"
+        );
+    }
+
+    #[test]
+    fn strip_html_preserves_text_when_no_tags() {
+        assert_eq!(
+            strip_html("plain text  with spaces"),
+            "plain text  with spaces"
+        );
+    }
+
+    #[test]
+    fn strip_html_handles_unclosed_tag_gracefully() {
+        // After '<', everything is in_tag until next '>'. Trailing '<…' without
+        // close swallows the rest of the input.
+        assert_eq!(strip_html("keep <broken"), "keep ");
+    }
+
+    // ─── inner_text ────────────────────────────────────────────────────────
+    #[test]
+    fn inner_text_extracts_between_tags_and_trims() {
+        let s = "<id>  urn:abc  </id>";
+        assert_eq!(inner_text(s, "id").as_deref(), Some("urn:abc"));
+    }
+
+    #[test]
+    fn inner_text_returns_none_when_tag_missing() {
+        assert!(inner_text("<title>x</title>", "id").is_none());
+    }
+
+    #[test]
+    fn inner_text_returns_first_occurrence_only() {
+        let s = "<x>first</x> mid <x>second</x>";
+        assert_eq!(inner_text(s, "x").as_deref(), Some("first"));
+    }
+
+    // ─── link_href ─────────────────────────────────────────────────────────
+    #[test]
+    fn link_href_extracts_href_attribute() {
+        let block = "<link rel=\"alt\" href=\"https://example.com/x\" />";
+        assert_eq!(link_href(block).as_deref(), Some("https://example.com/x"));
+    }
+
+    #[test]
+    fn link_href_returns_none_without_link() {
+        assert!(link_href("<entry><title>x</title></entry>").is_none());
+    }
+
+    // ─── parse_atom_entries ────────────────────────────────────────────────
+    #[test]
+    fn parse_atom_entries_extracts_multiple_entries() {
+        let body = r#"
+            <feed>
+              <entry>
+                <id>urn:tag:sec.gov,2008:accession-number=0001-26-1</id>
+                <title>4 - ACME CORP (0000001234)</title>
+                <link href="https://sec.gov/x1"/>
+                <updated>2024-01-02T03:04:05Z</updated>
+              </entry>
+              <entry>
+                <id>urn:tag:sec.gov,2008:accession-number=0001-26-2</id>
+                <title>4 - WIDGET INC (0000005678)</title>
+                <link href="https://sec.gov/x2"/>
+                <updated>2024-01-02T04:05:06Z</updated>
+              </entry>
+            </feed>
+        "#;
+        let entries = parse_atom_entries(body);
+        assert_eq!(entries.len(), 2);
+        assert!(entries[0].id.contains("0001-26-1"));
+        assert_eq!(entries[0].link, "https://sec.gov/x1");
+        assert_eq!(entries[1].link, "https://sec.gov/x2");
+    }
+
+    #[test]
+    fn parse_atom_entries_falls_back_to_now_on_bad_updated() {
+        let body = "<entry><id>x</id><title>t</title>\
+                    <link href=\"u\"/><updated>not-a-date</updated></entry>";
+        let entries = parse_atom_entries(body);
+        assert_eq!(entries.len(), 1);
+        // Just verify it didn't crash and produced a recent timestamp.
+        let age = Utc::now()
+            .signed_duration_since(entries[0].updated)
+            .num_seconds();
+        assert!(age.abs() < 5);
+    }
+
+    // ─── extract_senate_rows ───────────────────────────────────────────────
+    #[test]
+    fn extract_senate_rows_pulls_filer_type_date_href() {
+        let html = r#"<table>
+            <tr><td>Smith, John</td><td>State</td><td>Periodic Transaction Report</td>
+                <td>01/15/2024</td>
+                <td><a href="/search/view/ptr/abc-123/">view</a></td></tr>
+            <tr><td>noise</td><td>row</td><td>without</td><td>link</td></tr>
+        </table>"#;
+        let rows = extract_senate_rows(html);
+        assert_eq!(rows.len(), 1, "row without /search/view/ link is skipped");
+        assert_eq!(rows[0].filer, "Smith, John");
+        assert_eq!(rows[0].filing_type, "Periodic Transaction Report");
+        assert_eq!(
+            rows[0].filed,
+            Some(NaiveDate::from_ymd_opt(2024, 1, 15).unwrap())
+        );
+        assert!(rows[0].href.contains("/search/view/ptr/abc-123/"));
+    }
+
+    #[test]
+    fn extract_senate_rows_accepts_iso_dates_too() {
+        let html = r#"<tr><td>Doe, Jane</td><td>X</td><td>Y</td>
+            <td>2024-02-20</td>
+            <td><a href="/search/view/zz/abc/">v</a></td></tr>"#;
+        let rows = extract_senate_rows(html);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(
+            rows[0].filed,
+            Some(NaiveDate::from_ymd_opt(2024, 2, 20).unwrap())
+        );
+    }
+
+    #[test]
+    fn extract_senate_rows_returns_empty_on_garbage() {
+        assert!(extract_senate_rows("<html>no rows here</html>").is_empty());
+    }
+
+    // ─── extract_house_links ───────────────────────────────────────────────
+    #[test]
+    fn extract_house_links_finds_viewdocument_urls() {
+        let html = r#"
+            <a href="/PublicDisclosure/ViewDocument?id=1">a</a>
+            <a href="/something/else">b</a>
+            <a href="/PublicDisclosure/ViewDocument?id=2&kind=ptr">c</a>
+        "#;
+        let links = extract_house_links(html);
+        assert_eq!(links.len(), 2);
+        assert!(links[0].contains("id=1"));
+        assert!(links[1].contains("id=2"));
+    }
+
+    #[test]
+    fn extract_house_links_returns_empty_when_no_matches() {
+        assert!(extract_house_links("<html>nothing</html>").is_empty());
+    }
+}
