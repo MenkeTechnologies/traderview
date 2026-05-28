@@ -179,3 +179,120 @@ fn daily_returns(closes: &[f64]) -> Vec<f64> {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ===========================================================================
+    // return_over — N-bar lookback percent change
+    // ===========================================================================
+
+    #[test]
+    fn return_over_returns_none_when_window_exceeds_length() {
+        // len = 3, n = 3 → need at least 4 closes (n+1). Returns None.
+        let closes = vec![100.0, 105.0, 110.0];
+        assert!(return_over(&closes, 3).is_none());
+    }
+
+    #[test]
+    fn return_over_returns_none_when_window_equals_length_minus_one() {
+        // closes.len() == n means closes[len-1-n] is out of range. Guard: <= n.
+        let closes = vec![100.0, 110.0];
+        assert!(return_over(&closes, 2).is_none());
+        // n=1, len=2: 2 <= 1 is false → returns Some.
+        let r = return_over(&closes, 1).unwrap();
+        assert!((r - 10.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn return_over_computes_pct_change_from_n_bars_ago() {
+        // closes[last] = 121, closes[last-2] = 100 → return = 21%.
+        let closes = vec![100.0, 110.0, 121.0];
+        let r = return_over(&closes, 2).unwrap();
+        assert!((r - 21.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn return_over_handles_negative_returns() {
+        // 100 → 90 over 1 bar = -10%.
+        let closes = vec![100.0, 90.0];
+        let r = return_over(&closes, 1).unwrap();
+        assert!((r - (-10.0)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn return_over_returns_none_when_prior_is_zero_or_negative() {
+        // Prior = 0 → undefined % return.
+        let closes = vec![0.0, 100.0];
+        assert!(return_over(&closes, 1).is_none());
+        let neg = vec![-5.0, 100.0];
+        assert!(return_over(&neg, 1).is_none());
+    }
+
+    #[test]
+    fn return_over_empty_input_returns_none() {
+        let closes: Vec<f64> = vec![];
+        assert!(return_over(&closes, 0).is_none());
+    }
+
+    #[test]
+    fn return_over_zero_window_returns_none() {
+        // len=1, n=0 → 1 <= 0 false → Some. But last - last = 0%.
+        let closes = vec![100.0];
+        let r = return_over(&closes, 0).unwrap();
+        assert_eq!(r, 0.0);
+    }
+
+    // ===========================================================================
+    // daily_returns — bar-to-bar percent change vector
+    // ===========================================================================
+
+    #[test]
+    fn daily_returns_empty_when_fewer_than_two_closes() {
+        assert!(daily_returns(&[]).is_empty());
+        assert!(daily_returns(&[100.0]).is_empty());
+    }
+
+    #[test]
+    fn daily_returns_produces_n_minus_one_outputs() {
+        let closes = vec![100.0, 110.0, 121.0, 100.0];
+        let r = daily_returns(&closes);
+        assert_eq!(r.len(), 3);
+    }
+
+    #[test]
+    fn daily_returns_values_are_pct_change() {
+        // 100→110 = +10%, 110→121 = +10%, 121→121 = 0%.
+        let closes = vec![100.0, 110.0, 121.0, 121.0];
+        let r = daily_returns(&closes);
+        assert!((r[0] - 10.0).abs() < 1e-9);
+        assert!((r[1] - 10.0).abs() < 1e-9);
+        assert!((r[2] - 0.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn daily_returns_negative_moves_preserved() {
+        let closes = vec![100.0, 95.0, 90.25];
+        let r = daily_returns(&closes);
+        assert!((r[0] - (-5.0)).abs() < 1e-9);
+        assert!((r[1] - (-5.0)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn daily_returns_zero_or_negative_prev_yields_zero() {
+        // prev <= 0 short-circuits to 0.0 to avoid div-by-zero / sign flip.
+        let closes = vec![0.0, 100.0, 110.0];
+        let r = daily_returns(&closes);
+        assert_eq!(r[0], 0.0);
+        assert!((r[1] - 10.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn daily_returns_handles_negative_prev() {
+        let closes = vec![-1.0, 100.0];
+        let r = daily_returns(&closes);
+        // -1.0 <= 0 → guarded to 0.
+        assert_eq!(r[0], 0.0);
+    }
+}
