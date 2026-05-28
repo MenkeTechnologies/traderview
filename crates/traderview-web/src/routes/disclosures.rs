@@ -117,3 +117,88 @@ async fn delete_watcher(
             .map_err(ApiError::Internal)?,
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Scalar defaults ───────────────────────────────────────────────────
+
+    #[test]
+    fn default_limit_matches_200_disclosure_list_cap() {
+        // /disclosures defaults to the most-recent 200 items — anything
+        // higher hits the frontend's pagination assumption and lower hides
+        // SEC bursts that arrive in one minute.
+        assert_eq!(default_limit(), 200);
+    }
+
+    #[test]
+    fn default_sound_matches_bell() {
+        // The frontend Web Audio API plays `sounds/{sound}.mp3`; "bell" is
+        // the file that ships in the bundle. Renaming silently breaks the
+        // notification chime on every watcher.
+        assert_eq!(default_sound(), "bell");
+    }
+
+    // ── default_kinds: pinned watcher coverage set ────────────────────────
+
+    #[test]
+    fn default_kinds_covers_insider_and_political_disclosures() {
+        // These three feeds are the entire MVP — insider Form 4, Senate
+        // STOCK Act, House STOCK Act. Adding/removing here changes the
+        // out-of-the-box detection scope for new users.
+        let k = default_kinds();
+        assert_eq!(k.len(), 3);
+        assert!(k.contains(&"insider_form4".to_string()));
+        assert!(k.contains(&"senate_stock".to_string()));
+        assert!(k.contains(&"house_stock".to_string()));
+    }
+
+    #[test]
+    fn default_kinds_uses_snake_case_kind_ids() {
+        // The DB enum stores kinds in snake_case; mixing in camelCase
+        // produces silent FK mismatches with no rows matched.
+        for kind in default_kinds() {
+            assert!(
+                kind.chars()
+                    .all(|c| c.is_ascii_lowercase() || c == '_' || c.is_ascii_digit()),
+                "kind {kind:?} should be snake_case"
+            );
+        }
+    }
+
+    #[test]
+    fn default_kinds_returns_fresh_vec_each_call() {
+        // The function rebuilds the Vec each call so callers can mutate the
+        // returned value without affecting the next caller's defaults.
+        let mut a = default_kinds();
+        a.push("extra".into());
+        let b = default_kinds();
+        assert_eq!(b.len(), 3, "second call leaked first caller's mutation");
+    }
+
+    // ── Body serde fills defaults when fields omitted ─────────────────────
+
+    #[test]
+    fn create_body_uses_default_kinds_when_field_missing() {
+        let json = r#"{"name":"all-insider-buys"}"#;
+        let b: CreateBody = serde_json::from_str(json).expect("parse");
+        assert_eq!(b.name, "all-insider-buys");
+        assert_eq!(b.kinds, default_kinds());
+        assert_eq!(b.sound, "bell");
+        assert!(b.symbols.is_none());
+        assert!(b.filers.is_none());
+        assert!(b.min_amount_usd.is_none());
+    }
+
+    #[test]
+    fn list_query_uses_default_limit_when_field_missing() {
+        // The deserializer must hand back default_limit() not 0 — otherwise
+        // /disclosures with no params returns an empty page.
+        let json = "{}";
+        let q: ListQ = serde_json::from_str(json).expect("parse");
+        assert_eq!(q.limit, 200);
+        assert!(q.kind.is_none());
+        assert!(q.symbol.is_none());
+    }
+}
