@@ -340,3 +340,37 @@ pub async fn poll_all(pool: &PgPool) -> (usize, usize) {
         });
     (wsb, st)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── urlencoding: minimal percent-encoder for StockTwits paths ─────────
+    // StockTwits stream URLs accept tickers with `^` (preferred shares, e.g.
+    // BRK^B) and `=` (futures, e.g. ES=F). These two chars must be percent-
+    // encoded; everything else stays literal so common tickers don't get
+    // mangled. This pins the exact set of chars we encode.
+    #[test]
+    fn urlencoding_encodes_caret_and_equals() {
+        assert_eq!(urlencoding("BRK^B"), "BRK%5EB");
+        assert_eq!(urlencoding("ES=F"), "ES%3DF");
+        assert_eq!(urlencoding("BRK^B=F"), "BRK%5EB%3DF");
+    }
+
+    #[test]
+    fn urlencoding_passes_plain_tickers_through_unchanged() {
+        assert_eq!(urlencoding("AAPL"), "AAPL");
+        assert_eq!(urlencoding("TSLA"), "TSLA");
+        assert_eq!(urlencoding(""), "");
+    }
+
+    #[test]
+    fn urlencoding_does_not_touch_other_special_chars() {
+        // We intentionally do NOT encode `.`, `-`, `/`, `+` — Yahoo/StockTwits
+        // tickers don't use them in symbol path segments. Pin this to catch
+        // accidental over-encoding regressions.
+        assert_eq!(urlencoding("BRK.B"), "BRK.B");
+        assert_eq!(urlencoding("a-b"), "a-b");
+        assert_eq!(urlencoding("x/y"), "x/y");
+    }
+}
