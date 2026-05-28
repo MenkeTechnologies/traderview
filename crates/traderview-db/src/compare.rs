@@ -225,3 +225,112 @@ fn s(v: &Value) -> Option<String> {
 fn dec(d: rust_decimal::Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ===========================================================================
+    // f() — Yahoo `{raw, fmt, longFmt}` extractor
+    // ===========================================================================
+
+    #[test]
+    fn f_extracts_bare_f64_number() {
+        assert_eq!(f(&json!(3.14)), Some(3.14));
+    }
+
+    #[test]
+    fn f_extracts_bare_i64_as_f64() {
+        assert_eq!(f(&json!(42)), Some(42.0));
+    }
+
+    #[test]
+    fn f_extracts_raw_field_from_yahoo_object() {
+        // Yahoo wraps numbers in {raw, fmt, longFmt} for display formatting.
+        let v = json!({"raw": 123.45, "fmt": "$123.45", "longFmt": "123.45"});
+        assert_eq!(f(&v), Some(123.45));
+    }
+
+    #[test]
+    fn f_extracts_raw_integer_field() {
+        let v = json!({"raw": 1_000_000, "fmt": "1M"});
+        assert_eq!(f(&v), Some(1_000_000.0));
+    }
+
+    #[test]
+    fn f_prefers_bare_number_over_nested_raw() {
+        // Bare number is checked first — synthetic test for the ordering invariant.
+        // (real Yahoo data is never both, but defensive ordering matters.)
+        let v = json!(5.5);
+        assert_eq!(f(&v), Some(5.5));
+    }
+
+    #[test]
+    fn f_returns_none_for_strings() {
+        assert!(f(&json!("not a number")).is_none());
+    }
+
+    #[test]
+    fn f_returns_none_for_null() {
+        assert!(f(&Value::Null).is_none());
+    }
+
+    #[test]
+    fn f_returns_none_for_object_without_raw() {
+        // e.g. an empty Yahoo wrapper that has only `fmt`.
+        let v = json!({"fmt": "—"});
+        assert!(f(&v).is_none());
+    }
+
+    #[test]
+    fn f_returns_none_for_empty_object() {
+        assert!(f(&json!({})).is_none());
+    }
+
+    #[test]
+    fn f_returns_none_for_array() {
+        // Arrays are never used by Yahoo for scalar metrics.
+        assert!(f(&json!([1, 2, 3])).is_none());
+    }
+
+    #[test]
+    fn f_extracts_negative_number_correctly() {
+        assert_eq!(f(&json!(-2.5)), Some(-2.5));
+        assert_eq!(f(&json!({"raw": -100})), Some(-100.0));
+    }
+
+    // ===========================================================================
+    // s() — string extractor
+    // ===========================================================================
+
+    #[test]
+    fn s_extracts_string_value() {
+        assert_eq!(s(&json!("AAPL")), Some("AAPL".into()));
+    }
+
+    #[test]
+    fn s_returns_none_for_numbers_and_objects() {
+        assert!(s(&json!(42)).is_none());
+        assert!(s(&json!({"raw": "x"})).is_none());
+        assert!(s(&Value::Null).is_none());
+    }
+
+    #[test]
+    fn s_preserves_empty_string() {
+        // Empty string is still Some("").
+        assert_eq!(s(&json!("")), Some("".into()));
+    }
+
+    // ===========================================================================
+    // dec
+    // ===========================================================================
+
+    #[test]
+    fn dec_roundtrips_decimal_to_f64() {
+        use rust_decimal::Decimal;
+        assert_eq!(dec(Decimal::from(0)), 0.0);
+        assert!((dec(Decimal::new(99999, 4)) - 9.9999).abs() < 1e-9);
+        assert_eq!(dec(Decimal::from(-123)), -123.0);
+    }
+}
