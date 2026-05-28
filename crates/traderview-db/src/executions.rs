@@ -262,3 +262,145 @@ impl From<ExecRow> for Execution {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+    use serde_json::json;
+
+    // ===========================================================================
+    // side_to_pg — every Side variant must produce a stable PG enum string
+    // ===========================================================================
+
+    #[test]
+    fn side_to_pg_maps_all_four_variants() {
+        assert_eq!(side_to_pg(Side::Buy), "buy");
+        assert_eq!(side_to_pg(Side::Sell), "sell");
+        assert_eq!(side_to_pg(Side::Short), "short");
+        assert_eq!(side_to_pg(Side::Cover), "cover");
+    }
+
+    #[test]
+    fn side_to_pg_output_is_lowercase_matching_pg_enum() {
+        // PG enum side_t is lowercase by convention — verify no caps slip in.
+        for s in [Side::Buy, Side::Sell, Side::Short, Side::Cover] {
+            let v = side_to_pg(s);
+            assert!(v.chars().all(|c| c.is_ascii_lowercase()), "{:?} → {}", s, v);
+        }
+    }
+
+    // ===========================================================================
+    // ac_to_pg — every AssetClass variant
+    // ===========================================================================
+
+    #[test]
+    fn ac_to_pg_maps_all_four_classes() {
+        assert_eq!(ac_to_pg(AssetClass::Stock), "stock");
+        assert_eq!(ac_to_pg(AssetClass::Option), "option");
+        assert_eq!(ac_to_pg(AssetClass::Future), "future");
+        assert_eq!(ac_to_pg(AssetClass::Forex), "forex");
+    }
+
+    #[test]
+    fn ac_to_pg_default_asset_class_maps_to_stock() {
+        // Default-derived AssetClass should still map cleanly.
+        let a: AssetClass = Default::default();
+        assert_eq!(ac_to_pg(a), "stock");
+    }
+
+    // ===========================================================================
+    // option_type_to_pg
+    // ===========================================================================
+
+    #[test]
+    fn option_type_to_pg_maps_call_and_put() {
+        assert_eq!(option_type_to_pg(OptionType::Call), "call");
+        assert_eq!(option_type_to_pg(OptionType::Put), "put");
+    }
+
+    // ===========================================================================
+    // ExecRow → Execution conversion — text enums map back, fallback to Buy
+    // ===========================================================================
+
+    fn row_with_side_and_class(side: &str, ac: &str, ot: Option<&str>) -> ExecRow {
+        ExecRow {
+            id: Uuid::nil(),
+            account_id: Uuid::nil(),
+            symbol: "TEST".into(),
+            side: side.into(),
+            qty: Decimal::from(10),
+            price: Decimal::from(100),
+            fee: Decimal::ZERO,
+            executed_at: Utc.with_ymd_and_hms(2026, 1, 1, 9, 30, 0).unwrap(),
+            broker_order_id: None,
+            raw: json!({}),
+            import_id: None,
+            asset_class: ac.into(),
+            option_type: ot.map(|s| s.to_string()),
+            strike: None,
+            expiration: None,
+            multiplier: Decimal::ONE,
+            tick_size: None,
+            tick_value: None,
+            base_ccy: None,
+            quote_ccy: None,
+            pip_size: None,
+        }
+    }
+
+    #[test]
+    fn exec_row_parses_each_side_string_to_enum() {
+        for (s, expected) in [
+            ("buy", Side::Buy),
+            ("sell", Side::Sell),
+            ("short", Side::Short),
+            ("cover", Side::Cover),
+        ] {
+            let e: Execution = row_with_side_and_class(s, "stock", None).into();
+            assert_eq!(
+                e.side, expected,
+                "side string {} should map to {:?}",
+                s, expected
+            );
+        }
+    }
+
+    #[test]
+    fn exec_row_unknown_side_falls_back_to_buy() {
+        // Defensive: corrupt PG data must not panic — defaults to Buy.
+        let e: Execution = row_with_side_and_class("garbage", "stock", None).into();
+        assert_eq!(e.side, Side::Buy);
+    }
+
+    #[test]
+    fn exec_row_parses_each_asset_class() {
+        for (s, expected) in [
+            ("stock", AssetClass::Stock),
+            ("option", AssetClass::Option),
+            ("future", AssetClass::Future),
+            ("forex", AssetClass::Forex),
+        ] {
+            let e: Execution = row_with_side_and_class("buy", s, None).into();
+            assert_eq!(e.asset_class, expected);
+        }
+    }
+
+    #[test]
+    fn exec_row_unknown_asset_class_falls_back_to_stock() {
+        let e: Execution = row_with_side_and_class("buy", "crypto", None).into();
+        assert_eq!(e.asset_class, AssetClass::Stock);
+    }
+
+    #[test]
+    fn exec_row_option_type_parses_call_and_put_otherwise_none() {
+        let e_call: Execution = row_with_side_and_class("buy", "option", Some("call")).into();
+        assert_eq!(e_call.option_type, Some(OptionType::Call));
+        let e_put: Execution = row_with_side_and_class("buy", "option", Some("put")).into();
+        assert_eq!(e_put.option_type, Some(OptionType::Put));
+        let e_none: Execution = row_with_side_and_class("buy", "option", None).into();
+        assert_eq!(e_none.option_type, None);
+        let e_garbage: Execution = row_with_side_and_class("buy", "option", Some("warrant")).into();
+        assert_eq!(e_garbage.option_type, None);
+    }
+}
