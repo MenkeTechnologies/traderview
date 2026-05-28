@@ -42,6 +42,9 @@ rand = { workspace = true }
 hex = { workspace = true }
 axum = { workspace = true }
 
+[dev-dependencies]
+tempfile = "3"
+
 [features]
 # Propagate the OCR engine flip to traderview-web/traderview-ocr.
 # Build with `cargo tauri dev --features ocr-engine` to enable receipt OCR

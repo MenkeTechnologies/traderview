@@ -360,3 +360,117 @@ fn show_fatal_dialog(app: &tauri::App, message: &str) {
         .title("TraderView · startup failed")
         .blocking_show();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    // ── log_dir / log_file_path: platform-aware path resolution ───────────
+
+    #[test]
+    fn log_dir_ends_in_traderview_segment() {
+        // Every supported platform branch composes a path ending in
+        // "traderview" — the panic hook and rolling appender both rely on
+        // this for predictable on-disk layout.
+        let p = log_dir();
+        assert_eq!(
+            p.file_name().and_then(|s| s.to_str()),
+            Some("traderview"),
+            "log_dir should end in 'traderview', got: {}",
+            p.display()
+        );
+    }
+
+    #[test]
+    fn log_file_path_appends_log_filename() {
+        // The Tauri shell writes ~/Library/Application Support/traderview/traderview.log
+        // (macOS) or platform-equivalent. The filename is documented in the
+        // module header — pin it.
+        let p = log_file_path();
+        assert_eq!(
+            p.file_name().and_then(|s| s.to_str()),
+            Some("traderview.log"),
+            "log_file_path should end in 'traderview.log', got: {}",
+            p.display()
+        );
+        // And the parent must be log_dir.
+        assert_eq!(p.parent(), Some(log_dir().as_path()));
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn macos_log_dir_lives_under_application_support() {
+        // The doc-string commits to the macOS-specific path; if anyone moves
+        // it to ~/Library/Logs without updating both code AND docs, this trips.
+        let p = log_dir();
+        let s = p.to_string_lossy();
+        assert!(
+            s.contains("Library/Application Support/traderview"),
+            "expected Library/Application Support/traderview in path, got: {s}"
+        );
+    }
+
+    // ── load_or_create_secret: JWT-secret durability across runs ──────────
+
+    #[test]
+    fn load_or_create_secret_creates_32_bytes_on_first_run() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("jwt-secret");
+        // First call: file doesn't exist → fresh 32-byte secret is written.
+        let s = load_or_create_secret(&path).unwrap();
+        assert_eq!(s.len(), 32);
+        assert!(path.exists());
+        // On-disk format is hex (64 chars for 32 bytes).
+        let on_disk = std::fs::read(&path).unwrap();
+        assert_eq!(on_disk.len(), 64);
+        assert!(on_disk.iter().all(|b| b.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn load_or_create_secret_returns_same_bytes_on_second_run() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("jwt-secret");
+        let first = load_or_create_secret(&path).unwrap();
+        let second = load_or_create_secret(&path).unwrap();
+        // Persistence is the whole point — losing the secret invalidates every
+        // issued JWT and forces every user to re-auth.
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn load_or_create_secret_regenerates_when_file_is_garbled() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("jwt-secret");
+        // Write something that isn't hex — load path should fall through to
+        // generating a fresh secret rather than panicking or returning empty.
+        std::fs::write(&path, b"not-valid-hex-at-all-zzzz").unwrap();
+        let s = load_or_create_secret(&path).unwrap();
+        assert_eq!(s.len(), 32);
+    }
+
+    #[test]
+    fn load_or_create_secret_regenerates_when_decoded_too_short() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("jwt-secret");
+        // Valid hex but only 16 bytes decoded — below the 32-byte safety floor.
+        // load_or_create_secret must rewrite a fresh 32-byte secret.
+        let mut f = std::fs::File::create(&path).unwrap();
+        f.write_all(b"00112233445566778899aabbccddeeff").unwrap();
+        drop(f);
+        let s = load_or_create_secret(&path).unwrap();
+        assert_eq!(s.len(), 32);
+    }
+
+    #[test]
+    fn load_or_create_secret_two_fresh_dirs_yield_different_secrets() {
+        // Sanity check the RNG path — two new installations must never
+        // accidentally collide. With 2^256 keyspace, equality means the path
+        // returned a cached/constant value, which would be catastrophic.
+        let a = tempfile::tempdir().unwrap();
+        let b = tempfile::tempdir().unwrap();
+        let sa = load_or_create_secret(&a.path().join("s")).unwrap();
+        let sb = load_or_create_secret(&b.path().join("s")).unwrap();
+        assert_ne!(sa, sb);
+    }
+}
