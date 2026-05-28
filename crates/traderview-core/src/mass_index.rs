@@ -14,7 +14,11 @@
 pub fn compute(highs: &[f64], lows: &[f64], ema_period: usize, sum_period: usize) -> Vec<f64> {
     let n = highs.len();
     let mut out = vec![0.0; n];
-    if highs.len() != lows.len() || n < sum_period {
+    // `sum_period == 0` would underflow `sum_period - 1` (debug panic) and
+    // also yields a meaningless 0-period sum. `ema_period == 0` similarly
+    // breaks the ema() helper's smoothing constant. Both are JSON-supplied
+    // via the chart route so guard explicitly here.
+    if highs.len() != lows.len() || sum_period == 0 || ema_period == 0 || n < sum_period {
         return out;
     }
     let ranges: Vec<f64> = highs.iter().zip(lows).map(|(h, l)| h - l).collect();

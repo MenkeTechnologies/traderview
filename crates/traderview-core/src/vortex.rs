@@ -29,7 +29,10 @@ pub struct VortexPoint {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<VortexPoint> {
     let n = bars.len();
     let mut out = vec![VortexPoint::default(); n];
-    if n < period + 1 || period == 0 {
+    // saturating_add against `period = usize::MAX` overflow that would
+    // otherwise bypass the guard. Without it `n < 0` is false (because
+    // period+1 wraps to 0) and the function returns junk results.
+    if period == 0 || n < period.saturating_add(1) {
         return out;
     }
     let mut tr = vec![0.0; n];

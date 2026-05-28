@@ -207,7 +207,10 @@ pub fn adx(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Adx {
 fn wilder_smooth(values: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = values.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period + 1 {
+    // saturating_add so `period = usize::MAX` doesn't bypass the guard and
+    // then panic at `values[1..=usize::MAX]`. Reachable via the public ADX
+    // route which forwards `q.period` through `adx() → wilder_smooth()`.
+    if period == 0 || n < period.saturating_add(1) {
         return out;
     }
     let mut sum: f64 = values[1..=period].iter().sum();
@@ -376,7 +379,11 @@ pub fn classic_pivots(high: f64, low: f64, close: f64) -> Pivots {
 pub fn atr(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period + 1 || highs.len() != n || lows.len() != n {
+    // `period + 1` overflows on hostile JSON `period = usize::MAX`,
+    // bypassing the guard. Without it the `for i in 1..=period` loop
+    // then panics on `tr(i)` OOB-indexing the bar arrays. Saturating
+    // collapses the wrap to usize::MAX which is always > n.
+    if period == 0 || n < period.saturating_add(1) || highs.len() != n || lows.len() != n {
         return out;
     }
     let tr = |i: usize| -> f64 {

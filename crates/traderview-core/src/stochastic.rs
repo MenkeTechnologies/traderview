@@ -51,9 +51,13 @@ pub fn compute(bars: &[Bar], k_period: usize, d_period: usize) -> Vec<StochPoint
         };
         out[i].fast_k = fast_k_series[i];
     }
-    // Fast %D = SMA(fast_k, d_period).
+    // Fast %D = SMA(fast_k, d_period). Saturating math against hostile
+    // JSON `k_period = usize::MAX` / `d_period = usize::MAX` — naive
+    // `k_period + d_period - 2` would panic in debug / wrap in release
+    // and corrupt the loop bounds (potentially OOB-slicing fast_k_series).
     let mut fast_d_series = vec![0.0; n];
-    for i in (k_period + d_period - 2)..n {
+    let fast_d_start = k_period.saturating_add(d_period).saturating_sub(2);
+    for i in fast_d_start..n {
         let window = &fast_k_series[(i + 1 - d_period)..=i];
         let avg = window.iter().sum::<f64>() / d_period as f64;
         fast_d_series[i] = avg;
@@ -62,7 +66,10 @@ pub fn compute(bars: &[Bar], k_period: usize, d_period: usize) -> Vec<StochPoint
         out[i].slow_k = avg;
     }
     // Slow %D = SMA(slow_k, d_period) = SMA(fast_d, d_period).
-    for i in (k_period + 2 * d_period - 3)..n {
+    let slow_d_start = k_period
+        .saturating_add(d_period.saturating_mul(2))
+        .saturating_sub(3);
+    for i in slow_d_start..n {
         let window = &fast_d_series[(i + 1 - d_period)..=i];
         out[i].slow_d = window.iter().sum::<f64>() / d_period as f64;
     }

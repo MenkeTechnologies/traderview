@@ -12,16 +12,16 @@
 #![allow(clippy::unusual_byte_groupings, clippy::manual_is_multiple_of)]
 
 use traderview_core::{
-    acceleration_deceleration, anchored_vwap, arms_index, atr_cone,
+    acceleration_deceleration, anchored_vwap, aroon, arms_index, atr_cone,
     awesome_oscillator, bond_duration, breakout_detector, choppiness, coppock,
     correlation, cusum, displacement, dynamic_kelly, equity_regime,
     fair_value_gap, futures_roll, gap_fill_stats, indicators,
-    inside_bar_breakout, liquidity_grab, mcclellan_oscillator, monte_carlo,
-    opening_range, order_block, pair_trade, portfolio_heat, premium_discount,
-    put_call_ratio, random_walk_index, range_contraction, range_expansion,
-    rolling_zscore, round_levels, sharpe_by_window, sortino, stop_hunt,
-    supertrend, swing_points, three_bar_reversal, treynor, ulcer_index,
-    volatility_stop, volume_burst, vsa, wyckoff,
+    inside_bar_breakout, liquidity_grab, mass_index, mcclellan_oscillator,
+    monte_carlo, opening_range, order_block, pair_trade, portfolio_heat,
+    premium_discount, put_call_ratio, random_walk_index, range_contraction,
+    range_expansion, rolling_zscore, round_levels, sharpe_by_window, sortino,
+    stochastic, stop_hunt, supertrend, swing_points, three_bar_reversal,
+    treynor, ulcer_index, volatility_stop, volume_burst, vortex, vsa, wyckoff,
 };
 use traderview_core::models::TradeSide;
 use chrono::{NaiveDate, TimeZone, Utc};
@@ -1343,6 +1343,156 @@ fn fuzz_bond_duration() {
             "iter {it} mac dur non-finite: {}", r.macaulay_duration);
         assert!(r.modified_duration.is_finite(),
             "iter {it} mod dur non-finite: {}", r.modified_duration);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// indicators::adx — exercises the wilder_smooth saturating-add fix
+// (adx forwards `period` to wilder_smooth; without the fix
+// `period = usize::MAX` panicked on `values[1..=usize::MAX]`)
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_indicators_adx() {
+    let mut rng = Lcg::new(0x_A_DC_8E);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(64);
+        let highs: Vec<f64>  = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
+        let lows: Vec<f64>   = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let closes: Vec<f64> = (0..n).map(|i| rng.f64_range(lows[i], highs[i])).collect();
+        let period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+        };
+        let r = indicators::adx(&highs, &lows, &closes, period);
+        assert_eq!(r.adx.len(), n, "iter {it} adx len");
+        for v in &r.adx { assert_finite_opt(v, "adx"); }
+        for v in &r.plus_di { assert_finite_opt(v, "+di"); }
+        for v in &r.minus_di { assert_finite_opt(v, "-di"); }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// indicators::atr — verify the period+1 saturating guard
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_indicators_atr() {
+    let mut rng = Lcg::new(0x_A7_8B);
+    for it in 0..ITERS / 2 {
+        let n = rng.range_usize(64);
+        let highs: Vec<f64>  = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
+        let lows: Vec<f64>   = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let closes: Vec<f64> = (0..n).map(|i| rng.f64_range(lows[i], highs[i])).collect();
+        let period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+        };
+        let out = indicators::atr(&highs, &lows, &closes, period);
+        assert_eq!(out.len(), n, "iter {it}");
+        for v in &out { assert_finite_opt(v, "atr"); }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// vortex — n < period.saturating_add(1) guard
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_vortex() {
+    let mut rng = Lcg::new(0x_4_07_AB);
+    for it in 0..ITERS / 2 {
+        let n = rng.range_usize(64);
+        let bars: Vec<vortex::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            vortex::Bar { high: h, low: l, close: c }
+        }).collect();
+        let period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+        };
+        let out = vortex::compute(&bars, period);
+        assert_eq!(out.len(), n, "iter {it}");
+        for p in &out {
+            assert!(p.vi_plus.is_finite(), "iter {it} vi+");
+            assert!(p.vi_minus.is_finite(), "iter {it} vi-");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// aroon — n < period.saturating_add(1) guard
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_aroon() {
+    let mut rng = Lcg::new(0x_AA_5E_E);
+    for it in 0..ITERS / 2 {
+        let n = rng.range_usize(64);
+        let bars: Vec<aroon::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            aroon::Bar { high: h, low: l }
+        }).collect();
+        let period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+        };
+        let out = aroon::compute(&bars, period);
+        assert_eq!(out.len(), n, "iter {it}");
+        for p in &out {
+            assert!(p.up.is_finite(), "iter {it} up");
+            assert!(p.down.is_finite(), "iter {it} down");
+            assert!(p.oscillator.is_finite(), "iter {it} osc");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// mass_index — sum_period==0 and ema_period==0 guards
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_mass_index() {
+    let mut rng = Lcg::new(0x_4_4_55);
+    for it in 0..ITERS / 4 {
+        let n = rng.range_usize(64);
+        let highs: Vec<f64> = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
+        let lows: Vec<f64>  = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let ema_p = match rng.next_u64() % 5 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(20) + 1,
+        };
+        let sum_p = match rng.next_u64() % 5 {
+            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+        };
+        let out = mass_index::compute(&highs, &lows, ema_p, sum_p);
+        assert_eq!(out.len(), n, "iter {it}");
+        for v in &out { assert!(v.is_finite(), "iter {it} mi {}", v); }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// stochastic — verify the k_period + d_period overflow guard
+// ---------------------------------------------------------------------------
+#[test]
+fn fuzz_stochastic_compute() {
+    let mut rng = Lcg::new(0x_57_0C_C);
+    for it in 0..ITERS {
+        let n = rng.range_usize(64);
+        let bars: Vec<stochastic::Bar> = (0..n).map(|_| {
+            let h = rng.f64_range(50.0, 200.0);
+            let l = rng.f64_range(50.0, h);
+            let c = rng.f64_range(l, h);
+            stochastic::Bar { high: h, low: l, close: c }
+        }).collect();
+        // Adversarial periods to exercise the saturating_add/saturating_sub fix.
+        let k_period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(15) + 1,
+        };
+        let d_period = match rng.next_u64() % 10 {
+            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(10) + 1,
+        };
+        let out = stochastic::compute(&bars, k_period, d_period);
+        assert_eq!(out.len(), n, "iter {it} length invariant");
+        for p in &out {
+            assert!(p.fast_k.is_finite() || p.fast_k == 0.0, "iter {it} fast_k");
+            assert!(p.fast_d.is_finite() || p.fast_d == 0.0, "iter {it} fast_d");
+            assert!(p.slow_k.is_finite() || p.slow_k == 0.0, "iter {it} slow_k");
+            assert!(p.slow_d.is_finite() || p.slow_d == 0.0, "iter {it} slow_d");
+        }
     }
 }
 

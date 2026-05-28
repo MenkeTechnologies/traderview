@@ -29,7 +29,9 @@ pub struct AroonPoint {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<AroonPoint> {
     let n = bars.len();
     let mut out = vec![AroonPoint::default(); n];
-    if n < period + 1 || period == 0 {
+    // saturating_add against `period = usize::MAX` overflow that would
+    // otherwise bypass the guard.
+    if period == 0 || n < period.saturating_add(1) {
         return out;
     }
     for i in period..n {
