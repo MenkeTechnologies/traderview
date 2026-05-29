@@ -8,6 +8,8 @@
 // When the bid queue is much larger than the ask queue, the next print
 // is more likely to lift the ask → microprice biases toward the ask.
 
+import { t } from './i18n.js';
+
 /** Build the JSON body for /analytics/microprice-stoikov. The backend
  *  accepts an array (time series); we wrap the user's single snapshot
  *  in a 1-element array. */
@@ -20,12 +22,12 @@ export function buildBody(quote) {
 
 /** Validate inputs. Returns null on success or a friendly error string. */
 export function validateQuote(q) {
-    if (!Number.isFinite(q.bid) || q.bid <= 0) return 'bid must be > 0';
-    if (!Number.isFinite(q.ask) || q.ask <= 0) return 'ask must be > 0';
-    if (q.bid > q.ask) return 'bid must be ≤ ask (crossed market)';
-    if (!Number.isFinite(q.bid_size) || q.bid_size < 0) return 'bid_size must be ≥ 0';
-    if (!Number.isFinite(q.ask_size) || q.ask_size < 0) return 'ask_size must be ≥ 0';
-    if (q.bid_size + q.ask_size <= 0) return 'at least one side must have size';
+    if (!Number.isFinite(q.bid) || q.bid <= 0) return t('view.microprice.validate.bid');
+    if (!Number.isFinite(q.ask) || q.ask <= 0) return t('view.microprice.validate.ask');
+    if (q.bid > q.ask) return t('view.microprice.validate.crossed');
+    if (!Number.isFinite(q.bid_size) || q.bid_size < 0) return t('view.microprice.validate.bid_size');
+    if (!Number.isFinite(q.ask_size) || q.ask_size < 0) return t('view.microprice.validate.ask_size');
+    if (q.bid_size + q.ask_size <= 0) return t('view.microprice.validate.need_size');
     return null;
 }
 

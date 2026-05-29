@@ -12,6 +12,7 @@
 //     backend endpoints).
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse the textarea blob into a flat array of finite numbers.
  *  Returns { value, errors } where errors are line-anchored. */
@@ -22,13 +23,13 @@ export function parseReturns(text) {
 /** Validation gate before sending to any VaR endpoint. */
 export function validateReturns(returns) {
     if (!Array.isArray(returns) || returns.length < 20) {
-        return 'need at least 20 returns for a meaningful VaR estimate';
+        return t('view.var_calculator.validate.need_20');
     }
-    if (returns.some(x => !Number.isFinite(x))) return 'returns contain non-finite values';
+    if (returns.some(x => !Number.isFinite(x))) return t('view.var_calculator.validate.non_finite');
     // Need some variation; a flat series has undefined VaR.
     const min = Math.min(...returns);
     const max = Math.max(...returns);
-    if (max === min) return 'returns are constant — VaR is undefined';
+    if (max === min) return t('view.var_calculator.validate.constant');
     return null;
 }
 

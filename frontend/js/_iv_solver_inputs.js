@@ -5,6 +5,7 @@
 // chart both have a single source of truth.
 
 import { blackScholesEuropean } from './_american_option_inputs.js';
+import { t } from './i18n.js';
 
 /** Build the JSON body for /options/calc/iv-solver. */
 export function buildBody(p) {
@@ -25,23 +26,22 @@ export function buildBody(p) {
  *  K·e^{-rT}). We pre-check those bounds so the user sees a friendly
  *  error before the round-trip. */
 export function validateParams(p) {
-    if (p.kind !== 'call' && p.kind !== 'put') return 'kind must be "call" or "put"';
-    if (!Number.isFinite(p.spot) || p.spot <= 0)   return 'spot must be > 0';
-    if (!Number.isFinite(p.strike) || p.strike <= 0) return 'strike must be > 0';
+    if (p.kind !== 'call' && p.kind !== 'put') return t('view.iv_solver.validate.kind');
+    if (!Number.isFinite(p.spot) || p.spot <= 0)   return t('view.iv_solver.validate.spot');
+    if (!Number.isFinite(p.strike) || p.strike <= 0) return t('view.iv_solver.validate.strike');
     if (!Number.isFinite(p.time_to_expiry) || p.time_to_expiry <= 0) {
-        return 'time_to_expiry (years) must be > 0';
+        return t('view.iv_solver.validate.time');
     }
-    if (!Number.isFinite(p.risk_free))      return 'risk_free must be finite';
+    if (!Number.isFinite(p.risk_free))      return t('view.iv_solver.validate.risk_free');
     if (!Number.isFinite(p.dividend_yield) || p.dividend_yield < 0) {
-        return 'dividend_yield must be ≥ 0';
+        return t('view.iv_solver.validate.div_yield');
     }
     if (!Number.isFinite(p.market_price) || p.market_price < 0) {
-        return 'market_price must be ≥ 0';
+        return t('view.iv_solver.validate.market_price');
     }
     const bounds = arbBounds(p);
     if (p.market_price < bounds.lower - 1e-9 || p.market_price > bounds.upper + 1e-9) {
-        return `market_price ${p.market_price.toFixed(4)} is outside the no-arb band `
-             + `[${bounds.lower.toFixed(4)}, ${bounds.upper.toFixed(4)}] — IV cannot exist`;
+        return t('view.iv_solver.validate.no_arb_band', { price: p.market_price.toFixed(4), lower: bounds.lower.toFixed(4), upper: bounds.upper.toFixed(4) });
     }
     return null;
 }
