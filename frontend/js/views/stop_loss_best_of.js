@@ -104,10 +104,10 @@ function renderSummary(results, trades, candidates) {
         card(t('view.stop_loss_best_of.card.trades'),     String(trades.length)),
         card(t('view.stop_loss_best_of.card.candidates'), String(candidates.length)),
         card(t('view.stop_loss_best_of.card.results'),    String(matched)),
-        card('Best total $', best ? fmtSigned(best.total_realized) : '—', best && best.total_realized >= 0 ? 'pos' : 'neg'),
+        card(t('view.stop_loss_best_of.card.best_total_d'), best ? fmtSigned(best.total_realized) : '—', best && best.total_realized >= 0 ? 'pos' : 'neg'),
         card(t('view.stop_loss_best_of.card.best_method'), best ? describeCandidate(candidatesByMethod(candidates, best)) : '—',
             best ? methodBadge(best.method).cls : ''),
-        card('Best avg/trade $', bestAvg ? fmtSigned(bestAvg.avg_realized) : '—', bestAvg && bestAvg.avg_realized >= 0 ? 'pos' : 'neg'),
+        card(t('view.stop_loss_best_of.card.best_avg_per_trade_d'), bestAvg ? fmtSigned(bestAvg.avg_realized) : '—', bestAvg && bestAvg.avg_realized >= 0 ? 'pos' : 'neg'),
     ].join('');
 }
 

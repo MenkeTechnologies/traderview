@@ -175,7 +175,7 @@ function renderSummary(requested, rows) {
     document.getElementById('dc-summary').innerHTML = [
         card(t('view.dividend_calendar.card.symbols_requested'), String(requested)),
         card(t('view.dividend_calendar.card.dividend_payers_found'), String(rows.length)),
-        card(`In horizon (${state.horizon === 'all' ? 'all upcoming' : state.horizon + 'd'})`, String(filtered.length)),
+        card(t('view.dividend_calendar.card.in_horizon', { window: state.horizon === 'all' ? t('view.dividend_calendar.horizon.all_upcoming') : state.horizon + 'd' }), String(filtered.length)),
         card(t('view.dividend_calendar.card.avg_yield_paying_set'), fmtYield(avgYield)),
         card(t('view.dividend_calendar.card.max_yield'), fmtYield(maxYield)),
     ].join('');

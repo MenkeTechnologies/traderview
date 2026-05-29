@@ -151,7 +151,7 @@ function renderSummary(returns, res) {
     document.getElementById('bo-summary').innerHTML = [
         card(t('view.bocpd.card.hazard_per_bar'), fmtHazardPct(res.hazard)),
         card(t('view.bocpd.card.threshold'), `${(state.threshold * 100).toFixed(1)}%`),
-        card(`Change points ≥ threshold`, String(detected),
+        card(t('view.bocpd.card.change_points_above_threshold'), String(detected),
             detected > 0 ? 'pos' : ''),
         card(t('view.bocpd.card.series_length'), String(returns.length)),
     ].join('');

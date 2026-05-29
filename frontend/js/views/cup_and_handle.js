@@ -162,11 +162,11 @@ function renderSummary(cand, bars) {
         card(t('view.cup_and_handle.card.handle_depth'),   fmtPct(cand.handle_depth_pct) + ' · ' + handleQ.label, handleQ.cls),
         card(t('view.cup_and_handle.card.cup_length'),     String(cand.right_rim_index - cand.left_rim_index) + ' bars'),
         card(t('view.cup_and_handle.card.handle_length'),  String(cand.last_index - cand.right_rim_index) + ' bars'),
-        card('Left rim $',     fmtN(cand.left_rim_price)),
-        card('Right rim $',    fmtN(cand.right_rim_price)),
-        card('Trough $',       fmtN(cand.trough_price)),
-        card('Handle low $',   fmtN(cand.handle_low_price)),
-        card('Pivot $',        fmtN(cand.pivot_price), 'pos'),
+        card(t('view.cup_and_handle.card.left_rim_d'),   fmtN(cand.left_rim_price)),
+        card(t('view.cup_and_handle.card.right_rim_d'),  fmtN(cand.right_rim_price)),
+        card(t('view.cup_and_handle.card.trough_d'),     fmtN(cand.trough_price)),
+        card(t('view.cup_and_handle.card.handle_low_d'), fmtN(cand.handle_low_price)),
+        card(t('view.cup_and_handle.card.pivot_d'),      fmtN(cand.pivot_price), 'pos'),
     ].join('');
 }
 
