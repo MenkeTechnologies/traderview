@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { fmtMoney } from '../util.js';
+import { t } from '../i18n.js';
 
 export async function renderCalendar(mount, state) {
     if (!state.accountId) {
@@ -60,5 +61,6 @@ export async function renderCalendar(mount, state) {
 }
 
 function monthName(m) {
-    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1];
+    const keys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    return t(`common.month.${keys[m - 1]}`);
 }

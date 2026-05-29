@@ -13,6 +13,8 @@
 //   - short with stop ≤ entry → same
 // All emitted via Err<&str> on the backend; we mirror the exact strings.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     side: 'long',
     entry: 100,
@@ -86,9 +88,9 @@ export function localCompute(input) {
             dollar_reward: dollarReward,
             breakeven_win_rate: breakevenWr,
             scale_outs: [
-                { label: '1R',     price: oneR,         fraction: 1 / 3 },
-                { label: '2R',     price: twoR,         fraction: 1 / 3 },
-                { label: 'target', price: input.target, fraction: 1 / 3 },
+                { label: '1R',                              price: oneR,         fraction: 1 / 3 },
+                { label: '2R',                              price: twoR,         fraction: 1 / 3 },
+                { label: t('view.risk_reward.scale_out.target'), price: input.target, fraction: 1 / 3 },
             ],
         },
     };
