@@ -27,11 +27,11 @@ export async function renderAlerts(mount) {
             <form id="alert-form" class="inline-form">
                 <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
                 <select name="trigger">
-                    ${TRIGGERS.map(t => `<option value="${t}">${t}</option>`).join('')}
+                    ${TRIGGERS.map(trig => `<option value="${trig}" data-i18n="view.alerts.trigger.${trig}">${esc(trig)}</option>`).join('')}
                 </select>
                 <input name="threshold" type="number" step="any" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold">
                 <select name="sound">
-                    ${SOUNDS.map(s => `<option value="${s}">${s}</option>`).join('')}
+                    ${SOUNDS.map(s => `<option value="${s}" data-i18n="view.alerts.sound.${s}">${esc(s)}</option>`).join('')}
                 </select>
                 <input name="voice_text" placeholder="voice message (optional)" data-i18n-placeholder="view.alerts.placeholder.voice">
                 <button data-i18n="view.alerts.btn.create" class="primary" type="submit">Create</button>
@@ -48,9 +48,9 @@ export async function renderAlerts(mount) {
                 <tbody>${rules.map(r => `
                     <tr>
                         <td>${esc(r.symbol)}</td>
-                        <td>${esc(r.trigger)}</td>
+                        <td>${esc(t(`view.alerts.trigger.${r.trigger}`))}</td>
                         <td>${r.threshold != null ? r.threshold : '—'}</td>
-                        <td>${r.sound}</td>
+                        <td>${esc(t(`view.alerts.sound.${r.sound}`))}</td>
                         <td>${esc(r.voice_text || '')}</td>
                         <td>${r.triggered_at ? fmtDateTime(r.triggered_at) : '—'}</td>
                         <td>${r.trigger_count}</td>
