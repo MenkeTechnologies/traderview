@@ -10,6 +10,7 @@
 // subplots without per-method branching.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 const PALETTE = [
     '#00e5ff', '#ff9f1a', '#a06bff', '#39ff14',
@@ -20,11 +21,11 @@ const PALETTE = [
  *  validateOpts, toComponents }. */
 export const METHODS = {
     emd: {
-        label: 'Empirical Mode Decomposition',
+        get label() { return t('view.signal_decomposition.method.emd.label'); },
         endpoint: 'anlyEmpiricalModeDecomposition',
         fields: [
-            { key: 'max_imfs',      label: 'Max IMFs',      default: 5,  min: 1,  max: 12, integer: true },
-            { key: 'max_sift_iter', label: 'Max sift iter', default: 50, min: 1,  max: 500, integer: true },
+            { key: 'max_imfs',      get label() { return t('view.signal_decomposition.field.max_imfs'); },      default: 5,  min: 1,  max: 12, integer: true },
+            { key: 'max_sift_iter', get label() { return t('view.signal_decomposition.field.max_sift_iter'); }, default: 50, min: 1,  max: 500, integer: true },
         ],
         buildBody: (series, opts) => ({
             series,
@@ -44,20 +45,20 @@ export const METHODS = {
             if (!res) return null;
             const out = [];
             (res.imfs || []).forEach((y, i) => {
-                out.push({ label: `IMF ${i + 1}`, color: PALETTE[i % PALETTE.length], data: y });
+                out.push({ label: t('view.signal_decomposition.comp.imf', { n: i + 1 }), color: PALETTE[i % PALETTE.length], data: y });
             });
             if (Array.isArray(res.residual)) {
-                out.push({ label: 'Residual', color: '#888', data: res.residual });
+                out.push({ label: t('view.signal_decomposition.comp.residual'), color: '#888', data: res.residual });
             }
             return out;
         },
     },
 
     wavelet: {
-        label: 'Wavelet (Haar)',
+        get label() { return t('view.signal_decomposition.method.wavelet.label'); },
         endpoint: 'anlyWaveletDecompositionHaar',
         fields: [
-            { key: 'levels', label: 'Levels', default: 4, min: 1, max: 12, integer: true },
+            { key: 'levels', get label() { return t('view.signal_decomposition.field.levels'); }, default: 4, min: 1, max: 12, integer: true },
         ],
         buildBody: (series, opts) => ({ series, levels: opts.levels }),
         validateOpts: (opts) => {
@@ -73,20 +74,20 @@ export const METHODS = {
             // chart shows the lowest-frequency detail (cleanest visual).
             const details = res.details || [];
             details.forEach((y, i) => {
-                out.push({ label: `Detail ${i + 1}`, color: PALETTE[i % PALETTE.length], data: y });
+                out.push({ label: t('view.signal_decomposition.comp.detail', { n: i + 1 }), color: PALETTE[i % PALETTE.length], data: y });
             });
             if (Array.isArray(res.approximation)) {
-                out.push({ label: 'Approximation', color: '#888', data: res.approximation });
+                out.push({ label: t('view.signal_decomposition.comp.approximation'), color: '#888', data: res.approximation });
             }
             return out;
         },
     },
 
     ssa: {
-        label: 'Singular Spectrum Analysis',
+        get label() { return t('view.signal_decomposition.method.ssa.label'); },
         endpoint: 'anlySingularSpectrumAnalysis',
         fields: [
-            { key: 'window', label: 'Window L', default: 20, min: 2, max: 100, integer: true },
+            { key: 'window', get label() { return t('view.signal_decomposition.field.window'); }, default: 20, min: 2, max: 100, integer: true },
         ],
         buildBody: (series, opts) => ({ series, window: opts.window }),
         validateOpts: (opts) => {
@@ -98,8 +99,8 @@ export const METHODS = {
         toComponents: (res) => {
             if (!res) return null;
             return [
-                { label: 'Trend', color: '#00e5ff', data: res.trend },
-                { label: 'Noise', color: '#ff9f1a', data: res.noise },
+                { label: t('view.signal_decomposition.comp.trend'), color: '#00e5ff', data: res.trend },
+                { label: t('view.signal_decomposition.comp.noise'), color: '#ff9f1a', data: res.noise },
             ];
         },
     },

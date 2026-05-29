@@ -5,6 +5,8 @@
 //     overbought_threshold, intraday_breakout_up, intraday_breakout_down }
 // Response: { verdict: "buy"|"sell"|"wait" }.
 
+import { t } from './i18n.js';
+
 const VALID_TRENDS = new Set(['up', 'down', 'neutral']);
 
 export function validateInputs(p) {
@@ -63,47 +65,55 @@ export function stageResults(p) {
         (trendDown && p.intraday_breakout_down);
     return {
         longTide: {
-            label: 'Long-tide (weekly trend)',
+            label: t('view.triple_screen.screen.long_tide'),
             pass: trendUp || trendDown,
-            detail: trendUp ? 'UP — long bias' :
-                    trendDown ? 'DOWN — short bias' :
-                    'NEUTRAL — Triple Screen system stands aside',
+            detail: trendUp ? t('view.triple_screen.tide.up') :
+                    trendDown ? t('view.triple_screen.tide.down') :
+                    t('view.triple_screen.tide.neutral'),
         },
         intermediate: {
-            label: 'Intermediate-wave (daily oscillator)',
+            label: t('view.triple_screen.screen.intermediate'),
             pass: intermediatePass,
             detail: trendUp
                 ? (oversold
-                    ? `${p.daily_oscillator_value} < ${p.oversold_threshold} oversold — pullback entry zone`
-                    : `${p.daily_oscillator_value} ≥ ${p.oversold_threshold} — no pullback yet`)
+                    ? t('view.triple_screen.intermediate.oversold_hit', { val: p.daily_oscillator_value, thresh: p.oversold_threshold })
+                    : t('view.triple_screen.intermediate.oversold_no', { val: p.daily_oscillator_value, thresh: p.oversold_threshold }))
                 : trendDown
                     ? (overbought
-                        ? `${p.daily_oscillator_value} > ${p.overbought_threshold} overbought — rally entry zone`
-                        : `${p.daily_oscillator_value} ≤ ${p.overbought_threshold} — no rally yet`)
-                    : 'no tide direction to anchor pullback against',
+                        ? t('view.triple_screen.intermediate.overbought_hit', { val: p.daily_oscillator_value, thresh: p.overbought_threshold })
+                        : t('view.triple_screen.intermediate.overbought_no', { val: p.daily_oscillator_value, thresh: p.overbought_threshold }))
+                    : t('view.triple_screen.intermediate.no_tide'),
         },
         shortRipple: {
-            label: 'Short-ripple (intraday breakout)',
+            label: t('view.triple_screen.screen.short_ripple'),
             pass: intradayPass,
             detail: trendUp
                 ? (p.intraday_breakout_up
-                    ? 'intraday breakout UP — pulls long trigger'
-                    : 'no intraday breakout up yet')
+                    ? t('view.triple_screen.ripple.up_hit')
+                    : t('view.triple_screen.ripple.up_no'))
                 : trendDown
                     ? (p.intraday_breakout_down
-                        ? 'intraday breakout DOWN — pulls short trigger'
-                        : 'no intraday breakout down yet')
-                    : 'no tide to anchor breakout direction',
+                        ? t('view.triple_screen.ripple.down_hit')
+                        : t('view.triple_screen.ripple.down_no'))
+                    : t('view.triple_screen.ripple.no_tide'),
         },
     };
 }
 
 const VERDICT_BADGES = {
-    buy:  { label: 'BUY',  cls: 'pos', hint: 'all 3 screens aligned long — pull trigger' },
-    sell: { label: 'SELL', cls: 'neg', hint: 'all 3 screens aligned short — pull trigger' },
-    wait: { label: 'WAIT', cls: '',    hint: 'at least 1 screen mismatched — stay flat' },
+    buy:  { key: 'buy',  cls: 'pos' },
+    sell: { key: 'sell', cls: 'neg' },
+    wait: { key: 'wait', cls: '' },
 };
-export function verdictBadge(v) { return VERDICT_BADGES[v] || { label: String(v || '—'), cls: '', hint: '' }; }
+export function verdictBadge(v) {
+    const x = VERDICT_BADGES[v];
+    if (!x) return { label: String(v || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.triple_screen.verdict.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.triple_screen.verdict.${x.key}.hint`),
+    };
+}
 
 // Preset bundles for the demo buttons — one per Verdict-distinguishing path.
 export function makeDemoData(kind) {
