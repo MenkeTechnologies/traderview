@@ -4,13 +4,17 @@
 
 const TOKEN_DELIM = /[\s,]+/;
 
+import { t } from './i18n.js';
+
 export const REGIME_THRESHOLDS = { tight: 5, normal: 25, wide: 100 };
-export const REGIME_LABELS = {
-    tight:        'TIGHT (≤5 bps)',
-    normal:       'NORMAL (5-25 bps)',
-    wide:         'WIDE (25-100 bps)',
-    pathological: 'PATHOLOGICAL (>100 bps)',
-};
+const REGIME_KEYS_ARR = ['tight', 'normal', 'wide', 'pathological'];
+const _regimeTarget = Object.fromEntries(REGIME_KEYS_ARR.map(k => [k, true]));
+export const REGIME_LABELS = new Proxy(_regimeTarget, {
+    get(_t, key) {
+        if (typeof key !== 'string' || !REGIME_KEYS_ARR.includes(key)) return undefined;
+        return t(`view.spread_tracker.regime.${key}`);
+    },
+});
 export const REGIME_CSS = {
     tight:        'pos',
     normal:       '',

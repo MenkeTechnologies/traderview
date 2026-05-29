@@ -3,14 +3,16 @@
 // Backend body shape mirrors `ShortfallInput` in
 // `crates/traderview-core/src/implementation_shortfall.rs`.
 
+import { t } from './i18n.js';
+
 export const COMPONENT_KEYS = ['spread_cost', 'timing_cost', 'impact_cost', 'opportunity_cost'];
 
-export const COMPONENT_LABELS = {
-    spread_cost:      'Spread',
-    timing_cost:      'Timing',
-    impact_cost:      'Impact',
-    opportunity_cost: 'Opportunity',
-};
+export const COMPONENT_LABELS = new Proxy({}, {
+    get(_t, key) {
+        if (typeof key !== 'string') return undefined;
+        return t(`view.implementation_shortfall.component.${key}`);
+    },
+});
 
 export function validateInputs(p) {
     if (p.direction !== 'buy' && p.direction !== 'sell') return 'direction must be buy or sell';
