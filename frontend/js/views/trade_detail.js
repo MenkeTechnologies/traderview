@@ -26,7 +26,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
-        <h1 class="view-title">// ${esc(trade.symbol)} · ${trade.side} · ${trade.status}</h1>
+        <h1 class="view-title">// ${esc(trade.symbol)} · ${esc(t(`filter.opt.side.${trade.side}`))} · ${esc(t(`filter.opt.status.${trade.status}`))}</h1>
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.trade_detail.card.net_pnl">Net P&L</div>
                 <div class="value ${pnlClass(trade.net_pnl)}">${fmtMoney(trade.net_pnl)}</div></div>
