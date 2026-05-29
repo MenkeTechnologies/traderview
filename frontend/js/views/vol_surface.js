@@ -1,17 +1,14 @@
 // Implied-volatility surface — heatmap matrix + ATM term structure + skew curve.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderVolSurface(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.vol_surface.h1.vol_surface" class="view-title">// VOL SURFACE</h1>
-        <p class="muted small">IV grid across moneyness × expiration. Color intensity shows IV
-            relative to the surface min/max — bright red = highest IV (richest options), deep
-            blue = lowest (cheapest). Use OTM puts (negative moneyness) and OTM calls (positive)
-            to read skew. Watch for <em>term-structure inversion</em> (front-month IV &gt; back-month):
-            usually signals an upcoming binary event.</p>
+        <p class="muted small" data-i18n="view.vol_surface.hint.intro">IV grid across moneyness × expiration. Color intensity shows IV relative to the surface min/max — bright red = highest IV (richest options), deep blue = lowest (cheapest). Use OTM puts (negative moneyness) and OTM calls (positive) to read skew. Watch for term-structure inversion (front-month IV > back-month): usually signals an upcoming binary event.</p>
 
         <form id="vsForm" class="filter-form">
             <label><span data-i18n="view.vol_surface.label.symbol">Symbol</span>
@@ -36,7 +33,7 @@ export async function renderVolSurface(mount) {
 async function fetchAndRender(sym, n, mount, tok) {
     const out = mount.querySelector('#vsOut');
     if (!out) return;
-    out.innerHTML = `<p class="muted small">Fetching ${esc(sym)} chain across ${n} expirations (this calls Yahoo once per expiration)…</p>`;
+    out.innerHTML = `<p class="muted small">${esc(t('view.vol_surface.hint.fetching', { sym, n }))}</p>`;
     try {
         const s = await api.volSurface(sym, n);
         if (!viewIsCurrent(tok)) return;
@@ -51,7 +48,7 @@ async function fetchAndRender(sym, n, mount, tok) {
 
 function renderSurface(s, out, mount) {
     if (!s.expirations.length) {
-        out.innerHTML = `<p class="boot">No expirations returned for ${esc(s.symbol)}.</p>`;
+        out.innerHTML = `<p class="boot">${esc(t('view.vol_surface.empty', { sym: s.symbol }))}</p>`;
         return;
     }
     out.innerHTML = `

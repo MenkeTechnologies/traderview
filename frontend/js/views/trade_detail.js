@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
 import { renderAiAnalyze } from './journal_ai.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const dtLocal = (iso) => {
@@ -316,6 +317,6 @@ export async function renderTradeDetail(mount, state, tradeId) {
     const aiSlot = document.createElement('div');
     mount.appendChild(aiSlot);
     renderAiAnalyze(aiSlot, tradeId).catch((e) => {
-        aiSlot.innerHTML = `<p class="muted small">AI panel failed to load: ${esc(e.message)}</p>`;
+        aiSlot.innerHTML = `<p class="muted small">${esc(t('view.trade_detail.ai_error', { msg: e.message }))}</p>`;
     });
 }

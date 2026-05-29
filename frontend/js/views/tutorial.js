@@ -149,7 +149,7 @@ const SECTIONS = [
         id: 'risk-gate',
         title: '// RISK GATE — PRE-TRADE RULES',
         body: `
-            <p>Discipline that <em>enforces</em> instead of just reporting. The gate sits between the new-trade form and the broker — every submission runs the rules first.</p>
+            <p data-i18n="view.tutorial.risk_gate.intro">Discipline that enforces instead of just reporting. The gate sits between the new-trade form and the broker — every submission runs the rules first.</p>
             <ol class="tut-steps">
                 <li><strong>Install a preset</strong> from the <button data-i18n="view.tutorial.btn.risk_gate_2" class="link" data-go="risk-gate">Risk Gate</button> view. Three packs:
                     <ul class="tut-list">
