@@ -8,6 +8,8 @@
 // 0   = closet indexer; 0.6+ commonly called "active"; 1.0 = disjoint.
 
 // 1e-12 over/under tolerance matches Rust impl.
+import { t } from './i18n.js';
+
 export const OVER_TOL = 1e-12;
 
 export const DEFAULT_INPUTS = {
@@ -15,16 +17,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.weights))                          return 'weights must be an array';
-    if (input.weights.length === 0)                              return 'weights must be non-empty';
+    if (!Array.isArray(input.weights))                          return t('view.active_share.validate.weights_array');
+    if (input.weights.length === 0)                              return t('view.active_share.validate.weights_non_empty');
     for (let i = 0; i < input.weights.length; i++) {
         const w = input.weights[i];
-        if (!w || typeof w !== 'object')                         return `weights[${i}] must be an object`;
-        if (typeof w.symbol !== 'string' || w.symbol.length === 0) return `weights[${i}].symbol must be a non-empty string`;
+        if (!w || typeof w !== 'object')                         return t('view.active_share.validate.weight_object', { i });
+        if (typeof w.symbol !== 'string' || w.symbol.length === 0) return t('view.active_share.validate.weight_symbol', { i });
         if (!Number.isFinite(w.portfolio_weight) || w.portfolio_weight < 0)
-                                                                  return `weights[${i}].portfolio_weight must be ≥ 0 finite`;
+                                                                  return t('view.active_share.validate.weight_portfolio', { i });
         if (!Number.isFinite(w.benchmark_weight) || w.benchmark_weight < 0)
-                                                                  return `weights[${i}].benchmark_weight must be ≥ 0 finite`;
+                                                                  return t('view.active_share.validate.weight_benchmark', { i });
     }
     return null;
 }

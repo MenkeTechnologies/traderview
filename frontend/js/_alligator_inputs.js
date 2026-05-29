@@ -44,7 +44,7 @@ export function parseBarBlob(text) {
 export function validateInputs(bars) {
     // SMMA(13) needs at least 13 bars to seed; require ≥21 (13 + jaw shift 8)
     // so the shifted display has at least 1 plotted jaw value.
-    if (!Array.isArray(bars) || bars.length < 21) return 'need at least 21 bars (13 SMMA + 8 jaw shift)';
+    if (!Array.isArray(bars) || bars.length < 21) return t('view.alligator.validate.need_bars');
     return null;
 }
 

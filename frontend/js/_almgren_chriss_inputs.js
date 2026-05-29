@@ -6,21 +6,23 @@
 // Frontier helpers compute the (variance, expected-cost) curve over a
 // λ sweep — the classical AC efficient frontier.
 
+import { t } from './i18n.js';
+
 export function validateParams(p) {
     if (!Number.isFinite(p.total_shares) || p.total_shares === 0)
-        return 'total_shares must be a non-zero finite number';
+        return t('view.almgren_chriss.validate.total_shares');
     if (!Number.isFinite(p.horizon_seconds) || p.horizon_seconds <= 0)
-        return 'horizon_seconds must be > 0';
+        return t('view.almgren_chriss.validate.horizon');
     if (!Number.isInteger(p.n_intervals) || p.n_intervals < 1 || p.n_intervals > 2000)
-        return 'n_intervals must be integer in [1, 2000]';
+        return t('view.almgren_chriss.validate.n_intervals');
     if (!Number.isFinite(p.eta) || p.eta <= 0)
-        return 'eta (temporary impact) must be > 0';
+        return t('view.almgren_chriss.validate.eta');
     if (!Number.isFinite(p.gamma) || p.gamma < 0)
-        return 'gamma (permanent impact) must be ≥ 0';
+        return t('view.almgren_chriss.validate.gamma');
     if (!Number.isFinite(p.lambda) || p.lambda < 0)
-        return 'lambda (risk aversion) must be ≥ 0';
+        return t('view.almgren_chriss.validate.lambda');
     if (!Number.isFinite(p.sigma) || p.sigma < 0)
-        return 'sigma (vol) must be ≥ 0';
+        return t('view.almgren_chriss.validate.sigma');
     return null;
 }
 
