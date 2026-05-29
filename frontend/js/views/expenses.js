@@ -532,10 +532,10 @@ async function openReceiptMatchModal(meta) {
     <div class="modal-inner wide">
         <h2 data-i18n="view.expenses.h2.receipt_transaction">Receipt → transaction</h2>
         <div class="receipt-summary">
-            <strong>Merchant:</strong> ${esc(meta.ocr_merchant || '?')} ·
-            <strong>Total:</strong> ${meta.ocr_total ?? '?'} ·
-            <strong>Date:</strong> ${meta.ocr_date ?? '?'} ·
-            <strong>Conf:</strong> ${meta.ocr_confidence != null ? (meta.ocr_confidence * 100).toFixed(0) + '%' : '?'}
+            <strong>${esc(t('view.expenses.receipt.label.merchant'))}:</strong> ${esc(meta.ocr_merchant || '?')} ·
+            <strong>${esc(t('view.expenses.receipt.label.total'))}:</strong> ${meta.ocr_total ?? '?'} ·
+            <strong>${esc(t('view.expenses.receipt.label.date'))}:</strong> ${meta.ocr_date ?? '?'} ·
+            <strong>${esc(t('view.expenses.receipt.label.conf'))}:</strong> ${meta.ocr_confidence != null ? (meta.ocr_confidence * 100).toFixed(0) + '%' : '?'}
         </div>
         <table class="trades">
             <thead><tr><th data-i18n="view.expenses.th.score">Score</th><th data-i18n="view.expenses.th.date_2">Date</th><th data-i18n="view.expenses.th.account_2">Account</th><th data-i18n="view.expenses.th.merchant_2">Merchant</th><th data-i18n="view.expenses.th.amount_2">Amount</th><th></th></tr></thead>
