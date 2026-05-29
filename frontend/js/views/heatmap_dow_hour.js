@@ -117,10 +117,10 @@ function renderSummary(report, pending) {
              fmtUSDSigned(report.total_pnl),
              report.total_pnl >= 0 ? 'pos' : 'neg'),
         card(t('view.heatmap_dow_hour.card.best_cell'),
-             best ? `${DOW_LABELS[best.dow]} ${fmtHour(best.hour)} ${fmtUSDSigned(best.net_pnl)}` : '—',
+             best ? `${t('common.dow.' + DOW_LABELS[best.dow].toLowerCase())} ${fmtHour(best.hour)} ${fmtUSDSigned(best.net_pnl)}` : '—',
              best && best.net_pnl > 0 ? 'pos' : ''),
         card(t('view.heatmap_dow_hour.card.worst_cell'),
-             worst ? `${DOW_LABELS[worst.dow]} ${fmtHour(worst.hour)} ${fmtUSDSigned(worst.net_pnl)}` : '—',
+             worst ? `${t('common.dow.' + DOW_LABELS[worst.dow].toLowerCase())} ${fmtHour(worst.hour)} ${fmtUSDSigned(worst.net_pnl)}` : '—',
              worst && worst.net_pnl < 0 ? 'neg' : ''),
         card(t('view.heatmap_dow_hour.card.dow_count'), '7'),
         card(t('view.heatmap_dow_hour.card.hour_count'), '24'),
@@ -145,7 +145,7 @@ function renderGrid(report) {
         </tr>`;
     const bodyRows = report.cells.map((row, d) => `
         <tr>
-            <td data-i18n="view.heatmap_dow_hour.dow.${esc(DOW_LABELS[d].toLowerCase())}"
+            <td data-i18n="common.dow.${esc(DOW_LABELS[d].toLowerCase())}"
                 style="font-weight:bold">${esc(DOW_LABELS[d])}</td>
             ${row.map(cell => {
                 const pnl = dec(cell.net_pnl);

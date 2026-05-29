@@ -4,7 +4,8 @@ import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
-const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOW_SLUGS = ['sun','mon','tue','wed','thu','fri','sat'];
+const dowLabel = (i) => t('common.dow.' + DOW_SLUGS[i]);
 
 export async function renderEarningsCal(mount) {
     const tok = currentViewToken();
@@ -100,7 +101,7 @@ function renderCalendarMatrix(events, days, mount) {
         <div style="display:grid;grid-template-columns:repeat(${cols.length}, 1fr);gap:6px;">
             ${cols.map(c => `<div style="border:1px solid var(--border);padding:6px;min-height:80px;">
                 <div class="small muted" style="border-bottom:1px dashed var(--border);padding-bottom:3px;margin-bottom:4px;">
-                    ${DOW[c.date.getDay()]} ${c.date.getMonth() + 1}/${c.date.getDate()}
+                    ${dowLabel(c.date.getDay())} ${c.date.getMonth() + 1}/${c.date.getDate()}
                 </div>
                 ${c.events.length === 0
                     ? '<span class="muted small">—</span>'
