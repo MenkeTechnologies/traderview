@@ -16,7 +16,7 @@ export async function renderReplay(mount, state, day) {
     const trades = await api.trades(state.accountId, { date_from: day, date_to: day, limit: 500 });
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// REPLAY ·
+        <h1 class="view-title"><span data-i18n="view.replay.title">// REPLAY ·</span>
             <input type="date" id="day" value="${day}">
         </h1>
         ${trades.length ? `

@@ -17,11 +17,11 @@ const announced = new Set();
 export async function renderCatalysts(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CATALYST RADAR · LIVE
+        <h1 class="view-title"><span data-i18n="view.catalysts.title">// CATALYST RADAR · LIVE</span>
             <span class="status-dot" id="cat-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
             <label class="halt-voice-toggle">
                 <input type="checkbox" id="cat-voice" ${voiceOn ? 'checked' : ''}>
-                voice alerts
+                <span data-i18n="common.label.voice_alerts">voice alerts</span>
             </label>
         </h1>
         <p data-i18n="view.catalysts.hint.sec_edgar_every_6s_business_wire_pr_newswire_globe" class="muted small">

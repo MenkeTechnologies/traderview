@@ -14,11 +14,11 @@ const halts = new Map(); // dedupe key → halt
 export async function renderHalts(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// HALT SCANNER · LIVE
+        <h1 class="view-title"><span data-i18n="view.halts.title">// HALT SCANNER · LIVE</span>
             <span class="status-dot" id="halt-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
             <label class="halt-voice-toggle">
                 <input type="checkbox" id="halt-voice" ${voiceOn ? 'checked' : ''}>
-                voice alerts
+                <span data-i18n="common.label.voice_alerts">voice alerts</span>
             </label>
         </h1>
         <p class="muted small" data-i18n-html="view.halts.intro">

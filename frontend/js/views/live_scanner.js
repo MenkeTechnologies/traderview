@@ -20,11 +20,11 @@ const announced = new Set();   // dedupe TTS alerts per session
 export async function renderLiveScanner(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// LIVE SCANNER · DayTradeDash replacement
+        <h1 class="view-title"><span data-i18n="view.live_scanner.title">// LIVE SCANNER · DayTradeDash replacement</span>
             <span class="status-dot" id="ls-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
             <label class="halt-voice-toggle">
                 <input type="checkbox" id="ls-voice" ${voiceOn ? 'checked' : ''}>
-                voice alerts
+                <span data-i18n="common.label.voice_alerts">voice alerts</span>
             </label>
         </h1>
 

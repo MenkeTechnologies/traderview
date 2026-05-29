@@ -88,6 +88,13 @@
   "confirm.clear_bookmarks":            "Clear all bookmarks? This cannot be undone.",
   "view.launcher.section.recent":       "// RECENT",
   "view.launcher.title":                "// HOME",
+  "view.live_scanner.title":            "// LIVE SCANNER · DayTradeDash replacement",
+  "view.tutorial.title":                "// TUTORIAL",
+  "view.catalysts.title":               "// CATALYST RADAR · LIVE",
+  "view.halts.title":                   "// HALT SCANNER · LIVE",
+  "view.replay.title":                  "// REPLAY ·",
+  "view.webull.title":                  "// WEBULL · LIVE BROKER",
+  "common.label.voice_alerts":          "voice alerts",
 
   "symbol_hud.prompt":                  "Symbol",
   "symbol_hud.hint":                    "enter to jump · esc to cancel",

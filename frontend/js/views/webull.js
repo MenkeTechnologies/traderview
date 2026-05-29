@@ -12,7 +12,7 @@ let viewTok = 0;
 export async function renderWebull(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// WEBULL · LIVE BROKER
+        <h1 class="view-title"><span data-i18n="view.webull.title">// WEBULL · LIVE BROKER</span>
             <span class="status-dot" id="wb-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
         </h1>
 
