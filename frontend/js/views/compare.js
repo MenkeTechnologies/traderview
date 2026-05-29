@@ -1,6 +1,7 @@
 // Stock comparison — side-by-side fundamentals + RS chart for 2-4 symbols.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
@@ -107,7 +108,7 @@ function renderReport(r, out, mount) {
             <div id="cmp-rs"></div>
         </div>
         <div class="chart-panel">
-            <h2>Fundamental comparison (${r.rows.length} symbols)</h2>
+            <h2>${esc(t('view.compare.h2.fundamental', { count: r.rows.length }))}</h2>
             ${renderTable(r.rows)}
             <p class="muted small">Fetched ${new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
         </div>

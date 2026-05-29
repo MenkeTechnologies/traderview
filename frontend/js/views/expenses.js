@@ -10,6 +10,7 @@
 // the parser-stub message, which we surface verbatim.
 
 import { api, ApiError } from '../api.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const state = {
@@ -601,7 +602,7 @@ async function openScheduleCModal(year) {
 
     modal.innerHTML = `
     <div class="modal-inner wide">
-        <h2>Schedule C report — ${report.year}</h2>
+        <h2>${esc(t('view.expenses.h2.schedule_c', { year: report.year }))}</h2>
         <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">
             <label><span data-i18n="view.expenses.label.year">Year</span>
                 <select id="sc-year">${yearOpts}</select></label>

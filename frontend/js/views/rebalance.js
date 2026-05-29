@@ -3,6 +3,7 @@
 
 import { api, apiFetchBlob } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = {
@@ -164,7 +165,7 @@ function render(r, mount) {
         </div>`}
 
         <div class="chart-panel">
-            <h2>Trade list (${p.trades.length})</h2>
+            <h2>${esc(t('view.rebalance.h2.trade_list', { count: p.trades.length }))}</h2>
             ${tradeTable(p.trades)}
         </div>
         <div class="chart-panel">

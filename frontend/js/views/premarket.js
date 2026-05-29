@@ -1,6 +1,7 @@
 // Pre-market futures dashboard — index futures, commodities, crypto, FX.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
@@ -99,7 +100,7 @@ function renderEvents(events, fetched, mount) {
     }
     el.innerHTML = `
         <div class="chart-panel">
-            <h2>Today's high-impact releases (${events.length})</h2>
+            <h2>${esc(t('view.premarket.h2.high_impact', { count: events.length }))}</h2>
             <table class="trades">
                 <thead><tr><th data-i18n="view.premarket.th.time_et">Time (ET)</th><th data-i18n="view.premarket.th.event">Event</th><th data-i18n="view.premarket.th.category">Category</th><th data-i18n="view.premarket.th.source">Source</th></tr></thead>
                 <tbody>

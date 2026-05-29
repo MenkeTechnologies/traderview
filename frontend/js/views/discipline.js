@@ -3,6 +3,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDiscipline(mount, state) {
@@ -65,7 +66,7 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Latest rule evaluations (${r.rule_evals.length})</h2>
+            <h2>${esc(t('view.discipline.h2.latest_rules', { count: r.rule_evals.length }))}</h2>
             ${ruleTable(r.rule_evals.slice(-50).reverse())}
         </div>
     `;

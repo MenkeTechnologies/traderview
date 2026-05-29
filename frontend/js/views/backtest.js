@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { equityChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = [
@@ -119,7 +120,7 @@ function render(r) {
             <div id="bt-eq"></div>
         </div>
         <div class="chart-panel">
-            <h2>Trades · ${r.trades.length}</h2>
+            <h2>${esc(t('view.backtest.h2.trades', { count: r.trades.length }))}</h2>
             <table class="trades">
                 <thead><tr><th>#</th><th data-i18n="view.backtest.th.entry">Entry</th><th data-i18n="view.backtest.th.exit">Exit</th><th data-i18n="view.backtest.th.bars">Bars</th>
                 <th data-i18n="view.backtest.th.entry_2">Entry $</th><th data-i18n="view.backtest.th.exit_2">Exit $</th><th data-i18n="view.backtest.th.qty">Qty</th><th data-i18n="view.backtest.th.p_l">P&L</th><th>%</th></tr></thead>

@@ -50,21 +50,21 @@ export async function renderCupAndHandle(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cup_and_handle.h2.config">Config</h2>
             <div class="inline-form">
-                <label>Cup bars (min)
+                <label><span data-i18n="view.cup_and_handle.label.cup_min">Cup bars (min)</span>
                     <input id="ch-cmin" type="number" step="1" min="4" value="${state.config.cup_min_bars}"></label>
-                <label>Cup bars (max)
+                <label><span data-i18n="view.cup_and_handle.label.cup_max">Cup bars (max)</span>
                     <input id="ch-cmax" type="number" step="1" min="5" value="${state.config.cup_max_bars}"></label>
-                <label>Min depth %
+                <label><span data-i18n="view.cup_and_handle.label.min_depth">Min depth %</span>
                     <input id="ch-dmin" type="number" step="0.01" min="0" max="1" value="${state.config.min_depth_pct}"></label>
-                <label>Max depth %
+                <label><span data-i18n="view.cup_and_handle.label.max_depth">Max depth %</span>
                     <input id="ch-dmax" type="number" step="0.01" min="0" max="1" value="${state.config.max_depth_pct}"></label>
-                <label>Rim tolerance %
+                <label><span data-i18n="view.cup_and_handle.label.rim_tolerance">Rim tolerance %</span>
                     <input id="ch-rim" type="number" step="0.01" min="0" max="1" value="${state.config.rim_tolerance_pct}"></label>
-                <label>Handle bars (min)
+                <label><span data-i18n="view.cup_and_handle.label.handle_min">Handle bars (min)</span>
                     <input id="ch-hmin" type="number" step="1" min="1" value="${state.config.handle_min_bars}"></label>
-                <label>Handle bars (max)
+                <label><span data-i18n="view.cup_and_handle.label.handle_max">Handle bars (max)</span>
                     <input id="ch-hmax" type="number" step="1" min="1" value="${state.config.handle_max_bars}"></label>
-                <label>Max handle depth %
+                <label><span data-i18n="view.cup_and_handle.label.handle_depth">Max handle depth %</span>
                     <input id="ch-hdep" type="number" step="0.01" min="0" max="1" value="${state.config.max_handle_depth_pct}"></label>
                 <button data-i18n="view.cup_and_handle.btn.detect" id="ch-run" class="primary" type="button">Detect</button>
             </div>

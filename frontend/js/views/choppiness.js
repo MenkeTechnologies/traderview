@@ -22,7 +22,7 @@ export async function renderChoppiness(mount, _appState) {
         <h1 data-i18n="view.choppiness.h1.choppiness_index" class="view-title">// CHOPPINESS INDEX</h1>
 
         <div class="chart-panel">
-            <h2>Paste OHLC bars (per line: <code>high low close</code>)</h2>
+            <h2><span data-i18n="view.choppiness.h2.paste_bars">Paste OHLC bars (per line:</span> <code>high low close</code>)</h2>
             <textarea id="cp-blob" rows="6" placeholder="100.5 99.5 100.0&#10;100.6 99.4 100.1&#10;...">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.choppiness.label.period">Lookback period</span>

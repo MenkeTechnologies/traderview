@@ -13,6 +13,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const WIDGET_KINDS = [
@@ -59,7 +60,7 @@ async function renderList(mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Your boards (${boards.length})</h2>
+            <h2>${esc(t('view.boards.h2.your_boards', { count: boards.length }))}</h2>
             ${boards.length === 0
                 ? '<p data-i18n="view.boards.hint.no_boards_yet" class="muted small">No boards yet.</p>'
                 : `<table class="trades">

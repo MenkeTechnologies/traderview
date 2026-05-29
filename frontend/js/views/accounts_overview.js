@@ -2,6 +2,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderAccountsOverview(mount) {
@@ -55,7 +56,7 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Per-account breakdown (${r.accounts.length})</h2>
+            <h2>${esc(t('view.accounts_overview.h2.breakdown', { count: r.accounts.length }))}</h2>
             ${accountTable(r.accounts)}
             <p class="muted small">Updated ${new Date(r.computed_at).toLocaleString()}.</p>
         </div>

@@ -25,7 +25,7 @@ export async function renderClustersTradeFeatures(mount, _appState) {
         <h1 data-i18n="view.clusters_trade_features.h1.trade_clusters_k_means" class="view-title">// TRADE CLUSTERS (K-MEANS)</h1>
 
         <div class="chart-panel">
-            <h2>Paste trade features (per-line: <code>entry_min hold_min r_multiple</code>)</h2>
+            <h2><span data-i18n="view.clusters_trade_features.h2.paste">Paste trade features (per-line:</span> <code>entry_min hold_min r_multiple</code>)</h2>
             <textarea id="cl-blob" rows="8" placeholder="540 30 1.5  # 9:00 entry, 30min hold, +1.5R&#10;...">${esc(featuresToBlob(state.features))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.clusters_trade_features.label.k">k (clusters)</span>

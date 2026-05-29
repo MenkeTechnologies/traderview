@@ -43,24 +43,24 @@ export async function renderImplementationShortfall(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.implementation_shortfall.h2.order_lifecycle">Order lifecycle</h2>
             <div class="inline-form">
-                <label>Direction
+                <label><span data-i18n="view.implementation_shortfall.label.direction">Direction</span>
                     <select id="is-dir">
                         <option data-i18n="view.implementation_shortfall.opt.buy" value="buy"  ${state.params.direction === 'buy'  ? 'selected' : ''}>Buy</option>
                         <option data-i18n="view.implementation_shortfall.opt.sell" value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
                     </select></label>
-                <label>Decision mid
+                <label><span data-i18n="view.implementation_shortfall.label.decision_mid">Decision mid</span>
                     <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}"></label>
-                <label>Arrival mid
+                <label><span data-i18n="view.implementation_shortfall.label.arrival_mid">Arrival mid</span>
                     <input id="is-am" type="number" step="any" min="0" value="${state.params.arrival_mid}"></label>
-                <label>VWAP fill
+                <label><span data-i18n="view.implementation_shortfall.label.vwap_fill">VWAP fill</span>
                     <input id="is-vw" type="number" step="any" min="0" value="${state.params.vwap_fill}"></label>
-                <label>Final mid
+                <label><span data-i18n="view.implementation_shortfall.label.final_mid">Final mid</span>
                     <input id="is-fm" type="number" step="any" min="0" value="${state.params.final_mid}"></label>
-                <label>½-spread @ decision
+                <label><span data-i18n="view.implementation_shortfall.label.half_spread">½-spread @ decision</span>
                     <input id="is-hs" type="number" step="any" min="0" value="${state.params.half_spread_at_decision}"></label>
-                <label>Intended qty
+                <label><span data-i18n="view.implementation_shortfall.label.intended_qty">Intended qty</span>
                     <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}"></label>
-                <label>Filled qty
+                <label><span data-i18n="view.implementation_shortfall.label.filled_qty">Filled qty</span>
                     <input id="is-fq" type="number" step="1" min="0" value="${state.params.filled_qty}"></label>
                 <button data-i18n="view.implementation_shortfall.btn.analyze" id="is-run" class="primary" type="button">Analyze</button>
             </div>

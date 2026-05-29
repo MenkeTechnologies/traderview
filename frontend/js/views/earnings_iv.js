@@ -1,6 +1,7 @@
 // Earnings-week IV scanner + per-symbol straddle backtest detail.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderEarningsIv(mount, _state, symbol) {
@@ -128,7 +129,7 @@ async function renderDetail(mount, sym) {
             </div>
 
             <div class="chart-panel">
-                <h2>Straddle backtest — ${r.backtest.samples} historical earnings</h2>
+                <h2>${esc(t('view.earnings_iv.h2.straddle_backtest', { samples: r.backtest.samples }))}</h2>
                 <table class="trades">
                     <thead><tr><th data-i18n="view.earnings_iv.th.strategy">Strategy</th><th data-i18n="view.earnings_iv.th.avg_p_l_1_premium">Avg P&L / $1 premium</th><th data-i18n="view.earnings_iv.th.win_rate">Win rate</th></tr></thead>
                     <tbody>
@@ -158,7 +159,7 @@ async function renderDetail(mount, sym) {
             </div>
 
             <div class="chart-panel">
-                <h2>Straddle pricing — expiration ${esc(r.expiration)}</h2>
+                <h2>${esc(t('view.earnings_iv.h2.straddle_pricing', { expiration: r.expiration }))}</h2>
                 <table class="trades">
                     <tbody>
                         <tr><td>Call mid</td><td>${fmt(r.call_mid)}</td></tr>

@@ -42,7 +42,7 @@ export async function renderDemarker(mount, _appState) {
         <div id="dm-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>DeMarker(${state.period}) series</h2>
+            <h2>${esc(t('view.demarker.h2.series', { period: state.period }))}</h2>
             <div id="dm-chart" style="height:280px"></div>
             <p data-i18n="view.demarker.hint.cyan_demarker_red_dashed_0_70_ob_threshold_green_d" class="muted">Cyan = DeMarker. Red dashed = 0.70 OB threshold. Green dashed =
                 0.30 OS threshold. Yellow = 0.50 mid.</p>

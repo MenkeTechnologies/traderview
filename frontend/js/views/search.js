@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { esc, fmtDate, fmtDateTime, fmtMoney, pnlClass } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSearch(mount) {
@@ -44,7 +45,7 @@ function renderHits(r) {
     if (r.trades.length) {
         blocks.push(`
             <div class="chart-panel">
-              <h2>Trades · ${r.trades.length}</h2>
+              <h2>${esc(t('view.search.h2.trades', { count: r.trades.length }))}</h2>
               <table class="trades">
                 <thead><tr><th data-i18n="view.search.th.symbol">Symbol</th><th data-i18n="view.search.th.side">Side</th><th data-i18n="view.search.th.status">Status</th><th data-i18n="view.search.th.opened">Opened</th><th data-i18n="view.search.th.net_p_l">Net P&L</th></tr></thead>
                 <tbody>${r.trades.map(t => `
@@ -61,7 +62,7 @@ function renderHits(r) {
     if (r.journal.length) {
         blocks.push(`
             <div class="chart-panel">
-              <h2>Journal · ${r.journal.length}</h2>
+              <h2>${esc(t('view.search.h2.journal', { count: r.journal.length }))}</h2>
               ${r.journal.map(j => `
                 <div class="journal-entry">
                   <div class="meta">
@@ -77,7 +78,7 @@ function renderHits(r) {
     if (r.forum.length) {
         blocks.push(`
             <div class="chart-panel">
-              <h2>Forum · ${r.forum.length}</h2>
+              <h2>${esc(t('view.search.h2.forum', { count: r.forum.length }))}</h2>
               ${r.forum.map(f => `
                 <div class="forum-post">
                   <div class="meta">

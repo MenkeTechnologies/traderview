@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime, md } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderCommunity(mount, _state, catSlug) {
@@ -19,7 +20,7 @@ export async function renderCommunity(mount, _state, catSlug) {
         ).join('')}</div>
 
         <div class="chart-panel">
-            <h2>New thread in ${esc(cat.name)}</h2>
+            <h2>${esc(t('view.community.h2.new_thread', { category: cat.name }))}</h2>
             <form id="thread-form">
                 <input name="title" placeholder="title" required>
                 <textarea name="body_md" placeholder="markdown body" required></textarea>

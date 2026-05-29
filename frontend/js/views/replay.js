@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderReplay(mount, state, day) {
@@ -20,7 +21,7 @@ export async function renderReplay(mount, state, day) {
         </h1>
         ${trades.length ? `
             <div class="chart-panel">
-                <h2>Trades on ${esc(day)} — ${trades.length}</h2>
+                <h2>${esc(t('view.replay.h2.trades_on', { day, count: trades.length }))}</h2>
                 <select id="trade-pick">
                     ${trades.map(t => `<option value="${t.id}">${esc(t.symbol)} · ${t.side} · ${fmtDateTime(t.opened_at).slice(11)} → ${t.closed_at ? fmtDateTime(t.closed_at).slice(11) : 'open'}</option>`).join('')}
                 </select>

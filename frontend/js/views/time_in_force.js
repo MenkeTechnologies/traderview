@@ -20,19 +20,20 @@ export async function renderTimeInForce(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.time_in_force.h2.order">Order</h2>
             <div class="inline-form">
-                <label>TIF
+                <label><span data-i18n="view.time_in_force.label.tif">TIF</span>
                     <select id="tif-kind">
                         ${TIF_KINDS.map(k => `<option value="${k}" ${state.order.tif === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
                     </select></label>
-                <label>Original qty
+                <label><span data-i18n="view.time_in_force.label.orig_qty">Original qty</span>
                     <input id="tif-oq" type="number" step="any" min="0" value="${state.order.original_qty}"></label>
-                <label>Filled qty
+                <label><span data-i18n="view.time_in_force.label.filled_qty">Filled qty</span>
                     <input id="tif-fq" type="number" step="any" min="0" value="${state.order.filled_qty}"></label>
             </div>
             <div class="inline-form">
-                <label>Placed at <small class="muted">(your local time → UTC at the wire)</small>
+                <label><span data-i18n="view.time_in_force.label.placed_at">Placed at</span>
+                    <small class="muted" data-i18n="view.time_in_force.hint.placed_at">(your local time → UTC at the wire)</small>
                     <input id="tif-placed" type="datetime-local" value="${esc(isoUtcToLocalDt(state.order.placed_at))}"></label>
-                <label>Good until (GTD only)
+                <label><span data-i18n="view.time_in_force.label.good_until">Good until (GTD only)</span>
                     <input id="tif-good" type="date" value="${esc(state.good_until_in_order || '')}"></label>
             </div>
         </div>
@@ -40,9 +41,9 @@ export async function renderTimeInForce(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.time_in_force.h2.clock_session">Clock + session</h2>
             <div class="inline-form">
-                <label>Now
+                <label><span data-i18n="view.time_in_force.label.now">Now</span>
                     <input id="tif-now" type="datetime-local" value="${esc(isoUtcToLocalDt(state.now))}"></label>
-                <label>Session open (UTC date)
+                <label><span data-i18n="view.time_in_force.label.session_open">Session open (UTC date)</span>
                     <input id="tif-sess" type="date" value="${esc(state.session_open)}"></label>
                 <button data-i18n="view.time_in_force.btn.snap_now_session_to_current_time" id="tif-now-snap" class="secondary" type="button">Snap "now" + session to current time</button>
                 <button data-i18n="view.time_in_force.btn.evaluate" id="tif-run" class="primary" type="button">Evaluate</button>

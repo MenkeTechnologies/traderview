@@ -17,34 +17,62 @@ export async function renderPositionSize(mount, state) {
 
         <div class="chart-panel">
             <form id="ps-form" class="inline-form">
-                <label>Side
+                <label><span data-i18n="view.position_size.label.side">Side</span>
                     <select name="side">
                         <option data-i18n="view.position_size.opt.long" value="long" selected>long</option>
                         <option data-i18n="view.position_size.opt.short" value="short">short</option>
                     </select>
                 </label>
+<<<<<<< Updated upstream
                 <label><span data-i18n="view.position_size.label.entry">Entry</span>  <input name="entry" type="number" step="any" required value="50" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.stop">Stop</span>   <input name="stop"  type="number" step="any" required value="48" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.equity">Equity</span> <input name="equity" type="number" step="any" required value="100000" style="width:120px;"></label>
+=======
+                <label><span data-i18n="view.position_size.label.entry">Entry</span>
+                    <input name="entry" type="number" step="any" required value="50" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.stop">Stop</span>
+                    <input name="stop"  type="number" step="any" required value="48" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.equity">Equity</span>
+                    <input name="equity" type="number" step="any" required value="100000" style="width:120px;"></label>
+>>>>>>> Stashed changes
                 <label><span data-i18n="view.position_size.label.risk_pct">Risk % per trade</span>
                     <input name="risk_pct" type="number" step="0.01" min="0.01" max="10" value="1" style="width:80px;">
                 </label>
                 <label><span data-i18n="view.position_size.label.r_dollars">R ($)</span>
                     <input name="r_dollars" type="number" step="any" min="0" value="500" style="width:100px;">
                 </label>
+<<<<<<< Updated upstream
                 <label><span data-i18n="view.position_size.label.max_position_pct">Max position %</span>
                     <input name="max_pos_pct" type="number" step="1" min="0" max="100" value="25" style="width:80px;">
                 </label>
                 <label><span data-i18n="view.position_size.label.correlation_drag">Correlation drag</span>
+=======
+                <label><span data-i18n="view.position_size.label.max_pos_pct">Max position %</span>
+                    <input name="max_pos_pct" type="number" step="1" min="0" max="100" value="25" style="width:80px;">
+                </label>
+                <label><span data-i18n="view.position_size.label.corr_drag">Correlation drag</span>
+>>>>>>> Stashed changes
                     <input name="corr_drag" type="number" step="0.05" min="0" max="5" value="0" style="width:80px;">
                 </label>
             </form>
             <form id="ps-kelly" class="inline-form" style="margin-top:8px;">
+<<<<<<< Updated upstream
                 <span class="muted small" data-i18n="view.position_size.kelly_inputs">Kelly inputs:</span>
                 <label><span data-i18n="view.position_size.label.win_rate">Win rate</span> <input name="win_rate" type="number" step="0.01" min="0" max="1" value="0.55" style="width:80px;"></label>
                 <label><span data-i18n="view.position_size.label.avg_win">Avg win</span>  <input name="avg_win"  type="number" step="any" min="0" value="1.5" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.avg_loss">Avg loss</span> <input name="avg_loss" type="number" step="any" min="0" value="1.0" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.fractional">Fractional</span> <input name="frac_k" type="number" step="0.05" min="0" max="1" value="0.5" style="width:80px;"></label>
+=======
+                <span class="muted small" data-i18n="view.position_size.hint.kelly_inputs">Kelly inputs:</span>
+                <label><span data-i18n="view.position_size.label.win_rate">Win rate</span>
+                    <input name="win_rate" type="number" step="0.01" min="0" max="1" value="0.55" style="width:80px;"></label>
+                <label><span data-i18n="view.position_size.label.avg_win">Avg win</span>
+                    <input name="avg_win"  type="number" step="any" min="0" value="1.5" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.avg_loss">Avg loss</span>
+                    <input name="avg_loss" type="number" step="any" min="0" value="1.0" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.frac_k">Fractional</span>
+                    <input name="frac_k" type="number" step="0.05" min="0" max="1" value="0.5" style="width:80px;"></label>
+>>>>>>> Stashed changes
                 <button data-i18n="view.position_size.btn.pull_from_history" type="button" class="btn" id="ps-fill-history" ${acct ? '' : 'disabled'}
                         title="${acct ? 'Pull win-rate + avg win/loss from this account history' : 'no account selected'}">
                     Pull from history
