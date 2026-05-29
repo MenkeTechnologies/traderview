@@ -6848,6 +6848,7 @@
   "common.working":                        "working…",
   "common.loading_view":                   "loading {view}…",
   "common.connecting":                     "connecting…",
+  "common.connecting_backend":             "connecting to backend…",
   "view.expenses.summary.grand_total":     "Grand total (categorized business)",
   "view.expenses.summary.uncategorized":   "⚠ Uncategorized business expenses",
   "view.var_estimator.row.historical":     "Historical",
