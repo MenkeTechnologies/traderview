@@ -97,6 +97,13 @@
   "common.label.voice_alerts":          "voice alerts",
   "view.rebalance.placeholder.targets":  "Targets JSON: [{\"symbol\":\"SPY\",\"weight\":0.6},{\"symbol\":\"BND\",\"weight\":0.4}]",
   "view.backtest_presets.placeholder.preset": "Preset JSON, e.g.\n{\n  \"symbol\": \"SPY\",\n  \"preset\": { \"sma_cross\": { \"fast\": 20, \"slow\": 50 } },\n  \"days\": 730,\n  \"initial_capital\": 10000,\n  \"fee_per_trade\": 1\n}",
+  "view.csv_wizard.field.symbol.hint":      "AAPL, MSFT, …",
+  "view.csv_wizard.field.side.hint":        "buy / sell / short / cover",
+  "view.csv_wizard.field.qty.hint":         "positive number",
+  "view.csv_wizard.field.price.hint":       "fill price",
+  "view.csv_wizard.field.executed_at.hint": "RFC3339 / YYYY-MM-DD HH:MM:SS / M/D/Y",
+  "view.csv_wizard.field.fee.hint":         "optional; defaults 0",
+  "view.csv_wizard.field.broker_order_id.hint": "optional dedupe key",
 
   "symbol_hud.prompt":                  "Symbol",
   "symbol_hud.hint":                    "enter to jump · esc to cancel",

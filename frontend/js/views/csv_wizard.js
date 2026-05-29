@@ -93,7 +93,7 @@ function renderMap(mount) {
             ${FIELDS.map(f => `<tr>
                 <td><strong>${esc(f.key)}</strong>${f.required ? ' <span class="neg">*</span>' : ''}</td>
                 <td><select data-field="${f.key}">${opts(mapping[f.key] || autoGuess(f.key, headers))}</select></td>
-                <td class="small muted">${esc(f.hint)}</td>
+                <td class="small muted">${esc(t(`view.csv_wizard.field.${f.key}.hint`))}</td>
             </tr>`).join('')}
             </tbody>
         </table>
