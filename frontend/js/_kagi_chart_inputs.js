@@ -7,6 +7,8 @@
 // against the running extreme. Reversal is either an absolute price or
 // a percentage of the running extreme.
 
+import { t } from './i18n.js';
+
 export const KINDS = ['absolute', 'pct'];
 
 export const DEFAULT_INPUTS = {
@@ -16,12 +18,12 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                return 'closes must be an array';
-    if (input.closes.some(v => !Number.isFinite(v))) return 'closes must all be finite';
-    if (input.closes.some(v => v <= 0))              return 'closes must all be > 0';
-    if (!Number.isFinite(input.reversal))            return 'reversal must be finite';
-    if (input.reversal <= 0)                         return 'reversal must be > 0';
-    if (!KINDS.includes(input.kind))                 return `kind must be one of ${KINDS.join(', ')}`;
+    if (!Array.isArray(input.closes))                return t('view.kagi_chart.validate.closes_array');
+    if (input.closes.some(v => !Number.isFinite(v))) return t('view.kagi_chart.validate.closes_finite');
+    if (input.closes.some(v => v <= 0))              return t('view.kagi_chart.validate.closes_positive');
+    if (!Number.isFinite(input.reversal))            return t('view.kagi_chart.validate.reversal_finite');
+    if (input.reversal <= 0)                         return t('view.kagi_chart.validate.reversal_positive');
+    if (!KINDS.includes(input.kind))                 return t('view.kagi_chart.validate.kind', { list: KINDS.join(', ') });
     return null;
 }
 

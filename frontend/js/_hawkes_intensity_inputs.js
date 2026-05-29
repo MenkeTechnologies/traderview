@@ -8,6 +8,8 @@
 // Model: λ(t) = μ + Σ_{t_i < t} α · exp(−β · (t − t_i))
 // Stable iff α < β; unconditional mean = μ / (1 − α/β).
 
+import { t as tr } from './i18n.js';
+
 export const DEFAULT_PARAMS = {
     baseline_mu: 0.5,
     excitation_alpha: 0.4,
@@ -21,18 +23,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.event_times))                       return 'event_times must be an array';
-    if (!Array.isArray(input.query_times))                       return 'query_times must be an array';
-    if (input.event_times.some(t => !Number.isFinite(t)))        return 'event_times must all be finite';
-    if (input.query_times.some(t => !Number.isFinite(t)))        return 'query_times must all be finite';
+    if (!Array.isArray(input.event_times))                       return tr('view.hawkes.validate.events_array');
+    if (!Array.isArray(input.query_times))                       return tr('view.hawkes.validate.queries_array');
+    if (input.event_times.some(t => !Number.isFinite(t)))        return tr('view.hawkes.validate.events_finite');
+    if (input.query_times.some(t => !Number.isFinite(t)))        return tr('view.hawkes.validate.queries_finite');
     for (let i = 1; i < input.event_times.length; i++) {
-        if (input.event_times[i] < input.event_times[i - 1]) return 'event_times must be sorted ascending';
+        if (input.event_times[i] < input.event_times[i - 1]) return tr('view.hawkes.validate.events_sorted');
     }
     const p = input.params;
-    if (!p)                                                       return 'params required';
-    if (!Number.isFinite(p.baseline_mu) || p.baseline_mu < 0)     return 'baseline_mu must be ≥ 0';
-    if (!Number.isFinite(p.excitation_alpha) || p.excitation_alpha < 0) return 'excitation_alpha must be ≥ 0';
-    if (!Number.isFinite(p.decay_beta) || p.decay_beta <= 0)      return 'decay_beta must be > 0';
+    if (!p)                                                       return tr('view.hawkes.validate.params_required');
+    if (!Number.isFinite(p.baseline_mu) || p.baseline_mu < 0)     return tr('view.hawkes.validate.mu');
+    if (!Number.isFinite(p.excitation_alpha) || p.excitation_alpha < 0) return tr('view.hawkes.validate.alpha');
+    if (!Number.isFinite(p.decay_beta) || p.decay_beta <= 0)      return tr('view.hawkes.validate.beta');
     return null;
 }
 

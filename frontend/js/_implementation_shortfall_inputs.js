@@ -15,16 +15,16 @@ export const COMPONENT_LABELS = new Proxy({}, {
 });
 
 export function validateInputs(p) {
-    if (p.direction !== 'buy' && p.direction !== 'sell') return 'direction must be buy or sell';
-    if (!Number.isFinite(p.decision_mid) || p.decision_mid <= 0) return 'decision_mid must be > 0';
-    if (!Number.isFinite(p.arrival_mid)  || p.arrival_mid <= 0)  return 'arrival_mid must be > 0';
-    if (!Number.isFinite(p.vwap_fill)    || p.vwap_fill < 0)     return 'vwap_fill must be ≥ 0';
-    if (!Number.isFinite(p.final_mid)    || p.final_mid <= 0)    return 'final_mid must be > 0';
+    if (p.direction !== 'buy' && p.direction !== 'sell') return t('view.implementation_shortfall.validate.direction');
+    if (!Number.isFinite(p.decision_mid) || p.decision_mid <= 0) return t('view.implementation_shortfall.validate.decision_mid');
+    if (!Number.isFinite(p.arrival_mid)  || p.arrival_mid <= 0)  return t('view.implementation_shortfall.validate.arrival_mid');
+    if (!Number.isFinite(p.vwap_fill)    || p.vwap_fill < 0)     return t('view.implementation_shortfall.validate.vwap_fill');
+    if (!Number.isFinite(p.final_mid)    || p.final_mid <= 0)    return t('view.implementation_shortfall.validate.final_mid');
     if (!Number.isFinite(p.half_spread_at_decision) || p.half_spread_at_decision < 0)
-        return 'half_spread_at_decision must be ≥ 0';
-    if (!Number.isFinite(p.intended_qty) || p.intended_qty <= 0) return 'intended_qty must be > 0';
-    if (!Number.isFinite(p.filled_qty)   || p.filled_qty < 0)    return 'filled_qty must be ≥ 0';
-    if (p.filled_qty > p.intended_qty + 1e-9) return 'filled_qty must be ≤ intended_qty';
+        return t('view.implementation_shortfall.validate.half_spread');
+    if (!Number.isFinite(p.intended_qty) || p.intended_qty <= 0) return t('view.implementation_shortfall.validate.intended_qty');
+    if (!Number.isFinite(p.filled_qty)   || p.filled_qty < 0)    return t('view.implementation_shortfall.validate.filled_qty');
+    if (p.filled_qty > p.intended_qty + 1e-9) return t('view.implementation_shortfall.validate.filled_le_intended');
     return null;
 }
 
