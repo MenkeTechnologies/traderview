@@ -10,6 +10,8 @@
  * sized to the given `spot` so the preset opens at-the-money by default
  * with sensible premiums (heuristic, not market-accurate).
  */
+import { t } from './i18n.js';
+
 export const PRESETS = {
     long_call: (spot) => [
         { kind: 'call', strike: round5(spot), premium: spot * 0.03, qty: 1 },
@@ -58,21 +60,21 @@ function round5(x) {
 
 /** Validate a single leg. Returns null if valid, an error string otherwise. */
 export function validateLeg(leg) {
-    if (!leg || typeof leg !== 'object') return 'invalid leg';
-    if (!['call', 'put', 'underlying'].includes(leg.kind)) return `bad kind: ${leg.kind}`;
-    if (!Number.isFinite(leg.strike) || leg.strike <= 0) return 'strike must be > 0';
-    if (!Number.isFinite(leg.premium)) return 'premium must be a number';
-    if (!Number.isFinite(leg.qty) || leg.qty === 0) return 'qty must be non-zero';
+    if (!leg || typeof leg !== 'object') return t('view.option_payoff.validate.leg_invalid');
+    if (!['call', 'put', 'underlying'].includes(leg.kind)) return t('view.option_payoff.validate.bad_kind', { kind: leg.kind });
+    if (!Number.isFinite(leg.strike) || leg.strike <= 0) return t('view.option_payoff.validate.strike');
+    if (!Number.isFinite(leg.premium)) return t('view.option_payoff.validate.premium');
+    if (!Number.isFinite(leg.qty) || leg.qty === 0) return t('view.option_payoff.validate.qty');
     return null;
 }
 
 /** Validate the whole leg list. Returns null if every leg is valid, otherwise
  *  the first error tagged with leg index. */
 export function validateLegs(legs) {
-    if (!Array.isArray(legs) || legs.length === 0) return 'add at least one leg';
+    if (!Array.isArray(legs) || legs.length === 0) return t('view.option_payoff.validate.need_leg');
     for (let i = 0; i < legs.length; i++) {
         const err = validateLeg(legs[i]);
-        if (err) return `leg ${i + 1}: ${err}`;
+        if (err) return t('view.option_payoff.validate.leg_tagged', { idx: i + 1, err });
     }
     return null;
 }
