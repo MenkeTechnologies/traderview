@@ -382,9 +382,9 @@ async function openRulesModal() {
                 <option data-i18n="view.expenses.opt.regex" value="regex">regex</option>
             </select>
             <select name="category_code">${catOpts}</select>
-            <label><input type="checkbox" name="is_business" checked> biz</label>
+            <label><input type="checkbox" name="is_business" checked> <span data-i18n="view.expenses.label.biz">biz</span></label>
             <input name="priority" type="number" value="100" style="width:60px">
-            <label><input type="checkbox" name="apply_retroactively" checked> apply now</label>
+            <label><input type="checkbox" name="apply_retroactively" checked> <span data-i18n="view.expenses.label.apply_now">apply now</span></label>
             <button data-i18n="view.expenses.btn.add" class="primary" type="submit">add</button>
         </form>
         <table class="trades">

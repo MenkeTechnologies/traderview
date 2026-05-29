@@ -20,7 +20,7 @@ async function renderBrowse(mount) {
             <form id="bp-form" class="inline-form">
                 <input name="name" placeholder="name (unique per user)" data-i18n-placeholder="view.backtest_presets.placeholder.name" required style="min-width:200px;">
                 <input name="description" placeholder="optional description" data-i18n-placeholder="view.backtest_presets.placeholder.description" style="min-width:240px;">
-                <label><input name="is_public" type="checkbox"> public</label>
+                <label><input name="is_public" type="checkbox"> <span data-i18n="view.backtest_presets.label.public">public</span></label>
                 <button data-i18n="view.backtest_presets.btn.save" class="primary" type="submit">Save</button>
             </form>
             <textarea id="bp-json" rows="8"

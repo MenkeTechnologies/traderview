@@ -29,7 +29,7 @@ export async function renderIntradayHeatmap(mount, _appState) {
                 <button data-i18n="view.intraday_heatmap.btn.load_demo_200_trades" id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>
                 <button data-i18n="view.intraday_heatmap.btn.clear" id="ih-clear" class="secondary" type="button">Clear</button>
                 <button data-i18n="view.intraday_heatmap.btn.build_heatmap" id="ih-run" class="primary" type="button">Build heatmap</button>
-                <label><input id="ih-session" type="checkbox" checked> Session hours only (09:00-16:00)</label>
+                <label><input id="ih-session" type="checkbox" checked> <span data-i18n="view.intraday_heatmap.label.session">Session hours only (09:00-16:00)</span></label>
             </div>
         </div>
 
