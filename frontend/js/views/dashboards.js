@@ -294,18 +294,26 @@ function wirePicker(activeDashboard) {
     const grid = document.getElementById('db-pick-grid');
     const search = document.getElementById('db-pick-search');
     const renderGrid = (q) => {
-        const filtered = TILES.filter(([, label, , desc]) => {
+        // Resolve label/desc through the i18n catalog so filter + display
+        // both follow the active locale. Falls back to the TILES literal
+        // when a key is absent.
+        const tr = (key, fallback) => { const v = t(key); return (v && v !== key) ? v : fallback; };
+        const filtered = TILES.filter(([id, label, , desc]) => {
             if (!q) return true;
             const needle = q.toLowerCase();
-            return label.toLowerCase().includes(needle) || (desc || '').toLowerCase().includes(needle);
+            const trLabel = tr(`tile.${id}.label`, label);
+            const trDesc  = tr(`tile.${id}.desc`,  desc || '');
+            return trLabel.toLowerCase().includes(needle) || trDesc.toLowerCase().includes(needle);
         });
-        grid.innerHTML = filtered.map(([id, label, glyph, desc]) => `
-            <button class="db-pick-tile" data-add="${esc(id)}" type="button"
-                    title="${esc(desc || '')}">
+        grid.innerHTML = filtered.map(([id, label, glyph, desc]) => {
+            const trLabel = tr(`tile.${id}.label`, label);
+            const trDesc  = tr(`tile.${id}.desc`,  desc || '');
+            return `<button class="db-pick-tile" data-add="${esc(id)}" type="button"
+                    title="${esc(trDesc)}">
                 <span class="db-pick-glyph">${esc(glyph || '·')}</span>
-                <span class="db-pick-label">${esc(label)}</span>
-            </button>
-        `).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
+                <span class="db-pick-label">${esc(trLabel)}</span>
+            </button>`;
+        }).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
         grid.querySelectorAll('button[data-add]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 state = store.addTile(state, activeDashboard.id, btn.dataset.add);
