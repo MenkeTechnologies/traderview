@@ -90,6 +90,35 @@ export function mergeMenu(globalItems, customItems) {
     return [...customItems, { kind: 'separator' }, ...globalItems];
 }
 
+// Native edit actions surfaced when the right-click target is a text-
+// entry element (input/textarea/contentEditable). These get prepended
+// above the standard global menu so the user can still paste, copy,
+// select-all etc. — actions a custom menu would otherwise hide.
+export const EDITING_ITEMS = [
+    { id: 'edit_undo',       labelKey: 'ctxmenu.undo',
+      actionKey: 'tv:edit-undo',       section: 'edit' },
+    { id: 'edit_redo',       labelKey: 'ctxmenu.redo',
+      actionKey: 'tv:edit-redo',       section: 'edit' },
+    { kind: 'separator' },
+    { id: 'edit_cut',        labelKey: 'ctxmenu.cut',
+      actionKey: 'tv:edit-cut',        section: 'edit' },
+    { id: 'edit_copy',       labelKey: 'ctxmenu.copy',
+      actionKey: 'tv:edit-copy',       section: 'edit' },
+    { id: 'edit_paste',      labelKey: 'ctxmenu.paste',
+      actionKey: 'tv:edit-paste',      section: 'edit' },
+    { id: 'edit_select_all', labelKey: 'ctxmenu.select_all',
+      actionKey: 'tv:edit-select-all', section: 'edit' },
+];
+
+// Same as `mergeMenu`, but additionally prepends `editingItems` (followed
+// by a separator) above the custom + global blocks. Used for right-clicks
+// on text-entry targets.
+export function mergeMenuWithEditing(globalItems, customItems, editingItems) {
+    const merged = mergeMenu(globalItems, customItems);
+    if (!Array.isArray(editingItems) || editingItems.length === 0) return merged;
+    return [...editingItems, { kind: 'separator' }, ...merged];
+}
+
 // For the up/down keyboard navigation through visible items.
 export function nextVisibleIdx(items, currentIdx, delta) {
     if (!Array.isArray(items) || items.length === 0) return 0;

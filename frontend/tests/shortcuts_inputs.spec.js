@@ -162,6 +162,35 @@ test('defaults: every actionKey starts with tv:', () => {
     for (const s of DEFAULT_SHORTCUTS) expect(s.actionKey.startsWith('tv:')).toBe(true);
 });
 
+test('defaults: registers all six tv:edit-* actions (palette-findable)', () => {
+    const want = [
+        { id: 'edit_cut',        actionKey: 'tv:edit-cut' },
+        { id: 'edit_copy',       actionKey: 'tv:edit-copy' },
+        { id: 'edit_paste',      actionKey: 'tv:edit-paste' },
+        { id: 'edit_select_all', actionKey: 'tv:edit-select-all' },
+        { id: 'edit_undo',       actionKey: 'tv:edit-undo' },
+        { id: 'edit_redo',       actionKey: 'tv:edit-redo' },
+    ];
+    const byId = new Map(DEFAULT_SHORTCUTS.map(s => [s.id, s]));
+    for (const w of want) {
+        const sc = byId.get(w.id);
+        expect(sc, `missing shortcut id=${w.id}`).toBeTruthy();
+        expect(sc.actionKey).toBe(w.actionKey);
+        // No default key binding — palette-only.
+        expect(sc.keys.key).toBe(null);
+        expect(sc.scope).toBe('global');
+        expect(sc.descKey).toBe(`shortcut.${w.id}`);
+    }
+});
+
+test('defaults: every key:null shortcut still has a descKey for palette label', () => {
+    for (const s of DEFAULT_SHORTCUTS) {
+        if (s.keys.key !== null) continue;
+        expect(s.descKey).toBeTruthy();
+        expect(s.descKey.startsWith('shortcut.')).toBe(true);
+    }
+});
+
 // ── loadShortcuts (overrides via localStorage) ────────────────────
 
 test('loadShortcuts: no overrides → defaults', () => {

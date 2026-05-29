@@ -215,7 +215,7 @@ import { installShortcuts } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
-import { installTooltips, upgradeTooltips } from './tooltip.js';
+import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
@@ -850,6 +850,9 @@ export async function dispatch() {
     try { applyUiI18n(mount); } catch { /* i18n optional */ }
     // Upgrade any `data-tip` attributes the view emitted to native titles.
     try { upgradeTooltips(mount); } catch { /* tooltip optional */ }
+    // Auto-derive a `title` for every interactive element that didn't
+    // declare a `data-tip` — guarantees hover discoverability everywhere.
+    try { autoApplyTooltips(mount); } catch { /* tooltip optional */ }
 }
 
 // View-renderer registry — exposed so the Dashboards view can mount any

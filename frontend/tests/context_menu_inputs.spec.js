@@ -3,7 +3,8 @@
 
 import { test, expect } from 'vitest';
 import {
-    GLOBAL_ITEMS, positionMenu, compileMenu, mergeMenu, nextVisibleIdx, findMnemonic,
+    GLOBAL_ITEMS, EDITING_ITEMS, positionMenu, compileMenu, mergeMenu,
+    mergeMenuWithEditing, nextVisibleIdx, findMnemonic,
 } from '../js/_context_menu.js';
 
 // ── GLOBAL_ITEMS ──────────────────────────────────────────────────
@@ -132,6 +133,56 @@ test('mergeMenu: custom items get inserted at top with separator between', () =>
     expect(out[1].id).toBe('c2');
     expect(out[2].kind).toBe('separator');
     expect(out[3].id).toBe('g1');
+});
+
+// ── EDITING_ITEMS / mergeMenuWithEditing ──────────────────────────
+
+test('EDITING_ITEMS: contains cut/copy/paste/select-all/undo/redo', () => {
+    const ids = EDITING_ITEMS.filter(it => it.kind !== 'separator').map(it => it.id);
+    for (const want of ['edit_undo', 'edit_redo', 'edit_cut',
+        'edit_copy', 'edit_paste', 'edit_select_all']) {
+        expect(ids.includes(want)).toBe(true);
+    }
+});
+
+test('EDITING_ITEMS: every non-separator has a labelKey + actionKey starting with tv:edit-', () => {
+    for (const it of EDITING_ITEMS) {
+        if (it.kind === 'separator') continue;
+        expect(typeof it.labelKey).toBe('string');
+        expect(it.actionKey.startsWith('tv:edit-')).toBe(true);
+    }
+});
+
+test('mergeMenuWithEditing: editing items get prepended above custom + globals', () => {
+    const g = [{ id: 'g1', labelKey: 'g1' }];
+    const c = [{ id: 'c1', labelKey: 'c1' }];
+    const e = [{ id: 'e1', labelKey: 'e1' }, { id: 'e2', labelKey: 'e2' }];
+    const out = mergeMenuWithEditing(g, c, e);
+    // editing block (2) + sep + custom (1) + sep + globals (1) = 6
+    expect(out.length).toBe(6);
+    expect(out[0].id).toBe('e1');
+    expect(out[1].id).toBe('e2');
+    expect(out[2].kind).toBe('separator');
+    expect(out[3].id).toBe('c1');
+    expect(out[4].kind).toBe('separator');
+    expect(out[5].id).toBe('g1');
+});
+
+test('mergeMenuWithEditing: empty editing → behaves like mergeMenu', () => {
+    const g = [{ id: 'g1', labelKey: 'g1' }];
+    const c = [{ id: 'c1', labelKey: 'c1' }];
+    expect(mergeMenuWithEditing(g, c, [])).toEqual(mergeMenu(g, c));
+    expect(mergeMenuWithEditing(g, c, null)).toEqual(mergeMenu(g, c));
+});
+
+test('mergeMenuWithEditing: empty custom + editing → editing then globals', () => {
+    const g = [{ id: 'g1', labelKey: 'g1' }];
+    const e = [{ id: 'e1', labelKey: 'e1' }];
+    const out = mergeMenuWithEditing(g, [], e);
+    expect(out.length).toBe(3);
+    expect(out[0].id).toBe('e1');
+    expect(out[1].kind).toBe('separator');
+    expect(out[2].id).toBe('g1');
 });
 
 // ── nextVisibleIdx ────────────────────────────────────────────────

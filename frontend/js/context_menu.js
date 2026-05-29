@@ -9,7 +9,8 @@
 // scopes matching a registered set get their custom items merged in.
 
 import {
-    GLOBAL_ITEMS, positionMenu, compileMenu, mergeMenu, nextVisibleIdx,
+    GLOBAL_ITEMS, EDITING_ITEMS, positionMenu, compileMenu, mergeMenu,
+    mergeMenuWithEditing, nextVisibleIdx,
 } from './_context_menu.js';
 import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
@@ -20,6 +21,7 @@ let _installed = false;
 let _open = false;
 let _items = [];
 let _selected = -1;
+let _editingTarget = null;          // the input/textarea/CE the menu was opened on
 const _customByScope = new Map();   // scope-string → items[]
 
 export function installContextMenu() {
@@ -31,7 +33,8 @@ export function installContextMenu() {
     document.addEventListener('keydown', onKey, { capture: true });
     window.addEventListener('tv:context-menu', (e) => {
         const d = e && e.detail || {};
-        openAt(d.x || 0, d.y || 0, d.scope || null);
+        _editingTarget = isTextEntry(d.editingTarget) ? d.editingTarget : null;
+        openAt(d.x || 0, d.y || 0, d.scope || null, !!_editingTarget);
     });
     window.addEventListener('tv:copy-view-url', () => {
         const url = window.location.href;
@@ -83,6 +86,12 @@ export function installContextMenu() {
         showToast(t('toast.bookmark_added', { name: trimmed }), { level: 'success' });
         window.dispatchEvent(new CustomEvent('tv:favorites-changed'));
     });
+    window.addEventListener('tv:edit-cut',        () => execEdit('cut'));
+    window.addEventListener('tv:edit-copy',       () => execEdit('copy'));
+    window.addEventListener('tv:edit-paste',      () => void execPaste());
+    window.addEventListener('tv:edit-select-all', () => execEdit('selectAll'));
+    window.addEventListener('tv:edit-undo',       () => execEdit('undo'));
+    window.addEventListener('tv:edit-redo',       () => execEdit('redo'));
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {
@@ -120,12 +129,64 @@ function ensureMount() {
 function onContextMenu(e) {
     // Hold Shift to bypass and get native browser menu (escape hatch).
     if (e.shiftKey) return;
-    // Don't intercept right-clicks inside text inputs (let the user paste).
-    const tag = (e.target && e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea') return;
     e.preventDefault();
     const scope = nearestScope(e.target);
-    openAt(e.clientX, e.clientY, scope);
+    const editing = isTextEntry(e.target) ? e.target : null;
+    _editingTarget = editing;
+    openAt(e.clientX, e.clientY, scope, !!editing);
+}
+
+function isTextEntry(el) {
+    if (!el) return false;
+    const tag = (el.tagName || '').toLowerCase();
+    if (tag === 'textarea') return true;
+    if (tag === 'input') {
+        const type = (el.getAttribute('type') || 'text').toLowerCase();
+        return !['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'image', 'range', 'color'].includes(type);
+    }
+    return !!el.isContentEditable;
+}
+
+// Run a synchronous edit command (cut/copy/selectAll/undo/redo). Falls
+// back silently when the browser refuses (e.g. CSP / cross-origin).
+// Target priority: ctx-menu target → document.activeElement (palette
+// path) → no-op.
+function execEdit(cmd) {
+    const tgt = resolveEditTarget();
+    if (!tgt) return;
+    if (typeof tgt.focus === 'function') tgt.focus();
+    try {
+        if (typeof document.execCommand === 'function') document.execCommand(cmd);
+    } catch (_) { /* ignored */ }
+}
+
+// Paste needs the async clipboard API in modern browsers; execCommand
+// `paste` is widely blocked outside browser extensions.
+async function execPaste() {
+    const tgt = resolveEditTarget();
+    if (!tgt) return;
+    try {
+        const txt = await navigator.clipboard.readText();
+        if (typeof tgt.setRangeText === 'function' && typeof tgt.selectionStart === 'number') {
+            const s = tgt.selectionStart, e = tgt.selectionEnd;
+            tgt.setRangeText(txt, s, e, 'end');
+            tgt.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (tgt.isContentEditable) {
+            tgt.focus();
+            document.execCommand('insertText', false, txt);
+        }
+    } catch (_) { /* clipboard denied */ }
+}
+
+// Edit commands can fire from two sources: a right-click on an input
+// (ctxmenu sets _editingTarget) or the command palette (no target —
+// fall back to whatever has focus). Returns null when neither path
+// yields a text-entry element.
+function resolveEditTarget() {
+    if (_editingTarget && isTextEntry(_editingTarget)) return _editingTarget;
+    const ae = (typeof document !== 'undefined') ? document.activeElement : null;
+    if (ae && isTextEntry(ae)) return ae;
+    return null;
 }
 
 function nearestScope(el) {
@@ -138,9 +199,12 @@ function nearestScope(el) {
     return null;
 }
 
-function openAt(x, y, scope) {
+function openAt(x, y, scope, editing = false) {
     const custom = scope ? (_customByScope.get(scope) || []) : [];
-    _items = compileMenu(mergeMenu(GLOBAL_ITEMS, custom));
+    const merged = editing
+        ? mergeMenuWithEditing(GLOBAL_ITEMS, custom, EDITING_ITEMS)
+        : mergeMenu(GLOBAL_ITEMS, custom);
+    _items = compileMenu(merged);
     _selected = -1;
     _open = true;
     paint(x, y);

@@ -29,6 +29,18 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'toggle_neon',     keys: { key: 'g', meta: true,  ctrl: true,  shift: true,  alt: false }, scope: 'global',  descKey: 'shortcut.toggle_neon',     actionKey: 'tv:toggle-neon' },
     { id: 'cycle_locale',    keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.cycle_locale',    actionKey: 'tv:cycle-locale' },
     { id: 'open_settings',   keys: { key: ',',  meta: true,  ctrl: true,  shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.open_settings',   actionKey: 'tv:open-settings' },
+    // Context-menu actions surfaced in palette only — no default binding.
+    { id: 'nav_back',        keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.nav_back',        actionKey: 'tv:nav-back' },
+    { id: 'copy_view_url',   keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.copy_view_url',   actionKey: 'tv:copy-view-url' },
+    { id: 'copy_view_id',    keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.copy_view_id',    actionKey: 'tv:copy-view-id' },
+    // Text-entry edit actions — palette finds them; activation falls
+    // back to document.activeElement when no ctxmenu target was set.
+    { id: 'edit_cut',        keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_cut',        actionKey: 'tv:edit-cut' },
+    { id: 'edit_copy',       keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_copy',       actionKey: 'tv:edit-copy' },
+    { id: 'edit_paste',      keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_paste',      actionKey: 'tv:edit-paste' },
+    { id: 'edit_select_all', keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_select_all', actionKey: 'tv:edit-select-all' },
+    { id: 'edit_undo',       keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_undo',       actionKey: 'tv:edit-undo' },
+    { id: 'edit_redo',       keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_redo',       actionKey: 'tv:edit-redo' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.
