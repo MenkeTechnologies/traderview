@@ -174,8 +174,8 @@ function renderPnlSeries(realized, impliedPct) {
         title: '', width: el.clientWidth || 600, height: 220,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'event #' },
-            { label: 'long P&L / $1', stroke: '#39ff14', width: 1.2,
+            { label: t('chart.series.event_') },
+            { label: t('chart.series.long_pl_1'), stroke: '#39ff14', width: 1.2,
               fill: '#39ff141A', points: { show: true, size: 5 } },
             { label: t('chart.series.breakeven'), stroke: '#aab', width: 1.0, dash: [2, 4],
               points: { show: false } },

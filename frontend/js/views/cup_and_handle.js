@@ -152,10 +152,10 @@ function renderSummary(cand, bars) {
     }
     const q = depthQuality(cand.depth_pct);
     const handleQ = cand.handle_depth_pct < 0.05
-        ? { label: 'tight (<5%)', cls: 'pos' }
+        ? { label: t('chart.series.tight_5'), cls: 'pos' }
         : cand.handle_depth_pct <= 0.15
-            ? { label: 'normal (5-15%)', cls: '' }
-            : { label: 'wide (>15%)', cls: 'neg' };
+            ? { label: t('chart.series.normal_515'), cls: '' }
+            : { label: t('chart.series.wide_15'), cls: 'neg' };
     document.getElementById('ch-summary').innerHTML = [
         card(t('view.cup_and_handle.card.pattern_2'),        'DETECTED', 'pos'),
         card(t('view.cup_and_handle.card.cup_depth'),      fmtPct(cand.depth_pct) + ' · ' + q.label, q.cls),

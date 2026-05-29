@@ -161,11 +161,11 @@ function renderChart(returns, res) {
         series: [
             { label: 'f' },
             { label: 'TWR', stroke: '#00e5ff', width: 2, points: { show: false } },
-            { label: 'optimal-f',   stroke: '#ff9f1a', width: 0,
+            { label: t('chart.series.optimalf'),   stroke: '#ff9f1a', width: 0,
               points: { show: true, size: 12, stroke: '#ff9f1a', fill: '#ff9f1a' } },
-            { label: 'half-Kelly',  stroke: '#00e5ff', width: 0,
+            { label: t('chart.series.halfkelly'),  stroke: '#00e5ff', width: 0,
               points: { show: true, size: 10, stroke: '#00e5ff', fill: '#00e5ff' } },
-            { label: 'quarter-Kelly', stroke: '#39ff14', width: 0,
+            { label: t('chart.series.quarterkelly'), stroke: '#39ff14', width: 0,
               points: { show: true, size: 8, stroke: '#39ff14', fill: '#39ff14' } },
         ],
         axes: [

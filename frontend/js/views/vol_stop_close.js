@@ -166,7 +166,7 @@ function renderChart(bars, closeStops, chandStops) {
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'),          stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'close-vol-stop', stroke: '#ffd84a', width: 1.5, points: { show: false } },
+            { label: t('chart.series.closevolstop'), stroke: '#ffd84a', width: 1.5, points: { show: false } },
             { label: t('chart.series.chandelier'),     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.close_trig'),     stroke: '#ff3860', width: 0,
               points: { show: true, size: 9, fill: '#ff3860', stroke: '#ff3860' } },

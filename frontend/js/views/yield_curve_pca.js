@@ -196,7 +196,7 @@ function renderVarianceChart(res) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.factor_idx') },
-            { label: 'per-factor', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.perfactor'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 8, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: t('chart.series.cumulative'), stroke: '#ff9f1a', width: 2,
               points: { show: true, size: 6, stroke: '#ff9f1a', fill: '#ff9f1a' } },

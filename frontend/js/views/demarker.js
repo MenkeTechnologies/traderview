@@ -147,7 +147,7 @@ function renderChart(values) {
               fill: '#00e5ff14', points: { show: false } },
             { label: 'OB 0.70',  stroke: '#ff3860', width: 1.0,
               dash: [4, 4], points: { show: false } },
-            { label: 'mid 0.50', stroke: '#ffd84a', width: 0.8,
+            { label: t('chart.series.mid_050'), stroke: '#ffd84a', width: 0.8,
               dash: [2, 4], points: { show: false } },
             { label: 'OS 0.30',  stroke: '#39ff14', width: 1.0,
               dash: [4, 4], points: { show: false } },

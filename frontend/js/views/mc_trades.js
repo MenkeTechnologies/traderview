@@ -181,7 +181,7 @@ function renderChart(ending, report) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'equity $' },
+            { label: t('chart.series.equity_') },
             { label: t('chart.series.count'), stroke: '#888', width: 1.5,
               fill: '#88888833', points: { show: false } },
             { label: t('chart.series.start'),  stroke: '#00e5ff', width: 0,

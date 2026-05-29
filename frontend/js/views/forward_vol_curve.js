@@ -191,7 +191,7 @@ function renderChart(rows, res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'tenor (years)' },
+            { label: t('chart.series.tenor_years') },
             { label: t('chart.series.spot_iv'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 6, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: t('chart.series.forward_vol'), stroke: '#ff9f1a', width: 2,

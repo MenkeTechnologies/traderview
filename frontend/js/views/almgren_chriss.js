@@ -187,7 +187,7 @@ function renderTrajectory(r) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.t_seconds') },
-            { label: 'inventory x_k', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.inventory_x_k'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff1A', points: { show: true, size: 5 } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
@@ -200,7 +200,7 @@ function renderTrajectory(r) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.t_seconds') },
-            { label: 'slice v_k', stroke: '#ff9f1a', width: 1.2,
+            { label: t('chart.series.slice_v_k'), stroke: '#ff9f1a', width: 1.2,
               fill: '#ff9f1a33', points: { show: true, size: 4 } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
@@ -222,7 +222,7 @@ function renderFrontier(points, currentLambda) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.variance') },
-            { label: 'expected cost ($)', stroke: '#a06bff', width: 1.5,
+            { label: t('chart.series.expected_cost_'), stroke: '#a06bff', width: 1.5,
               fill: '#a06bff1A', points: { show: true, size: 6 } },
             { label: t('chart.series.you_are_here'), stroke: '#fff', width: 0,
               points: { show: true, size: 12, stroke: '#fff', fill: 'transparent' } },

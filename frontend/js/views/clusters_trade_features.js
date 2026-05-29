@@ -171,7 +171,7 @@ function renderChart(features, report) {
     for (const xs of grouped.xs) for (const x of xs) allXSet.add(x);
     const xs = Array.from(allXSet).sort((a, b) => a - b);
     const seriesData = [xs];
-    const seriesDefs = [{ label: 'entry_min' }];
+    const seriesDefs = [{ label: t('chart.series.entry_min') }];
     for (let j = 0; j < k; j++) {
         const idxByX = new Map();
         for (let i = 0; i < grouped.xs[j].length; i++) {

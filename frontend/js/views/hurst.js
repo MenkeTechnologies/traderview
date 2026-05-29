@@ -170,8 +170,8 @@ function renderChart(res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'log(n)' },
-            { label: 'log(R/S)', stroke: '#00e5ff', width: 0,
+            { label: t('chart.series.logn') },
+            { label: t('chart.series.logrs'), stroke: '#00e5ff', width: 0,
               points: { show: true, size: 10, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: `fit (slope = ${res.hurst.toFixed(4)})`, stroke: '#ff9f1a',
               width: 2, dash: [4, 4], points: { show: false } },

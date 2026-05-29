@@ -198,7 +198,7 @@ function renderVolChart(report) {
         title: '', width: el.clientWidth || 600, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bucket #' },
+            { label: t('chart.series.bucket_') },
             { label: t('chart.series.buy'),  stroke: '#00e5ff', width: 1.0, fill: '#00e5ff66',
               points: { show: false } },
             { label: t('chart.series.sell'), stroke: '#ff3860', width: 1.0, fill: '#ff386066',

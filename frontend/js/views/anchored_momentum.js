@@ -165,7 +165,7 @@ function renderChart(series) {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'momentum %', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.momentum_'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: t('chart.series.anchor'),     stroke: '#ffd84a', width: 0,   points: { show: true, size: 8 } },
         ],
         axes: [

@@ -220,7 +220,7 @@ function renderHistogram(returns, positionValue, hist, gauss) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'loss $' },
+            { label: t('chart.series.loss_') },
             { label: t('chart.series.count'),     stroke: '#888', width: 1.5,
               fill: '#88888833', points: { show: false } },
             { label: 'Hist VaR',  stroke: '#ffd84a', width: 0,

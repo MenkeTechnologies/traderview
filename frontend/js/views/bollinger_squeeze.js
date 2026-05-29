@@ -180,7 +180,7 @@ function renderChart(report) {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'width %', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.width_'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: t('chart.series.squeeze'), stroke: '#ffd84a', width: 0,   points: { show: true, size: 6 } },
         ],
         axes: [

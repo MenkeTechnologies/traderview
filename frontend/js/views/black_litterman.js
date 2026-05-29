@@ -172,8 +172,8 @@ function renderChart(report) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.asset') },
-            { label: 'prior π (%)',     stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: true, size: 5 } },
-            { label: 'posterior μ_bl (%)', stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.prior_'),     stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: true, size: 5 } },
+            { label: t('chart.series.posterior__bl_'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

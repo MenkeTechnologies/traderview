@@ -205,7 +205,7 @@ function renderPath(nA, nB, res) {
             { label: 'i (A)' },
             { label: t('chart.series.warping_path'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 3, stroke: '#00e5ff', fill: '#00e5ff' } },
-            { label: 'y = x diagonal', stroke: '#ff9f1a', width: 1,
+            { label: t('chart.series.y_x_diagonal'), stroke: '#ff9f1a', width: 1,
               dash: [4, 4], points: { show: false } },
         ],
         axes: [

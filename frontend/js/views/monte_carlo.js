@@ -198,7 +198,7 @@ function renderChart(stats) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.terminal_price') },
-            { label: 'density (normal ≈)', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.density_normal_'), stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.10)' },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

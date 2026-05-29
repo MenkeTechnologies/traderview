@@ -206,10 +206,10 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 260,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'state #' },
+            { label: t('chart.series.state_') },
             { label: t('chart.series.avg_cost'),    stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: true, size: 8 } },
-            { label: 'trigger $',   stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+            { label: t('chart.series.trigger_'),   stroke: '#ffd84a', width: 1.0, dash: [4, 4],
               points: { show: true, size: 5 } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],

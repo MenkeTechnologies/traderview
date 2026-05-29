@@ -160,7 +160,7 @@ function renderChart(report) {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.rank') },
-            { label: 'weight %',     stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.weight_'),     stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
             { label: 'HHI contrib',  stroke: '#ff3860', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [
