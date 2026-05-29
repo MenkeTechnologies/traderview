@@ -61,6 +61,7 @@ export async function renderRebalance(mount, state) {
             </form>
             <textarea id="rb-targets" rows="8"
                 style="width:100%;font-family:'Share Tech Mono',monospace;font-size:11px;background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:8px;margin-top:8px;"
+                data-i18n-placeholder="view.rebalance.placeholder.targets"
                 placeholder='Targets JSON: [{"symbol":"SPY","weight":0.6},{"symbol":"BND","weight":0.4}]'>[
   {"symbol":"SPY","weight":0.6},
   {"symbol":"BND","weight":0.4}

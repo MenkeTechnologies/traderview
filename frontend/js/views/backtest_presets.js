@@ -23,7 +23,9 @@ async function renderBrowse(mount) {
                 <label><input name="is_public" type="checkbox"> public</label>
                 <button data-i18n="view.backtest_presets.btn.save" class="primary" type="submit">Save</button>
             </form>
-            <textarea id="bp-json" rows="8" placeholder='Preset JSON, e.g.
+            <textarea id="bp-json" rows="8"
+                data-i18n-placeholder="view.backtest_presets.placeholder.preset"
+                placeholder='Preset JSON, e.g.
 {
   "symbol": "SPY",
   "preset": { "sma_cross": { "fast": 20, "slow": 50 } },
