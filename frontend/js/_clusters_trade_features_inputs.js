@@ -4,6 +4,8 @@
 //   r_multiple}, ...], k: usize, max_iters: usize }.
 // Returns: { assignments: number[], clusters: ClusterStat[] }.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // "<entry_minute> <hold_min> <r_multiple>" per line. Blank + #-comments ok.
@@ -11,7 +13,7 @@ export function parseFeatureBlob(text) {
     const features = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { features, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { features, errors: [{ line_no: 0, raw: '', message: t('view.clusters_trade_features.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -24,22 +26,22 @@ export function parseFeatureBlob(text) {
         if (!s) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 3) {
-            errors.push({ line_no: i + 1, raw, message: `expected 3 tokens (entry_min hold_min r_multiple), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_trade_features.parse.token_count', { n: parts.length }) });
             continue;
         }
         const em = Number(parts[0]);
         const hd = Number(parts[1]);
         const r  = Number(parts[2]);
         if (![em, hd, r].every(Number.isFinite)) {
-            errors.push({ line_no: i + 1, raw, message: 'tokens must be finite numbers' });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_trade_features.parse.tokens_finite') });
             continue;
         }
         if (em < 0 || em > 1440) {
-            errors.push({ line_no: i + 1, raw, message: 'entry_minute_of_day must be 0..1440' });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_trade_features.parse.entry_range') });
             continue;
         }
         if (hd < 0) {
-            errors.push({ line_no: i + 1, raw, message: 'hold_duration_minutes must be ≥ 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_trade_features.parse.hold_non_neg') });
             continue;
         }
         features.push({ entry_minute_of_day: em, hold_duration_minutes: hd, r_multiple: r });
@@ -49,10 +51,10 @@ export function parseFeatureBlob(text) {
 
 export function validateInputs(features, k, maxIters) {
     if (!Array.isArray(features) || features.length === 0)
-        return 'need ≥ 1 trade feature';
-    if (!Number.isInteger(k) || k < 1) return 'k must be integer ≥ 1';
-    if (!Number.isInteger(maxIters) || maxIters < 1) return 'max_iters must be integer ≥ 1';
-    if (k > features.length) return `k (${k}) cannot exceed feature count (${features.length})`;
+        return t('view.clusters_trade_features.validate.features_min');
+    if (!Number.isInteger(k) || k < 1) return t('view.clusters_trade_features.validate.k_int');
+    if (!Number.isInteger(maxIters) || maxIters < 1) return t('view.clusters_trade_features.validate.max_iters_int');
+    if (k > features.length) return t('view.clusters_trade_features.validate.k_max', { k, n: features.length });
     return null;
 }
 
