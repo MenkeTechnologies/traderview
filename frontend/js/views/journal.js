@@ -45,7 +45,8 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                     <option data-i18n="view.journal.opt.2_confident" value="2">+2 confident</option>
                 </select>
             `}
-            <textarea id="body" placeholder="What happened today? Setups taken / missed? Process notes?"></textarea>
+            <textarea id="body" placeholder="What happened today? Setups taken / missed? Process notes?"
+                      data-i18n-placeholder="view.journal.placeholder.body"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.journal.btn.save" class="primary" id="save">Save</button>
                 <button data-i18n="view.journal.btn.insert_template" class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>

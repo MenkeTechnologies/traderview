@@ -26,8 +26,9 @@ export async function renderTradePlanChecklist(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.trade_plan_checklist.h2.planned_trade">Planned trade</h2>
-            <label style="display:block;margin-bottom:6px">Thesis (free text)
-                <textarea id="tpc-thesis" rows="3" placeholder="Why does this work? Catalyst? Setup? Confirmation?">${esc(state.plan.thesis)}</textarea>
+            <label style="display:block;margin-bottom:6px"><span data-i18n="view.trade_plan_checklist.label.thesis">Thesis (free text)</span>
+                <textarea id="tpc-thesis" rows="3" placeholder="Why does this work? Catalyst? Setup? Confirmation?"
+                          data-i18n-placeholder="view.trade_plan_checklist.placeholder.thesis">${esc(state.plan.thesis)}</textarea>
             </label>
             <div class="inline-form">
                 <label><span data-i18n="view.trade_plan_checklist.label.side">Side</span>

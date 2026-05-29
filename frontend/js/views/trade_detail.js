@@ -139,7 +139,8 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 <button data-i18n="view.trade_detail.btn.delete_2" class="link" data-del-journal="${j.id}">delete</button>
               </div>
             `).join('')}</div>
-            <textarea id="journal-body" placeholder="What was the setup? What did you see? Mistakes? Lessons?"></textarea>
+            <textarea id="journal-body" placeholder="What was the setup? What did you see? Mistakes? Lessons?"
+                      data-i18n-placeholder="view.trade_detail.placeholder.journal"></textarea>
             <div class="inline-form">
               <button data-i18n="view.trade_detail.btn.save_note" class="primary" id="journal-save">Save note</button>
               <button data-i18n="view.trade_detail.btn.insert_template" class="primary" id="journal-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>

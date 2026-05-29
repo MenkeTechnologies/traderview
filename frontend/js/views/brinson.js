@@ -26,7 +26,8 @@ export async function renderBrinson(mount, _appState) {
                 <small data-i18n="view.brinson.h2.inputs_hint" class="muted">(per line: sector port_w bench_w port_r bench_r — decimals or "5%")</small></h2>
             <textarea id="br-blob" rows="8"
                       data-tip="view.brinson.tip.inputs"
-                      placeholder="Tech 0.30 0.20 0.12 0.08&#10;Energy 0.15 0.25 -0.03 0.01">${esc(inputsToBlob(state.inputs))}</textarea>
+                      placeholder="Tech 0.30 0.20 0.12 0.08&#10;Energy 0.15 0.25 -0.03 0.01"
+                      data-i18n-placeholder="view.brinson.placeholder.inputs">${esc(inputsToBlob(state.inputs))}</textarea>
 
             <div class="inline-form">
                 <button data-i18n="view.brinson.btn.compute" id="br-run" class="primary"
