@@ -63,22 +63,23 @@ export function buildBody(returns, chunkSizes) {
     return { returns, chunk_sizes: chunkSizes };
 }
 
-/** Three-bucket regime classification. */
-export function regimeLabel(h) {
-    if (!Number.isFinite(h)) return 'unknown';
-    if (h < 0.45) return 'mean-reverting';
-    if (h > 0.55) return 'trending (persistent)';
-    return 'random walk';
+/** Three-bucket regime classification. Returns an i18n key so the caller
+ *  can translate via `t()`; pure helper stays decoupled from i18n.js. */
+export function regimeLabelKey(h) {
+    if (!Number.isFinite(h)) return 'view.hurst.regime.unknown';
+    if (h < 0.45) return 'view.hurst.regime.mean_reverting';
+    if (h > 0.55) return 'view.hurst.regime.trending';
+    return 'view.hurst.regime.random_walk';
 }
 
-/** Strength qualifier — distance from 0.5 mapped to a word. Useful for
- *  the UI badge so the user gets a quick "weak vs strong" read. */
-export function regimeStrength(h) {
-    if (!Number.isFinite(h)) return '—';
+/** Strength qualifier — distance from 0.5 mapped to a word. Returns an
+ *  i18n key. */
+export function regimeStrengthKey(h) {
+    if (!Number.isFinite(h)) return 'view.hurst.strength.unknown';
     const d = Math.abs(h - 0.5);
-    if (d < 0.05) return 'weak';
-    if (d < 0.15) return 'moderate';
-    return 'strong';
+    if (d < 0.05) return 'view.hurst.strength.weak';
+    if (d < 0.15) return 'view.hurst.strength.moderate';
+    return 'view.hurst.strength.strong';
 }
 
 /** Color class for the H value card based on regime — green for

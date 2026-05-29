@@ -4,7 +4,7 @@
 import { test, expect } from 'vitest';
 import {
     parseChunkSizes, validateInputs, buildBody,
-    regimeLabel, regimeStrength, regimeCssClass,
+    regimeLabelKey, regimeStrengthKey, regimeCssClass,
 } from '../js/_hurst_inputs.js';
 
 // ── parseChunkSizes ────────────────────────────────────────────────
@@ -61,48 +61,48 @@ test('buildBody emits backend shape', () => {
     expect(buildBody([1, 2, 3], [10, 20])).toEqual({ returns: [1, 2, 3], chunk_sizes: [10, 20] });
 });
 
-// ── regimeLabel ────────────────────────────────────────────────────
+// ── regimeLabelKey ─────────────────────────────────────────────────
 
-test('regimeLabel: H < 0.45 → mean-reverting', () => {
-    expect(regimeLabel(0.30)).toBe('mean-reverting');
-    expect(regimeLabel(0.44)).toBe('mean-reverting');
+test('regimeLabelKey: H < 0.45 → mean_reverting key', () => {
+    expect(regimeLabelKey(0.30)).toBe('view.hurst.regime.mean_reverting');
+    expect(regimeLabelKey(0.44)).toBe('view.hurst.regime.mean_reverting');
 });
 
-test('regimeLabel: H near 0.5 → random walk', () => {
-    expect(regimeLabel(0.45)).toBe('random walk');
-    expect(regimeLabel(0.50)).toBe('random walk');
-    expect(regimeLabel(0.55)).toBe('random walk');
+test('regimeLabelKey: H near 0.5 → random_walk key', () => {
+    expect(regimeLabelKey(0.45)).toBe('view.hurst.regime.random_walk');
+    expect(regimeLabelKey(0.50)).toBe('view.hurst.regime.random_walk');
+    expect(regimeLabelKey(0.55)).toBe('view.hurst.regime.random_walk');
 });
 
-test('regimeLabel: H > 0.55 → trending', () => {
-    expect(regimeLabel(0.65)).toBe('trending (persistent)');
-    expect(regimeLabel(0.95)).toBe('trending (persistent)');
+test('regimeLabelKey: H > 0.55 → trending key', () => {
+    expect(regimeLabelKey(0.65)).toBe('view.hurst.regime.trending');
+    expect(regimeLabelKey(0.95)).toBe('view.hurst.regime.trending');
 });
 
-test('regimeLabel returns "unknown" on non-finite', () => {
-    expect(regimeLabel(NaN)).toBe('unknown');
-    expect(regimeLabel(null)).toBe('unknown');
+test('regimeLabelKey returns unknown key on non-finite', () => {
+    expect(regimeLabelKey(NaN)).toBe('view.hurst.regime.unknown');
+    expect(regimeLabelKey(null)).toBe('view.hurst.regime.unknown');
 });
 
-// ── regimeStrength ─────────────────────────────────────────────────
+// ── regimeStrengthKey ──────────────────────────────────────────────
 
-test('regimeStrength buckets: |Δ| < 0.05 weak', () => {
-    expect(regimeStrength(0.52)).toBe('weak');
-    expect(regimeStrength(0.49)).toBe('weak');
+test('regimeStrengthKey buckets: |Δ| < 0.05 weak key', () => {
+    expect(regimeStrengthKey(0.52)).toBe('view.hurst.strength.weak');
+    expect(regimeStrengthKey(0.49)).toBe('view.hurst.strength.weak');
 });
 
-test('regimeStrength: 0.05 ≤ |Δ| < 0.15 moderate', () => {
-    expect(regimeStrength(0.60)).toBe('moderate');
-    expect(regimeStrength(0.40)).toBe('moderate');
+test('regimeStrengthKey: 0.05 ≤ |Δ| < 0.15 moderate key', () => {
+    expect(regimeStrengthKey(0.60)).toBe('view.hurst.strength.moderate');
+    expect(regimeStrengthKey(0.40)).toBe('view.hurst.strength.moderate');
 });
 
-test('regimeStrength: |Δ| ≥ 0.15 strong', () => {
-    expect(regimeStrength(0.70)).toBe('strong');
-    expect(regimeStrength(0.20)).toBe('strong');
+test('regimeStrengthKey: |Δ| ≥ 0.15 strong key', () => {
+    expect(regimeStrengthKey(0.70)).toBe('view.hurst.strength.strong');
+    expect(regimeStrengthKey(0.20)).toBe('view.hurst.strength.strong');
 });
 
-test('regimeStrength returns "—" on non-finite', () => {
-    expect(regimeStrength(NaN)).toBe('—');
+test('regimeStrengthKey returns unknown key on non-finite', () => {
+    expect(regimeStrengthKey(NaN)).toBe('view.hurst.strength.unknown');
 });
 
 // ── regimeCssClass ─────────────────────────────────────────────────

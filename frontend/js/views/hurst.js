@@ -12,7 +12,7 @@ import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseReturns, parseChunkSizes, validateInputs, buildBody,
-    regimeLabel, regimeStrength, regimeCssClass,
+    regimeLabelKey, regimeStrengthKey, regimeCssClass,
 } from '../_hurst_inputs.js';
 
 import { t } from '../i18n.js';
@@ -122,16 +122,18 @@ async function estimate(mount, tok) {
 
 function renderSummary(res) {
     const cls = regimeCssClass(res.hurst);
-    const label = regimeLabel(res.hurst);
-    const strength = regimeStrength(res.hurst);
+    const label = t(regimeLabelKey(res.hurst));
+    const strength = t(regimeStrengthKey(res.hurst));
+    const fitKey = res.r_squared >= 0.95 ? 'view.hurst.fit.clean'
+                 : (res.r_squared < 0.80 ? 'view.hurst.fit.noisy' : 'view.hurst.fit.acceptable');
     document.getElementById('hu-summary').innerHTML = [
         card(t('view.hurst.card.hurst_h'), res.hurst.toFixed(4), cls,
             `<div class="vc-row"><span class="muted" data-i18n="view.hurst.row.distance_from_half">distance from 0.5</span>
                 <strong>${Math.abs(res.hurst - 0.5).toFixed(3)}</strong></div>`),
-        card(t('view.hurst.card.regime'), `${label} (${strength})`, cls),
+        card(t('view.hurst.card.regime'), t('view.hurst.label.regime_strength', { label, strength }), cls),
         card(t('view.hurst.card.r_of_log_log_fit'), res.r_squared.toFixed(4),
             res.r_squared >= 0.95 ? 'pos' : (res.r_squared < 0.80 ? 'neg' : ''),
-            `<div class="vc-row"><span class="muted">${res.r_squared >= 0.95 ? 'clean linear fit — H is trustworthy' : (res.r_squared < 0.80 ? 'noisy — multi-regime series?' : 'acceptable')}</span><strong></strong></div>`),
+            `<div class="vc-row"><span class="muted">${t(fitKey)}</span><strong></strong></div>`),
         card(t('view.hurst.card.regression_points'), String(res.log_n.length)),
     ].join('');
 }
