@@ -8222,6 +8222,8 @@
   "view.research.ind.bb_upper":      "BB upper",
   "view.research.ind.bb_middle":     "BB middle",
   "view.research.ind.bb_lower":      "BB lower",
+  "view.journal_ai.placeholder.api_key_saved": "*** (saved, leave blank to keep)",
+  "view.journal_ai.placeholder.api_key_paste": "paste key",
   "view.charts.error.generic":                  "Error: {err}",
   "view.monte_carlo.empty.stdev_zero":           "stdev was zero — distribution is a point mass.",
   "view.research.empty.no_quote":                "no quote",

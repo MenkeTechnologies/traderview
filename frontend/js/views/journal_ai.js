@@ -29,18 +29,18 @@ export async function renderAiSettings(mount) {
                 </select>
             </label>
             <label><span data-i18n="view.journal_ai.label.model">Model</span>
-                <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3" data-i18n-placeholder="view.journal_ai.placeholder.model"
+                <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3"
                        data-i18n-placeholder="view.journal_ai.placeholder.model"
                        value="${esc(cfg.model || '')}" style="min-width:280px;">
             </label>
             <label><span data-i18n="view.journal_ai.label.endpoint">Endpoint (override)</span>
-                <input name="endpoint" placeholder="default per provider" data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
+                <input name="endpoint" placeholder="default per provider"
                        data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
                        value="${esc(cfg.endpoint || '')}" style="min-width:240px;">
             </label>
             <label><span data-i18n="view.journal_ai.label.api_key">API key</span>
                 <input name="api_key" type="password"
-                       placeholder="${cfg.api_key ? '*** (saved, leave blank to keep)' : 'paste key'}"
+                       placeholder="${esc(t(cfg.api_key ? 'view.journal_ai.placeholder.api_key_saved' : 'view.journal_ai.placeholder.api_key_paste'))}"
                        autocomplete="off">
             </label>
             <label><span data-i18n="view.journal_ai.label.max_tokens">Max tokens</span>
