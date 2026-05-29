@@ -290,7 +290,7 @@ async function boot() {
         state.me = me;
         const userStrip = document.getElementById('user-strip');
         if (userStrip) {
-            userStrip.textContent = me.is_local ? 'local user' : (me.email || me.display_name || '');
+            userStrip.textContent = me.is_local ? t('app.user.local') : (me.email || me.display_name || '');
         }
         await loadAccounts();
         renderAccountStrip();

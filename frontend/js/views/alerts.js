@@ -78,7 +78,7 @@ export async function renderAlerts(mount) {
     });
     mount.querySelector('#test-bell').addEventListener('click', () => playSound('bell'));
     mount.querySelector('#test-voice').addEventListener('click', () =>
-        speak('Test alert from TraderView'));
+        speak(t('view.alerts.test_voice_phrase')));
     mount.querySelectorAll('[data-tog]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.toggleAlert(b.dataset.tog, b.dataset.en !== 'true');

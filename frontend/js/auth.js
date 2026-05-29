@@ -2,6 +2,7 @@
 // Desktop mode auto-logs in via the token injected by Tauri.
 
 import { api, setToken } from './api.js';
+import { t } from './i18n.js';
 
 let currentMode = 'login';
 
@@ -51,7 +52,7 @@ function bindOnce() {
             hideAuthScreen();
             window.dispatchEvent(new CustomEvent('tv:authed'));
         } catch (e) {
-            if (err) err.textContent = e.message || 'failed';
+            if (err) err.textContent = e.message || t('auth.error.fallback');
         }
     });
 }
