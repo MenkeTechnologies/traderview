@@ -128,10 +128,10 @@ function renderResults({ labels, mv, mxd, erc }) {
     const root = document.getElementById('pa-results');
     root.innerHTML = `
         ${cardSection('Min-Variance + Tangency', mv ? `
-            ${kv('MV portfolio vol', mv.min_variance_portfolio_volatility?.toFixed(4))}
-            ${kv('Tangency vol', mv.tangency_volatility?.toFixed(4))}
-            ${kv('Tangency excess return', mv.tangency_expected_return?.toFixed(4))}
-            ${kv('Tangency Sharpe', mv.tangency_sharpe?.toFixed(3))}
+            ${kv(t('view.portfolio_allocator.kv.mv_portfolio_vol'), mv.min_variance_portfolio_volatility?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.tangency_vol'), mv.tangency_volatility?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.tangency_excess_return'), mv.tangency_expected_return?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.tangency_sharpe'), mv.tangency_sharpe?.toFixed(3))}
             <h4 data-i18n="view.portfolio_allocator.h4.min_variance_weights">Min-variance weights</h4>
             <div id="pa-mv-weights"></div>
             <h4 data-i18n="view.portfolio_allocator.h4.tangency_weights">Tangency weights</h4>
@@ -139,16 +139,16 @@ function renderResults({ labels, mv, mxd, erc }) {
         ` : '<p data-i18n="view.portfolio_allocator.hint.mv_solver_returned_null_covariance_not_invertible" class="muted">MV solver returned null (covariance not invertible?).</p>')}
 
         ${cardSection('Maximum Diversification', mxd ? `
-            ${kv('Diversification ratio', mxd.diversification_ratio?.toFixed(3))}
-            ${kv('Portfolio vol', mxd.portfolio_volatility?.toFixed(4))}
-            ${kv('Wtd-avg single-asset vol', mxd.weighted_average_volatility?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.diversification_ratio'), mxd.diversification_ratio?.toFixed(3))}
+            ${kv(t('view.portfolio_allocator.kv.portfolio_vol'), mxd.portfolio_volatility?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.wtd_avg_single_asset_vol'), mxd.weighted_average_volatility?.toFixed(4))}
             <h4 data-i18n="view.portfolio_allocator.h4.weights">Weights</h4>
             <div id="pa-mxd-weights"></div>
         ` : '<p data-i18n="view.portfolio_allocator.hint.maxdiv_solver_returned_null" class="muted">MaxDiv solver returned null.</p>')}
 
         ${cardSection('Equal Risk Contribution', erc ? `
-            ${kv('Portfolio vol', erc.portfolio_stdev?.toFixed(4))}
-            ${kv('Iterations', erc.iterations)} ${kv('Converged', erc.converged ? '✓' : '✗')}
+            ${kv(t('view.portfolio_allocator.kv.portfolio_vol'), erc.portfolio_stdev?.toFixed(4))}
+            ${kv(t('view.portfolio_allocator.kv.iterations'), erc.iterations)} ${kv(t('view.portfolio_allocator.kv.converged'), erc.converged ? '✓' : '✗')}
             <h4 data-i18n="view.portfolio_allocator.h4.weights">Weights</h4>
             <div id="pa-erc-weights"></div>
             <h4>${esc(t('view.portfolio_allocator.h4.risk_contrib', { pct: (100 / labels.length).toFixed(1) }))}</h4>

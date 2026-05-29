@@ -141,17 +141,17 @@ function algoCard(label, color, res, totalOrder) {
     const s = summarizeSchedule(res);
     const pctFilled = (s.totalFilled / totalOrder) * 100;
     const rows = [];
-    rows.push(kv('Filled', `${pctFilled.toFixed(1)}%`));
+    rows.push(kv(t('view.execution_scheduler.kv.filled'), `${pctFilled.toFixed(1)}%`));
     if (s.shortfall != null && s.shortfall > 1e-6) {
-        rows.push(kv('Shortfall', `${Math.round(s.shortfall).toLocaleString()} sh`));
+        rows.push(kv(t('view.execution_scheduler.kv.shortfall'), `${Math.round(s.shortfall).toLocaleString()} sh`));
     }
     if (s.completionBar != null) {
-        rows.push(kv('Done at bar', String(s.completionBar)));
+        rows.push(kv(t('view.execution_scheduler.kv.done_at_bar'), String(s.completionBar)));
     } else if (s.lastFillBar != null) {
-        rows.push(kv('Last fill bar', String(s.lastFillBar)));
+        rows.push(kv(t('view.execution_scheduler.kv.last_fill_bar'), String(s.lastFillBar)));
     }
     if (s.maxParticipation != null) {
-        rows.push(kv('Peak participation', `${(s.maxParticipation * 100).toFixed(2)}%`));
+        rows.push(kv(t('view.execution_scheduler.kv.peak_participation'), `${(s.maxParticipation * 100).toFixed(2)}%`));
     }
     return `<div class="card">
         <div class="label"><span class="es-swatch ${esc(label.toLowerCase())}">▮</span> ${esc(label)}</div>
