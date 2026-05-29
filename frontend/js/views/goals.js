@@ -15,10 +15,7 @@ export async function renderGoals(mount, state) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.goals.h1.goals" class="view-title">// GOALS</h1>
-        <p class="muted small">Set monthly / quarterly / yearly P/L + win-rate + max-drawdown
-            targets. Progress is computed live from closed trades whose <code>opened_at</code>
-            falls in the window. Run-rate projection extrapolates current P/L pace to the end
-            of the period so you know if you're on track today.</p>
+        <p class="muted small" data-i18n="view.goals.hint.intro">Set monthly / quarterly / yearly P/L + win-rate + max-drawdown targets. Progress is computed live from closed trades whose opened_at falls in the window. Run-rate projection extrapolates current P/L pace to the end of the period so you know if you're on track today.</p>
 
         <div class="chart-panel">
             <h2 data-i18n="view.goals.h2.create_goal">Create goal</h2>

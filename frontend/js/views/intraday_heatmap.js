@@ -23,9 +23,7 @@ export async function renderIntradayHeatmap(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.intraday_heatmap.h2.trade_ledger">Trade ledger</h2>
-            <p class="muted">One line per trade: <code>timestamp pnl</code>.
-                Timestamps accept ISO 8601 (<code>2024-01-15T14:30:00Z</code>) or
-                bare <code>HH:MM</code> (anchored to a fixed epoch date).</p>
+            <p class="muted" data-i18n="view.intraday_heatmap.hint.format">One line per trade: timestamp pnl. Timestamps accept ISO 8601 (2024-01-15T14:30:00Z) or bare HH:MM (anchored to a fixed epoch date).</p>
             <textarea id="ih-trades" rows="8" placeholder="09:35 125.50&#10;09:45 -42.00&#10;..."></textarea>
             <div class="inline-form">
                 <button data-i18n="view.intraday_heatmap.btn.load_demo_200_trades" id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>

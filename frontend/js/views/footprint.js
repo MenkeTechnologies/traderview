@@ -22,9 +22,7 @@ export async function renderFootprint(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.footprint.h2.classified_tick_stream">Classified tick stream</h2>
-            <p class="muted">One tick per line: <code>bar_id price volume side</code>
-                where side ∈ {buy, sell, uncertain}. Demo loads 4 bars with engineered
-                patterns: balanced churn → absorption at low → drive up → rejection at high.</p>
+            <p class="muted" data-i18n="view.footprint.hint.ticks">One tick per line: bar_id price volume side where side ∈ {buy, sell, uncertain}. Demo loads 4 bars with engineered patterns: balanced churn → absorption at low → drive up → rejection at high.</p>
             <textarea id="fp-ticks" rows="8" placeholder="0 100.00 50 buy&#10;0 100.00 50 sell&#10;..."></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.footprint.label.tick_size">Tick size (price quantization)</span>
@@ -41,9 +39,7 @@ export async function renderFootprint(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.footprint.h2.footprint_bars">Footprint bars</h2>
             <div id="fp-grid" class="fp-grid"></div>
-            <p class="muted">Each column = one bar. Each row = one price level. Cells show
-                <strong>bid × ask</strong>; row color is the per-cell delta (green = ask
-                won, red = bid won). Gold-highlighted row = bar POC (most-traded level).</p>
+            <p class="muted" data-i18n="view.footprint.hint.grid">Each column = one bar. Each row = one price level. Cells show bid × ask; row color is the per-cell delta (green = ask won, red = bid won). Gold-highlighted row = bar POC (most-traded level).</p>
         </div>
 
         <div class="chart-panel">

@@ -53,10 +53,7 @@ export async function renderAiSettings(mount) {
             <span id="ai-save-status" class="muted small"></span>
         </form>
 
-        <p class="muted small">Defaults: Anthropic → <code>https://api.anthropic.com</code>,
-            OpenAI → <code>https://api.openai.com</code>, Ollama → <code>http://localhost:11434</code>.
-            The prompt asks the model to return strict JSON with summary / mistakes /
-            risk_gaps / suggestions / rule_changes arrays.</p>
+        <p class="muted small" data-i18n="view.journal_ai.hint.defaults">Defaults: Anthropic → https://api.anthropic.com, OpenAI → https://api.openai.com, Ollama → http://localhost:11434. The prompt asks the model to return strict JSON with summary / mistakes / risk_gaps / suggestions / rule_changes arrays.</p>
     `;
     mount.querySelector('#ai-form').addEventListener('submit', async (e) => {
         e.preventDefault();

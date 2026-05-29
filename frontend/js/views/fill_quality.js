@@ -12,13 +12,7 @@ export async function renderFillQuality(mount, state) {
     if (!acct) { mount.innerHTML = `<p data-i18n="view.fill_quality.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// FILL QUALITY — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Bar-level approximation — TraderView caches daily OHLC, not
-            intraday bid/ask, so this is a directional metric not tick-perfect slippage.
-            <strong>fill-in-range</strong> places the fill on the day's high-low line; the
-            <strong>fill-efficiency</strong> column flips that for buys (lower = better) and
-            sells (higher = better) so 100% always means "best possible fill within the day's
-            range". <strong>Slippage bps</strong> = deviation from typical price (HLC/3),
-            sign-flipped so positive = worse than typical for that side.</p>
+        <p class="muted small" data-i18n="view.fill_quality.hint.intro">Bar-level approximation — TraderView caches daily OHLC, not intraday bid/ask, so this is a directional metric not tick-perfect slippage. fill-in-range places the fill on the day's high-low line; the fill-efficiency column flips that for buys (lower = better) and sells (higher = better) so 100% always means "best possible fill within the day's range". Slippage bps = deviation from typical price (HLC/3), sign-flipped so positive = worse than typical for that side.</p>
 
         <div id="fq-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;

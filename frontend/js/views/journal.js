@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { fmtDateTime, md, esc } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderJournalView(mount, _state, dayOrGeneral) {
@@ -31,7 +32,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                 <div class="body">${md(e.body_md)}</div>
                 <button data-i18n="view.journal.btn.delete" class="link" data-del="${e.id}">delete</button>
             </div>
-        `).join('') || `<p class="muted">No ${isGeneral ? 'general' : 'entries for this day'} yet.</p>`}</div>
+        `).join('') || `<p class="muted">${esc(t(isGeneral ? 'view.journal.empty.general' : 'view.journal.empty.day'))}</p>`}</div>
         <div class="chart-panel">
             <h2 data-i18n="view.journal.h2.new_entry">New entry</h2>
             ${isGeneral ? '' : `

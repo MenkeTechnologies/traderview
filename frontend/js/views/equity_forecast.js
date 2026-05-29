@@ -10,12 +10,7 @@ export async function renderEquityForecast(mount, state) {
     if (!acct) { mount.innerHTML = `<p data-i18n="view.equity_forecast.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// EQUITY FORECAST — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Bootstraps R-multiples from your closed-trade history and
-            resamples thousands of forward paths. Each step risks <strong>risk_pct × equity</strong>
-            and gains <strong>equity × risk × R</strong> where R is drawn with replacement.
-            Ruin = equity drops to ≤ <code>ruin_threshold</code> of starting (default 50%);
-            ruined paths freeze at zero for the rest of the horizon so percentile bands stay
-            meaningful at the bottom of the fan.</p>
+        <p class="muted small" data-i18n="view.equity_forecast.hint.intro">Bootstraps R-multiples from your closed-trade history and resamples thousands of forward paths. Each step risks risk_pct × equity and gains equity × risk × R where R is drawn with replacement. Ruin = equity drops to ≤ ruin_threshold of starting (default 50%); ruined paths freeze at zero for the rest of the horizon so percentile bands stay meaningful at the bottom of the fan.</p>
 
         <div class="chart-panel">
             <form id="ef-form" class="inline-form">

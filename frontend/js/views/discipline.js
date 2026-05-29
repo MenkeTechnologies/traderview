@@ -12,11 +12,7 @@ export async function renderDiscipline(mount, state) {
     if (!acct) { mount.innerHTML = `<p data-i18n="view.discipline.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// DISCIPLINE — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Streaks computed from chronological closed-trade P/L sign.
-            Rule-violation tracker joins your <code>trade_plans</code> rows to filled trades
-            via <code>linked_trade_id</code> and grades on four checks: stop_set, stop_honored,
-            qty_within (≤ 1.10× planned), direction_match. Discipline % = passing / linked
-            across week / month / all-time.</p>
+        <p class="muted small" data-i18n="view.discipline.hint.intro">Streaks computed from chronological closed-trade P/L sign. Rule-violation tracker joins your trade_plans rows to filled trades via linked_trade_id and grades on four checks: stop_set, stop_honored, qty_within (≤ 1.10× planned), direction_match. Discipline % = passing / linked across week / month / all-time.</p>
 
         <div id="d-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;

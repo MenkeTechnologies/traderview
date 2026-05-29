@@ -1,6 +1,7 @@
 // Earnings calendar + surprise leaderboard.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -9,10 +10,7 @@ export async function renderEarningsCal(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.earnings_cal.h1.earnings_calendar" class="view-title">// EARNINGS CALENDAR</h1>
-        <p class="muted small">Polls Yahoo's <code>quoteSummary</code> earnings module every 6h
-            across your watchlist symbols. Surprise % = (actual − estimate) / |estimate| × 100.
-            Reaction columns are next-session and 5-session price moves vs the close on / just
-            before the earnings date, computed from cached daily bars.</p>
+        <p class="muted small" data-i18n="view.earnings_cal.hint.intro">Polls Yahoo's quoteSummary earnings module every 6h across your watchlist symbols. Surprise % = (actual − estimate) / |estimate| × 100. Reaction columns are next-session and 5-session price moves vs the close on / just before the earnings date, computed from cached daily bars.</p>
 
         <div class="chart-panel">
             <form class="inline-form" id="e-form">
@@ -84,7 +82,7 @@ function renderCalendarMatrix(events, days, mount) {
     const el = mount.querySelector('#e-cal');
     if (!el) return;
     if (!events.length) {
-        el.innerHTML = `<p class="muted small">No upcoming earnings in the next ${days} days. Hit "Poll now" to seed from Yahoo.</p>`;
+        el.innerHTML = `<p class="muted small">${esc(t('view.earnings_cal.hint.empty', { days }))}</p>`;
         return;
     }
     const today = new Date();

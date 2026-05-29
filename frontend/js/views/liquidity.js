@@ -23,8 +23,7 @@ export async function renderLiquidity(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.liquidity.h2.trades">Trades</h2>
-            <p class="muted">One line per trade: <code>symbol qty net_pnl</code>.
-                Negative pnl = loss. Other Trade fields are auto-filled.</p>
+            <p class="muted" data-i18n="view.liquidity.hint.format">One line per trade: symbol qty net_pnl. Negative pnl = loss. Other Trade fields are auto-filled.</p>
             <textarea id="lq-trades" rows="8" placeholder="AAPL 100 75&#10;MSFT 2000 -150&#10;..."></textarea>
         </div>
 

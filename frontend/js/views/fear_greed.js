@@ -1,6 +1,7 @@
 // Fear & Greed gauge — CNN-style 0..100 composite of 7 risk-appetite signals.
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let timer = null;
@@ -92,7 +93,7 @@ function renderGauge(s, mount) {
             <circle cx="${cx}" cy="${cy}" r="6" fill="${color}"/>
             <text x="160" y="170" text-anchor="middle" fill="#9aa0c8" font-size="12">0 fear · 50 neutral · 100 greed</text>
         </svg>
-        <p class="muted small" style="text-align:center;">Updated ${new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
+        <p class="muted small" style="text-align:center;">${esc(t('view.fear_greed.hint.updated', { time: new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
     `;
 }
 

@@ -25,10 +25,7 @@ export async function renderMarketProfile(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.market_profile.h2.brackets_one_per_time_period_typically_30_min_rth_">Brackets (one per time period — typically 30-min RTH brackets)</h2>
-            <p class="muted">One line per bracket: <code>bracket_index high low</code>.
-                Each bracket prints one letter (A, B, C, …) at every quantized price
-                level it traded through. Demo loads a 13-bracket A-M session shaped
-                like a typical normal-day profile.</p>
+            <p class="muted" data-i18n="view.market_profile.hint.format">One line per bracket: bracket_index high low. Each bracket prints one letter (A, B, C, …) at every quantized price level it traded through. Demo loads a 13-bracket A-M session shaped like a typical normal-day profile.</p>
             <textarea id="mp-brackets" rows="8" placeholder="0 102.5 101.0&#10;1 101.5 100.0&#10;..."></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.market_profile.label.tick_size">Tick size</span>
