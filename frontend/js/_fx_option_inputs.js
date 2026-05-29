@@ -15,6 +15,7 @@
 //   put  = K · e^(−r_d T) · N(−d2) − S · e^(−r_f T) · N(−d1)
 
 import { normCdf } from './_american_option_inputs.js';
+import { t } from './i18n.js';
 
 /** Build the JSON body for /analytics/garman-kohlhagen-fx-option. */
 export function buildGkBody(p) {
@@ -32,15 +33,15 @@ export function buildGkBody(p) {
 /** Validate the parameter block. Returns null on success, an error
  *  string with the offending field otherwise. */
 export function validateGkParams(p) {
-    if (p.kind !== 'call' && p.kind !== 'put') return 'kind must be "call" or "put"';
+    if (p.kind !== 'call' && p.kind !== 'put') return t('view.fx_option.validate.kind');
     const positive = ['spot', 'strike', 't_years'];
     for (const k of positive) {
-        if (!Number.isFinite(p[k]) || p[k] <= 0) return `${k} must be > 0`;
+        if (!Number.isFinite(p[k]) || p[k] <= 0) return t('view.fx_option.validate.field_positive', { k });
     }
     for (const k of ['rate_dom', 'rate_for']) {
-        if (!Number.isFinite(p[k])) return `${k} must be finite`;
+        if (!Number.isFinite(p[k])) return t('view.fx_option.validate.field_finite', { k });
     }
-    if (!Number.isFinite(p.sigma) || p.sigma < 0) return 'sigma must be ≥ 0';
+    if (!Number.isFinite(p.sigma) || p.sigma < 0) return t('view.fx_option.validate.sigma');
     return null;
 }
 

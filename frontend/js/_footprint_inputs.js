@@ -5,6 +5,8 @@
 // The user pastes simple 4-token rows; we synthesize the ClassifiedTick
 // shape required by the backend.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 const VALID_SIDES = new Set(['buy', 'sell', 'uncertain']);
 
@@ -56,8 +58,8 @@ export function parseTickBlob(text) {
 }
 
 export function validateInputs(ticks, tickSize) {
-    if (!Array.isArray(ticks) || ticks.length === 0) return 'need at least 1 tick';
-    if (!Number.isFinite(tickSize) || tickSize <= 0) return 'tick_size must be > 0';
+    if (!Array.isArray(ticks) || ticks.length === 0) return t('view.footprint.validate.ticks_empty');
+    if (!Number.isFinite(tickSize) || tickSize <= 0) return t('view.footprint.validate.tick_size');
     return null;
 }
 

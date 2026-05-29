@@ -11,6 +11,8 @@
 //   Power:   vol > 1.5 × avg AND range > 1.5 × avg range
 //   Normal:  otherwise
 
+import { t } from './i18n.js';
+
 export const KINDS = ['normal', 'narrow', 'wide', 'power'];
 
 export const DEFAULT_INPUTS = {
@@ -19,18 +21,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                              return 'bars must be an array';
+    if (!Array.isArray(input.bars))                              return t('view.equivolume.validate.bars_array');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b || typeof b !== 'object')                         return `bars[${i}] must be an object`;
-        if (!Number.isFinite(b.high))                            return `bars[${i}].high not finite`;
-        if (!Number.isFinite(b.low))                             return `bars[${i}].low not finite`;
-        if (!Number.isFinite(b.volume))                          return `bars[${i}].volume not finite`;
-        if (b.volume < 0)                                        return `bars[${i}].volume must be ≥ 0`;
-        if (b.high < b.low)                                      return `bars[${i}].high must be ≥ low`;
+        if (!b || typeof b !== 'object')                         return t('view.equivolume.validate.bar_object', { i });
+        if (!Number.isFinite(b.high))                            return t('view.equivolume.validate.high_finite', { i });
+        if (!Number.isFinite(b.low))                             return t('view.equivolume.validate.low_finite', { i });
+        if (!Number.isFinite(b.volume))                          return t('view.equivolume.validate.vol_finite', { i });
+        if (b.volume < 0)                                        return t('view.equivolume.validate.vol_negative', { i });
+        if (b.high < b.low)                                      return t('view.equivolume.validate.high_ge_low', { i });
     }
-    if (!Number.isFinite(input.total_width))                     return 'total_width must be finite';
-    if (input.total_width <= 0)                                  return 'total_width must be > 0';
+    if (!Number.isFinite(input.total_width))                     return t('view.equivolume.validate.width_finite');
+    if (input.total_width <= 0)                                  return t('view.equivolume.validate.width_positive');
     return null;
 }
 
