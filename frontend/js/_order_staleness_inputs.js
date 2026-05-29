@@ -80,15 +80,15 @@ function toIso(tok) {
 }
 
 export function validateInputs(orders, nowIso, thresholds) {
-    if (!Array.isArray(orders) || orders.length === 0) return 'need at least 1 order';
-    if (typeof nowIso !== 'string' || !nowIso) return 'now must be an ISO 8601 string';
-    if (Number.isNaN(new Date(nowIso).getTime())) return 'now is not a valid timestamp';
+    if (!Array.isArray(orders) || orders.length === 0) return t('view.order_staleness.validate.orders_empty');
+    if (typeof nowIso !== 'string' || !nowIso) return t('view.order_staleness.validate.now_string');
+    if (Number.isNaN(new Date(nowIso).getTime())) return t('view.order_staleness.validate.now_invalid');
     if (!Number.isFinite(thresholds.warn_hours) || thresholds.warn_hours <= 0)
-        return 'warn_hours must be > 0';
+        return t('view.order_staleness.validate.warn_hours');
     if (!Number.isFinite(thresholds.stale_hours) || thresholds.stale_hours <= thresholds.warn_hours)
-        return 'stale_hours must be > warn_hours';
+        return t('view.order_staleness.validate.stale_hours');
     if (!Number.isFinite(thresholds.forgotten_hours) || thresholds.forgotten_hours <= thresholds.stale_hours)
-        return 'forgotten_hours must be > stale_hours';
+        return t('view.order_staleness.validate.forgotten_hours');
     return null;
 }
 

@@ -8,15 +8,15 @@ import { t } from './i18n.js';
 export function validateInputs(p) {
     for (const k of ['open_price', 'opening_range_high', 'opening_range_low', 'opening_range_close',
                      'prior_day_high', 'prior_day_low', 'prior_day_vah', 'prior_day_val']) {
-        if (!Number.isFinite(p[k]) || p[k] <= 0) return `${k} must be > 0`;
+        if (!Number.isFinite(p[k]) || p[k] <= 0) return t('view.open_type.validate.field_positive', { k });
     }
-    if (p.opening_range_high < p.opening_range_low) return 'opening_range_high must be ≥ opening_range_low';
+    if (p.opening_range_high < p.opening_range_low) return t('view.open_type.validate.or_high_ge_low');
     if (p.opening_range_close < p.opening_range_low || p.opening_range_close > p.opening_range_high)
-        return 'opening_range_close must be in [low, high]';
-    if (p.prior_day_high < p.prior_day_low) return 'prior_day_high must be ≥ prior_day_low';
-    if (p.prior_day_vah < p.prior_day_val) return 'prior_day_vah must be ≥ prior_day_val';
+        return t('view.open_type.validate.or_close_range');
+    if (p.prior_day_high < p.prior_day_low) return t('view.open_type.validate.pd_high_ge_low');
+    if (p.prior_day_vah < p.prior_day_val) return t('view.open_type.validate.pd_vah_ge_val');
     if (p.prior_day_val < p.prior_day_low || p.prior_day_vah > p.prior_day_high)
-        return 'value area must lie within prior-day range';
+        return t('view.open_type.validate.va_in_range');
     return null;
 }
 

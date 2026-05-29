@@ -12,15 +12,15 @@ export function parseSizes(text) {
 
 export function validateInputs(bidSizes, askSizes, levels) {
     if (!Array.isArray(bidSizes) || bidSizes.length === 0)
-        return 'bid_sizes must have at least 1 level';
+        return t('view.order_book_imbalance.validate.bid_empty');
     if (!Array.isArray(askSizes) || askSizes.length === 0)
-        return 'ask_sizes must have at least 1 level';
+        return t('view.order_book_imbalance.validate.ask_empty');
     if (!Number.isInteger(levels) || levels < 1 || levels > 50)
-        return 'levels must be integer in [1, 50]';
+        return t('view.order_book_imbalance.validate.levels');
     if (!bidSizes.every(v => Number.isFinite(v) && v >= 0))
-        return 'bid_sizes must be non-negative finite';
+        return t('view.order_book_imbalance.validate.bid_finite');
     if (!askSizes.every(v => Number.isFinite(v) && v >= 0))
-        return 'ask_sizes must be non-negative finite';
+        return t('view.order_book_imbalance.validate.ask_finite');
     return null;
 }
 
