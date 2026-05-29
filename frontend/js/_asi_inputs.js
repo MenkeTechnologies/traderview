@@ -8,6 +8,8 @@
 // highs/lows confirm "real" trend changes. limit_move is the market's
 // max allowable per-bar price move; for equities use ~10% of prior close.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_LIMIT_MOVE = 10.0;
 
 export const DEFAULT_INPUTS = {
@@ -16,22 +18,22 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                                return 'bars must be an array';
-    if (input.bars.length === 0)                                   return 'bars cannot be empty';
+    if (!Array.isArray(input.bars))                                return t('view.asi.validate.bars_array');
+    if (input.bars.length === 0)                                   return t('view.asi.validate.bars_empty');
     if (!Number.isFinite(input.limit_move) || input.limit_move <= 0)
-                                                                    return 'limit_move must be positive finite';
+                                                                    return t('view.asi.validate.limit_move');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                                    return `bars[${i}] missing`;
+        if (!b)                                                    return t('view.asi.validate.bar_missing', { i });
         if (typeof b.open !== 'number' || typeof b.high !== 'number'
             || typeof b.low !== 'number' || typeof b.close !== 'number')
-                                                                    return `bars[${i}] OHLC must be numbers`;
+                                                                    return t('view.asi.validate.ohlc_numbers', { i });
         if (!Number.isFinite(b.open) || !Number.isFinite(b.high)
             || !Number.isFinite(b.low) || !Number.isFinite(b.close))
-                                                                    return `bars[${i}] OHLC must be finite`;
-        if (b.high < b.low)                                        return `bars[${i}] high < low`;
-        if (b.close < b.low || b.close > b.high)                   return `bars[${i}] close outside [low, high]`;
-        if (b.open  < b.low || b.open  > b.high)                   return `bars[${i}] open outside [low, high]`;
+                                                                    return t('view.asi.validate.ohlc_finite', { i });
+        if (b.high < b.low)                                        return t('view.asi.validate.high_lt_low', { i });
+        if (b.close < b.low || b.close > b.high)                   return t('view.asi.validate.close_outside', { i });
+        if (b.open  < b.low || b.open  > b.high)                   return t('view.asi.validate.open_outside', { i });
     }
     return null;
 }

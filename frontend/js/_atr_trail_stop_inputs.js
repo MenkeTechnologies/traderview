@@ -7,6 +7,8 @@
 //   period, multiplier
 // }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 14;
 export const DEFAULT_MULTIPLIER = 3.0;
 export const MIN_PERIOD = 2;
@@ -19,19 +21,19 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                  return 'bars must be an array';
-    if (!Number.isInteger(input.period))             return 'period must be an integer';
+    if (!Array.isArray(input.bars))                  return t('view.atr_trail_stop.validate.bars_array');
+    if (!Number.isInteger(input.period))             return t('view.atr_trail_stop.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                      return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                      return t('view.atr_trail_stop.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isFinite(input.multiplier) || input.multiplier <= 0)
-                                                      return 'multiplier must be positive';
-    if (input.bars.length < input.period + 1)         return `need at least period + 1 = ${input.period + 1} bars`;
+                                                      return t('view.atr_trail_stop.validate.multiplier');
+    if (input.bars.length < input.period + 1)         return t('view.atr_trail_stop.validate.bars_min', { n: input.period + 1 });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
         if (!b || !Number.isFinite(b.high) || !Number.isFinite(b.low) || !Number.isFinite(b.close))
-                                                      return `bars[${i}] not finite`;
-        if (b.high < b.low)                           return `bars[${i}] high < low`;
-        if (b.close < b.low || b.close > b.high)      return `bars[${i}] close outside [low, high]`;
+                                                      return t('view.atr_trail_stop.validate.bar_finite', { i });
+        if (b.high < b.low)                           return t('view.atr_trail_stop.validate.high_lt_low', { i });
+        if (b.close < b.low || b.close > b.high)      return t('view.atr_trail_stop.validate.close_outside', { i });
     }
     return null;
 }
