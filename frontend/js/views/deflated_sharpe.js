@@ -204,10 +204,10 @@ function renderSweep(points, currentN) {
         title: '', width: el.clientWidth || 600, height: 260,
         scales: { x: { distr: 3, log: 10 }, y: { range: [0, 1] } },
         series: [
-            { label: 'N_trials (log)' },
+            { label: t('view.deflated_sharpe.series.n_trials_log') },
             { label: 'PSR', stroke: '#a06bff', width: 1.5,
               fill: '#a06bff1A', points: { show: true, size: 5 } },
-            { label: 'you are here', stroke: '#fff', width: 0,
+            { label: t('view.deflated_sharpe.series.you_are_here'), stroke: '#fff', width: 0,
               points: { show: true, size: 10, stroke: '#fff', fill: 'transparent' } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 }],

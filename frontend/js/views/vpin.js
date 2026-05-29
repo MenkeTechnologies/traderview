@@ -177,10 +177,10 @@ function renderVpinChart(report) {
         title: '', width: el.clientWidth || 600, height: 260,
         scales: { x: {}, y: { range: [0, 1] } },
         series: [
-            { label: 'bucket #' },
+            { label: t('view.vpin.series.bucket_num') },
             { label: 'VPIN', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff1A', points: { show: false } },
-            { label: 'toxic threshold', stroke: '#ff3860', width: 1.0,
+            { label: t('view.vpin.series.toxic_threshold'), stroke: '#ff3860', width: 1.0,
               dash: [4, 4], points: { show: false } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 }],

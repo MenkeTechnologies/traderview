@@ -7,16 +7,16 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 
 const ACTIONS = [
-    { id: 'go_dashboard',   label: 'Jump to Dashboard' },
-    { id: 'go_trades',      label: 'Jump to Trades' },
-    { id: 'go_journal',     label: 'Jump to Journal (today)' },
-    { id: 'go_research',    label: 'Jump to Research (prompt symbol)' },
-    { id: 'go_scanners',    label: 'Jump to Scanners' },
-    { id: 'go_paper',       label: 'Jump to Paper' },
-    { id: 'go_watchlists',  label: 'Jump to Watchlists' },
-    { id: 'paper_buy_100',  label: 'Paper: BUY 100 of prompt symbol' },
-    { id: 'paper_sell_all', label: 'Paper: SELL all of current symbol' },
-    { id: 'add_journal_quick', label: 'New journal note (today, prompt body)' },
+    { id: 'go_dashboard',      get label() { return t('view.hotkeys.action.go_dashboard'); } },
+    { id: 'go_trades',         get label() { return t('view.hotkeys.action.go_trades'); } },
+    { id: 'go_journal',        get label() { return t('view.hotkeys.action.go_journal'); } },
+    { id: 'go_research',       get label() { return t('view.hotkeys.action.go_research'); } },
+    { id: 'go_scanners',       get label() { return t('view.hotkeys.action.go_scanners'); } },
+    { id: 'go_paper',          get label() { return t('view.hotkeys.action.go_paper'); } },
+    { id: 'go_watchlists',     get label() { return t('view.hotkeys.action.go_watchlists'); } },
+    { id: 'paper_buy_100',     get label() { return t('view.hotkeys.action.paper_buy_100'); } },
+    { id: 'paper_sell_all',    get label() { return t('view.hotkeys.action.paper_sell_all'); } },
+    { id: 'add_journal_quick', get label() { return t('view.hotkeys.action.add_journal_quick'); } },
 ];
 
 export async function renderHotkeys(mount) {

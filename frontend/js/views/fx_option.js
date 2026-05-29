@@ -193,10 +193,10 @@ function renderChart(res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'spot' },
-            { label: 'GK (local)', stroke: '#00e5ff', width: 2,
+            { label: t('view.fx_option.series.spot') },
+            { label: t('view.fx_option.series.gk_local'), stroke: '#00e5ff', width: 2,
               points: { show: false } },
-            { label: 'backend response', stroke: '#ff9f1a', width: 0,
+            { label: t('view.fx_option.series.backend'), stroke: '#ff9f1a', width: 0,
               points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

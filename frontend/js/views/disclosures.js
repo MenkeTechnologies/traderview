@@ -9,9 +9,9 @@ import { t } from '../i18n.js';
 let wsUnsub = null;
 
 const KINDS = [
-    { id: 'insider_form4', label: 'Insider (Form 4)' },
-    { id: 'senate_stock',  label: 'Senate' },
-    { id: 'house_stock',   label: 'House' },
+    { id: 'insider_form4', get label() { return t('view.disclosures.kind.insider_form4'); } },
+    { id: 'senate_stock',  get label() { return t('view.disclosures.kind.senate_stock'); } },
+    { id: 'house_stock',   get label() { return t('view.disclosures.kind.house_stock'); } },
 ];
 
 let pollTimer = null;
