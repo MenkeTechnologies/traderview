@@ -124,15 +124,15 @@ function checkAnnouncements(prev, s) {
     // Announce when a symbol crosses the +5% gainer threshold for the first time today.
     if (prev.change_pct < 5 && s.change_pct >= 5 && !announced.has(`gain-${s.symbol}`)) {
         announced.add(`gain-${s.symbol}`);
-        speak(`${spell(s.symbol)} up ${s.change_pct.toFixed(1)} percent`);
+        speak(t('view.live_scanner.tts.gainer', { symbol: spell(s.symbol), pct: s.change_pct.toFixed(1) }));
     }
     if (prev.change_pct > -5 && s.change_pct <= -5 && !announced.has(`loss-${s.symbol}`)) {
         announced.add(`loss-${s.symbol}`);
-        speak(`${spell(s.symbol)} down ${Math.abs(s.change_pct).toFixed(1)} percent`);
+        speak(t('view.live_scanner.tts.loser', { symbol: spell(s.symbol), pct: Math.abs(s.change_pct).toFixed(1) }));
     }
     if (prev.day_high < s.day_high && s.day_pct > 0 && !announced.has(`hod-${s.symbol}-${Math.floor(s.day_high)}`)) {
         announced.add(`hod-${s.symbol}-${Math.floor(s.day_high)}`);
-        speak(`${spell(s.symbol)} new high of day`);
+        speak(t('view.live_scanner.tts.new_high_of_day', { symbol: spell(s.symbol) }));
     }
 }
 
