@@ -147,14 +147,14 @@ function fanSvg(r) {
         ${line('p50', '#00ffaa', 2)}
         ${meanLine}
         <line x1="${padL}" y1="${baseY}" x2="${padL + innerW}" y2="${baseY}" stroke="#666" stroke-dasharray="3,3"/>
-        <text x="${padL + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">starting $${fmt(r.starting_equity, 0)}</text>
+        <text x="${padL + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">${esc(t('view.equity_forecast.chart.starting', { eq: fmt(r.starting_equity, 0) }))}</text>
         ${labels}
-        <text x="${padL + innerW / 2}" y="${H - 8}" text-anchor="middle" fill="#9aa0c8" font-size="11">trade #</text>
+        <text x="${padL + innerW / 2}" y="${H - 8}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('chart.series.trade_num'))}</text>
         <g transform="translate(${padL + 8}, ${padT + 14})">
-            <rect width="10" height="10" fill="#00e5ff" opacity="0.35"/><text x="14" y="9" fill="#cfd2e8" font-size="10">90% (p5-p95)</text>
-            <rect y="14" width="10" height="10" fill="#00e5ff" opacity="0.55"/><text x="14" y="23" fill="#cfd2e8" font-size="10">50% (p25-p75)</text>
-            <line x1="0" y1="32" x2="10" y2="32" stroke="#00ffaa" stroke-width="2"/><text x="14" y="35" fill="#cfd2e8" font-size="10">median</text>
-            <line x1="0" y1="46" x2="10" y2="46" stroke="#ffd24a" stroke-dasharray="3,2"/><text x="14" y="49" fill="#cfd2e8" font-size="10">mean</text>
+            <rect width="10" height="10" fill="#00e5ff" opacity="0.35"/><text x="14" y="9" fill="#cfd2e8" font-size="10">${esc(t('view.equity_forecast.legend.band_90'))}</text>
+            <rect y="14" width="10" height="10" fill="#00e5ff" opacity="0.55"/><text x="14" y="23" fill="#cfd2e8" font-size="10">${esc(t('view.equity_forecast.legend.band_50'))}</text>
+            <line x1="0" y1="32" x2="10" y2="32" stroke="#00ffaa" stroke-width="2"/><text x="14" y="35" fill="#cfd2e8" font-size="10">${esc(t('view.equity_forecast.legend.median'))}</text>
+            <line x1="0" y1="46" x2="10" y2="46" stroke="#ffd24a" stroke-dasharray="3,2"/><text x="14" y="49" fill="#cfd2e8" font-size="10">${esc(t('view.equity_forecast.legend.mean'))}</text>
         </g>
     </svg>`;
 }
@@ -181,6 +181,6 @@ function spaghettiSvg(r) {
         <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="#0d0d22" stroke="#222"/>
         ${paths}
         <line x1="${padL}" y1="${baseY}" x2="${padL + innerW}" y2="${baseY}" stroke="#666" stroke-dasharray="3,3"/>
-        <text x="${padL + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">starting $${fmt(r.starting_equity, 0)}</text>
+        <text x="${padL + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">${esc(t('view.equity_forecast.chart.starting', { eq: fmt(r.starting_equity, 0) }))}</text>
     </svg>`;
 }
