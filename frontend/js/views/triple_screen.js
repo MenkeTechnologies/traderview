@@ -50,8 +50,8 @@ export async function renderTripleScreen(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.triple_screen.h2.screen_3_short_ripple_intraday_breakout">Screen 3 — Short-ripple (intraday breakout)</h2>
             <div class="inline-form">
-                <label><input id="ts-buy"  type="checkbox" ${state.params.intraday_breakout_up   ? 'checked' : ''}> Intraday breakout UP</label>
-                <label><input id="ts-sell" type="checkbox" ${state.params.intraday_breakout_down ? 'checked' : ''}> Intraday breakout DOWN</label>
+                <label><input id="ts-buy"  type="checkbox" ${state.params.intraday_breakout_up   ? 'checked' : ''}> <span data-i18n="view.triple_screen.label.intraday_up">Intraday breakout UP</span></label>
+                <label><input id="ts-sell" type="checkbox" ${state.params.intraday_breakout_down ? 'checked' : ''}> <span data-i18n="view.triple_screen.label.intraday_down">Intraday breakout DOWN</span></label>
                 <button data-i18n="view.triple_screen.btn.evaluate" id="ts-run" class="primary" type="button">Evaluate</button>
             </div>
             <div class="inline-form">

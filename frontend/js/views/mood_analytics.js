@@ -3,7 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 const MOOD_LABELS = { '-2': '😡 awful', '-1': '🙁 down', '0': '😐 flat', '1': '🙂 good', '2': '😄 great' };
 
@@ -78,13 +78,13 @@ function render(r, mount) {
 }
 
 function interpretCorr(c) {
-    if (c == null) return 'insufficient samples';
+    if (c == null) return t('view.mood_analytics.corr.insufficient');
     const a = Math.abs(c);
-    const sign = c >= 0 ? 'positive' : 'negative';
-    if (a < 0.1) return 'no meaningful relationship';
-    if (a < 0.3) return `weak ${sign}`;
-    if (a < 0.5) return `moderate ${sign}`;
-    return `strong ${sign}`;
+    const sign = t(c >= 0 ? 'view.mood_analytics.corr.positive' : 'view.mood_analytics.corr.negative');
+    if (a < 0.1) return t('view.mood_analytics.corr.none');
+    if (a < 0.3) return t('view.mood_analytics.corr.weak',     { sign });
+    if (a < 0.5) return t('view.mood_analytics.corr.moderate', { sign });
+    return                 t('view.mood_analytics.corr.strong',   { sign });
 }
 
 function moodTable(stats) {
