@@ -295,7 +295,7 @@ function renderSubs(mount, subs) {
     const tb = mount.querySelector('#sub-table tbody');
     if (!tb) return;
     if (!subs.length) {
-        tb.innerHTML = '<tr><td colspan="5" class="muted">No recurring subscriptions detected.</td></tr>';
+        tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.tax_workshop.empty.subs'))}</td></tr>`;
         return;
     }
     tb.innerHTML = subs.map(s => `

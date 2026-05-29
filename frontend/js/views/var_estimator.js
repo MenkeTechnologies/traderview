@@ -179,7 +179,7 @@ function renderCompare(hist, gauss) {
                     <td><strong>Hist − Gauss</strong></td>
                     <td class="${cmp.diff >= 0 ? 'neg' : 'pos'}">${esc(fmtUSDSigned(cmp.diff))}</td>
                     <td>${esc(fmtUSDSigned(hist.expected_shortfall_dollars - gauss.expected_shortfall_dollars))}</td>
-                    <td colspan="2" class="muted">Positive Hist − Gauss = empirical tail is fatter than Gaussian assumes.</td>
+                    <td colspan="2" class="muted" data-i18n="view.var_estimator.hint.fat_tail">Positive Hist − Gauss = empirical tail is fatter than Gaussian assumes.</td>
                 </tr>
             </tbody>
         </table>
