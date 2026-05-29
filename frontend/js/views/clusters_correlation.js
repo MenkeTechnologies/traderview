@@ -151,7 +151,7 @@ function card(label, value, cls = '') {
 
 function renderClusters(clusters) {
     const wrap = document.getElementById('cc-clusters');
-    if (!clusters.length) { wrap.innerHTML = '<div class="muted">No clusters.</div>'; return; }
+    if (!clusters.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.clusters_correlation.empty.clusters">No clusters.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>

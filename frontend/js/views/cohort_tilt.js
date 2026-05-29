@@ -152,7 +152,7 @@ function card(label, value, cls = '') {
 
 function renderBars(report) {
     const wrap = document.getElementById('ct-bars');
-    if (!report.by_symbol.length) { wrap.innerHTML = '<div class="muted">No symbols.</div>'; return; }
+    if (!report.by_symbol.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.cohort_tilt.empty.symbols">No symbols.</div>`; return; }
     // Track + fill. Use semantic CSS classes already defined for daily-loss-limit.
     wrap.innerHTML = report.by_symbol.map((s, i) => {
         const ratio = s.long_ratio;
@@ -184,7 +184,7 @@ function renderBars(report) {
 
 function renderTable(report) {
     const wrap = document.getElementById('ct-table');
-    if (!report.by_symbol.length) { wrap.innerHTML = '<div class="muted">No symbols.</div>'; return; }
+    if (!report.by_symbol.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.cohort_tilt.empty.symbols">No symbols.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>

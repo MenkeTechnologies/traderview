@@ -51,7 +51,7 @@ export async function renderTimeInForce(mount, _appState) {
                 <button data-i18n="view.time_in_force.btn.day_keep" id="tif-demo-day-keep"    class="secondary" type="button">DAY → keep</button>
                 <button data-i18n="view.time_in_force.btn.day_cancel_next_session" id="tif-demo-day-cancel"  class="secondary" type="button">DAY → cancel (next session)</button>
                 <button data-i18n="view.time_in_force.btn.gtc_keep_30d_old" id="tif-demo-gtc-keep"    class="secondary" type="button">GTC → keep (30d old)</button>
-                <button id="tif-demo-gtc-cancel"  class="secondary" type="button">GTC → cancel (>90d)</button>
+                <button data-i18n="view.time_in_force.btn.gtc_cancel_old" id="tif-demo-gtc-cancel"  class="secondary" type="button">GTC → cancel (>90d)</button>
                 <button data-i18n="view.time_in_force.btn.ioc_cancel_partial" id="tif-demo-ioc"         class="secondary" type="button">IOC → cancel (partial)</button>
                 <button data-i18n="view.time_in_force.btn.fok_cancel_no_fill" id="tif-demo-fok-no"      class="secondary" type="button">FOK → cancel (no fill)</button>
                 <button data-i18n="view.time_in_force.btn.fok_cancel_partial" id="tif-demo-fok-partial" class="secondary" type="button">FOK → cancel (partial)</button>

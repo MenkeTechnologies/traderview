@@ -381,7 +381,7 @@ async function mountBreadth(body, tok) {
             if (!viewIsCurrent(tok)) return;
             const cls = s.composite_score >= 30 ? 'pos' : s.composite_score <= -30 ? 'neg' : '';
             body.innerHTML = `
-                <div class="muted small">Composite</div>
+                <div class="muted small" data-i18n="view.boards.tile.composite">Composite</div>
                 <div style="font-size:22px;font-weight:700;" class="${cls}">${s.composite_score >= 0 ? '+' : ''}${s.composite_score}</div>
                 <div class="small ${cls}">${(s.regime || '').toUpperCase()}</div>
             `;
@@ -397,7 +397,7 @@ async function mountVix(body, tok) {
             const ch = q.change_pct;
             const cls = ch == null ? '' : ch >= 0 ? 'neg' : 'pos'; // VIX up = risk-off
             body.innerHTML = `
-                <div class="muted small">VIX</div>
+                <div class="muted small" data-i18n="view.boards.tile.vix">VIX</div>
                 <div style="font-size:22px;font-weight:700;">${fmt(q.price, 2)}</div>
                 <div class="small ${cls}">${ch == null ? '—' : (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%'}</div>
             `;
@@ -415,7 +415,7 @@ async function mountFearGreed(body, tok) {
                       r.score <= 55 ? '#9aa0c8' :
                       r.score <= 74 ? '#7af0a8' : '#00ffaa';
             body.innerHTML = `
-                <div class="muted small">Fear & Greed</div>
+                <div class="muted small" data-i18n="view.boards.tile.fear_greed">Fear & Greed</div>
                 <div style="font-size:22px;font-weight:700;color:${c};">${r.score}</div>
                 <div class="small" style="color:${c};">${esc(r.label)}</div>
             `;

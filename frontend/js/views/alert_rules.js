@@ -164,7 +164,7 @@ function bindFeedButtons() {
 function renderRulesList() {
     const wrap = document.getElementById('ar-rules');
     if (!state.rules.length) {
-        wrap.innerHTML = '<div class="muted">No rules. Add one below.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.alert_rules.empty.rules">No rules. Add one below.</div>`;
         return;
     }
     wrap.innerHTML = state.rules.map(r => renderRuleCard(r)).join('');
@@ -277,7 +277,7 @@ function fireAudioFor(ev) {
 function renderEvents(events) {
     const wrap = document.getElementById('ar-events');
     if (!events.length) {
-        wrap.innerHTML = '<div class="chart-panel"><div class="muted">No events fired at current rule set.</div></div>';
+        wrap.innerHTML = `<div class="chart-panel"><div class="muted" data-i18n="view.alert_rules.empty.events">No events fired at current rule set.</div></div>`;
         return;
     }
     wrap.innerHTML = `

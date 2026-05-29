@@ -156,7 +156,7 @@ function renderChart(bars, points) {
 function renderBiasStrip(points) {
     const wrap = document.getElementById('al-bias-strip');
     if (!Array.isArray(points) || points.length === 0) {
-        wrap.innerHTML = '<div class="muted">No points.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.alligator.empty.points">No points.</div>`;
         return;
     }
     // Color-coded cell per bar — green/red/grey by bias.

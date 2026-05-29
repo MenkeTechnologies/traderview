@@ -206,7 +206,7 @@ function renderChart(features, report) {
 
 function renderClusters(report) {
     const wrap = document.getElementById('cl-clusters');
-    if (!report.clusters.length) { wrap.innerHTML = '<div class="muted">No clusters.</div>'; return; }
+    if (!report.clusters.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.clusters_trade_features.empty.clusters">No clusters.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
