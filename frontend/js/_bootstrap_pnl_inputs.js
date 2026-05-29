@@ -8,6 +8,8 @@
 // Resamples trade-level P&L with replacement, sums per-resample to total,
 // then reports quantiles + probability(total > 0).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_RESAMPLES = 5000;
 export const DEFAULT_SEED = 0n;
 export const MIN_TRADES = 5;
@@ -20,15 +22,15 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.trade_pnls))                          return 'trade_pnls must be an array';
-    if (input.trade_pnls.length < MIN_TRADES)                       return `need at least ${MIN_TRADES} trades`;
+    if (!Array.isArray(input.trade_pnls))                          return t('view.bootstrap_pnl.validate.pnls_array');
+    if (input.trade_pnls.length < MIN_TRADES)                       return t('view.bootstrap_pnl.validate.trades_min', { min: MIN_TRADES });
     for (let i = 0; i < input.trade_pnls.length; i++) {
-        if (!Number.isFinite(input.trade_pnls[i]))                  return `trade_pnls[${i}] not finite`;
+        if (!Number.isFinite(input.trade_pnls[i]))                  return t('view.bootstrap_pnl.validate.pnls_finite', { i });
     }
-    if (!Number.isInteger(input.n_resamples))                       return 'n_resamples must be an integer';
-    if (input.n_resamples < MIN_RESAMPLES)                          return `n_resamples must be ≥ ${MIN_RESAMPLES}`;
+    if (!Number.isInteger(input.n_resamples))                       return t('view.bootstrap_pnl.validate.resamples_int');
+    if (input.n_resamples < MIN_RESAMPLES)                          return t('view.bootstrap_pnl.validate.resamples_min', { min: MIN_RESAMPLES });
     if (typeof input.seed !== 'bigint' && !Number.isInteger(input.seed))
-                                                                      return 'seed must be an integer';
+                                                                      return t('view.bootstrap_pnl.validate.seed');
     return null;
 }
 

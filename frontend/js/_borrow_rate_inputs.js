@@ -7,6 +7,8 @@
 //   period:     usize,
 // }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 5;
 export const MIN_PERIOD = 1;
 export const MAX_PERIOD = 500;
@@ -21,13 +23,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.rates_pct))                    return 'rates_pct must be an array';
+    if (!Array.isArray(input.rates_pct))                    return t('view.borrow_rate.validate.rates_array');
     if (!Number.isInteger(input.period) || input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                             return `period must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.rates_pct.length < input.period + 1)          return `need at least period + 1 = ${input.period + 1} rates`;
+                                                             return t('view.borrow_rate.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.rates_pct.length < input.period + 1)          return t('view.borrow_rate.validate.rates_min', { n: input.period + 1 });
     for (let i = 0; i < input.rates_pct.length; i++) {
-        if (!Number.isFinite(input.rates_pct[i]))           return `rates_pct[${i}] not finite`;
-        if (input.rates_pct[i] < 0)                         return `rates_pct[${i}] cannot be negative`;
+        if (!Number.isFinite(input.rates_pct[i]))           return t('view.borrow_rate.validate.rate_finite', { i });
+        if (input.rates_pct[i] < 0)                         return t('view.borrow_rate.validate.rate_negative', { i });
     }
     return null;
 }

@@ -8,6 +8,8 @@
 //
 // Tests H₀: OLS residual variance is independent of x (homoskedasticity).
 
+import { t } from './i18n.js';
+
 export const MIN_OBS = 10;
 
 export const DEFAULT_INPUTS = {
@@ -16,13 +18,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.x))                              return 'x must be an array';
-    if (!Array.isArray(input.y))                              return 'y must be an array';
-    if (input.x.length !== input.y.length)                    return 'x and y must have equal length';
-    if (input.x.length < MIN_OBS)                             return `need at least ${MIN_OBS} pairs`;
+    if (!Array.isArray(input.x))                              return t('view.bp.validate.x_array');
+    if (!Array.isArray(input.y))                              return t('view.bp.validate.y_array');
+    if (input.x.length !== input.y.length)                    return t('view.bp.validate.length_mismatch');
+    if (input.x.length < MIN_OBS)                             return t('view.bp.validate.min_pairs', { min: MIN_OBS });
     for (let i = 0; i < input.x.length; i++) {
-        if (!Number.isFinite(input.x[i]))                     return `x[${i}] not finite`;
-        if (!Number.isFinite(input.y[i]))                     return `y[${i}] not finite`;
+        if (!Number.isFinite(input.x[i]))                     return t('view.bp.validate.x_finite', { i });
+        if (!Number.isFinite(input.y[i]))                     return t('view.bp.validate.y_finite', { i });
     }
     return null;
 }
