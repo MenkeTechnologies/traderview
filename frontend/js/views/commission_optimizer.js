@@ -93,7 +93,7 @@ function readInputs() {
     state.executions = parsed.executions;
     try {
         const tiers = JSON.parse(document.getElementById('co-tiers').value);
-        if (!Array.isArray(tiers)) throw new Error('tiers must be an array');
+        if (!Array.isArray(tiers)) throw new Error(t('view.commission_optimizer.error.tiers_array'));
         for (const t_ of tiers) {
             for (const k of ['per_trade_flat', 'per_share', 'per_dollar', 'min_per_trade', 'max_per_trade']) {
                 t_[k] = Number(t_[k]);

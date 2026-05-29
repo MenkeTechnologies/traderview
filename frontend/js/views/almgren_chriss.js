@@ -140,7 +140,7 @@ async function computeFrontier(tok) {
             lambdas.map(l => api.microAlmgrenChriss(buildBody({ ...state.params, lambda: l }))),
         );
     } catch (e) {
-        showErr(`Frontier sweep failed: ${e.message || e}`); return;
+        showErr(t('view.almgren_chriss.error.sweep', { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     const points = reports.map((r, i) => r ? {

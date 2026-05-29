@@ -81,7 +81,7 @@ function barsToBlob(bars) {
 function readInputs() {
     const parsed = parseBarBlob(document.getElementById('vsc-blob').value);
     if (parsed.errors.length) {
-        showErr(`Parse errors: ${parsed.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; ')}`);
+        showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
     } else {
         hideErr();
         state.bars = parsed.bars;

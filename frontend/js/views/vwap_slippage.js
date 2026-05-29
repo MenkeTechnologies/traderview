@@ -102,7 +102,7 @@ async function compute(tok) {
     }
     if (!viewIsCurrent(tok)) return;
     const unwrapped = unwrapResponse(resp);
-    if (!unwrapped.ok) { showErr(`Backend: ${unwrapped.reason}`); return; }
+    if (!unwrapped.ok) { showErr(t('common.error.backend', { reason: unwrapped.reason })); return; }
     renderSummary(unwrapped.result, bars);
     renderChart(bars, decToNum(unwrapped.result.vwap), state.fillPrice);
 }

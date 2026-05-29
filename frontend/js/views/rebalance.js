@@ -85,11 +85,11 @@ export async function renderRebalance(mount, state) {
 function bodyFromForm(accountId, mount) {
     const f = mount.querySelector('#rb-form');
     const ta = mount.querySelector('#rb-targets');
-    if (!f || !ta) throw new Error('form gone');
+    if (!f || !ta) throw new Error(t('view.rebalance.error.form_gone'));
     let targets;
     try { targets = JSON.parse(ta.value); }
-    catch (e) { throw new Error('targets JSON invalid: ' + e.message); }
-    if (!Array.isArray(targets)) throw new Error('targets must be a JSON array');
+    catch (e) { throw new Error(t('view.rebalance.error.targets_json', { msg: e.message })); }
+    if (!Array.isArray(targets)) throw new Error(t('view.rebalance.error.targets_array'));
     return {
         account_id: accountId,
         targets,

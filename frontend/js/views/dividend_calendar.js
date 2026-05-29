@@ -117,7 +117,7 @@ async function loadFromWatchlist(mount, tok) {
         document.getElementById('dc-text').value = text;
         state.text = text;
     } catch (e) {
-        showErr(`Watchlist load error: ${e.message || e}`);
+        showErr(t('view.dividend_calendar.error.watchlist_load', { msg: e.message || e }));
     }
 }
 
