@@ -5134,6 +5134,8 @@
   "view.block_boot.stat.stdev":       "stdev",
   "view.block_boot.stat.sharpe_ratio": "sharpe ratio",
   "view.block_boot.stat.max_drawdown": "max drawdown",
+  "view.block_boot.stat.sharpe":      "sharpe_ratio",
+  "view.block_boot.stat.maxdd":       "max_drawdown",
   "view.block_boot.btn.compute":      "Resample",
   "view.block_boot.btn.demo_meanrevert": "Demo: mean-revert AR(1)",
   "view.block_boot.btn.demo_momentum":   "Demo: momentum AR(1)",
