@@ -79,8 +79,7 @@ function renderReport(r, out) {
         </div>
 
         ${r.skipped_short_events > 0 ? `
-            <p class="muted small">${r.skipped_short_events} short/cover or oversold event(s)
-            were skipped (short-side lot tracking is a v2 feature).</p>` : ''}
+            <p class="muted small">${esc(t('view.tax_lots.hint.skipped_short', { n: r.skipped_short_events }))}</p>` : ''}
 
         <div class="chart-panel">
             <h2>${esc(t('view.tax_lots.h2.realized', { count: r.realized.length, method: r.method.toUpperCase() }))}</h2>

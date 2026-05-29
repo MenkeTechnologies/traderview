@@ -201,7 +201,7 @@ export async function renderTutorial(mount, _state) {
         <h1 class="view-title">// TUTORIAL
             <input id="tut-q" type="search" placeholder="search…" data-i18n-placeholder="common.placeholder.search" autocomplete="off">
         </h1>
-        <p class="muted small">
+        <p class="muted small" data-i18n-html="view.tutorial.intro">
             Press <kbd>?</kbd> any time to re-open this. Press <kbd>Cmd</kbd>+<kbd>K</kbd> for the launcher.
         </p>
         <nav class="tut-toc">

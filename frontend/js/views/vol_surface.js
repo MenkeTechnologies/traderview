@@ -54,8 +54,11 @@ function renderSurface(s, out, mount) {
     out.innerHTML = `
         <div class="chart-panel">
             <h2>${esc(s.symbol)} — spot ${s.spot.toFixed(2)}</h2>
-            <p class="muted small">${s.expirations.length} expirations · ${s.moneyness.length} moneyness buckets ·
-                fetched ${new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
+            <p class="muted small">${esc(t('view.vol_surface.stats', {
+                exps: s.expirations.length,
+                buckets: s.moneyness.length,
+                time: new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
+            }))}</p>
             <div id="vsHeat"></div>
         </div>
         <div class="chart-panel">
