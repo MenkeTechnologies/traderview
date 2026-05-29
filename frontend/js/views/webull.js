@@ -50,7 +50,7 @@ export async function renderWebull(mount, _state) {
                     <th data-i18n="view.webull.th.avg_cost">Avg cost</th><th data-i18n="view.webull.th.last">Last</th><th data-i18n="view.webull.th.mkt_value">Mkt value</th>
                     <th data-i18n="view.webull.th.unrealized">Unrealized</th><th>%</th><th data-i18n="view.webull.th.day_p_l">Day P/L</th>
                 </tr></thead>
-                <tbody><tr><td colspan="10" class="muted">waiting for first poll…</td></tr></tbody>
+                <tbody><tr><td colspan="10" class="muted" data-i18n="common.status.waiting_first_poll">waiting for first poll…</td></tr></tbody>
             </table>
         </div>
 
@@ -61,7 +61,7 @@ export async function renderWebull(mount, _state) {
                     <th data-i18n="view.webull.th.time">Time</th><th data-i18n="view.webull.th.symbol_2">Symbol</th><th data-i18n="view.webull.th.side_2">Side</th>
                     <th data-i18n="view.webull.th.qty_2">Qty</th><th data-i18n="view.webull.th.avg_fill">Avg fill</th><th data-i18n="view.webull.th.status">Status</th>
                 </tr></thead>
-                <tbody><tr><td colspan="6" class="muted">waiting for first poll…</td></tr></tbody>
+                <tbody><tr><td colspan="6" class="muted" data-i18n="common.status.waiting_first_poll">waiting for first poll…</td></tr></tbody>
             </table>
         </div>
     `;
@@ -143,7 +143,7 @@ function render(mount, snap) {
             </tr>
         `).join('');
     } else {
-        posBody.innerHTML = '<tr><td colspan="10" class="muted">no open positions</td></tr>';
+        posBody.innerHTML = `<tr><td colspan="10" class="muted">${esc(t('view.webull.empty.no_positions'))}</td></tr>`;
     }
     const ordBody = mount.querySelector('#wb-orders tbody');
     if (!ordBody) return;
@@ -159,6 +159,6 @@ function render(mount, snap) {
             </tr>
         `).join('');
     } else {
-        ordBody.innerHTML = '<tr><td colspan="6" class="muted">no filled orders today</td></tr>';
+        ordBody.innerHTML = `<tr><td colspan="6" class="muted">${esc(t('view.webull.empty.no_orders'))}</td></tr>`;
     }
 }

@@ -64,21 +64,21 @@ export async function renderPaper(mount) {
             <div class="chart-panel">
                 <h2 data-i18n="view.paper.h2.order_ticket">Order ticket</h2>
                 <form id="ord-form" class="inline-form">
-                    <input name="symbol" placeholder="symbol" required style="text-transform:uppercase">
+                    <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
                     <select name="side">
                         <option data-i18n="view.paper.opt.buy" value="buy">BUY</option>
                         <option data-i18n="view.paper.opt.sell" value="sell">SELL</option>
                         <option data-i18n="view.paper.opt.short" value="short">SHORT</option>
                         <option data-i18n="view.paper.opt.cover" value="cover">COVER</option>
                     </select>
-                    <input name="qty" type="number" step="any" placeholder="qty" required>
+                    <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
                     <select name="order_type">
                         <option data-i18n="view.paper.opt.market" value="market">market</option>
                         <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
                         <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
                     </select>
-                    <input name="limit_price" type="number" step="any" placeholder="limit">
-                    <input name="stop_price"  type="number" step="any" placeholder="stop">
+                    <input name="limit_price" type="number" step="any" placeholder="limit" data-i18n-placeholder="common.placeholder.limit">
+                    <input name="stop_price"  type="number" step="any" placeholder="stop" data-i18n-placeholder="common.placeholder.stop">
                     <button data-i18n="view.paper.btn.submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" class="link" id="reset">Reset account ($200k)</button>

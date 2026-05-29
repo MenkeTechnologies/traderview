@@ -25,7 +25,7 @@ export async function renderWatchlists(mount) {
                         ${esc(w.name)}
                     </button>`).join('')}
                 <form id="wl-create" class="inline-form" style="display:inline-flex">
-                    <input name="name" placeholder="new watchlist" required>
+                    <input name="name" placeholder="new watchlist" data-i18n-placeholder="view.watchlists.placeholder.new" required>
                     <button data-i18n="view.watchlists.btn.add_list" class="primary" type="submit">+ Add list</button>
                 </form>
             </div>
@@ -34,7 +34,7 @@ export async function renderWatchlists(mount) {
         <div class="chart-panel">
             <h2 id="wl-name">${esc(active.name)}</h2>
             <form id="add-sym" class="inline-form" style="margin-bottom:10px">
-                <input name="symbol" placeholder="symbol (e.g. AAPL)" required style="text-transform:uppercase">
+                <input name="symbol" placeholder="symbol (e.g. AAPL)" data-i18n-placeholder="view.watchlists.placeholder.symbol" required style="text-transform:uppercase">
                 <button data-i18n="view.watchlists.btn.add_symbol" class="primary" type="submit">+ Add symbol</button>
                 <button data-i18n="view.watchlists.btn.rename" class="primary" type="button" id="rename-wl"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Rename</button>

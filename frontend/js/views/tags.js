@@ -11,7 +11,7 @@ export async function renderTags(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.tags.h2.add_tag">Add tag</h2>
             <form id="tag-form" class="inline-form">
-                <input name="name" placeholder="tag name" required>
+                <input name="name" placeholder="tag name" data-i18n-placeholder="view.tags.placeholder.name" required>
                 <input type="color" name="color" value="#00e5ff">
                 <button data-i18n="view.tags.btn.create" class="primary" type="submit">Create</button>
             </form>

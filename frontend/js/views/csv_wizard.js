@@ -42,7 +42,7 @@ export async function renderCsvWizard(mount, state) {
         const f = e.target.files[0];
         if (!f) return;
         const status = mount.querySelector('#cw-status');
-        if (status) status.textContent = `parsing ${f.name}…`;
+        if (status) status.textContent = t('view.csv_wizard.status.parsing', { name: f.name });
         rawBytes = await f.arrayBuffer();
         if (!viewIsCurrent(tok)) return;
         try {

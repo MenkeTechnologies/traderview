@@ -11,7 +11,7 @@ export async function renderResearch(mount, _state, sym) {
         mount.innerHTML = `
             <h1 data-i18n="view.research.h1.research" class="view-title">// RESEARCH</h1>
             <form id="rs-form" class="inline-form">
-                <input name="symbol" placeholder="symbol — AAPL, NVDA, ^GSPC, BTC-USD" required autofocus style="min-width:300px;text-transform:uppercase">
+                <input name="symbol" placeholder="symbol — AAPL, NVDA, ^GSPC, BTC-USD" data-i18n-placeholder="view.research.placeholder.symbol" required autofocus style="min-width:300px;text-transform:uppercase">
                 <button data-i18n="view.research.btn.research" class="primary" type="submit">Research</button>
             </form>
             <p data-i18n="view.research.hint.tip_anything_yahoo_recognizes_works_stocks_indices" class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD).</p>
@@ -264,7 +264,7 @@ function renderFund(el, f) {
         `<tr><td>${k}</td><td>${esc(String(v))}</td></tr>`).join('')}</tbody></table>`;
     if (ap.longBusinessSummary) {
         el.insertAdjacentHTML('beforeend',
-            `<details style="margin-top:8px"><summary>Business summary</summary>
+            `<details style="margin-top:8px"><summary data-i18n="view.research.summary.business">Business summary</summary>
              <p class="muted small" style="margin-top:6px">${esc(ap.longBusinessSummary)}</p>
              </details>`);
     }

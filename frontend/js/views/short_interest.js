@@ -27,7 +27,7 @@ export async function renderShortInterest(mount, _state, sym) {
             FINRA Reg SHO daily short-volume aggregated across market centers.</p>
 
         <form id="sf" class="inline-form">
-            <input name="sym" placeholder="symbol (GME)" style="text-transform:uppercase">
+            <input name="sym" placeholder="symbol (GME)" data-i18n-placeholder="view.short_interest.placeholder.symbol" style="text-transform:uppercase">
             <button data-i18n="view.short_interest.btn.lookup" class="primary" type="submit">Lookup</button>
         </form>
 

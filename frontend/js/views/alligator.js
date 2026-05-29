@@ -162,7 +162,8 @@ function renderBiasStrip(points) {
     // Color-coded cell per bar — green/red/grey by bias.
     wrap.innerHTML = `<div class="al-strip">${points.map((p, i) => {
         const bias = classifyPoint(p);
-        return `<div class="al-strip-cell al-bias-${bias}" title="bar ${i} · ${biasBadge(bias).label}${p ? ' · J=' + fmtN(p.jaw) + ' T=' + fmtN(p.teeth) + ' L=' + fmtN(p.lips) : ''}"></div>`;
+        const detail = p ? t('view.alligator.tip.bar_detail', { i, label: biasBadge(bias).label, jaw: fmtN(p.jaw), teeth: fmtN(p.teeth), lips: fmtN(p.lips) }) : t('view.alligator.tip.bar_empty', { i, label: biasBadge(bias).label });
+        return `<div class="al-strip-cell al-bias-${bias}" title="${detail}"></div>`;
     }).join('')}</div>`;
 }
 

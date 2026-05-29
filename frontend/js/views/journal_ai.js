@@ -29,12 +29,12 @@ export async function renderAiSettings(mount) {
                 </select>
             </label>
             <label><span data-i18n="view.journal_ai.label.model">Model</span>
-                <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3"
+                <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3" data-i18n-placeholder="view.journal_ai.placeholder.model"
                        data-i18n-placeholder="view.journal_ai.placeholder.model"
                        value="${esc(cfg.model || '')}" style="min-width:280px;">
             </label>
             <label><span data-i18n="view.journal_ai.label.endpoint">Endpoint (override)</span>
-                <input name="endpoint" placeholder="default per provider"
+                <input name="endpoint" placeholder="default per provider" data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
                        data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
                        value="${esc(cfg.endpoint || '')}" style="min-width:240px;">
             </label>
@@ -108,8 +108,8 @@ export async function renderAiAnalyze(mount, tradeId) {
             const cached = await api.getAiCached(tradeId);
             if (!viewIsCurrent(tok)) return;
             if (cached) {
-                if (status) status.textContent = `cached ${new Date(cached.created_at).toLocaleString()} · ${cached.provider}/${cached.model}` +
-                    (cached.prompt_tokens ? ` · ${cached.prompt_tokens}+${cached.response_tokens || 0} tok` : '');
+                if (status) status.textContent = t('view.journal_ai.status.cached', { when: new Date(cached.created_at).toLocaleString(), provider: cached.provider, model: cached.model }) +
+                    (cached.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: cached.prompt_tokens, r: cached.response_tokens || 0 }) : '');
                 if (body) body.innerHTML = renderFindings(cached.findings);
                 const runBtn = mount.querySelector('#ai-run');
                 if (runBtn) runBtn.textContent = t('view.journal_ai.btn.reanalyze');
@@ -134,8 +134,8 @@ export async function renderAiAnalyze(mount, tradeId) {
         try {
             const r = await api.runAiAnalysis(tradeId);
             if (!viewIsCurrent(tok)) return;
-            if (status) status.textContent = `done · ${r.provider}/${r.model}` +
-                (r.prompt_tokens ? ` · ${r.prompt_tokens}+${r.response_tokens || 0} tok` : '');
+            if (status) status.textContent = t('view.journal_ai.status.done', { provider: r.provider, model: r.model }) +
+                (r.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: r.prompt_tokens, r: r.response_tokens || 0 }) : '');
             if (body) body.innerHTML = renderFindings(r.findings);
             btn.textContent = t('view.journal_ai.btn.reanalyze');
         } catch (e) {

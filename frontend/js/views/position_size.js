@@ -76,7 +76,7 @@ export async function renderPositionSize(mount, state) {
             if (aw) aw.value = r.avg_win.toFixed(2);
             if (al) al.value = r.avg_loss.toFixed(2);
             const s2 = mount.querySelector('#ps-fill-status');
-            if (s2) s2.textContent = `loaded ${r.wins}W / ${r.losses}L (${r.samples} closed)`;
+            if (s2) s2.textContent = t('view.position_size.status.loaded', { wins: r.wins, losses: r.losses, samples: r.samples });
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#ps-fill-status');

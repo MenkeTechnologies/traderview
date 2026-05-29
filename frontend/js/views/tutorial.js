@@ -199,7 +199,7 @@ export async function renderTutorial(mount, _state) {
 
     mount.innerHTML = `
         <h1 class="view-title">// TUTORIAL
-            <input id="tut-q" type="search" placeholder="search…" autocomplete="off">
+            <input id="tut-q" type="search" placeholder="search…" data-i18n-placeholder="common.placeholder.search" autocomplete="off">
         </h1>
         <p class="muted small">
             Press <kbd>?</kbd> any time to re-open this. Press <kbd>Cmd</kbd>+<kbd>K</kbd> for the launcher.

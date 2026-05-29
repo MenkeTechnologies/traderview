@@ -45,7 +45,7 @@ export async function renderAlertRules(mount, _appState) {
                         <option data-i18n="view.alert_rules.opt.pct_change_in_window" value="pct_change">pct change in window</option>
                         <option data-i18n="view.alert_rules.opt.volume_spike_in_window" value="volume_spike">volume spike in window</option>
                     </select></label>
-                <input id="ar-new-name" type="text" placeholder="rule name">
+                <input id="ar-new-name" type="text" placeholder="rule name" data-i18n-placeholder="view.alert_rules.placeholder.name">
                 <button data-i18n="view.alert_rules.btn.add" id="ar-add" class="primary" type="button">+ Add</button>
             </div>
         </div>
@@ -198,7 +198,7 @@ function renderRuleCard(r) {
                 </div>
                 <div class="inline-form">
                     <label style="flex:1">TTS template (placeholders: {symbol} {price} {change_pct} {volume_mult} {threshold})
-                        <input type="text" data-rule-id="${esc(r.id)}" data-field="tts_template" value="${esc(r.tts_template || '')}" placeholder="optional; leave blank for default" style="width:100%"></label>
+                        <input type="text" data-rule-id="${esc(r.id)}" data-field="tts_template" value="${esc(r.tts_template || '')}" placeholder="optional; leave blank for default" data-i18n-placeholder="view.alert_rules.placeholder.tts" style="width:100%"></label>
                 </div>
             </div>
         </div>

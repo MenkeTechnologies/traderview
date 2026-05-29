@@ -76,10 +76,10 @@ export async function renderTradesView(mount, state) {
             const tags = await api.tags();
             if (!viewIsCurrent(tok)) return null;
             if (!tags.length) { alert(t('view.trades.alert.no_tags')); return null; }
-            const name = prompt(`Tag name (${tags.map(t => t.name).join(', ')})`);
+            const name = prompt(t('view.trades.prompt.tag_name', { names: tags.map(x => x.name).join(', ') }));
             if (!name) return null;
-            const tag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-            if (!tag) { alert(`No tag named "${name}".`); return null; }
+            const tag = tags.find(x => x.name.toLowerCase() === name.toLowerCase());
+            if (!tag) { alert(t('view.trades.alert.no_tag_named', { name })); return null; }
             return { tag_id: tag.id };
         }
         if (action === 'set_risk') {

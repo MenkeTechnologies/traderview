@@ -180,7 +180,7 @@ function tradeTable(trades) {
     if (!trades.length) return '<p data-i18n="view.rebalance.hint.no_trades_already_balanced" class="muted small">No trades — already balanced.</p>';
     return `<table class="trades">
         <thead><tr>
-            <th data-i18n="view.rebalance.th.symbol">Symbol</th><th data-i18n="view.rebalance.th.side">Side</th><th data-i18n="view.rebalance.th.qty">Qty</th><th data-i18n="view.rebalance.th.price">Price</th><th>$ value</th>
+            <th data-i18n="view.rebalance.th.symbol">Symbol</th><th data-i18n="view.rebalance.th.side">Side</th><th data-i18n="view.rebalance.th.qty">Qty</th><th data-i18n="view.rebalance.th.price">Price</th><th data-i18n="view.rebalance.th.dollar_value">$ value</th>
             <th data-i18n="view.rebalance.th.current_target_qty">Current → Target qty</th>
         </tr></thead>
         <tbody>

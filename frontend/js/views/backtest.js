@@ -24,7 +24,7 @@ export async function renderBacktest(mount) {
 
         <div class="chart-panel">
             <form id="bt-form" class="inline-form">
-                <input name="symbol" placeholder="symbol (AAPL)" value="SPY" required style="text-transform:uppercase">
+                <input name="symbol" placeholder="symbol (AAPL)" data-i18n-placeholder="view.backtest.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
                 <select name="preset" id="ps">
                     ${PRESETS.map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join('')}
                 </select>

@@ -54,7 +54,7 @@ async function renderList(mount) {
 
         <div class="chart-panel">
             <form id="b-new" class="inline-form">
-                <input name="name" placeholder="board name" required style="min-width:240px;">
+                <input name="name" placeholder="board name" data-i18n-placeholder="view.boards.placeholder.name" required style="min-width:240px;">
                 <button data-i18n="view.boards.btn.create_board" class="primary" type="submit">Create board</button>
             </form>
         </div>
@@ -284,7 +284,7 @@ async function persist(state) {
         });
         if (!viewIsCurrent(state.tok)) return;
         const tag2 = state.mount.querySelector('#b-save');
-        if (tag2) tag2.textContent = `saved ${new Date().toLocaleTimeString(undefined, { hour12: false })}`;
+        if (tag2) tag2.textContent = t('view.boards.status.saved', { when: new Date().toLocaleTimeString(undefined, { hour12: false }) });
         state.dirty = false;
     } catch (e) {
         if (!viewIsCurrent(state.tok)) return;

@@ -26,7 +26,7 @@ export async function renderCustomIndicators(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.custom_indicators.h2.create_update_preset">Create / update preset</h2>
             <form id="ci-form" class="inline-form">
-                <input name="name" placeholder="name (e.g. 'EMA-21 trend')" required style="min-width:200px;">
+                <input name="name" placeholder="name (e.g. 'EMA-21 trend')" data-i18n-placeholder="view.custom_indicators.placeholder.name" required style="min-width:200px;">
                 <select name="kind">
                     ${KINDS.map(k => {
                         const lk = `view.custom_indicators.kind.${k.id}.label`;

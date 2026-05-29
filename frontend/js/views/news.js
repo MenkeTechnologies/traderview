@@ -25,7 +25,7 @@ export async function renderNews(mount) {
                     <option data-i18n="view.news.opt.by_symbol" value="symbol">by symbol</option>
                     <option data-i18n="view.news.opt.full_text_search" value="search">full-text search</option>
                 </select>
-                <input name="value" placeholder="symbol or query"
+                <input name="value" placeholder="symbol or query" data-i18n-placeholder="view.news.placeholder.value"
                        data-i18n-placeholder="view.news.placeholder.value" style="min-width:200px;">
                 <label><span data-i18n="view.news.label.limit">Limit</span>
                     <input name="limit" type="number" min="10" max="200" value="40" style="width:80px;"></label>
@@ -112,9 +112,9 @@ function renderList(el, items) {
 
 function sentimentBar(s) {
     if (s == null) return '<span style="display:inline-block;width:8px;height:18px;background:#444;margin-right:8px;"></span>';
-    const t = Math.max(-1, Math.min(1, s));
-    const color = t > 0.1 ? '#7af0a8' : t < -0.1 ? '#ff1f7a' : '#9aa0c8';
-    return `<span title="sentiment ${t.toFixed(2)}" style="display:inline-block;width:8px;height:18px;background:${color};margin-right:8px;vertical-align:middle;"></span>`;
+    const v = Math.max(-1, Math.min(1, s));
+    const color = v > 0.1 ? '#7af0a8' : v < -0.1 ? '#ff1f7a' : '#9aa0c8';
+    return `<span title="${t('view.news.tip.sentiment', { score: v.toFixed(2) })}" style="display:inline-block;width:8px;height:18px;background:${color};margin-right:8px;vertical-align:middle;"></span>`;
 }
 
 function row(n) {

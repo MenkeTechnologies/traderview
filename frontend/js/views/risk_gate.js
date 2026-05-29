@@ -47,7 +47,7 @@ export async function renderRiskGate(mount, state) {
             <h2 data-i18n="view.risk_gate.h2.today_s_compliance_snapshot">Today's compliance snapshot</h2>
             <p data-i18n="view.risk_gate.hint.live_ping_of_the_gate_with_a_near_zero_risk_synthe" class="muted small">Live ping of the gate with a near-zero-risk synthetic trade — shows which rules would fire on a probe entry RIGHT NOW. Click refresh after every trade close.</p>
             <button data-i18n="view.risk_gate.btn.refresh_snapshot" id="rg-snap-refresh" class="primary" type="button">Refresh snapshot</button>
-            <pre id="rg-snap-out" class="boot">click refresh to evaluate</pre>
+            <pre id="rg-snap-out" class="boot" data-i18n="view.risk_gate.snapshot.click_to_eval">click refresh to evaluate</pre>
         </div>
 
         <div class="chart-panel">
@@ -388,7 +388,7 @@ async function reloadFires(mount, tok) {
                 <tr>
                     <td>${new Date(f.fired_at).toLocaleString(undefined, { hour12: false })}</td>
                     <td><strong>${esc(f.symbol)}</strong></td>
-                    <td>${f.blocked ? '<strong style="color:#ff2a6d">BLOCKED</strong>' : '<span class="muted">warned, allowed</span>'}</td>
+                    <td>${f.blocked ? `<strong style="color:#ff2a6d">${t('view.risk_gate.status.blocked')}</strong>` : `<span class="muted">${t('view.risk_gate.status.warned_allowed')}</span>`}</td>
                     <td>${rules}</td>
                 </tr>`;
         }).join('');

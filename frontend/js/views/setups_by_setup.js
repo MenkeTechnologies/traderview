@@ -22,7 +22,7 @@ export async function renderSetupsBySetup(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.setups_by_setup.h2.trades">Trades (per line:</span> <code>setup net_pnl [risk_amount]</code><span data-i18n="view.setups_by_setup.h2.trades_suffix">; "-" = untagged)</span></h2>
-            <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded">${esc(rowsToBlob(state.rows))}</textarea>
+            <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded" data-i18n-placeholder="view.setups_by_setup.placeholder.blob">${esc(rowsToBlob(state.rows))}</textarea>
             <div class="inline-form">
                 <button data-i18n="view.setups_by_setup.btn.analyze" id="sbs-run" class="primary" type="button">Analyze</button>
                 <button data-i18n="view.setups_by_setup.btn.demo_3_setups_mixed" id="sbs-demo-mixed"    class="secondary" type="button">Demo: 3 setups mixed</button>

@@ -21,7 +21,7 @@ export async function renderGoals(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.goals.h2.create_goal">Create goal</h2>
             <form id="g-form" class="inline-form">
-                <input name="name" placeholder="name" required style="min-width:180px;">
+                <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name" required style="min-width:180px;">
                 <select name="period">
                     <option data-i18n="view.goals.opt.monthly" value="monthly">monthly</option>
                     <option data-i18n="view.goals.opt.quarterly" value="quarterly">quarterly</option>

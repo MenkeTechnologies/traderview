@@ -22,8 +22,8 @@ export async function renderCommunity(mount, _state, catSlug) {
         <div class="chart-panel">
             <h2>${esc(t('view.community.h2.new_thread', { category: cat.name }))}</h2>
             <form id="thread-form">
-                <input name="title" placeholder="title" required>
-                <textarea name="body_md" placeholder="markdown body" required></textarea>
+                <input name="title" placeholder="title" data-i18n-placeholder="common.placeholder.title" required>
+                <textarea name="body_md" placeholder="markdown body" data-i18n-placeholder="view.community.placeholder.body" required></textarea>
                 <button data-i18n="view.community.btn.post" class="primary" type="submit">Post</button>
             </form>
         </div>
@@ -69,7 +69,7 @@ export async function renderCommunityThread(mount, _state, catSlug, threadSlug) 
             <div class="chart-panel">
                 <h2 data-i18n="view.community.h2.reply">Reply</h2>
                 <form id="reply-form">
-                    <textarea name="body_md" placeholder="markdown reply" required></textarea>
+                    <textarea name="body_md" placeholder="markdown reply" data-i18n-placeholder="view.community.placeholder.reply" required></textarea>
                     <button data-i18n="view.community.btn.post_2" class="primary" type="submit">Post</button>
                 </form>
             </div>

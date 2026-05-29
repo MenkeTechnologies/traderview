@@ -18,8 +18,8 @@ async function renderBrowse(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.backtest_presets.h2.save_a_new_preset">Save a new preset</h2>
             <form id="bp-form" class="inline-form">
-                <input name="name" placeholder="name (unique per user)" required style="min-width:200px;">
-                <input name="description" placeholder="optional description" style="min-width:240px;">
+                <input name="name" placeholder="name (unique per user)" data-i18n-placeholder="view.backtest_presets.placeholder.name" required style="min-width:200px;">
+                <input name="description" placeholder="optional description" data-i18n-placeholder="view.backtest_presets.placeholder.description" style="min-width:240px;">
                 <label><input name="is_public" type="checkbox"> public</label>
                 <button data-i18n="view.backtest_presets.btn.save" class="primary" type="submit">Save</button>
             </form>
@@ -48,7 +48,7 @@ async function renderBrowse(mount) {
         const fd = new FormData(e.target);
         let preset;
         try { preset = JSON.parse(mount.querySelector('#bp-json').value); }
-        catch (err) { alert('preset JSON invalid: ' + err.message); return; }
+        catch (err) { alert(t('view.backtest_presets.alert.json_invalid', { err: err.message })); return; }
         try {
             await api.createBacktestPreset({
                 name: fd.get('name').trim(),

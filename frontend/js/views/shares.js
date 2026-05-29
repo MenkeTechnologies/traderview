@@ -72,7 +72,7 @@ export async function renderSharedTrade(mount, _state, slug) {
                 </div>
             `).join('') || '<p data-i18n="view.shares.hint.be_the_first_to_comment" class="muted">Be the first to comment.</p>'}</div>
             <form id="comment-form">
-                <textarea name="body" placeholder="comment (markdown)" required></textarea>
+                <textarea name="body" placeholder="comment (markdown)" data-i18n-placeholder="view.shares.placeholder.comment" required></textarea>
                 <button data-i18n="view.shares.btn.post" class="primary" type="submit">Post</button>
             </form>
         </div>

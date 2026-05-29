@@ -8,7 +8,7 @@ export async function renderSearch(mount) {
     mount.innerHTML = `
         <h1 data-i18n="view.search.h1.search" class="view-title">// SEARCH</h1>
         <form id="search-form" class="inline-form" style="margin-bottom:14px">
-            <input name="q" placeholder="symbol, journal text, forum post…" autofocus required style="min-width:300px">
+            <input name="q" placeholder="symbol, journal text, forum post…" data-i18n-placeholder="view.search.placeholder.q" autofocus required style="min-width:300px">
             <select name="scope">
                 <option data-i18n="view.search.opt.all" value="all">all</option>
                 <option data-i18n="view.search.opt.trades" value="trades">trades</option>

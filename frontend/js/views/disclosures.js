@@ -43,10 +43,10 @@ export async function renderDisclosures(mount) {
             <div class="chart-panel">
                 <h2 data-i18n="view.disclosures.h2.new_watcher">New watcher</h2>
                 <form id="w-form" class="inline-form">
-                    <input name="name" placeholder="name" required>
-                    <input name="symbols" placeholder="symbols (CSV, blank = any)">
-                    <input name="filers" placeholder="filer names (CSV, blank = any)">
-                    <input name="min_amount_usd" type="number" placeholder="min $ amount">
+                    <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name" required>
+                    <input name="symbols" placeholder="symbols (CSV, blank = any)" data-i18n-placeholder="view.disclosures.placeholder.symbols">
+                    <input name="filers" placeholder="filer names (CSV, blank = any)" data-i18n-placeholder="view.disclosures.placeholder.filers">
+                    <input name="min_amount_usd" type="number" placeholder="min $ amount" data-i18n-placeholder="view.disclosures.placeholder.min_amount">
                     <button data-i18n="view.disclosures.btn.create" class="primary" type="submit">Create</button>
                 </form>
                 ${watchers.length ? `<table class="trades" style="margin-top:10px">

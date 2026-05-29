@@ -12,6 +12,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const SPEEDS = [1, 10, 100, 500];
 let raf = null;
@@ -277,7 +278,7 @@ function renderChart(data, state, mount) {
 
     const pos = mount.querySelector('#tr-pos');
     if (pos && cursorTime) {
-        pos.textContent = `bar ${state.idx + 1}/${bars.length} · ${new Date(cursorTime).toLocaleString()}`;
+        pos.textContent = t('view.tape_replay.status.bar', { i: state.idx + 1, n: bars.length, when: new Date(cursorTime).toLocaleString() });
     }
 }
 

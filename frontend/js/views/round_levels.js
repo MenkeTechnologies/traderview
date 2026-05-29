@@ -28,7 +28,7 @@ export async function renderRoundLevels(mount, _appState) {
                     <input id="rl-price" type="number" step="any" min="0" value="${state.current_price}"></label>
                 <label><span data-i18n="view.round_levels.label.atr">ATR ($, optional)</span>
                     <input id="rl-atr" type="number" step="any" min="0"
-                           placeholder="leave blank to skip ATR-distance"
+                           placeholder="leave blank to skip ATR-distance" data-i18n-placeholder="view.round_levels.placeholder.atr_blank"
                            value="${state.atr == null ? '' : state.atr}"></label>
                 <label><span data-i18n="view.round_levels.label.window">Window ($ either side)</span>
                     <input id="rl-window" type="number" step="any" min="0" value="${state.config.window}"></label>

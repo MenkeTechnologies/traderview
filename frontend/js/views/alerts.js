@@ -24,15 +24,15 @@ export async function renderAlerts(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.alerts.h2.new_alert">New alert</h2>
             <form id="alert-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" required style="text-transform:uppercase">
+                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
                 <select name="trigger">
                     ${TRIGGERS.map(t => `<option value="${t}">${t}</option>`).join('')}
                 </select>
-                <input name="threshold" type="number" step="any" placeholder="threshold">
+                <input name="threshold" type="number" step="any" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold">
                 <select name="sound">
                     ${SOUNDS.map(s => `<option value="${s}">${s}</option>`).join('')}
                 </select>
-                <input name="voice_text" placeholder="voice message (optional)">
+                <input name="voice_text" placeholder="voice message (optional)" data-i18n-placeholder="view.alerts.placeholder.voice">
                 <button data-i18n="view.alerts.btn.create" class="primary" type="submit">Create</button>
                 <button data-i18n="view.alerts.btn.test_bell" type="button" class="link" id="test-bell">test bell</button>
                 <button data-i18n="view.alerts.btn.test_voice" type="button" class="link" id="test-voice">test voice</button>

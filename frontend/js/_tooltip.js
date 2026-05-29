@@ -158,6 +158,8 @@ export function resetAutoTitled(root, selectorList) {
 // repeated 3+ times across the view files end up here.
 export const COMMON_BUTTON_KEYS = new Map([
     ['add',                  'common.btn.add'],
+    ['aggregate',            'common.btn.aggregate'],
+    ['allocate',             'common.btn.allocate'],
     ['analyze',              'common.btn.analyze'],
     ['apply',                'common.btn.apply'],
     ['cancel',               'common.btn.cancel'],
@@ -182,16 +184,23 @@ export const COMMON_BUTTON_KEYS = new Map([
     ['poll now',             'common.btn.poll_now'],
     ['post',                 'common.btn.post'],
     ['previous',             'common.btn.previous'],
+    ['price',                'common.btn.price'],
     ['rank',                 'common.btn.rank'],
     ['refresh',              'common.btn.refresh'],
+    ['resample',             'common.btn.resample'],
     ['reset',                'common.btn.reset'],
     ['run',                  'common.btn.run'],
     ['save',                 'common.btn.save'],
+    ['score',                'common.btn.score'],
     ['search',               'common.btn.search'],
     ['simulate',             'common.btn.simulate'],
+    ['solve',                'common.btn.solve'],
     ['submit',               'common.btn.submit'],
+    ['test',                 'common.btn.test'],
     ['update',               'common.btn.update'],
     ['upload',               'common.btn.upload'],
+    ['build bars',           'common.btn.build_bars'],
+    ['build heatmap',        'common.btn.build_heatmap'],
 ]);
 
 // Squash whitespace + lowercase; what we key COMMON_BUTTON_KEYS by.

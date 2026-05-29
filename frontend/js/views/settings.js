@@ -82,7 +82,7 @@ export async function renderSettings(mount, state) {
                 </tbody>
             </table>
             <form id="tpl-form" class="inline-form" style="margin-top:10px">
-                <input name="name" placeholder="template name" required>
+                <input name="name" placeholder="template name" data-i18n-placeholder="view.settings.placeholder.template_name" required>
                 <select name="scope">
                     <option data-i18n="view.settings.opt.trade" value="trade">trade</option>
                     <option data-i18n="view.settings.opt.journal" value="journal">journal</option>
@@ -90,7 +90,7 @@ export async function renderSettings(mount, state) {
                 <label style="flex-direction:row;align-items:center;gap:6px">
                     <input type="checkbox" name="is_default"> default
                 </label>
-                <textarea name="body_md" placeholder="markdown body — used as default when creating notes for the selected scope" rows="4" style="flex:1 1 100%"></textarea>
+                <textarea name="body_md" placeholder="markdown body — used as default when creating notes for the selected scope" data-i18n-placeholder="view.settings.placeholder.template_body" rows="4" style="flex:1 1 100%"></textarea>
                 <button data-i18n="view.settings.btn.save_template" class="primary" type="submit">Save template</button>
             </form>
         </div>

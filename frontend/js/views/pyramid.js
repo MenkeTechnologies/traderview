@@ -133,7 +133,7 @@ async function compute(tok) {
     // Local pre-flight: warn before round-trip if misordered.
     if (directionMisordered(state.kind, state.side, state.initialEntry, tranches)) {
         const el = document.getElementById('py-misorder');
-        el.innerHTML = `<strong>⚠ Pre-flight:</strong> at least one tranche violates the ${state.kind.replace('_', '-')} ${state.side} direction rule. Backend will also flag this.`;
+        el.innerHTML = t('view.pyramid.preflight.misorder_html', { kind: state.kind.replace('_', '-'), side: state.side });
         el.style.display = 'block';
     }
 

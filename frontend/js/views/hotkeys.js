@@ -30,12 +30,12 @@ export async function renderHotkeys(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.hotkeys.h2.new_binding">New binding</h2>
             <form id="hk-form" class="inline-form">
-                <input name="name" placeholder="binding name" required>
+                <input name="name" placeholder="binding name" data-i18n-placeholder="view.hotkeys.placeholder.name" required>
                 <button data-i18n="view.hotkeys.btn.capture_combo" type="button" id="capture" class="primary"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">
                     Capture combo
                 </button>
-                <input name="combo" placeholder="ctrl+shift+z" required readonly>
+                <input name="combo" placeholder="ctrl+shift+z" data-i18n-placeholder="view.hotkeys.placeholder.combo" required readonly>
                 <select name="action" required>
                     ${ACTIONS.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
                 </select>

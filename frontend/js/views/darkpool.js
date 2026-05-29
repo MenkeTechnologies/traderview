@@ -25,7 +25,7 @@ export async function renderDarkpool(mount, _state, sym) {
             a conservative proxy for ATS + internalizer / dark-pool printing.</p>
 
         <form id="df" class="inline-form">
-            <input name="sym" placeholder="symbol (NVDA)" style="text-transform:uppercase">
+            <input name="sym" placeholder="symbol (NVDA)" data-i18n-placeholder="view.darkpool.placeholder.symbol" style="text-transform:uppercase">
             <button data-i18n="view.darkpool.btn.lookup" class="primary" type="submit">Lookup</button>
         </form>
 

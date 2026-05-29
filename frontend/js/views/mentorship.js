@@ -21,7 +21,7 @@ export async function renderMentorship(mount) {
             <div class="chart-panel">
                 <h2 data-i18n="view.mentorship.h2.invite_a_mentor_paste_their_user_id">Invite a mentor (paste their user ID)</h2>
                 <form id="mentor-form" class="inline-form">
-                    <input name="mentor_id" placeholder="mentor user UUID" required>
+                    <input name="mentor_id" placeholder="mentor user UUID" data-i18n-placeholder="view.mentorship.placeholder.mentor" required>
                     <select name="scope">
                         <option data-i18n="view.mentorship.opt.read_only" value="read">read-only</option>
                         <option data-i18n="view.mentorship.opt.read_comment" value="comment">read + comment</option>

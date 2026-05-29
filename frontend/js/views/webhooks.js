@@ -15,7 +15,7 @@ export async function renderWebhooks(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.add_webhook">Add webhook</h2>
             <form id="wf" class="inline-form">
-                <input name="name" placeholder="name" required>
+                <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name" required>
                 <select name="kind">
                     <option data-i18n="view.webhooks.opt.discord" value="discord">Discord</option>
                     <option data-i18n="view.webhooks.opt.slack" value="slack">Slack</option>
@@ -52,15 +52,15 @@ export async function renderWebhooks(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.provider_payloads">Provider payloads</h2>
             <details>
-                <summary>Discord embed</summary>
+                <summary data-i18n="view.webhooks.summary.discord">Discord embed</summary>
                 <pre class="result">{ "username": "TraderView", "embeds": [{ "title": "...", "description": "...", "color": 0x00e5ff, "fields": [...] }] }</pre>
             </details>
             <details>
-                <summary>Slack blocks</summary>
+                <summary data-i18n="view.webhooks.summary.slack">Slack blocks</summary>
                 <pre class="result">{ "text": "header\\nbody", "blocks": [ {"type":"header", ...}, {"type":"section", ...}, {"type":"context", ...} ] }</pre>
             </details>
             <details>
-                <summary>Generic (raw AlertPayload JSON)</summary>
+                <summary data-i18n="view.webhooks.summary.generic">Generic (raw AlertPayload JSON)</summary>
                 <pre class="result">{ "title": "...", "message": "...", "symbol": "AAPL", "kind": "price_alert", "url": "...", "fired_at": "2026-..." }</pre>
             </details>
         </div>

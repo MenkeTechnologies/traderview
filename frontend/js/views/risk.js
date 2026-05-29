@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderRisk(mount, state) {
     const tok = currentViewToken();
@@ -46,7 +47,7 @@ export async function renderRisk(mount, state) {
                     <div class="risk-bar pos" style="width:${goalPct.toFixed(1)}%"></div>
                     <span class="risk-bar-label">${goalPct.toFixed(1)}% of ${fmtMoney(goal)}</span>
                 </div>
-                ${hitGoal ? '<p class="pos"><strong>🎯 Goal hit — consider stopping for the day.</strong></p>' : ''}
+                ${hitGoal ? `<p class="pos"><strong>${t('view.risk.alert.goal_hit')}</strong></p>` : ''}
             ` : '<p data-i18n="view.risk.hint.set_a_daily_profit_goal_under_settings_to_enable_p" class="muted">Set a daily profit goal under Settings to enable progress tracking.</p>'}
         </div>
 
@@ -57,8 +58,8 @@ export async function renderRisk(mount, state) {
                     <div class="risk-bar neg" style="width:${lossPct.toFixed(1)}%"></div>
                     <span class="risk-bar-label">${lossPct.toFixed(1)}% of -${fmtMoney(maxLoss)}</span>
                 </div>
-                ${hitMax ? '<p class="neg"><strong>🚨 Daily max loss hit — STOP TRADING.</strong></p>' :
-                  (lossPct > 60 ? '<p class="neg"><strong>⚠️ Approaching max loss — be cautious.</strong></p>' : '')}
+                ${hitMax ? `<p class="neg"><strong>${t('view.risk.alert.max_loss_hit')}</strong></p>` :
+                  (lossPct > 60 ? `<p class="neg"><strong>${t('view.risk.alert.approaching_max')}</strong></p>` : '')}
             ` : '<p data-i18n="view.risk.hint.set_a_daily_max_loss_under_settings_to_enable_the_" class="muted">Set a daily max loss under Settings to enable the tracker.</p>'}
         </div>
 

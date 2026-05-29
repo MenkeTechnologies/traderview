@@ -137,7 +137,7 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
                     </label>
                     <label style="display:flex;flex-direction:column;">
                         <span>5. Setup classifier (one tag)</span>
-                        <input name="setup_tag" placeholder="e.g. breakout / fade / news / squeeze"
+                        <input name="setup_tag" placeholder="e.g. breakout / fade / news / squeeze" data-i18n-placeholder="view.trade_reviews.placeholder.setup_tag"
                             value="${esc(existing?.setup_tag || '')}"
                             style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;">
                     </label>

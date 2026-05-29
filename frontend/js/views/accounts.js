@@ -27,7 +27,7 @@ export async function renderAccounts(mount, _state, onChange) {
                     <option data-i18n="view.accounts.opt.robinhood" value="robinhood">Robinhood</option>
                     <option data-i18n="view.accounts.opt.manual_other" value="manual">Manual / Other</option>
                 </select>
-                <input name="name" placeholder="account name (e.g. Margin)" required>
+                <input name="name" placeholder="account name (e.g. Margin)" data-i18n-placeholder="view.accounts.placeholder.name" required>
                 <input name="base_currency" placeholder="USD" value="USD">
                 <button data-i18n="view.accounts.btn.create" class="primary" type="submit">Create</button>
             </form>

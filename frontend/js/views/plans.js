@@ -13,7 +13,7 @@ export async function renderPlans(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.plans.h2.new_plan">New plan</h2>
             <form id="plan-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" required>
+                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
                 <select name="asset_class">
                     <option data-i18n="view.plans.opt.stock" value="stock">stock</option>
                     <option data-i18n="view.plans.opt.option" value="option">option</option>
@@ -21,11 +21,11 @@ export async function renderPlans(mount, state) {
                     <option data-i18n="view.plans.opt.forex" value="forex">forex</option>
                 </select>
                 <select name="side"><option data-i18n="view.plans.opt.long" value="long">long</option><option data-i18n="view.plans.opt.short" value="short">short</option></select>
-                <input name="intended_qty" type="number" step="any" placeholder="qty" required>
-                <input name="intended_entry" type="number" step="any" placeholder="entry" required>
-                <input name="stop_loss" type="number" step="any" placeholder="stop">
-                <input name="initial_target" type="number" step="any" placeholder="target">
-                <input name="setup_notes" placeholder="setup notes">
+                <input name="intended_qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
+                <input name="intended_entry" type="number" step="any" placeholder="entry" data-i18n-placeholder="common.placeholder.entry" required>
+                <input name="stop_loss" type="number" step="any" placeholder="stop" data-i18n-placeholder="common.placeholder.stop">
+                <input name="initial_target" type="number" step="any" placeholder="target" data-i18n-placeholder="common.placeholder.target">
+                <input name="setup_notes" placeholder="setup notes" data-i18n-placeholder="view.plans.placeholder.setup_notes">
                 <button data-i18n="view.plans.btn.create" class="primary" type="submit">Create</button>
             </form>
         </div>

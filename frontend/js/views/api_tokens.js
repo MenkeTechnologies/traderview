@@ -16,7 +16,7 @@ export async function renderDeveloper(mount) {
             <h2 data-i18n="view.api_tokens.h2.create_token">Create token</h2>
             <form id="tok-form" class="inline-form">
                 <label><span data-i18n="view.api_tokens.label.name">Name</span>
-                    <input name="name" placeholder="n8n staging"
+                    <input name="name" placeholder="n8n staging" data-i18n-placeholder="view.api_tokens.placeholder.name"
                            data-i18n-placeholder="view.api_tokens.placeholder.name" required style="min-width:220px;"></label>
                 <label><span data-i18n="view.api_tokens.label.scopes">Scopes</span>
                     <select name="scopes" multiple size="3" style="min-width:120px;">
@@ -138,7 +138,7 @@ async function loadList(mount, tok) {
             input.addEventListener('change', async () => {
                 const v = Number(input.value);
                 if (!Number.isFinite(v) || v < 1 || v > 10000) {
-                    alert('rate must be 1..=10000'); return;
+                    alert(t('view.api_tokens.alert.rate_range')); return;
                 }
                 try { await api.setApiTokenRateLimit(input.dataset.id, v); }
                 catch (e) { alert(t('common.error', { err: e.message })); if (viewIsCurrent(tok)) await loadList(mount, tok); }

@@ -43,7 +43,7 @@ export async function renderStrategyAlerts(mount) {
 
         <div class="chart-panel">
             <form id="sa-form" class="inline-form">
-                <input name="name" placeholder="rule name"
+                <input name="name" placeholder="rule name" data-i18n-placeholder="view.strategy_alerts.placeholder.name"
                        data-i18n-placeholder="view.strategy_alerts.placeholder.name"
                        required style="min-width:240px;">
                 <label><span data-i18n="view.strategy_alerts.label.template">Template</span>

@@ -103,7 +103,7 @@ function drawShell(mount) {
             </select>
         </label>
         <label><span data-i18n="view.expenses.label.search">Search</span>
-            <input type="text" id="exp-search" placeholder="merchant / description"
+            <input type="text" id="exp-search" placeholder="merchant / description" data-i18n-placeholder="view.expenses.placeholder.search"
                    data-i18n-placeholder="view.expenses.placeholder.search"></label>
         <button data-i18n="view.expenses.btn.apply" id="exp-apply">Apply</button>
     </div>
@@ -202,13 +202,13 @@ function drawTable() {
                 </select>
             </td>
             <td>
-                <button class="tx-biz ${bizClass}" data-tx="${t.id}" data-biz="${t.is_business}">
+                <button class="tx-biz ${bizClass}" data-tx="${t.id}" data-biz="${t.is_business}" data-i18n="view.expenses.btn.${t.is_business ? 'biz' : 'pers'}">
                     ${t.is_business ? 'BIZ' : 'pers'}
                 </button>
             </td>
             <td>
                 <button class="tx-xfer ${t.is_transfer ? 'biz-on' : ''}"
-                        data-tx="${t.id}" data-xfer="${t.is_transfer}">
+                        data-tx="${t.id}" data-xfer="${t.is_transfer}"${t.is_transfer ? ' data-i18n="view.expenses.btn.xfer"' : ''}>
                     ${t.is_transfer ? 'XFER' : '—'}
                 </button>
             </td>
@@ -292,23 +292,25 @@ async function handleUpload(ev) {
     ev.target.value = '';
     if (!file) return;
     if (!state.currentAccountId) {
-        alert('pick an account first (or create one)');
+        alert(t('view.expenses.alert.pick_account'));
         return;
     }
     const source = state.mount.querySelector('#exp-source').value;
     const status = state.mount.querySelector('#exp-status');
-    if (status) status.textContent = `uploading ${file.name}…`;
+    if (status) status.textContent = t('view.expenses.status.uploading', { name: file.name });
     try {
         const res = await api.importExpense(state.currentAccountId, source, file);
         if (!viewIsCurrent(state.tok)) return;
         const status2 = state.mount.querySelector('#exp-status');
         if (res.duplicate) {
-            if (status2) status2.textContent = `already imported (sha matches existing import ${res.import_id.slice(0, 8)})`;
+            if (status2) status2.textContent = t('view.expenses.status.duplicate', { id: res.import_id.slice(0, 8) });
         } else {
-            if (status2) status2.textContent =
-                `imported ${res.inserted_count}/${res.row_count} rows · ` +
-                `auto-categorized ${res.categorized_count} · ` +
-                `transfer pairs ${res.transfer_pairs}`;
+            if (status2) status2.textContent = t('view.expenses.status.imported', {
+                inserted: res.inserted_count,
+                total: res.row_count,
+                categorized: res.categorized_count,
+                pairs: res.transfer_pairs,
+            });
         }
         await refresh();
     } catch (e) {
@@ -316,9 +318,9 @@ async function handleUpload(ev) {
         const status2 = state.mount.querySelector('#exp-status');
         if (status2) {
             if (e instanceof ApiError && e.status === 400) {
-                status2.textContent = `parser: ${e.message}`;
+                status2.textContent = t('view.expenses.status.parser_err', { err: e.message });
             } else {
-                status2.textContent = `upload failed: ${e.message}`;
+                status2.textContent = t('view.expenses.status.upload_err', { err: e.message });
             }
         }
     }
@@ -331,12 +333,12 @@ async function seedRulesFlow() {
         if (!viewIsCurrent(state.tok)) return;
         const status2 = state.mount.querySelector('#exp-status');
         if (status2) status2.textContent = res.skipped_existing
-            ? `you already have ${res.skipped_existing} rules — seed skipped`
-            : `seeded ${res.inserted} default rules`;
+            ? t('view.expenses.status.seed_skipped', { n: res.skipped_existing })
+            : t('view.expenses.status.seed_ok', { n: res.inserted });
     } catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         const status2 = state.mount.querySelector('#exp-status');
-        if (status2) status2.textContent = `seed failed: ${e.message}`;
+        if (status2) status2.textContent = t('view.expenses.status.seed_err', { err: e.message });
     }
 }
 
@@ -374,7 +376,7 @@ async function openRulesModal() {
     <div class="modal-inner wide">
         <h2 data-i18n="view.expenses.h2.merchant_rules">Merchant rules</h2>
         <form id="rule-form" class="rule-form">
-            <input name="pattern" placeholder="pattern (e.g. uber)" required>
+            <input name="pattern" placeholder="pattern (e.g. uber)" data-i18n-placeholder="view.expenses.placeholder.pattern" required>
             <select name="pattern_kind">
                 <option data-i18n="view.expenses.opt.substring" value="substring">substring</option>
                 <option data-i18n="view.expenses.opt.regex" value="regex">regex</option>
@@ -627,7 +629,7 @@ async function openScheduleCModal(year) {
                     <td></td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="color:var(--yellow)">⚠ Uncategorized business expenses</td>
+                    <td colspan="2" style="color:var(--yellow)" data-i18n="view.expenses.summary.uncategorized">⚠ Uncategorized business expenses</td>
                     <td class="num" style="color:var(--yellow)">${fmt(report.uncategorized_total)}</td>
                     <td></td>
                     <td></td>

@@ -21,7 +21,7 @@ export async function renderTradeCompare(mount, state) {
         <div style="display:grid;grid-template-columns:340px 1fr;gap:10px;">
             <div class="chart-panel">
                 <h2 data-i18n="view.trade_compare.h2.picker">Picker</h2>
-                <input id="tc-search" placeholder="filter by symbol…" style="width:100%;margin-bottom:8px;">
+                <input id="tc-search" placeholder="filter by symbol…" data-i18n-placeholder="view.trade_compare.placeholder.filter" style="width:100%;margin-bottom:8px;">
                 <div id="tc-picker" style="max-height:500px;overflow:auto;"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
             </div>
             <div id="tc-result"><p data-i18n="view.trade_compare.hint.select_2_4_trades_from_the_picker" class="muted small">Select 2-4 trades from the picker.</p></div>
@@ -67,7 +67,7 @@ function renderPicker(trades, mount, tok) {
             const id = cb.dataset.id;
             if (cb.checked) {
                 if (selectedIds.length >= 4) {
-                    alert('max 4 trades; uncheck one first');
+                    alert(t('view.trade_compare.alert.max_four'));
                     cb.checked = false; return;
                 }
                 selectedIds.push(id);

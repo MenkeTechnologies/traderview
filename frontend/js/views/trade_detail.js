@@ -81,9 +81,9 @@ export async function renderTradeDetail(mount, state, tradeId) {
                   <option data-i18n="view.trade_detail.opt.buy" value="buy">buy</option><option data-i18n="view.trade_detail.opt.sell" value="sell">sell</option>
                   <option data-i18n="view.trade_detail.opt.short" value="short">short</option><option data-i18n="view.trade_detail.opt.cover" value="cover">cover</option>
                 </select>
-                <input name="qty" type="number" step="any" placeholder="qty" required>
-                <input name="price" type="number" step="any" placeholder="price" required>
-                <input name="fee" type="number" step="any" placeholder="fee" value="0">
+                <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
+                <input name="price" type="number" step="any" placeholder="price" data-i18n-placeholder="common.placeholder.price" required>
+                <input name="fee" type="number" step="any" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" value="0">
                 <input name="executed_at" type="datetime-local" required>
                 <button data-i18n="view.trade_detail.btn.add" class="primary" type="submit">Add</button>
               </form>
@@ -126,7 +126,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 </figure>`).join('')}
             </div>
             <input type="file" id="shot-input" accept="image/*">
-            <input type="text" id="shot-caption" placeholder="caption (optional)">
+            <input type="text" id="shot-caption" placeholder="caption (optional)" data-i18n-placeholder="view.trade_detail.placeholder.caption">
             <button data-i18n="view.trade_detail.btn.upload" class="primary" id="shot-upload">Upload</button>
           </div>
 
