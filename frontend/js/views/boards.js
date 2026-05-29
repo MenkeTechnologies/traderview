@@ -236,8 +236,8 @@ function renderGrid(state) {
         head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--bg-secondary);font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;cursor:grab;';
         head.innerHTML = `<span>${esc(WIDGET_KINDS.find(k => k.kind === w.kind)?.label || w.kind)}</span>
             <span>
-                <button class="btn" data-act="cfg" style="font-size:9px;padding:1px 4px;">⚙</button>
-                <button class="btn" data-act="del" style="font-size:9px;padding:1px 4px;color:var(--red);border-color:var(--red);">×</button>
+                <button class="btn" data-act="cfg" data-i18n-aria-label="common.aria.settings" aria-label="Settings" style="font-size:9px;padding:1px 4px;">⚙</button>
+                <button class="btn" data-act="del" data-i18n-aria-label="common.aria.remove" aria-label="Remove" style="font-size:9px;padding:1px 4px;color:var(--red);border-color:var(--red);">×</button>
             </span>`;
         el.appendChild(head);
         const body = document.createElement('div');

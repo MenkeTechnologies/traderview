@@ -19,7 +19,7 @@ export async function renderTags(mount) {
         <div class="tag-list">${tags.map(t => `
             <span class="tag-chip" style="border-color:${esc(t.color)}">
                 ${esc(t.name)}
-                <button class="link" data-del="${t.id}">×</button>
+                <button class="link" data-del="${t.id}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button>
             </span>
         `).join('') || '<p data-i18n="view.tags.hint.no_tags_yet" class="muted">No tags yet.</p>'}</div>
     `;

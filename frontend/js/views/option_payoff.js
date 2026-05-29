@@ -118,7 +118,7 @@ function renderLegsTable() {
             <td><input type="number" step="any" value="${l.strike}"  data-leg="${i}" data-field="strike"></td>
             <td><input type="number" step="any" value="${l.premium}" data-leg="${i}" data-field="premium"></td>
             <td><input type="number" step="any" value="${l.qty}"     data-leg="${i}" data-field="qty"></td>
-            <td><button type="button" class="secondary" data-leg-delete="${i}">×</button></td>
+            <td><button type="button" class="secondary" data-leg-delete="${i}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button></td>
         </tr>
     `).join('');
 
