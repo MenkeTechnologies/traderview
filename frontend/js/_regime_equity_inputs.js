@@ -33,13 +33,13 @@ export function parseEquityBlob(s) {
 }
 
 export function validateInputs(equity, cfg) {
-    if (!Array.isArray(equity)) return 'equity must be an array';
-    if (equity.length < 3) return 'need ≥ 3 equity points (linear fit requires at least 3)';
-    if (equity.some(v => !Number.isFinite(v))) return 'all equity values must be finite numbers';
+    if (!Array.isArray(equity)) return t('view.regime_equity.validate.equity_array');
+    if (equity.length < 3) return t('view.regime_equity.validate.equity_min');
+    if (equity.some(v => !Number.isFinite(v))) return t('view.regime_equity.validate.equity_finite');
     if (!Number.isFinite(cfg.trend_slope_pct) || cfg.trend_slope_pct < 0)
-        return 'trend_slope_pct must be ≥ 0';
+        return t('view.regime_equity.validate.trend_slope');
     if (!Number.isFinite(cfg.clean_trend_rel_stdev) || cfg.clean_trend_rel_stdev < 0)
-        return 'clean_trend_rel_stdev must be ≥ 0';
+        return t('view.regime_equity.validate.clean_stdev');
     return null;
 }
 
