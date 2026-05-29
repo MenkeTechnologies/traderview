@@ -130,7 +130,7 @@ async function discover(mount, tok) {
             m: state.m,
             top_k_discords: state.top_k,
         });
-        if (!res) throw new Error('matrix profile returned null (constraints?)');
+        if (!res) throw new Error(t('view.pattern_discovery.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
         return;

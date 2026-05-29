@@ -179,7 +179,7 @@ async function recalc(mount, tok) {
         payoff = await api.anlyOptionPayoffDiagram(
             buildPayoffBody(state.legs, smin, smax, state.steps),
         );
-        if (!payoff) throw new Error('payoff returned null');
+        if (!payoff) throw new Error(t('view.option_payoff.error.null'));
         mtmAtSpot = await api.anlyMultiLegOptionPricer(
             buildPricerBody(state.legs, state.spot, state.t_to_expiry,
                             state.rate, state.div_yield, state.sigma),

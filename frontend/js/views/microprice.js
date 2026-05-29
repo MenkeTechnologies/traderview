@@ -103,7 +103,7 @@ async function compute(mount, tok) {
     try {
         res = await api.anlyMicropriceStoikov(buildBody(state.quote));
         if (!Array.isArray(res) || res.length !== 1 || res[0] == null) {
-            throw new Error('microprice returned null (input out of domain)');
+            throw new Error(t('view.microprice.error.null'));
         }
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));

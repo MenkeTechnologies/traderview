@@ -117,7 +117,7 @@ async function compute(mount, tok) {
     let res;
     try {
         res = await api.optsGreeksProfile(buildBody(state.params));
-        if (!res) throw new Error('greeks-profile returned null');
+        if (!res) throw new Error(t('view.greeks_profile.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
         return;

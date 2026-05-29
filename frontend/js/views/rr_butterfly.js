@@ -125,7 +125,7 @@ async function compute(mount, tok) {
     let res;
     try {
         res = await api.anlyRiskReversalBfCalc(buildBody(state.mode, state.params));
-        if (!res) throw new Error('calculator returned null (input out of domain)');
+        if (!res) throw new Error(t('view.rr_butterfly.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
         return;

@@ -120,7 +120,7 @@ async function compute(tok) {
     let res;
     try {
         res = await api.microAlmgrenChriss(buildBody(state.params));
-        if (!res) throw new Error('almgren-chriss returned null (check inputs)');
+        if (!res) throw new Error(t('view.almgren_chriss.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e })); return;
     }

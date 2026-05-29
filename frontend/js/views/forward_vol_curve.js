@@ -97,7 +97,7 @@ async function bootstrap(mount, tok) {
     let res;
     try {
         res = await api.anlyForwardVolatilityBootstrap(buildBody(sorted));
-        if (!res) throw new Error('bootstrap returned null (input out of domain)');
+        if (!res) throw new Error(t('view.forward_vol_curve.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
         return;

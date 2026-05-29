@@ -104,7 +104,7 @@ async function denoise(mount, tok) {
         res = await api.anlyMarchenkoPasturCleaning(
             buildBody(parsed.value, state.numObservations),
         );
-        if (!res) throw new Error('cleaner returned null (input out of domain)');
+        if (!res) throw new Error(t('view.cov_denoiser.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
         return;

@@ -161,7 +161,7 @@ async function run(mount, tok) {
     wanted.forEach((k, i) => {
         const r = results[i];
         if (!r) {
-            summaries.push({ id: k, label: SMOOTHER_META[k].label, status: 'failed', note: 'endpoint returned null' });
+            summaries.push({ id: k, label: SMOOTHER_META[k].label, status: 'failed', note: t('view.series_smoother.note.endpoint_null') });
             return;
         }
         smoothed[k] = r.y;
