@@ -118,7 +118,7 @@ function renderSummary(r, bars) {
         card(t('view.vwap_slippage.card.vwap_local'),   fmtN(localChk),
             Math.abs(vwap - localChk) < 1e-6 ? 'pos' : 'neg'),
         card(t('view.vwap_slippage.card.fill_price'),     fmtN(fill)),
-        card('Slippage $',     fmtN(slipDollars),
+        card(t('common.card.slippage_dollars'),     fmtN(slipDollars),
             slipDollars > 0 ? 'pos' : slipDollars < 0 ? 'neg' : ''),
         card(t('view.vwap_slippage.card.slippage_bps'),   fmtBps(r.slippage_bps),
             r.slippage_bps > 0 ? 'pos' : r.slippage_bps < 0 ? 'neg' : ''),

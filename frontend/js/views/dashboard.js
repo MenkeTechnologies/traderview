@@ -28,18 +28,18 @@ export async function renderDashboard(mount, state) {
         <h1 data-i18n="view.dashboard.h1.dashboard_2" class="view-title">// DASHBOARD</h1>
         <div id="world-markets-mount"></div>
         <div class="cards">
-            ${statCard('Net P&L', fmtMoney(summary.net_pnl), pnlClass(summary.net_pnl))}
-            ${statCard('Trades', summary.trade_count)}
-            ${statCard('Win rate', fmtPct(summary.win_rate))}
-            ${statCard('Profit factor', fmt(summary.profit_factor))}
-            ${statCard('Expectancy', fmtMoney(summary.expectancy), pnlClass(summary.expectancy))}
-            ${statCard('Avg R', fmt(summary.avg_r))}
-            ${statCard('Largest win', fmtMoney(summary.largest_win), 'pos')}
-            ${statCard('Largest loss', fmtMoney(summary.largest_loss), 'neg')}
-            ${statCard('Max consec wins', summary.max_consec_wins)}
-            ${statCard('Max consec losses', summary.max_consec_losses)}
-            ${statCard('Avg hold', fmtSecs(summary.avg_hold_seconds))}
-            ${statCard('Fees', fmtMoney(summary.fees))}
+            ${statCard(t('view.dashboard.stat.net_pnl'),      fmtMoney(summary.net_pnl), pnlClass(summary.net_pnl))}
+            ${statCard(t('view.dashboard.stat.trades'),       summary.trade_count)}
+            ${statCard(t('view.dashboard.stat.win_rate'),     fmtPct(summary.win_rate))}
+            ${statCard(t('view.dashboard.stat.profit_factor'), fmt(summary.profit_factor))}
+            ${statCard(t('view.dashboard.stat.expectancy'),   fmtMoney(summary.expectancy), pnlClass(summary.expectancy))}
+            ${statCard(t('view.dashboard.stat.avg_r'),        fmt(summary.avg_r))}
+            ${statCard(t('view.dashboard.stat.largest_win'),  fmtMoney(summary.largest_win), 'pos')}
+            ${statCard(t('view.dashboard.stat.largest_loss'), fmtMoney(summary.largest_loss), 'neg')}
+            ${statCard(t('view.dashboard.stat.max_consec_wins'),   summary.max_consec_wins)}
+            ${statCard(t('view.dashboard.stat.max_consec_losses'), summary.max_consec_losses)}
+            ${statCard(t('view.dashboard.stat.avg_hold'),     fmtSecs(summary.avg_hold_seconds))}
+            ${statCard(t('view.dashboard.stat.fees'),         fmtMoney(summary.fees))}
         </div>
 
         <div class="chart-panel">

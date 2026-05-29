@@ -160,7 +160,7 @@ function renderSummary(r) {
     document.getElementById('ac-summary').innerHTML = [
         card('κ',                   r.kappa.toExponential(3)),
         card(t('view.almgren_chriss.card.half_life'),       fmtSeconds(halfLife)),
-        card('Expected impact $',   fmtBig(r.expected_impact_cost)),
+        card(t('view.almgren_chriss.card.expected_impact'), fmtBig(r.expected_impact_cost)),
         card(t('view.almgren_chriss.card.risk_variance'),       fmtBig(r.risk_variance)),
         card(t('view.almgren_chriss.card.slices'),              String(r.trade_schedule.length)),
         card(t('view.almgren_chriss.card.max_slice_avg'),     concentration.toFixed(2) + '×'),

@@ -131,11 +131,11 @@ function renderSummary(r) {
     document.getElementById('is-summary').innerHTML = [
         card(t('view.implementation_shortfall.card.direction'),     state.params.direction.toUpperCase()),
         card(t('view.implementation_shortfall.card.fill'),          fill.toUpperCase() + ' · ' + fmtPct(fillPct), fill === 'full' ? 'pos' : 'neg'),
-        card('Spread $',      fmtUSD(r.spread_cost),      costSignClass(r.spread_cost)),
-        card('Timing $',      fmtUSD(r.timing_cost),      costSignClass(r.timing_cost)),
-        card('Impact $',      fmtUSD(r.impact_cost),      costSignClass(r.impact_cost)),
-        card('Opportunity $', fmtUSD(r.opportunity_cost), costSignClass(r.opportunity_cost)),
-        card('Total $',       fmtUSD(r.total_dollars),    costSignClass(r.total_dollars)),
+        card(t('view.implementation_shortfall.card.spread_d'),      fmtUSD(r.spread_cost),      costSignClass(r.spread_cost)),
+        card(t('view.implementation_shortfall.card.timing_d'),      fmtUSD(r.timing_cost),      costSignClass(r.timing_cost)),
+        card(t('view.implementation_shortfall.card.impact_d'),      fmtUSD(r.impact_cost),      costSignClass(r.impact_cost)),
+        card(t('view.implementation_shortfall.card.opportunity_d'), fmtUSD(r.opportunity_cost), costSignClass(r.opportunity_cost)),
+        card(t('view.implementation_shortfall.card.total_d'),       fmtUSD(r.total_dollars),    costSignClass(r.total_dollars)),
         card(t('view.implementation_shortfall.card.total_bps'),     fmtBps(r.total_bps),        costSignClass(r.total_bps)),
     ].join('');
 }

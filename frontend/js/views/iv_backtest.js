@@ -122,9 +122,9 @@ function renderSummary(r) {
         card(t('view.iv_backtest.card.implied'),          fmtPct(r.implied_move_pct)),
         card(t('view.iv_backtest.card.median_realized'),  fmtPct(r.median_realized_pct), r.median_realized_pct > r.implied_move_pct ? 'pos' : 'neg'),
         card(t('view.iv_backtest.card.avg_realized'),     fmtPct(r.avg_realized_pct)),
-        card('Long P&L /$1',     fmtPnl(r.long_avg_pnl), r.long_avg_pnl >= 0 ? 'pos' : 'neg'),
+        card(t('view.iv_backtest.card.long_pnl_per_1'),  fmtPnl(r.long_avg_pnl), r.long_avg_pnl >= 0 ? 'pos' : 'neg'),
         card(t('view.iv_backtest.card.long_win_rate'),    fmtWinRate(r.long_win_rate)),
-        card('Short P&L /$1',    fmtPnl(r.short_avg_pnl), r.short_avg_pnl >= 0 ? 'pos' : 'neg'),
+        card(t('view.iv_backtest.card.short_pnl_per_1'), fmtPnl(r.short_avg_pnl), r.short_avg_pnl >= 0 ? 'pos' : 'neg'),
         card(t('view.iv_backtest.card.recommendation'),   badge.label, badge.cls),
         card(t('view.iv_backtest.card.action'),           badge.hint),
     ].join('');
