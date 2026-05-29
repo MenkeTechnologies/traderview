@@ -89,10 +89,10 @@ function render(r, mount) {
                 <div class="value ${r.final_bands.p50 >= r.starting_equity ? 'pos' : 'neg'}">
                     $${fmt(r.final_bands.p50)}
                 </div>
-                <div class="small muted">from $${fmt(r.starting_equity)}</div></div>
-            <div class="card"><div class="label">p5 → p95</div>
+                <div class="small muted">${esc(t('view.equity_forecast.card.from', { amount: fmt(r.starting_equity) }))}</div></div>
+            <div class="card"><div class="label" data-i18n="view.equity_forecast.card.p5_to_p95">p5 → p95</div>
                 <div class="value small">$${fmt(r.final_bands.p5)} → $${fmt(r.final_bands.p95)}</div>
-                <div class="small muted">90% confidence band</div></div>
+                <div class="small muted" data-i18n="view.equity_forecast.card.confidence_band">90% confidence band</div></div>
         </div>
 
         <div class="chart-panel">

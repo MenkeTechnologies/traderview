@@ -116,10 +116,10 @@ async function renderSymbol(mount, sym, tok) {
         cardsEl.innerHTML = `
             <div class="card"><div class="label" data-i18n="view.short_interest.card.shares_short">Shares short</div><div class="value">${compact(s.shares_short)}</div></div>
             <div class="card"><div class="label" data-i18n="view.short_interest.card.prior_month">Prior month</div><div class="value">${compact(s.shares_short_prior)}</div></div>
-            <div class="card"><div class="label">Δ vs prior</div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.delta_vs_prior">Δ vs prior</div>
                 <div class="value ${changeCls}">${pctSigned(s.change_pct)}</div></div>
-            <div class="card"><div class="label">% of float</div><div class="value">${pct1(s.short_pct_float)}</div></div>
-            <div class="card"><div class="label">% of shares out</div><div class="value">${pct1(s.short_pct_outstanding)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.pct_float">% of float</div><div class="value">${pct1(s.short_pct_float)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.pct_shares_out">% of shares out</div><div class="value">${pct1(s.short_pct_outstanding)}</div></div>
             <div class="card"><div class="label" data-i18n="view.short_interest.card.days_to_cover">Days to cover</div><div class="value">${s.short_ratio != null ? s.short_ratio.toFixed(2) : '—'}</div></div>
             <div class="card"><div class="label" data-i18n="view.short_interest.card.float">Float</div><div class="value">${compact(s.float)}</div></div>
         `;
