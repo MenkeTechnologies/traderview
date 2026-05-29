@@ -8,6 +8,8 @@
 //
 // Higher = less liquid (more price impact per dollar traded).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 21;
 
 export const DEFAULT_INPUTS = {
@@ -17,18 +19,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.returns))                          return 'returns must be an array';
-    if (!Array.isArray(input.dollar_volumes))                   return 'dollar_volumes must be an array';
-    if (input.returns.length !== input.dollar_volumes.length)   return 'returns and dollar_volumes must have the same length';
+    if (!Array.isArray(input.returns))                          return t('view.amihud.validate.returns_array');
+    if (!Array.isArray(input.dollar_volumes))                   return t('view.amihud.validate.dollar_volumes_array');
+    if (input.returns.length !== input.dollar_volumes.length)   return t('view.amihud.validate.length_mismatch');
     for (let i = 0; i < input.returns.length; i++) {
         // NaN tolerated in series (matches Rust skip behavior); only reject non-numeric.
         if (typeof input.returns[i] !== 'number' && input.returns[i] != null)
-                                                                  return `returns[${i}] must be number or null`;
+                                                                  return t('view.amihud.validate.return_type', { i });
         if (typeof input.dollar_volumes[i] !== 'number' && input.dollar_volumes[i] != null)
-                                                                  return `dollar_volumes[${i}] must be number or null`;
+                                                                  return t('view.amihud.validate.dollar_volume_type', { i });
     }
-    if (!Number.isInteger(input.period))                        return 'period must be an integer';
-    if (input.period < 1)                                       return 'period must be ≥ 1';
+    if (!Number.isInteger(input.period))                        return t('view.amihud.validate.period_int');
+    if (input.period < 1)                                       return t('view.amihud.validate.period_min');
     return null;
 }
 

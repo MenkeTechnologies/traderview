@@ -11,6 +11,8 @@
 // Window: (period + 1) bars [i − period .. i].
 // Ties resolve to OLDEST bar (matches Rust strict `>` / `<` comparison).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 25;
 
 export const DEFAULT_INPUTS = {
@@ -19,16 +21,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                              return 'bars must be an array';
+    if (!Array.isArray(input.bars))                              return t('view.aroon.validate.bars_array');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b || typeof b !== 'object')                         return `bars[${i}] must be an object`;
-        if (!Number.isFinite(b.high))                            return `bars[${i}].high not finite`;
-        if (!Number.isFinite(b.low))                             return `bars[${i}].low not finite`;
-        if (b.high < b.low)                                      return `bars[${i}].high must be ≥ low`;
+        if (!b || typeof b !== 'object')                         return t('view.aroon.validate.bar_object', { i });
+        if (!Number.isFinite(b.high))                            return t('view.aroon.validate.bar_high_finite', { i });
+        if (!Number.isFinite(b.low))                             return t('view.aroon.validate.bar_low_finite', { i });
+        if (b.high < b.low)                                      return t('view.aroon.validate.bar_high_low', { i });
     }
-    if (!Number.isInteger(input.period))                         return 'period must be an integer';
-    if (input.period < 2)                                        return 'period must be ≥ 2';
+    if (!Number.isInteger(input.period))                         return t('view.aroon.validate.period_int');
+    if (input.period < 2)                                        return t('view.aroon.validate.period_min');
     return null;
 }
 

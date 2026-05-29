@@ -7,6 +7,8 @@
 // varying variance). LM = (n−q) · R² ~ χ²(q) under H₀. Reject when LM
 // exceeds the tabulated critical value (q=5 at 5% → 11.07).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_LAGS = 5;
 export const MIN_LAGS = 1;
 export const MAX_LAGS = 50;
@@ -14,13 +16,13 @@ export const MAX_LAGS = 50;
 export const DEFAULT_INPUTS = { returns: [], lags: DEFAULT_LAGS };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.returns))               return 'returns must be an array';
-    if (!Number.isInteger(input.lags))               return 'lags must be an integer';
-    if (input.lags < MIN_LAGS || input.lags > MAX_LAGS) return `lags must be in [${MIN_LAGS}, ${MAX_LAGS}]`;
+    if (!Array.isArray(input.returns))               return t('view.arch_lm.validate.returns_array');
+    if (!Number.isInteger(input.lags))               return t('view.arch_lm.validate.lags_int');
+    if (input.lags < MIN_LAGS || input.lags > MAX_LAGS) return t('view.arch_lm.validate.lags_range', { min: MIN_LAGS, max: MAX_LAGS });
     const need = 3 * input.lags + 2;
-    if (input.returns.length < need)                 return `returns needs ≥ 3·lags + 2 = ${need} obs`;
+    if (input.returns.length < need)                 return t('view.arch_lm.validate.returns_min', { need });
     for (let i = 0; i < input.returns.length; i++) {
-        if (!Number.isFinite(input.returns[i]))      return `returns[${i}] not finite`;
+        if (!Number.isFinite(input.returns[i]))      return t('view.arch_lm.validate.return_finite', { i });
     }
     return null;
 }
