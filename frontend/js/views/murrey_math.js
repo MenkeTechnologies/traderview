@@ -10,7 +10,7 @@ import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseBarBlob, validateInputs, buildBody,
-    significanceOf, pricePosition, bracketingLevels,
+    significanceOf, pricePosition, pricePositionLabel, bracketingLevels,
     makeDemoBars, fmtN, fmtPct,
 } from '../_murrey_math_inputs.js';
 
@@ -114,7 +114,7 @@ function renderSummary(r, bars) {
         card(t('view.murrey_math.card.bars'),           String(bars.length)),
         card(t('view.murrey_math.card.lookback'),       String(state.lookback)),
         card(t('view.murrey_math.card.current_price'),  fmtN(r.current_price, 2)),
-        card(t('view.murrey_math.card.octave_position'), pos, pos === 'lower half' ? 'pos' : pos === 'upper half' ? 'neg' : ''),
+        card(t('view.murrey_math.card.octave_position'), pricePositionLabel(pos), pos === 'lower half' ? 'pos' : pos === 'upper half' ? 'neg' : ''),
         card(t('view.murrey_math.card.bracket_below'),  below ? `${below[0]} @ ${fmtN(below[1], 4)}` : '—', 'pos'),
         card(t('view.murrey_math.card.bracket_above'),  above ? `${above[0]} @ ${fmtN(above[1], 4)}` : '—', 'neg'),
         card(t('view.murrey_math.card.nearest_level'),  `${nearestLbl} @ ${fmtN(nearestVal, 4)}`, nearestSig.cls),

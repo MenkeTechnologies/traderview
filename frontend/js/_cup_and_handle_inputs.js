@@ -5,6 +5,8 @@
 // rim_tolerance_pct, handle_min_bars, handle_max_bars,
 // max_handle_depth_pct } }.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Parses three-token-per-line OHLC bars: "high low close" (open is not
@@ -124,7 +126,7 @@ export function fmtPct(v) {
 // to give traders a one-glance "is this a textbook cup?" verdict.
 export function depthQuality(depthPct) {
     if (!Number.isFinite(depthPct)) return { label: '—', cls: '' };
-    if (depthPct < 0.12) return { label: 'shallow (<12%)', cls: 'neg' };
-    if (depthPct <= 0.33) return { label: 'textbook (12-33%)', cls: 'pos' };
-    return { label: 'deep / V-shaped (>33%)', cls: 'neg' };
+    if (depthPct < 0.12) return { label: t('view.cup_and_handle.depth.shallow'), cls: 'neg' };
+    if (depthPct <= 0.33) return { label: t('view.cup_and_handle.depth.textbook'), cls: 'pos' };
+    return { label: t('view.cup_and_handle.depth.deep'), cls: 'neg' };
 }

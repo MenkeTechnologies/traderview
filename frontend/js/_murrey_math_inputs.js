@@ -5,6 +5,8 @@
 // }. Returns { levels: [(label, value), ...], current_price, nearest_level,
 // distance_to_nearest_pct } — or null when invalid.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Three-token-per-line "high low close".
@@ -56,24 +58,29 @@ export function buildBody(bars, lookback) {
 
 // Murrey's classic per-level significance labels. Used as tooltip + table
 // annotations so traders read the level's tactical meaning at a glance.
-export const LEVEL_SIGNIFICANCE = {
-    '-2/8':  { label: 'extension low',     cls: '',    rank: 'extended' },
-    '-1/8':  { label: 'extension low',     cls: '',    rank: 'extended' },
-    '0/8':   { label: 'ultimate support',  cls: 'pos', rank: 'critical' },
-    '1/8':   { label: 'weak / stall',      cls: '',    rank: 'minor' },
-    '2/8':   { label: 'pivot / reverse',   cls: '',    rank: 'major' },
-    '3/8':   { label: 'lower range edge',  cls: '',    rank: 'minor' },
-    '4/8':   { label: 'major S/R (mid)',   cls: '',    rank: 'critical' },
-    '5/8':   { label: 'upper range edge',  cls: '',    rank: 'minor' },
-    '6/8':   { label: 'pivot / reverse',   cls: '',    rank: 'major' },
-    '7/8':   { label: 'weak / stall',      cls: '',    rank: 'minor' },
-    '8/8':   { label: 'ultimate resistance', cls: 'neg', rank: 'critical' },
-    '9/8':   { label: 'extension high',    cls: '',    rank: 'extended' },
-    '10/8':  { label: 'extension high',    cls: '',    rank: 'extended' },
+const LEVEL_SIGNIFICANCE_META = {
+    '-2/8':  { key: 'extension_low',       cls: '',    rank: 'extended' },
+    '-1/8':  { key: 'extension_low',       cls: '',    rank: 'extended' },
+    '0/8':   { key: 'ultimate_support',    cls: 'pos', rank: 'critical' },
+    '1/8':   { key: 'weak_stall',          cls: '',    rank: 'minor' },
+    '2/8':   { key: 'pivot_reverse',       cls: '',    rank: 'major' },
+    '3/8':   { key: 'lower_range_edge',    cls: '',    rank: 'minor' },
+    '4/8':   { key: 'major_sr_mid',        cls: '',    rank: 'critical' },
+    '5/8':   { key: 'upper_range_edge',    cls: '',    rank: 'minor' },
+    '6/8':   { key: 'pivot_reverse',       cls: '',    rank: 'major' },
+    '7/8':   { key: 'weak_stall',          cls: '',    rank: 'minor' },
+    '8/8':   { key: 'ultimate_resistance', cls: 'neg', rank: 'critical' },
+    '9/8':   { key: 'extension_high',      cls: '',    rank: 'extended' },
+    '10/8':  { key: 'extension_high',      cls: '',    rank: 'extended' },
 };
 
+// Exposed for tests/consumers that want the raw map without resolving label.
+export const LEVEL_SIGNIFICANCE = LEVEL_SIGNIFICANCE_META;
+
 export function significanceOf(label) {
-    return LEVEL_SIGNIFICANCE[label] || { label: '—', cls: '', rank: 'unknown' };
+    const m = LEVEL_SIGNIFICANCE_META[label];
+    if (!m) return { label: '—', cls: '', rank: 'unknown' };
+    return { label: t(`view.murrey_math.sig.${m.key}`), cls: m.cls, rank: m.rank };
 }
 
 // Classifies the current price's position within the octave. Octave is
@@ -91,6 +98,17 @@ export function pricePosition(current, levels) {
     if (current > v8) return 'above octave';
     if (current <= v4) return 'lower half';
     return 'upper half';
+}
+
+// Translate a pricePosition() return value into a display string.
+export function pricePositionLabel(pos) {
+    switch (pos) {
+        case 'below octave': return t('view.murrey_math.pos.below_octave');
+        case 'above octave': return t('view.murrey_math.pos.above_octave');
+        case 'lower half':   return t('view.murrey_math.pos.lower_half');
+        case 'upper half':   return t('view.murrey_math.pos.upper_half');
+        default:             return pos;
+    }
 }
 
 // Auto-detect the bracketing levels for the current price — useful for

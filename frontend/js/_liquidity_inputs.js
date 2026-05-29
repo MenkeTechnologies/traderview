@@ -7,6 +7,8 @@
 // analyzer (it only reads symbol, qty, net_pnl) but the backend
 // deserializer requires them, so we fill with deterministic stubs.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 export function parseTradeLines(text) {
@@ -153,11 +155,11 @@ export function buildBody(trades, adv) {
 // the trader reads at a glance.
 export function liquidityTier(pct) {
     if (!Number.isFinite(pct)) return { label: '—', cls: '' };
-    if (pct < 0.001) return { label: 'invisible (<0.1%)',  cls: 'pos' };
-    if (pct < 0.01)  return { label: 'normal (0.1-1%)',    cls: 'pos' };
-    if (pct < 0.05)  return { label: 'large (1-5%)',       cls: '' };
-    if (pct < 0.20)  return { label: 'illiquid (5-20%)',   cls: 'neg' };
-    return                  { label: 'whale (>20%)',       cls: 'neg' };
+    if (pct < 0.001) return { label: t('view.liquidity.tier.invisible'), cls: 'pos' };
+    if (pct < 0.01)  return { label: t('view.liquidity.tier.normal'),    cls: 'pos' };
+    if (pct < 0.05)  return { label: t('view.liquidity.tier.large'),     cls: '' };
+    if (pct < 0.20)  return { label: t('view.liquidity.tier.illiquid'),  cls: 'neg' };
+    return                  { label: t('view.liquidity.tier.whale'),     cls: 'neg' };
 }
 
 // Deterministic demo: 4 symbols of varying ADV → trades that span the

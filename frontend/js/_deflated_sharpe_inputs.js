@@ -4,6 +4,8 @@
 // Backend body shape: { observed_sharpe, n_observations, skewness,
 // kurtosis, n_trials }.
 
+import { t } from './i18n.js';
+
 export function validateInputs(p) {
     if (!Number.isFinite(p.observed_sharpe)) return 'observed_sharpe must be finite';
     if (!Number.isInteger(p.n_observations) || p.n_observations < 4)
@@ -32,11 +34,11 @@ export function buildBody(p) {
 // at a glance. Buckets follow standard academic/CFA-style cutoffs.
 export function confidenceTier(prob) {
     if (!Number.isFinite(prob)) return { label: '—', cls: '' };
-    if (prob >= 0.99) return { label: 'very high (≥99%)', cls: 'pos' };
-    if (prob >= 0.95) return { label: 'high (≥95%)',      cls: 'pos' };
-    if (prob >= 0.90) return { label: 'moderate (≥90%)',  cls: '' };
-    if (prob >= 0.50) return { label: 'weak (≥50%)',      cls: 'neg' };
-    return { label: 'overfit (<50%)', cls: 'neg' };
+    if (prob >= 0.99) return { label: t('view.deflated_sharpe.tier.very_high'), cls: 'pos' };
+    if (prob >= 0.95) return { label: t('view.deflated_sharpe.tier.high'),      cls: 'pos' };
+    if (prob >= 0.90) return { label: t('view.deflated_sharpe.tier.moderate'),  cls: '' };
+    if (prob >= 0.50) return { label: t('view.deflated_sharpe.tier.weak'),      cls: 'neg' };
+    return { label: t('view.deflated_sharpe.tier.overfit'), cls: 'neg' };
 }
 
 // Builds a geometric n_trials ladder for the sensitivity sweep — answers
