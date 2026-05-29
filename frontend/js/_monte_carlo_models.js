@@ -4,24 +4,30 @@
 // terminal-price distribution. Lives outside the view so vitest can
 // exercise every model without a DOM stub.
 
+import { t } from './i18n.js';
+
 /** Parameter spec for one model. `fields` is the list of inputs the form
  *  must collect (label + key + default). `endpoint` is the api.js method
  *  name (e.g. `anlyGbmPathSimulator`). `buildBody` shapes the JSON
  *  request from a flat values map. `extractTerminalStats` maps the
  *  response into a canonical { mean, stdev, min?, max?, skew?, extra? }
  *  shape so the view renders uniformly. */
+function _f(key, rest) {
+    return Object.assign({ key, get label() { return t(`view.monte_carlo.field.${key}`); } }, rest);
+}
+
 export const MODELS = {
     gbm: {
-        label: 'Geometric Brownian Motion',
+        get label() { return t('view.monte_carlo.model.gbm'); },
         endpoint: 'anlyGbmPathSimulator',
         fields: [
-            { key: 's0', label: 'Spot S₀', default: 100, min: 0, step: 'any' },
-            { key: 'mu', label: 'Drift μ (annual)', default: 0.05, step: 'any' },
-            { key: 'sigma', label: 'Vol σ (annual)', default: 0.20, min: 0, step: 'any' },
-            { key: 'dt', label: 'dt (years)', default: 1 / 252, min: 0, step: 'any' },
-            { key: 'steps', label: 'Steps', default: 252, min: 1, integer: true },
-            { key: 'paths', label: 'Paths', default: 5000, min: 1, integer: true },
-            { key: 'seed', label: 'Seed (0 = auto)', default: 42, min: 0, integer: true },
+            _f('s0',    { default: 100,     min: 0, step: 'any' }),
+            _f('mu',    { default: 0.05,            step: 'any' }),
+            _f('sigma', { default: 0.20,    min: 0, step: 'any' }),
+            _f('dt',    { default: 1 / 252, min: 0, step: 'any' }),
+            _f('steps', { default: 252,     min: 1, integer: true }),
+            _f('paths', { default: 5000,    min: 1, integer: true }),
+            _f('seed',  { default: 42,      min: 0, integer: true }),
         ],
         buildBody: (v) => ({
             s0: v.s0, mu: v.mu, sigma: v.sigma,
@@ -37,19 +43,19 @@ export const MODELS = {
     },
 
     merton_jump: {
-        label: 'Merton Jump-Diffusion',
+        get label() { return t('view.monte_carlo.model.merton_jump'); },
         endpoint: 'anlyJumpDiffusionSimulator',
         fields: [
-            { key: 's0', label: 'Spot S₀', default: 100, min: 0, step: 'any' },
-            { key: 'mu', label: 'Drift μ (annual)', default: 0.05, step: 'any' },
-            { key: 'sigma', label: 'Vol σ (annual)', default: 0.20, min: 0, step: 'any' },
-            { key: 'jump_lambda', label: 'Jump rate λ (per year)', default: 1.0, min: 0, step: 'any' },
-            { key: 'jump_mean', label: 'Jump mean (log)', default: -0.05, step: 'any' },
-            { key: 'jump_stdev', label: 'Jump stdev (log)', default: 0.10, min: 0, step: 'any' },
-            { key: 'dt', label: 'dt (years)', default: 1 / 252, min: 0, step: 'any' },
-            { key: 'steps', label: 'Steps', default: 252, min: 1, integer: true },
-            { key: 'paths', label: 'Paths', default: 5000, min: 1, integer: true },
-            { key: 'seed', label: 'Seed (0 = auto)', default: 42, min: 0, integer: true },
+            _f('s0',         { default: 100,     min: 0, step: 'any' }),
+            _f('mu',         { default: 0.05,            step: 'any' }),
+            _f('sigma',      { default: 0.20,    min: 0, step: 'any' }),
+            _f('jump_lambda', { default: 1.0,    min: 0, step: 'any' }),
+            _f('jump_mean',  { default: -0.05,           step: 'any' }),
+            _f('jump_stdev', { default: 0.10,    min: 0, step: 'any' }),
+            _f('dt',         { default: 1 / 252, min: 0, step: 'any' }),
+            _f('steps',      { default: 252,     min: 1, integer: true }),
+            _f('paths',      { default: 5000,    min: 1, integer: true }),
+            _f('seed',       { default: 42,      min: 0, integer: true }),
         ],
         buildBody: (v) => ({
             s0: v.s0, mu: v.mu, sigma: v.sigma,
@@ -60,26 +66,26 @@ export const MODELS = {
             mean: r.mean_terminal,
             stdev: r.stdev_terminal,
             skew: r.skew_log_return,
-            extra: { 'Jump count (total)': r.jump_count_total },
+            extra: { [t('view.monte_carlo.extra.jump_count_total')]: r.jump_count_total },
             paths_run: r.paths_run,
         }),
     },
 
     kou_jump: {
-        label: 'Kou Double-Exp Jump-Diffusion',
+        get label() { return t('view.monte_carlo.model.kou_jump'); },
         endpoint: 'anlyKouJumpDiffusionSimulator',
         fields: [
-            { key: 's0', label: 'Spot S₀', default: 100, min: 0, step: 'any' },
-            { key: 'mu', label: 'Drift μ (annual)', default: 0.05, step: 'any' },
-            { key: 'sigma', label: 'Vol σ (annual)', default: 0.20, min: 0, step: 'any' },
-            { key: 'jump_lambda', label: 'Jump rate λ (per year)', default: 1.0, min: 0, step: 'any' },
-            { key: 'up_prob', label: 'Up-jump probability', default: 0.4, min: 0, max: 1, step: 'any' },
-            { key: 'eta_up', label: 'η up (up-tail rate; > 1)', default: 10, min: 1.0001, step: 'any' },
-            { key: 'eta_down', label: 'η down (down-tail rate)', default: 5, min: 0, step: 'any' },
-            { key: 'dt', label: 'dt (years)', default: 1 / 252, min: 0, step: 'any' },
-            { key: 'steps', label: 'Steps', default: 252, min: 1, integer: true },
-            { key: 'paths', label: 'Paths', default: 5000, min: 1, integer: true },
-            { key: 'seed', label: 'Seed (0 = auto)', default: 42, min: 0, integer: true },
+            _f('s0',          { default: 100,     min: 0,      step: 'any' }),
+            _f('mu',          { default: 0.05,                 step: 'any' }),
+            _f('sigma',       { default: 0.20,    min: 0,      step: 'any' }),
+            _f('jump_lambda', { default: 1.0,     min: 0,      step: 'any' }),
+            _f('up_prob',     { default: 0.4,     min: 0, max: 1, step: 'any' }),
+            _f('eta_up',      { default: 10,      min: 1.0001, step: 'any' }),
+            _f('eta_down',    { default: 5,       min: 0,      step: 'any' }),
+            _f('dt',          { default: 1 / 252, min: 0,      step: 'any' }),
+            _f('steps',       { default: 252,     min: 1,      integer: true }),
+            _f('paths',       { default: 5000,    min: 1,      integer: true }),
+            _f('seed',        { default: 42,      min: 0,      integer: true }),
         ],
         buildBody: (v) => ({
             s0: v.s0, mu: v.mu, sigma: v.sigma,
@@ -92,21 +98,21 @@ export const MODELS = {
             stdev: r.stdev_terminal,
             skew: r.skew_log_return,
             extra: {
-                'Up jumps':   r.up_jumps,
-                'Down jumps': r.down_jumps,
+                [t('view.monte_carlo.extra.up_jumps')]:   r.up_jumps,
+                [t('view.monte_carlo.extra.down_jumps')]: r.down_jumps,
             },
             paths_run: r.paths_run,
         }),
     },
 
     fbm: {
-        label: 'Fractional Brownian Motion (path)',
+        get label() { return t('view.monte_carlo.model.fbm'); },
         endpoint: 'anlyFbmGenerator',
         fields: [
-            { key: 'hurst', label: 'Hurst H (0=anti, 1=trend)', default: 0.7, min: 0.01, max: 0.99, step: 'any' },
-            { key: 'sigma0', label: 'σ₀ (initial scale)', default: 1.0, min: 0, step: 'any' },
-            { key: 'levels', label: 'Levels (path length = 2^L+1)', default: 10, min: 1, max: 18, integer: true },
-            { key: 'seed', label: 'Seed (0 = auto)', default: 42, min: 0, integer: true },
+            _f('hurst',  { default: 0.7, min: 0.01, max: 0.99, step: 'any' }),
+            _f('sigma0', { default: 1.0, min: 0,                step: 'any' }),
+            _f('levels', { default: 10,  min: 1,    max: 18,    integer: true }),
+            _f('seed',   { default: 42,  min: 0,                integer: true }),
         ],
         buildBody: (v) => ({
             hurst: v.hurst, sigma0: v.sigma0, levels: v.levels, seed: v.seed,
@@ -123,7 +129,7 @@ export const MODELS = {
             const max = path.reduce((a, b) => Math.max(a, b), -Infinity);
             return {
                 mean, stdev, min, max,
-                extra: { 'Path samples': n },
+                extra: { [t('view.monte_carlo.extra.path_samples')]: n },
                 paths_run: 1,
                 // The view checks for `path` to render the trace instead
                 // of the normal-approximation density.
