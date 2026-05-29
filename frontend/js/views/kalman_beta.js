@@ -243,7 +243,7 @@ function renderBetaChart(betas) {
             { label: t('chart.series.bar') },
             { label: 'β (Kalman)', stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.08)', points: { show: false } },
-            { label: 'β = 1 reference', stroke: '#ff9f1a', width: 1,
+            { label: t('chart.series._1_reference'), stroke: '#ff9f1a', width: 1,
               dash: [4, 4], points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

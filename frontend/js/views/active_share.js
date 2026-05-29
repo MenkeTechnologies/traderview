@@ -156,7 +156,7 @@ function renderChart() {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.rank') },
-            { label: 'Δw (pp)', stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.w_pp'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

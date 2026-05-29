@@ -171,7 +171,7 @@ function renderEigenChart(originalCov, res) {
             { label: t('chart.series.rank') },
             { label: t('chart.series.cleaned_sorted_desc'), stroke: '#ff9f1a', width: 2,
               points: { show: true, size: 8, stroke: '#ff9f1a', fill: '#ff9f1a' } },
-            { label: 'λ_max bulk threshold', stroke: '#ff3860', width: 1,
+            { label: t('chart.series._max_bulk_threshold'), stroke: '#ff3860', width: 1,
               dash: [4, 4], points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

@@ -151,7 +151,7 @@ function renderHistogram(realized, impliedPct) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: '|realized| %' },
+            { label: t('chart.series.realized_') },
             { label: t('chart.series.count'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff33', points: { show: true, size: 4 } },
             { label: t('chart.series.implied'), stroke: '#ff9f1a', width: 1.0, dash: [4, 4],

@@ -179,7 +179,7 @@ function renderChart(report) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.rank') },
-            { label: '% contrib', stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series._contrib'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [
             { stroke: '#aab', size: 28,
