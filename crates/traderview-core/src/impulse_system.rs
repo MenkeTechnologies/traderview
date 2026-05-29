@@ -236,4 +236,80 @@ mod tests {
             "output length must always match input length, even when shorter than period"
         );
     }
+
+    // ─── ema/ema_opt seed + smoothing pins ───────────────────────────
+    //
+    // The EMA seed is a simple mean over the first `period` bars; the
+    // smoothing factor k = 2/(p+1). Drift in either silently shifts
+    // every downstream MACD / impulse signal off by ~half a bar.
+
+    #[test]
+    fn ema_period_zero_yields_all_none() {
+        let s = vec![1.0, 2.0, 3.0, 4.0];
+        let out = ema(&s, 0);
+        assert_eq!(out.len(), 4);
+        assert!(out.iter().all(|x| x.is_none()));
+    }
+
+    #[test]
+    fn ema_seed_is_simple_mean_of_first_period_bars() {
+        let s = vec![10.0_f64, 20.0, 30.0, 40.0, 50.0];
+        let out = ema(&s, 3);
+        // First two bars carry None; bar at index 2 (period-1) carries
+        // the simple mean (10+20+30)/3 = 20.
+        assert!(out[0].is_none());
+        assert!(out[1].is_none());
+        assert_eq!(out[2], Some(20.0));
+    }
+
+    #[test]
+    fn ema_constant_series_converges_immediately_to_the_constant() {
+        // EMA of a constant series equals that constant from the seed
+        // bar onward (k * c + (1-k) * c = c).
+        let s = vec![42.0_f64; 10];
+        let out = ema(&s, 4);
+        for i in 3..10 {
+            let v = out[i].unwrap();
+            let diff = (v - 42.0).abs();
+            assert!(
+                diff < 1e-9,
+                "constant-series EMA must equal the constant at idx {i}; got {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn ema_output_length_equals_input_length_for_short_series() {
+        let s = vec![1.0_f64; 2];
+        // Series shorter than period; output is still len=2 with all None.
+        let out = ema(&s, 5);
+        assert_eq!(out.len(), 2);
+        assert!(out.iter().all(|x| x.is_none()));
+    }
+
+    #[test]
+    fn ema_opt_resets_seed_window_on_None_gap() {
+        // When the input contains a None gap, the seed window has to
+        // restart from the next Some — period bars of contiguous data
+        // are needed before the first emit. Pin that behavior.
+        let s = vec![
+            Some(1.0_f64),
+            Some(2.0),
+            None,            // gap resets count
+            Some(3.0),
+            Some(4.0),
+            Some(5.0),
+        ];
+        let out = ema_opt(&s, 3);
+        // Indices 0, 1 cannot seed (only 2 bars before gap).
+        // Index 2 is the gap itself.
+        // Indices 3, 4, 5 form a contiguous 3-bar window — first emit
+        // lands at index 5 (= seed_end).
+        assert!(out[0].is_none());
+        assert!(out[1].is_none());
+        assert!(out[2].is_none());
+        assert!(out[3].is_none());
+        assert!(out[4].is_none());
+        assert_eq!(out[5], Some(4.0)); // seed = (3+4+5)/3 = 4
+    }
 }
