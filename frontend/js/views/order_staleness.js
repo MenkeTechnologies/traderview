@@ -28,10 +28,7 @@ export async function renderOrderStaleness(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.order_staleness.h2.resting_orders">Resting orders</h2>
-            <p class="muted">One line per order: <code>id symbol placed_at [last_modified_at] side</code>.
-                Timestamps accept ISO 8601 (<code>2024-06-15T10:00:00Z</code>). Side is one of
-                <code>buy / sell / buy_stop / sell_stop</code>. Modifying an order resets the
-                staleness clock — treated as "re-confirming intent."</p>
+            <p class="muted" data-i18n="view.order_staleness.hint.format">One line per order: id symbol placed_at [last_modified_at] side. Timestamps accept ISO 8601 (2024-06-15T10:00:00Z). Side is one of buy / sell / buy_stop / sell_stop. Modifying an order resets the staleness clock — treated as "re-confirming intent."</p>
             <textarea id="os-orders" rows="8" placeholder="A1 AAPL 2024-06-15T10:00:00Z buy&#10;B1 TSLA 2024-06-14T10:00:00Z 2024-06-15T08:00:00Z sell_stop"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.order_staleness.btn.load_demo_12_orders_across_all_tiers" id="os-demo" class="secondary" type="button">Load demo (12 orders across all tiers)</button>

@@ -24,15 +24,13 @@ export async function renderNewsEvent(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.news_event.h2.open_positions">Open positions</h2>
-            <p class="muted">One line per position: <code>symbol qty</code>.</p>
+            <p class="muted" data-i18n="view.news_event.hint.position_format">One line per position: symbol qty.</p>
             <textarea id="ne-pos" rows="5" placeholder="AAPL 100&#10;TSLA 50&#10;MSFT 200"></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.news_event.h2.upcoming_news_events">Upcoming news events</h2>
-            <p class="muted">One event per line: <code>event_name &lt;low|medium|high|critical&gt; [comma,sep,symbols]</code>.
-                Omit symbols for market-wide events (e.g., FOMC, NFP).
-                Event-name can contain spaces; the parser finds the impact token automatically.</p>
+            <p class="muted" data-i18n="view.news_event.hint.event_format">One event per line: event_name &lt;low|medium|high|critical&gt; [comma,sep,symbols]. Omit symbols for market-wide events (e.g., FOMC, NFP). Event-name can contain spaces; the parser finds the impact token automatically.</p>
             <textarea id="ne-ev" rows="5" placeholder="FOMC critical&#10;CPI high TSLA&#10;Retail sales medium MSFT&#10;Fed minutes low ILQD"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.news_event.btn.load_demo_5_positions_4_events_spanning_all_tiers" id="ne-demo" class="secondary" type="button">Load demo (5 positions, 4 events spanning all tiers)</button>

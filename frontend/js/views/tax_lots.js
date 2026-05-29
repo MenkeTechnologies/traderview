@@ -18,12 +18,7 @@ export async function renderTaxLots(mount, state) {
 
     mount.innerHTML = `
         <h1 class="view-title">// TAX LOTS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Lot-by-lot accounting derived from your executions. Methods supported:
-            <strong>FIFO</strong> (default — IRS default for equities), <strong>LIFO</strong>.
-            Wash-sale flag: per IRC §1091, any loss realized within ±30 days of a buy of the
-            same symbol is disallowed for tax purposes (the disallowed amount is added back
-            to net gain). Long-term = held ≥ 365 days. Short/cover events are passed through
-            but not lot-matched in v1.</p>
+        <p class="muted small" data-i18n="view.tax_lots.hint.intro">Lot-by-lot accounting derived from your executions. Methods supported: FIFO (default — IRS default for equities), LIFO. Wash-sale flag: per IRC §1091, any loss realized within ±30 days of a buy of the same symbol is disallowed for tax purposes (the disallowed amount is added back to net gain). Long-term = held ≥ 365 days. Short/cover events are passed through but not lot-matched in v1.</p>
 
         <form id="tx-form" class="inline-form">
             <label><span data-i18n="view.tax_lots.label.year">Year</span>

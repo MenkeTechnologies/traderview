@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { fmt, fmtMoney, fmtPct, fmtDate, fmtSecs, pnlClass, esc, statCard } from '../util.js';
 import { barChart, equityChart } from '../charts.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const TABS = [
@@ -72,7 +73,7 @@ export async function renderReports(mount, state, sub) {
             if (eqMount) equityChart(eqMount, eq);
         } else if (sub === 'risk-adjusted') setBody(riskAdjustedHtml(await api.riskAdjusted(acct)));
     } catch (e) {
-        setBody(`<p class="boot">Error: ${e.message}</p>`);
+        setBody(`<p class="boot">${esc(t('view.reports.error', { msg: e.message }))}</p>`);
     }
 }
 

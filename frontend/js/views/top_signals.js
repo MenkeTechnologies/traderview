@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTopSignals(mount) {
@@ -68,7 +69,7 @@ export async function renderTopSignals(mount) {
 }
 
 function renderList(r, side) {
-    if (!r.hits.length) return `<p class="muted">No ${side} candidates in this universe.</p>`;
+    if (!r.hits.length) return `<p class="muted">${esc(t('view.top_signals.empty', { side }))}</p>`;
     return `<table class="trades">
         <thead><tr><th>#</th><th data-i18n="view.top_signals.th.symbol">Symbol</th><th data-i18n="view.top_signals.th.score">Score</th><th data-i18n="view.top_signals.th.summary">Summary</th>
             <th data-i18n="view.top_signals.th.close">Close</th><th data-i18n="view.top_signals.th.rsi">RSI</th><th data-i18n="view.top_signals.th.signals">Signals</th></tr></thead>

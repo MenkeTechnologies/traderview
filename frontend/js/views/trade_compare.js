@@ -3,6 +3,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
@@ -15,11 +16,7 @@ export async function renderTradeCompare(mount, state) {
     if (!acct) { mount.innerHTML = `<p data-i18n="view.trade_compare.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// TRADE COMPARISON — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Pick 2-4 closed trades from the picker. The right pane shows
-            side-by-side stats and a normalized P/L overlay where the x-axis is
-            <code>t ∈ [0..1]</code> from open to close (so a 5-min scalp and a 6-month swing
-            can be compared on the same chart) and the y-axis is % return vs entry. Auto-picks
-            bar interval per trade duration (1m / 5m / 1h / 1d) so each curve has 50-200 points.</p>
+        <p class="muted small" data-i18n="view.trade_compare.hint.intro">Pick 2-4 closed trades from the picker. The right pane shows side-by-side stats and a normalized P/L overlay where the x-axis is t ∈ [0..1] from open to close (so a 5-min scalp and a 6-month swing can be compared on the same chart) and the y-axis is % return vs entry. Auto-picks bar interval per trade duration (1m / 5m / 1h / 1d) so each curve has 50-200 points.</p>
 
         <div style="display:grid;grid-template-columns:340px 1fr;gap:10px;">
             <div class="chart-panel">
@@ -105,7 +102,7 @@ async function runCompare(mount, tok) {
 }
 
 function render(r, out) {
-    if (r.rows.length < 2) { out.innerHTML = `<p class="boot">Got ${r.rows.length} resolvable trades — need ≥ 2.</p>`; return; }
+    if (r.rows.length < 2) { out.innerHTML = `<p class="boot">${esc(t('view.trade_compare.too_few', { count: r.rows.length }))}</p>`; return; }
     out.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.trade_compare.h2.normalized_p_l_overlay_return_vs_entry">Normalized P/L overlay (% return vs entry)</h2>

@@ -26,9 +26,7 @@ export async function renderOiChange(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.oi_change.h2.strike_level_oi_snapshots">Strike-level OI snapshots</h2>
-            <p class="muted">One line per strike: <code>strike call_oi put_oi call_baseline put_baseline</code>.
-                Baseline = trailing 20-day average (or your own reference). Demo loads
-                an 8-strike chain with engineered surges on the 510 call and 470 put.</p>
+            <p class="muted" data-i18n="view.oi_change.hint.format">One line per strike: strike call_oi put_oi call_baseline put_baseline. Baseline = trailing 20-day average (or your own reference). Demo loads an 8-strike chain with engineered surges on the 510 call and 470 put.</p>
             <textarea id="oi-snap" rows="8" placeholder="500 25000 6000 24000 6200&#10;510 32000 3000 12000 3100&#10;..."></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.oi_change.label.pct_threshold">Pct threshold (e.g. 0.25 = 25%)</span>

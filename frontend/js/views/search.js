@@ -92,5 +92,5 @@ function renderHits(r) {
     }
     return blocks.length
         ? blocks.join('')
-        : `<p class="boot">No matches for "${esc(r.query)}".</p>`;
+        : `<p class="boot">${esc(t('view.search.no_matches', { query: r.query }))}</p>`;
 }

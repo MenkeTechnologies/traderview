@@ -49,10 +49,7 @@ export async function renderPyramid(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.pyramid.h2.tranche_ladder">Tranche ladder</h2>
-            <p class="muted">One tranche per line: <code>trigger_price qty</code>.
-                Pyramid-Up: tranches must move INTO profit. Scale-In: tranches must
-                move AGAINST you within your planned ladder. Misordered tranches are
-                flagged by both the local pre-flight and the backend.</p>
+            <p class="muted" data-i18n="view.pyramid.hint.format">One tranche per line: trigger_price qty. Pyramid-Up: tranches must move INTO profit. Scale-In: tranches must move AGAINST you within your planned ladder. Misordered tranches are flagged by both the local pre-flight and the backend.</p>
             <textarea id="py-tranches" rows="5" placeholder="105 75&#10;110 50&#10;115 25"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.pyramid.btn.demo_pyramid_up_long" id="py-demo-pu-long"  class="secondary" type="button">Demo: Pyramid Up Long</button>

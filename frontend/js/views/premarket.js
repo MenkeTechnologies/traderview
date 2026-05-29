@@ -93,8 +93,7 @@ function renderEvents(events, fetched, mount) {
         el.innerHTML = `
             <div class="chart-panel">
                 <h2 data-i18n="view.premarket.h2.today_s_high_impact_releases">Today's high-impact releases</h2>
-                <p class="muted small">No high-importance scheduled releases today (per static
-                    economic calendar). Updated ${new Date(fetched).toLocaleTimeString(undefined, { hour12: false })}.</p>
+                <p class="muted small">${esc(t('view.premarket.hint.none_today', { time: new Date(fetched).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
             </div>`;
         return;
     }
@@ -112,7 +111,7 @@ function renderEvents(events, fetched, mount) {
                     </tr>`).join('')}
                 </tbody>
             </table>
-            <p class="muted small">Updated ${new Date(fetched).toLocaleTimeString(undefined, { hour12: false })}</p>
+            <p class="muted small">${esc(t('view.premarket.hint.updated', { time: new Date(fetched).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
         </div>
     `;
 }

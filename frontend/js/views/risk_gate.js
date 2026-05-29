@@ -38,7 +38,7 @@ export async function renderRiskGate(mount, state) {
 
         <div class="chart-panel" style="border-left:3px solid #ff2a6d">
             <h2 data-i18n="view.risk_gate.h2.kill_switch">🛑 Kill switch</h2>
-            <p class="muted small">Halt every trade entry across all rules with one click. Toggles a <code>kill_switch</code> rule that always blocks. Disable here when ready to resume.</p>
+            <p class="muted small" data-i18n="view.risk_gate.hint.kill_switch">Halt every trade entry across all rules with one click. Toggles a kill_switch rule that always blocks. Disable here when ready to resume.</p>
             <button data-i18n="view.risk_gate.btn.toggle_kill_switch" id="rg-kill" class="primary" type="button" style="background:#ff2a6d">Toggle kill switch</button>
             <span id="rg-kill-state" class="muted small" style="margin-left:10px">checking…</span>
         </div>

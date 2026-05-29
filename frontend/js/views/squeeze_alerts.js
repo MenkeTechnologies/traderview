@@ -74,16 +74,13 @@ export async function renderSqueezeAlerts(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.squeeze_alerts.h2.tick_feed">Tick feed</h2>
-            <p class="muted">One tick per line: <code>symbol unix_ts price volume</code>.
-                Demo loads 3 symbols over 30 minutes — AAPL ramps +8% in the last 5
-                minutes on 4× volume (normal alert), SMID gaps +12% on 6× volume (CRITICAL
-                alarm), MSFT drifts (no alert).</p>
+            <p class="muted" data-i18n="view.squeeze_alerts.hint.ticks">One tick per line: symbol unix_ts price volume. Demo loads 3 symbols over 30 minutes — AAPL ramps +8% in the last 5 minutes on 4× volume (normal alert), SMID gaps +12% on 6× volume (CRITICAL alarm), MSFT drifts (no alert).</p>
             <textarea id="sq-ticks" rows="6" placeholder="AAPL 1700000000 150.00 5000&#10;AAPL 1700000030 150.05 5500&#10;..."></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.squeeze_alerts.h2.adv_table">ADV table</h2>
-            <p class="muted">One per line: <code>symbol adv_shares</code>.</p>
+            <p class="muted" data-i18n="view.squeeze_alerts.hint.adv">One per line: symbol adv_shares.</p>
             <textarea id="sq-adv" rows="3" placeholder="AAPL 50000000&#10;MSFT 25000000&#10;SMID 250000"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.squeeze_alerts.btn.load_demo_3_symbols_60_ticks_each_30_min_span" id="sq-demo" class="secondary" type="button">Load demo (3 symbols, 60 ticks each, 30 min span)</button>

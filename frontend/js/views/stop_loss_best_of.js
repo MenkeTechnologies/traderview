@@ -20,9 +20,7 @@ export async function renderStopLossBestOf(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.stop_loss_best_of.h2.trade_outcomes">Trade outcomes</h2>
-            <p class="muted">One trade per line: <code>entry mae mfe actual_exit</code>.
-                MAE/MFE are POSITIVE excursion magnitudes (max-adverse / max-favorable in dollars).
-                Demo loads 20 mixed-outcome trades with realistic excursion ranges.</p>
+            <p class="muted" data-i18n="view.stop_loss_best_of.hint.format">One trade per line: entry mae mfe actual_exit. MAE/MFE are POSITIVE excursion magnitudes (max-adverse / max-favorable in dollars). Demo loads 20 mixed-outcome trades with realistic excursion ranges.</p>
             <textarea id="sl-trades" rows="8" placeholder="100 0.8 2.5 101.7&#10;100.5 2.1 0.5 99.2&#10;..."></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.stop_loss_best_of.label.side">Side</span>

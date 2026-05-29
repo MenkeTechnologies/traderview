@@ -33,9 +33,7 @@ export async function renderStressTest(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.stress_test.h2.option_legs">Option legs</h2>
-            <p class="muted">One leg per line: <code>symbol kind spot strike dte iv contracts entry_price</code>.
-                Multiplier is fixed at 100 (equity options). Demo loads a short SPY iron
-                condor.</p>
+            <p class="muted" data-i18n="view.stress_test.hint.legs">One leg per line: symbol kind spot strike dte iv contracts entry_price. Multiplier is fixed at 100 (equity options). Demo loads a short SPY iron condor.</p>
             <textarea id="st-legs" rows="6" placeholder="SPY put 100 95 30 0.30 -1 1.20&#10;SPY put 100 90 30 0.30 1 0.40&#10;..."></textarea>
             <div class="inline-form">
                 <button data-i18n="view.stress_test.btn.load_demo_iron_condor" id="st-demo" class="secondary" type="button">Load demo (iron condor)</button>

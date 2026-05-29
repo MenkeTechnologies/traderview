@@ -49,7 +49,7 @@ export async function renderNewTrade(mount, state) {
                 </label>
                 <button data-i18n="view.new_trade.btn.add" class="primary" type="submit">Add</button>
             </form>
-            <p class="muted small">Pre-trade <a href="#risk-gate">Risk Gate</a> rules evaluate <code>stop_loss</code> + <code>has_attached_plan</code> before submission. Configure rules in the Risk Gate view.</p>
+            <p class="muted small" data-i18n="view.new_trade.hint.risk_gate">Pre-trade Risk Gate rules evaluate stop_loss + has_attached_plan before submission. Configure rules in the Risk Gate view.</p>
         </div>
 
         <div class="chart-panel">
