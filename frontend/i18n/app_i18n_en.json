@@ -5832,6 +5832,7 @@
   "view.trade_detail.confirm.delete_execution": "Delete this execution? The trade will re-FIFO.",
   "view.api_tokens.confirm.revoke": "Revoke this token? Integrations using it will lose access immediately.",
   "view.boards.confirm.delete": "Delete this board?",
+  "view.boards.note.empty": "(empty — click ⚙ to edit)",
   "view.backtest_presets.confirm.delete": "Delete this preset?",
   "view.trades.confirm.delete": "Delete this trade?",
   "view.alert_rules.confirm.remove": "Remove this rule?",
