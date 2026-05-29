@@ -6,60 +6,69 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
 
+function _m(key, kind, lower) {
+    const o = { key, kind, get label() { return t(`view.compare.metric.${key}`); } };
+    if (lower !== undefined) o.lower = lower;
+    return o;
+}
+function _g(slug, metrics) {
+    return { get group() { return t(`view.compare.group.${slug}`); }, metrics };
+}
+
 const ROWS = [
-    { group: 'Profile', metrics: [
-        { key: 'name', label: 'Name', kind: 'text' },
-        { key: 'sector', label: 'Sector', kind: 'text' },
-        { key: 'industry', label: 'Industry', kind: 'text' },
-        { key: 'price', label: 'Price', kind: 'money' },
-        { key: 'market_cap', label: 'Market cap', kind: 'big' },
-        { key: 'enterprise_value', label: 'Enterprise value', kind: 'big' },
-        { key: 'beta', label: 'Beta', kind: 'num' },
-    ]},
-    { group: 'Valuation (lower = cheaper)', metrics: [
-        { key: 'trailing_pe',  label: 'Trailing P/E',  kind: 'num',   lower: true },
-        { key: 'forward_pe',   label: 'Forward P/E',   kind: 'num',   lower: true },
-        { key: 'peg_ratio',    label: 'PEG ratio',     kind: 'num',   lower: true },
-        { key: 'price_to_book',label: 'Price / book',  kind: 'num',   lower: true },
-        { key: 'price_to_sales', label: 'Price / sales', kind: 'num', lower: true },
-        { key: 'ev_to_ebitda', label: 'EV / EBITDA',   kind: 'num',   lower: true },
-    ]},
-    { group: 'Profitability (higher = stronger)', metrics: [
-        { key: 'profit_margin',    label: 'Profit margin',    kind: 'pct', lower: false },
-        { key: 'operating_margin', label: 'Operating margin', kind: 'pct', lower: false },
-        { key: 'return_on_equity', label: 'ROE',              kind: 'pct', lower: false },
-        { key: 'return_on_assets', label: 'ROA',              kind: 'pct', lower: false },
-    ]},
-    { group: 'Growth (higher = faster)', metrics: [
-        { key: 'revenue_growth',  label: 'Revenue growth (YoY)',  kind: 'pct', lower: false },
-        { key: 'earnings_growth', label: 'Earnings growth (YoY)', kind: 'pct', lower: false },
-        { key: 'revenue_per_share', label: 'Revenue / share', kind: 'money', lower: false },
-    ]},
-    { group: 'Balance sheet', metrics: [
-        { key: 'debt_to_equity',  label: 'Debt / equity (%)', kind: 'num', lower: true },
-        { key: 'current_ratio',   label: 'Current ratio',     kind: 'num', lower: false },
-        { key: 'quick_ratio',     label: 'Quick ratio',       kind: 'num', lower: false },
-        { key: 'free_cashflow',   label: 'Free cashflow',     kind: 'big', lower: false },
-        { key: 'total_cash_per_share', label: 'Cash / share', kind: 'money', lower: false },
-    ]},
-    { group: 'Income to holders', metrics: [
-        { key: 'dividend_yield', label: 'Dividend yield', kind: 'pct', lower: false },
-        { key: 'payout_ratio',   label: 'Payout ratio',   kind: 'pct', lower: true  },
-    ]},
-    { group: 'Price action', metrics: [
-        { key: 'fifty_two_week_high', label: '52-wk high', kind: 'money' },
-        { key: 'fifty_two_week_low',  label: '52-wk low',  kind: 'money' },
-        { key: 'fifty_day_avg',       label: '50-d avg',   kind: 'money' },
-        { key: 'two_hundred_day_avg', label: '200-d avg',  kind: 'money' },
-    ]},
-    { group: 'Returns', metrics: [
-        { key: 'return_1d', label: '1-day',  kind: 'pct', lower: false },
-        { key: 'return_1w', label: '1-week', kind: 'pct', lower: false },
-        { key: 'return_1m', label: '1-month', kind: 'pct', lower: false },
-        { key: 'return_3m', label: '3-month', kind: 'pct', lower: false },
-        { key: 'return_6m', label: '6-month', kind: 'pct', lower: false },
-        { key: 'return_1y', label: '1-year',  kind: 'pct', lower: false },
-    ]},
+    _g('profile', [
+        _m('name', 'text'),
+        _m('sector', 'text'),
+        _m('industry', 'text'),
+        _m('price', 'money'),
+        _m('market_cap', 'big'),
+        _m('enterprise_value', 'big'),
+        _m('beta', 'num'),
+    ]),
+    _g('valuation', [
+        _m('trailing_pe',     'num',   true),
+        _m('forward_pe',      'num',   true),
+        _m('peg_ratio',       'num',   true),
+        _m('price_to_book',   'num',   true),
+        _m('price_to_sales',  'num',   true),
+        _m('ev_to_ebitda',    'num',   true),
+    ]),
+    _g('profitability', [
+        _m('profit_margin',    'pct', false),
+        _m('operating_margin', 'pct', false),
+        _m('return_on_equity', 'pct', false),
+        _m('return_on_assets', 'pct', false),
+    ]),
+    _g('growth', [
+        _m('revenue_growth',    'pct',   false),
+        _m('earnings_growth',   'pct',   false),
+        _m('revenue_per_share', 'money', false),
+    ]),
+    _g('balance_sheet', [
+        _m('debt_to_equity',        'num',   true),
+        _m('current_ratio',         'num',   false),
+        _m('quick_ratio',           'num',   false),
+        _m('free_cashflow',         'big',   false),
+        _m('total_cash_per_share',  'money', false),
+    ]),
+    _g('income', [
+        _m('dividend_yield', 'pct', false),
+        _m('payout_ratio',   'pct', true),
+    ]),
+    _g('price_action', [
+        _m('fifty_two_week_high', 'money'),
+        _m('fifty_two_week_low',  'money'),
+        _m('fifty_day_avg',       'money'),
+        _m('two_hundred_day_avg', 'money'),
+    ]),
+    _g('returns', [
+        _m('return_1d', 'pct', false),
+        _m('return_1w', 'pct', false),
+        _m('return_1m', 'pct', false),
+        _m('return_3m', 'pct', false),
+        _m('return_6m', 'pct', false),
+        _m('return_1y', 'pct', false),
+    ]),
 ];
 
 export async function renderCompare(mount) {
