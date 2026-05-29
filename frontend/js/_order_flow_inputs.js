@@ -14,7 +14,7 @@ export function parseTickBlob(text) {
     const ticks = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { ticks, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { ticks, errors: [{ line_no: 0, raw: '', message: t('view.order_flow.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -23,7 +23,7 @@ export function parseTickBlob(text) {
         if (!s || s.startsWith('#')) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 4) {
-            errors.push({ line_no: i + 1, raw, message: `expected 4 tokens (price volume bid ask), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.order_flow.parse.token_count', { n: parts.length }) });
             continue;
         }
         const price = Number(parts[0]);
@@ -31,19 +31,19 @@ export function parseTickBlob(text) {
         const bid = Number(parts[2]);
         const ask = Number(parts[3]);
         if (!Number.isFinite(price) || price <= 0) {
-            errors.push({ line_no: i + 1, raw, message: `price must be > 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.order_flow.parse.price_invalid') });
             continue;
         }
         if (!Number.isFinite(volume) || volume <= 0) {
-            errors.push({ line_no: i + 1, raw, message: `volume must be > 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.order_flow.parse.volume_invalid') });
             continue;
         }
         if (!Number.isFinite(bid) || bid <= 0) {
-            errors.push({ line_no: i + 1, raw, message: `bid must be > 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.order_flow.parse.bid_invalid') });
             continue;
         }
         if (!Number.isFinite(ask) || ask < bid) {
-            errors.push({ line_no: i + 1, raw, message: `ask must be ≥ bid` });
+            errors.push({ line_no: i + 1, raw, message: t('view.order_flow.parse.ask_invalid') });
             continue;
         }
         ticks.push({ price, volume, bid, ask });
@@ -52,7 +52,7 @@ export function parseTickBlob(text) {
 }
 
 export function validateInputs(ticks) {
-    if (!Array.isArray(ticks) || ticks.length < 5) return 'need at least 5 ticks';
+    if (!Array.isArray(ticks) || ticks.length < 5) return t('view.order_flow.validate.ticks_min');
     return null;
 }
 
