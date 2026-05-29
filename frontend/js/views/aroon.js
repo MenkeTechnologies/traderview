@@ -159,10 +159,10 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
-            { label: 'AroonUp',   stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'AroonDown', stroke: '#ff3860', width: 1.5, points: { show: false } },
-            { label: 'Oscillator', stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.aroon.series.bar') },
+            { label: t('view.aroon.series.aroon_up'),    stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('view.aroon.series.aroon_down'),  stroke: '#ff3860', width: 1.5, points: { show: false } },
+            { label: t('view.aroon.series.oscillator'),  stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

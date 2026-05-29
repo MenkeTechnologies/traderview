@@ -169,7 +169,7 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
             if (!viewIsCurrent(tok)) return;
             close();
             await refresh(accountId, mount, tok);
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
 }
 

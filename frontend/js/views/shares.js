@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime, fmtMoney, md, pnlClass } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderShares(mount) {
     const tok = currentViewToken();
@@ -84,7 +85,7 @@ export async function renderSharedTrade(mount, _state, slug) {
             if (!viewIsCurrent(tok)) return;
             renderSharedTrade(mount, _state, slug);
         } catch (err) {
-            alert(err.message);
+            alert(t('common.error', { err: err.message }));
         }
     });
 }

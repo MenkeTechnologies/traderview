@@ -394,9 +394,9 @@ async function openRulesModal() {
     modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.rule-del').forEach(btn => {
         btn.onclick = async () => {
-            if (!confirm('delete this rule?')) return;
+            if (!confirm(t('view.expenses.confirm.delete_rule'))) return;
             try { await api.deleteExpenseRule(btn.dataset.id); }
-            catch (e) { alert(`delete failed: ${e.message}`); return; }
+            catch (e) { alert(t('view.expenses.alert.delete_failed', { err: e.message })); return; }
             if (!viewIsCurrent(state.tok)) return;
             openRulesModal();
         };
@@ -635,7 +635,8 @@ async function openScheduleCModal(year) {
                 </tr>
             </tfoot>
         </table>
-        <p style="color:var(--fg-2);font-size:11px;margin-top:12px">
+        <p style="color:var(--fg-2);font-size:11px;margin-top:12px"
+           data-i18n-html="view.expenses.summary.footnote">
             Deductible column applies each category's IRS rate (meals 50%; everything else 100%).
             Uncategorized business expenses do <strong>not</strong> roll into the grand total —
             tag them in the transaction list first.

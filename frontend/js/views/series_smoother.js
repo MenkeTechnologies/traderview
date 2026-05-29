@@ -10,6 +10,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 import {
     parseSeries, validateSeries, indexAxis,
     buildSmootherPayloads, theilSenFittedY,
@@ -197,8 +198,11 @@ async function callSmoother(id, body) {
 
 function renderSummary(summaries) {
     const cards = summaries.map(s => {
+        const lk = `view.series_smoother.method.${s.id}.label`;
+        const lv = t(lk);
+        const lbl = (lv && lv !== lk) ? lv : s.label;
         return `<div class="card">
-            <div class="label"><span class="ss-swatch ${esc(s.id)}">▮</span> ${esc(s.label)}</div>
+            <div class="label"><span class="ss-swatch ${esc(s.id)}">▮</span> ${esc(lbl)}</div>
             <div class="value ss-summary-value">
                 ${s.status === 'failed' ? `<span class="neg">${esc(s.note)}</span>` : esc(s.note)}
             </div>
@@ -216,14 +220,16 @@ function renderChart(xs, raw, smoothed) {
     el.innerHTML = '';
 
     const series = [
-        { label: 'idx' },
-        { label: 'raw', stroke: 'rgba(170,170,170,0.55)', width: 1, points: { show: false } },
+        { label: t('view.series_smoother.series.idx') },
+        { label: t('view.series_smoother.series.raw'), stroke: 'rgba(170,170,170,0.55)', width: 1, points: { show: false } },
     ];
     const data = [xs, raw];
     for (const id of Object.keys(SMOOTHER_META)) {
         if (smoothed[id]) {
+            const lk = `view.series_smoother.method.${id}.label`;
+            const lv = t(lk);
             series.push({
-                label: SMOOTHER_META[id].label,
+                label: (lv && lv !== lk) ? lv : SMOOTHER_META[id].label,
                 stroke: SMOOTHER_META[id].color,
                 width: 2,
                 points: { show: false },

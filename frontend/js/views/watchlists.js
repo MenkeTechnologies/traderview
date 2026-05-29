@@ -80,7 +80,7 @@ export async function renderWatchlists(mount) {
         renderWatchlists(mount);
     });
     mount.querySelector('#delete-wl').addEventListener('click', async () => {
-        if (!confirm(`Delete watchlist "${active.name}"?`)) return;
+        if (!confirm(t('view.watchlists.confirm.delete_named', { name: active.name }))) return;
         await api.deleteWatchlist(active.id);
         if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);

@@ -61,7 +61,7 @@ async function renderBrowse(mount) {
             const ta = mount.querySelector('#bp-json');
             if (ta) ta.value = '';
             await refresh(mount, tok);
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
     await refresh(mount, tok);
 }
@@ -129,7 +129,7 @@ function wireRowButtons(scope, mine, mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.backtest_presets.confirm.delete'))) return;
                 try { await api.deleteBacktestPreset(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(e.message); }
+                catch (e) { alert(t('common.error', { err: e.message })); }
             });
         });
     } else {
@@ -139,7 +139,7 @@ function wireRowButtons(scope, mine, mount, tok) {
                     const forked = await api.forkBacktestPreset(b.dataset.slug);
                     alert(`Forked as "${forked.name}"`);
                     if (viewIsCurrent(tok)) await refresh(mount, tok);
-                } catch (e) { alert(e.message); }
+                } catch (e) { alert(t('common.error', { err: e.message })); }
             });
         });
     }
@@ -178,7 +178,7 @@ async function renderPresetDetail(mount, slug) {
                 const f = await api.forkBacktestPreset(slug);
                 alert(`Forked as "${f.name}"`);
                 window.location.hash = `backtest-presets/${f.slug}`;
-            } catch (e) { alert(e.message); }
+            } catch (e) { alert(t('common.error', { err: e.message })); }
         });
     } catch (e) {
         if (!viewIsCurrent(tok)) return;

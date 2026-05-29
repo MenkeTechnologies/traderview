@@ -131,7 +131,7 @@ function renderSidebar() {
     document.getElementById('db-delete').addEventListener('click', async () => {
         const d = store.getActiveDashboard(state);
         if (!d) return;
-        if (!window.confirm(`Delete dashboard "${d.name}"? Cannot be undone.`)) return;
+        if (!window.confirm(t('view.dashboards.confirm.delete_named', { name: d.name }))) return;
         state = store.deleteDashboard(state, d.id);
         persist();
         renderSidebar();

@@ -186,7 +186,7 @@ export async function renderRiskGate(mount, state) {
     mount.querySelectorAll('#rg-presets [data-preset]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const preset = btn.dataset.preset;
-            const ok = confirm(`Install ${preset} preset? Existing rules are kept (deduplication is manual).`);
+            const ok = confirm(t('view.risk_gate.confirm.install_preset', { preset }));
             if (!ok) return;
             try {
                 const r = await api.installRiskPreset(preset);
@@ -225,7 +225,7 @@ export async function renderRiskGate(mount, state) {
             const verb = !killBtn.dataset.id ? 'INSTALL + ENABLE'
                 : wasEnabled                 ? 'DISABLE (resume trading)'
                                              : 'ENABLE (halt all trades)';
-            if (!confirm(`${verb} the kill switch?`)) return;
+            if (!confirm(t('view.risk_gate.confirm.kill_switch', { verb }))) return;
             if (!killBtn.dataset.id) {
                 await api.createRiskRule({ rule: { type: 'kill_switch' }, account_id: null });
             } else {

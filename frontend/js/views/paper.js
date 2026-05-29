@@ -139,9 +139,9 @@ export async function renderPaper(mount) {
         try {
             const o = await api.paperSubmit(acct.id, body);
             if (!viewIsCurrent(tok)) return;
-            if (o.status === 'rejected') alert(t('view.paper.alert.rejected', { reason: o.reject_reason || t('view.paper.alert.unknown_reason') }));
+            if (o.status === 'rejected') alert(t('view.paper.alert.order_rejected', { reason: o.reject_reason || t('common.empty.unknown') }));
             renderPaper(mount);
-        } catch (err) { alert(t('view.paper.alert.error', { msg: err.message })); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
     mount.querySelector('#reset').addEventListener('click', async () => {
         if (!confirm(t('view.paper.confirm.reset'))) return;

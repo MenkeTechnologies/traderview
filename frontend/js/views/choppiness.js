@@ -102,9 +102,13 @@ function renderSummary(report, pending) {
     const buckets = regimeBuckets(report.series);
     const totalEvaluated = buckets.trending + buckets.mixed + buckets.choppy;
     const switchEvt = lastRegimeSwitch(report.series);
+    const labelKey = `view.choppiness.regime.${report.regime}.label`;
+    const hintKey  = `view.choppiness.regime.${report.regime}.hint`;
+    const labelTr  = (() => { const v = t(labelKey); return (v && v !== labelKey) ? v : badge.label; })();
+    const hintTr   = (() => { const v = t(hintKey);  return (v && v !== hintKey)  ? v : badge.hint;  })();
     document.getElementById('cp-summary').innerHTML = [
-        card(t('view.choppiness.card.regime'),         badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card(t('view.choppiness.card.action'),         badge.hint),
+        card(t('view.choppiness.card.regime'),         labelTr + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.choppiness.card.action'),         hintTr),
         card(t('view.choppiness.card.latest_ci'),      report.latest == null ? '—' : fmtN(report.latest, 2),
             badge.cls),
         card(t('view.choppiness.card.note'),           report.note),

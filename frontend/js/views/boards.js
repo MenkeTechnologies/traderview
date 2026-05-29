@@ -82,13 +82,13 @@ async function renderList(mount) {
         try {
             const b = await api.createDashboard({ name: fd.get('name').trim(), layout: [] });
             window.location.hash = `boards/${b.id}`;
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!confirm(t('view.boards.confirm.delete'))) return;
             try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
-            catch (e) { alert(e.message); }
+            catch (e) { alert(t('common.error', { err: e.message })); }
         });
     });
 }

@@ -131,7 +131,7 @@ async function loadList(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.api_tokens.confirm.revoke'))) return;
                 try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
-                catch (e) { alert(e.message); }
+                catch (e) { alert(t('common.error', { err: e.message })); }
             });
         });
         el2.querySelectorAll('.rate-input').forEach(input => {
@@ -141,7 +141,7 @@ async function loadList(mount, tok) {
                     alert('rate must be 1..=10000'); return;
                 }
                 try { await api.setApiTokenRateLimit(input.dataset.id, v); }
-                catch (e) { alert(e.message); if (viewIsCurrent(tok)) await loadList(mount, tok); }
+                catch (e) { alert(t('common.error', { err: e.message })); if (viewIsCurrent(tok)) await loadList(mount, tok); }
             });
         });
     } catch (e) {

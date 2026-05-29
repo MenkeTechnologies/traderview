@@ -94,7 +94,7 @@ export async function renderStrategyAlerts(mount) {
             if (astEl) astEl.value = '';
             e.target.reset();
             await refresh(mount, tok);
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
     mount.querySelector('#sa-eval-now').addEventListener('click', async () => {
         const status = mount.querySelector('#sa-status');
@@ -173,7 +173,7 @@ function renderRules(rules, mount, tok) {
                 if (!viewIsCurrent(tok)) return;
                 await refresh(mount, tok);
             }
-            catch (e) { alert(e.message); }
+            catch (e) { alert(t('common.error', { err: e.message })); }
         }));
     el.querySelectorAll('.sa-toggle').forEach(b =>
         b.addEventListener('click', async () => {
@@ -187,7 +187,7 @@ function renderRules(rules, mount, tok) {
                 });
                 if (!viewIsCurrent(tok)) return;
                 await refresh(mount, tok);
-            } catch (e) { alert(e.message); }
+            } catch (e) { alert(t('common.error', { err: e.message })); }
         }));
 }
 

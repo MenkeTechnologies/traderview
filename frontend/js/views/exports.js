@@ -106,7 +106,7 @@ export async function renderExports(mount, state) {
                     await openBlobInNewTab(path);
                 }
             } catch (e) {
-                alert(e.message);
+                alert(t('common.error', { err: e.message }));
             } finally {
                 if (viewIsCurrent(tok)) {
                     btn.textContent = orig;

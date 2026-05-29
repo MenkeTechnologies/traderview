@@ -10,6 +10,7 @@ import { api } from '../api.js';
 import { esc, fmtMoney, fmtPct } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderTaxWorkshop(mount, _state) {
     if (!mount) return;
@@ -231,7 +232,7 @@ function formAsJson(form, numericFields) {
 
 function showError(mount, sel, err) {
     const el = mount.querySelector(sel);
-    if (el) el.textContent = `Error: ${err.message || err}`;
+    if (el) el.textContent = t('common.error', { err: err.message || err });
 }
 
 function renderSe(mount, r) {

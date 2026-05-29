@@ -92,13 +92,13 @@ export async function renderCharts(mount, _state, symbol = '') {
         });
     });
     mount.querySelector('#clearDrawings').addEventListener('click', async () => {
-        if (!confirm(`Delete ALL drawings on ${ds.symbol}?`)) return;
+        if (!confirm(t('view.charts.confirm.delete_all_drawings', { symbol: ds.symbol }))) return;
         try {
             await api.deleteChartDrawings(ds.symbol);
             if (!viewIsCurrent(tok)) return;
             ds.drawings = [];
             drawAll(ds);
-        } catch (e) { alert(e.message); }
+        } catch (e) { alert(t('common.error', { err: e.message })); }
     });
 
     mount.querySelector('#drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
@@ -285,7 +285,7 @@ async function persistAndAdd(ds, draft) {
         if (!viewIsCurrent(ds.tok)) return;
         ds.drawings.push(saved);
         drawAll(ds);
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(t('common.error', { err: e.message })); }
 }
 
 function drawAll(ds, opts = {}) {
@@ -438,7 +438,7 @@ function appendDeleteBtn(svg, ds, d, x, y) {
             if (!viewIsCurrent(ds.tok)) return;
             ds.drawings = ds.drawings.filter(x => x.id !== d.id);
             drawAll(ds);
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
     svg.appendChild(g);
 }

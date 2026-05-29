@@ -151,7 +151,7 @@ export async function renderNewTrade(mount, state) {
                 `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T` +
                 `${pad(now.getHours())}:${pad(now.getMinutes())}`;
             syncOption();
-        } catch (err) { alert(t('view.new_trade.alert.error', { msg: err.message })); }
+        } catch (err) { alert(t('common.error', { err: err.message })); }
     });
 
     async function refresh() {

@@ -129,7 +129,7 @@ async function refresh(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.goals.confirm.delete'))) return;
                 try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(e.message); }
+                catch (e) { alert(t('common.error', { err: e.message })); }
             });
         });
     } catch (e) {

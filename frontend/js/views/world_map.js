@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { fmt, esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 // Simplified low-poly world continents in equirectangular projection.
 // Viewport is the rectangle: lng [-180,180], lat [85,-85].
@@ -87,8 +88,8 @@ function renderSnapshot(snap, mount) {
     if (status) {
         status.className = 'market-status ' + (snap.us_market_open ? 'open' : 'closed');
         status.innerHTML = snap.us_market_open
-            ? '🇺🇸 U.S. markets are <strong>open</strong>'
-            : '🇺🇸 U.S. markets are <strong>closed</strong>';
+            ? t('view.world_map.status.open_html')
+            : t('view.world_map.status.closed_html');
     }
 
     const strip = mount.querySelector('#commodities-strip');

@@ -97,7 +97,7 @@ export async function renderKelly(mount, _appState) {
         readDynamic();
         const d = pnlsToStaticInput(state.pnls);
         if (d.payoff_ratio <= 0) {
-            showErr('PnLs have no wins or no losses — can\'t derive payoff ratio.');
+            showErr(t('view.kelly.err.no_wins_or_losses'));
             return;
         }
         state.winRate = d.win_rate;
@@ -247,10 +247,10 @@ function renderDynamicChart(points) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'trade #' },
-            { label: 'Kelly',      stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'Half-Kelly', stroke: '#ffd84a', width: 1.5, points: { show: false } },
-            { label: 'zero',       stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.kelly.series.trade') },
+            { label: t('view.kelly.series.kelly'),       stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('view.kelly.series.half_kelly'),  stroke: '#ffd84a', width: 1.5, points: { show: false } },
+            { label: t('view.kelly.series.zero'),        stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

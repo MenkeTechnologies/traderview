@@ -70,11 +70,11 @@ export async function renderTimeInForce(mount, _appState) {
             <table class="lq-table">
                 <thead><tr><th data-i18n="view.time_in_force.th.tif">TIF</th><th data-i18n="view.time_in_force.th.semantics">Semantics</th><th data-i18n="view.time_in_force.th.cancel_trigger">Cancel trigger</th></tr></thead>
                 <tbody>
-                    <tr><td><strong>DAY</strong></td><td>Expires at session close.</td><td>session_open &gt; placed_date</td></tr>
-                    <tr><td><strong>GTC</strong></td><td>Good Till Cancelled (with 90-day broker timeout).</td><td>age &gt; 90 days</td></tr>
-                    <tr><td><strong>IOC</strong></td><td>Immediate Or Cancel: fill what's avail now, cancel rest.</td><td>any remaining qty</td></tr>
-                    <tr><td><strong>FOK</strong></td><td>Fill Or Kill: all-or-nothing immediately.</td><td>partial / no fill</td></tr>
-                    <tr><td><strong>GTD</strong></td><td>Good Till Date: expires after good_until.</td><td>session_open &gt; good_until OR missing date</td></tr>
+                    <tr data-i18n-html="view.time_in_force.cheat.day"><td><strong>DAY</strong></td><td>Expires at session close.</td><td>session_open &gt; placed_date</td></tr>
+                    <tr data-i18n-html="view.time_in_force.cheat.gtc"><td><strong>GTC</strong></td><td>Good Till Cancelled (with 90-day broker timeout).</td><td>age &gt; 90 days</td></tr>
+                    <tr data-i18n-html="view.time_in_force.cheat.ioc"><td><strong>IOC</strong></td><td>Immediate Or Cancel: fill what's avail now, cancel rest.</td><td>any remaining qty</td></tr>
+                    <tr data-i18n-html="view.time_in_force.cheat.fok"><td><strong>FOK</strong></td><td>Fill Or Kill: all-or-nothing immediately.</td><td>partial / no fill</td></tr>
+                    <tr data-i18n-html="view.time_in_force.cheat.gtd"><td><strong>GTD</strong></td><td>Good Till Date: expires after good_until.</td><td>session_open &gt; good_until OR missing date</td></tr>
                 </tbody>
             </table>
         </div>

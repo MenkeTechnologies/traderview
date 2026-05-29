@@ -5,7 +5,6 @@ import { api, wsUrl } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { t } from '../i18n.js';
 
 let ws = null;
 let viewTok = 0;
@@ -79,12 +78,12 @@ export async function renderWebull(mount, _state) {
         try {
             const r = await api.connectWebull(body);
             if (!viewIsCurrent(viewTok)) return;
-            alert(`Connected. has_creds=${r.has_creds}`);
+            alert(t('view.webull.alert.connected', { hasCreds: r.has_creds }));
             const panel = mount.querySelector('#wb-creds-panel');
             if (panel) panel.open = false;
             connectWs(mount, viewTok);
         } catch (err) {
-            alert(t('view.webull.alert.connect_failed', { msg: err.message }));
+            alert(t('view.webull.alert.connect_failed', { err: err.message }));
         }
     });
 

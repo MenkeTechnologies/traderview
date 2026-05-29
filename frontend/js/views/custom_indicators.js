@@ -121,7 +121,7 @@ async function refresh(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.custom_indicators.confirm.delete_preset'))) return;
                 try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(e.message); }
+                catch (e) { alert(t('common.error', { err: e.message })); }
             }));
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
