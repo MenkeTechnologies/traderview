@@ -41,9 +41,9 @@ export function parseBarBlob(text) {
 }
 
 export function validateInputs(bars, period) {
-    if (!Array.isArray(bars) || bars.length === 0) return 'need at least 1 bar';
-    if (!Number.isInteger(period) || period < 2) return 'period must be integer ≥ 2';
-    if (bars.length < period + 1) return `need at least ${period + 1} bars (period + 1)`;
+    if (!Array.isArray(bars) || bars.length === 0) return t('view.demarker.validate.bars_empty');
+    if (!Number.isInteger(period) || period < 2) return t('view.demarker.validate.period_min');
+    if (bars.length < period + 1) return t('view.demarker.validate.bars_min', { n: period + 1 });
     return null;
 }
 

@@ -9,11 +9,11 @@ import { t } from './i18n.js';
 
 export function validateInputs(p) {
     for (const k of ['open', 'high', 'low', 'close']) {
-        if (!Number.isFinite(p[k]) || p[k] <= 0) return `${k} must be > 0`;
+        if (!Number.isFinite(p[k]) || p[k] <= 0) return t('view.demark_pivots.validate.field_positive', { k });
     }
-    if (p.high < p.low) return 'high must be ≥ low';
-    if (p.open < p.low - 1e-9 || p.open > p.high + 1e-9) return 'open must be in [low, high]';
-    if (p.close < p.low - 1e-9 || p.close > p.high + 1e-9) return 'close must be in [low, high]';
+    if (p.high < p.low) return t('view.demark_pivots.validate.high_ge_low');
+    if (p.open < p.low - 1e-9 || p.open > p.high + 1e-9) return t('view.demark_pivots.validate.open_in_range');
+    if (p.close < p.low - 1e-9 || p.close > p.high + 1e-9) return t('view.demark_pivots.validate.close_in_range');
     return null;
 }
 

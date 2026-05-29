@@ -51,7 +51,7 @@ function stripComment(raw) {
 
 export function validateInputs(positions) {
     if (!Array.isArray(positions) || positions.length === 0)
-        return 'need ≥ 1 position';
+        return t('view.cohort_tilt.validate.positions_empty');
     return null;
 }
 
