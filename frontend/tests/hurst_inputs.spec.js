@@ -28,32 +28,29 @@ test('parseChunkSizes rejects non-integer / < 2 chunk sizes', () => {
 
 // ── validateInputs ─────────────────────────────────────────────────
 
-// validateInputs now routes through t() so the helper returns either the
-// localized string (when a catalog is loaded) or the i18n key itself (when
-// it isn't — vitest's case). Assert against the keys so behavior is locked
-// to the helper's *intent*, not the en-fallback wording.
+// validateInputs routes through t() — the vitest setup-i18n.js preloads the
+// en catalog, so we assert against the translated strings (not raw keys).
 
 test('validate rejects too few returns', () => {
-    expect(validateInputs([1, 2, 3], [2])).toBe('view.hurst.validate.need_returns');
+    expect(validateInputs([1, 2, 3], [2])).toMatch(/at least 10 returns/);
 });
 
 test('validate rejects non-finite returns', () => {
     const r = Array(20).fill(0.01); r[5] = NaN;
-    expect(validateInputs(r, [10])).toBe('view.hurst.validate.non_finite');
+    expect(validateInputs(r, [10])).toMatch(/non-finite/);
 });
 
 test('validate requires at least 2 chunk sizes', () => {
-    expect(validateInputs(Array(20).fill(0.01), [10])).toBe('view.hurst.validate.need_chunks');
+    expect(validateInputs(Array(20).fill(0.01), [10])).toMatch(/at least 2 chunk sizes/);
 });
 
 test('validate rejects non-integer / < 2 chunk sizes', () => {
-    expect(validateInputs(Array(20).fill(0.01), [10, 1])).toBe('view.hurst.validate.chunk_int');
-    expect(validateInputs(Array(20).fill(0.01), [10, 5.5])).toBe('view.hurst.validate.chunk_int');
+    expect(validateInputs(Array(20).fill(0.01), [10, 1])).toMatch(/every chunk size/);
+    expect(validateInputs(Array(20).fill(0.01), [10, 5.5])).toMatch(/every chunk size/);
 });
 
 test('validate rejects chunk sizes larger than series', () => {
-    // chunk_exceeds is a template with {n}; t() leaves {n} intact when no params resolve.
-    expect(validateInputs(Array(20).fill(0.01), [10, 25])).toMatch(/^view\.hurst\.validate\.chunk_exceeds/);
+    expect(validateInputs(Array(20).fill(0.01), [10, 25])).toMatch(/chunk sizes must be ≤ series length/);
 });
 
 test('validate accepts good input', () => {

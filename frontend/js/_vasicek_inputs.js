@@ -19,6 +19,8 @@
 // large t the simulated distribution converges to the long-run normal,
 // so the approximation is asymptotically exact.
 
+import { t } from './i18n.js';
+
 /** Build the JSON body for /analytics/vasicek-short-rate-simulator. */
 export function buildBody(p) {
     return {
@@ -36,14 +38,14 @@ export function buildBody(p) {
 /** Validate inputs. Returns null on success or a friendly error string
  *  with the offending field. */
 export function validateParams(p) {
-    if (!Number.isFinite(p.r0)) return 'r0 must be a finite number';
-    if (!Number.isFinite(p.a) || p.a <= 0) return 'a (mean-reversion speed) must be > 0';
-    if (!Number.isFinite(p.b)) return 'b (long-run mean) must be finite';
-    if (!Number.isFinite(p.sigma) || p.sigma < 0) return 'σ must be ≥ 0';
-    if (!Number.isFinite(p.dt) || p.dt <= 0) return 'dt must be > 0';
-    if (!Number.isInteger(p.steps) || p.steps < 1) return 'steps must be a positive integer';
-    if (!Number.isInteger(p.paths) || p.paths < 10) return 'paths must be an integer ≥ 10';
-    if (!Number.isInteger(p.seed) || p.seed < 0) return 'seed must be a non-negative integer';
+    if (!Number.isFinite(p.r0)) return t('view.vasicek.validate.r0');
+    if (!Number.isFinite(p.a) || p.a <= 0) return t('view.vasicek.validate.a');
+    if (!Number.isFinite(p.b)) return t('view.vasicek.validate.b');
+    if (!Number.isFinite(p.sigma) || p.sigma < 0) return t('view.vasicek.validate.sigma');
+    if (!Number.isFinite(p.dt) || p.dt <= 0) return t('view.vasicek.validate.dt');
+    if (!Number.isInteger(p.steps) || p.steps < 1) return t('view.vasicek.validate.steps');
+    if (!Number.isInteger(p.paths) || p.paths < 10) return t('view.vasicek.validate.paths');
+    if (!Number.isInteger(p.seed) || p.seed < 0) return t('view.vasicek.validate.seed');
     return null;
 }
 

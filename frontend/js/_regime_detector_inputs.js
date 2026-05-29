@@ -7,6 +7,7 @@
 // of bars where state-1 prob exceeded a threshold.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse a pasted return series. */
 export function parseReturns(text) {
@@ -16,13 +17,13 @@ export function parseReturns(text) {
 /** Validate inputs against the backend's constraints. */
 export function validateReturns(returns) {
     if (!Array.isArray(returns) || returns.length < 30) {
-        return 'need at least 30 returns for the 2-state Markov fit';
+        return t('view.regime_detector.validate.need_30');
     }
-    if (returns.some(x => !Number.isFinite(x))) return 'returns contain non-finite values';
+    if (returns.some(x => !Number.isFinite(x))) return t('view.regime_detector.validate.non_finite');
     // Variance > 0 — backend bails on a flat series.
     const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
     const sse = returns.reduce((a, b) => a + (b - mean) ** 2, 0);
-    if (sse < 1e-18) return 'returns are flat — Markov fit needs some variance';
+    if (sse < 1e-18) return t('view.regime_detector.validate.flat');
     return null;
 }
 

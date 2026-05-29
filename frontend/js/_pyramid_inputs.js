@@ -6,6 +6,8 @@
 //
 // Backend response uses Decimal-string scalars in every numeric field.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Two-token-per-line "trigger_price qty" for tranches.
@@ -41,15 +43,15 @@ export function parseTrancheBlob(text) {
 }
 
 export function validateInputs(p) {
-    if (p.kind !== 'pyramid_up' && p.kind !== 'scale_in') return 'kind must be pyramid_up or scale_in';
-    if (p.side !== 'long' && p.side !== 'short') return 'side must be long or short';
-    if (!Number.isFinite(p.initial_qty) || p.initial_qty <= 0) return 'initial_qty must be > 0';
-    if (!Number.isFinite(p.initial_entry) || p.initial_entry <= 0) return 'initial_entry must be > 0';
-    if (!Array.isArray(p.tranches) || p.tranches.length === 0) return 'need at least 1 tranche';
-    if (!p.tranches.every(t => Number.isFinite(t.trigger_price) && t.trigger_price > 0))
-        return 'every tranche needs a positive trigger_price';
-    if (!p.tranches.every(t => Number.isFinite(t.qty) && t.qty > 0))
-        return 'every tranche needs a positive qty';
+    if (p.kind !== 'pyramid_up' && p.kind !== 'scale_in') return t('view.pyramid.validate.kind');
+    if (p.side !== 'long' && p.side !== 'short') return t('view.pyramid.validate.side');
+    if (!Number.isFinite(p.initial_qty) || p.initial_qty <= 0) return t('view.pyramid.validate.initial_qty');
+    if (!Number.isFinite(p.initial_entry) || p.initial_entry <= 0) return t('view.pyramid.validate.initial_entry');
+    if (!Array.isArray(p.tranches) || p.tranches.length === 0) return t('view.pyramid.validate.need_tranche');
+    if (!p.tranches.every(tr => Number.isFinite(tr.trigger_price) && tr.trigger_price > 0))
+        return t('view.pyramid.validate.trigger_price');
+    if (!p.tranches.every(tr => Number.isFinite(tr.qty) && tr.qty > 0))
+        return t('view.pyramid.validate.tranche_qty');
     return null;
 }
 
