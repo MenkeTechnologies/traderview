@@ -8,6 +8,8 @@
 // must break beyond the OPEN of the last `num_lines` lines in the current
 // direction (the "N-line break" rule).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_NUM_LINES = 3;
 
 export const DEFAULT_INPUTS = {
@@ -16,13 +18,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
+    if (!Array.isArray(input.closes))                       return t('view.three_line_break.validate.closes_array');
     for (let i = 0; i < input.closes.length; i++) {
         const v = input.closes[i];
-        if (!Number.isFinite(v))                            return `closes[${i}] not finite`;
+        if (!Number.isFinite(v))                            return t('view.three_line_break.validate.close_finite', { i });
     }
-    if (!Number.isInteger(input.num_lines))                 return 'num_lines must be an integer';
-    if (input.num_lines < 1)                                return 'num_lines must be ≥ 1';
+    if (!Number.isInteger(input.num_lines))                 return t('view.three_line_break.validate.num_lines_int');
+    if (input.num_lines < 1)                                return t('view.three_line_break.validate.num_lines_min');
     return null;
 }
 

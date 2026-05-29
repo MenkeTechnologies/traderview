@@ -5,6 +5,8 @@
 // Returns: { bins: [{center, volume}], poc_index, value_area_high,
 //   value_area_low, total_volume } — empty fields if validation failed.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_NUM_BINS = 50;
 export const DEFAULT_VA_PCT = 70.0;
 
@@ -15,18 +17,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                                 return 'bars must be an array';
+    if (!Array.isArray(input.bars))                                 return t('view.volume_at_price.validate.bars_array');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b || typeof b !== 'object')                           return `bars[${i}] must be an object`;
+        if (!b || typeof b !== 'object')                           return t('view.volume_at_price.validate.bar_object', { i });
         if (!Number.isFinite(b.high) || !Number.isFinite(b.low) || !Number.isFinite(b.volume))
-                                                                    return `bars[${i}] has non-finite field`;
-        if (b.volume < 0)                                          return `bars[${i}].volume must be ≥ 0`;
-        if (b.high < b.low)                                        return `bars[${i}].high must be ≥ low`;
+                                                                    return t('view.volume_at_price.validate.bar_finite', { i });
+        if (b.volume < 0)                                          return t('view.volume_at_price.validate.vol_negative', { i });
+        if (b.high < b.low)                                        return t('view.volume_at_price.validate.high_ge_low', { i });
     }
-    if (!Number.isInteger(input.num_bins) || input.num_bins < 2)    return 'num_bins must be an integer ≥ 2';
+    if (!Number.isInteger(input.num_bins) || input.num_bins < 2)    return t('view.volume_at_price.validate.num_bins');
     if (!Number.isFinite(input.value_area_pct)
-        || input.value_area_pct < 1 || input.value_area_pct > 99.9) return 'value_area_pct must be in [1, 99.9]';
+        || input.value_area_pct < 1 || input.value_area_pct > 99.9) return t('view.volume_at_price.validate.va_pct');
     return null;
 }
 

@@ -4,6 +4,8 @@
 // Backend body shape: { ticks: [{price, volume}, ...], config: {
 // volume_per_bucket, window_buckets, return_window } }.
 
+import { t as tr } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Parses a two-column textarea: "price<sep>volume" per line. Returns
@@ -42,17 +44,17 @@ export function parseTickBlob(text) {
 
 export function validateInputs(ticks, config) {
     if (!Array.isArray(ticks) || ticks.length < 10)
-        return 'need at least 10 ticks';
+        return tr('view.vpin.validate.ticks_min');
     if (!Number.isFinite(config.volume_per_bucket) || config.volume_per_bucket <= 0)
-        return 'volume_per_bucket must be > 0';
+        return tr('view.vpin.validate.vpb');
     if (!Number.isInteger(config.window_buckets) || config.window_buckets < 1 || config.window_buckets > 2000)
-        return 'window_buckets must be integer in [1, 2000]';
+        return tr('view.vpin.validate.window_buckets');
     if (!Number.isInteger(config.return_window) || config.return_window < 2 || config.return_window > 10_000)
-        return 'return_window must be integer in [2, 10000]';
+        return tr('view.vpin.validate.return_window');
     const totalVol = ticks.reduce((a, t) => a + (t.volume || 0), 0);
     const expectedBuckets = totalVol / config.volume_per_bucket;
     if (expectedBuckets < 1)
-        return `volume_per_bucket too large — total volume ${totalVol} won't fill 1 bucket`;
+        return tr('view.vpin.validate.vpb_too_large', { totalVol });
     return null;
 }
 
