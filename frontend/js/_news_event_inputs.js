@@ -98,8 +98,8 @@ export function parseEvents(text) {
 }
 
 export function validateInputs(positions, events) {
-    if (!Array.isArray(positions) || positions.length === 0) return 'need at least 1 position';
-    if (!Array.isArray(events)) return 'events must be an array';
+    if (!Array.isArray(positions) || positions.length === 0) return t('view.news_event.validate.positions_empty');
+    if (!Array.isArray(events)) return t('view.news_event.validate.events_array');
     return null;
 }
 

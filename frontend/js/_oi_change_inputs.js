@@ -63,9 +63,9 @@ export function parseSnapshotBlob(text) {
 }
 
 export function validateInputs(snapshots, pctThreshold, minOi) {
-    if (!Array.isArray(snapshots) || snapshots.length === 0) return 'need at least 1 strike snapshot';
-    if (!Number.isFinite(pctThreshold) || pctThreshold <= 0) return 'pct_threshold must be > 0';
-    if (!Number.isInteger(minOi) || minOi < 0) return 'min_oi must be non-negative integer';
+    if (!Array.isArray(snapshots) || snapshots.length === 0) return t('view.oi_change.validate.snapshots_empty');
+    if (!Number.isFinite(pctThreshold) || pctThreshold <= 0) return t('view.oi_change.validate.pct_threshold');
+    if (!Number.isInteger(minOi) || minOi < 0) return t('view.oi_change.validate.min_oi');
     return null;
 }
 

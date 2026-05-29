@@ -9,6 +9,8 @@
 //
 // All parsers return `{ value, errors }` and never throw.
 
+import { t } from './i18n.js';
+
 /** Parse a multi-line N×N matrix. Tokens within a row separated by
  *  whitespace OR commas; rows by newlines. Lines starting with `#`
  *  and blank lines are skipped. Returns the matrix plus a list of
@@ -82,19 +84,19 @@ export function defaultLabels(n) {
 /** Validate that a parsed matrix can be sent to the allocators.
  *  Returns null on success, an error string otherwise. */
 export function validateCovariance(cov) {
-    if (!Array.isArray(cov) || cov.length < 2) return 'need at least 2 assets';
+    if (!Array.isArray(cov) || cov.length < 2) return t('view.portfolio_allocator.validate.assets_min');
     const n = cov.length;
     for (let i = 0; i < n; i++) {
         if (!Array.isArray(cov[i]) || cov[i].length !== n) {
-            return `row ${i + 1} must have ${n} columns (matrix must be square)`;
+            return t('view.portfolio_allocator.validate.row_cols', { row: i + 1, n });
         }
-        if (cov[i][i] <= 0) return `diagonal[${i}] must be > 0 (variance)`;
+        if (cov[i][i] <= 0) return t('view.portfolio_allocator.validate.diagonal', { i });
     }
     // Symmetry check: allow small float drift.
     for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
             if (Math.abs(cov[i][j] - cov[j][i]) > 1e-9 * Math.max(1, Math.abs(cov[i][j]))) {
-                return `matrix not symmetric at [${i + 1},${j + 1}]`;
+                return t('view.portfolio_allocator.validate.not_symmetric', { i: i + 1, j: j + 1 });
             }
         }
     }
