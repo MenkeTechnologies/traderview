@@ -184,7 +184,7 @@ function renderChart(ending, report) {
             { label: 'equity $' },
             { label: t('chart.series.count'), stroke: '#888', width: 1.5,
               fill: '#88888833', points: { show: false } },
-            { label: 'start',  stroke: '#00e5ff', width: 0,
+            { label: t('chart.series.start'),  stroke: '#00e5ff', width: 0,
               points: { show: true, size: 11, fill: '#00e5ff', stroke: '#00e5ff' } },
             { label: 'p05',    stroke: '#ff3860', width: 0,
               points: { show: true, size: 11, fill: '#ff3860', stroke: '#ff3860' } },

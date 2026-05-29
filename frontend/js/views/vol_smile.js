@@ -176,7 +176,7 @@ function renderChart(rows, res) {
         height: h,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'strike' },
+            { label: t('chart.series.strike') },
             {
                 label: 'IV (raw)',
                 stroke: '#ff9f1a',

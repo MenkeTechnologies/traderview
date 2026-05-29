@@ -142,7 +142,7 @@ function renderChart(bars, points) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
-            { label: 'median', stroke: '#00e5ff', width: 0.8,
+            { label: t('chart.series.median'), stroke: '#00e5ff', width: 0.8,
               fill: '#00e5ff10', points: { show: false } },
             { label: 'jaw (13)',   stroke: '#3b82f6', width: 1.5, points: { show: false } },
             { label: 'teeth (8)',  stroke: '#ff3860', width: 1.5, points: { show: false } },

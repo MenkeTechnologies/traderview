@@ -164,7 +164,7 @@ function renderChart(lines) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.line') },
-            { label: 'kagi', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.kagi'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

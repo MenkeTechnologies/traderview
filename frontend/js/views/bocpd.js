@@ -208,7 +208,7 @@ function renderRlChart(res) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'expected run length', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.expected_run_length'), stroke: '#00e5ff', width: 1.5,
               fill: 'rgba(0,229,255,0.08)', points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

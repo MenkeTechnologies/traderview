@@ -192,7 +192,7 @@ function renderChart(rows, res) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'tenor (years)' },
-            { label: 'spot IV', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.spot_iv'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 6, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: t('chart.series.forward_vol'), stroke: '#ff9f1a', width: 2,
               spanGaps: false, points: { show: false } },

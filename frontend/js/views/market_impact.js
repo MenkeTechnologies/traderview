@@ -177,7 +177,7 @@ function renderDistribution(trades) {
         title: '', width: el.clientWidth || 600, height: 200,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bucket' },
+            { label: t('chart.series.bucket') },
             { label: t('chart.series.trade_count'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff33', points: { show: true, size: 5 } },
         ],

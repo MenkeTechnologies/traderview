@@ -156,7 +156,7 @@ function renderChart(series) {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'amihud',
+            { label: t('chart.series.amihud'),
               stroke: '#00e5ff',
               width: 1.5,
               points: { show: false },

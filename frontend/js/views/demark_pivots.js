@@ -175,7 +175,7 @@ function renderChart(levels) {
         scales: { x: {}, y: { range: [min, max] } },
         series: [
             { label: 't' },
-            { label: 'prior OHLC', stroke: '#a06bff', width: 1.5,
+            { label: t('chart.series.prior_ohlc'), stroke: '#a06bff', width: 1.5,
               fill: '#a06bff14', points: { show: true, size: 8 } },
             { label: 'R1',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.pivot'),  stroke: '#ffd84a', width: 1.5,               points: { show: false } },

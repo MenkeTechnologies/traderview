@@ -145,7 +145,7 @@ function renderChart(equity, report) {
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.equity'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
-            { label: 'fit', stroke: '#ffd84a', width: 1.0,
+            { label: t('chart.series.fit'), stroke: '#ffd84a', width: 1.0,
               dash: [4, 4], points: { show: false } },
         ],
         axes: [

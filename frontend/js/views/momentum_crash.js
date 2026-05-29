@@ -212,9 +212,9 @@ function renderChart(report) {
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'leverage',    stroke: '#ffd84a', width: 1.5, points: { show: false } },
-            { label: 'cum managed', stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
-            { label: 'cum raw',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
+            { label: t('chart.series.leverage'),    stroke: '#ffd84a', width: 1.5, points: { show: false } },
+            { label: t('chart.series.cum_managed'), stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
+            { label: t('chart.series.cum_raw'),     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

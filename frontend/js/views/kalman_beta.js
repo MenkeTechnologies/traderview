@@ -223,7 +223,7 @@ function renderReturnsChart(asset, bench) {
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.asset'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'bench', stroke: '#ff9f1a', width: 1.5, points: { show: false } },
+            { label: t('chart.series.bench'), stroke: '#ff9f1a', width: 1.5, points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, asset, bench], el);

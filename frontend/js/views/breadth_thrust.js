@@ -184,11 +184,11 @@ function renderChart(report) {
         scales: { x: {}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'ratio',    stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
+            { label: t('chart.series.ratio'),    stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
             { label: 'EMA',      stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: t('chart.series.low'),      stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.high'),     stroke: '#3ad96b', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: 'thrust',   stroke: '#ffd84a', width: 0,                  points: { show: true, size: 8 } },
+            { label: t('chart.series.thrust'),   stroke: '#ffd84a', width: 0,                  points: { show: true, size: 8 } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

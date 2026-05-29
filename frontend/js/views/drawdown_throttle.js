@@ -187,9 +187,9 @@ function renderChart(equity, tiers, report) {
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.equity'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
-            { label: 'rolling peak', stroke: '#ffd84a', width: 1.0,
+            { label: t('chart.series.rolling_peak'), stroke: '#ffd84a', width: 1.0,
               dash: [4, 4], points: { show: false } },
-            { label: 'drawdown',  stroke: '#ff3860', width: 1.0,
+            { label: t('chart.series.drawdown'),  stroke: '#ff3860', width: 1.0,
               fill: '#ff386033', points: { show: false }, scale: 'y_dd' },
         ],
         axes: [

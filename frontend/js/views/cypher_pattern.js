@@ -152,9 +152,9 @@ function renderChart(pivots, matches) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.pivot_index') },
-            { label: 'pivots', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.pivots'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: true, size: 8, stroke: '#ffd84a', fill: '#ffd84a' } },
-            { label: 'match XABCD', stroke: '#39ff14', width: 0,
+            { label: t('chart.series.match_xabcd'), stroke: '#39ff14', width: 0,
               points: { show: true, size: 14, stroke: '#39ff14', fill: 'transparent' } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],

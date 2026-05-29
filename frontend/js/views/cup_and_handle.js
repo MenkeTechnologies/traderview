@@ -195,10 +195,10 @@ function renderChart(bars, cand) {
 
     if (cand) {
         series.push(
-            { label: 'left rim',    stroke: '#ffd84a', width: 0, points: { show: true, size: 10, stroke: '#ffd84a', fill: '#ffd84a' } },
-            { label: 'trough',      stroke: '#ff3860', width: 0, points: { show: true, size: 10, stroke: '#ff3860', fill: '#ff3860' } },
-            { label: 'right rim',   stroke: '#00e5ff', width: 0, points: { show: true, size: 10, stroke: '#00e5ff', fill: '#00e5ff' } },
-            { label: 'handle low',  stroke: '#ff9f1a', width: 0, points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
+            { label: t('chart.series.left_rim'),    stroke: '#ffd84a', width: 0, points: { show: true, size: 10, stroke: '#ffd84a', fill: '#ffd84a' } },
+            { label: t('chart.series.trough'),      stroke: '#ff3860', width: 0, points: { show: true, size: 10, stroke: '#ff3860', fill: '#ff3860' } },
+            { label: t('chart.series.right_rim'),   stroke: '#00e5ff', width: 0, points: { show: true, size: 10, stroke: '#00e5ff', fill: '#00e5ff' } },
+            { label: t('chart.series.handle_low'),  stroke: '#ff9f1a', width: 0, points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
             { label: t('chart.series.pivot'),       stroke: '#39ff14', width: 1.0, dash: [4, 4], points: { show: false } },
         );
         data.push(

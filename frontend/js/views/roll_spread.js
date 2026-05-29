@@ -163,7 +163,7 @@ function renderChart(series) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'spread', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.spread'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

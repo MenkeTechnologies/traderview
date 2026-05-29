@@ -169,7 +169,7 @@ function renderChart(bar) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.imbalance') },
-            { label: 'microprice', stroke: '#00e5ff', width: 2, points: { show: false } },
+            { label: t('chart.series.microprice'), stroke: '#00e5ff', width: 2, points: { show: false } },
             { label: t('chart.series.current'), stroke: '#ff9f1a', width: 0,
               points: { show: true, size: 12, stroke: '#ff9f1a', fill: '#ff9f1a' } },
         ],

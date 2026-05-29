@@ -180,7 +180,7 @@ function renderChart(volumeCurve, pov, twap, vwap) {
     const series = [
         { label: t('chart.series.bar') },
         // Reference: expected volume in muted grey.
-        { label: 'volume', stroke: 'rgba(170,170,170,0.45)', width: 1,
+        { label: t('chart.series.volume'), stroke: 'rgba(170,170,170,0.45)', width: 1,
           fill: 'rgba(170,170,170,0.05)' },
         { label: 'POV slice', stroke: '#00e5ff', width: 2,
           points: { show: true, size: 6, stroke: '#00e5ff', fill: '#00e5ff' } },

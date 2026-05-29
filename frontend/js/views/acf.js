@@ -161,7 +161,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: { auto: true } },
         series: [
-            { label: 'lag' },
+            { label: t('chart.series.lag') },
             { label: 'ρ̂(k)',  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
             { label: '+band', stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: '−band', stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },

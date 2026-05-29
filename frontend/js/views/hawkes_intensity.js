@@ -182,7 +182,7 @@ function renderChart(report) {
         series: [
             { label: 't' },
             { label: 'λ(t)',  stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'event', stroke: '#ff3860', width: 0,   points: { show: true, size: 6 } },
+            { label: t('chart.series.event'), stroke: '#ff3860', width: 0,   points: { show: true, size: 6 } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },

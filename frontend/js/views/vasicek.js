@@ -169,8 +169,8 @@ function renderChart(res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'terminal rate' },
-            { label: 'density', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.terminal_rate') },
+            { label: t('chart.series.density'), stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.10)', points: { show: false } },
         ],
         axes: [

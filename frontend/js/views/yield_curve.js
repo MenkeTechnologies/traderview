@@ -142,8 +142,8 @@ function renderChart() {
         title: '', width: el.clientWidth || 600, height: 300,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'years' },
-            { label: 'yield', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.years') },
+            { label: t('chart.series.yield'), stroke: '#00e5ff', width: 2,
               fill: '#00e5ff14',
               points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
         ],

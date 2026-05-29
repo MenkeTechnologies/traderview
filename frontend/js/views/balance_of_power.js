@@ -162,8 +162,8 @@ function renderChart(report) {
         scales: { x: {}, y: { range: [-1.1, 1.1] } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'raw',      stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
-            { label: 'smoothed', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.raw'),      stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
+            { label: t('chart.series.smoothed'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

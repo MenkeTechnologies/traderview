@@ -216,7 +216,7 @@ function renderChart(returns, hs, fhs, cf) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.return') },
-            { label: 'frequency', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.frequency'), stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.10)' },
             { label: '−VaR (HS)',  stroke: '#ff9f1a', width: 2,
               points: { show: true, size: 8, stroke: '#ff9f1a', fill: '#ff9f1a' } },
