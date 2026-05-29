@@ -8,6 +8,8 @@
 //   w_i ← b_i · σ_p / (Σw)_i ,  then normalize Σw = 1
 // with b_i = 1/n (equal budget).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_MAX_ITER = 500;
 export const DEFAULT_TOLERANCE = 1e-8;
 
@@ -23,17 +25,17 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(input) {
     const c = input.covariance;
-    if (!Array.isArray(c))                              return 'covariance must be a 2-D array';
-    if (c.length < 2)                                    return 'need at least 2 assets';
+    if (!Array.isArray(c))                              return t('view.risk_parity_solver.validate.cov_array');
+    if (c.length < 2)                                    return t('view.risk_parity_solver.validate.assets_min');
     const n = c.length;
     for (let i = 0; i < n; i++) {
-        if (!Array.isArray(c[i]) || c[i].length !== n) return 'covariance must be a square matrix';
+        if (!Array.isArray(c[i]) || c[i].length !== n) return t('view.risk_parity_solver.validate.cov_square');
         for (let j = 0; j < n; j++) {
-            if (!Number.isFinite(c[i][j]))             return `covariance[${i}][${j}] not finite`;
+            if (!Number.isFinite(c[i][j]))             return t('view.risk_parity_solver.validate.cov_finite', { i, j });
         }
     }
-    if (!Number.isInteger(input.max_iter) || input.max_iter < 1) return 'max_iter must be a positive integer';
-    if (!Number.isFinite(input.tolerance) || input.tolerance <= 0) return 'tolerance must be > 0';
+    if (!Number.isInteger(input.max_iter) || input.max_iter < 1) return t('view.risk_parity_solver.validate.max_iter');
+    if (!Number.isFinite(input.tolerance) || input.tolerance <= 0) return t('view.risk_parity_solver.validate.tolerance');
     return null;
 }
 

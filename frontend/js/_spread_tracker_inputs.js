@@ -55,7 +55,7 @@ export function parseQuoteBlob(text) {
 
 export function validateInputs(samples) {
     if (!Array.isArray(samples) || samples.length < 5)
-        return 'need at least 5 quote samples';
+        return t('view.spread_tracker.validate.samples_min');
     return null;
 }
 

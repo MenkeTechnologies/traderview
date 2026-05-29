@@ -55,14 +55,14 @@ export function parseTradeBlob(text) {
 export const VALID_METHODS = new Set(['none', 'fixed_dollar', 'fixed_pct', 'atr_multiple']);
 
 export function validateInputs(trades, candidates, sideLong) {
-    if (!Array.isArray(trades) || trades.length === 0) return 'need at least 1 trade';
-    if (!Array.isArray(candidates) || candidates.length === 0) return 'need at least 1 candidate stop';
+    if (!Array.isArray(trades) || trades.length === 0) return t('view.stop_loss_best_of.validate.trades_empty');
+    if (!Array.isArray(candidates) || candidates.length === 0) return t('view.stop_loss_best_of.validate.candidates_empty');
     for (const c of candidates) {
-        if (!c || !VALID_METHODS.has(c.method)) return `bad candidate method "${c?.method}"`;
-        if (!Number.isFinite(c.value) || c.value < 0) return 'candidate value must be ≥ 0';
-        if (!Number.isFinite(c.atr) || c.atr < 0) return 'candidate atr must be ≥ 0';
+        if (!c || !VALID_METHODS.has(c.method)) return t('view.stop_loss_best_of.validate.method', { m: c?.method });
+        if (!Number.isFinite(c.value) || c.value < 0) return t('view.stop_loss_best_of.validate.value');
+        if (!Number.isFinite(c.atr) || c.atr < 0) return t('view.stop_loss_best_of.validate.atr');
     }
-    if (typeof sideLong !== 'boolean') return 'side_long must be boolean';
+    if (typeof sideLong !== 'boolean') return t('view.stop_loss_best_of.validate.side_long');
     return null;
 }
 
