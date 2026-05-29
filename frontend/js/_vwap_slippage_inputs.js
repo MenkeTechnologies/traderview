@@ -5,6 +5,8 @@
 // Backend returns a tagged-enum: { kind: "computed", ... } or
 // { kind: "empty", reason: "..." }.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Two-token-per-line "typical volume". Typical = (high+low+close)/3; the
@@ -14,7 +16,7 @@ export function parseBarBlob(text) {
     const bars = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { bars, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { bars, errors: [{ line_no: 0, raw: '', message: t('view.vwap_slippage.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -23,17 +25,17 @@ export function parseBarBlob(text) {
         if (!s || s.startsWith('#')) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 2) {
-            errors.push({ line_no: i + 1, raw, message: `expected 2 tokens (typical volume), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.vwap_slippage.parse.token_count', { n: parts.length }) });
             continue;
         }
         const typical = Number(parts[0]);
         const volume = Number(parts[1]);
         if (!Number.isFinite(typical) || typical <= 0) {
-            errors.push({ line_no: i + 1, raw, message: `typical price must be > 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.vwap_slippage.parse.typical_invalid') });
             continue;
         }
         if (!Number.isFinite(volume) || volume < 0) {
-            errors.push({ line_no: i + 1, raw, message: `volume must be ≥ 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.vwap_slippage.parse.volume_non_neg') });
             continue;
         }
         bars.push({ typical, volume });
@@ -42,11 +44,11 @@ export function parseBarBlob(text) {
 }
 
 export function validateInputs(side, fillPrice, bars) {
-    if (side !== 'long' && side !== 'short') return 'side must be long or short';
-    if (!Number.isFinite(fillPrice) || fillPrice <= 0) return 'fill_price must be > 0';
-    if (!Array.isArray(bars) || bars.length === 0) return 'need at least 1 bar';
+    if (side !== 'long' && side !== 'short') return t('view.vwap_slippage.validate.side');
+    if (!Number.isFinite(fillPrice) || fillPrice <= 0) return t('view.vwap_slippage.validate.fill_price');
+    if (!Array.isArray(bars) || bars.length === 0) return t('view.vwap_slippage.validate.bars_min');
     const totalVol = bars.reduce((a, b) => a + (b.volume || 0), 0);
-    if (totalVol <= 0) return 'total bar volume must be > 0';
+    if (totalVol <= 0) return t('view.vwap_slippage.validate.total_vol');
     return null;
 }
 

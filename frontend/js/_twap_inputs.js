@@ -9,6 +9,7 @@
 // working a passive limit and cares about time-in-market rather than
 // volume-participation rate.
 
+import { t } from './i18n.js';
 import { parseFloatBlob } from './_paste_parser.js';
 
 // Single-column paste — one typical price per line. Reuse shared parser
@@ -18,11 +19,11 @@ export function parseTypicals(text) {
 }
 
 export function validateInputs(side, fillPrice, typicals) {
-    if (side !== 'long' && side !== 'short') return 'side must be long or short';
-    if (!Number.isFinite(fillPrice) || fillPrice <= 0) return 'fill_price must be > 0';
-    if (!Array.isArray(typicals) || typicals.length === 0) return 'need at least 1 typical price';
+    if (side !== 'long' && side !== 'short') return t('view.twap.validate.side');
+    if (!Number.isFinite(fillPrice) || fillPrice <= 0) return t('view.twap.validate.fill_price');
+    if (!Array.isArray(typicals) || typicals.length === 0) return t('view.twap.validate.typicals_min');
     if (!typicals.every(v => Number.isFinite(v) && v > 0))
-        return 'typical_prices must all be > 0';
+        return t('view.twap.validate.typicals_pos');
     return null;
 }
 
