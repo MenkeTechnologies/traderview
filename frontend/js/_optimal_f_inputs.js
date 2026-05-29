@@ -18,6 +18,7 @@
 // downside risk).
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse the trade-P/L textarea. Each value is one trade's P/L (sign
  *  matters — positive = gain, negative = loss). */
@@ -34,11 +35,11 @@ export function buildBody(returns) {
  *  worst_loss = 0 and the bet-fraction is unbounded. */
 export function validateInputs(returns) {
     if (!Array.isArray(returns) || returns.length < 5) {
-        return 'need at least 5 trade P/Ls';
+        return t('view.optimal_f.validate.need_5_pnls');
     }
-    if (returns.some(x => !Number.isFinite(x))) return 'P/L series contains non-finite values';
+    if (returns.some(x => !Number.isFinite(x))) return t('view.optimal_f.validate.non_finite');
     const hasLoser = returns.some(x => x < 0);
-    if (!hasLoser) return 'need at least one losing trade (Vince formula requires worst_loss > 0)';
+    if (!hasLoser) return t('view.optimal_f.validate.need_loser');
     return null;
 }
 

@@ -27,15 +27,15 @@ export const DEFAULT_INPUTS = {
 // Shape-only validation (geometry is checked by compute / localCompute).
 export function validateInputs(input) {
     if (input.side !== 'long' && input.side !== 'short')
-        return 'side must be "long" or "short"';
+        return t('view.risk_reward.validate.side');
     for (const k of ['entry', 'stop', 'target', 'risk_budget', 'multiplier']) {
-        if (!Number.isFinite(input[k])) return `${k} must be finite`;
+        if (!Number.isFinite(input[k])) return t('view.risk_reward.validate.field_finite', { field: k });
     }
-    if (input.entry <= 0)       return 'entry must be > 0';
-    if (input.stop <= 0)        return 'stop must be > 0';
-    if (input.target <= 0)      return 'target must be > 0';
-    if (input.risk_budget <= 0) return 'risk_budget must be > 0';
-    if (input.multiplier <= 0)  return 'multiplier must be > 0';
+    if (input.entry <= 0)       return t('view.risk_reward.validate.entry');
+    if (input.stop <= 0)        return t('view.risk_reward.validate.stop');
+    if (input.target <= 0)      return t('view.risk_reward.validate.target');
+    if (input.risk_budget <= 0) return t('view.risk_reward.validate.risk_budget');
+    if (input.multiplier <= 0)  return t('view.risk_reward.validate.multiplier');
     return null;
 }
 
