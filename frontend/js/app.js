@@ -2,6 +2,8 @@
 
 import { api, initApi, ApiError } from './api.js';
 import { showAuthScreen, hideAuthScreen } from './auth.js';
+import { installSymbolHotkey } from './symbol_hotkey_install.js';
+import { getGlobalSymbol } from './_global_symbol.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderTradesView } from './views/trades.js';
 import { renderTradeDetail } from './views/trade_detail.js';
@@ -36,6 +38,49 @@ import { renderDisclosures } from './views/disclosures.js';
 import { renderSentiment } from './views/sentiment.js';
 import { renderHeatmap } from './views/heatmap.js';
 import { renderOptions } from './views/options_chain.js';
+import { renderOptionPayoff } from './views/option_payoff.js';
+import { renderVolSmile } from './views/vol_smile.js';
+import { renderMonteCarlo } from './views/monte_carlo.js';
+import { renderPortfolioAllocator } from './views/portfolio_allocator.js';
+import { renderVarCalculator } from './views/var_calculator.js';
+import { renderSeriesSmoother } from './views/series_smoother.js';
+import { renderPatternDiscovery } from './views/pattern_discovery.js';
+import { renderExecutionScheduler } from './views/execution_scheduler.js';
+import { renderRegimeDetector } from './views/regime_detector.js';
+import { renderAmericanOption } from './views/american_option.js';
+import { renderFxOption } from './views/fx_option.js';
+import { renderForwardVolCurve } from './views/forward_vol_curve.js';
+import { renderYieldCurvePca } from './views/yield_curve_pca.js';
+import { renderDividendCalendar } from './views/dividend_calendar.js';
+import { renderSignalDecomposition } from './views/signal_decomposition.js';
+import { renderRrButterfly } from './views/rr_butterfly.js';
+import { renderCovDenoiser } from './views/cov_denoiser.js';
+import { renderMicroprice } from './views/microprice.js';
+import { renderDtw } from './views/dtw.js';
+import { renderHurst } from './views/hurst.js';
+import { renderBocpd } from './views/bocpd.js';
+import { renderVasicek } from './views/vasicek.js';
+import { renderOptimalF } from './views/optimal_f.js';
+import { renderKalmanBeta } from './views/kalman_beta.js';
+import { renderPairTrade } from './views/pair_trade.js';
+import { renderIvSolver } from './views/iv_solver.js';
+import { renderGreeksProfile } from './views/greeks_profile.js';
+import { renderSecondOrderGreeks } from './views/second_order_greeks.js';
+import { renderAlmgrenChriss } from './views/almgren_chriss.js';
+import { renderImplementationShortfall } from './views/implementation_shortfall.js';
+import { renderDeflatedSharpe } from './views/deflated_sharpe.js';
+import { renderVpin } from './views/vpin.js';
+import { renderCupAndHandle } from './views/cup_and_handle.js';
+import { renderIvRank } from './views/iv_rank.js';
+import { renderMarketImpact } from './views/market_impact.js';
+import { renderLiquidity } from './views/liquidity.js';
+import { renderSpreadTracker } from './views/spread_tracker.js';
+import { renderIntradayHeatmap } from './views/intraday_heatmap.js';
+import { renderIvBacktest } from './views/iv_backtest.js';
+import { renderOrderBookImbalance } from './views/order_book_imbalance.js';
+import { renderCusum } from './views/cusum.js';
+import { renderOrderFlow } from './views/order_flow.js';
+import { renderVwapSlippage } from './views/vwap_slippage.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
 import { renderEconomy } from './views/economy.js';
@@ -167,6 +212,7 @@ function bindTabs() {
     window.addEventListener('hashchange', dispatch);
     bindNavToggle();
     bindLauncherShortcut();
+    installSymbolHotkey();
 }
 
 function bindLauncherShortcut() {
@@ -265,6 +311,11 @@ export async function dispatch() {
     bumpViewToken();
     const hash = (window.location.hash || '#launcher').slice(1);
     const [view, ...rest] = hash.split('/');
+    // For symbol-aware views, fall back to the global ticker store when
+    // the URL doesn't carry one. Lets the user type a ticker once on
+    // any page, then navigate freely — every symbol-aware view picks
+    // it up automatically.
+    const sym = () => rest[0] || getGlobalSymbol() || '';
     state.view = view;
     document.querySelectorAll('.tab').forEach(b =>
         b.classList.toggle('active', b.dataset.view === view)
@@ -279,7 +330,7 @@ export async function dispatch() {
             case 'new-trade':   await renderNewTrade(mount, state); break;
             case 'search':      await renderSearch(mount, state); break;
             case 'watchlists':  await renderWatchlists(mount, state); break;
-            case 'research':    await renderResearch(mount, state, rest[0] || ''); break;
+            case 'research':    await renderResearch(mount, state, sym()); break;
             case 'screener':    await renderScreener(mount, state); break;
             case 'top-signals': await renderTopSignals(mount, state); break;
             case 'scanners':    await renderScanners(mount, state); break;
@@ -288,19 +339,62 @@ export async function dispatch() {
             case 'risk':        await renderRisk(mount, state); break;
             case 'alerts':      await renderAlerts(mount, state); break;
             case 'hotkeys':     await renderHotkeys(mount, state); break;
-            case 'replay':      await renderReplay(mount, state, rest[0]); break;
+            case 'replay':      await renderReplay(mount, state, sym()); break;
             case 'tape':        await renderTape(mount, state); break;
-            case 'earnings-iv': await renderEarningsIv(mount, state, rest[0]); break;
+            case 'earnings-iv': await renderEarningsIv(mount, state, sym()); break;
             case 'disclosures': await renderDisclosures(mount, state); break;
-            case 'sentiment':   await renderSentiment(mount, state, rest[0]); break;
+            case 'sentiment':   await renderSentiment(mount, state, sym()); break;
             case 'heatmap':     await renderHeatmap(mount, state); break;
-            case 'options':     await renderOptions(mount, state, rest[0]); break;
+            case 'options':     await renderOptions(mount, state, sym()); break;
+            case 'option-payoff': await renderOptionPayoff(mount, state); break;
+            case 'vol-smile':     await renderVolSmile(mount, state); break;
+            case 'monte-carlo':   await renderMonteCarlo(mount, state); break;
+            case 'portfolio-allocator': await renderPortfolioAllocator(mount, state); break;
+            case 'var-calculator': await renderVarCalculator(mount, state); break;
+            case 'series-smoother': await renderSeriesSmoother(mount, state); break;
+            case 'pattern-discovery': await renderPatternDiscovery(mount, state); break;
+            case 'execution-scheduler': await renderExecutionScheduler(mount, state); break;
+            case 'regime-detector': await renderRegimeDetector(mount, state); break;
+            case 'american-option': await renderAmericanOption(mount, state); break;
+            case 'fx-option':       await renderFxOption(mount, state); break;
+            case 'forward-vol':     await renderForwardVolCurve(mount, state); break;
+            case 'yield-curve-pca': await renderYieldCurvePca(mount, state); break;
+            case 'dividend-calendar': await renderDividendCalendar(mount, state); break;
+            case 'signal-decomposition': await renderSignalDecomposition(mount, state); break;
+            case 'rr-butterfly':    await renderRrButterfly(mount, state); break;
+            case 'cov-denoiser':    await renderCovDenoiser(mount, state); break;
+            case 'microprice':      await renderMicroprice(mount, state); break;
+            case 'dtw':             await renderDtw(mount, state); break;
+            case 'hurst':           await renderHurst(mount, state); break;
+            case 'bocpd':           await renderBocpd(mount, state); break;
+            case 'vasicek':         await renderVasicek(mount, state); break;
+            case 'optimal-f':       await renderOptimalF(mount, state); break;
+            case 'kalman-beta':     await renderKalmanBeta(mount, state); break;
+            case 'pair-trade-calc': await renderPairTrade(mount, state); break;
+            case 'iv-solver':       await renderIvSolver(mount, state); break;
+            case 'greeks-profile':  await renderGreeksProfile(mount, state); break;
+            case 'second-order-greeks': await renderSecondOrderGreeks(mount, state); break;
+            case 'almgren-chriss':  await renderAlmgrenChriss(mount, state); break;
+            case 'implementation-shortfall': await renderImplementationShortfall(mount, state); break;
+            case 'deflated-sharpe': await renderDeflatedSharpe(mount, state); break;
+            case 'vpin':            await renderVpin(mount, state); break;
+            case 'cup-and-handle':  await renderCupAndHandle(mount, state); break;
+            case 'iv-rank':         await renderIvRank(mount, state); break;
+            case 'market-impact':   await renderMarketImpact(mount, state); break;
+            case 'liquidity':       await renderLiquidity(mount, state); break;
+            case 'spread-tracker':  await renderSpreadTracker(mount, state); break;
+            case 'intraday-heatmap': await renderIntradayHeatmap(mount, state); break;
+            case 'iv-backtest':     await renderIvBacktest(mount, state); break;
+            case 'order-book-imbalance': await renderOrderBookImbalance(mount, state); break;
+            case 'cusum':           await renderCusum(mount, state); break;
+            case 'order-flow':      await renderOrderFlow(mount, state); break;
+            case 'vwap-slippage':   await renderVwapSlippage(mount, state); break;
             case 'crypto':      await renderCrypto(mount, state); break;
             case 'backtest':    await renderBacktest(mount, state); break;
             case 'economy':     await renderEconomy(mount, state); break;
             case 'pairs':       await renderPairs(mount, state); break;
-            case 'short-interest': await renderShortInterest(mount, state, rest[0]); break;
-            case 'darkpool':       await renderDarkpool(mount, state, rest[0]); break;
+            case 'short-interest': await renderShortInterest(mount, state, sym()); break;
+            case 'darkpool':       await renderDarkpool(mount, state, sym()); break;
             case 'vol':            await renderVol(mount, state); break;
             case 'webhooks':       await renderWebhooks(mount, state); break;
             case 'breadth':        await renderBreadth(mount, state); break;
@@ -327,7 +421,7 @@ export async function dispatch() {
             case 'strategy-alerts': await renderStrategyAlerts(mount, state); break;
             case 'rebalance':      await renderRebalance(mount, state); break;
             case 'sector-rotation': await renderSectorRotation(mount, state); break;
-            case 'tape-replay':    await renderTapeReplay(mount, state, rest[0] || ''); break;
+            case 'tape-replay':    await renderTapeReplay(mount, state, sym()); break;
             case 'backtest-presets': await renderBacktestPresets(mount, state, rest[0] || ''); break;
             case 'mood':           await renderMoodAnalytics(mount, state); break;
             case 'discipline':     await renderDiscipline(mount, state); break;
@@ -344,7 +438,7 @@ export async function dispatch() {
             case 'journal':     await renderJournalView(mount, state, rest[0]); break;
             case 'calendar':    await renderCalendar(mount, state); break;
             case 'reports':     await renderReports(mount, state, rest[0] || 'overview'); break;
-            case 'charts':      await renderCharts(mount, state, rest[0] || ''); break;
+            case 'charts':      await renderCharts(mount, state, sym()); break;
             case 'import':      await renderImportView(mount, state); break;
             case 'plans':       await renderPlans(mount, state); break;
             case 'tags':        await renderTags(mount, state); break;

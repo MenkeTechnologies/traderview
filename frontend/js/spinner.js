@@ -11,9 +11,10 @@
 // All pure DOM; safe to call from any view's render path.
 
 export function spinnerHTML(text = 'loading…') {
+    const safe = escapeText(text);
     return `<div class="tv-spinner-wrap">
-        <div class="tv-spinner" role="status" aria-label="${text}"></div>
-        <div class="tv-spinner-text">${escapeText(text)}</div>
+        <div class="tv-spinner" role="status" aria-label="${safe}"></div>
+        <div class="tv-spinner-text">${safe}</div>
     </div>`;
 }
 

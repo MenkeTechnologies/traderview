@@ -1,0 +1,181 @@
+// Implementation Shortfall view — institutional Transaction Cost Analysis.
+//
+// Inputs: 7 numbers about the order's lifecycle.
+//   decision_mid       — mid when the trade was decided
+//   arrival_mid        — mid when the order hit the market
+//   vwap_fill          — realized volume-weighted average fill
+//   final_mid          — mid at order close (post-cancel / completion)
+//   half_spread        — (ask-bid)/2 at decision
+//   intended_qty       — shares the trader meant to buy / sell
+//   filled_qty         — shares actually filled
+//
+// Output: 4-component cost decomposition (spread / timing / impact /
+// opportunity) + total $ + total bps. Visualized as a horizontal bar
+// chart so the dominant component is obvious at a glance.
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    validateInputs, buildBody, decompose, costSignClass,
+    fillKind, fmtUSD, fmtBps, fmtPct, COMPONENT_KEYS,
+} from '../_implementation_shortfall_inputs.js';
+
+const DEFAULTS = {
+    direction:               'buy',
+    decision_mid:            100.00,
+    arrival_mid:             100.05,
+    vwap_fill:               100.08,
+    final_mid:               100.20,
+    half_spread_at_decision: 0.02,
+    intended_qty:            10_000,
+    filled_qty:              9_500,
+};
+
+let state = { params: { ...DEFAULTS } };
+
+export async function renderImplementationShortfall(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// IMPLEMENTATION SHORTFALL</h1>
+
+        <div class="chart-panel">
+            <h2>Order lifecycle</h2>
+            <div class="inline-form">
+                <label>Direction
+                    <select id="is-dir">
+                        <option value="buy"  ${state.params.direction === 'buy'  ? 'selected' : ''}>Buy</option>
+                        <option value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
+                    </select></label>
+                <label>Decision mid
+                    <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}"></label>
+                <label>Arrival mid
+                    <input id="is-am" type="number" step="any" min="0" value="${state.params.arrival_mid}"></label>
+                <label>VWAP fill
+                    <input id="is-vw" type="number" step="any" min="0" value="${state.params.vwap_fill}"></label>
+                <label>Final mid
+                    <input id="is-fm" type="number" step="any" min="0" value="${state.params.final_mid}"></label>
+                <label>½-spread @ decision
+                    <input id="is-hs" type="number" step="any" min="0" value="${state.params.half_spread_at_decision}"></label>
+                <label>Intended qty
+                    <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}"></label>
+                <label>Filled qty
+                    <input id="is-fq" type="number" step="1" min="0" value="${state.params.filled_qty}"></label>
+                <button id="is-run" class="primary" type="button">Analyze</button>
+            </div>
+            <p class="muted">
+                Buy convention: a positive $ cost means the trader paid up.
+                Negative = captured liquidity / favorable drift. Total in bps
+                normalizes against intended notional (qty × decision_mid).
+            </p>
+        </div>
+
+        <div id="is-summary" class="cards"></div>
+
+        <div class="chart-panel"><h2>Cost attribution</h2>
+            <div id="is-bars"></div>
+        </div>
+
+        <div class="chart-panel"><h2>Backend note</h2>
+            <div id="is-note" class="muted">—</div>
+        </div>
+
+        <div id="is-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+
+    document.getElementById('is-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+
+    readInputs();
+    void compute(tok);
+}
+
+function readInputs() {
+    const get = id => document.getElementById(id).value;
+    state.params = {
+        direction:               get('is-dir'),
+        decision_mid:            Number(get('is-dm')),
+        arrival_mid:             Number(get('is-am')),
+        vwap_fill:               Number(get('is-vw')),
+        final_mid:               Number(get('is-fm')),
+        half_spread_at_decision: Number(get('is-hs')),
+        intended_qty:            Number(get('is-iq')),
+        filled_qty:              Number(get('is-fq')),
+    };
+}
+
+async function compute(tok) {
+    hideErr();
+    const err = validateInputs(state.params);
+    if (err) { showErr(err); return; }
+    let res;
+    try {
+        res = await api.microImplementationShortfall(buildBody(state.params));
+        if (!res) throw new Error('shortfall returned null');
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`);
+        return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(res);
+    renderBars(res);
+    document.getElementById('is-note').textContent = res.note || '—';
+}
+
+function renderSummary(r) {
+    const fill = fillKind(state.params.intended_qty, state.params.filled_qty);
+    const fillPct = state.params.filled_qty / state.params.intended_qty;
+    document.getElementById('is-summary').innerHTML = [
+        card('Direction',     state.params.direction.toUpperCase()),
+        card('Fill',          fill.toUpperCase() + ' · ' + fmtPct(fillPct), fill === 'full' ? 'pos' : 'neg'),
+        card('Spread $',      fmtUSD(r.spread_cost),      costSignClass(r.spread_cost)),
+        card('Timing $',      fmtUSD(r.timing_cost),      costSignClass(r.timing_cost)),
+        card('Impact $',      fmtUSD(r.impact_cost),      costSignClass(r.impact_cost)),
+        card('Opportunity $', fmtUSD(r.opportunity_cost), costSignClass(r.opportunity_cost)),
+        card('Total $',       fmtUSD(r.total_dollars),    costSignClass(r.total_dollars)),
+        card('Total bps',     fmtBps(r.total_bps),        costSignClass(r.total_bps)),
+    ].join('');
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderBars(report) {
+    const wrap = document.getElementById('is-bars');
+    const items = decompose(report);
+    const maxAbs = Math.max(...items.map(it => Math.abs(it.value)), 1e-9);
+    // Horizontal divergent bars: 50% midline, left = negative (captured),
+    // right = positive (paid). Color is a static CSS class (is-fill-<key>);
+    // width/side is set after insertion via rAF so release-WebKit picks it up.
+    wrap.innerHTML = items.map(it => `
+        <div class="is-bar-row">
+            <div class="is-bar-label">${esc(it.label)}</div>
+            <div class="is-bar-track">
+                <div class="is-bar-midline"></div>
+                <div class="is-bar-fill is-fill-${esc(it.key)} is-fill-${it.value >= 0 ? 'pos' : 'neg'}"
+                     data-bar-pct="${(Math.abs(it.value) / maxAbs * 50).toFixed(2)}"></div>
+            </div>
+            <div class="is-bar-value ${costSignClass(it.value)}">${esc(fmtUSD(it.value))} · ${esc(fmtPct(it.share))}</div>
+        </div>
+    `).join('');
+    requestAnimationFrame(() => {
+        wrap.querySelectorAll('.is-bar-fill').forEach(el => {
+            const pct = Number(el.dataset.barPct);
+            if (Number.isFinite(pct)) el.style.width = pct + '%';
+        });
+    });
+}
+
+function showErr(msg) {
+    const el = document.getElementById('is-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('is-err').style.display = 'none'; }

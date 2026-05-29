@@ -1332,3 +1332,274 @@ kbd {
 @keyframes tv-spin {
     to { transform: rotate(360deg); }
 }
+
+/* ---- portfolio allocator view (`pa-`) -------------------------------- */
+.op-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+.op-inputs-grid h3 { font-size: 11px; margin: 0 0 4px 0; }
+.pa-kv { display: inline-block; margin: 0 14px 4px 0; font-size: 12px; }
+.pa-kv strong { color: var(--text); margin-left: 4px; }
+.pa-bar-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 90px;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 2px 0;
+}
+.pa-bar-label { color: var(--text-muted); font-family: monospace; }
+.pa-bar-track {
+    position: relative;
+    height: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.pa-bar-track .pa-bar-zero {
+    position: absolute;
+    left: 50%;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+}
+.pa-bar {
+    position: absolute;
+    top: 1px; bottom: 1px;
+}
+.pa-bar.pos { background: var(--green); }
+.pa-bar.neg { background: var(--red); }
+.pa-bar-value { font-family: 'Orbitron', monospace; font-weight: 700; text-align: right; }
+.pa-bar-value.pos { color: var(--green); }
+.pa-bar-value.neg { color: var(--red); }
+
+/* ---- VaR calculator view (`vc-`) ------------------------------------ */
+.vc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    margin-top: 4px;
+    border-top: 1px dashed rgba(255,255,255,0.04);
+    padding-top: 4px;
+}
+.vc-row:first-of-type { border-top: none; padding-top: 0; }
+.vc-row strong { color: var(--text); font-family: 'Orbitron', monospace; }
+
+/* ---- Series Smoother view (`ss-`) ----------------------------------- */
+.ss-smoothers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+}
+.ss-smoother {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+.ss-smoother label { display: inline-block; margin-right: 12px; }
+.ss-smoother input[type=number] { width: 90px; }
+.ss-swatch { font-weight: 700; margin-right: 4px; }
+.ss-swatch.lowess     { color: #00e5ff; }
+.ss-swatch.kalman_rts { color: #ff9f1a; }
+.ss-swatch.theil_sen  { color: #a06bff; }
+.ss-swatch.polynomial { color: #39ff14; }
+.ss-summary-value { font-size: 12px !important; font-weight: normal !important; }
+
+/* ---- Pattern Discovery view (`pd-`) --------------------------------- */
+.pd-discord-value { font-size: 12px !important; font-weight: normal !important; }
+
+/* ---- Execution Scheduler view (`es-`) ------------------------------- */
+.es-swatch { font-weight: 700; margin-right: 4px; }
+.es-swatch.pov  { color: #00e5ff; }
+.es-swatch.twap { color: #ff9f1a; }
+.es-swatch.vwap { color: #a06bff; }
+.es-summary-value { font-size: 12px !important; font-weight: normal !important; }
+
+/* ---- Regime Detector view (`rd-`) ----------------------------------- */
+.rd-swatch { font-weight: 700; margin-right: 4px; }
+.rd-swatch.state-low  { color: #39ff14; }
+.rd-swatch.state-high { color: #ff3860; }
+.rd-summary-value { font-size: 12px !important; font-weight: normal !important; }
+
+/* ---- American Option view (`ao-`) ----------------------------------- */
+.ao-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- FX Option view (`fx-`) ----------------------------------------- */
+.fx-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Yield Curve PCA view (`yp-`) ----------------------------------- */
+.yp-swatch { font-weight: 700; margin-right: 4px; }
+.yp-pc-0 { color: #00e5ff; }
+.yp-pc-1 { color: #ff9f1a; }
+.yp-pc-2 { color: #a06bff; }
+.yp-pc-3 { color: #39ff14; }
+.yp-pc-4 { color: #ff3860; }
+.yp-pc-5 { color: #ffd84a; }
+.yp-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Dividend Calendar view (`dc-`) --------------------------------- */
+.dc-table { font-size: 12px; width: 100%; border-collapse: collapse; }
+.dc-table th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+.dc-table td { padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.dc-amount { font-family: 'Orbitron', monospace; }
+.dc-yield  { font-family: 'Orbitron', monospace; color: var(--cyan); }
+.dc-days   { font-family: 'Orbitron', monospace; color: var(--text-muted); }
+
+/* ---- Signal Decomposition view (`sd-`) ------------------------------ */
+.sd-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
+.sd-row-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: right; padding-right: 8px; }
+.sd-chart-cell { height: 80px; }
+
+/* ---- RR / BF calculator (`rr-`) ------------------------------------- */
+.rr-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Global symbol-hotkey HUD (`tv-symbol-hud`) --------------------- */
+.tv-symbol-hud {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(15, 18, 24, 0.96);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    pointer-events: none;
+}
+.tv-symbol-hud-prompt { color: var(--text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; font-family: 'Orbitron', sans-serif; }
+.tv-symbol-hud-value  { color: var(--text); font-family: 'Orbitron', monospace; font-weight: 700; font-size: 17px; letter-spacing: 2px; min-width: 60px; text-align: center; }
+.tv-symbol-hud-hint   { color: var(--text-muted); font-size: 10px; }
+.tv-symbol-hud.tv-symbol-hud-valid { border-left-color: var(--green); }
+.tv-symbol-hud.tv-symbol-hud-valid .tv-symbol-hud-value { color: var(--green); text-shadow: 0 0 8px rgba(57,255,20,0.5); }
+
+/* ---- Topbar active-ticker pill (`global-ticker`) -------------------- */
+.global-ticker {
+    display: inline-block;
+    margin: 0 8px;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--cyan);
+    border-radius: 2px;
+    background: rgba(0, 229, 255, 0.06);
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+.global-ticker:hover {
+    background: rgba(0, 229, 255, 0.16);
+    text-decoration: none;
+}
+
+/* ---- Cov Denoiser view (`cd-`) -------------------------------------- */
+.cd-matrix { font-family: 'Orbitron', monospace; font-size: 11px; border-collapse: collapse; }
+.cd-matrix th { padding: 3px 8px; color: var(--text-muted); font-weight: 700; text-align: right; border-bottom: 1px solid var(--border); }
+.cd-matrix td { padding: 3px 8px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.cd-unchanged { color: var(--text-muted); }
+.cd-bumped    { color: var(--green); background: rgba(57,255,20,0.06); }
+.cd-trimmed   { color: var(--red);   background: rgba(255,7,58,0.06); }
+
+/* ---- Microprice view (`mp-`) ---------------------------------------- */
+.mp-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Hurst Exponent view (`hu-`) ------------------------------------ */
+.hu-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Vasicek view (`va-`) ------------------------------------------- */
+.va-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Optimal-f view (`of-`) ----------------------------------------- */
+.of-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Kalman Beta view (`kb-`) --------------------------------------- */
+.kb-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Pair Trade view (`pt-`) ---------------------------------------- */
+.pt-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- IV Solver view (`iv-`) ----------------------------------------- */
+.iv-summary-value { font-size: 12px !important; font-weight: normal !important; margin-top: 6px; }
+
+/* ---- Greeks Profile view (`gp-`) ----------------------------------- */
+.gp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 10px; }
+.gp-cell { background: var(--bg-card); border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 6px; border-radius: 2px; }
+.gp-cell-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-family: 'Orbitron', sans-serif; margin-bottom: 4px; padding-left: 4px; }
+.gp-chart-area { height: 140px; }
+
+/* Implementation Shortfall — divergent horizontal bars (midline = zero) */
+.is-bar-row { display: grid; grid-template-columns: 120px 1fr 220px; gap: 12px; align-items: center; margin: 4px 0; font-size: 12px; }
+.is-bar-label { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: #aab; }
+.is-bar-track { position: relative; height: 18px; background: #111418; border: 1px solid #222; }
+.is-bar-midline { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #555; z-index: 1; }
+.is-bar-fill { position: absolute; top: 1px; bottom: 1px; width: 0; transition: width 200ms ease-out; }
+.is-bar-fill.is-fill-pos { left: 50%; }
+.is-bar-fill.is-fill-neg { right: 50%; }
+.is-fill-spread_cost      { background: #ff9f1a; }
+.is-fill-timing_cost      { background: #a06bff; }
+.is-fill-impact_cost      { background: #ff3860; }
+.is-fill-opportunity_cost { background: #39ff14; }
+.ds-fill-obs              { background: #00e5ff; }
+.ds-fill-star             { background: #ff3860; }
+/* IV Rank gauge — 0-100 left-anchored gradient bar with q1/q3 markers */
+.iv-gauge-fill            { position: absolute; top: 1px; bottom: 1px; left: 0; width: 0; transition: width 200ms ease-out; }
+.iv-gauge-low             { background: #ff3860; }
+.iv-gauge-mid             { background: #ffd84a; }
+.iv-gauge-high            { background: #39ff14; }
+.iv-q1                    { left: 25% !important; background: #555 !important; }
+.iv-q3                    { left: 75% !important; background: #555 !important; }
+/* Liquidity P&L-by-bucket bars + per-symbol table */
+.lq-table                 { width: 100%; border-collapse: collapse; font-size: 12px; font-family: ui-monospace, monospace; }
+.lq-table th              { background: #1a1d22; padding: 6px 8px; text-align: left; border-bottom: 1px solid #333; color: #aab; font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; }
+.lq-table td              { padding: 4px 8px; border-bottom: 1px solid #1a1d22; }
+.lq-table tr:hover td     { background: #161a1f; }
+.lq-fill-win              { background: #39ff14; }
+.lq-fill-lose             { background: #ff3860; }
+/* Intraday heatmap — 4-column quarter-hour grid w/ tiered heat colors */
+.ih-grid                  { display: flex; flex-direction: column; gap: 2px; max-width: 600px; }
+.ih-row                   { display: grid; grid-template-columns: 40px repeat(4, 1fr); gap: 2px; }
+.ih-row.ih-header         { font-family: 'Orbitron', sans-serif; font-size: 10px; color: #aab; text-transform: uppercase; letter-spacing: 1.2px; }
+.ih-hlabel                { display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-family: ui-monospace, monospace; font-size: 11px; color: #aab; }
+.ih-cell                  { height: 28px; display: flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 10px; border: 1px solid #1a1d22; color: #fff; cursor: default; }
+.ih-cell.ih-col-label     { background: transparent !important; color: #aab; border: none; }
+.heat-empty               { background: #161a1f; color: #444; }
+.heat-pos-1               { background: #1b3d2a; }
+.heat-pos-2               { background: #226d3f; }
+.heat-pos-3               { background: #1bb05c; color: #000; }
+.heat-pos-4               { background: #39ff14; color: #000; font-weight: bold; }
+.heat-neg-1               { background: #3d1b25; }
+.heat-neg-2               { background: #6d2233; }
+.heat-neg-3               { background: #b01b46; color: #000; }
+.heat-neg-4               { background: #ff3860; color: #fff; font-weight: bold; }
+.ih-cell-pnl              { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Order Book Imbalance — gauge quartile marks + per-level mini bars */
+.obi-q-neg-strong         { left: 20% !important; background: #555 !important; }
+.obi-q-neg                { left: 45% !important; background: #333 !important; }
+.obi-q-pos                { left: 55% !important; background: #333 !important; }
+.obi-q-pos-strong         { left: 80% !important; background: #555 !important; }
+.obi-fill-bid             { background: #00e5ff; }
+.obi-fill-ask             { background: #ff3860; }
+.obi-mini-bar-track       { width: 100%; height: 14px; background: #161a1f; border: 1px solid #1a1d22; position: relative; }
+.obi-mini-bar             { height: 100%; width: 0; transition: width 200ms ease-out; }
+/* Market Impact slippage bars — left-anchored (slippage starts at 0).
+   Layered: pale max envelope underneath, colored avg on top. */
+.mi-axis-zero             { left: 0 !important; background: #333 !important; }
+.mi-bar-fill              { position: absolute; top: 1px; bottom: 1px; left: 0; width: 0; transition: width 200ms ease-out; }
+.mi-fill-max              { background: #2a4555; z-index: 1; }
+.mi-fill-ok               { background: #39ff14; z-index: 2; }
+.mi-fill-bust             { background: #ff3860; z-index: 2; }
+.is-bar-value { font-family: ui-monospace, monospace; font-size: 11px; text-align: right; }

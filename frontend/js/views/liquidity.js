@@ -1,0 +1,214 @@
+// Liquidity view — per-symbol position-vs-ADV analyzer + pnl-by-ADV-bucket.
+//
+// Answers two questions:
+//   1. Per symbol — what % of ADV does my average trade consume?
+//   2. By position-size bucket — where am I making/losing money?
+//      (Most traders' P&L cliff sits at the same bucket where slippage cliffs.)
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseTradeLines, parseAdvLines, validateInputs, buildBody,
+    liquidityTier, makeDemoData, fmtN, fmtPct, fmtUSD,
+} from '../_liquidity_inputs.js';
+
+let state = { tradesText: '', advText: '' };
+
+export async function renderLiquidity(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// LIQUIDITY · POSITION vs ADV</h1>
+
+        <div class="chart-panel">
+            <h2>Trades</h2>
+            <p class="muted">One line per trade: <code>symbol qty net_pnl</code>.
+                Negative pnl = loss. Other Trade fields are auto-filled.</p>
+            <textarea id="lq-trades" rows="8" placeholder="AAPL 100 75&#10;MSFT 2000 -150&#10;..."></textarea>
+        </div>
+
+        <div class="chart-panel">
+            <h2>ADV (avg daily volume per symbol)</h2>
+            <textarea id="lq-adv" rows="4" placeholder="AAPL 50000000&#10;MSFT 1500000&#10;..."></textarea>
+            <div class="inline-form">
+                <button id="lq-demo" class="secondary" type="button">Load demo (4 symbols, 53 trades)</button>
+                <button id="lq-clear" class="secondary" type="button">Clear</button>
+                <button id="lq-run" class="primary" type="button">Analyze</button>
+            </div>
+            <p class="muted">Symbols not in the ADV table are silently dropped from
+                bucket analysis. Per-symbol rows still show their qty / pnl regardless.</p>
+        </div>
+
+        <div id="lq-errors" class="boot" style="display:none"></div>
+        <div id="lq-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>Per-symbol breakdown</h2>
+            <div id="lq-rows"></div>
+            <p class="muted">Each row: symbol · trade count · total qty · avg qty/trade ·
+                ADV · avg % of ADV · liquidity tier · net pnl. Tiers cut at 0.1% / 1% / 5% / 20%.</p>
+        </div>
+
+        <div class="chart-panel">
+            <h2>P&amp;L &amp; win rate by ADV bucket</h2>
+            <div id="lq-buckets"></div>
+            <p class="muted">If your wins concentrate in small-pct buckets and losses
+                concentrate in large-pct buckets, you have a sizing problem — not an edge problem.</p>
+        </div>
+
+        <div id="lq-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+
+    document.getElementById('lq-demo').addEventListener('click', () => {
+        const { trades, adv } = makeDemoData();
+        document.getElementById('lq-trades').value =
+            trades.map(t => `${t.symbol} ${t.qty} ${t.net_pnl}`).join('\n');
+        document.getElementById('lq-adv').value =
+            Object.entries(adv).map(([s, v]) => `${s} ${v}`).join('\n');
+    });
+    document.getElementById('lq-clear').addEventListener('click', () => {
+        document.getElementById('lq-trades').value = '';
+        document.getElementById('lq-adv').value = '';
+    });
+    document.getElementById('lq-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+}
+
+function readInputs() {
+    state.tradesText = document.getElementById('lq-trades').value;
+    state.advText = document.getElementById('lq-adv').value;
+}
+
+async function compute(tok) {
+    hideErr();
+    const errs = document.getElementById('lq-errors');
+    errs.style.display = 'none';
+
+    const { trades, errors: tradeErrs } = parseTradeLines(state.tradesText);
+    const { adv,    errors: advErrs }   = parseAdvLines(state.advText);
+    const allErrs = [...tradeErrs.map(e => ({ ...e, src: 'trades' })),
+                     ...advErrs.map(e => ({ ...e, src: 'adv' }))];
+    if (allErrs.length) {
+        const head = allErrs.slice(0, 8).map(e =>
+            `[${e.src}] line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+        const more = allErrs.length > 8 ? `<br>… and ${allErrs.length - 8} more.` : '';
+        errs.innerHTML = `<strong>${allErrs.length} parse error(s):</strong><br>${head}${more}`;
+        errs.style.display = 'block';
+    }
+    const err = validateInputs(trades, adv);
+    if (err) { showErr(err); return; }
+
+    let res;
+    try {
+        res = await api.microLiquidity(buildBody(trades, adv));
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`); return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(res, trades);
+    renderRows(res);
+    renderBuckets(res);
+}
+
+function renderSummary(report, trades) {
+    const symCount = report.rows.length;
+    const totalQty = report.rows.reduce((a, r) => a + Number(r.total_qty || 0), 0);
+    const totalPnl = report.rows.reduce((a, r) => a + Number(r.net_pnl || 0), 0);
+    const matchedSym = report.rows.filter(r => r.avg_daily_volume != null).length;
+    document.getElementById('lq-summary').innerHTML = [
+        card('Trades',          fmtN(trades.length)),
+        card('Symbols',         String(symCount)),
+        card('Matched ADV',     `${matchedSym} / ${symCount}`),
+        card('Total qty',       fmtN(totalQty)),
+        card('Total net P&L',   fmtUSD(totalPnl), totalPnl >= 0 ? 'pos' : 'neg'),
+    ].join('');
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderRows(report) {
+    const wrap = document.getElementById('lq-rows');
+    if (!report.rows.length) {
+        wrap.innerHTML = '<div class="muted">No rows.</div>';
+        return;
+    }
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr>
+                <th>Symbol</th><th>Trades</th><th>Total qty</th><th>Avg qty</th>
+                <th>ADV</th><th>Avg %ADV</th><th>Tier</th><th>Net P&amp;L</th>
+            </tr></thead>
+            <tbody>
+                ${report.rows.map(r => {
+                    const pct = r.avg_pct_of_adv;
+                    const tier = liquidityTier(pct);
+                    const pnl = Number(r.net_pnl || 0);
+                    return `<tr>
+                        <td>${esc(r.symbol)}</td>
+                        <td>${esc(fmtN(r.trades))}</td>
+                        <td>${esc(fmtN(Number(r.total_qty)))}</td>
+                        <td>${esc(fmtN(Number(r.avg_qty_per_trade)))}</td>
+                        <td>${esc(r.avg_daily_volume == null ? '—' : fmtN(Number(r.avg_daily_volume)))}</td>
+                        <td>${esc(pct == null ? '—' : fmtPct(pct))}</td>
+                        <td class="${tier.cls}">${esc(tier.label)}</td>
+                        <td class="${pnl >= 0 ? 'pos' : 'neg'}">${esc(fmtUSD(pnl))}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderBuckets(report) {
+    const wrap = document.getElementById('lq-buckets');
+    if (!report.buckets.length) {
+        wrap.innerHTML = '<div class="muted">No bucketable trades (no ADV matches).</div>';
+        return;
+    }
+    const maxAbs = Math.max(...report.buckets.map(b => Math.abs(Number(b.net_pnl || 0))), 1);
+    wrap.innerHTML = report.buckets.map(b => {
+        const pnl = Number(b.net_pnl || 0);
+        if (b.trades === 0) {
+            return `
+                <div class="is-bar-row">
+                    <div class="is-bar-label">${esc(b.label)}</div>
+                    <div class="is-bar-track"><div class="is-bar-midline"></div></div>
+                    <div class="is-bar-value">no trades</div>
+                </div>`;
+        }
+        const widthPct = Math.max(0, Math.min(50, (Math.abs(pnl) / maxAbs) * 50)).toFixed(2);
+        const cls = pnl >= 0 ? 'is-fill-pos lq-fill-win' : 'is-fill-neg lq-fill-lose';
+        return `
+            <div class="is-bar-row">
+                <div class="is-bar-label">${esc(b.label)}</div>
+                <div class="is-bar-track">
+                    <div class="is-bar-midline"></div>
+                    <div class="is-bar-fill ${cls}" data-bar-pct="${widthPct}"></div>
+                </div>
+                <div class="is-bar-value">
+                    n=${b.trades} · ${esc(fmtUSD(pnl))} · win ${esc((b.win_rate * 100).toFixed(0))}%
+                </div>
+            </div>`;
+    }).join('');
+    requestAnimationFrame(() => {
+        wrap.querySelectorAll('.is-bar-fill').forEach(el => {
+            const pct = Number(el.dataset.barPct);
+            if (Number.isFinite(pct)) el.style.width = pct + '%';
+        });
+    });
+}
+
+function showErr(msg) {
+    const el = document.getElementById('lq-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('lq-err').style.display = 'none'; }

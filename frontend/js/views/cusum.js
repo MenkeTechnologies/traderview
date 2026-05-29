@@ -1,0 +1,219 @@
+// CUSUM view — Page-Hinkley change-point detector.
+//
+// "When did this series quietly shift regime?" Maintains a running
+// cumulative-deviation sum that resets on threshold hits. Each event
+// marks a bar where the series demonstrated a sustained shift away
+// from the reference mean.
+//
+// Use cases:
+//   * Regime alert on returns: when did drift flip from + to −?
+//   * Risk alert: when did vol-scaled returns enter a fat-tail regime?
+//   * Execution: when did the order-flow imbalance series shift?
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseSeries, validateInputs, buildBody,
+    meanStdev, eventMarkers, makeDemoSeries,
+    fmtN, dirCss,
+} from '../_cusum_inputs.js';
+
+const DEFAULT_CFG = {
+    reference_mean: 0.0,
+    reference_stdev: 1.0,
+    threshold_stdevs: 5.0,
+    slack: 0.5,
+};
+
+let state = { seriesText: '', config: { ...DEFAULT_CFG } };
+
+export async function renderCusum(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// CUSUM · CHANGE-POINT DETECTOR</h1>
+
+        <div class="chart-panel">
+            <h2>Series</h2>
+            <p class="muted">Paste one signed value per line — typically log-returns or
+                vol-normalized returns. Demo loads 200 bars where mean flips at bar 100.</p>
+            <textarea id="cu-series" rows="6" placeholder="0.0025&#10;-0.001&#10;0.004&#10;..."></textarea>
+            <div class="inline-form">
+                <button id="cu-demo" class="secondary" type="button">Load demo (200 bars, regime flip @ 100)</button>
+                <button id="cu-clear" class="secondary" type="button">Clear</button>
+                <button id="cu-autofit" class="secondary" type="button">Auto-fit mean / stdev from series</button>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Config</h2>
+            <div class="inline-form">
+                <label>Reference mean
+                    <input id="cu-mean" type="number" step="any" value="${state.config.reference_mean}"></label>
+                <label>Reference stdev
+                    <input id="cu-sd" type="number" step="any" min="0" value="${state.config.reference_stdev}"></label>
+                <label>Threshold (stdevs)
+                    <input id="cu-thr" type="number" step="any" min="0" value="${state.config.threshold_stdevs}"></label>
+                <label>Slack
+                    <input id="cu-slk" type="number" step="any" min="0" value="${state.config.slack}"></label>
+                <button id="cu-run" class="primary" type="button">Detect</button>
+            </div>
+            <p class="muted">
+                threshold_stdevs × reference_stdev = trigger level. Slack subtracts a
+                small amount each bar to suppress noise (typically 0.5 × stdev).
+                A high threshold + zero slack = chatty detector. Low threshold + large
+                slack = laggy but stable.</p>
+        </div>
+
+        <div id="cu-errors" class="boot" style="display:none"></div>
+        <div id="cu-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>Series + event markers</h2>
+            <div id="cu-chart" style="height:280px"></div>
+            <p class="muted">Cyan = the series itself. Green dots = UP change-points
+                (regime mean shifted higher). Red dots = DOWN change-points (mean shifted lower).
+                Marker height = CUSUM value at the firing bar (how hard the threshold was busted).</p>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Event log</h2>
+            <div id="cu-events"></div>
+        </div>
+
+        <div id="cu-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+
+    document.getElementById('cu-demo').addEventListener('click', () => {
+        const xs = makeDemoSeries(42);
+        document.getElementById('cu-series').value = xs.join('\n');
+    });
+    document.getElementById('cu-clear').addEventListener('click', () => {
+        document.getElementById('cu-series').value = '';
+    });
+    document.getElementById('cu-autofit').addEventListener('click', () => {
+        const { value: xs } = parseSeries(document.getElementById('cu-series').value);
+        const { mean, stdev } = meanStdev(xs);
+        if (Number.isFinite(mean))  document.getElementById('cu-mean').value = mean.toFixed(6);
+        if (Number.isFinite(stdev)) document.getElementById('cu-sd').value   = stdev.toFixed(6);
+    });
+    document.getElementById('cu-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+}
+
+function readInputs() {
+    state.seriesText = document.getElementById('cu-series').value;
+    state.config = {
+        reference_mean:   Number(document.getElementById('cu-mean').value),
+        reference_stdev:  Number(document.getElementById('cu-sd').value),
+        threshold_stdevs: Number(document.getElementById('cu-thr').value),
+        slack:            Number(document.getElementById('cu-slk').value),
+    };
+}
+
+async function compute(tok) {
+    hideErr();
+    const errs = document.getElementById('cu-errors');
+    errs.style.display = 'none';
+    const { value: series, errors } = parseSeries(state.seriesText);
+    if (errors.length) {
+        const head = errors.slice(0, 6).map(e =>
+            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+        const more = errors.length > 6 ? `<br>… and ${errors.length - 6} more.` : '';
+        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+        errs.style.display = 'block';
+    }
+    const err = validateInputs(series, state.config);
+    if (err) { showErr(err); return; }
+    let res;
+    try {
+        res = await api.anlyCusum(buildBody(series, state.config));
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`); return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(res, series);
+    renderChart(series, res);
+    renderEvents(res);
+}
+
+function renderSummary(report, series) {
+    const events = report.events || [];
+    const upCount = events.filter(e => e.direction === 'up').length;
+    const dnCount = events.filter(e => e.direction === 'down').length;
+    const lastEvent = events[events.length - 1];
+    document.getElementById('cu-summary').innerHTML = [
+        card('Bars',          String(series.length)),
+        card('Events',        String(report.n_events || 0),
+            (report.n_events || 0) > 0 ? '' : 'pos'),
+        card('Up events',     String(upCount), upCount > 0 ? 'pos' : ''),
+        card('Down events',   String(dnCount), dnCount > 0 ? 'neg' : ''),
+        card('Final g+',      fmtN(report.final_g_pos)),
+        card('Final g−',      fmtN(report.final_g_neg)),
+        card('Last event',    lastEvent
+            ? `bar ${lastEvent.bar_index} ${lastEvent.direction.toUpperCase()}`
+            : '—',
+            lastEvent ? dirCss(lastEvent.direction) : ''),
+    ].join('');
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderChart(series, report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cu-chart');
+    const xs = series.map((_, i) => i);
+    const { up, dn } = eventMarkers(report.events, series.length);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 280,
+        scales: { x: {}, y: {} },
+        series: [
+            { label: 'bar #' },
+            { label: 'series', stroke: '#00e5ff', width: 1.2,
+              fill: '#00e5ff14', points: { show: false } },
+            { label: 'UP event', stroke: '#39ff14', width: 0,
+              points: { show: true, size: 10, stroke: '#39ff14', fill: '#39ff14' } },
+            { label: 'DOWN event', stroke: '#ff3860', width: 0,
+              points: { show: true, size: 10, stroke: '#ff3860', fill: '#ff3860' } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, series, up, dn], el);
+}
+
+function renderEvents(report) {
+    const wrap = document.getElementById('cu-events');
+    const events = report.events || [];
+    if (!events.length) {
+        wrap.innerHTML = '<div class="muted">No change-point events at current threshold.</div>';
+        return;
+    }
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr><th>#</th><th>Bar index</th><th>Direction</th><th>CUSUM value</th></tr></thead>
+            <tbody>
+                ${events.map((e, i) => `<tr>
+                    <td>${i + 1}</td>
+                    <td>${esc(String(e.bar_index))}</td>
+                    <td class="${dirCss(e.direction)}">${esc(String(e.direction || '').toUpperCase())}</td>
+                    <td>${esc(fmtN(e.cusum_value))}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('cu-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('cu-err').style.display = 'none'; }

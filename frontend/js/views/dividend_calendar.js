@@ -1,0 +1,239 @@
+// Dividend Yield Calendar — for a user-supplied symbol list, fetch
+// each symbol's dividend data in parallel via /symbols/:sym/dividends,
+// extract upcoming ex-date/amount/yield, and render a sortable
+// calendar table filtered by horizon (next 7 / 14 / 30 / 60 / 180
+// days).
+//
+// Data source: the existing per-symbol dividends endpoint (Yahoo
+// quoteSummary blob). No additional backend wiring required.
+//
+// Symbol input: textarea (one per line/comma/space) OR pre-populate
+// from the user's default watchlist via the "load from watchlist"
+// button if their account has one.
+
+import { api } from '../api.js';
+import { esc, fmt } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseSymbolList, extractDividend, sortByExDate,
+    filterByHorizon, daysBetween,
+    fmtDate, fmtYield, fmtAmount,
+} from '../_dividend_calendar_inputs.js';
+
+const DEFAULT_SYMBOLS = `# One symbol per token (line / comma / space separated).
+# Demo: a handful of well-known dividend payers.
+KO  PG  JNJ  XOM  CVX  T  VZ  MCD  WMT  PEP  HD  IBM  PFE  MRK  ABBV
+`;
+
+const HORIZON_OPTIONS = [
+    { value: 7,    label: 'Next 7 days' },
+    { value: 14,   label: 'Next 14 days' },
+    { value: 30,   label: 'Next 30 days' },
+    { value: 60,   label: 'Next 60 days' },
+    { value: 180,  label: 'Next 6 months' },
+    { value: 'all', label: 'All upcoming' },
+];
+
+let state = {
+    text: DEFAULT_SYMBOLS,
+    horizon: 30,
+    lastRows: null,
+};
+
+export async function renderDividendCalendar(mount, _appState) {
+    const tok = currentViewToken();
+
+    mount.innerHTML = `
+        <h1 class="view-title">// DIVIDEND YIELD CALENDAR</h1>
+
+        <div class="chart-panel">
+            <h2>Symbols</h2>
+            <textarea id="dc-text" rows="5"
+                style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
+            <div class="inline-form" style="margin-top:10px">
+                <label>Horizon
+                    <select id="dc-horizon">
+                        ${HORIZON_OPTIONS.map(o =>
+                            `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(o.label)}</option>`
+                        ).join('')}
+                    </select></label>
+                <button id="dc-load-watchlist" class="secondary" type="button">Load from watchlist</button>
+                <button id="dc-run" class="primary" type="button">Fetch dividends</button>
+            </div>
+            <p class="muted">
+                Pulls per-symbol dividend data in parallel from the research backend.
+                Symbols without dividend data (non-payers, ETFs, ADRs) are silently
+                skipped. Past-dated ex-dates are filtered out.
+            </p>
+        </div>
+
+        <div id="dc-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>Upcoming dividends</h2>
+            <div id="dc-table"></div>
+        </div>
+
+        <div id="dc-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+
+    wireForm(mount, tok);
+    void fmt;
+}
+
+function wireForm(mount, tok) {
+    document.getElementById('dc-run').addEventListener('click', () => {
+        state.text = document.getElementById('dc-text').value;
+        const h = document.getElementById('dc-horizon').value;
+        state.horizon = h === 'all' ? 'all' : Number(h);
+        void runFetch(mount, tok);
+    });
+    document.getElementById('dc-load-watchlist').addEventListener('click', () => {
+        void loadFromWatchlist(mount, tok);
+    });
+    document.getElementById('dc-horizon').addEventListener('change', e => {
+        const h = e.target.value;
+        state.horizon = h === 'all' ? 'all' : Number(h);
+        // Re-render from cached rows without a refetch.
+        if (state.lastRows) renderTable(state.lastRows);
+    });
+}
+
+async function loadFromWatchlist(mount, tok) {
+    hideErr();
+    try {
+        const wls = await api.watchlists();
+        if (!viewIsCurrent(tok)) return;
+        if (!Array.isArray(wls) || wls.length === 0) {
+            showErr('No watchlists found. Add one under the Watchlists view first.');
+            return;
+        }
+        const first = wls[0];
+        const syms = await api.watchlistSymbols(first.id);
+        if (!viewIsCurrent(tok)) return;
+        const tokens = (syms || []).map(s => s.symbol || s).filter(Boolean);
+        const text = `# Loaded from watchlist "${first.name}"\n${tokens.join('  ')}\n`;
+        document.getElementById('dc-text').value = text;
+        state.text = text;
+    } catch (e) {
+        showErr(`Watchlist load error: ${e.message || e}`);
+    }
+}
+
+async function runFetch(mount, tok) {
+    hideErr();
+    const symbols = parseSymbolList(state.text);
+    if (symbols.length === 0) {
+        showErr('No symbols parsed from input');
+        return;
+    }
+    document.getElementById('dc-table').innerHTML = '<div class="boot">Fetching dividend data…</div>';
+
+    // Parallel fetch, but cap concurrency to avoid hammering the backend.
+    const rows = await fetchWithConcurrencyLimit(symbols, 8, async (sym) => {
+        try {
+            const payload = await api.symbolDividends(sym);
+            return extractDividend(sym, payload);
+        } catch (_e) {
+            return null;
+        }
+    });
+    if (!viewIsCurrent(tok)) return;
+
+    const valid = rows.filter(r => r !== null);
+    state.lastRows = valid;
+    renderSummary(symbols.length, valid);
+    renderTable(valid);
+}
+
+// Bounded-concurrency mapper. Returns results in original-input order.
+async function fetchWithConcurrencyLimit(items, limit, worker) {
+    const out = new Array(items.length);
+    let next = 0;
+    const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (true) {
+            const i = next++;
+            if (i >= items.length) return;
+            out[i] = await worker(items[i]);
+        }
+    });
+    await Promise.all(runners);
+    return out;
+}
+
+function renderSummary(requested, rows) {
+    const now = new Date();
+    const filtered = state.horizon === 'all'
+        ? sortByExDate(rows).filter(r => r.ex_date && r.ex_date >= now)
+        : filterByHorizon(sortByExDate(rows), now, state.horizon);
+    const yields = rows.map(r => r.yield).filter(y => Number.isFinite(y));
+    const avgYield = yields.length
+        ? yields.reduce((a, b) => a + b, 0) / yields.length
+        : NaN;
+    const maxYield = yields.length ? Math.max(...yields) : NaN;
+    document.getElementById('dc-summary').innerHTML = [
+        card('Symbols requested', String(requested)),
+        card('Dividend payers found', String(rows.length)),
+        card(`In horizon (${state.horizon === 'all' ? 'all upcoming' : state.horizon + 'd'})`, String(filtered.length)),
+        card('Avg yield (paying set)', fmtYield(avgYield)),
+        card('Max yield', fmtYield(maxYield)),
+    ].join('');
+}
+
+function card(label, value) {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value">${esc(value)}</div>
+    </div>`;
+}
+
+function renderTable(rows) {
+    const now = new Date();
+    const sorted = sortByExDate(rows);
+    const visible = state.horizon === 'all'
+        ? sorted.filter(r => r.ex_date && r.ex_date >= now)
+        : filterByHorizon(sorted, now, state.horizon);
+
+    if (visible.length === 0) {
+        document.getElementById('dc-table').innerHTML =
+            '<div class="boot">No upcoming dividends in the selected horizon.</div>';
+        return;
+    }
+
+    const rowHtml = visible.map(r => {
+        const days = r.ex_date ? daysBetween(now, r.ex_date) : null;
+        return `<tr>
+            <td>${esc(r.symbol)}</td>
+            <td>${esc(fmtDate(r.ex_date))}</td>
+            <td class="dc-days">${days == null ? '—' : days + 'd'}</td>
+            <td>${esc(fmtDate(r.pay_date))}</td>
+            <td class="dc-amount">${esc(fmtAmount(r.amount))}</td>
+            <td class="dc-yield">${esc(fmtYield(r.yield))}</td>
+            <td>${esc(fmtAmount(r.last_div_amount))}</td>
+            <td>${esc(fmtDate(r.last_div_date))}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('dc-table').innerHTML = `
+        <table class="trades dc-table">
+            <thead><tr>
+                <th>Symbol</th>
+                <th>Ex-date</th>
+                <th>Days to ex</th>
+                <th>Pay date</th>
+                <th>Amount / yr</th>
+                <th>Indicated yield</th>
+                <th>Last paid (amount)</th>
+                <th>Last paid (date)</th>
+            </tr></thead>
+            <tbody>${rowHtml}</tbody>
+        </table>`;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('dc-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('dc-err').style.display = 'none'; }

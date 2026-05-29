@@ -134,6 +134,7 @@ use traderview_core::{
     lower_partial_moments, lowess_smoother,
     macaulay_duration, madrid_moving_average_ribbon,
     mahalanobis_distance, mann_whitney_u, marginal_var,
+    marchenko_pastur_cleaning,
     margrabe_spread_option, markov_switching_2state, mat_hold_pattern, matrix_profile,
     max_diversification,
     mcclellan_oscillator,
@@ -149,7 +150,8 @@ use traderview_core::{
     nadaraya_watson,
     negative_volume_index, nelson_siegel, nelson_siegel_svensson,
     newey_west, noise_to_signal_ratio, nyse_tick, omega_ratio, on_balance_volume, on_neck_in_neck,
-    opening_range, optimal_execution_pov_schedule,
+    opening_range, optimal_execution_pov_schedule, optimal_execution_twap_schedule,
+    optimal_execution_vwap_schedule,
     option_open_interest_distribution, option_payoff_diagram, options_margin, order_block, ornstein_uhlenbeck,
     pain_index, pair_trade,
     pair_trade_zscore, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
@@ -857,6 +859,8 @@ pub fn router() -> Router<AppState> {
         .route("/scans/gap-and-go",                    post(gap_and_go_scanner_route))
         .route("/scans/late-day-ramp",                 post(late_day_ramp_scanner_route))
         .route("/analytics/optimal-execution-pov",     post(optimal_execution_pov_schedule_route))
+        .route("/analytics/optimal-execution-twap",    post(optimal_execution_twap_schedule_route))
+        .route("/analytics/optimal-execution-vwap",    post(optimal_execution_vwap_schedule_route))
         .route("/analytics/principal-component-yield-curve", post(principal_component_yield_curve_route))
         .route("/analytics/risk-reversal-25-delta-butterfly", post(risk_reversal_25_delta_butterfly_route))
         .route("/analytics/vasicek-short-rate-simulator", post(vasicek_short_rate_simulator_route))
@@ -864,6 +868,7 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/forward-volatility-bootstrap", post(forward_volatility_implied_bootstrap_route))
         .route("/analytics/kalman-smoother-rts",       post(kalman_smoother_rts_route))
         .route("/analytics/lowess-smoother",           post(lowess_smoother_route))
+        .route("/analytics/marchenko-pastur-cleaning", post(marchenko_pastur_cleaning_route))
         .route("/analytics/polynomial-regression",     post(polynomial_regression_route))
         .route("/analytics/theil-sen-estimator",       post(theil_sen_estimator_route))
         .route("/scans/pin-risk",                      post(pin_risk_scanner_route))
@@ -9589,6 +9594,51 @@ struct OptimalExecutionPovScheduleResponse {
 }
 
 #[derive(Deserialize)]
+struct OptimalExecutionTwapScheduleBody {
+    total_order_size: f64,
+    num_slices: usize,
+    #[serde(default)]
+    volume_curve: Option<Vec<f64>>,
+}
+
+async fn optimal_execution_twap_schedule_route(
+    _u: AuthUser, Json(b): Json<OptimalExecutionTwapScheduleBody>,
+) -> Json<Option<OptimalExecutionScheduleResponse>> {
+    Json(optimal_execution_twap_schedule::compute(
+        b.total_order_size, b.num_slices, b.volume_curve.as_deref(),
+    ).map(|r| OptimalExecutionScheduleResponse {
+        slices: r.slices,
+        cumulative_fill: r.cumulative_fill,
+        max_participation_rate: r.max_participation_rate,
+    }))
+}
+
+#[derive(Deserialize)]
+struct OptimalExecutionVwapScheduleBody {
+    total_order_size: f64,
+    volume_curve: Vec<f64>,
+}
+
+async fn optimal_execution_vwap_schedule_route(
+    _u: AuthUser, Json(b): Json<OptimalExecutionVwapScheduleBody>,
+) -> Json<Option<OptimalExecutionScheduleResponse>> {
+    Json(optimal_execution_vwap_schedule::compute(
+        b.total_order_size, &b.volume_curve,
+    ).map(|r| OptimalExecutionScheduleResponse {
+        slices: r.slices,
+        cumulative_fill: r.cumulative_fill,
+        max_participation_rate: r.max_participation_rate,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct OptimalExecutionScheduleResponse {
+    slices: Vec<f64>,
+    cumulative_fill: Vec<f64>,
+    max_participation_rate: f64,
+}
+
+#[derive(Deserialize)]
 struct PrincipalComponentYieldCurveBody {
     curves: Vec<Vec<f64>>,
     #[serde(default = "default_pc_top_k")]
@@ -9810,6 +9860,36 @@ async fn lowess_smoother_route(
     _u: AuthUser, Json(b): Json<LowessSmootherBody>,
 ) -> Json<Option<Vec<f64>>> {
     Json(lowess_smoother::compute(&b.x, &b.y, b.frac, b.robustness_iter))
+}
+
+#[derive(Deserialize)]
+struct MarchenkoPasturCleaningBody {
+    covariance: Vec<Vec<f64>>,
+    num_observations: usize,
+}
+
+async fn marchenko_pastur_cleaning_route(
+    _u: AuthUser, Json(b): Json<MarchenkoPasturCleaningBody>,
+) -> Json<Option<MarchenkoPasturCleaningResponse>> {
+    Json(marchenko_pastur_cleaning::compute(&b.covariance, b.num_observations)
+        .map(|r| MarchenkoPasturCleaningResponse {
+            cleaned_covariance: r.cleaned_covariance,
+            eigenvalues_signal: r.eigenvalues_signal,
+            bulk_eigenvalue_avg: r.bulk_eigenvalue_avg,
+            signal_count: r.signal_count,
+            bulk_count: r.bulk_count,
+            lambda_max: r.lambda_max,
+        }))
+}
+
+#[derive(serde::Serialize)]
+struct MarchenkoPasturCleaningResponse {
+    cleaned_covariance: Vec<Vec<f64>>,
+    eigenvalues_signal: Vec<f64>,
+    bulk_eigenvalue_avg: f64,
+    signal_count: usize,
+    bulk_count: usize,
+    lambda_max: f64,
 }
 
 #[derive(Deserialize)]
