@@ -169,7 +169,7 @@ async function renderPresetDetail(mount, slug) {
                 <h2 data-i18n="view.backtest_presets.h2.preset_json">Preset JSON</h2>
                 <pre style="background:#070714;padding:8px;font-size:11px;overflow:auto;">${esc(JSON.stringify(r.preset, null, 2))}</pre>
                 <button data-i18n="view.backtest_presets.btn.fork_to_my_library" class="btn" id="bp-fork-btn">Fork to my library</button>
-                <a class="btn" href="#backtest-presets" style="margin-left:6px;">Back to library</a>
+                <a class="btn" href="#backtest-presets" data-i18n="view.backtest_presets.link.back_to_library" style="margin-left:6px;">Back to library</a>
             </div>
         `;
         const btn = mount.querySelector('#bp-fork-btn');

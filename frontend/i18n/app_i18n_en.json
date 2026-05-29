@@ -7514,6 +7514,7 @@
   "view.backtest_presets.h2.my_presets": "My presets",
   "view.backtest_presets.h2.public_library_top_by_forks": "Public library (top by forks)",
   "view.backtest_presets.h2.preset_json": "Preset JSON",
+  "view.backtest_presets.link.back_to_library": "Back to library",
   "view.backtest_presets.btn.save": "Save",
   "view.backtest_presets.btn.delete": "Delete",
   "view.backtest_presets.btn.fork": "Fork",
