@@ -186,7 +186,7 @@ function renderTrajectory(r) {
         title: '', width: elInv.clientWidth || 600, height: 260,
         scales: { x: {}, y: {} },
         series: [
-            { label: 't (s)' },
+            { label: t('chart.series.t_seconds') },
             { label: 'inventory x_k', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff1A', points: { show: true, size: 5 } },
         ],
@@ -199,7 +199,7 @@ function renderTrajectory(r) {
         title: '', width: elSch.clientWidth || 600, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 't (s)' },
+            { label: t('chart.series.t_seconds') },
             { label: 'slice v_k', stroke: '#ff9f1a', width: 1.2,
               fill: '#ff9f1a33', points: { show: true, size: 4 } },
         ],

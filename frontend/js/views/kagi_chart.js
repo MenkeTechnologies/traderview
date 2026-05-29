@@ -163,7 +163,7 @@ function renderChart(lines) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'line' },
+            { label: t('chart.series.line') },
             { label: 'kagi', stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [

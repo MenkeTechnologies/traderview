@@ -178,7 +178,7 @@ function renderChart(levels) {
             { label: 'prior OHLC', stroke: '#a06bff', width: 1.5,
               fill: '#a06bff14', points: { show: true, size: 8 } },
             { label: 'R1',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: 'pivot',  stroke: '#ffd84a', width: 1.5,               points: { show: false } },
+            { label: t('chart.series.pivot'),  stroke: '#ffd84a', width: 1.5,               points: { show: false } },
             { label: 'S1',     stroke: '#39ff14', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: 'spot now', stroke: '#00e5ff', width: 1.0, dash: [2, 4], points: { show: false } },
         ],

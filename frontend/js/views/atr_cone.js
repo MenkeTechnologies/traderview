@@ -148,7 +148,7 @@ function renderChart(points) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'days' },
+            { label: t('chart.series.days') },
             { label: '+2σ',    stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: '+1σ',    stroke: '#ffd84a', width: 1.0,                 points: { show: false } },
             { label: 'entry',  stroke: '#00e5ff', width: 1.5,                 points: { show: false } },

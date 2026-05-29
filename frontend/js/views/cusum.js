@@ -177,7 +177,7 @@ function renderChart(series, report) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
-            { label: 'series', stroke: '#00e5ff', width: 1.2,
+            { label: t('chart.series.series'), stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'UP event', stroke: '#39ff14', width: 0,
               points: { show: true, size: 10, stroke: '#39ff14', fill: '#39ff14' } },

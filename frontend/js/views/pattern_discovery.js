@@ -187,7 +187,7 @@ function renderCharts(series, m, profile, motif, discords) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.idx') },
-            { label: 'series', stroke: 'rgba(170,170,170,0.55)', width: 1,
+            { label: t('chart.series.series'), stroke: 'rgba(170,170,170,0.55)', width: 1,
               points: { show: false } },
             { label: 'motif pair', stroke: '#00e5ff', width: 3,
               points: { show: false } },

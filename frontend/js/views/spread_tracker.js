@@ -141,7 +141,7 @@ function renderCharts(samples, _report) {
         title: '', width: elBps.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'sample #' },
+            { label: t('chart.series.sample_num') },
             { label: 'spread bps', stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff1A', points: { show: false } },
             { label: 'tight ≤ 5',   stroke: '#39ff14', width: 1.0,
@@ -160,8 +160,8 @@ function renderCharts(samples, _report) {
         title: '', width: elMid.clientWidth || 600, height: 200,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'sample #' },
-            { label: 'mid', stroke: '#a06bff', width: 1.2,
+            { label: t('chart.series.sample_num') },
+            { label: t('chart.series.mid'), stroke: '#a06bff', width: 1.2,
               fill: '#a06bff14', points: { show: false } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],

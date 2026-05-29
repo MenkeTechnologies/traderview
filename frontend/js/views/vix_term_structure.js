@@ -141,7 +141,7 @@ function renderChart() {
         title: '', width: el.clientWidth || 600, height: 300,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'days' },
+            { label: t('chart.series.days') },
             { label: 'IV',
               stroke: '#00e5ff', width: 2,
               fill: '#00e5ff14',

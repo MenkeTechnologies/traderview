@@ -143,7 +143,7 @@ function renderChart(history, r) {
             { label: 'day #' },
             { label: 'IV',       stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff14', points: { show: false } },
-            { label: 'current',  stroke: '#ff9f1a', width: 1.0,
+            { label: t('chart.series.current'),  stroke: '#ff9f1a', width: 1.0,
               dash: [4, 4], points: { show: false } },
             { label: '52w low',  stroke: '#39ff14', width: 1.0,
               dash: [2, 4], points: { show: false } },

@@ -157,7 +157,7 @@ function renderChart(bars) {
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'imbalance', stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.imbalance'), stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
             { label: t('chart.series.close'),     stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
         ],
         axes: [
