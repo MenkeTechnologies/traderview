@@ -47,7 +47,10 @@ export async function renderTradesView(mount, state) {
     mount.querySelector('#close-exp-btn').addEventListener('click', async () => {
         const n = await api.closeExpiredOptions(state.accountId);
         if (!viewIsCurrent(tok)) return;
-        alert(`Closed ${n} expired option trade${n === 1 ? '' : 's'}.`);
+        alert(t('view.trades.alert.closed_expired', {
+            n,
+            label: t(n === 1 ? 'view.trades.label.trade_singular' : 'view.trades.label.trade_plural'),
+        }));
         await refresh();
     });
 
@@ -64,7 +67,7 @@ export async function renderTradesView(mount, state) {
             if (extras === null) return; // cancelled
             const r = await api.bulkTrades(ids, action, extras);
             if (!viewIsCurrent(tok)) return;
-            alert(`${action} → affected ${r.affected}`);
+            alert(t('view.trades.alert.bulk_done', { action, affected: r.affected }));
             await refresh();
         } catch (e) {
             alert(t('view.trades.alert.error', { msg: e.message }));

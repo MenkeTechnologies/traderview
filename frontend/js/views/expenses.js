@@ -231,7 +231,7 @@ function drawTable() {
             try {
                 await api.updateExpenseTransaction(tx, { category_code: code });
             } catch (e) {
-                alert(`update failed: ${e.message}`);
+                alert(t('view.expenses.alert.update_failed', { err: e.message }));
             }
         });
     });
@@ -245,7 +245,7 @@ function drawTable() {
                 btn.textContent = next ? 'BIZ' : 'pers';
                 btn.classList.toggle('biz-on', next);
                 btn.classList.toggle('biz-off', !next);
-            } catch (e) { alert(`update failed: ${e.message}`); }
+            } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
         });
     });
     host.querySelectorAll('button.tx-xfer').forEach(btn => {
@@ -257,7 +257,7 @@ function drawTable() {
                 btn.dataset.xfer = String(next);
                 btn.textContent = next ? 'XFER' : '—';
                 btn.classList.toggle('biz-on', next);
-            } catch (e) { alert(`update failed: ${e.message}`); }
+            } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
         });
     });
 }
@@ -283,7 +283,7 @@ async function createAccountFlow() {
         if (sel) sel.value = acct.id;
         await refresh();
     } catch (e) {
-        alert(`create failed: ${e.message}`);
+        alert(t('view.expenses.alert.create_failed', { err: e.message }));
     }
 }
 
@@ -418,7 +418,7 @@ async function openRulesModal() {
             if (!viewIsCurrent(state.tok)) return;
             await refresh();
             openRulesModal();
-        } catch (e) { alert(`create failed: ${e.message}`); }
+        } catch (e) { alert(t('view.expenses.alert.create_failed', { err: e.message })); }
     });
 }
 
@@ -556,7 +556,7 @@ async function openReceiptMatchModal(meta) {
                 const s = state.mount.querySelector('#exp-status');
                 if (s) s.textContent = t('view.expenses.status.receipt_attached');
                 await refresh();
-            } catch (e) { alert(`attach failed: ${e.message}`); }
+            } catch (e) { alert(t('view.expenses.alert.attach_failed', { err: e.message })); }
         };
     });
 }
@@ -701,7 +701,7 @@ async function openReceiptsModal() {
                 const meta = await api.receiptMeta(btn.dataset.id);
                 if (!viewIsCurrent(state.tok)) return;
                 openReceiptMatchModal(meta);
-            } catch (e) { alert(`open failed: ${e.message}`); }
+            } catch (e) { alert(t('view.expenses.alert.open_failed', { err: e.message })); }
         };
     });
 }
