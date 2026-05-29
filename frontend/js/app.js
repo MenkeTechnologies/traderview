@@ -579,7 +579,7 @@ export async function dispatch() {
         b.classList.toggle('active', b.dataset.view === view)
     );
     const mount = document.getElementById('app');
-    mount.innerHTML = spinnerHTML(`loading ${view}…`);
+    mount.innerHTML = spinnerHTML(t('common.loading_view', { view }));
     try {
         switch (view) {
             case 'launcher':    await renderLauncher(mount, state); break;
