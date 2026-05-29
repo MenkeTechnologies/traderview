@@ -7,6 +7,7 @@
 // Formula (E.W. Dreiss): CI = 100 * log10(sum_TR_n / (max_H_n - min_L_n)) / log10(n).
 // Reuse HLC parser from _chandelier_stop_inputs.js so this isn't duplicated.
 
+import { t } from './i18n.js';
 export { parseBarBlob } from './_chandelier_stop_inputs.js';
 
 export function validateInputs(bars, period) {
@@ -77,13 +78,19 @@ function regimeRustName(r) {
 }
 
 const REGIME_BADGES = {
-    trending: { label: 'TRENDING', cls: 'pos', hint: 'CI < 38.2 — directional move; trend-follow strategies edge.' },
-    mixed:    { label: 'MIXED',    cls: '',    hint: 'CI 38.2–61.8 — no clear regime; reduce confidence.' },
-    choppy:   { label: 'CHOPPY',   cls: 'neg', hint: 'CI > 61.8 — sideways consolidation; mean-reversion edge, avoid breakouts.' },
+    trending: { key: 'trending', cls: 'pos' },
+    mixed:    { key: 'mixed',    cls: '' },
+    choppy:   { key: 'choppy',   cls: 'neg' },
 };
 
 export function regimeBadge(r) {
-    return REGIME_BADGES[r] || { label: String(r || '—').toUpperCase(), cls: '', hint: '—' };
+    const x = REGIME_BADGES[r];
+    if (!x) return { label: String(r || '—').toUpperCase(), cls: '', hint: '—' };
+    return {
+        label: t(`view.choppiness.regime.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.choppiness.regime.${x.key}.hint`),
+    };
 }
 
 // Time spent in each regime across the series (informative summary).

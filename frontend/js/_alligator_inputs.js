@@ -5,6 +5,8 @@
 // The view applies canonical forward shifts (jaw +8, teeth +5, lips +3)
 // for the chart rendering only; backend math stays raw.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Two-token-per-line "high low".
@@ -87,11 +89,19 @@ export function classifyPoint(p) {
 }
 
 const BIAS_BADGES = {
-    up:       { label: 'UP (hunting)',   cls: 'pos', hint: 'lips > teeth > jaw — trend bias up' },
-    down:     { label: 'DOWN (hunting)', cls: 'neg', hint: 'lips < teeth < jaw — trend bias down' },
-    sleeping: { label: 'SLEEPING',       cls: '',    hint: 'lines intertwined — no trade signal' },
+    up:       { key: 'up',       cls: 'pos' },
+    down:     { key: 'down',     cls: 'neg' },
+    sleeping: { key: 'sleeping', cls: '' },
 };
-export function biasBadge(b) { return BIAS_BADGES[b] || { label: String(b || '—'), cls: '', hint: '' }; }
+export function biasBadge(b) {
+    const x = BIAS_BADGES[b];
+    if (!x) return { label: String(b || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.alligator.bias.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.alligator.bias.${x.key}.hint`),
+    };
+}
 
 // Aggregate counts per bias across the full series.
 export function biasCounts(points) {

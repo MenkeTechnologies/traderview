@@ -9,6 +9,8 @@
 //   ≥ 0.75 strongly_long, ≥ 0.60 long, ≥ 0.40 balanced,
 //   ≥ 0.25 short, else strongly_short.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Per line: "<trader_id> <SYMBOL> <net_contracts>". Symbol uppercased.
@@ -109,15 +111,21 @@ export function classify(longRatio) {
 }
 
 const BIAS_BADGES = {
-    strongly_long:  { label: 'STRONGLY LONG',  cls: 'pos', hint: '≥75% of positioned traders are long — squeeze risk elevated.' },
-    long:           { label: 'LONG',           cls: 'pos', hint: '60–75% long.' },
-    balanced:       { label: 'BALANCED',       cls: '',    hint: '40–60% long — no consensus.' },
-    short:          { label: 'SHORT',          cls: 'neg', hint: '25–40% long (i.e., 60–75% short).' },
-    strongly_short: { label: 'STRONGLY SHORT', cls: 'neg', hint: '≤25% long — short-squeeze fuel.' },
+    strongly_long:  { key: 'strongly_long',  cls: 'pos' },
+    long:           { key: 'long',           cls: 'pos' },
+    balanced:       { key: 'balanced',       cls: '' },
+    short:          { key: 'short',          cls: 'neg' },
+    strongly_short: { key: 'strongly_short', cls: 'neg' },
 };
 
 export function biasBadge(bias) {
-    return BIAS_BADGES[bias] || { label: String(bias || '—').toUpperCase(), cls: '', hint: '—' };
+    const x = BIAS_BADGES[bias];
+    if (!x) return { label: String(bias || '—').toUpperCase(), cls: '', hint: '—' };
+    return {
+        label: t(`view.cohort_tilt.bias.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.cohort_tilt.bias.${x.key}.hint`),
+    };
 }
 
 // Lopsidedness = |long_ratio - 0.5|; null → 0.

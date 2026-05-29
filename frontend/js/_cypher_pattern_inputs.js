@@ -5,6 +5,8 @@
 // 5 pivots (X/A/B/C/D) + the 4 measured Fibonacci ratios that qualified
 // the match.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Three-token-per-line "index price H|L" (or h/l). High/low flag is
@@ -61,10 +63,18 @@ export function buildBody(pivots, tolerance) {
 
 // Direction badge.
 const DIR_BADGES = {
-    bullish: { label: 'BULLISH', cls: 'pos', hint: 'X is a low — bullish reversal setup at D' },
-    bearish: { label: 'BEARISH', cls: 'neg', hint: 'X is a high — bearish reversal setup at D' },
+    bullish: { key: 'bullish', cls: 'pos' },
+    bearish: { key: 'bearish', cls: 'neg' },
 };
-export function dirBadge(d) { return DIR_BADGES[d] || { label: String(d || '—'), cls: '', hint: '' }; }
+export function dirBadge(d) {
+    const x = DIR_BADGES[d];
+    if (!x) return { label: String(d || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.cypher_pattern.dir.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.cypher_pattern.dir.${x.key}.hint`),
+    };
+}
 
 // Quality score: how close each ratio is to its canonical Cypher target.
 // 1.0 = perfect; 0 = at the tolerance edge. Average across all 4 ratios.

@@ -3,6 +3,8 @@
 // Backend body shape: { highs: f64[], lows: f64[], period: usize }.
 // Returns Vec<Option<f64>> — null until warmup, then values in [0, 1].
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Two-token-per-line "high low" — same convention as the Alligator view
@@ -66,13 +68,21 @@ export function regimeOf(v) {
 }
 
 const REGIME_BADGES = {
-    overbought: { label: 'OVERBOUGHT', cls: 'neg', hint: '≥0.70 — selling pressure setup' },
-    oversold:   { label: 'OVERSOLD',   cls: 'pos', hint: '≤0.30 — buying pressure setup' },
-    neutral:    { label: 'NEUTRAL',    cls: '',    hint: 'between thresholds — no extreme signal' },
-    unknown:    { label: '—',          cls: '',    hint: 'warmup or non-finite' },
+    overbought: { key: 'overbought', cls: 'neg' },
+    oversold:   { key: 'oversold',   cls: 'pos' },
+    neutral:    { key: 'neutral',    cls: '' },
+    unknown:    { key: 'unknown',    cls: '' },
 };
 
-export function regimeBadge(r) { return REGIME_BADGES[r] || { label: String(r || '—'), cls: '', hint: '' }; }
+export function regimeBadge(r) {
+    const x = REGIME_BADGES[r];
+    if (!x) return { label: String(r || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.demarker.regime.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.demarker.regime.${x.key}.hint`),
+    };
+}
 
 // Aggregate counts across the series (including unknown for warmup).
 export function regimeCounts(values) {

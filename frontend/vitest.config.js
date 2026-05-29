@@ -12,6 +12,7 @@ export default defineConfig({
     // directive at the top of that test file.
     environment: 'node',
     globals: false,
+    setupFiles: ['tests/setup-i18n.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
