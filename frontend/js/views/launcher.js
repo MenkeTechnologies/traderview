@@ -365,8 +365,12 @@ function renderGrid() {
             .filter(Boolean)
             .filter(t => !q || matchesQuery(t, q));
         if (!tiles.length) return '';
+        // Translate the category header — tile.<id>.label-style key with
+        // English literal fallback when key is missing.
+        const catKey = `view.launcher.category.${cat}`;
+        const catLabel = (() => { const v = t(catKey); return (v && v !== catKey) ? v : label; })();
         return `<section class="launcher-cat">
-            <h2>${esc(label)}</h2>
+            <h2>${esc(catLabel)}</h2>
             <div class="launcher-tiles">${tiles.map(renderTile).join('')}</div>
         </section>`;
     }).join('');

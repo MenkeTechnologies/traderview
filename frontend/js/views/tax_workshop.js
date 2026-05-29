@@ -181,7 +181,7 @@ export async function renderTaxWorkshop(mount, _state) {
         refreshMiTable();
     });
     mount.querySelector('#mi-compute').addEventListener('click', async () => {
-        if (!trips.length) { showError(mount, '#mi-out', new Error('Add at least one trip first.')); return; }
+        if (!trips.length) { showError(mount, '#mi-out', new Error(t('view.tax_workshop.error.no_trips'))); return; }
         try {
             const r = await api.calcMileage(trips);
             if (!viewIsCurrent(tok)) return;
