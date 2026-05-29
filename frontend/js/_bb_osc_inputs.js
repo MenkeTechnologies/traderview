@@ -9,6 +9,8 @@
 //   lower:     (number|null)[],
 // }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 20;
 export const DEFAULT_K = 2.0;
 export const MIN_PERIOD = 1;       // Rust impl allows period=1 (returns all-null on n<period)
@@ -21,13 +23,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
+    if (!Array.isArray(input.closes))                       return t('view.bbosc.validate.closes_array');
     if (!Number.isInteger(input.period) || input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                             return `period must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (!Number.isFinite(input.k) || input.k < 0)           return 'k must be non-negative finite';
-    if (input.closes.length < input.period)                 return `need at least period (${input.period}) closes`;
+                                                             return t('view.bbosc.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (!Number.isFinite(input.k) || input.k < 0)           return t('view.bbosc.validate.k_non_negative');
+    if (input.closes.length < input.period)                 return t('view.bbosc.validate.closes_min_period', { period: input.period });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.bbosc.validate.close_not_finite', { i });
     }
     return null;
 }

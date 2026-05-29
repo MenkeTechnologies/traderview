@@ -4058,6 +4058,11 @@
   "view.borrow.err.server_rejected":  "Server rejected input.",
 
   "view.bbosc.h1.title":              "// BOLLINGER OSCILLATORS",
+  "view.bbosc.validate.closes_array":      "closes must be an array",
+  "view.bbosc.validate.period_range":      "period must be integer in [{min}, {max}]",
+  "view.bbosc.validate.k_non_negative":    "k must be non-negative finite",
+  "view.bbosc.validate.closes_min_period": "need at least period ({period}) closes",
+  "view.bbosc.validate.close_not_finite":  "closes[{i}] not finite",
   "view.bbosc.h2.closes":             "Closes",
   "view.bbosc.h2.closes_hint":        "(positive prices; ≥ period bars)",
   "view.bbosc.h2.bands":              "Price + bands",
