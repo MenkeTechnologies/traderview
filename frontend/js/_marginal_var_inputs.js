@@ -12,6 +12,8 @@
 //   Σ component = port_var       (decomposition identity)
 //   Σ pct       = 100%
 
+import { t } from './i18n.js';
+
 export const DEFAULT_Z_ALPHA = 1.645;        // 95% normal-tail z
 
 // Common z-scores for quick reference / dropdown labels.
@@ -38,25 +40,25 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(input) {
     const p = input.portfolio;
-    if (!p)                                                  return 'portfolio required';
-    if (!Array.isArray(p.weights))                            return 'weights must be an array';
-    if (p.weights.length === 0)                               return 'weights must be non-empty';
+    if (!p)                                                  return t('view.marginal_var.validate.portfolio_required');
+    if (!Array.isArray(p.weights))                            return t('view.marginal_var.validate.weights_array');
+    if (p.weights.length === 0)                               return t('view.marginal_var.validate.weights_empty');
     for (let i = 0; i < p.weights.length; i++) {
-        if (!Number.isFinite(p.weights[i]))                   return `weights[${i}] not finite`;
+        if (!Number.isFinite(p.weights[i]))                   return t('view.marginal_var.validate.weight_finite', { i });
     }
-    if (!Array.isArray(p.covariance))                         return 'covariance must be a 2-D array';
+    if (!Array.isArray(p.covariance))                         return t('view.marginal_var.validate.cov_array');
     const k = p.weights.length;
-    if (p.covariance.length !== k)                            return `covariance must be ${k}×${k} (got ${p.covariance.length} rows)`;
+    if (p.covariance.length !== k)                            return t('view.marginal_var.validate.cov_dims', { k, got: p.covariance.length });
     for (let i = 0; i < k; i++) {
         if (!Array.isArray(p.covariance[i]) || p.covariance[i].length !== k)
-                                                              return `covariance row ${i} must have ${k} cols`;
+                                                              return t('view.marginal_var.validate.cov_row', { i, k });
         for (let j = 0; j < k; j++) {
-            if (!Number.isFinite(p.covariance[i][j]))         return `covariance[${i}][${j}] not finite`;
+            if (!Number.isFinite(p.covariance[i][j]))         return t('view.marginal_var.validate.cov_finite', { i, j });
         }
     }
     if (p.labels != null && (!Array.isArray(p.labels) || p.labels.length !== k))
-                                                              return `labels must be an array of ${k} strings (or null)`;
-    if (!Number.isFinite(input.z_alpha) || input.z_alpha <= 0) return 'z_alpha must be > 0';
+                                                              return t('view.marginal_var.validate.labels', { k });
+    if (!Number.isFinite(input.z_alpha) || input.z_alpha <= 0) return t('view.marginal_var.validate.z_alpha');
     return null;
 }
 

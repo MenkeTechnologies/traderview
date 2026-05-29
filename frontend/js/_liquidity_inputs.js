@@ -79,13 +79,13 @@ export function parseAdvLines(text) {
 }
 
 export function validateInputs(trades, adv) {
-    if (!Array.isArray(trades) || trades.length === 0) return 'need at least 1 trade';
-    if (!adv || Object.keys(adv).length === 0) return 'need at least 1 symbol → ADV mapping';
-    const tradeSyms = new Set(trades.map(t => t.symbol));
+    if (!Array.isArray(trades) || trades.length === 0) return t('view.liquidity.validate.trades_empty');
+    if (!adv || Object.keys(adv).length === 0) return t('view.liquidity.validate.adv_empty');
+    const tradeSyms = new Set(trades.map(tr => tr.symbol));
     const advSyms = new Set(Object.keys(adv));
     const missing = [...tradeSyms].filter(s => !advSyms.has(s));
     if (missing.length === tradeSyms.size) {
-        return `no trade symbol has ADV — supplied ADV for [${[...advSyms].join(', ')}], need [${[...tradeSyms].join(', ')}]`;
+        return t('view.liquidity.validate.no_overlap', { supplied: [...advSyms].join(', '), needed: [...tradeSyms].join(', ') });
     }
     return null;
 }

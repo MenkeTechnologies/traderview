@@ -12,6 +12,8 @@
 //
 // Pure compute; matches crates/traderview-core/src/margin_runway.rs::compute.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     account_equity: 50_000,
     position_value: 100_000,
@@ -19,12 +21,12 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(equity, position, maintPct) {
-    if (!Number.isFinite(equity))            return 'account_equity must be finite';
-    if (!Number.isFinite(position))          return 'position_value must be finite';
-    if (position < 0)                        return 'position_value must be ≥ 0';
-    if (!Number.isFinite(maintPct))          return 'maintenance_req_pct must be finite';
+    if (!Number.isFinite(equity))            return t('view.margin_runway.validate.equity_finite');
+    if (!Number.isFinite(position))          return t('view.margin_runway.validate.position_finite');
+    if (position < 0)                        return t('view.margin_runway.validate.position_negative');
+    if (!Number.isFinite(maintPct))          return t('view.margin_runway.validate.maint_finite');
     if (maintPct < 0 || maintPct >= 1)
-        return 'maintenance_req_pct must be in [0, 1) — e.g. 0.25 for 25%';
+        return t('view.margin_runway.validate.maint_range');
     return null;
 }
 
