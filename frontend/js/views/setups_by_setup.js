@@ -150,7 +150,7 @@ function card(label, value, cls = '') {
 
 function renderStats(stats) {
     const wrap = document.getElementById('sbs-stats');
-    if (!stats.length) { wrap.innerHTML = '<div class="muted">No tagged trades.</div>'; return; }
+    if (!stats.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.setups_by_setup.empty.trades">No tagged trades.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>

@@ -193,7 +193,7 @@ function renderHistogram(returns, positionValue, hist, gauss) {
     el.innerHTML = '';
     const histo = lossHistogram(returns, positionValue, 30);
     if (!histo.edges.length) {
-        el.innerHTML = '<div class="muted">No data to histogram.</div>';
+        el.innerHTML = `<div class="muted" data-i18n="view.var_estimator.empty.histogram">No data to histogram.</div>`;
         return;
     }
     const xs = histo.edges.slice(0, -1).map((e, i) => (e + histo.edges[i + 1]) / 2);

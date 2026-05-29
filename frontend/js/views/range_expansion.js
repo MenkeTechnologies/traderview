@@ -187,7 +187,7 @@ function renderEvents(report) {
     const wrap = document.getElementById('re-events');
     const events = report.events || [];
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No range-expansion events at current config.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.range_expansion.empty.events">No range-expansion events at current config.</div>`;
         return;
     }
     wrap.innerHTML = `

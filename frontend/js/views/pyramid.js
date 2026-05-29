@@ -174,7 +174,7 @@ function renderTable(report) {
     const wrap = document.getElementById('py-table');
     const states = report.states || [];
     if (!states.length) {
-        wrap.innerHTML = '<div class="muted">No states.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.pyramid.empty.states">No states.</div>`;
         return;
     }
     wrap.innerHTML = `

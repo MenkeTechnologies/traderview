@@ -147,7 +147,7 @@ function renderEvents(report) {
     const wrap = document.getElementById('tbr-events');
     const events = report.events || [];
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No three-bar reversal events.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.three_bar_reversal.empty.events">No three-bar reversal events.</div>`;
         return;
     }
     wrap.innerHTML = `

@@ -232,7 +232,7 @@ function card(label, value, cls = '') {
 function renderEvents(events) {
     const wrap = document.getElementById('sq-events');
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No squeezes detected at current thresholds.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.squeeze_alerts.empty.events">No squeezes detected at current thresholds.</div>`;
         return;
     }
     wrap.innerHTML = `

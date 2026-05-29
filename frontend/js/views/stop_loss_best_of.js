@@ -125,7 +125,7 @@ function card(label, value, cls = '') {
 function renderResults(results, candidates) {
     const wrap = document.getElementById('sl-results');
     if (!results.length) {
-        wrap.innerHTML = '<div class="muted">No results.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.stop_loss_best_of.empty.results">No results.</div>`;
         return;
     }
     // Sort by total realized (desc) for the table; keep raw indices for

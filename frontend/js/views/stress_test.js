@@ -160,7 +160,7 @@ function card(label, value, cls = '') {
 function renderGrid(report) {
     const wrap = document.getElementById('st-grid');
     const grid = report.grid || [];
-    if (!grid.length) { wrap.innerHTML = '<div class="muted">No cells.</div>'; return; }
+    if (!grid.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.stress_test.empty.cells">No cells.</div>`; return; }
     const matrix = pivotGrid(grid, state.priceShocks, state.ivShocks);
     const maxAbs = Math.max(...grid.map(c => Math.abs(c.pnl_dollars || 0)), 1);
     const worstKey = keyOf(report.worst_case);

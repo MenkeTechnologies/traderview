@@ -175,7 +175,7 @@ function card(label, value, cls = '') {
 function renderGates(report) {
     const wrap = document.getElementById('tpc-gates');
     const gates = report.gates || [];
-    if (!gates.length) { wrap.innerHTML = '<div class="muted">No gates.</div>'; return; }
+    if (!gates.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.trade_plan_checklist.empty.gates">No gates.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
