@@ -10,19 +10,21 @@
 // Caller pre-aligns the two return series. NaN / non-finite inputs are
 // rejected; zero-variance benchmark → null.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     asset: [],
     benchmark: [],
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.asset))                          return 'asset must be an array';
-    if (!Array.isArray(input.benchmark))                      return 'benchmark must be an array';
-    if (input.asset.length !== input.benchmark.length)        return 'asset and benchmark must have equal length';
-    if (input.asset.length < 2)                                return 'need at least 2 paired observations';
+    if (!Array.isArray(input.asset))                          return t('view.beta.validate.asset_array');
+    if (!Array.isArray(input.benchmark))                      return t('view.beta.validate.bench_array');
+    if (input.asset.length !== input.benchmark.length)        return t('view.beta.validate.length_mismatch');
+    if (input.asset.length < 2)                                return t('view.beta.validate.min_pairs');
     for (let i = 0; i < input.asset.length; i++) {
-        if (!Number.isFinite(input.asset[i]))                 return `asset[${i}] not finite`;
-        if (!Number.isFinite(input.benchmark[i]))             return `benchmark[${i}] not finite`;
+        if (!Number.isFinite(input.asset[i]))                 return t('view.beta.validate.asset_finite', { i });
+        if (!Number.isFinite(input.benchmark[i]))             return t('view.beta.validate.bench_finite', { i });
     }
     return null;
 }

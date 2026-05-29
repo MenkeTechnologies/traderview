@@ -11,6 +11,8 @@
 //   resolution   = Σ (n_k/N) · (ō_k − ō)²        (discrimination)
 //   uncertainty  = ō · (1 − ō)                    (base-rate variance)
 
+import { t } from './i18n.js';
+
 export const DEFAULT_BINS = 10;
 
 export const DEFAULT_INPUTS = {
@@ -20,21 +22,21 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.probabilities))                      return 'probabilities must be an array';
-    if (!Array.isArray(input.outcomes))                           return 'outcomes must be an array';
-    if (input.probabilities.length === 0)                          return 'probabilities must be non-empty';
-    if (input.probabilities.length !== input.outcomes.length)     return 'probabilities and outcomes must have equal length';
+    if (!Array.isArray(input.probabilities))                      return t('view.brier_score.validate.probs_array');
+    if (!Array.isArray(input.outcomes))                           return t('view.brier_score.validate.outcomes_array');
+    if (input.probabilities.length === 0)                          return t('view.brier_score.validate.probs_empty');
+    if (input.probabilities.length !== input.outcomes.length)     return t('view.brier_score.validate.length_mismatch');
     for (let i = 0; i < input.probabilities.length; i++) {
         const p = input.probabilities[i];
-        if (!Number.isFinite(p))                                   return `probabilities[${i}] not finite`;
-        if (p < 0 || p > 1)                                        return `probabilities[${i}] must be in [0, 1]`;
+        if (!Number.isFinite(p))                                   return t('view.brier_score.validate.prob_finite', { i });
+        if (p < 0 || p > 1)                                        return t('view.brier_score.validate.prob_range', { i });
     }
     for (let i = 0; i < input.outcomes.length; i++) {
         const y = input.outcomes[i];
-        if (!Number.isInteger(y) || (y !== 0 && y !== 1))         return `outcomes[${i}] must be 0 or 1`;
+        if (!Number.isInteger(y) || (y !== 0 && y !== 1))         return t('view.brier_score.validate.outcome_binary', { i });
     }
-    if (!Number.isInteger(input.n_bins))                          return 'n_bins must be an integer';
-    if (input.n_bins < 1)                                         return 'n_bins must be ≥ 1';
+    if (!Number.isInteger(input.n_bins))                          return t('view.brier_score.validate.n_bins_int');
+    if (input.n_bins < 1)                                         return t('view.brier_score.validate.n_bins_min');
     return null;
 }
 
