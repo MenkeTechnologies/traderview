@@ -87,7 +87,7 @@ function scoreCard(label, w) {
                 w.discipline_pct >= 60 ? '' : 'neg';
     return `<div class="card"><div class="label">${esc(label)}</div>
         <div class="value ${cls}">${w.discipline_pct.toFixed(1)}%</div>
-        <div class="muted small">${w.passing} / ${w.linked_trades} passing</div></div>`;
+        <div class="muted small">${esc(t('view.discipline.score.passing', { pass: w.passing, total: w.linked_trades }))}</div></div>`;
 }
 
 function ruleBars(rb) {
@@ -101,10 +101,10 @@ function ruleBars(rb) {
             <div class="${cls}">${pct.toFixed(1)}%</div>`;
     };
     return `<div style="display:grid;grid-template-columns:140px 1fr 60px;gap:6px;font-size:11px;">
-        ${row('stop_set', rb.stop_set_rate)}
-        ${row('stop_honored', rb.stop_honored_rate)}
-        ${row('qty_within', rb.qty_within_rate)}
-        ${row('direction_match', rb.direction_match_rate)}
+        ${row(t('view.discipline.rule.stop_set'),        rb.stop_set_rate)}
+        ${row(t('view.discipline.rule.stop_honored'),    rb.stop_honored_rate)}
+        ${row(t('view.discipline.rule.qty_within'),      rb.qty_within_rate)}
+        ${row(t('view.discipline.rule.direction_match'), rb.direction_match_rate)}
     </div>`;
 }
 
