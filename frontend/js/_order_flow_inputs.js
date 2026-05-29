@@ -5,6 +5,8 @@
 // `aggregate` returns the rolled-up imbalance scalars. View calls both
 // in parallel.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Parses four-token-per-line: "price volume bid ask".
@@ -62,10 +64,10 @@ export function buildBody(ticks) {
 // (pos), Sell → red (neg), Uncertain → muted neutral.
 export function sideBadge(side) {
     switch (side) {
-        case 'buy':       return { label: 'BUY',       cls: 'pos' };
-        case 'sell':      return { label: 'SELL',      cls: 'neg' };
+        case 'buy':       return { label: t('view.order_flow.side.buy'),       cls: 'pos' };
+        case 'sell':      return { label: t('view.order_flow.side.sell'),      cls: 'neg' };
         case 'uncertain':
-        default:          return { label: 'UNCERTAIN', cls: '' };
+        default:          return { label: t('view.order_flow.side.uncertain'), cls: '' };
     }
 }
 

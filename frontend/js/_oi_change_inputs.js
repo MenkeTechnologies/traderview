@@ -5,6 +5,8 @@
 // min_oi: u64 }. Backend returns separate call/put alert arrays sorted
 // by largest absolute OI change first.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Five-token-per-line "strike call_oi put_oi call_baseline put_baseline".
@@ -77,18 +79,18 @@ export function alertTier(alert) {
     if (!alert) return { label: '—', cls: '' };
     const pct = Math.abs(alert.pct_change || 0);
     const abs = Math.abs(alert.abs_change || 0);
-    if (pct >= 1.0 || abs >= 50_000) return { label: 'SURGE',      cls: 'neg' };
-    if (pct >= 0.5 || abs >= 20_000) return { label: 'STRONG',     cls: 'neg' };
-    if (pct >= 0.25 || abs >= 5000)  return { label: 'NOTABLE',    cls: '' };
-    return                              { label: 'MILD',       cls: 'pos' };
+    if (pct >= 1.0 || abs >= 50_000) return { label: t('view.oi_change.tier.surge'),   cls: 'neg' };
+    if (pct >= 0.5 || abs >= 20_000) return { label: t('view.oi_change.tier.strong'),  cls: 'neg' };
+    if (pct >= 0.25 || abs >= 5000)  return { label: t('view.oi_change.tier.notable'), cls: '' };
+    return                              { label: t('view.oi_change.tier.mild'),     cls: 'pos' };
 }
 
 // "buy_to_open" semantic: positive abs_change = positioning building;
 // negative = liquidation. Backend doesn't infer direction; the UI does.
 export function flowDirection(absChange) {
-    if (!Number.isFinite(absChange) || absChange === 0) return { label: 'FLAT',     cls: '' };
-    if (absChange > 0)                                   return { label: 'BUILDING', cls: 'neg' };
-    return                                                       { label: 'UNWIND',   cls: 'pos' };
+    if (!Number.isFinite(absChange) || absChange === 0) return { label: t('view.oi_change.flow.flat'),     cls: '' };
+    if (absChange > 0)                                   return { label: t('view.oi_change.flow.building'), cls: 'neg' };
+    return                                                       { label: t('view.oi_change.flow.unwind'),   cls: 'pos' };
 }
 
 // Aggregate stats across both sides for the summary cards.

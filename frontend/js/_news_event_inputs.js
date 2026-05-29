@@ -6,6 +6,8 @@
 // trim_amount, reason}] }. Trim % by impact: Low=0, Medium=25,
 // High=50, Critical=100.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Two-token-per-line `symbol qty` for positions.
@@ -119,12 +121,16 @@ export function trimFractionFor(impact) {
 
 // Impact-to-UI badge.
 const IMPACT_BADGES = {
-    low:      { label: 'LOW',      cls: 'pos' },
-    medium:   { label: 'MEDIUM',   cls: '' },
-    high:     { label: 'HIGH',     cls: 'neg' },
-    critical: { label: 'CRITICAL', cls: 'neg' },
+    low:      { key: 'low',      cls: 'pos' },
+    medium:   { key: 'medium',   cls: '' },
+    high:     { key: 'high',     cls: 'neg' },
+    critical: { key: 'critical', cls: 'neg' },
 };
-export function impactBadge(i) { return IMPACT_BADGES[i] || { label: String(i || '—'), cls: '' }; }
+export function impactBadge(i) {
+    const x = IMPACT_BADGES[i];
+    if (!x) return { label: String(i || '—'), cls: '' };
+    return { label: t(`view.news_event.impact.${x.key}`), cls: x.cls };
+}
 
 // Aggregate counts for the summary panel.
 export function summarize(report, positions) {

@@ -3,6 +3,7 @@
 // Backend body shape: { bid_sizes: f64[], ask_sizes: f64[], levels: usize }.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 // Sizes are non-negative — reuse the shared parser with nonNegative gate.
 export function parseSizes(text) {
@@ -47,15 +48,21 @@ export function alignLevels(bidSizes, askSizes, levels) {
 
 // Maps the backend's snake_case bias enum to a UI badge.
 const BIAS_BADGES = {
-    strongly_bid: { label: 'STRONGLY BID', cls: 'pos', hint: 'heavy buying pressure on top of book' },
-    bid:          { label: 'BID',          cls: 'pos', hint: 'moderate bid skew' },
-    balanced:     { label: 'BALANCED',     cls: '',    hint: 'no directional pressure' },
-    ask:          { label: 'ASK',          cls: 'neg', hint: 'moderate ask skew' },
-    strongly_ask: { label: 'STRONGLY ASK', cls: 'neg', hint: 'heavy selling pressure on top of book' },
+    strongly_bid: { key: 'strongly_bid', cls: 'pos' },
+    bid:          { key: 'bid',          cls: 'pos' },
+    balanced:     { key: 'balanced',     cls: '' },
+    ask:          { key: 'ask',          cls: 'neg' },
+    strongly_ask: { key: 'strongly_ask', cls: 'neg' },
 };
 
 export function biasBadge(bias) {
-    return BIAS_BADGES[bias] || { label: String(bias || '—'), cls: '', hint: '' };
+    const x = BIAS_BADGES[bias];
+    if (!x) return { label: String(bias || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.order_book_imbalance.bias.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.order_book_imbalance.bias.${x.key}.hint`),
+    };
 }
 
 // Deterministic preset books — used by the 3 demo buttons.

@@ -7,6 +7,8 @@
 // limit can fire when price comes back. This module classifies orders
 // into 4 freshness tiers using the most-recent-touch as the clock.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 const ALLOWED_SIDES = new Set(['buy', 'sell', 'buy_stop', 'sell_stop']);
 
@@ -96,13 +98,15 @@ export function buildBody(orders, nowIso, thresholds) {
 
 // Maps backend snake_case tier enum to badge label + color class.
 const TIER_BADGES = {
-    fresh:     { label: 'FRESH',     cls: 'pos' },
-    aging:     { label: 'AGING',     cls: '' },
-    stale:     { label: 'STALE',     cls: 'neg' },
-    forgotten: { label: 'FORGOTTEN', cls: 'neg' },
+    fresh:     { key: 'fresh',     cls: 'pos' },
+    aging:     { key: 'aging',     cls: '' },
+    stale:     { key: 'stale',     cls: 'neg' },
+    forgotten: { key: 'forgotten', cls: 'neg' },
 };
 export function tierBadge(tier) {
-    return TIER_BADGES[tier] || { label: String(tier || '—'), cls: '' };
+    const x = TIER_BADGES[tier];
+    if (!x) return { label: String(tier || '—'), cls: '' };
+    return { label: t(`view.order_staleness.tier.${x.key}`), cls: x.cls };
 }
 
 // Pretty-prints hours into "X.Yh" / "X.Yd" depending on magnitude.
