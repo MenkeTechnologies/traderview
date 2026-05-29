@@ -126,7 +126,7 @@ function renderSummary(res) {
     const strength = regimeStrength(res.hurst);
     document.getElementById('hu-summary').innerHTML = [
         card(t('view.hurst.card.hurst_h'), res.hurst.toFixed(4), cls,
-            `<div class="vc-row"><span class="muted">distance from 0.5</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.hurst.row.distance_from_half">distance from 0.5</span>
                 <strong>${Math.abs(res.hurst - 0.5).toFixed(3)}</strong></div>`),
         card(t('view.hurst.card.regime'), `${label} (${strength})`, cls),
         card(t('view.hurst.card.r_of_log_log_fit'), res.r_squared.toFixed(4),

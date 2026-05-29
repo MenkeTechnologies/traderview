@@ -154,7 +154,7 @@ function renderDecomposeSummary(d, fromBackend) {
     document.getElementById('rr-summary').innerHTML = [
         card(t('view.rr_butterfly.card.atm'),                fmtVolPct(d.atm), '', subtitle(fromBackend)),
         card(t('view.rr_butterfly.card.risk_reversal_rr'), fmtVolPct(d.rr),   rrClass,
-            `<div class="vc-row"><span class="muted">σ_25C − σ_25P</span> <strong>${fmtVolPct(d.rr)}</strong></div>
+            `<div class="vc-row"><span class="muted" data-i18n="view.rr_butterfly.row.sigma_diff">σ_25C − σ_25P</span> <strong>${fmtVolPct(d.rr)}</strong></div>
              <div class="vc-row"><span class="muted">interp</span> <strong>${rrInterp(d.rr)}</strong></div>`),
         card(t('view.rr_butterfly.card.butterfly_bf'),     fmtVolPct(d.bf),   bfClass,
             `<div class="vc-row"><span class="muted">(σ_25C + σ_25P)/2 − σ_ATM</span> <strong>${fmtVolPct(d.bf)}</strong></div>
@@ -169,7 +169,7 @@ function renderReconstructSummary(r, fromBackend) {
         card(t('view.rr_butterfly.card.25c_call_wing'), fmtVolPct(r.sigma_25_call), '', subtitle(fromBackend)),
         card(t('view.rr_butterfly.card.25p_put_wing'),  fmtVolPct(r.sigma_25_put),  '', subtitle(fromBackend)),
         card(t('view.rr_butterfly.card.spread'),            fmtVolPct(r.sigma_25_call - r.sigma_25_put), '',
-            `<div class="vc-row"><span class="muted">σ_25C − σ_25P</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.rr_butterfly.row.sigma_diff">σ_25C − σ_25P</span>
                 <strong>${fmtVolPct(r.sigma_25_call - r.sigma_25_put)}</strong></div>`),
     ].join('');
 }
@@ -183,8 +183,8 @@ function card(label, value, valueCls, body = '') {
 }
 
 function subtitle(fromBackend) {
-    return `<div class="vc-row"><span class="muted">source</span>
-        <strong>${fromBackend ? 'backend' : 'local preview…'}</strong></div>`;
+    return `<div class="vc-row"><span class="muted" data-i18n="view.rr_butterfly.row.source">source</span>
+        <strong>${esc(t(fromBackend ? 'view.rr_butterfly.source.backend' : 'view.rr_butterfly.source.local'))}</strong></div>`;
 }
 
 function rrInterp(rr) {

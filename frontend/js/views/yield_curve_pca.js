@@ -143,9 +143,9 @@ function renderSummary(res) {
             <div class="label"><span class="yp-swatch yp-pc-${i % 6}">▮</span> ${esc(factorName(i))}</div>
             <div class="value">${(vexp * 100).toFixed(1)}%</div>
             <div class="value yp-summary-value">
-                <div class="vc-row"><span class="muted">cumulative</span>
+                <div class="vc-row"><span class="muted" data-i18n="view.yield_curve_pca.row.cumulative">cumulative</span>
                     <strong>${(res.cumulative_variance[i] * 100).toFixed(1)}%</strong></div>
-                <div class="vc-row"><span class="muted">eigenvalue</span>
+                <div class="vc-row"><span class="muted" data-i18n="view.yield_curve_pca.row.eigenvalue">eigenvalue</span>
                     <strong>${res.eigenvalues[i].toFixed(6)}</strong></div>
             </div>
         </div>`;

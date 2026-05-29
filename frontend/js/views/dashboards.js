@@ -212,7 +212,7 @@ function renderFavsSection() {
                             data-i18n-title="view.dashboards.tip.fav_add"
                             title="Click to add this favorite as a tile in the active dashboard">
                         <span>${esc(f.glyph)} ${esc(f.label)}</span>
-                        <span class="muted">+ tile</span>
+                        <span class="muted" data-i18n="view.dashboards.label.add_tile">+ tile</span>
                     </button>
                 </li>
             `).join('')}

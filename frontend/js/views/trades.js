@@ -17,7 +17,7 @@ export async function renderTradesView(mount, state) {
         <div class="trades-toolbar">
             <button data-i18n="view.trades.btn.re_run_fifo" class="primary" id="rollup-btn">Re-run FIFO</button>
             <button data-i18n="view.trades.btn.close_expired_options" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
-            <span class="muted" id="sel-count" style="margin-left:14px">0 selected</span>
+            <span class="muted" id="sel-count" style="margin-left:14px">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>
             <select id="bulk-action" style="width:auto;min-width:140px;display:inline-block">
                 <option data-i18n="view.trades.opt.bulk_action" value="">— bulk action —</option>
                 <option data-i18n="view.trades.opt.delete" value="delete">Delete</option>
@@ -136,7 +136,7 @@ export async function renderTradesView(mount, state) {
             const n = mount.querySelectorAll('.trade-row input:checked').length;
             const cEl = mount.querySelector('#sel-count');
             const aEl = mount.querySelector('#apply-bulk');
-            if (cEl) cEl.textContent = `${n} selected`;
+            if (cEl) cEl.textContent = t('view.trades.label.n_selected', { n });
             if (aEl) aEl.disabled = n === 0;
         };
         tableEl.querySelectorAll('.trade-row input').forEach(c =>

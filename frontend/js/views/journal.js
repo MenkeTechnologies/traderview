@@ -16,10 +16,10 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         <h1 class="view-title">
             // JOURNAL ·
             ${isGeneral
-                ? '<span style="color:var(--magenta)">GENERAL</span>'
+                ? `<span style="color:var(--magenta)">${esc(t('view.journal.label.general'))}</span>`
                 : `<input type="date" id="journal-day" value="${day}">`}
             <a href="#journal/${isGeneral ? new Date().toISOString().slice(0,10) : 'general'}" class="link small">
-                switch to ${isGeneral ? 'daily' : 'general'}
+                ${esc(t(isGeneral ? 'view.journal.link.switch_to_daily' : 'view.journal.link.switch_to_general'))}
             </a>
         </h1>
         <div id="entries">${entries.map(e => `

@@ -137,18 +137,18 @@ function renderSummary(res) {
     );
     const cards = [];
     cards.push(card(t('view.iv_solver.card.implied_volatility'), fmtVolPct(res.implied_vol), 'pos',
-        `<div class="vc-row"><span class="muted">absolute σ</span>
+        `<div class="vc-row"><span class="muted" data-i18n="view.iv_solver.row.abs_sigma">absolute σ</span>
             <strong>${res.implied_vol.toFixed(6)}</strong></div>`));
     cards.push(card(t('view.iv_solver.card.newton_iterations'), String(res.iterations), '',
-        `<div class="vc-row"><span class="muted">residual</span>
+        `<div class="vc-row"><span class="muted" data-i18n="view.iv_solver.row.residual">residual</span>
             <strong>${res.residual.toExponential(3)}</strong></div>`));
     cards.push(card(t('view.iv_solver.card.bs_at_solved'), fmtPrice(bsAtSolved), '',
-        `<div class="vc-row"><span class="muted">market price</span>
+        `<div class="vc-row"><span class="muted" data-i18n="view.iv_solver.row.market_price">market price</span>
             <strong>${fmtPrice(p.market_price)}</strong></div>`));
     cards.push(card(t('view.iv_solver.card.no_arb_band'),
         `${fmtPrice(bounds.lower)} – ${fmtPrice(bounds.upper)}`, '',
-        `<div class="vc-row"><span class="muted">market is</span>
-            <strong>${p.market_price >= bounds.lower && p.market_price <= bounds.upper ? 'inside ✓' : 'outside ✗'}</strong></div>`));
+        `<div class="vc-row"><span class="muted" data-i18n="view.iv_solver.row.market_is">market is</span>
+            <strong>${esc(t(p.market_price >= bounds.lower && p.market_price <= bounds.upper ? 'view.iv_solver.bounds.inside' : 'view.iv_solver.bounds.outside'))}</strong></div>`));
     document.getElementById('iv-summary').innerHTML = cards.join('');
 }
 

@@ -118,16 +118,16 @@ function renderSummary(bar, fromBackend) {
     const biasCls = bar.bias_bps > 0 ? 'pos' : (bar.bias_bps < 0 ? 'neg' : '');
     document.getElementById('mp-summary').innerHTML = [
         card(t('view.microprice.card.microprice'), fmtPrice(bar.microprice), '',
-            `<div class="vc-row"><span class="muted">source</span>
-                <strong>${fromBackend ? 'backend' : 'local preview…'}</strong></div>`),
+            `<div class="vc-row"><span class="muted" data-i18n="view.microprice.row.source">source</span>
+                <strong>${esc(t(fromBackend ? 'view.microprice.source.backend' : 'view.microprice.source.local'))}</strong></div>`),
         card(t('view.microprice.card.midpoint'), fmtPrice(bar.midpoint), '',
-            `<div class="vc-row"><span class="muted">spread</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.microprice.row.spread">spread</span>
                 <strong>${fmtPrice(state.quote.ask - state.quote.bid)}</strong></div>`),
         card(t('view.microprice.card.imbalance'), fmtImbalance(bar.imbalance), '',
-            `<div class="vc-row"><span class="muted">${bar.imbalance > 0.5 ? 'bid-heavy' : (bar.imbalance < 0.5 ? 'ask-heavy' : 'balanced')}</span>
+            `<div class="vc-row"><span class="muted">${esc(t(bar.imbalance > 0.5 ? 'view.microprice.tilt.bid_heavy' : (bar.imbalance < 0.5 ? 'view.microprice.tilt.ask_heavy' : 'view.microprice.tilt.balanced')))}</span>
                 <strong>${(bar.imbalance * 100).toFixed(1)}% bid / ${((1 - bar.imbalance) * 100).toFixed(1)}% ask</strong></div>`),
         card(t('view.microprice.card.bias_vs_midpoint'), fmtBps(bar.bias_bps), biasCls,
-            `<div class="vc-row"><span class="muted">interp</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.microprice.row.interp">interp</span>
                 <strong>${biasInterp(bar.bias_bps)}</strong></div>`),
     ].join('');
 }

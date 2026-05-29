@@ -151,7 +151,7 @@ function renderSummary(motif, discords) {
            </div>`
         : `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_motif_pair">Top motif pair</div>
              <div class="value">none</div>
-             <div class="vc-row"><span class="muted">reason</span> <strong>flat / too noisy</strong></div>
+             <div class="vc-row"><span class="muted" data-i18n="view.pattern_discovery.row.reason">reason</span> <strong data-i18n="view.pattern_discovery.row.flat_noisy">flat / too noisy</strong></div>
            </div>`;
     const discordCard = discords.length
         ? `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_discords_dist">Top discords (by distance)</div>

@@ -110,7 +110,7 @@ async function loadRiskGateBadge(el) {
         const blocks = todays.filter(f => f.blocked).length;
         const warns  = todays.length - blocks;
         if (!todays.length) {
-            el.innerHTML = '<span class="muted">no fires today — every trade passed clean</span>';
+            el.innerHTML = `<span class="muted">${t('view.dashboard.empty.no_fires_today')}</span>`;
             return;
         }
         el.innerHTML = `

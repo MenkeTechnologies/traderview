@@ -82,7 +82,7 @@ export async function renderSeriesSmoother(mount, _appState) {
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="theil_sen" ${state.enabled.theil_sen ? 'checked' : ''}>
                         <span class="ss-swatch theil_sen">▮</span> Theil-Sen (robust line)</label>
-                    <span class="muted">(no params — pair-slope median)</span>
+                    <span class="muted" data-i18n="view.series_smoother.note.theil_sen">(no params — pair-slope median)</span>
                 </div>
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="polynomial" ${state.enabled.polynomial ? 'checked' : ''}>

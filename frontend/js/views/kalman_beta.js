@@ -197,7 +197,7 @@ function renderSummary(betas) {
         card(t('view.kalman_beta.card.range'),  `${fmtBeta(s.min)} – ${fmtBeta(s.max)}`),
         card(t('view.kalman_beta.card.stdev_of_trace'), fmtBeta(s.stdev)),
         card(t('view.kalman_beta.card.drift_latest_first'), fmtBeta(s.drift), driftCls,
-            `<div class="vc-row"><span class="muted">first → latest</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.kalman_beta.row.first_latest">first → latest</span>
                 <strong>${fmtBeta(s.first)} → ${fmtBeta(s.latest)}</strong></div>`),
         card(t('view.kalman_beta.card.finite_samples'), String(s.count)),
     ];

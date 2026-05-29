@@ -107,17 +107,17 @@ function renderSummary(returns, res) {
         ? losers.reduce((a, b) => a + b, 0) / losers.length : NaN;
     const cards = [];
     cards.push(card(t('view.optimal_f.card.optimal_f'),  fmtPctF(res.optimal_f), 'pos',
-        `<div class="vc-row"><span class="muted">TWR @ optimal</span>
+        `<div class="vc-row"><span class="muted">${esc(t('view.optimal_f.sub.twr_at_optimal'))}</span>
             <strong>${fmtMultiple(res.twr_at_optimal)}</strong></div>`));
     cards.push(card(t('view.optimal_f.card.half_kelly_recommended'), fmtPctF(res.half_kelly), '',
-        `<div class="vc-row"><span class="muted">conservative default</span>
+        `<div class="vc-row"><span class="muted">${esc(t('view.optimal_f.sub.conservative_default'))}</span>
             <strong>optimal-f / 2</strong></div>`));
     cards.push(card(t('view.optimal_f.card.quarter_kelly'), fmtPctF(res.quarter_kelly), '',
-        `<div class="vc-row"><span class="muted">ultra-conservative</span>
+        `<div class="vc-row"><span class="muted">${esc(t('view.optimal_f.sub.ultra_conservative'))}</span>
             <strong>optimal-f / 4</strong></div>`));
     cards.push(card(t('view.optimal_f.card.worst_single_trade_loss'), fmtMoney(-res.worst_loss), 'neg'));
     cards.push(card(t('view.optimal_f.card.trades'), String(returns.length), '',
-        `<div class="vc-row"><span class="muted">wins / losses</span>
+        `<div class="vc-row"><span class="muted">${esc(t('view.optimal_f.sub.wins_losses'))}</span>
             <strong>${winners.length} / ${losers.length}</strong></div>`));
     cards.push(card(t('view.optimal_f.card.win_rate'), fmtPctF(winRate)));
     cards.push(card(t('view.optimal_f.card.avg_win'),  fmtMoney(avgWin),  winners.length > 0 ? 'pos' : ''));

@@ -168,14 +168,14 @@ function renderSummary(res) {
     cards.push(card(t('view.american_option.card.early_exercise_premium'),
         eep == null ? '—' : fmtMoney(eep),
         eep != null && eep > 0 ? 'pos' : (eep != null && eep < 0 ? 'neg' : ''),
-        `<div class="vc-row"><span class="muted">% of American price</span>
+        `<div class="vc-row"><span class="muted" data-i18n="view.american_option.row.pct_of_american">% of American price</span>
              <strong>${eepPct == null ? '—' : eepPct.toFixed(2) + '%'}</strong></div>
          <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.sign">Sign</span>
-             <strong>${eep == null ? '—' : (eep > 0 ? 'EE valuable' : 'within MC noise')}</strong></div>`));
+             <strong>${eep == null ? '—' : esc(t(eep > 0 ? 'view.american_option.sign.ee_valuable' : 'view.american_option.sign.mc_noise'))}</strong></div>`));
     cards.push(card(t('view.american_option.card.intrinsic_value_parity_floor'), fmtMoney(intrinsic), '', `
         <div class="vc-row"><span class="muted">${p.kind === 'call' ? 'max(S - K, 0)' : 'max(K - S, 0)'}</span>
             <strong>${fmtMoney(intrinsic)}</strong></div>
-        <div class="vc-row"><span class="muted">LSMC ≥ intrinsic</span>
+        <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.lsmc_ge_intrinsic">LSMC ≥ intrinsic</span>
             <strong>${res.price + 1.96 * res.standard_error >= intrinsic - 1e-9 ? '✓' : '✗'}</strong></div>
     `));
     document.getElementById('ao-summary').innerHTML = cards.join('');

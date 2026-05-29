@@ -196,7 +196,7 @@ function renderSummary(res, local) {
     cards.push(card(t('view.pair_trade.card.current_z'), res.current_z.toFixed(3),
         Math.abs(res.current_z) > state.config.entry_z ? 'pos' : ''));
     cards.push(card(t('view.pair_trade.card.current_spread'), res.current_spread.toFixed(4), '',
-        `<div class="vc-row"><span class="muted">mean / σ</span>
+        `<div class="vc-row"><span class="muted" data-i18n="view.pair_trade.row.mean_sigma">mean / σ</span>
             <strong>${res.spread_mean.toFixed(4)} / ${res.spread_stdev.toFixed(4)}</strong></div>`));
     cards.push(card(t('view.pair_trade.card.entry_crossings_history'),
         String(countCrossings(local.zs, state.config.entry_z))));

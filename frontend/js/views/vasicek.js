@@ -142,10 +142,10 @@ function renderSummary(res) {
     const negPct = res.negative_path_fraction * 100;
     document.getElementById('va-summary').innerHTML = [
         card(t('view.vasicek.card.terminal_mean'), fmtRatePct(res.mean_terminal_rate), '',
-            `<div class="vc-row"><span class="muted">long-run target b</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.vasicek.row.long_run_target">long-run target b</span>
                 <strong>${fmtRatePct(p.b)}</strong></div>`),
         card(t('view.vasicek.card.terminal_stdev'), fmtRatePct(res.stdev_terminal_rate, 4), '',
-            `<div class="vc-row"><span class="muted">long-run σ_∞ = σ/√(2a)</span>
+            `<div class="vc-row"><span class="muted" data-i18n="view.vasicek.row.long_run_sigma">long-run σ_∞ = σ/√(2a)</span>
                 <strong>${fmtRatePct(lrs, 4)}</strong></div>`),
         card(t('view.vasicek.card.terminal_range'), `${fmtRatePct(res.min_terminal_rate)} – ${fmtRatePct(res.max_terminal_rate)}`),
         card(t('view.vasicek.card.mean_reversion_half_life'), fmtYears(hl)),
