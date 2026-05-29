@@ -8,6 +8,8 @@
 //
 // Defaults: bb_period=20, n_stdev=2.0, lookback=125, slack=0.05.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_BB_PERIOD = 20;
 export const DEFAULT_N_STDEV   = 2.0;
 export const DEFAULT_LOOKBACK  = 125;
@@ -22,17 +24,17 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
+    if (!Array.isArray(input.closes))                       return t('view.bollinger_squeeze.validate.closes_array');
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.bollinger_squeeze.validate.closes_finite', { i });
     }
-    if (!Number.isInteger(input.bb_period))                 return 'bb_period must be an integer';
-    if (input.bb_period < 2)                                return 'bb_period must be ≥ 2';
-    if (!Number.isFinite(input.n_stdev) || input.n_stdev <= 0) return 'n_stdev must be > 0';
-    if (!Number.isInteger(input.lookback))                  return 'lookback must be an integer';
-    if (input.lookback < input.bb_period)                   return 'lookback must be ≥ bb_period';
-    if (!Number.isFinite(input.slack) || input.slack < 0)   return 'slack must be ≥ 0';
-    if (input.closes.length < input.lookback)               return `closes must have ≥ ${input.lookback} observations`;
+    if (!Number.isInteger(input.bb_period))                 return t('view.bollinger_squeeze.validate.bb_period_int');
+    if (input.bb_period < 2)                                return t('view.bollinger_squeeze.validate.bb_period_min');
+    if (!Number.isFinite(input.n_stdev) || input.n_stdev <= 0) return t('view.bollinger_squeeze.validate.n_stdev');
+    if (!Number.isInteger(input.lookback))                  return t('view.bollinger_squeeze.validate.lookback_int');
+    if (input.lookback < input.bb_period)                   return t('view.bollinger_squeeze.validate.lookback_min');
+    if (!Number.isFinite(input.slack) || input.slack < 0)   return t('view.bollinger_squeeze.validate.slack');
+    if (input.closes.length < input.lookback)               return t('view.bollinger_squeeze.validate.closes_min', { n: input.lookback });
     return null;
 }
 

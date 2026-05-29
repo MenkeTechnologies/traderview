@@ -10,6 +10,8 @@
 // preserve serial dependence. Use for serially-correlated returns where
 // the naive iid bootstrap underestimates variance.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_BLOCK_SIZE = 20;
 export const DEFAULT_RESAMPLES = 1000;
 export const DEFAULT_SEED = 0n;
@@ -27,18 +29,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.data))                                  return 'data must be an array';
-    if (!Number.isInteger(input.block_size) || input.block_size <= 0) return 'block_size must be positive integer';
-    if (input.data.length < input.block_size + 2)                     return `data needs ≥ block_size + 2 = ${input.block_size + 2} obs`;
+    if (!Array.isArray(input.data))                                  return t('view.block_bootstrap.validate.data_array');
+    if (!Number.isInteger(input.block_size) || input.block_size <= 0) return t('view.block_bootstrap.validate.block_size');
+    if (input.data.length < input.block_size + 2)                     return t('view.block_bootstrap.validate.data_min', { n: input.block_size + 2 });
     for (let i = 0; i < input.data.length; i++) {
-        if (!Number.isFinite(input.data[i]))                          return `data[${i}] not finite`;
+        if (!Number.isFinite(input.data[i]))                          return t('view.block_bootstrap.validate.data_finite', { i });
     }
-    if (!Number.isInteger(input.n_resamples))                         return 'n_resamples must be an integer';
+    if (!Number.isInteger(input.n_resamples))                         return t('view.block_bootstrap.validate.resamples_int');
     if (input.n_resamples < MIN_RESAMPLES || input.n_resamples > MAX_RESAMPLES)
-                                                                       return `n_resamples must be in [${MIN_RESAMPLES}, ${MAX_RESAMPLES}]`;
-    if (!STATISTICS.includes(input.statistic))                        return `statistic must be one of ${STATISTICS.join(', ')}`;
+                                                                       return t('view.block_bootstrap.validate.resamples_range', { min: MIN_RESAMPLES, max: MAX_RESAMPLES });
+    if (!STATISTICS.includes(input.statistic))                        return t('view.block_bootstrap.validate.statistic', { list: STATISTICS.join(', ') });
     if (typeof input.seed !== 'bigint' && !Number.isInteger(input.seed))
-                                                                       return 'seed must be an integer';
+                                                                       return t('view.block_bootstrap.validate.seed');
     return null;
 }
 

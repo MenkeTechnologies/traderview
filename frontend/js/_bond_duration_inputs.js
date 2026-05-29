@@ -13,6 +13,8 @@
 //
 // Quick estimator: ΔP/P ≈ -ModDur × Δy.
 
+import { t as tr } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // "<time_years> <amount>" per line.
@@ -53,11 +55,11 @@ function stripComment(raw) {
 }
 
 export function validateInputs(cash_flows, ytm, compounding_per_year) {
-    if (!Array.isArray(cash_flows)) return 'cash_flows must be an array';
-    if (cash_flows.length === 0)    return 'need ≥ 1 cash flow';
-    if (!Number.isFinite(ytm))      return 'ytm must be finite';
+    if (!Array.isArray(cash_flows)) return tr('view.bond_duration.validate.cash_flows_array');
+    if (cash_flows.length === 0)    return tr('view.bond_duration.validate.cash_flows_empty');
+    if (!Number.isFinite(ytm))      return tr('view.bond_duration.validate.ytm_finite');
     if (!Number.isInteger(compounding_per_year) || compounding_per_year < 1)
-        return 'compounding_per_year must be integer ≥ 1';
+        return tr('view.bond_duration.validate.compounding');
     return null;
 }
 
