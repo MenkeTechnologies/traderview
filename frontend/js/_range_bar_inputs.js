@@ -6,23 +6,25 @@
 //
 // Partial trailing bars are NOT emitted (matches Rust contract).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     prints: [],
     target_range: 5.0,
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.prints))                          return 'prints must be an array';
+    if (!Array.isArray(input.prints))                          return t('view.range_bar.validate.prints_array');
     for (let i = 0; i < input.prints.length; i++) {
         const p = input.prints[i];
-        if (!p || typeof p !== 'object')                       return `prints[${i}] must be an object`;
-        if (!Number.isFinite(p.price))                         return `prints[${i}].price not finite`;
-        if (p.price <= 0)                                      return `prints[${i}].price must be > 0`;
-        if (!Number.isFinite(p.size))                          return `prints[${i}].size not finite`;
-        if (p.size < 0)                                        return `prints[${i}].size must be ≥ 0`;
+        if (!p || typeof p !== 'object')                       return t('view.range_bar.validate.print_object', { i });
+        if (!Number.isFinite(p.price))                         return t('view.range_bar.validate.price_finite', { i });
+        if (p.price <= 0)                                      return t('view.range_bar.validate.price_positive', { i });
+        if (!Number.isFinite(p.size))                          return t('view.range_bar.validate.size_finite', { i });
+        if (p.size < 0)                                        return t('view.range_bar.validate.size_negative', { i });
     }
-    if (!Number.isFinite(input.target_range))                  return 'target_range must be finite';
-    if (input.target_range <= 0)                               return 'target_range must be > 0';
+    if (!Number.isFinite(input.target_range))                  return t('view.range_bar.validate.target_finite');
+    if (input.target_range <= 0)                               return t('view.range_bar.validate.target_positive');
     return null;
 }
 

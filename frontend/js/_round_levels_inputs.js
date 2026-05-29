@@ -12,6 +12,8 @@
 //   Minor  → ÷10, ÷5, ÷1   (any integer)
 // Non-integer prices return None.
 
+import { t } from './i18n.js';
+
 export const WEIGHTS = ['major', 'medium', 'minor'];
 const WEIGHT_RANK = { major: 3, medium: 2, minor: 1 };
 
@@ -26,15 +28,15 @@ export const DEFAULT_INPUTS = {
 export const MAX_INTEGER_SCAN = 100_000;
 
 export function validateInputs(input) {
-    if (!Number.isFinite(input.current_price)) return 'current_price must be finite';
-    if (input.current_price <= 0)              return 'current_price must be > 0';
+    if (!Number.isFinite(input.current_price)) return t('view.round_levels.validate.price_finite');
+    if (input.current_price <= 0)              return t('view.round_levels.validate.price_positive');
     if (input.atr != null && (!Number.isFinite(input.atr) || input.atr < 0))
-        return 'atr must be ≥ 0 when set';
-    if (!input.config)                          return 'config required';
-    if (!Number.isFinite(input.config.window))  return 'config.window must be finite';
-    if (input.config.window <= 0)               return 'config.window must be > 0';
+        return t('view.round_levels.validate.atr');
+    if (!input.config)                          return t('view.round_levels.validate.config_required');
+    if (!Number.isFinite(input.config.window))  return t('view.round_levels.validate.window_finite');
+    if (input.config.window <= 0)               return t('view.round_levels.validate.window_positive');
     if (!WEIGHTS.includes(input.config.min_weight))
-        return `config.min_weight must be one of ${WEIGHTS.join(', ')}`;
+        return t('view.round_levels.validate.min_weight', { list: WEIGHTS.join(', ') });
     return null;
 }
 
