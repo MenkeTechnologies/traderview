@@ -8,6 +8,8 @@
 //      Abramowitz-Stegun 26.2.17 normal-CDF approximation matches what
 //      the Rust modules already use (error < 7.5e-8).
 
+import { t } from './i18n.js';
+
 /** Build the JSON body for /analytics/american-option-lsmc. */
 export function buildLsmcBody(p) {
     return {
@@ -28,17 +30,17 @@ export function buildLsmcBody(p) {
  *  error string with the offending field. Mirrors the backend's compute
  *  rejections so the UI surfaces problems pre-round-trip. */
 export function validateLsmcParams(p) {
-    if (p.kind !== 'call' && p.kind !== 'put') return 'kind must be "call" or "put"';
+    if (p.kind !== 'call' && p.kind !== 'put') return t('view.american_option.validate.kind');
     const positive = ['spot', 'strike', 't_years'];
     for (const k of positive) {
-        if (!Number.isFinite(p[k]) || p[k] <= 0) return `${k} must be > 0`;
+        if (!Number.isFinite(p[k]) || p[k] <= 0) return t('view.american_option.validate.field_positive', { k });
     }
-    if (!Number.isFinite(p.rate)) return 'rate must be finite';
-    if (!Number.isFinite(p.dividend) || p.dividend < 0) return 'dividend must be ≥ 0';
-    if (!Number.isFinite(p.sigma) || p.sigma < 0) return 'sigma must be ≥ 0';
-    if (!Number.isInteger(p.steps) || p.steps < 2) return 'steps must be an integer ≥ 2';
-    if (!Number.isInteger(p.paths) || p.paths < 10) return 'paths must be an integer ≥ 10';
-    if (!Number.isInteger(p.seed) || p.seed < 0) return 'seed must be a non-negative integer';
+    if (!Number.isFinite(p.rate)) return t('view.american_option.validate.rate');
+    if (!Number.isFinite(p.dividend) || p.dividend < 0) return t('view.american_option.validate.dividend');
+    if (!Number.isFinite(p.sigma) || p.sigma < 0) return t('view.american_option.validate.sigma');
+    if (!Number.isInteger(p.steps) || p.steps < 2) return t('view.american_option.validate.steps');
+    if (!Number.isInteger(p.paths) || p.paths < 10) return t('view.american_option.validate.paths');
+    if (!Number.isInteger(p.seed) || p.seed < 0) return t('view.american_option.validate.seed');
     return null;
 }
 

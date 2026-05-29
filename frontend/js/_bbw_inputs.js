@@ -27,7 +27,7 @@ export function validateInputs(input) {
     if (!Number.isInteger(input.period))                    return t('view.bbw.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
                                                              return t('view.bbw.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
-    if (!Number.isFinite(input.k) || input.k < 0)           return 'k must be non-negative finite';
+    if (!Number.isFinite(input.k) || input.k < 0)           return t('view.bbw.validate.k_non_negative');
     if (input.closes.length < input.period)                 return t('view.bbw.validate.closes_min_period', { period: input.period });
     for (let i = 0; i < input.closes.length; i++) {
         if (!Number.isFinite(input.closes[i]))              return t('view.bbw.validate.close_not_finite', { i });
