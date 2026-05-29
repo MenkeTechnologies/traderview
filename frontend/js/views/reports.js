@@ -31,7 +31,7 @@ export async function renderReports(mount, state, sub) {
     mount.innerHTML = `
         <h1 data-i18n="view.reports.h1.reports" class="view-title">// REPORTS</h1>
         <div class="report-tabs">
-            ${TABS.map(([k, l]) => `<a class="report-tab ${k === sub ? 'active' : ''}" href="#reports/${k}">${l}</a>`).join('')}
+            ${TABS.map(([k, l]) => `<a class="report-tab ${k === sub ? 'active' : ''}" href="#reports/${k}" data-i18n="view.reports.tab.${k}">${l}</a>`).join('')}
         </div>
         <div id="report-body"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
