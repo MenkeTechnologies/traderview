@@ -13,11 +13,11 @@ export function parseHistory(text) {
 
 export function validateInputs(currentIv, history) {
     if (!Number.isFinite(currentIv) || currentIv < 0)
-        return 'current_iv must be ≥ 0';
+        return t('view.iv_rank.validate.current_iv');
     if (!Array.isArray(history) || history.length < 10)
-        return 'history must have at least 10 observations';
+        return t('view.iv_rank.validate.history_min');
     if (!history.every(v => Number.isFinite(v) && v >= 0))
-        return 'history must contain only non-negative finite values';
+        return t('view.iv_rank.validate.history_finite');
     return null;
 }
 
@@ -42,9 +42,9 @@ export function rankEnvironment(rank) {
 export function rankVsPercentileNote(rank, pct) {
     if (!Number.isFinite(rank) || !Number.isFinite(pct)) return '';
     const delta = Math.abs(rank - pct);
-    if (delta < 10) return 'rank and percentile agree closely — trust either';
-    if (delta < 20) return 'mild divergence between rank and percentile';
-    return 'rank and percentile diverge ≥20pts — series is skewed, prefer percentile';
+    if (delta < 10) return t('view.iv_rank.note.agree');
+    if (delta < 20) return t('view.iv_rank.note.mild');
+    return t('view.iv_rank.note.diverge');
 }
 
 // Synthesizes a deterministic 252-day IV history with one earnings-style

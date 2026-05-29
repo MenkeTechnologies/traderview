@@ -15,12 +15,12 @@ export function parseRealized(text) {
 
 export function validateInputs(implied, realized) {
     if (!Number.isFinite(implied) || implied <= 0)
-        return 'implied_move_pct must be > 0';
-    if (implied > 100) return 'implied_move_pct looks like raw bps — enter as %, e.g. 5.5 for 5.5%';
+        return t('view.iv_backtest.validate.implied_positive');
+    if (implied > 100) return t('view.iv_backtest.validate.implied_bps');
     if (!Array.isArray(realized) || realized.length < 4)
-        return 'need at least 4 realized observations';
+        return t('view.iv_backtest.validate.realized_min');
     if (!realized.every(Number.isFinite))
-        return 'realized history must contain only finite values';
+        return t('view.iv_backtest.validate.realized_finite');
     return null;
 }
 
