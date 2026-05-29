@@ -17,7 +17,7 @@ export async function renderTaxWorkshop(mount, _state) {
 
     mount.innerHTML = `
         <h1 data-i18n="view.tax_workshop.h1.tax_workshop" class="view-title">// TAX WORKSHOP</h1>
-        <p class="muted small">
+        <p class="muted small" data-i18n-html="view.tax_workshop.intro">
             Trader-as-business calculators. Math lives in <code>traderview-expense</code>
             and is unit-tested against hand-rolled IRS scenarios. Inputs are
             <em>local-only</em> — nothing leaves your machine in desktop mode.

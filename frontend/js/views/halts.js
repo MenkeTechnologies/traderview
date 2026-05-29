@@ -21,7 +21,7 @@ export async function renderHalts(mount, _state) {
                 voice alerts
             </label>
         </h1>
-        <p class="muted small">
+        <p class="muted small" data-i18n-html="view.halts.intro">
             Polling <code>nasdaqtrader.com/rss.aspx?feed=tradehalts</code> every 3 seconds.
             New halts speak the symbol + reason via Web Speech API.
         </p>

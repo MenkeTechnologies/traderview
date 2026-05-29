@@ -30,7 +30,7 @@ export async function renderRiskGate(mount, state) {
 
     mount.innerHTML = `
         <h1 data-i18n="view.risk_gate.h1.risk_gate" class="view-title">// RISK GATE</h1>
-        <p class="muted small">
+        <p class="muted small" data-i18n-html="view.risk_gate.intro">
             Pre-trade rules that veto bad trades <em>before</em> they reach the broker.
             <code>discipline</code> tells you what you already broke; this stops the next one.
             Engine: <code>traderview_core::risk_gate</code> (pure-compute, 18 unit tests).

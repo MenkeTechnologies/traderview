@@ -59,7 +59,7 @@ export async function renderVolSmile(mount, _appState) {
                     <input id="vs-q" type="number" step="any" value="${state.div_yield}"></label>
                 <button data-i18n="view.vol_smile.btn.fit" id="vs-fit" class="primary" type="button">Fit</button>
             </div>
-            <p class="muted">
+            <p class="muted" data-i18n-html="view.vol_smile.intro">
                 Paste quotes below — one per line, two whitespace-OR-comma
                 separated fields: <code>strike  iv</code>. IV accepts
                 <code>0.25</code> or <code>25%</code>. Lines starting
