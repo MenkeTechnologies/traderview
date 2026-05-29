@@ -162,21 +162,21 @@ function renderCompare(hist, gauss) {
             </tr></thead>
             <tbody>
                 <tr>
-                    <td><strong>Historical</strong></td>
+                    <td><strong data-i18n="view.var_estimator.row.historical">Historical</strong></td>
                     <td class="neg">${esc(fmtUSD(hist.var_dollars))}</td>
                     <td class="neg">${esc(fmtUSD(hist.expected_shortfall_dollars))}</td>
                     <td>${esc(fmtUSD(histESminusVar))}</td>
                     <td>${hist.n}</td>
                 </tr>
                 <tr>
-                    <td><strong>Parametric (Gaussian)</strong></td>
+                    <td><strong data-i18n="view.var_estimator.row.parametric">Parametric (Gaussian)</strong></td>
                     <td class="neg">${esc(fmtUSD(gauss.var_dollars))}</td>
                     <td class="neg">${esc(fmtUSD(gauss.expected_shortfall_dollars))}</td>
                     <td>${esc(fmtUSD(gaussESminusVar))}</td>
                     <td>${gauss.n}</td>
                 </tr>
                 <tr>
-                    <td><strong>Hist − Gauss</strong></td>
+                    <td><strong data-i18n="view.var_estimator.row.hist_minus_gauss">Hist − Gauss</strong></td>
                     <td class="${cmp.diff >= 0 ? 'neg' : 'pos'}">${esc(fmtUSDSigned(cmp.diff))}</td>
                     <td>${esc(fmtUSDSigned(hist.expected_shortfall_dollars - gauss.expected_shortfall_dollars))}</td>
                     <td colspan="2" class="muted" data-i18n="view.var_estimator.hint.fat_tail">Positive Hist − Gauss = empirical tail is fatter than Gaussian assumes.</td>

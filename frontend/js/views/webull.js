@@ -17,8 +17,8 @@ export async function renderWebull(mount, _state) {
         </h1>
 
         <details class="chart-panel" id="wb-creds-panel">
-            <summary><strong>Connect</strong> — paste tokens from your browser session</summary>
-            <p class="muted small">
+            <summary data-i18n-html="view.webull.summary.connect"><strong>Connect</strong> — paste tokens from your browser session</summary>
+            <p class="muted small" data-i18n-html="view.webull.summary.instructions">
                 1. Open <code>webull.com</code> in another tab and log in (complete MFA / trade pin).<br>
                 2. Open DevTools → <strong>Network</strong> → click any <code>tradeapi.webullbroker.com</code> request.<br>
                 3. Copy the request headers <code>did</code>, <code>access_token</code>, and <code>t_token</code>.<br>

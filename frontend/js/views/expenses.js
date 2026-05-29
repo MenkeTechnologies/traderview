@@ -78,8 +78,8 @@ function drawShell(mount) {
     </div>
 
     <div class="receipt-dropzone" id="receipt-dz">
-        <strong>Drop receipt</strong> — JPG, PNG, WebP, or PDF.
-        OCR runs in the background; results auto-match candidate transactions.
+        <span data-i18n-html="view.expenses.receipt.dropzone"><strong>Drop receipt</strong> — JPG, PNG, WebP, or PDF.
+        OCR runs in the background; results auto-match candidate transactions.</span>
         <input type="file" id="receipt-file" class="hidden" accept="image/jpeg,image/png,image/webp,image/bmp,application/pdf">
     </div>
 
@@ -620,7 +620,7 @@ async function openScheduleCModal(year) {
             <tbody>${lines}</tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2"><strong>Grand total (categorized business)</strong></td>
+                    <td colspan="2"><strong data-i18n="view.expenses.summary.grand_total">Grand total (categorized business)</strong></td>
                     <td class="num">${fmt(report.grand_total_raw)}</td>
                     <td></td>
                     <td class="num"><strong>${fmt(report.grand_total_deductible)}</strong></td>
