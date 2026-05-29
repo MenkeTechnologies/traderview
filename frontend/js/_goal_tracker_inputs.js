@@ -17,18 +17,18 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function validateInputs(p) {
     if (!Number.isFinite(p.period_start_equity) || p.period_start_equity <= 0)
-        return 'period_start_equity must be > 0';
+        return t('view.goal_tracker.validate.period_start_equity');
     if (!Number.isFinite(p.target_pct_return))
-        return 'target_pct_return must be finite';
+        return t('view.goal_tracker.validate.target_pct_return');
     if (!Number.isFinite(p.max_dd_pct) || p.max_dd_pct < 0 || p.max_dd_pct > 1)
-        return 'max_dd_pct must be in [0, 1] (decimal — 0.10 = 10%)';
-    if (!DATE_RE.test(p.period_start)) return 'period_start must be YYYY-MM-DD';
-    if (!DATE_RE.test(p.period_end))   return 'period_end must be YYYY-MM-DD';
-    if (!DATE_RE.test(p.today))         return 'today must be YYYY-MM-DD';
-    if (p.period_end <= p.period_start) return 'period_end must be after period_start';
-    if (!Array.isArray(p.equity) || p.equity.length === 0) return 'need at least 1 equity value';
+        return t('view.goal_tracker.validate.max_dd_pct');
+    if (!DATE_RE.test(p.period_start)) return t('view.goal_tracker.validate.period_start');
+    if (!DATE_RE.test(p.period_end))   return t('view.goal_tracker.validate.period_end');
+    if (!DATE_RE.test(p.today))         return t('view.goal_tracker.validate.today');
+    if (p.period_end <= p.period_start) return t('view.goal_tracker.validate.period_end_after');
+    if (!Array.isArray(p.equity) || p.equity.length === 0) return t('view.goal_tracker.validate.need_equity');
     if (!p.equity.every(v => Number.isFinite(v) && v > 0))
-        return 'all equity values must be > 0';
+        return t('view.goal_tracker.validate.equity_positive');
     return null;
 }
 
