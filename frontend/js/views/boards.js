@@ -143,7 +143,7 @@ async function renderBoard(mount, id) {
     `;
 
     mount.querySelector('#b-rename').addEventListener('click', async () => {
-        const next = prompt('Board name:', state.board.name);
+        const next = prompt(t('view.boards.prompt.name'), state.board.name);
         if (!next || next === state.board.name) return;
         state.board.name = next;
         const nm = mount.querySelector('#b-name');
@@ -257,15 +257,15 @@ function renderGrid(state) {
 
 function configureWidget(w) {
     if (w.kind === 'quote' || w.kind === 'mini_chart') {
-        const s = prompt('Symbol:', w.params.symbol || 'SPY');
+        const s = prompt(t('view.boards.prompt.symbol'), w.params.symbol || 'SPY');
         return s ? { symbol: s.toUpperCase() } : null;
     }
     if (w.kind === 'note') {
-        const t = prompt('Note text:', w.params.text || '');
-        return t === null ? null : { text: t };
+        const txt = prompt(t('view.boards.prompt.note_text'), w.params.text || '');
+        return txt === null ? null : { text: txt };
     }
     if (w.kind === 'watchlist' || w.kind === 'alerts') {
-        const n = prompt('Limit:', w.params.limit || 10);
+        const n = prompt(t('view.boards.prompt.limit'), w.params.limit || 10);
         return n ? { limit: Number(n) || 10 } : null;
     }
     return null;

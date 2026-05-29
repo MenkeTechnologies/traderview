@@ -57,7 +57,7 @@ export async function renderTradesView(mount, state) {
         if (!action) return;
         const ids = Array.from(mount.querySelectorAll('.trade-row input:checked'))
             .map(c => c.value);
-        if (!ids.length) { alert('Select trades first.'); return; }
+        if (!ids.length) { alert(t('view.trades.alert.select_first')); return; }
         try {
             const extras = await collectActionExtras(action);
             if (!viewIsCurrent(tok)) return;
@@ -67,7 +67,7 @@ export async function renderTradesView(mount, state) {
             alert(`${action} → affected ${r.affected}`);
             await refresh();
         } catch (e) {
-            alert('Error: ' + e.message);
+            alert(t('view.trades.alert.error', { msg: e.message }));
         }
     });
 
@@ -75,7 +75,7 @@ export async function renderTradesView(mount, state) {
         if (action === 'add_tag' || action === 'remove_tag') {
             const tags = await api.tags();
             if (!viewIsCurrent(tok)) return null;
-            if (!tags.length) { alert('Create a tag first (Tags tab).'); return null; }
+            if (!tags.length) { alert(t('view.trades.alert.no_tags')); return null; }
             const name = prompt(`Tag name (${tags.map(t => t.name).join(', ')})`);
             if (!name) return null;
             const tag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
@@ -83,9 +83,9 @@ export async function renderTradesView(mount, state) {
             return { tag_id: tag.id };
         }
         if (action === 'set_risk') {
-            const stop = prompt('Stop-loss price (blank = none):');
-            const risk = prompt('Risk amount $ (blank = none):');
-            const tgt = prompt('Initial target price (blank = none):');
+            const stop = prompt(t('view.trades.prompt.stop'));
+            const risk = prompt(t('view.trades.prompt.risk'));
+            const tgt = prompt(t('view.trades.prompt.target'));
             return {
                 stop_loss: stop ? Number(stop) : null,
                 risk_amount: risk ? Number(risk) : null,

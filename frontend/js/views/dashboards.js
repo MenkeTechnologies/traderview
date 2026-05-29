@@ -159,7 +159,7 @@ function renderSidebar() {
         if (!text) return;
         const next = store.importState(text);
         if (!next) {
-            window.alert('Could not parse JSON. Make sure you copied the whole file.');
+            window.alert(t('view.dashboards.alert.import_failed'));
             return;
         }
         if (!window.confirm(t('view.dashboards.confirm.import_replace'))) return;

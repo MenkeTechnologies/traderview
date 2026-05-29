@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a', '#ffd24a'];
@@ -249,7 +250,7 @@ async function onDrawClick(e, ds) {
         return;
     }
     if (ds.tool === 'text') {
-        const text = prompt('Text:', '');
+        const text = prompt(t('view.charts.prompt.text'), '');
         if (!text) return;
         await persistAndAdd(ds, {
             kind: 'text',
