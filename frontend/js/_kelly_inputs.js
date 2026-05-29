@@ -13,10 +13,10 @@ import { t } from './i18n.js';
 // ── Static Kelly ─────────────────────────────────────────────────
 
 export function validateStaticInputs(winRate, payoffRatio) {
-    if (!Number.isFinite(winRate))     return 'win_rate must be finite';
-    if (winRate < 0 || winRate > 1)    return 'win_rate must be in [0, 1]';
-    if (!Number.isFinite(payoffRatio)) return 'payoff_ratio must be finite';
-    if (payoffRatio <= 0)              return 'payoff_ratio must be > 0';
+    if (!Number.isFinite(winRate))     return t('view.kelly.validate.win_rate_finite');
+    if (winRate < 0 || winRate > 1)    return t('view.kelly.validate.win_rate_range');
+    if (!Number.isFinite(payoffRatio)) return t('view.kelly.validate.payoff_finite');
+    if (payoffRatio <= 0)              return t('view.kelly.validate.payoff_positive');
     return null;
 }
 
@@ -79,9 +79,9 @@ export function pnlsToStaticInput(trade_pnls) {
 // ── Dynamic Kelly ────────────────────────────────────────────────
 
 export function validateDynamicInputs(pnls, window) {
-    if (!Array.isArray(pnls) || pnls.length === 0) return 'need ≥ 1 trade pnl';
-    if (!Number.isInteger(window) || window <= 0) return 'window must be integer > 0';
-    if (window > pnls.length) return `window (${window}) exceeds pnls length (${pnls.length})`;
+    if (!Array.isArray(pnls) || pnls.length === 0) return t('view.kelly.validate.need_pnl');
+    if (!Number.isInteger(window) || window <= 0) return t('view.kelly.validate.window_positive');
+    if (window > pnls.length) return t('view.kelly.validate.window_exceeds', { window, len: pnls.length });
     return null;
 }
 

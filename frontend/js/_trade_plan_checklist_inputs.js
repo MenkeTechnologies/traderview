@@ -14,20 +14,20 @@ export const DEFAULT_CONFIG = {
 };
 
 export function validateInputs(p, c) {
-    if (typeof p.thesis !== 'string') return 'thesis must be a string (can be empty)';
-    if (!Number.isFinite(p.entry_price) || p.entry_price <= 0) return 'entry_price must be > 0';
+    if (typeof p.thesis !== 'string') return t('view.trade_plan_checklist.validate.thesis');
+    if (!Number.isFinite(p.entry_price) || p.entry_price <= 0) return t('view.trade_plan_checklist.validate.entry_price');
     if (p.stop_price != null && (!Number.isFinite(p.stop_price) || p.stop_price <= 0))
-        return 'stop_price must be > 0 when set';
+        return t('view.trade_plan_checklist.validate.stop_price');
     if (p.target_price != null && (!Number.isFinite(p.target_price) || p.target_price <= 0))
-        return 'target_price must be > 0 when set';
-    if (!Number.isFinite(p.risk_dollars) || p.risk_dollars < 0) return 'risk_dollars must be ≥ 0';
-    if (!Number.isFinite(p.account_equity) || p.account_equity <= 0) return 'account_equity must be > 0';
-    if (typeof p.is_long !== 'boolean') return 'is_long must be boolean';
+        return t('view.trade_plan_checklist.validate.target_price');
+    if (!Number.isFinite(p.risk_dollars) || p.risk_dollars < 0) return t('view.trade_plan_checklist.validate.risk_dollars');
+    if (!Number.isFinite(p.account_equity) || p.account_equity <= 0) return t('view.trade_plan_checklist.validate.account_equity');
+    if (typeof p.is_long !== 'boolean') return t('view.trade_plan_checklist.validate.is_long');
     if (!Number.isInteger(c.min_thesis_words) || c.min_thesis_words < 0)
-        return 'min_thesis_words must be non-negative integer';
-    if (!Number.isFinite(c.min_r_multiple) || c.min_r_multiple < 0) return 'min_r_multiple must be ≥ 0';
+        return t('view.trade_plan_checklist.validate.min_thesis_words');
+    if (!Number.isFinite(c.min_r_multiple) || c.min_r_multiple < 0) return t('view.trade_plan_checklist.validate.min_r');
     if (!Number.isFinite(c.max_risk_pct_per_trade) || c.max_risk_pct_per_trade < 0 || c.max_risk_pct_per_trade > 1)
-        return 'max_risk_pct_per_trade must be in [0, 1] (decimal — 0.02 = 2%)';
+        return t('view.trade_plan_checklist.validate.max_risk_pct');
     return null;
 }
 
