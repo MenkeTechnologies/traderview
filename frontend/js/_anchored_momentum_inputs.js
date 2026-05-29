@@ -8,6 +8,8 @@
 //          with weights 1..smooth_period (sum = n(n+1)/2)
 // smooth_period=1 returns the raw series.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_SMOOTH = 5;
 
 export const DEFAULT_INPUTS = {
@@ -17,16 +19,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                                    return 'closes must be an array';
+    if (!Array.isArray(input.closes))                                    return t('view.anchored_momentum.validate.closes_array');
     for (let i = 0; i < input.closes.length; i++) {
         // NaN tolerated mid-series (Rust skips them per-bar).
-        if (typeof input.closes[i] !== 'number')                          return `closes[${i}] must be a number`;
+        if (typeof input.closes[i] !== 'number')                          return t('view.anchored_momentum.validate.close_number', { i });
     }
-    if (!Number.isInteger(input.anchor))                                  return 'anchor must be an integer';
-    if (input.anchor < 0)                                                  return 'anchor must be ≥ 0';
-    if (!Number.isInteger(input.smooth_period))                           return 'smooth_period must be an integer';
-    if (input.smooth_period < 1)                                          return 'smooth_period must be ≥ 1';
-    if (input.closes.length > 0 && input.anchor >= input.closes.length)   return `anchor (${input.anchor}) must be < closes.length (${input.closes.length})`;
+    if (!Number.isInteger(input.anchor))                                  return t('view.anchored_momentum.validate.anchor_int');
+    if (input.anchor < 0)                                                  return t('view.anchored_momentum.validate.anchor_min');
+    if (!Number.isInteger(input.smooth_period))                           return t('view.anchored_momentum.validate.smooth_int');
+    if (input.smooth_period < 1)                                          return t('view.anchored_momentum.validate.smooth_min');
+    if (input.closes.length > 0 && input.anchor >= input.closes.length)   return t('view.anchored_momentum.validate.anchor_lt_len', { anchor: input.anchor, len: input.closes.length });
     return null;
 }
 

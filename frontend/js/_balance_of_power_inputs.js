@@ -6,6 +6,8 @@
 // BOP_t = (close − open) / (high − low), clamped to [-1, +1].
 // Smoothed = SMA over smoothing_period bars.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_SMOOTHING = 14;
 
 export const DEFAULT_INPUTS = {
@@ -14,17 +16,17 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                              return 'bars must be an array';
+    if (!Array.isArray(input.bars))                              return t('view.balance_of_power.validate.bars_array');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b || typeof b !== 'object')                         return `bars[${i}] must be an object`;
+        if (!b || typeof b !== 'object')                         return t('view.balance_of_power.validate.bar_object', { i });
         for (const f of ['open', 'high', 'low', 'close']) {
-            if (!Number.isFinite(b[f]))                          return `bars[${i}].${f} not finite`;
+            if (!Number.isFinite(b[f]))                          return t('view.balance_of_power.validate.bar_field_finite', { i, f });
         }
-        if (b.high < b.low)                                      return `bars[${i}].high must be ≥ low`;
+        if (b.high < b.low)                                      return t('view.balance_of_power.validate.bar_high_low', { i });
     }
-    if (!Number.isInteger(input.smoothing_period))               return 'smoothing_period must be an integer';
-    if (input.smoothing_period < 1)                              return 'smoothing_period must be ≥ 1';
+    if (!Number.isInteger(input.smoothing_period))               return t('view.balance_of_power.validate.smoothing_int');
+    if (input.smoothing_period < 1)                              return t('view.balance_of_power.validate.smoothing_min');
     return null;
 }
 

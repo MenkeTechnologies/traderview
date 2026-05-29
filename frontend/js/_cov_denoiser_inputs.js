@@ -10,6 +10,7 @@
 
 import { parseMatrix } from './_portfolio_allocator_inputs.js';
 import { validateCovariance } from './_portfolio_allocator_inputs.js';
+import { t } from './i18n.js';
 
 /** Parse the cov matrix textarea. Same shape as portfolio-allocator. */
 export function parseCovariance(text) {
@@ -23,10 +24,10 @@ export function validateInputs(cov, numObservations) {
     const baseErr = validateCovariance(cov);
     if (baseErr) return baseErr;
     if (!Number.isInteger(numObservations) || numObservations < 1) {
-        return 'num observations T must be a positive integer';
+        return t('view.cov_denoiser.validate.num_obs');
     }
     if (numObservations < cov.length) {
-        return `T (${numObservations}) must be ≥ N (${cov.length}) — q = N/T must be ≤ 1`;
+        return t('view.cov_denoiser.validate.t_ge_n', { T: numObservations, N: cov.length });
     }
     return null;
 }
