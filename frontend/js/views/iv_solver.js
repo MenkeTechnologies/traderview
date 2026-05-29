@@ -182,7 +182,7 @@ function renderChart(res) {
         series: [
             { label: 'σ' },
             { label: 'BS price',     stroke: '#00e5ff', width: 2, points: { show: false } },
-            { label: 'market price', stroke: '#ff9f1a', width: 1, dash: [4, 4],
+            { label: t('chart.series.market_price'), stroke: '#ff9f1a', width: 1, dash: [4, 4],
               points: { show: false } },
             { label: 'solved σ',     stroke: '#39ff14', width: 0,
               points: { show: true, size: 12, stroke: '#39ff14', fill: '#39ff14' } },

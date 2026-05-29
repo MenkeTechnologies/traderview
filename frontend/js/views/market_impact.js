@@ -178,7 +178,7 @@ function renderDistribution(trades) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'bucket' },
-            { label: 'trade count', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.trade_count'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff33', points: { show: true, size: 5 } },
         ],
         axes: [

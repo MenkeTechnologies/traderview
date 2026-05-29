@@ -180,7 +180,7 @@ function renderChart(levels) {
             { label: 'R1',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.pivot'),  stroke: '#ffd84a', width: 1.5,               points: { show: false } },
             { label: 'S1',     stroke: '#39ff14', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: 'spot now', stroke: '#00e5ff', width: 1.0, dash: [2, 4], points: { show: false } },
+            { label: t('chart.series.spot_now'), stroke: '#00e5ff', width: 1.0, dash: [2, 4], points: { show: false } },
         ],
         axes: [{ stroke: '#aab', size: 24 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },

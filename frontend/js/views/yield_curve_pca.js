@@ -160,7 +160,7 @@ function renderLoadingsChart(tenors, res) {
     // X axis = tenor index (0..N-1). Plot one line per factor.
     const xs = tenors.map((_, i) => i);
     const data = [xs];
-    const series = [{ label: 'tenor idx' }];
+    const series = [{ label: t('chart.series.tenor_idx') }];
     for (let i = 0; i < res.loadings.length; i++) {
         series.push({
             label: factorName(i),
@@ -195,7 +195,7 @@ function renderVarianceChart(res) {
         title: '', width: el.clientWidth || 800, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'factor idx' },
+            { label: t('chart.series.factor_idx') },
             { label: 'per-factor', stroke: '#00e5ff', width: 2,
               points: { show: true, size: 8, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: 'cumulative', stroke: '#ff9f1a', width: 2,

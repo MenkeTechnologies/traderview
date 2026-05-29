@@ -151,7 +151,7 @@ function renderChart(pivots, matches) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'pivot index' },
+            { label: t('chart.series.pivot_index') },
             { label: 'pivots', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: true, size: 8, stroke: '#ffd84a', fill: '#ffd84a' } },
             { label: 'match XABCD', stroke: '#39ff14', width: 0,

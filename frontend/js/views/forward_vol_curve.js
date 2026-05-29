@@ -194,9 +194,9 @@ function renderChart(rows, res) {
             { label: 'tenor (years)' },
             { label: 'spot IV', stroke: '#00e5ff', width: 2,
               points: { show: true, size: 6, stroke: '#00e5ff', fill: '#00e5ff' } },
-            { label: 'forward vol', stroke: '#ff9f1a', width: 2,
+            { label: t('chart.series.forward_vol'), stroke: '#ff9f1a', width: 2,
               spanGaps: false, points: { show: false } },
-            { label: 'arb violation', stroke: '#ff3860', width: 0,
+            { label: t('chart.series.arb_violation'), stroke: '#ff3860', width: 0,
               points: { show: true, size: 12, stroke: '#ff3860', fill: '#ff3860' } },
         ],
         axes: [

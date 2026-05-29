@@ -197,7 +197,7 @@ function renderChart(stats) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'terminal price' },
+            { label: t('chart.series.terminal_price') },
             { label: 'density (normal ≈)', stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.10)' },
         ],

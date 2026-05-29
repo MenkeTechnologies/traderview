@@ -173,7 +173,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'cum width' },
+            { label: t('chart.series.cum_width') },
             { label: t('chart.series.mid'),  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
             { label: t('chart.series.high'), stroke: '#3ad96b', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.low'),  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },

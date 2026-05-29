@@ -61,7 +61,9 @@ export async function renderCatalysts(mount, _state) {
         const list = fd.get('symbols').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
         watchSet = new Set(list);
         const stateEl = mount.querySelector('#cat-watch-state');
-        if (stateEl) stateEl.textContent = watchSet.size ? `watching ${watchSet.size}` : 'all clear';
+        if (stateEl) stateEl.textContent = watchSet.size
+            ? t('view.catalysts.watch.watching', { n: watchSet.size })
+            : t('view.catalysts.watch.all_clear');
     });
 
     connectWs(mount, viewTok);

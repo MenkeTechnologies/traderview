@@ -142,11 +142,11 @@ function renderCharts(samples, _report) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.sample_num') },
-            { label: 'spread bps', stroke: '#00e5ff', width: 1.2,
+            { label: t('chart.series.spread_bps'), stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff1A', points: { show: false } },
             { label: 'tight ≤ 5',   stroke: '#39ff14', width: 1.0,
               dash: [4, 4], points: { show: false } },
-            { label: 'normal cap',  stroke: '#ffd84a', width: 1.0,
+            { label: t('chart.series.normal_cap'),  stroke: '#ffd84a', width: 1.0,
               dash: [4, 4], points: { show: false } },
             { label: 'patho ≥ 100', stroke: '#ff3860', width: 1.0,
               dash: [4, 4], points: { show: false } },

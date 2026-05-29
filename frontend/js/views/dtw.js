@@ -203,7 +203,7 @@ function renderPath(nA, nB, res) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'i (A)' },
-            { label: 'warping path', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.warping_path'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 3, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: 'y = x diagonal', stroke: '#ff9f1a', width: 1,
               dash: [4, 4], points: { show: false } },
