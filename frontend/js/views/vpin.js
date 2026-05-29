@@ -61,9 +61,7 @@ export async function renderVpin(mount, _appState) {
                     <input id="vp-rw"  type="number" step="1" min="2" max="10000" value="${state.config.return_window}"></label>
                 <button data-i18n="view.vpin.btn.compute_vpin" id="vp-run" class="primary" type="button">Compute VPIN</button>
             </div>
-            <p class="muted">VPIN ≥ ${TOXIC_THRESHOLD} marks a "toxic" bucket — informed
-                traders running through the book. Was used to flag the 2010 flash crash
-                minutes ahead of the cascade.</p>
+            <p class="muted">${esc(t('view.vpin.hint.toxic', { threshold: TOXIC_THRESHOLD }))}</p>
         </div>
 
         <div id="vp-errors" class="boot" style="display:none"></div>
@@ -72,7 +70,7 @@ export async function renderVpin(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.vpin.h2.vpin_time_series">VPIN time series</h2>
             <div id="vp-chart-vpin" style="height:260px"></div>
-            <p class="muted">Red dashed = ${TOXIC_THRESHOLD} toxic threshold. Spikes above the line are flow-toxicity alerts.</p>
+            <p class="muted">${esc(t('view.vpin.hint.chart', { threshold: TOXIC_THRESHOLD }))}</p>
         </div>
 
         <div class="chart-panel">

@@ -106,8 +106,7 @@ function renderHeatmap(s, mount) {
             </tr></thead>
             <tbody>${s.expirations.map(rowHtml).join('')}</tbody>
         </table>
-        <p class="muted small">Surface range: ${(min * 100).toFixed(1)}% → ${(max * 100).toFixed(1)}%
-            (IV expressed as annualized standard deviation, decimal × 100).</p>
+        <p class="muted small">${esc(t('view.vol_surface.range', { min: (min * 100).toFixed(1), max: (max * 100).toFixed(1) }))}</p>
     `;
 }
 

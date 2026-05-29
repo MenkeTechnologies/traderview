@@ -35,10 +35,7 @@ export async function renderVwapSlippage(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.vwap_slippage.h2.bars_during_the_trade_s_open_window">Bars during the trade's open window</h2>
-            <p class="muted">One line per bar: <code>typical_price volume</code>.
-                Typical = (high+low+close)/3. Pre-computed by the caller so this
-                view stays agnostic about whether you're feeding 1-second, 1-minute,
-                or 1-hour bars. Demo loads 200 bars with an intentional below-VWAP long fill.</p>
+            <p class="muted" data-i18n="view.vwap_slippage.hint.format">One line per bar: typical_price volume. Typical = (high+low+close)/3. Pre-computed by the caller so this view stays agnostic about whether you're feeding 1-second, 1-minute, or 1-hour bars. Demo loads 200 bars with an intentional below-VWAP long fill.</p>
             <textarea id="vw-bars" rows="6" placeholder="100.05 1200&#10;100.08 850&#10;..."></textarea>
             <div class="inline-form">
                 <button data-i18n="view.vwap_slippage.btn.load_demo_200_bars_fill_beats_vwap" id="vw-demo" class="secondary" type="button">Load demo (200 bars, fill beats VWAP)</button>

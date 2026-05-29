@@ -9,9 +9,7 @@ export async function renderWebhooks(mount) {
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 data-i18n="view.webhooks.h1.webhooks" class="view-title">// WEBHOOKS</h1>
-        <p class="muted small">Fan-out alerts to Discord, Slack, or any generic HTTP endpoint.
-            Wire a webhook here, then reference its ID from an alert rule's <code>webhook_ids[]</code>
-            field — alert fires call POST automatically.</p>
+        <p class="muted small" data-i18n="view.webhooks.hint.intro">Fan-out alerts to Discord, Slack, or any generic HTTP endpoint. Wire a webhook here, then reference its ID from an alert rule's webhook_ids[] field — alert fires call POST automatically.</p>
 
         <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.add_webhook">Add webhook</h2>
