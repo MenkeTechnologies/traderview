@@ -162,7 +162,7 @@ function renderChart(res) {
     el.innerHTML = '';
     const { xs, ys } = normalDensityCurve(res.mean_terminal_rate, res.stdev_terminal_rate, 161);
     if (xs.length === 0) {
-        el.innerHTML = '<div class="boot">stdev was zero — distribution is a point mass.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.monte_carlo.empty.stdev_zero'))}</div>`;
         return;
     }
     new window.uPlot({

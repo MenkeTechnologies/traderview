@@ -99,7 +99,7 @@ async function renderDetail(mount, sym) {
         <h1 class="view-title">// EARNINGS IV · ${esc(sym)}
             <a class="link small" href="#earnings-iv">← back to scan</a>
         </h1>
-        <div id="iv-detail"><div class="boot">computing…</div></div>
+        <div id="iv-detail"><div class="boot" data-i18n="common.computing">computing…</div></div>
     `;
     try {
         const r = await api.ivSymbol(sym);

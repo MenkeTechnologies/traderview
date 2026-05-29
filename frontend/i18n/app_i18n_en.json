@@ -6894,6 +6894,7 @@
   "common.loading":                        "loading…",
   "common.refreshing":                     "refreshing…",
   "common.working":                        "working…",
+  "common.computing":                      "computing…",
   "common.loading_view":                   "loading {view}…",
   "common.connecting":                     "connecting…",
   "common.connecting_backend":             "connecting to backend…",
