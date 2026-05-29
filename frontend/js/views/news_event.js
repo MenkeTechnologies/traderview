@@ -88,8 +88,8 @@ async function compute(tok) {
     if (allErrs.length) {
         const head = allErrs.slice(0, 8).map(e =>
             `[${e.src}] line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
-        const more = allErrs.length > 8 ? `<br>… and ${allErrs.length - 8} more.` : '';
-        errs.innerHTML = `<strong>${allErrs.length} parse error(s):</strong><br>${head}${more}`;
+        const more = allErrs.length > 8 ? `<br>${esc(t('common.and_n_more', { n: allErrs.length - 8 }))}` : '';
+        errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: allErrs.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
     }
     const err = validateInputs(positions, events);

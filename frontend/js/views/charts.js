@@ -136,7 +136,7 @@ export async function renderCharts(mount, _state, symbol = '') {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const cm = mount.querySelector('#chart-mount');
-            if (cm) cm.innerHTML = `<div class="boot">Error: ${e.message}</div>`;
+            if (cm) cm.innerHTML = `<div class="boot">${esc(t('view.charts.error.generic', { err: e.message }))}</div>`;
         }
     };
 

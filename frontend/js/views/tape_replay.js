@@ -123,14 +123,14 @@ async function renderReplay(mount, tradeId, tok) {
     const $ = (id) => mount.querySelector('#' + id);
     $('tr-play').addEventListener('click', () => {
         state.playing = !state.playing;
-        $('tr-play').textContent = state.playing ? '⏸ Pause' : '▶ Play';
+        $('tr-play').textContent = t(state.playing ? 'view.tape_replay.btn.pause' : 'view.tape_replay.btn.play');
         if (state.playing) play(data, state, mount, tok);
         else cancelAnims();
     });
     $('tr-rewind').addEventListener('click', () => {
         cancelAnims();
         state.playing = false;
-        $('tr-play').textContent = '▶ Play';
+        $('tr-play').textContent = t('view.tape_replay.btn.play');
         state.idx = 0;
         renderChart(data, state, mount);
     });
@@ -141,7 +141,7 @@ async function renderReplay(mount, tradeId, tok) {
     $('tr-scrub').addEventListener('input', (e) => {
         cancelAnims();
         state.playing = false;
-        $('tr-play').textContent = '▶ Play';
+        $('tr-play').textContent = t('view.tape_replay.btn.play');
         state.idx = Number(e.target.value);
         renderChart(data, state, mount);
     });
@@ -175,7 +175,7 @@ function play(data, state, mount, tok) {
         if (state.idx >= data.bars.length - 1) {
             state.playing = false;
             const btn = mount.querySelector('#tr-play');
-            if (btn) btn.textContent = '▶ Play';
+            if (btn) btn.textContent = t('view.tape_replay.btn.play');
             return;
         }
         timerHandle = setTimeout(tick, realTickMs);

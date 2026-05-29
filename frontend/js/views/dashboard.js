@@ -81,22 +81,30 @@ async function loadDisciplineScore(el, accountId) {
         const color = s.score >= 90 ? '#39ff14'
                     : s.score >= 75 ? '#ffb800'
                                     : '#ff2a6d';
+        const body = t('view.dashboard.discipline.body', {
+            stop_set:       s.component_stop_set,
+            stop_honored:   s.component_stop_honored,
+            plan:           s.component_plan_adherence,
+            gate_restraint: s.component_gate_restraint,
+        });
+        const win = t('view.dashboard.discipline.window', {
+            blocks:        s.gate_blocks,
+            block_label:   t(s.gate_blocks === 1 ? 'view.dashboard.discipline.block_singular' : 'view.dashboard.discipline.block_plural'),
+            warnings:      s.gate_warnings,
+            warning_label: t(s.gate_warnings === 1 ? 'view.dashboard.discipline.warning_singular' : 'view.dashboard.discipline.warning_plural'),
+        });
         el.innerHTML = `
             <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
                 <div style="font-size:48px;font-weight:700;color:${color};line-height:1">${s.score}</div>
                 <div style="font-size:24px;color:${color}">${esc(s.grade)}</div>
                 <div class="muted small" style="flex:1;min-width:200px">
-                    stop set ${s.component_stop_set}/100 &middot;
-                    stop honored ${s.component_stop_honored}/100 &middot;
-                    plan ${s.component_plan_adherence}/100 &middot;
-                    gate restraint ${s.component_gate_restraint}/100
-                    <br>${s.gate_blocks} block${s.gate_blocks === 1 ? '' : 's'},
-                    ${s.gate_warnings} warning${s.gate_warnings === 1 ? '' : 's'} in the window
+                    ${esc(body)}
+                    <br>${esc(win)}
                 </div>
             </div>
         `;
     } catch (_) {
-        el.textContent = '— (discipline score unavailable)';
+        el.textContent = t('view.dashboard.discipline.unavailable');
     }
 }
 
@@ -113,13 +121,13 @@ async function loadRiskGateBadge(el) {
             el.innerHTML = `<span class="muted">${t('view.dashboard.empty.no_fires_today')}</span>`;
             return;
         }
-        el.innerHTML = `
-            <strong style="color:#ff2a6d">${blocks}</strong> blocks &middot;
-            <strong style="color:#ffb800">${warns}</strong> warnings today &middot;
-            <a href="#risk-gate">audit log →</a>
-        `;
+        el.innerHTML = t('view.dashboard.risk_gate.body', {
+            blocks_html: `<strong style="color:#ff2a6d">${blocks}</strong>`,
+            warns_html:  `<strong style="color:#ffb800">${warns}</strong>`,
+            audit_link:  `<a href="#risk-gate">${esc(t('view.dashboard.risk_gate.audit_log'))}</a>`,
+        });
     } catch (_) {
-        el.textContent = '— (risk-gate route not available)';
+        el.textContent = t('view.dashboard.risk_gate.unavailable');
     }
 }
 

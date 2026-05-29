@@ -381,13 +381,13 @@ async function renderTiles(dashboard) {
         if (!body) continue;
         const fn = renderers[tile.viewId];
         if (!fn) {
-            body.innerHTML = `<div class="boot" style="color:var(--red)">View "${esc(tile.viewId)}" not found in renderer registry.</div>`;
+            body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.not_found', { view: tile.viewId }))}</div>`;
             continue;
         }
         try {
             await fn(body, {});
         } catch (e) {
-            body.innerHTML = `<div class="boot" style="color:var(--red)">Tile render failed: ${esc(String(e.message || e))}</div>`;
+            body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.render_failed', { err: String(e.message || e) }))}</div>`;
         }
     }
 }
