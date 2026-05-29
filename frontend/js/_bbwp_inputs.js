@@ -5,6 +5,8 @@
 // its own rolling lookback window. <10 = compression / squeeze;
 // >90 = expansion.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_BB_PERIOD = 20;
 export const DEFAULT_N_STDEV = 2.0;
 export const DEFAULT_LOOKBACK = 252;
@@ -21,18 +23,18 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                          return 'closes must be an array';
-    if (!Number.isInteger(input.bb_period))                    return 'bb_period must be an integer';
+    if (!Array.isArray(input.closes))                          return t('view.bbwp.validate.closes_array');
+    if (!Number.isInteger(input.bb_period))                    return t('view.bbwp.validate.bb_period_int');
     if (input.bb_period < MIN_BB_PERIOD || input.bb_period > MAX_BB_PERIOD)
-                                                                return `bb_period must be in [${MIN_BB_PERIOD}, ${MAX_BB_PERIOD}]`;
-    if (!Number.isFinite(input.n_stdev) || input.n_stdev <= 0) return 'n_stdev must be positive finite';
-    if (!Number.isInteger(input.lookback))                     return 'lookback must be an integer';
+                                                                return t('view.bbwp.validate.bb_period_range', { min: MIN_BB_PERIOD, max: MAX_BB_PERIOD });
+    if (!Number.isFinite(input.n_stdev) || input.n_stdev <= 0) return t('view.bbwp.validate.n_stdev_pos');
+    if (!Number.isInteger(input.lookback))                     return t('view.bbwp.validate.lookback_int');
     if (input.lookback < MIN_LOOKBACK || input.lookback > MAX_LOOKBACK)
-                                                                return `lookback must be in [${MIN_LOOKBACK}, ${MAX_LOOKBACK}]`;
-    if (input.lookback < input.bb_period)                      return `lookback (${input.lookback}) must be ≥ bb_period (${input.bb_period})`;
-    if (input.closes.length < input.lookback)                  return `need at least lookback (${input.lookback}) closes`;
+                                                                return t('view.bbwp.validate.lookback_range', { min: MIN_LOOKBACK, max: MAX_LOOKBACK });
+    if (input.lookback < input.bb_period)                      return t('view.bbwp.validate.lookback_ge_bb', { lookback: input.lookback, bb_period: input.bb_period });
+    if (input.closes.length < input.lookback)                  return t('view.bbwp.validate.closes_min_lookback', { lookback: input.lookback });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))                 return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))                 return t('view.bbwp.validate.close_not_finite', { i });
     }
     return null;
 }

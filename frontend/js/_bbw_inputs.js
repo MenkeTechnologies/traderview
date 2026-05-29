@@ -9,6 +9,8 @@
 //   percent_b:  (number|null)[],
 // }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 20;
 export const DEFAULT_K = 2.0;
 export const MIN_PERIOD = 2;
@@ -21,14 +23,14 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
-    if (!Number.isInteger(input.period))                    return 'period must be an integer';
+    if (!Array.isArray(input.closes))                       return t('view.bbw.validate.closes_array');
+    if (!Number.isInteger(input.period))                    return t('view.bbw.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                             return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                             return t('view.bbw.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isFinite(input.k) || input.k < 0)           return 'k must be non-negative finite';
-    if (input.closes.length < input.period)                 return `need at least period (${input.period}) closes`;
+    if (input.closes.length < input.period)                 return t('view.bbw.validate.closes_min_period', { period: input.period });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.bbw.validate.close_not_finite', { i });
     }
     return null;
 }
