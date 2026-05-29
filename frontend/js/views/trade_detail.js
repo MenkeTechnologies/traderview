@@ -236,7 +236,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
-            alert('No default trade template set. Configure one under Settings → Notes Templates.');
+            alert(t('view.trade_detail.alert.no_template'));
         }
     });
     mount.querySelectorAll('[data-del-journal]').forEach(b =>
@@ -262,7 +262,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 await api.updateExecution(eid, body);
                 if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
-            } catch (err) { alert('Save failed: ' + err.message); }
+            } catch (err) { alert(t('view.trade_detail.alert.save_failed', { msg: err.message })); }
         }));
     mount.querySelectorAll('[data-del-ex]').forEach(b =>
         b.addEventListener('click', async () => {
@@ -298,7 +298,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 await api.addExecutionToTrade(tradeId, body);
                 if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
-            } catch (err) { alert('Add failed: ' + err.message); }
+            } catch (err) { alert(t('view.trade_detail.alert.add_failed', { msg: err.message })); }
         });
     }
 

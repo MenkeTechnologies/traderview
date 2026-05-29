@@ -3,6 +3,7 @@
 
 import { api, wsUrl } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 
@@ -83,7 +84,7 @@ export async function renderWebull(mount, _state) {
             if (panel) panel.open = false;
             connectWs(mount, viewTok);
         } catch (err) {
-            alert('Connect failed: ' + err.message);
+            alert(t('view.webull.alert.connect_failed', { msg: err.message }));
         }
     });
 

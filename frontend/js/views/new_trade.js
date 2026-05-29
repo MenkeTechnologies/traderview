@@ -127,9 +127,9 @@ export async function renderNewTrade(mount, state) {
             if (decision) {
                 const { blocks, warnings } = splitViolations(decision);
                 if (blocks.length) {
-                    alert('Risk Gate BLOCKED this trade:\n\n' +
-                        blocks.map(b => `[${b.rule}] ${b.message}`).join('\n\n') +
-                        '\n\nFix the inputs or disable the rule and try again.');
+                    alert(t('view.new_trade.alert.risk_blocked', {
+                        blocks: blocks.map(b => `[${b.rule}] ${b.message}`).join('\n\n'),
+                    }));
                     return;
                 }
                 if (warnings.length) {
@@ -151,7 +151,7 @@ export async function renderNewTrade(mount, state) {
                 `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T` +
                 `${pad(now.getHours())}:${pad(now.getMinutes())}`;
             syncOption();
-        } catch (err) { alert('Error: ' + err.message); }
+        } catch (err) { alert(t('view.new_trade.alert.error', { msg: err.message })); }
     });
 
     async function refresh() {

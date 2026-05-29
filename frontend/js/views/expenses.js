@@ -263,14 +263,14 @@ function drawTable() {
 }
 
 async function createAccountFlow() {
-    const name = prompt('Account name (e.g. "BofA Business Checking"):');
+    const name = prompt(t('view.expenses.prompt.account_name'));
     if (!name) return;
-    const kind = prompt('Kind: bank | credit_card | marketplace', 'credit_card');
+    const kind = prompt(t('view.expenses.prompt.kind'), 'credit_card');
     if (!['bank', 'credit_card', 'marketplace'].includes(kind)) {
-        alert('invalid kind');
+        alert(t('view.expenses.alert.invalid_kind'));
         return;
     }
-    const source = prompt('Source id (bofa | chase | apple_card | amazon | manual):', 'chase');
+    const source = prompt(t('view.expenses.prompt.source'), 'chase');
     if (!source) return;
     try {
         const acct = await api.createExpenseAccount({ kind, source, name });

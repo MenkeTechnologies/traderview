@@ -78,7 +78,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
-            alert('No default journal template set. Configure one under Settings → Notes Templates.');
+            alert(t('view.journal.alert.no_template'));
         }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>

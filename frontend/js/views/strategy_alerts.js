@@ -83,7 +83,7 @@ export async function renderStrategyAlerts(mount) {
         const fd = new FormData(e.target);
         let ast;
         try { ast = JSON.parse(mount.querySelector('#sa-ast').value); }
-        catch (err) { alert('AST JSON invalid: ' + err.message); return; }
+        catch (err) { alert(t('view.strategy_alerts.alert.ast_invalid', { msg: err.message })); return; }
         try {
             await api.createStrategyAlert({
                 name: fd.get('name').trim(),

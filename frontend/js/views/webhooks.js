@@ -1,6 +1,7 @@
 // Outbound webhooks: Discord, Slack, generic HTTP.
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderWebhooks(mount) {
@@ -80,7 +81,7 @@ export async function renderWebhooks(mount) {
         b.addEventListener('click', async () => {
             await api.testWebhook(b.dataset.test);
             if (!viewIsCurrent(tok)) return;
-            alert('Test fired — check your Discord/Slack/endpoint.');
+            alert(t('view.webhooks.alert.test_fired'));
             renderWebhooks(mount);
         }));
     mount.querySelectorAll('[data-tog]').forEach(b =>

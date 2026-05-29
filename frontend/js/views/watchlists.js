@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 
 export async function renderWatchlists(mount) {
     const tok = currentViewToken();
@@ -72,7 +73,7 @@ export async function renderWatchlists(mount) {
     });
 
     mount.querySelector('#rename-wl').addEventListener('click', async () => {
-        const name = prompt('New name:', active.name);
+        const name = prompt(t('view.watchlists.prompt.rename'), active.name);
         if (!name) return;
         await api.renameWatchlist(active.id, name);
         if (!viewIsCurrent(tok)) return;
