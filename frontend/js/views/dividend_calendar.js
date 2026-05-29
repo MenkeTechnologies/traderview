@@ -14,26 +14,29 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 import {
     parseSymbolList, extractDividend, sortByExDate,
     filterByHorizon, daysBetween,
     fmtDate, fmtYield, fmtAmount,
 } from '../_dividend_calendar_inputs.js';
 
-import { t } from '../i18n.js';
 const DEFAULT_SYMBOLS = `# One symbol per token (line / comma / space separated).
 # Demo: a handful of well-known dividend payers.
 KO  PG  JNJ  XOM  CVX  T  VZ  MCD  WMT  PEP  HD  IBM  PFE  MRK  ABBV
 `;
 
 const HORIZON_OPTIONS = [
-    { value: 7,    label: 'Next 7 days' },
-    { value: 14,   label: 'Next 14 days' },
-    { value: 30,   label: 'Next 30 days' },
-    { value: 60,   label: 'Next 60 days' },
-    { value: 180,  label: 'Next 6 months' },
-    { value: 'all', label: 'All upcoming' },
+    { value: 7,    n: 7 },
+    { value: 14,   n: 14 },
+    { value: 30,   n: 30 },
+    { value: 60,   n: 60 },
+    { value: 180,  key: 'view.dividend_calendar.horizon.next_6_months' },
+    { value: 'all', key: 'view.dividend_calendar.horizon.all' },
 ];
+function horizonLabel(o) {
+    return o.key ? t(o.key) : t('view.dividend_calendar.horizon.next_n_days', { n: o.n });
+}
 
 let state = {
     text: DEFAULT_SYMBOLS,
@@ -55,7 +58,7 @@ export async function renderDividendCalendar(mount, _appState) {
                 <label><span data-i18n="view.dividend_calendar.label.horizon">Horizon</span>
                     <select id="dc-horizon">
                         ${HORIZON_OPTIONS.map(o =>
-                            `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(o.label)}</option>`
+                            `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(horizonLabel(o))}</option>`
                         ).join('')}
                     </select></label>
                 <button data-i18n="view.dividend_calendar.btn.load_from_watchlist" id="dc-load-watchlist" class="secondary" type="button">Load from watchlist</button>
