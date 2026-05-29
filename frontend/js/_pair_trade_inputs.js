@@ -9,6 +9,7 @@
 // Z-score:       z_t = (spread_t - mean(spread)) / stdev(spread)
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse a price-series textarea. */
 export function parseSeries(text) {
@@ -17,27 +18,27 @@ export function parseSeries(text) {
 
 /** Validate the y/x series + threshold inputs. */
 export function validateInputs(y, x, config) {
-    if (!Array.isArray(y) || y.length < 10) return 'y leg needs ≥ 10 prices';
-    if (!Array.isArray(x) || x.length < 10) return 'x leg needs ≥ 10 prices';
+    if (!Array.isArray(y) || y.length < 10) return t('view.pair_trade.validate.y_min');
+    if (!Array.isArray(x) || x.length < 10) return t('view.pair_trade.validate.x_min');
     if (y.length !== x.length) {
-        return `y and x must be the same length (got ${y.length} vs ${x.length})`;
+        return t('view.pair_trade.validate.length_mismatch', { yLen: y.length, xLen: x.length });
     }
-    if (y.some(v => !Number.isFinite(v))) return 'y prices contain non-finite values';
-    if (x.some(v => !Number.isFinite(v))) return 'x prices contain non-finite values';
+    if (y.some(v => !Number.isFinite(v))) return t('view.pair_trade.validate.y_non_finite');
+    if (x.some(v => !Number.isFinite(v))) return t('view.pair_trade.validate.x_non_finite');
     if (!Number.isFinite(config.entry_z) || config.entry_z <= 0) {
-        return 'entry_z must be > 0';
+        return t('view.pair_trade.validate.entry_z');
     }
     if (!Number.isFinite(config.exit_z) || config.exit_z <= 0) {
-        return 'exit_z must be > 0';
+        return t('view.pair_trade.validate.exit_z');
     }
     if (!Number.isFinite(config.stop_z) || config.stop_z <= 0) {
-        return 'stop_z must be > 0';
+        return t('view.pair_trade.validate.stop_z');
     }
     if (config.exit_z >= config.entry_z) {
-        return 'exit_z must be < entry_z (exit only when z mean-reverts inside entry band)';
+        return t('view.pair_trade.validate.exit_lt_entry');
     }
     if (config.stop_z <= config.entry_z) {
-        return 'stop_z must be > entry_z';
+        return t('view.pair_trade.validate.stop_gt_entry');
     }
     return null;
 }
