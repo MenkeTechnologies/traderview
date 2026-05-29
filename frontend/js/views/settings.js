@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSettings(mount, state) {
@@ -68,16 +69,16 @@ export async function renderSettings(mount, state) {
             <h2 data-i18n="view.settings.h2.notes_templates">Notes Templates</h2>
             <table class="trades">
                 <thead><tr><th data-i18n="view.settings.th.name">Name</th><th data-i18n="view.settings.th.scope">Scope</th><th data-i18n="view.settings.th.default">Default</th><th data-i18n="view.settings.th.updated">Updated</th><th></th></tr></thead>
-                <tbody>${templates.map(t => `
-                    <tr><td>${esc(t.name)}</td>
-                    <td>${esc(t.scope)}</td>
-                    <td>${t.is_default ? '✓' : ''}</td>
-                    <td>${fmtDateTime(t.updated_at)}</td>
+                <tbody>${templates.map(tpl => `
+                    <tr><td>${esc(tpl.name)}</td>
+                    <td>${esc(tpl.scope)}</td>
+                    <td>${tpl.is_default ? '✓' : ''}</td>
+                    <td>${fmtDateTime(tpl.updated_at)}</td>
                     <td>
-                        <button data-i18n="view.settings.btn.edit" class="link" data-edit-tpl='${esc(JSON.stringify(t))}'>edit</button>
-                        <button data-i18n="view.settings.btn.delete" class="link" data-del-tpl="${t.id}">delete</button>
+                        <button data-i18n="view.settings.btn.edit" class="link" data-edit-tpl='${esc(JSON.stringify(tpl))}'>edit</button>
+                        <button data-i18n="view.settings.btn.delete" class="link" data-del-tpl="${tpl.id}">delete</button>
                     </td></tr>
-                `).join('') || '<tr><td colspan="5" class="muted">No templates yet.</td></tr>'}
+                `).join('') || `<tr><td colspan="5" class="muted">${esc(t('view.settings.empty.templates'))}</td></tr>`}
                 </tbody>
             </table>
             <form id="tpl-form" class="inline-form" style="margin-top:10px">

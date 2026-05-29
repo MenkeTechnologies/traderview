@@ -8,6 +8,7 @@
 
 import { api } from '../api.js';
 import { esc, fmtMoney, fmtPct } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTaxWorkshop(mount, _state) {
@@ -85,7 +86,7 @@ export async function renderTaxWorkshop(mount, _state) {
             </form>
             <table class="trades" id="mi-table">
                 <thead><tr><th data-i18n="view.tax_workshop.th.date">Date</th><th data-i18n="view.tax_workshop.th.miles">Miles</th><th data-i18n="view.tax_workshop.th.purpose">Purpose</th><th data-i18n="view.tax_workshop.th.note">Note</th></tr></thead>
-                <tbody><tr><td colspan="4" class="muted">No trips added yet.</td></tr></tbody>
+                <tbody><tr><td colspan="4" class="muted" data-i18n="view.tax_workshop.empty.trips">No trips added yet.</td></tr></tbody>
             </table>
             <button data-i18n="view.tax_workshop.btn.compute_deduction" id="mi-compute" class="primary" type="button" style="margin-top:8px">Compute Deduction</button>
             <pre id="mi-out" class="boot">—</pre>
@@ -121,7 +122,7 @@ export async function renderTaxWorkshop(mount, _state) {
                 <thead><tr>
                     <th data-i18n="view.tax_workshop.th.merchant">Merchant</th><th data-i18n="view.tax_workshop.th.cadence">Cadence</th><th data-i18n="view.tax_workshop.th.median">Median</th><th data-i18n="view.tax_workshop.th.samples">Samples</th><th data-i18n="view.tax_workshop.th.projected_yr">Projected/yr</th>
                 </tr></thead>
-                <tbody><tr><td colspan="5" class="muted">Click detect to scan.</td></tr></tbody>
+                <tbody><tr><td colspan="5" class="muted" data-i18n="view.tax_workshop.empty.scan">Click detect to scan.</td></tr></tbody>
             </table>
         </div>
     `;
@@ -159,12 +160,12 @@ export async function renderTaxWorkshop(mount, _state) {
         const tb = mount.querySelector('#mi-table tbody');
         if (!tb) return;
         if (!trips.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="muted">No trips added yet.</td></tr>';
+            tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.tax_workshop.empty.trips'))}</td></tr>`;
             return;
         }
-        tb.innerHTML = trips.map(t =>
-            `<tr><td>${esc(t.date)}</td><td>${esc(String(t.miles))}</td>
-             <td>${esc(t.purpose)}</td><td>${esc(t.note)}</td></tr>`
+        tb.innerHTML = trips.map(trip =>
+            `<tr><td>${esc(trip.date)}</td><td>${esc(String(trip.miles))}</td>
+             <td>${esc(trip.purpose)}</td><td>${esc(trip.note)}</td></tr>`
         ).join('');
     };
     mount.querySelector('#mi-form').addEventListener('submit', (e) => {
@@ -206,13 +207,13 @@ export async function renderTaxWorkshop(mount, _state) {
     // ---- Subscriptions -------------------------------------------------
     mount.querySelector('#sub-run').addEventListener('click', async () => {
         const tb = mount.querySelector('#sub-table tbody');
-        if (tb) tb.innerHTML = '<tr><td colspan="5" class="muted">Scanning…</td></tr>';
+        if (tb) tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.tax_workshop.hint.scanning'))}</td></tr>`;
         try {
             const subs = await api.detectSubscriptions();
             if (!viewIsCurrent(tok)) return;
             renderSubs(mount, subs);
         } catch (err) {
-            if (tb) tb.innerHTML = `<tr><td colspan="5" class="muted">Error: ${esc(err.message)}</td></tr>`;
+            if (tb) tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.tax_workshop.error', { msg: err.message }))}</td></tr>`;
         }
     });
 }
