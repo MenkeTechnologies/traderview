@@ -8286,6 +8286,7 @@
   "view.vol_surface.axis.x":       "days to expiry",
   "view.vol_surface.axis.y":       "ATM IV (%)",
   "view.vol_surface.term_summary": "Front-month {front}% · Back-month {back}% · {verdict}",
+  "view.fear_greed.axis":          "0 fear · 50 neutral · 100 greed",
   "view.charts.error.generic":                  "Error: {err}",
   "view.monte_carlo.empty.stdev_zero":           "stdev was zero — distribution is a point mass.",
   "view.research.empty.no_quote":                "no quote",

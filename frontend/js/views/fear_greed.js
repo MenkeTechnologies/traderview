@@ -91,7 +91,7 @@ function renderGauge(s, mount) {
             <path d="M 40 140 A 120 120 0 0 1 280 140" stroke="url(#fg-grad)" stroke-width="22" fill="none" stroke-linecap="round"/>
             <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="${color}" stroke-width="3"/>
             <circle cx="${cx}" cy="${cy}" r="6" fill="${color}"/>
-            <text x="160" y="170" text-anchor="middle" fill="#9aa0c8" font-size="12">0 fear · 50 neutral · 100 greed</text>
+            <text x="160" y="170" text-anchor="middle" fill="#9aa0c8" font-size="12">${esc(t('view.fear_greed.axis'))}</text>
         </svg>
         <p class="muted small" style="text-align:center;">${esc(t('view.fear_greed.hint.updated', { time: new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
     `;
