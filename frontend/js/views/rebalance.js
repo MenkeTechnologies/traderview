@@ -6,29 +6,29 @@ import { esc, fmt } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
-const PRESETS = {
-    '60/40 stocks/bonds': [
+const PRESETS = [
+    { id: '60_40', weights: [
         { symbol: 'VTI', weight: 0.60 },
         { symbol: 'BND', weight: 0.40 },
-    ],
-    'Three-fund (Bogle)': [
+    ]},
+    { id: 'three_fund_bogle', weights: [
         { symbol: 'VTI', weight: 0.60 },
         { symbol: 'VXUS', weight: 0.20 },
         { symbol: 'BND',  weight: 0.20 },
-    ],
-    'Permanent Portfolio (Browne)': [
+    ]},
+    { id: 'permanent_browne', weights: [
         { symbol: 'VTI', weight: 0.25 },
         { symbol: 'TLT', weight: 0.25 },
         { symbol: 'GLD', weight: 0.25 },
         { symbol: 'BIL', weight: 0.25 },
-    ],
-    'Risk parity (lite)': [
+    ]},
+    { id: 'risk_parity_lite', weights: [
         { symbol: 'VTI', weight: 0.30 },
         { symbol: 'TLT', weight: 0.40 },
         { symbol: 'GLD', weight: 0.15 },
         { symbol: 'IEF', weight: 0.15 },
-    ],
-};
+    ]},
+];
 
 export async function renderRebalance(mount, state) {
     const tok = currentViewToken();
@@ -46,7 +46,7 @@ export async function renderRebalance(mount, state) {
                 <label><span data-i18n="view.rebalance.label.preset">Preset</span>
                     <select name="preset">
                         <option data-i18n="view.rebalance.opt.custom" value="">(custom)</option>
-                        ${Object.keys(PRESETS).map(k => `<option>${esc(k)}</option>`).join('')}
+                        ${PRESETS.map(p => `<option value="${p.id}" data-i18n="view.rebalance.preset.${p.id}">${esc(t(`view.rebalance.preset.${p.id}`))}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.rebalance.label.cash">Cash on hand</span>
@@ -72,10 +72,10 @@ export async function renderRebalance(mount, state) {
     `;
 
     mount.querySelector('#rb-form [name=preset]').addEventListener('change', (e) => {
-        const k = e.target.value;
-        if (k && PRESETS[k]) {
+        const preset = PRESETS.find(p => p.id === e.target.value);
+        if (preset) {
             const ta = mount.querySelector('#rb-targets');
-            if (ta) ta.value = JSON.stringify(PRESETS[k], null, 2);
+            if (ta) ta.value = JSON.stringify(preset.weights, null, 2);
         }
     });
 
