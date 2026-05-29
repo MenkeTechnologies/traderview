@@ -5,6 +5,8 @@
 // }
 // Returns: (number|null)[]  — RSI-like 0..100 with adaptive lookback.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_TD_CONST = 14;
 export const DEFAULT_STD_PERIOD = 5;
 export const DEFAULT_TD_MIN = 5;
@@ -21,20 +23,20 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
+    if (!Array.isArray(input.closes))                       return t('view.cdmi.validate.closes_array');
     if (!Number.isInteger(input.td_const) || input.td_const < MIN_PERIOD || input.td_const > MAX_PERIOD)
-                                                             return `td_const must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                             return t('view.cdmi.validate.td_const_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isInteger(input.std_period) || input.std_period < MIN_PERIOD || input.std_period > MAX_PERIOD)
-                                                             return `std_period must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                             return t('view.cdmi.validate.std_period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isInteger(input.td_min) || input.td_min < MIN_PERIOD)
-                                                             return `td_min must be integer ≥ ${MIN_PERIOD}`;
+                                                             return t('view.cdmi.validate.td_min', { min: MIN_PERIOD });
     if (!Number.isInteger(input.td_max) || input.td_max < input.td_min)
-                                                             return `td_max must be integer ≥ td_min`;
-    if (input.td_max < input.td_const)                      return `td_max must be ≥ td_const`;
+                                                             return t('view.cdmi.validate.td_max_ge_min');
+    if (input.td_max < input.td_const)                      return t('view.cdmi.validate.td_max_ge_const');
     const required = 2 * input.std_period + input.td_max;
-    if (input.closes.length < required)                     return `need at least 2·std_period + td_max = ${required} closes`;
+    if (input.closes.length < required)                     return t('view.cdmi.validate.closes_min', { n: required });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.cdmi.validate.close_finite', { i });
     }
     return null;
 }

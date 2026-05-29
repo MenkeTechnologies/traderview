@@ -4,6 +4,8 @@
 //   where Bar = { high, low }
 // Returns: (number|null)[]  — CVI in %.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_EMA = 10;
 export const DEFAULT_ROC = 10;
 export const MIN_EMA = 2;
@@ -17,21 +19,21 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                       return 'bars must be an array';
+    if (!Array.isArray(input.bars))                       return t('view.cvi.validate.bars_array');
     if (!Number.isInteger(input.ema_period) || input.ema_period < MIN_EMA || input.ema_period > MAX_PERIOD)
-                                                           return `ema_period must be integer in [${MIN_EMA}, ${MAX_PERIOD}]`;
+                                                           return t('view.cvi.validate.ema_range', { min: MIN_EMA, max: MAX_PERIOD });
     if (!Number.isInteger(input.roc_period) || input.roc_period < MIN_ROC || input.roc_period > MAX_PERIOD)
-                                                           return `roc_period must be integer in [${MIN_ROC}, ${MAX_PERIOD}]`;
+                                                           return t('view.cvi.validate.roc_range', { min: MIN_ROC, max: MAX_PERIOD });
     if (input.bars.length < input.ema_period + input.roc_period)
-                                                           return `need at least ema_period + roc_period = ${input.ema_period + input.roc_period} bars`;
+                                                           return t('view.cvi.validate.bars_min', { n: input.ema_period + input.roc_period });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.cvi.validate.bar_missing', { i });
         if (typeof b.high !== 'number' || typeof b.low !== 'number')
-                                                            return `bars[${i}] high / low must be numbers`;
+                                                            return t('view.cvi.validate.hl_numbers', { i });
         if (!Number.isFinite(b.high) || !Number.isFinite(b.low))
-                                                            return `bars[${i}] high / low must be finite`;
-        if (b.high < b.low)                                return `bars[${i}] high < low`;
+                                                            return t('view.cvi.validate.hl_finite', { i });
+        if (b.high < b.low)                                return t('view.cvi.validate.high_lt_low', { i });
     }
     return null;
 }
