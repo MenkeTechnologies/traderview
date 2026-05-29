@@ -82,13 +82,13 @@ async function renderReplay(mount, tradeId, tok) {
         <h1 class="view-title">// REPLAY — ${esc(data.symbol)} · ${esc(data.side)} ·
             ${esc(data.interval)} bars</h1>
         <div class="cards">
-            <div class="card"><div class="label">Qty</div><div class="value">${fmt(data.qty, 0)}</div></div>
-            <div class="card"><div class="label">Entry / Exit</div>
+            <div class="card"><div class="label" data-i18n="view.tape_replay.card.qty">Qty</div><div class="value">${fmt(data.qty, 0)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.tape_replay.card.entry_exit">Entry / Exit</div>
                 <div class="value">${fmt(data.entry_avg, 2)} → ${data.exit_avg != null ? fmt(data.exit_avg, 2) : '—'}</div></div>
-            <div class="card"><div class="label">Stop / Target</div>
+            <div class="card"><div class="label" data-i18n="view.tape_replay.card.stop_target">Stop / Target</div>
                 <div class="value">${data.stop_loss != null ? fmt(data.stop_loss, 2) : '—'} /
                 ${data.initial_target != null ? fmt(data.initial_target, 2) : '—'}</div></div>
-            <div class="card"><div class="label">Net P/L</div>
+            <div class="card"><div class="label" data-i18n="view.tape_replay.card.net_pnl">Net P/L</div>
                 <div class="value ${(data.net_pnl ?? 0) >= 0 ? 'pos' : 'neg'}">${
                     data.net_pnl != null ? '$' + fmt(data.net_pnl) : '—'
                 }</div></div>

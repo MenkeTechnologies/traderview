@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const PACE_COLOR = {
     on_track:      '#7af0a8',
@@ -123,6 +124,7 @@ async function refresh(mount, tok) {
         if (!el2) return;
         el2.innerHTML = progressList.map((p, i) => p ? card(p) : `<div class="chart-panel">
             <p class="boot">progress fetch failed for ${esc(goals[i].name)}</p></div>`).join('');
+        try { applyUiI18n(el2); } catch (_) {}
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!confirm('Delete this goal?')) return;
@@ -166,19 +168,19 @@ function card(p) {
             <button data-i18n="view.goals.btn.delete" class="btn g-del" data-id="${g.id}">Delete</button>
         </div>
         <div class="cards">
-            <div class="card"><div class="label">Window progress</div>
+            <div class="card"><div class="label" data-i18n="view.goals.card.window_progress">Window progress</div>
                 <div class="value">${p.elapsed_pct.toFixed(0)}%</div>
                 <div class="small muted">${p.days_elapsed} / ${p.days_total} days</div></div>
-            <div class="card"><div class="label">Closed trades</div>
+            <div class="card"><div class="label" data-i18n="view.goals.card.closed_trades">Closed trades</div>
                 <div class="value">${p.trades_in_window}</div>
                 <div class="small muted">${p.wins}W / ${p.losses}L</div></div>
-            <div class="card"><div class="label">Actual P/L</div>
+            <div class="card"><div class="label" data-i18n="view.goals.card.actual_pnl">Actual P/L</div>
                 <div class="value ${p.actual_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(p.actual_pnl)}</div>
                 ${p.projected_pnl != null ? `<div class="small muted">projected end: $${fmt(p.projected_pnl)}</div>` : ''}
             </div>
-            <div class="card"><div class="label">Win rate</div>
+            <div class="card"><div class="label" data-i18n="view.goals.card.win_rate">Win rate</div>
                 <div class="value">${(p.actual_win_rate * 100).toFixed(1)}%</div></div>
-            <div class="card"><div class="label">Max drawdown</div>
+            <div class="card"><div class="label" data-i18n="view.goals.card.max_drawdown">Max drawdown</div>
                 <div class="value ${p.actual_max_drawdown_pct > (targetDD ?? Infinity) ? 'neg' : ''}">
                     ${p.actual_max_drawdown_pct.toFixed(2)}%
                 </div></div>

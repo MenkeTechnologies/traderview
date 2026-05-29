@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const pct = (n) => n == null ? '—' : (n * 100).toFixed(2) + '%';
 const compact = (n) => {
@@ -107,17 +108,18 @@ async function renderSymbol(mount, sym) {
         }
         const latest = s.days[s.days.length - 1];
         cardsEl.innerHTML = `
-            <div class="card"><div class="label">Avg off-exch %</div>
+            <div class="card"><div class="label" data-i18n="view.darkpool.card.avg_off_exch_pct">Avg off-exch %</div>
                 <div class="value">${pct(s.avg_off_exchange_pct)}</div></div>
-            <div class="card"><div class="label">Latest (${latest.date})</div>
+            <div class="card"><div class="label"><span data-i18n="view.darkpool.card.latest">Latest</span> (${latest.date})</div>
                 <div class="value">${pct(latest.off_exchange_pct)}</div></div>
-            <div class="card"><div class="label">Latest off-exch vol</div>
+            <div class="card"><div class="label" data-i18n="view.darkpool.card.latest_off_exch_vol">Latest off-exch vol</div>
                 <div class="value">${compact(latest.off_exchange_volume)}</div></div>
-            <div class="card"><div class="label">Latest total vol</div>
+            <div class="card"><div class="label" data-i18n="view.darkpool.card.latest_total_vol">Latest total vol</div>
                 <div class="value">${compact(latest.total_volume)}</div></div>
-            <div class="card"><div class="label">Sessions</div>
+            <div class="card"><div class="label" data-i18n="view.darkpool.card.sessions">Sessions</div>
                 <div class="value">${s.days.length}</div></div>
         `;
+        try { applyUiI18n(cardsEl); } catch (_) {}
         const labels = s.days.map(d => d.date);
         const pctEl = mount.querySelector('#dp-pct');
         const volEl = mount.querySelector('#dp-vol');

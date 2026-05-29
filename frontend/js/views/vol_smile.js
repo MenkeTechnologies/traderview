@@ -14,6 +14,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtPct } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 import {
     parseStrikeIvText, buildSviBody, validateSmileInputs,
     sortRowsByStrike, atmSkewSlope,
@@ -128,24 +129,26 @@ function renderSummary(res, tYears) {
     const arbCell = res.arbitrage_ok
         ? '<span class="pos">no-arb OK</span>'
         : '<span class="neg">violated</span>';
-    document.getElementById('vs-summary').innerHTML = `
-        <div class="card"><div class="label">a (level)</div>
+    const vsSummary = document.getElementById('vs-summary');
+    vsSummary.innerHTML = `
+        <div class="card"><div class="label"><span data-i18n="view.vol_smile.card.a">a</span> (level)</div>
             <div class="value">${formatN(res.a, 6)}</div></div>
-        <div class="card"><div class="label">b (scale)</div>
+        <div class="card"><div class="label"><span data-i18n="view.vol_smile.card.b">b</span> (scale)</div>
             <div class="value">${formatN(res.b, 4)}</div></div>
-        <div class="card"><div class="label">ρ (skew)</div>
+        <div class="card"><div class="label">ρ (<span data-i18n="view.vol_smile.card.skew">skew</span>)</div>
             <div class="value ${res.rho < 0 ? 'neg' : 'pos'}">${formatN(res.rho, 4)}</div></div>
-        <div class="card"><div class="label">m (center)</div>
+        <div class="card"><div class="label"><span data-i18n="view.vol_smile.card.m">m</span> (center)</div>
             <div class="value">${formatN(res.m, 4)}</div></div>
-        <div class="card"><div class="label">σ (smoothness)</div>
+        <div class="card"><div class="label">σ (<span data-i18n="view.vol_smile.card.smoothness">smoothness</span>)</div>
             <div class="value">${formatN(res.sigma, 4)}</div></div>
-        <div class="card"><div class="label">RMSE (total var)</div>
+        <div class="card"><div class="label" data-i18n="view.vol_smile.card.rmse_total_var">RMSE (total var)</div>
             <div class="value">${formatN(res.rmse_total_var, 6)}</div></div>
-        <div class="card"><div class="label">∂σ/∂k at ATM</div>
+        <div class="card"><div class="label">∂σ/∂k <span data-i18n="view.vol_smile.card.at_atm">at ATM</span></div>
             <div class="value ${skew < 0 ? 'neg' : 'pos'}">${formatN(skew, 4)}</div></div>
-        <div class="card"><div class="label">Arbitrage</div>
+        <div class="card"><div class="label" data-i18n="view.vol_smile.card.arbitrage">Arbitrage</div>
             <div class="value">${arbCell}</div></div>
     `;
+    try { applyUiI18n(vsSummary); } catch (_) {}
 }
 
 function renderChart(rows, res) {

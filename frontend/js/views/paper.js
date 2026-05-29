@@ -49,14 +49,14 @@ export async function renderPaper(mount) {
         <h1 class="view-title">// PAPER TRADING · ${esc(acct.name)}</h1>
 
         <div class="cards">
-            <div class="card"><div class="label">Cash</div><div class="value">$${fmt(cash)}</div></div>
-            <div class="card"><div class="label">Position value</div><div class="value">$${fmt(posValue)}</div></div>
-            <div class="card"><div class="label">Equity</div><div class="value">$${fmt(equity)}</div></div>
-            <div class="card"><div class="label">Total P&L</div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.cash">Cash</div><div class="value">$${fmt(cash)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.position_value">Position value</div><div class="value">$${fmt(posValue)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.equity">Equity</div><div class="value">$${fmt(equity)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.total_pnl">Total P&L</div>
                 <div class="value ${total >= 0 ? 'pos' : 'neg'}">${total >= 0 ? '+' : ''}$${fmt(total)} (${totalPct.toFixed(2)}%)</div></div>
-            <div class="card"><div class="label">Unrealized</div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.unrealized">Unrealized</div>
                 <div class="value ${unrealized >= 0 ? 'pos' : 'neg'}">${unrealized >= 0 ? '+' : ''}$${fmt(unrealized)}</div></div>
-            <div class="card"><div class="label">Starting cash</div><div class="value">$${fmt(acct.starting_cash)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.paper.card.starting_cash">Starting cash</div><div class="value">$${fmt(acct.starting_cash)}</div></div>
         </div>
 
         <div class="panel-grid">

@@ -52,14 +52,14 @@ export async function renderSharedTrade(mount, _state, slug) {
     mount.innerHTML = `
         <h1 class="view-title">// SHARED · ${esc(t.symbol)}</h1>
         <div class="cards">
-            <div class="card"><div class="label">Net P&L</div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.net_pnl">Net P&L</div>
                 <div class="value ${pnlClass(t.net_pnl)}">${fmtMoney(t.net_pnl)}</div></div>
-            <div class="card"><div class="label">Side</div><div class="value">${t.side}</div></div>
-            <div class="card"><div class="label">Qty</div><div class="value">${fmt(t.qty, 0)}</div></div>
-            <div class="card"><div class="label">Entry</div><div class="value">${fmt(t.entry_avg)}</div></div>
-            <div class="card"><div class="label">Exit</div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.side">Side</div><div class="value">${t.side}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.qty">Qty</div><div class="value">${fmt(t.qty, 0)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.entry">Entry</div><div class="value">${fmt(t.entry_avg)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.exit">Exit</div>
                 <div class="value">${t.exit_avg !== null ? fmt(t.exit_avg) : '—'}</div></div>
-            <div class="card"><div class="label">Asset</div><div class="value">${t.asset_class}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.asset">Asset</div><div class="value">${t.asset_class}</div></div>
         </div>
 
         <div class="chart-panel">

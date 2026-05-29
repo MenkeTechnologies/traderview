@@ -3,7 +3,7 @@
 
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 
 const FIELDS = [
     { key: 'symbol',          required: true,  hint: 'AAPL, MSFT, …' },
@@ -203,13 +203,13 @@ function renderResult(r, mount) {
     el.innerHTML = `<div class="chart-panel">
         <h2 data-i18n="view.csv_wizard.h2.5_result">5 — Result</h2>
         <div class="cards">
-            <div class="card"><div class="label">Inserted</div>
+            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.inserted">Inserted</div>
                 <div class="value pos">${r.inserted}</div></div>
-            <div class="card"><div class="label">Skipped (dedupe)</div>
+            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.skipped_dedupe">Skipped (dedupe)</div>
                 <div class="value">${r.skipped_dedupe}</div></div>
-            <div class="card"><div class="label">Row failures</div>
+            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.row_failures">Row failures</div>
                 <div class="value ${r.failed_rows.length > 0 ? 'neg' : ''}">${r.failed_rows.length}</div></div>
-            <div class="card"><div class="label">Import id</div>
+            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.import_id">Import id</div>
                 <div class="value small"><code>${esc(r.import_id)}</code></div></div>
         </div>
         ${r.failed_rows.length === 0 ? '' : `<table class="trades">
@@ -222,4 +222,5 @@ function renderResult(r, mount) {
             </tbody>
         </table>`}
     </div>`;
+    try { applyUiI18n(el); } catch (_) {}
 }

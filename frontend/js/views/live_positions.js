@@ -4,6 +4,7 @@
 import { api, ApiError } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 let timer = null;
 
@@ -59,19 +60,20 @@ function renderCards(r, mount) {
     const el = mount.querySelector('#lp-cards');
     if (!el) return;
     el.innerHTML = `
-        <div class="card"><div class="label">Open positions</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.open_positions">Open positions</div>
             <div class="value">${r.position_count}</div></div>
-        <div class="card"><div class="label">Total notional</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.total_notional">Total notional</div>
             <div class="value">$${fmt(r.total_notional)}</div></div>
-        <div class="card"><div class="label">Unrealized P/L</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.unrealized_pnl">Unrealized P/L</div>
             <div class="value ${cls(r.total_unrealized_pnl)}">${signed$(r.total_unrealized_pnl)}</div></div>
-        <div class="card"><div class="label">Day P/L</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.day_pnl">Day P/L</div>
             <div class="value ${cls(r.total_day_pnl)}">${signed$(r.total_day_pnl)}</div></div>
-        <div class="card"><div class="label">Biggest winner</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.biggest_winner">Biggest winner</div>
             <div class="value pos">${esc(r.biggest_winner || '—')}</div></div>
-        <div class="card"><div class="label">Biggest loser</div>
+        <div class="card"><div class="label" data-i18n="view.live_positions.card.biggest_loser">Biggest loser</div>
             <div class="value neg">${esc(r.biggest_loser || '—')}</div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderTable(r, mount) {

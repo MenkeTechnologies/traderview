@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderFillQuality(mount, state) {
     const tok = currentViewToken();
@@ -35,19 +36,19 @@ function render(r, mount) {
     if (!el) return;
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Sampled fills</div>
+            <div class="card"><div class="label" data-i18n="view.fill_quality.card.sampled_fills">Sampled fills</div>
                 <div class="value">${o.samples}</div>
                 ${r.skipped_no_bar > 0 ? `<div class="small muted">${r.skipped_no_bar} skipped (no bar)</div>` : ''}
             </div>
-            <div class="card"><div class="label">Avg fill efficiency</div>
+            <div class="card"><div class="label" data-i18n="view.fill_quality.card.avg_efficiency">Avg fill efficiency</div>
                 <div class="value ${effCls}">${(o.avg_fill_efficiency * 100).toFixed(1)}%</div>
                 <div class="small muted">100% = best in day's range</div></div>
-            <div class="card"><div class="label">Avg slippage</div>
+            <div class="card"><div class="label" data-i18n="view.fill_quality.card.avg_slippage">Avg slippage</div>
                 <div class="value ${slipCls}">${(o.avg_slippage_bps >= 0 ? '+' : '') + o.avg_slippage_bps.toFixed(1)} bps</div>
                 <div class="small muted">vs HLC/3 typical, side-adj</div></div>
-            <div class="card"><div class="label">Median slippage</div>
+            <div class="card"><div class="label" data-i18n="view.fill_quality.card.median_slippage">Median slippage</div>
                 <div class="value">${o.median_slippage_bps.toFixed(1)} bps</div></div>
-            <div class="card"><div class="label">Worst / Best</div>
+            <div class="card"><div class="label" data-i18n="view.fill_quality.card.worst_best">Worst / Best</div>
                 <div class="value small"><span class="neg">+${o.worst_slippage_bps.toFixed(1)}</span> /
                     <span class="pos">${o.best_slippage_bps.toFixed(1)}</span></div></div>
         </div>
@@ -63,6 +64,7 @@ function render(r, mount) {
             ${sampleTable(r.samples.slice(0, 50))}
         </div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function bucketPanel(title, rows) {

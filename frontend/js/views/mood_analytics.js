@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const MOOD_LABELS = { '-2': '😡 awful', '-1': '🙁 down', '0': '😐 flat', '1': '🙂 good', '2': '😄 great' };
 
@@ -34,16 +35,17 @@ function render(r, mount) {
     const cardsEl = mount.querySelector('#ma-cards');
     if (!cardsEl) return;
     cardsEl.innerHTML = `
-        <div class="card"><div class="label">Samples</div>
+        <div class="card"><div class="label" data-i18n="view.mood_analytics.card.samples">Samples</div>
             <div class="value">${r.samples_total}</div></div>
-        <div class="card"><div class="label">Pearson(mood, P/L)</div>
+        <div class="card"><div class="label" data-i18n="view.mood_analytics.card.pearson">Pearson(mood, P/L)</div>
             <div class="value ${cls(corr)}">${corr == null ? '—' : corr.toFixed(3)}</div>
             <div class="muted small">${interpretCorr(corr)}</div></div>
-        <div class="card"><div class="label">Mood buckets</div>
+        <div class="card"><div class="label" data-i18n="view.mood_analytics.card.mood_buckets">Mood buckets</div>
             <div class="value">${r.stats.length}</div></div>
-        <div class="card"><div class="label">Per-trade vs per-day</div>
+        <div class="card"><div class="label" data-i18n="view.mood_analytics.card.per_trade_vs_day">Per-trade vs per-day</div>
             <div class="value small">${r.pairs.filter(p=>p.source==='per_trade').length} / ${r.pairs.filter(p=>p.source==='per_day').length}</div></div>
     `;
+    try { applyUiI18n(cardsEl); } catch (_) {}
     const outEl = mount.querySelector('#ma-out');
     if (!outEl) return;
     if (!r.stats.length) {

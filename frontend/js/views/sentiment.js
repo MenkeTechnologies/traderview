@@ -6,6 +6,7 @@ import { barChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 let timer = null;
 let wsUnsub = null;
@@ -222,12 +223,15 @@ async function renderSymbol(mount, sym, tok) {
             ? scores.reduce((a, b, i) => a + b * counts[i], 0) / totalCount : 0;
 
         const cardsEl = mount.querySelector('#sym-cards');
-        if (cardsEl) cardsEl.innerHTML = `
-            <div class="card"><div class="label">Mentions (7d)</div><div class="value">${totalCount}</div></div>
-            <div class="card"><div class="label">Avg sentiment</div>
+        if (cardsEl) {
+            cardsEl.innerHTML = `
+            <div class="card"><div class="label" data-i18n="view.sentiment.card.mentions_7d">Mentions (7d)</div><div class="value">${totalCount}</div></div>
+            <div class="card"><div class="label" data-i18n="view.sentiment.card.avg_sentiment">Avg sentiment</div>
                 <div class="value ${avgScore >= 0 ? 'pos' : 'neg'}">${avgScore >= 0 ? '+' : ''}${avgScore.toFixed(2)}</div></div>
-            <div class="card"><div class="label">Hours covered</div><div class="value">${sorted.length}</div></div>
+            <div class="card"><div class="label" data-i18n="view.sentiment.card.hours_covered">Hours covered</div><div class="value">${sorted.length}</div></div>
         `;
+            try { applyUiI18n(cardsEl); } catch (_) {}
+        }
 
         const volChartEl = mount.querySelector('#sent-vol-chart');
         const scoreChartEl = mount.querySelector('#sent-score-chart');

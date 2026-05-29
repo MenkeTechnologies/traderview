@@ -3,7 +3,7 @@
 
 import { api, apiFetchBlob } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = {
@@ -150,13 +150,13 @@ function render(r, mount) {
     const p = r.plan;
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Portfolio value</div>
+            <div class="card"><div class="label" data-i18n="view.rebalance.card.portfolio_value">Portfolio value</div>
                 <div class="value">$${fmt(p.total_value)}</div></div>
-            <div class="card"><div class="label">Trade count</div>
+            <div class="card"><div class="label" data-i18n="view.rebalance.card.trade_count">Trade count</div>
                 <div class="value">${p.trade_count}</div></div>
-            <div class="card"><div class="label">Total $ traded</div>
+            <div class="card"><div class="label" data-i18n="view.rebalance.card.total_traded">Total $ traded</div>
                 <div class="value">$${fmt(p.total_trade_value)}</div></div>
-            <div class="card"><div class="label">Cash now → target</div>
+            <div class="card"><div class="label" data-i18n="view.rebalance.card.cash_target">Cash now → target</div>
                 <div class="value">$${fmt(p.cash_current)} → $${fmt(p.cash_target)}</div></div>
         </div>
 
@@ -173,6 +173,7 @@ function render(r, mount) {
             ${positionsTable(p.rows)}
         </div>
     `;
+    try { applyUiI18n(out); } catch (_) {}
 }
 
 function tradeTable(trades) {

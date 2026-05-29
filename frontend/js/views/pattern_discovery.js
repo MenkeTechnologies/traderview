@@ -22,7 +22,7 @@ import {
     indexAxis,
 } from '../_matrix_profile_inputs.js';
 
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 const DEFAULT_TEXT = `# Paste a numeric series. One value per token.
 # Demo: 200 samples with two embedded copies of a sine "pattern"
 # (at positions 30 and 120) plus a single anomaly spike.
@@ -145,24 +145,26 @@ async function discover(mount, tok) {
 
 function renderSummary(motif, discords) {
     const motifCard = motif
-        ? `<div class="card"><div class="label">Top motif pair</div>
+        ? `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_motif_pair">Top motif pair</div>
              <div class="value">idx ${motif.i} ↔ idx ${motif.j}</div>
              <div class="vc-row"><span class="muted">distance</span> <strong>${motif.distance.toFixed(4)}</strong></div>
            </div>`
-        : `<div class="card"><div class="label">Top motif pair</div>
+        : `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_motif_pair">Top motif pair</div>
              <div class="value">none</div>
              <div class="vc-row"><span class="muted">reason</span> <strong>flat / too noisy</strong></div>
            </div>`;
     const discordCard = discords.length
-        ? `<div class="card"><div class="label">Top discords (by distance)</div>
+        ? `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_discords_dist">Top discords (by distance)</div>
              <div class="value pd-discord-value">
                 ${discords.map(d =>
                     `<div class="vc-row"><span class="muted">idx ${d.start}</span> <strong>${d.distance.toFixed(4)}</strong></div>`
                 ).join('')}
              </div>
            </div>`
-        : `<div class="card"><div class="label">Top discords</div><div class="value">none</div></div>`;
-    document.getElementById('pd-summary').innerHTML = motifCard + discordCard;
+        : `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_discords">Top discords</div><div class="value">none</div></div>`;
+    const pdSummary = document.getElementById('pd-summary');
+    pdSummary.innerHTML = motifCard + discordCard;
+    try { applyUiI18n(pdSummary); } catch (_) {}
 }
 
 function renderCharts(series, m, profile, motif, discords) {

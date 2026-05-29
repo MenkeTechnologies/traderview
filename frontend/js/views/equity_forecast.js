@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderEquityForecast(mount, state) {
     const tok = currentViewToken();
@@ -75,16 +76,16 @@ function render(r, mount) {
     const exCls   = r.mean_r >= 0 ? 'pos' : 'neg';
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Mean R (sampled)</div>
+            <div class="card"><div class="label" data-i18n="view.equity_forecast.card.mean_r">Mean R (sampled)</div>
                 <div class="value ${exCls}">${(r.mean_r >= 0 ? '+' : '') + r.mean_r.toFixed(3)}R</div>
                 <div class="small muted">stdev ${r.stdev_r.toFixed(3)}</div></div>
-            <div class="card"><div class="label">P(ruin)</div>
+            <div class="card"><div class="label" data-i18n="view.equity_forecast.card.p_ruin">P(ruin)</div>
                 <div class="value ${ruinCls}">${(r.ruin_probability * 100).toFixed(2)}%</div>
                 <div class="small muted">at ≤ ${(r.ruin_threshold_pct * 100).toFixed(0)}% of start</div></div>
-            <div class="card"><div class="label">P(double)</div>
+            <div class="card"><div class="label" data-i18n="view.equity_forecast.card.p_double">P(double)</div>
                 <div class="value ${dblCls}">${(r.double_probability * 100).toFixed(2)}%</div>
                 <div class="small muted">final ≥ 2× start</div></div>
-            <div class="card"><div class="label">Median final</div>
+            <div class="card"><div class="label" data-i18n="view.equity_forecast.card.median_final">Median final</div>
                 <div class="value ${r.final_bands.p50 >= r.starting_equity ? 'pos' : 'neg'}">
                     $${fmt(r.final_bands.p50)}
                 </div>
@@ -104,6 +105,7 @@ function render(r, mount) {
             ${spaghettiSvg(r)}
         </div>
     `;
+    try { applyUiI18n(out); } catch (_) {}
 }
 
 function fanSvg(r) {

@@ -34,11 +34,11 @@ export async function renderWebull(mount, _state) {
         </details>
 
         <div class="cards" id="wb-account">
-            <div class="card"><div class="label">Net Liquidation</div><div class="value" id="wb-nl">—</div></div>
-            <div class="card"><div class="label">Cash</div><div class="value" id="wb-cash">—</div></div>
-            <div class="card"><div class="label">Day P/L</div><div class="value" id="wb-daypl">—</div></div>
-            <div class="card"><div class="label">Total Unrealized</div><div class="value" id="wb-totpl">—</div></div>
-            <div class="card"><div class="label">Buying Power</div><div class="value" id="wb-bp">—</div></div>
+            <div class="card"><div class="label" data-i18n="view.webull.card.net_liquidation">Net Liquidation</div><div class="value" id="wb-nl">—</div></div>
+            <div class="card"><div class="label" data-i18n="view.webull.card.cash">Cash</div><div class="value" id="wb-cash">—</div></div>
+            <div class="card"><div class="label" data-i18n="view.webull.card.day_pnl">Day P/L</div><div class="value" id="wb-daypl">—</div></div>
+            <div class="card"><div class="label" data-i18n="view.webull.card.total_unrealized">Total Unrealized</div><div class="value" id="wb-totpl">—</div></div>
+            <div class="card"><div class="label" data-i18n="view.webull.card.buying_power">Buying Power</div><div class="value" id="wb-bp">—</div></div>
         </div>
 
         <div class="chart-panel">

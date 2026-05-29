@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -113,15 +114,16 @@ async function renderSymbol(mount, sym, tok) {
         const cardsEl = mount.querySelector('#ss-cards');
         if (!cardsEl) return;
         cardsEl.innerHTML = `
-            <div class="card"><div class="label">Shares short</div><div class="value">${compact(s.shares_short)}</div></div>
-            <div class="card"><div class="label">Prior month</div><div class="value">${compact(s.shares_short_prior)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.shares_short">Shares short</div><div class="value">${compact(s.shares_short)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.prior_month">Prior month</div><div class="value">${compact(s.shares_short_prior)}</div></div>
             <div class="card"><div class="label">Δ vs prior</div>
                 <div class="value ${changeCls}">${pctSigned(s.change_pct)}</div></div>
             <div class="card"><div class="label">% of float</div><div class="value">${pct1(s.short_pct_float)}</div></div>
             <div class="card"><div class="label">% of shares out</div><div class="value">${pct1(s.short_pct_outstanding)}</div></div>
-            <div class="card"><div class="label">Days to cover</div><div class="value">${s.short_ratio != null ? s.short_ratio.toFixed(2) : '—'}</div></div>
-            <div class="card"><div class="label">Float</div><div class="value">${compact(s.float)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.days_to_cover">Days to cover</div><div class="value">${s.short_ratio != null ? s.short_ratio.toFixed(2) : '—'}</div></div>
+            <div class="card"><div class="label" data-i18n="view.short_interest.card.float">Float</div><div class="value">${compact(s.float)}</div></div>
         `;
+        try { applyUiI18n(cardsEl); } catch (_) {}
         const labels = days.map(d => d.date);
         const vols   = days.map(d => Number(d.short_volume));
         const pcts   = days.map(d => Number(d.short_pct));

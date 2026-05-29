@@ -18,7 +18,7 @@ import {
     expectedDwell, highVolBarFraction,
 } from '../_regime_detector_inputs.js';
 
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 const DEFAULT_RETURNS = `# Daily returns (decimal). One per token.
 # Demo: 200 calm bars then 100 high-vol bars (regime change at index 200).
 ${synthRegimeDemo().join('\n')}
@@ -149,7 +149,7 @@ function renderSummary(res) {
         'Long-run frac': pct(stationary.p_state1),
     }));
     cards.push(`<div class="card">
-        <div class="label">Fit diagnostics</div>
+        <div class="label" data-i18n="view.regime_detector.card.fit_diagnostics">Fit diagnostics</div>
         <div class="value rd-summary-value">
             <div class="vc-row"><span class="muted">Log-likelihood</span> <strong>${res.log_likelihood.toFixed(3)}</strong></div>
             <div class="vc-row"><span class="muted" data-i18n="view.regime_detector.row.em_iterations">EM iterations</span> <strong>${res.iterations}</strong></div>
@@ -157,7 +157,9 @@ function renderSummary(res) {
             <div class="vc-row"><span class="muted" data-i18n="view.regime_detector.row.series_length">Series length</span> <strong>${res.prob_state1.length}</strong></div>
         </div>
     </div>`);
-    document.getElementById('rd-summary').innerHTML = cards.join('');
+    const rdSummary = document.getElementById('rd-summary');
+    rdSummary.innerHTML = cards.join('');
+    try { applyUiI18n(rdSummary); } catch (_) {}
 }
 
 function stateCard(label, swatchColor, kvs) {

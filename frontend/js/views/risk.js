@@ -29,13 +29,13 @@ export async function renderRisk(mount, state) {
         <h1 class="view-title">// RISK · ${esc(today)}</h1>
 
         <div class="cards">
-            <div class="card"><div class="label">Today P&L</div>
+            <div class="card"><div class="label" data-i18n="view.risk.card.today_pnl">Today P&L</div>
                 <div class="value ${todayNum >= 0 ? 'pos' : 'neg'}">${fmtMoney(todayNum)}</div></div>
-            <div class="card"><div class="label">Daily goal</div>
+            <div class="card"><div class="label" data-i18n="view.risk.card.daily_goal">Daily goal</div>
                 <div class="value">${fmtMoney(goal)}</div></div>
-            <div class="card"><div class="label">Max loss</div>
+            <div class="card"><div class="label" data-i18n="view.risk.card.max_loss">Max loss</div>
                 <div class="value">${fmtMoney(maxLoss)}</div></div>
-            <div class="card"><div class="label">All-time net</div>
+            <div class="card"><div class="label" data-i18n="view.risk.card.alltime_net">All-time net</div>
                 <div class="value ${Number(summary.net_pnl) >= 0 ? 'pos' : 'neg'}">${fmtMoney(summary.net_pnl)}</div></div>
         </div>
 

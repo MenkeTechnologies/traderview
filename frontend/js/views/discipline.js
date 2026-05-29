@@ -3,7 +3,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDiscipline(mount, state) {
@@ -35,13 +35,13 @@ function render(r, mount) {
     if (!el) return;
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Total closed trades</div>
+            <div class="card"><div class="label" data-i18n="view.discipline.card.total_closed">Total closed trades</div>
                 <div class="value">${s.total_closed}</div></div>
-            <div class="card"><div class="label">Longest win streak</div>
+            <div class="card"><div class="label" data-i18n="view.discipline.card.longest_win">Longest win streak</div>
                 <div class="value pos">${s.longest_win_streak}</div></div>
-            <div class="card"><div class="label">Longest loss streak</div>
+            <div class="card"><div class="label" data-i18n="view.discipline.card.longest_loss">Longest loss streak</div>
                 <div class="value neg">${s.longest_loss_streak}</div></div>
-            <div class="card"><div class="label">Current streak</div>
+            <div class="card"><div class="label" data-i18n="view.discipline.card.current_streak">Current streak</div>
                 <div class="value ${streakColor}">${s.current_streak_length} ${s.current_streak_kind}</div></div>
         </div>
 
@@ -66,6 +66,7 @@ function render(r, mount) {
             ${ruleTable(r.rule_evals.slice(-50).reverse())}
         </div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function streakSpark(bits) {

@@ -154,13 +154,13 @@ async function renderPresetDetail(mount, slug) {
         mount.innerHTML = `
             <h1 class="view-title">// PRESET — ${esc(r.name)}</h1>
             <div class="cards">
-                <div class="card"><div class="label">Visibility</div>
+                <div class="card"><div class="label" data-i18n="view.backtest_presets.card.visibility">Visibility</div>
                     <div class="value ${r.is_public ? 'pos' : 'muted'}">${r.is_public ? 'public' : 'private'}</div></div>
-                <div class="card"><div class="label">Forks</div>
+                <div class="card"><div class="label" data-i18n="view.backtest_presets.card.forks">Forks</div>
                     <div class="value">${r.fork_count}</div></div>
-                <div class="card"><div class="label">Runs</div>
+                <div class="card"><div class="label" data-i18n="view.backtest_presets.card.runs">Runs</div>
                     <div class="value">${r.run_count}</div></div>
-                <div class="card"><div class="label">Slug</div>
+                <div class="card"><div class="label" data-i18n="view.backtest_presets.card.slug">Slug</div>
                     <div class="value small"><code>${esc(r.slug)}</code></div></div>
             </div>
             ${r.description ? `<div class="chart-panel"><p>${esc(r.description)}</p></div>` : ''}

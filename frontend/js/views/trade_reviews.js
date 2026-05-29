@@ -2,7 +2,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_OPTS = [
@@ -51,18 +51,19 @@ function renderStats(s, mount) {
     if (!el) return;
     const cls = s.completion_pct >= 80 ? 'pos' : s.completion_pct >= 50 ? '' : 'neg';
     el.innerHTML = `
-        <div class="card"><div class="label">High-|R| trades</div>
+        <div class="card"><div class="label" data-i18n="view.trade_reviews.card.high_r_trades">High-|R| trades</div>
             <div class="value">${s.total_high_r_trades}</div>
             <div class="small muted">closed, |R| ≥ 2</div></div>
-        <div class="card"><div class="label">Reviewed</div>
+        <div class="card"><div class="label" data-i18n="view.trade_reviews.card.reviewed">Reviewed</div>
             <div class="value pos">${s.reviewed}</div></div>
-        <div class="card"><div class="label">Pending</div>
+        <div class="card"><div class="label" data-i18n="view.trade_reviews.card.pending">Pending</div>
             <div class="value ${s.pending > 0 ? 'neg' : ''}">${s.pending}</div></div>
-        <div class="card"><div class="label">Completion</div>
+        <div class="card"><div class="label" data-i18n="view.trade_reviews.card.completion">Completion</div>
             <div class="value ${cls}">${s.completion_pct.toFixed(1)}%</div>
             ${s.last_review_at ? `<div class="small muted">last ${new Date(s.last_review_at).toLocaleString()}</div>` : ''}
         </div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderInbox(items, accountId, mount, tok) {

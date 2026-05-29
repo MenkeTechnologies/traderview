@@ -15,6 +15,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 import {
     PRESETS, validateLegs,
     buildPayoffBody, buildPricerBody, defaultSpotRange,
@@ -204,20 +205,22 @@ function renderSummary(payoff, mtm) {
         : '—';
     const mtmPnl = mtm ? mtm.strategy_pnl : null;
     const mtmValue = mtm ? mtm.strategy_value : null;
-    document.getElementById('op-summary').innerHTML = `
-        <div class="card"><div class="label">Max profit (@ expiry)</div>
+    const opSummary = document.getElementById('op-summary');
+    opSummary.innerHTML = `
+        <div class="card"><div class="label" data-i18n="view.option_payoff.card.max_profit">Max profit (@ expiry)</div>
             <div class="value pos">${fmtMoney(payoff.max_profit)}</div></div>
-        <div class="card"><div class="label">Max loss (@ expiry)</div>
+        <div class="card"><div class="label" data-i18n="view.option_payoff.card.max_loss">Max loss (@ expiry)</div>
             <div class="value neg">${fmtMoney(payoff.max_loss)}</div></div>
-        <div class="card"><div class="label">Breakevens (@ expiry)</div>
+        <div class="card"><div class="label" data-i18n="view.option_payoff.card.breakevens">Breakevens (@ expiry)</div>
             <div class="value">${esc(breakevensCell)}</div></div>
-        <div class="card"><div class="label">Strategy value (now)</div>
+        <div class="card"><div class="label" data-i18n="view.option_payoff.card.strategy_value">Strategy value (now)</div>
             <div class="value">${mtmValue == null ? '—' : fmtMoney(mtmValue)}</div></div>
-        <div class="card"><div class="label">Strategy P/L (now)</div>
+        <div class="card"><div class="label" data-i18n="view.option_payoff.card.strategy_pnl">Strategy P/L (now)</div>
             <div class="value ${mtmPnl >= 0 ? 'pos' : 'neg'}">
                 ${mtmPnl == null ? '—' : fmtMoney(mtmPnl)}
             </div></div>
     `;
+    try { applyUiI18n(opSummary); } catch (_) {}
 }
 
 async function renderChart(payoff) {
