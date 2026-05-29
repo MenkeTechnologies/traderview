@@ -122,7 +122,7 @@ function renderSummary(r, typicals) {
             slipDollars > 0 ? 'pos' : slipDollars < 0 ? 'neg' : ''),
         card(t('view.twap.card.slippage_bps'),   fmtBps(r.slippage_bps),
             r.slippage_bps > 0 ? 'pos' : r.slippage_bps < 0 ? 'neg' : ''),
-        card(t('view.twap.card.beat_twap'),     r.beat_twap ? 'YES' : 'NO',
+        card(t('view.twap.card.beat_twap'),     r.beat_twap ? t('common.yes') : t('common.no'),
             r.beat_twap ? 'pos' : 'neg'),
         card(t('view.twap.card.bars'),           String(typicals.length)),
         card(t('view.twap.card.mean_fill'),    fmtN(localChk - state.fillPrice)),

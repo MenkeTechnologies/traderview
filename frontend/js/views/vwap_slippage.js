@@ -122,7 +122,7 @@ function renderSummary(r, bars) {
             slipDollars > 0 ? 'pos' : slipDollars < 0 ? 'neg' : ''),
         card(t('view.vwap_slippage.card.slippage_bps'),   fmtBps(r.slippage_bps),
             r.slippage_bps > 0 ? 'pos' : r.slippage_bps < 0 ? 'neg' : ''),
-        card(t('view.vwap_slippage.card.beat_vwap'),     r.beat_vwap ? 'YES' : 'NO',
+        card(t('view.vwap_slippage.card.beat_vwap'),     r.beat_vwap ? t('common.yes') : t('common.no'),
             r.beat_vwap ? 'pos' : 'neg'),
         card(t('view.vwap_slippage.card.bars'),           String(bars.length)),
         card(t('view.vwap_slippage.card.total_volume'),   fmtVol(totalVol)),

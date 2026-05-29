@@ -242,7 +242,7 @@ function drawTable() {
             try {
                 await api.updateExpenseTransaction(tx, { is_business: next });
                 btn.dataset.biz = String(next);
-                btn.textContent = next ? 'BIZ' : 'pers';
+                btn.textContent = next ? t('view.expenses.btn.biz') : t('view.expenses.btn.pers');
                 btn.classList.toggle('biz-on', next);
                 btn.classList.toggle('biz-off', !next);
             } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
@@ -255,7 +255,7 @@ function drawTable() {
             try {
                 await api.updateExpenseTransaction(tx, { is_transfer: next });
                 btn.dataset.xfer = String(next);
-                btn.textContent = next ? 'XFER' : '—';
+                btn.textContent = next ? t('view.expenses.btn.xfer') : '—';
                 btn.classList.toggle('biz-on', next);
             } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
         });

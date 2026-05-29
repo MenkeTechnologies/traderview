@@ -158,7 +158,7 @@ function renderSummary(r) {
         card(t('view.pyramid.card.final_qty'),      fmtInt(finalQty)),
         card(t('view.pyramid.card.final_avg_cost'), fmtN(finalAvg)),
         card(t('view.pyramid.card.final_notional'), fmtUSD(finalNotnl)),
-        card(t('view.pyramid.card.plan_misordered'), r.plan_misordered ? 'YES' : 'NO',
+        card(t('view.pyramid.card.plan_misordered'), r.plan_misordered ? t('common.yes') : t('common.no'),
             r.plan_misordered ? 'neg' : 'pos'),
     ].join('');
 }

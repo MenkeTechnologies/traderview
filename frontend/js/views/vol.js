@@ -84,7 +84,7 @@ function renderYields(y, mount) {
         <div class="card"><div class="label" data-i18n="view.vol.card.spread_10y_3m">10Y − 3M</div>
             <div class="value ${(y.spread_10y_3m ?? 0) >= 0 ? 'pos' : 'neg'}">${y.spread_10y_3m != null ? sign(y.spread_10y_3m) + ' bp' : '—'}</div></div>
         <div class="card"><div class="label" data-i18n="view.vol.card.inverted">Inverted</div>
-            <div class="value ${y.inverted ? 'neg' : 'pos'}">${y.inverted ? 'YES' : 'NO'}</div></div>
+            <div class="value ${y.inverted ? 'neg' : 'pos'}">${y.inverted ? t('common.yes') : t('common.no')}</div></div>
     `;
     try { applyUiI18n(ycEl); } catch (_) {}
     const ycChart = mount.querySelector('#yc-chart');

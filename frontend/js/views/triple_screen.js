@@ -136,9 +136,9 @@ function renderSummary(resp, pending) {
             state.params.weekly_trend === 'down' ? 'neg' : ''),
         card(t('view.triple_screen.card.daily_osc'),     fmtN(state.params.daily_oscillator_value)),
         card(t('view.triple_screen.card.bands'),         `${fmtN(state.params.oversold_threshold)} / ${fmtN(state.params.overbought_threshold)}`),
-        card(t('view.triple_screen.card.intraday_up'),  state.params.intraday_breakout_up ? 'YES' : 'NO',
+        card(t('view.triple_screen.card.intraday_up'),  state.params.intraday_breakout_up ? t('common.yes') : t('common.no'),
             state.params.intraday_breakout_up ? 'pos' : ''),
-        card(t('view.triple_screen.card.intraday_down'), state.params.intraday_breakout_down ? 'YES' : 'NO',
+        card(t('view.triple_screen.card.intraday_down'), state.params.intraday_breakout_down ? t('common.yes') : t('common.no'),
             state.params.intraday_breakout_down ? 'neg' : ''),
     ].join('');
 }
