@@ -171,22 +171,22 @@ function statsTable(rows) {
     return `<table class="trades">
         <thead><tr><th data-i18n="view.trade_compare.th.metric">Metric</th>${headerRow}</tr></thead>
         <tbody>
-            ${metricRow('Opened',   r => td(new Date(r.opened_at).toLocaleString()))}
-            ${metricRow('Closed',   r => td(r.closed_at ? new Date(r.closed_at).toLocaleString() : '—'))}
-            ${metricRow('Hold (h)', r => td((r.hold_seconds / 3600).toFixed(2)))}
-            ${metricRow('Bar interval', r => td(r.bar_interval))}
-            ${metricRow('Qty',      r => td(fmt(r.qty, 0)))}
-            ${metricRow('Entry',    r => td(num(r.entry_avg)))}
-            ${metricRow('Exit',     r => td(num(r.exit_avg)))}
-            ${metricRow('Stop',     r => td(num(r.stop_loss)))}
-            ${metricRow('Target',   r => td(num(r.initial_target)))}
-            ${cmpRow('Gross P/L',   r => ({ v: usd(r.gross_pnl), c: cls(r.gross_pnl) }))}
-            ${metricRow('Fees',     r => td(usd(r.fees)))}
-            ${cmpRow('Net P/L',     r => ({ v: usd(r.net_pnl), c: cls(r.net_pnl) }))}
-            ${cmpRow('MFE',         r => ({ v: usd(r.mfe), c: 'pos' }))}
-            ${cmpRow('MAE',         r => ({ v: usd(r.mae), c: 'neg' }))}
-            ${metricRow('Risk $',   r => td(usd(r.risk_amount)))}
-            ${cmpRow('R-multiple',  r => ({
+            ${metricRow(t('view.trade_compare.row.opened'),   r => td(new Date(r.opened_at).toLocaleString()))}
+            ${metricRow(t('view.trade_compare.row.closed'),   r => td(r.closed_at ? new Date(r.closed_at).toLocaleString() : '—'))}
+            ${metricRow(t('view.trade_compare.row.hold_h'),   r => td((r.hold_seconds / 3600).toFixed(2)))}
+            ${metricRow(t('view.trade_compare.row.bar_interval'), r => td(r.bar_interval))}
+            ${metricRow(t('view.trade_compare.row.qty'),      r => td(fmt(r.qty, 0)))}
+            ${metricRow(t('view.trade_compare.row.entry'),    r => td(num(r.entry_avg)))}
+            ${metricRow(t('view.trade_compare.row.exit'),     r => td(num(r.exit_avg)))}
+            ${metricRow(t('view.trade_compare.row.stop'),     r => td(num(r.stop_loss)))}
+            ${metricRow(t('view.trade_compare.row.target'),   r => td(num(r.initial_target)))}
+            ${cmpRow(t('view.trade_compare.row.gross_pnl'),   r => ({ v: usd(r.gross_pnl), c: cls(r.gross_pnl) }))}
+            ${metricRow(t('view.trade_compare.row.fees'),     r => td(usd(r.fees)))}
+            ${cmpRow(t('view.trade_compare.row.net_pnl'),     r => ({ v: usd(r.net_pnl), c: cls(r.net_pnl) }))}
+            ${cmpRow(t('view.trade_compare.row.mfe'),         r => ({ v: usd(r.mfe), c: 'pos' }))}
+            ${cmpRow(t('view.trade_compare.row.mae'),         r => ({ v: usd(r.mae), c: 'neg' }))}
+            ${metricRow(t('view.trade_compare.row.risk_d'),   r => td(usd(r.risk_amount)))}
+            ${cmpRow(t('view.trade_compare.row.r_multiple'),  r => ({
                 v: r.r_multiple == null ? '—' : (r.r_multiple >= 0 ? '+' : '') + r.r_multiple.toFixed(2) + 'R',
                 c: cls(r.r_multiple),
             }))}
