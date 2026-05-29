@@ -205,12 +205,12 @@ export async function renderTutorial(mount, _state) {
             Press <kbd>?</kbd> any time to re-open this. Press <kbd>Cmd</kbd>+<kbd>K</kbd> for the launcher.
         </p>
         <nav class="tut-toc">
-            ${SECTIONS.map(s => `<button class="tut-toc-btn" data-jump="${esc(s.id)}">${esc(s.title)}</button>`).join('')}
+            ${SECTIONS.map(s => `<button class="tut-toc-btn" data-jump="${esc(s.id)}" data-i18n="view.tutorial.section.${esc(s.id)}">${esc(s.title)}</button>`).join('')}
         </nav>
         <div class="tut-body">
             ${SECTIONS.map(s => `
                 <section class="tut-section chart-panel" id="tut-${esc(s.id)}">
-                    <h2>${esc(s.title)}</h2>
+                    <h2 data-i18n="view.tutorial.section.${esc(s.id)}">${esc(s.title)}</h2>
                     ${s.body}
                 </section>
             `).join('')}
