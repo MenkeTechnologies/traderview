@@ -42,7 +42,7 @@ export async function renderWebull(mount, _state) {
         </div>
 
         <div class="chart-panel">
-            <h2>Open positions <span class="muted small" id="wb-fetched">—</span></h2>
+            <h2><span data-i18n="view.webull.h2.open_positions">Open positions</span> <span class="muted small" id="wb-fetched">—</span></h2>
             <table class="trades" id="wb-pos">
                 <thead><tr>
                     <th data-i18n="view.webull.th.symbol">Symbol</th><th data-i18n="view.webull.th.side">Side</th><th data-i18n="view.webull.th.asset">Asset</th><th data-i18n="view.webull.th.qty">Qty</th>

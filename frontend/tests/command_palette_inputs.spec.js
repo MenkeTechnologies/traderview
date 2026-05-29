@@ -6,6 +6,7 @@ import {
     buildTileItems, buildFavoriteItems, buildBookmarkItems, buildActionItems,
     categoriesByViewId, tilesByViewId,
     fuzzyScore, filterAndRank, highlightLabel, moveSelection,
+    tileLabelKey, tileDescKey, categoryLabelKey,
 } from '../js/_command_palette_inputs.js';
 
 const TILES = [
@@ -223,4 +224,85 @@ test('buildActionItems: action items rank above raw views (kind tiebreaker)', ()
     const action = { kind: 'action', label: 'Reload data', icon: '⚡' };
     const view   = { kind: 'view',   label: 'Reload data', icon: '🔄' };
     expect(fuzzyScore('reload', action)).toBeGreaterThan(fuzzyScore('reload', view));
+});
+
+// ── i18n key conventions ─────────────────────────────────────────
+
+test('tileLabelKey / tileDescKey / categoryLabelKey: stable key formats', () => {
+    expect(tileLabelKey('choppiness')).toBe('tile.choppiness.label');
+    expect(tileDescKey('choppiness')).toBe('tile.choppiness.desc');
+    expect(categoryLabelKey('research')).toBe('tile.cat.research');
+});
+
+test('buildTileItems: when translate hits, uses translated label/hint', () => {
+    const cats = categoriesByViewId(CATEGORIES);
+    const dict = {
+        'tile.choppiness.label': 'Índice de turbulencia',
+        'tile.choppiness.desc':  'Oscilador de tendencia vs lateral',
+    };
+    const tr = (k) => dict[k] || k;
+    const items = buildTileItems(TILES, cats, tr);
+    const chop = items.find(i => i.viewId === 'choppiness');
+    expect(chop.label).toBe('Índice de turbulencia');
+    expect(chop.hint).toBe('Oscilador de tendencia vs lateral');
+});
+
+test('buildTileItems: missing key falls back to TILES literal', () => {
+    const cats = categoriesByViewId(CATEGORIES);
+    const tr = (k) => k; // every key is a miss (returns the key, matching i18n.t() semantics)
+    const items = buildTileItems(TILES, cats, tr);
+    const chop = items.find(i => i.viewId === 'choppiness');
+    expect(chop.label).toBe('Choppiness Idx');
+    expect(chop.hint).toBe('Trend vs sideways oscillator');
+});
+
+test('buildTileItems: no translate arg → behaves like before', () => {
+    const cats = categoriesByViewId(CATEGORIES);
+    const items = buildTileItems(TILES, cats);
+    expect(items[0].label).toBe('Squeeze Alerts');
+});
+
+test('categoriesByViewId: translates category labels via tile.cat.<id>', () => {
+    const dict = { 'tile.cat.research': 'INVESTIGACIÓN' };
+    const tr = (k) => dict[k] || k;
+    const map = categoriesByViewId(CATEGORIES, tr);
+    expect(map.get('choppiness')).toBe('INVESTIGACIÓN');
+    expect(map.get('squeeze-alerts')).toBe('TRADING'); // miss → literal
+});
+
+test('buildFavoriteItems: translated label + Favorites category via translate', () => {
+    const tr = (k) => k === 'palette.cat.favorites' ? 'Favoritos'
+        : k === 'tile.choppiness.label' ? 'Turbulencia'
+        : k;
+    const byVid = tilesByViewId(TILES);
+    const items = buildFavoriteItems(['choppiness'], byVid, tr);
+    expect(items[0].label).toBe('Turbulencia');
+    expect(items[0].category).toBe('Favoritos');
+});
+
+test('buildBookmarkItems: user-named bookmark keeps custom name', () => {
+    const tr = (k) => k === 'tile.choppiness.label' ? 'Turbulencia' : k;
+    const byVid = tilesByViewId(TILES);
+    const items = buildBookmarkItems(
+        [{ id: 'b1', name: 'My pinned name', viewId: 'choppiness' }], byVid, tr);
+    expect(items[0].label).toBe('My pinned name');
+});
+
+test('buildBookmarkItems: nameless bookmark falls back to translated tile label', () => {
+    const tr = (k) => k === 'tile.choppiness.label' ? 'Turbulencia' : k;
+    const byVid = tilesByViewId(TILES);
+    const items = buildBookmarkItems(
+        [{ id: 'b1', name: '', viewId: 'choppiness' }], byVid, tr);
+    expect(items[0].label).toBe('Turbulencia');
+});
+
+test('buildActionItems: Actions category translated via palette.cat.actions', () => {
+    const tr = (k) => k === 'palette.cat.actions' ? 'Acciones'
+        : k === 'shortcut.reload' ? 'Recargar' : k;
+    const shortcuts = [
+        { id: 'reload', descKey: 'shortcut.reload', actionKey: 'tv:reload', scope: 'global' },
+    ];
+    const items = buildActionItems(shortcuts, tr, () => '⌘R');
+    expect(items[0].category).toBe('Acciones');
+    expect(items[0].label).toBe('Recargar');
 });

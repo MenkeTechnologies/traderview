@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const KINDS = [
     { id: 'sma',       label: 'SMA',       params: { period: 20 } },
@@ -113,7 +114,7 @@ async function refresh(mount, tok) {
             </tbody></table>`;
         el2.querySelectorAll('.ci-del').forEach(b =>
             b.addEventListener('click', async () => {
-                if (!confirm('Delete preset?')) return;
+                if (!confirm(t('view.custom_indicators.confirm.delete_preset'))) return;
                 try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { alert(e.message); }
             }));

@@ -23,18 +23,18 @@ export async function renderOpenType(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.open_type.h2.today_s_opening_range_first_30_60_min">Today's opening range (first 30-60 min)</h2>
             <div class="inline-form">
-                <label>Open price <input id="ot-open" type="number" step="any" min="0" value="${state.params.open_price}"></label>
-                <label>OR high   <input id="ot-orh"  type="number" step="any" min="0" value="${state.params.opening_range_high}"></label>
-                <label>OR low    <input id="ot-orl"  type="number" step="any" min="0" value="${state.params.opening_range_low}"></label>
-                <label>OR close  <input id="ot-orc"  type="number" step="any" min="0" value="${state.params.opening_range_close}"></label>
+                <label><span data-i18n="view.open_type.label.open_price">Open price</span> <input id="ot-open" type="number" step="any" min="0" value="${state.params.open_price}"></label>
+                <label><span data-i18n="view.open_type.label.or_high">OR high</span>   <input id="ot-orh"  type="number" step="any" min="0" value="${state.params.opening_range_high}"></label>
+                <label><span data-i18n="view.open_type.label.or_low">OR low</span>    <input id="ot-orl"  type="number" step="any" min="0" value="${state.params.opening_range_low}"></label>
+                <label><span data-i18n="view.open_type.label.or_close">OR close</span>  <input id="ot-orc"  type="number" step="any" min="0" value="${state.params.opening_range_close}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.open_type.h2.prior_day_reference">Prior-day reference</h2>
             <div class="inline-form">
-                <label>Prior high   <input id="ot-ph"  type="number" step="any" min="0" value="${state.params.prior_day_high}"></label>
-                <label>Prior low    <input id="ot-pl"  type="number" step="any" min="0" value="${state.params.prior_day_low}"></label>
+                <label><span data-i18n="view.open_type.label.prior_high">Prior high</span>   <input id="ot-ph"  type="number" step="any" min="0" value="${state.params.prior_day_high}"></label>
+                <label><span data-i18n="view.open_type.label.prior_low">Prior low</span>    <input id="ot-pl"  type="number" step="any" min="0" value="${state.params.prior_day_low}"></label>
                 <label>VAH (Value Area High) <input id="ot-vah" type="number" step="any" min="0" value="${state.params.prior_day_vah}"></label>
                 <label>VAL (Value Area Low)  <input id="ot-val" type="number" step="any" min="0" value="${state.params.prior_day_val}"></label>
             </div>

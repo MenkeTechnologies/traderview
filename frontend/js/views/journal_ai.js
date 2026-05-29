@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderAiSettings(mount) {
     const tok = currentViewToken();
@@ -114,7 +115,7 @@ export async function renderAiAnalyze(mount, tradeId) {
                     (cached.prompt_tokens ? ` · ${cached.prompt_tokens}+${cached.response_tokens || 0} tok` : '');
                 if (body) body.innerHTML = renderFindings(cached.findings);
                 const runBtn = mount.querySelector('#ai-run');
-                if (runBtn) runBtn.textContent = 'Re-analyze';
+                if (runBtn) runBtn.textContent = t('view.journal_ai.btn.reanalyze');
             } else {
                 if (status) status.textContent = 'no cached analysis for this trade';
             }
@@ -139,7 +140,7 @@ export async function renderAiAnalyze(mount, tradeId) {
             if (status) status.textContent = `done · ${r.provider}/${r.model}` +
                 (r.prompt_tokens ? ` · ${r.prompt_tokens}+${r.response_tokens || 0} tok` : '');
             if (body) body.innerHTML = renderFindings(r.findings);
-            btn.textContent = 'Re-analyze';
+            btn.textContent = t('view.journal_ai.btn.reanalyze');
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             if (status) status.textContent = 'error: ' + e.message;

@@ -7,7 +7,8 @@
 
 import {
     tipSelectors, tipKey, tipAttrsFor, shortcutId, composeTooltip,
-    interactiveSelectors, deriveAutoTitle, shouldAutoTitle,
+    interactiveSelectors, deriveAutoTitle, shouldAutoTitle, resetAutoTitled,
+    inferI18nKey, shouldStampCommonI18n,
 } from './_tooltip.js';
 import { applyUiI18n, t } from './i18n.js';
 import { listShortcuts } from './shortcuts.js';
@@ -18,6 +19,9 @@ export function installTooltips() {
     autoApply(document);
     augmentShortcutTitles(document);
     window.addEventListener('tv:i18n-changed', () => {
+        // Translated DOM text just landed via applyUiI18n — wipe our
+        // cached titles so the next pass picks up the new locale.
+        resetAutoTitled(document);
         upgrade(document);
         autoApply(document);
         augmentShortcutTitles(document);
@@ -125,6 +129,11 @@ function autoApply(root) {
     if (!root || typeof root.querySelectorAll !== 'function') return 0;
     let n = 0;
     root.querySelectorAll(interactiveSelectors()).forEach(el => {
+        // 1) Common-verb i18n stamp: buttons with high-frequency labels
+        //    like "Save" / "Cancel" get a data-i18n attr so applyUiI18n
+        //    re-translates them on locale change.
+        stampCommonI18n(el);
+        // 2) Auto-title: derive a title from semantics if none set.
         if (!shouldAutoTitle(el)) return;
         const title = deriveAutoTitle(el);
         if (!title) return;
@@ -133,6 +142,14 @@ function autoApply(root) {
         n++;
     });
     return n;
+}
+
+function stampCommonI18n(el) {
+    if (!shouldStampCommonI18n(el)) return false;
+    const key = inferI18nKey(el.textContent);
+    if (!key) return false;
+    el.setAttribute('data-i18n', key);
+    return true;
 }
 
 // Append "(⌘K)"-style shortcut chip to the title of every element that

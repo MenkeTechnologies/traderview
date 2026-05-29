@@ -6,65 +6,95 @@
 // Fuzzy scoring: subsequence match + prefix bonus + exact-token bonus.
 // Optimized for ~200-item catalogs (every TILE in launcher) — O(n·m) is fine.
 
-export function buildTileItems(tiles, categoriesByViewId) {
+// i18n key convention for tile labels / descriptions. Looking these up
+// with `t()` and falling back to the literal in the TILES tuple lets a
+// locale catalog translate any view by adding tile.<id>.label without
+// editing the 200-entry TILES const.
+export function tileLabelKey(viewId)  { return `tile.${viewId}.label`; }
+export function tileDescKey(viewId)   { return `tile.${viewId}.desc`; }
+export function categoryLabelKey(catId) { return `tile.cat.${catId}`; }
+
+// `translate` is i18n's `t`. When omitted (vitest), we just return the
+// literal. When the looked-up key === the key itself (missing in
+// catalog), we also fall back — that's how the i18n module signals miss.
+function translateOrFallback(translate, key, fallback) {
+    if (typeof translate !== 'function') return fallback;
+    try {
+        const v = translate(key);
+        if (typeof v === 'string' && v && v !== key) return v;
+    } catch (_) { /* defensive */ }
+    return fallback;
+}
+
+export function buildTileItems(tiles, categoriesByViewId, translate) {
     if (!Array.isArray(tiles)) return [];
-    return tiles.map(t => ({
-        id: `view:${t[0]}`,
-        kind: 'view',
-        viewId: t[0],
-        label: t[1],
-        icon: t[2] || '',
-        hint: t[3] || '',
-        category: categoriesByViewId.get(t[0]) || '',
-        badge: t[4] || null,
-    }));
+    return tiles.map(t => {
+        const id = t[0];
+        return {
+            id: `view:${id}`,
+            kind: 'view',
+            viewId: id,
+            label: translateOrFallback(translate, tileLabelKey(id), t[1]),
+            icon: t[2] || '',
+            hint: translateOrFallback(translate, tileDescKey(id), t[3] || ''),
+            category: categoriesByViewId.get(id) || '',
+            badge: t[4] || null,
+        };
+    });
 }
 
 // Map of viewId → category label, built from CATEGORIES const layout.
-// CATEGORIES is a flat array of [catId, catLabel, viewIds[]].
-export function categoriesByViewId(categories) {
+// CATEGORIES is a flat array of [catId, catLabel, viewIds[]]. When a
+// `translate` (i18n's `t`) is provided, the label is looked up via
+// tile.cat.<catId> with fallback to the literal in the tuple.
+export function categoriesByViewId(categories, translate) {
     const map = new Map();
     if (!Array.isArray(categories)) return map;
     for (const cat of categories) {
         if (!Array.isArray(cat) || cat.length < 3) continue;
-        const label = cat[1];
-        const viewIds = cat[2];
+        const [catId, catLabel, viewIds] = cat;
         if (!Array.isArray(viewIds)) continue;
+        const label = translateOrFallback(translate, categoryLabelKey(catId), catLabel);
         for (const vid of viewIds) map.set(vid, label);
     }
     return map;
 }
 
 // Append favorite + bookmark items to the catalog so they're palette-
-// searchable too.
-export function buildFavoriteItems(favorites, tilesByViewId) {
+// searchable too. `translate` is i18n's `t` — when present, tile
+// labels/descs are looked up via tile.<id>.{label,desc} convention.
+export function buildFavoriteItems(favorites, tilesByViewId, translate) {
     if (!Array.isArray(favorites)) return [];
+    const catLabel = translateOrFallback(translate, 'palette.cat.favorites', 'Favorites');
     return favorites.map(vid => {
-        const t = tilesByViewId.get(vid);
+        const tup = tilesByViewId.get(vid);
         return {
             id: `fav:${vid}`,
             kind: 'favorite',
             viewId: vid,
-            label: t ? t[1] : vid,
+            label: translateOrFallback(translate, tileLabelKey(vid), tup ? tup[1] : vid),
             icon: '★',
-            hint: t ? t[3] : '',
-            category: 'Favorites',
+            hint:  translateOrFallback(translate, tileDescKey(vid),  tup ? tup[3] : ''),
+            category: catLabel,
         };
     }).filter(it => !!it.viewId);
 }
 
-export function buildBookmarkItems(bookmarks, tilesByViewId) {
+export function buildBookmarkItems(bookmarks, tilesByViewId, translate) {
     if (!Array.isArray(bookmarks)) return [];
+    const catLabel = translateOrFallback(translate, 'palette.cat.bookmarks', 'Bookmarks');
     return bookmarks.map(b => {
-        const t = tilesByViewId.get(b.viewId);
+        const tup = tilesByViewId.get(b.viewId);
         return {
             id: `bm:${b.id}`,
             kind: 'bookmark',
             viewId: b.viewId,
-            label: b.name || (t ? t[1] : b.viewId),
+            // User-named bookmarks keep their custom name; otherwise use
+            // the translated tile label.
+            label: b.name || translateOrFallback(translate, tileLabelKey(b.viewId), tup ? tup[1] : b.viewId),
             icon: '📌',
-            hint: t ? t[3] : '',
-            category: 'Bookmarks',
+            hint:  translateOrFallback(translate, tileDescKey(b.viewId), tup ? tup[3] : ''),
+            category: catLabel,
         };
     }).filter(it => !!it.viewId);
 }
@@ -87,6 +117,7 @@ export function buildActionItems(shortcuts, translate, formatChip) {
     if (!Array.isArray(shortcuts)) return [];
     const tr = typeof translate === 'function' ? translate : (k => k);
     const fmt = typeof formatChip === 'function' ? formatChip : (() => '');
+    const cat = translateOrFallback(translate, 'palette.cat.actions', 'Actions');
     return shortcuts.map(sc => {
         const chip = fmt(sc) || '';
         return {
@@ -96,7 +127,7 @@ export function buildActionItems(shortcuts, translate, formatChip) {
             label: sc.descKey ? tr(sc.descKey) : sc.id,
             icon: '⚡',
             hint: chip,
-            category: 'Actions',
+            category: cat,
             scope: sc.scope || 'global',
         };
     }).filter(it => !!it.actionKey);

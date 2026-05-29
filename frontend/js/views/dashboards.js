@@ -13,6 +13,7 @@ import { esc } from '../util.js';
 import * as store from '../_dashboards_storage.js';
 import * as favs from '../_favorites_storage.js';
 import { TILES } from './launcher.js';
+import { t } from '../i18n.js';
 
 // Re-export so the rest of the app can mount the same renderers in
 // other contexts later (e.g., browser extensions, popups).
@@ -120,7 +121,7 @@ function renderSidebar() {
     document.getElementById('db-rename').addEventListener('click', async () => {
         const d = store.getActiveDashboard(state);
         if (!d) return;
-        const n = window.prompt('Rename dashboard:', d.name);
+        const n = window.prompt(t('view.dashboards.prompt.rename'), d.name);
         if (!n || !n.trim()) return;
         state = store.renameDashboard(state, d.id, n);
         persist();
@@ -154,7 +155,7 @@ function renderSidebar() {
         downloadJsonFile('traderview-dashboards.json', json);
     });
     document.getElementById('db-import').addEventListener('click', async () => {
-        const text = window.prompt('Paste a previously-exported dashboards JSON blob:');
+        const text = window.prompt(t('view.dashboards.prompt.paste_import'));
         if (!text) return;
         const next = store.importState(text);
         if (!next) {

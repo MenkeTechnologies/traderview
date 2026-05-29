@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc, fmtMoney, fmtPct } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const RULE_TYPES = [
     { id: 'max_loss_per_trade_pct',     label: 'Max loss per trade (% of equity)',     fields: [['pct', 'number', '1.0']] },
@@ -93,7 +94,7 @@ export async function renderRiskGate(mount, state) {
         </div>
 
         <div class="chart-panel">
-            <h2>Fires by rule <span class="muted small">— last 30 days</span></h2>
+            <h2><span data-i18n="view.risk_gate.h2.fires_by_rule">Fires by rule</span> <span class="muted small" data-i18n="view.risk_gate.h2.fires_by_rule_sub">— last 30 days</span></h2>
             <p data-i18n="view.risk_gate.hint.which_rules_trigger_most_high_fire_rules_are_worki" class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
             <table class="trades" id="rg-by-rule">
                 <thead><tr><th data-i18n="view.risk_gate.th.rule">Rule</th><th data-i18n="view.risk_gate.th.total_fires">Total fires</th><th data-i18n="view.risk_gate.th.blocks">Blocks</th><th data-i18n="view.risk_gate.th.warnings">Warnings</th></tr></thead>
@@ -102,7 +103,7 @@ export async function renderRiskGate(mount, state) {
         </div>
 
         <div class="chart-panel">
-            <h2>Recent fires <span class="muted small">— rules that saved you</span></h2>
+            <h2><span data-i18n="view.risk_gate.h2.recent_fires">Recent fires</span> <span class="muted small" data-i18n="view.risk_gate.h2.recent_fires_sub">— rules that saved you</span></h2>
             <table class="trades" id="rg-fires">
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.time">Time</th><th data-i18n="view.risk_gate.th.symbol">Symbol</th><th data-i18n="view.risk_gate.th.outcome">Outcome</th><th data-i18n="view.risk_gate.th.rules_that_fired">Rules that fired</th>
@@ -178,7 +179,7 @@ export async function renderRiskGate(mount, state) {
                 lines.push(`  [${v.severity.toUpperCase()}] ${v.rule}: ${v.message}`);
             }
             out.textContent = lines.join('\n');
-        } catch (e) { out.textContent = 'Error: ' + e.message; }
+        } catch (e) { out.textContent = t('common.error', { err: e.message }); }
     });
 
     // Preset install buttons.
@@ -190,9 +191,9 @@ export async function renderRiskGate(mount, state) {
             try {
                 const r = await api.installRiskPreset(preset);
                 if (!viewIsCurrent(tok)) return;
-                alert(`Installed ${r.inserted} rules.`);
+                alert(t('view.risk_gate.alert.installed', { n: r.inserted }));
                 await reloadRules(mount, tok);
-            } catch (e) { alert('Install failed: ' + e.message); }
+            } catch (e) { alert(t('view.risk_gate.alert.install_failed', { err: e.message })); }
         });
     });
 
@@ -214,7 +215,7 @@ export async function renderRiskGate(mount, state) {
                 killBtn.dataset.id = ks.id;
                 killBtn.dataset.enabled = ks.enabled ? '1' : '0';
             }
-        } catch (e) { killState.textContent = 'Error: ' + e.message; }
+        } catch (e) { killState.textContent = t('common.error', { err: e.message }); }
     };
     killBtn.addEventListener('click', async () => {
         try {
@@ -233,7 +234,7 @@ export async function renderRiskGate(mount, state) {
             if (!viewIsCurrent(tok)) return;
             await refreshKillState();
             await reloadRules(mount, tok);
-        } catch (e) { alert('Kill switch toggle failed: ' + e.message); }
+        } catch (e) { alert(t('view.risk_gate.alert.kill_switch_failed', { err: e.message })); }
     });
     await refreshKillState();
 
@@ -267,7 +268,7 @@ export async function renderRiskGate(mount, state) {
             await api.createRiskRule(body);
             if (!viewIsCurrent(tok)) return;
             await reloadRules(mount, tok);
-        } catch (err) { alert('Create failed: ' + err.message); }
+        } catch (err) { alert(t('view.risk_gate.alert.create_failed', { err: err.message })); }
     });
 
     // Dry-run evaluate.
@@ -297,7 +298,7 @@ export async function renderRiskGate(mount, state) {
             if (!viewIsCurrent(tok)) return;
             renderDecision(mount, decision);
         } catch (err) {
-            mount.querySelector('#rg-eval-out').textContent = 'Error: ' + err.message;
+            mount.querySelector('#rg-eval-out').textContent = t('common.error', { err: err.message });
         }
     });
 }
@@ -326,13 +327,13 @@ async function reloadRules(mount, tok) {
         tb.querySelectorAll('[data-toggle]').forEach(cb => {
             cb.addEventListener('change', async () => {
                 try { await api.toggleRiskRule(cb.dataset.toggle, cb.checked); }
-                catch (e) { alert('Toggle failed: ' + e.message); cb.checked = !cb.checked; }
+                catch (e) { alert(t('view.risk_gate.alert.toggle_failed', { err: e.message })); cb.checked = !cb.checked; }
             });
         });
         tb.querySelectorAll('[data-del]').forEach(b => {
             b.addEventListener('click', async () => {
                 try { await api.deleteRiskRule(b.dataset.del); }
-                catch (e) { alert('Delete failed: ' + e.message); return; }
+                catch (e) { alert(t('view.risk_gate.alert.delete_failed', { err: e.message })); return; }
                 if (viewIsCurrent(tok)) await reloadRules(mount, tok);
             });
         });

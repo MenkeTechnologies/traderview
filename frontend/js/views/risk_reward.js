@@ -26,8 +26,8 @@ export async function renderRiskReward(mount, _appState) {
             <div class="inline-form">
                 <label><span data-i18n="view.risk_reward.label.side">Side</span>
                     <select id="rr-side">
-                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
-                        <option value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
+                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''} data-i18n="view.risk_reward.option.long">Long</option>
+                        <option value="short" ${state.side === 'short' ? 'selected' : ''} data-i18n="view.risk_reward.option.short">Short</option>
                     </select></label>
                 <label><span data-i18n="view.risk_reward.label.entry">Entry</span>
                     <input id="rr-entry" type="number" step="any" min="0" value="${state.entry}"></label>

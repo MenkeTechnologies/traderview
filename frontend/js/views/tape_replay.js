@@ -112,7 +112,7 @@ async function renderReplay(mount, tradeId, tok) {
         <div class="chart-panel">
             <h2 data-i18n="view.tape_replay.h2.what_i_d_do_differently_client_side_this_session_o">What I'd do differently (client-side, this session only)</h2>
             <form id="tr-note-form" class="inline-form">
-                <input id="tr-note" placeholder="Drop note at current cursor" style="flex:1;min-width:240px;">
+                <input id="tr-note" data-i18n-placeholder="view.tape_replay.note.placeholder" placeholder="Drop note at current cursor" style="flex:1;min-width:240px;">
                 <button data-i18n="view.tape_replay.btn.pin_at_cursor" class="primary" type="submit">Pin at cursor</button>
             </form>
             <div id="tr-notes" style="margin-top:8px;"></div>

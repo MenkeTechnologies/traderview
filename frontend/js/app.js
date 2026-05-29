@@ -216,7 +216,7 @@ import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
-import { bootI18n, applyUiI18n } from './i18n.js';
+import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
 import { renderEconomy } from './views/economy.js';
@@ -309,7 +309,7 @@ async function boot() {
             showAuthScreen();
         } else {
             const appEl = document.getElementById('app');
-            if (appEl) appEl.innerHTML = `<p class="boot">Failed to connect: ${e.message}</p>`;
+            if (appEl) appEl.innerHTML = `<p class="boot">${t('boot.failed_connect', { err: e.message })}</p>`;
         }
     }
 }
@@ -840,10 +840,10 @@ export async function dispatch() {
             case 'tutorial':    await renderTutorial(mount, state); break;
             case 'tax-workshop': await renderTaxWorkshop(mount, state); break;
             case 'risk-gate':   await renderRiskGate(mount, state); break;
-            default:            mount.innerHTML = `<p class="boot">Unknown view: ${view}</p>`;
+            default:            mount.innerHTML = `<p class="boot">${t('boot.unknown_view', { view })}</p>`;
         }
     } catch (e) {
-        mount.innerHTML = `<p class="boot">Error: ${e.message}</p>`;
+        mount.innerHTML = `<p class="boot">${t('boot.view_error', { err: e.message })}</p>`;
         console.error(e);
     }
     // Translate any `data-i18n*` attributes the view just emitted.

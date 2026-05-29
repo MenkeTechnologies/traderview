@@ -169,8 +169,8 @@ function renderChart(stats) {
 
     // fBm returns the actual path; plot it as a time series.
     if (stats.path && stats.path.length > 1) {
-        title.textContent = 'fBm path';
-        caption.textContent = 'Single fractional Brownian motion realization. Higher Hurst H → smoother / more persistent.';
+        title.textContent = t('view.monte_carlo.fbm.title');
+        caption.textContent = t('view.monte_carlo.fbm.caption');
         const xs = stats.path.map((_, i) => i);
         new window.uPlot({
             title: '', width: el.clientWidth || 800, height: 340,
@@ -186,10 +186,8 @@ function renderChart(stats) {
     }
 
     // Default: normal-approximation density curve.
-    title.textContent = 'Terminal-price distribution (normal approximation)';
-    caption.textContent = 'Density curve is a normal approximation around (mean, stdev). '
-        + 'For jump models the real distribution is skewed and fat-tailed — use the reported '
-        + 'skew to gauge how misleading the normal is.';
+    title.textContent = t('view.monte_carlo.terminal.title');
+    caption.textContent = t('view.monte_carlo.terminal.caption');
     const { xs, ys } = normalDensityCurve(stats.mean, stats.stdev);
     if (xs.length === 0) {
         el.innerHTML = '<div class="boot">stdev was zero — distribution is a point mass.</div>';

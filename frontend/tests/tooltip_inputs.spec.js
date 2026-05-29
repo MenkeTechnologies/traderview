@@ -4,6 +4,8 @@ import { test, expect } from 'vitest';
 import {
     tipAttrsFor, tipSelectors, tipKey, shortcutId, composeTooltip,
     interactiveSelectors, normalizeTitle, deriveAutoTitle, shouldAutoTitle,
+    isAutoTitled, resetAutoTitled,
+    COMMON_BUTTON_KEYS, normalizeButtonText, inferI18nKey, shouldStampCommonI18n,
 } from '../js/_tooltip.js';
 
 // Minimal fake element factory — covers what _tooltip.js touches without
@@ -19,6 +21,7 @@ function makeEl(spec = {}) {
         dataset: ds,
         getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
         setAttribute(k, v) { attrs[k] = String(v); },
+        removeAttribute(k) { delete attrs[k]; },
         hasAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k); },
     };
 }
@@ -208,4 +211,106 @@ test('shouldAutoTitle: accepts a bare button', () => {
 
 test('shouldAutoTitle: null safe', () => {
     expect(shouldAutoTitle(null)).toBe(false);
+});
+
+// ── isAutoTitled / resetAutoTitled ───────────────────────────────
+
+test('isAutoTitled: only true when data-auto-title=="1"', () => {
+    expect(isAutoTitled(makeEl({ dataset: { autoTitle: '1' } }))).toBe(true);
+    expect(isAutoTitled(makeEl({ dataset: { autoTitle: '0' } }))).toBe(false);
+    expect(isAutoTitled(makeEl({}))).toBe(false);
+    expect(isAutoTitled(null)).toBe(false);
+});
+
+// Minimal fake root with querySelectorAll that returns a fixed list.
+function makeRoot(els) {
+    return {
+        nodeType: 1,
+        querySelectorAll() { return els; },
+    };
+}
+
+test('resetAutoTitled: clears title + flag from previously auto-titled elements only', () => {
+    const a = makeEl({ dataset: { autoTitle: '1' }, attrs: { title: 'old', 'data-auto-title': '1' } });
+    const b = makeEl({ attrs: { title: 'user-set' } }); // no flag, user-set
+    const root = makeRoot([a, b]);
+    const n = resetAutoTitled(root);
+    expect(n).toBe(1);
+    expect(a.getAttribute('title')).toBe(null);
+    expect(a.dataset.autoTitle).toBe(undefined);
+    expect(b.getAttribute('title')).toBe('user-set'); // untouched
+});
+
+test('resetAutoTitled: idempotent on a clean root', () => {
+    const root = makeRoot([makeEl({}), makeEl({})]);
+    expect(resetAutoTitled(root)).toBe(0);
+});
+
+test('resetAutoTitled: null-safe + accepts custom selector list', () => {
+    expect(resetAutoTitled(null)).toBe(0);
+    const a = makeEl({ dataset: { autoTitle: '1' }, attrs: { title: 'x' } });
+    expect(resetAutoTitled(makeRoot([a]), 'button,a[href]')).toBe(1);
+});
+
+// ── normalizeButtonText / inferI18nKey ───────────────────────────
+
+test('normalizeButtonText: collapses whitespace + lowercases', () => {
+    expect(normalizeButtonText('  Save  ')).toBe('save');
+    expect(normalizeButtonText('Download\n\tCSV')).toBe('download csv');
+    expect(normalizeButtonText(null)).toBe('');
+    expect(normalizeButtonText(undefined)).toBe('');
+});
+
+test('COMMON_BUTTON_KEYS: covers high-frequency view-button verbs', () => {
+    // Sanity — at least the top verbs from the codebase audit are present.
+    for (const k of ['save', 'cancel', 'apply', 'reset', 'clear', 'compute',
+        'analyze', 'evaluate', 'add', 'delete', 'close', 'run', 'create']) {
+        expect(COMMON_BUTTON_KEYS.has(k), `missing ${k}`).toBe(true);
+        expect(COMMON_BUTTON_KEYS.get(k).startsWith('common.btn.')).toBe(true);
+    }
+});
+
+test('COMMON_BUTTON_KEYS: every value matches common.btn.<snake_case>', () => {
+    for (const [k, v] of COMMON_BUTTON_KEYS.entries()) {
+        expect(/^common\.btn\.[a-z_]+$/.test(v), `bad key for ${k}: ${v}`).toBe(true);
+    }
+});
+
+test('inferI18nKey: matches whitelist case-insensitively + with surrounding whitespace', () => {
+    expect(inferI18nKey('Save')).toBe('common.btn.save');
+    expect(inferI18nKey('  SAVE  ')).toBe('common.btn.save');
+    expect(inferI18nKey('Download CSV')).toBe('common.btn.download_csv');
+    expect(inferI18nKey('not on whitelist')).toBe(null);
+    expect(inferI18nKey('')).toBe(null);
+    expect(inferI18nKey(null)).toBe(null);
+});
+
+// ── shouldStampCommonI18n ────────────────────────────────────────
+
+// Extend makeEl to support children for the mixed-content guard.
+function makeButton(spec = {}) {
+    const el = makeEl(spec);
+    el.children = spec.children || [];
+    return el;
+}
+
+test('shouldStampCommonI18n: accepts a bare button with text-only content', () => {
+    expect(shouldStampCommonI18n(makeButton({ textContent: 'Save' }))).toBe(true);
+});
+
+test('shouldStampCommonI18n: skips when data-i18n already set', () => {
+    expect(shouldStampCommonI18n(makeButton({ textContent: 'Save', dataset: { i18n: 'x' } }))).toBe(false);
+});
+
+test('shouldStampCommonI18n: skips when data-no-i18n opt-out', () => {
+    expect(shouldStampCommonI18n(makeButton({ textContent: 'Save', dataset: { noI18n: '1' } }))).toBe(false);
+    expect(shouldStampCommonI18n(makeButton({ textContent: 'Save', dataset: { noI18n: 'true' } }))).toBe(false);
+});
+
+test('shouldStampCommonI18n: skips buttons with element children (mixed icon+text)', () => {
+    expect(shouldStampCommonI18n(makeButton({ textContent: 'Save', children: [{}] }))).toBe(false);
+});
+
+test('shouldStampCommonI18n: null safe', () => {
+    expect(shouldStampCommonI18n(null)).toBe(false);
 });

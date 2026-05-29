@@ -76,20 +76,31 @@ export function listRecents(state, excludeViewId = null) {
 
 // Build palette-shaped items from a recents list, joined with the tiles
 // map (label/icon/hint come from tiles). Drops entries whose viewId
-// isn't in the tiles map.
-export function buildRecentItems(recents, tilesByViewId) {
+// isn't in the tiles map. `translate` is i18n's `t` — looks up
+// tile.<id>.{label,desc} with fallback to the literal in TILES.
+function lookup(translate, key, fallback) {
+    if (typeof translate !== 'function') return fallback;
+    try {
+        const v = translate(key);
+        if (typeof v === 'string' && v && v !== key) return v;
+    } catch (_) { /* defensive */ }
+    return fallback;
+}
+
+export function buildRecentItems(recents, tilesByViewId, translate) {
     if (!Array.isArray(recents)) return [];
+    const cat = lookup(translate, 'palette.cat.recent', 'Recent');
     return recents.map(r => {
-        const t = tilesByViewId.get(r.viewId);
-        if (!t) return null;
+        const tup = tilesByViewId.get(r.viewId);
+        if (!tup) return null;
         return {
             id: `recent:${r.viewId}`,
             kind: 'recent',
             viewId: r.viewId,
-            label: t[1] || r.viewId,
+            label: lookup(translate, `tile.${r.viewId}.label`, tup[1] || r.viewId),
             icon: '🕒',
-            hint: t[3] || '',
-            category: 'Recent',
+            hint:  lookup(translate, `tile.${r.viewId}.desc`,  tup[3] || ''),
+            category: cat,
         };
     }).filter(Boolean);
 }

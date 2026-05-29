@@ -47,7 +47,7 @@ export async function renderKelly(mount, _appState) {
         <div id="kl-static-cards" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Dynamic Kelly <small class="muted">(rolling window over trade PnLs)</small></h2>
+            <h2><span data-i18n="view.kelly.h2.dynamic_kelly">Dynamic Kelly</span> <small class="muted" data-i18n="view.kelly.h2.dynamic_kelly_hint">(rolling window over trade PnLs)</small></h2>
             <textarea id="kl-pnls" rows="5" placeholder="200&#10;-100&#10;200&#10;-100&#10;...">${esc(pnlsToBlob(state.pnls))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.kelly.label.window">Window (last N trades)</span>

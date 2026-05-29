@@ -173,19 +173,19 @@ function activate(it) {
 
 function buildAllItems() {
     const byVid = tilesByViewId(TILES);
-    const cats = categoriesByViewId(CATEGORIES);
-    const tileItems = buildTileItems(TILES, cats);
+    const cats = categoriesByViewId(CATEGORIES, t);
+    const tileItems = buildTileItems(TILES, cats, t);
     let favs = [], bms = [];
     try {
         const fav = loadState();
-        favs = buildFavoriteItems(fav.favorites || [], byVid);
-        bms  = buildBookmarkItems(fav.bookmarks || [], byVid);
+        favs = buildFavoriteItems(fav.favorites || [], byVid, t);
+        bms  = buildBookmarkItems(fav.bookmarks || [], byVid, t);
     } catch { /* favorites module unavailable; fine */ }
     let recents = [];
     try {
         const r = loadRecents();
         const currentView = (window.location.hash || '').replace(/^#/, '').split('/')[0];
-        recents = buildRecentItems(listRecents(r, currentView), byVid);
+        recents = buildRecentItems(listRecents(r, currentView), byVid, t);
     } catch { /* recents module unavailable; fine */ }
     const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
     const actions = buildActionItems(listShortcuts(), t, (sc) => formatKey(sc, isMac));

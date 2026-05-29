@@ -3,6 +3,7 @@
 
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const FIELDS = [
     { key: 'symbol',          required: true,  hint: 'AAPL, MSFT, …' },
@@ -162,7 +163,7 @@ function renderCommit(accountId, mount, tok) {
     mount.querySelector('#cw-go').addEventListener('click', async () => {
         const missing = FIELDS.filter(f => f.required && !mapping[f.key]);
         if (missing.length) {
-            alert('missing required fields: ' + missing.map(f => f.key).join(', '));
+            alert(t('view.csv_wizard.alert.missing_fields', { fields: missing.map(f => f.key).join(', ') }));
             return;
         }
         const status = mount.querySelector('#cw-go-status');

@@ -20,7 +20,7 @@ export async function renderCohortTilt(mount, _appState) {
         <h1 data-i18n="view.cohort_tilt.h1.cohort_tilt" class="view-title">// COHORT TILT</h1>
 
         <div class="chart-panel">
-            <h2>Cohort positions <small class="muted">(per line: <code>trader_id SYMBOL net_contracts</code> — signed: + long, - short, 0 flat)</small></h2>
+            <h2><span data-i18n="view.cohort_tilt.h2.cohort_positions">Cohort positions</span> <small class="muted"><span data-i18n="view.cohort_tilt.h2.cohort_positions_hint">(per line: </span><code>trader_id SYMBOL net_contracts</code><span data-i18n="view.cohort_tilt.h2.cohort_positions_hint2"> — signed: + long, - short, 0 flat)</span></small></h2>
             <textarea id="ct-blob" rows="10" placeholder="L0 ES 3&#10;S0 ES -3&#10;a NQ 1">${esc(positionsToBlob(state.positions))}</textarea>
             <div class="inline-form">
                 <button data-i18n="view.cohort_tilt.btn.aggregate" id="ct-run" class="primary" type="button">Aggregate</button>

@@ -428,11 +428,18 @@ function renderGrid() {
 function renderTile([id, label, glyph, desc, badge]) {
     const fState = favs.loadState();
     const fav = favs.isFavorite(fState, id);
+    // Convention: tile.<id>.label / tile.<id>.desc translate the literal
+    // strings in TILES. Missing keys fall back to the English literal so
+    // partial locale catalogs degrade cleanly.
+    const labelKey = `tile.${id}.label`;
+    const descKey  = `tile.${id}.desc`;
+    const tLabel = (() => { const v = t(labelKey); return (v && v !== labelKey) ? v : label; })();
+    const tDesc  = (() => { const v = t(descKey);  return (v && v !== descKey)  ? v : desc;  })();
     return `<button class="tile" data-view="${esc(id)}" tabindex="0">
         <span class="tile-glyph">${glyph}</span>
         <span class="tile-body">
-            <span class="tile-label">${esc(label)}${badge ? ` <span class="tile-badge">${esc(badge)}</span>` : ''}</span>
-            <span class="tile-desc">${esc(desc)}</span>
+            <span class="tile-label"><span data-i18n="${esc(labelKey)}">${esc(tLabel)}</span>${badge ? ` <span class="tile-badge">${esc(badge)}</span>` : ''}</span>
+            <span class="tile-desc" data-i18n="${esc(descKey)}">${esc(tDesc)}</span>
         </span>
         <span class="tile-actions">
             <span class="tile-action ${fav ? 'tile-fav-on' : 'tile-fav-off'}" data-fav="${esc(id)}"

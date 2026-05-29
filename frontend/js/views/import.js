@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { fmt, fmtDateTime, esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderImportView(mount, state) {
     const tok = currentViewToken();
@@ -63,7 +64,7 @@ export async function renderImportView(mount, state) {
 
     mount.querySelector('#go').addEventListener('click', async () => {
         const f = fileInput.files[0];
-        if (!f) { alert('pick a file'); return; }
+        if (!f) { alert(t('view.import.alert.pick_a_file')); return; }
         const src = mount.querySelector('#source').value;
         try {
             const r = await api.upload(state.accountId, src, f);
@@ -75,7 +76,7 @@ export async function renderImportView(mount, state) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const out = mount.querySelector('#import-result');
-            if (out) out.textContent = 'Error: ' + e.message;
+            if (out) out.textContent = t('common.error', { err: e.message });
         }
         void fmt;
     });

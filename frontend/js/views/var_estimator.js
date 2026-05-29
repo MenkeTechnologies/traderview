@@ -25,7 +25,7 @@ export async function renderVarEstimator(mount, _appState) {
         <h1 data-i18n="view.var_estimator.h1.value_at_risk" class="view-title">// VALUE AT RISK</h1>
 
         <div class="chart-panel">
-            <h2>Daily returns <small class="muted">(decimal or with % suffix; csv/space/newline mix)</small></h2>
+            <h2><span data-i18n="view.var_estimator.h2.daily_returns">Daily returns</span> <small class="muted" data-i18n="view.var_estimator.h2.daily_returns_hint">(decimal or with % suffix; csv/space/newline mix)</small></h2>
             <textarea id="var-blob" rows="6" placeholder="0.005&#10;-0.012&#10;0.003&#10;-0.5%&#10;...">${esc(returnsToBlob(state.returns))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.var_estimator.label.position_value">Position value ($)</span>

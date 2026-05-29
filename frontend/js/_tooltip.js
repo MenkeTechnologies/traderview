@@ -125,6 +125,105 @@ export function deriveAutoTitle(el, getById) {
     return '';
 }
 
+// True if the element was previously stamped by autoApply (so the
+// title is derived, not user-set). Used to decide whether it's safe
+// to wipe the cached title on locale change.
+export function isAutoTitled(el) {
+    if (!el || el.nodeType !== 1) return false;
+    return el && el.dataset && el.dataset.autoTitle === '1';
+}
+
+// Clear the cached title from elements we previously auto-titled so
+// the next autoApply pass can re-derive from the now-translated DOM.
+// Only touches our own stamped elements — user-set titles are left
+// alone. Returns the number of elements reset for testability.
+export function resetAutoTitled(root, selectorList) {
+    if (!root || typeof root.querySelectorAll !== 'function') return 0;
+    const sel = selectorList || interactiveSelectors();
+    let n = 0;
+    root.querySelectorAll(sel).forEach(el => {
+        if (!isAutoTitled(el)) return;
+        try { el.removeAttribute('title'); } catch (_) { /* read-only */ }
+        delete el.dataset.autoTitle;
+        n++;
+    });
+    return n;
+}
+
+// High-frequency button labels that recur across many views. When a
+// button's text matches one of these exactly (case-insensitive after
+// normalizeButtonText), the auto-i18n pass stamps a `data-i18n` attr
+// pointing to `common.btn.<key>` so applyUiI18n re-translates on
+// locale change. Curated, not generated — only verbs that are truly
+// repeated 3+ times across the view files end up here.
+export const COMMON_BUTTON_KEYS = new Map([
+    ['add',                  'common.btn.add'],
+    ['analyze',              'common.btn.analyze'],
+    ['apply',                'common.btn.apply'],
+    ['cancel',               'common.btn.cancel'],
+    ['classify',             'common.btn.classify'],
+    ['clear',                'common.btn.clear'],
+    ['close',                'common.btn.close'],
+    ['compute',              'common.btn.compute'],
+    ['connect',              'common.btn.connect'],
+    ['create',               'common.btn.create'],
+    ['decompose',            'common.btn.decompose'],
+    ['delete',               'common.btn.delete'],
+    ['detect',               'common.btn.detect'],
+    ['download csv',         'common.btn.download_csv'],
+    ['edit',                 'common.btn.edit'],
+    ['evaluate',             'common.btn.evaluate'],
+    ['export',               'common.btn.export'],
+    ['import',               'common.btn.import'],
+    ['insert template',      'common.btn.insert_template'],
+    ['load',                 'common.btn.load'],
+    ['lookup',               'common.btn.lookup'],
+    ['next',                 'common.btn.next'],
+    ['poll now',             'common.btn.poll_now'],
+    ['post',                 'common.btn.post'],
+    ['previous',             'common.btn.previous'],
+    ['rank',                 'common.btn.rank'],
+    ['refresh',              'common.btn.refresh'],
+    ['reset',                'common.btn.reset'],
+    ['run',                  'common.btn.run'],
+    ['save',                 'common.btn.save'],
+    ['search',               'common.btn.search'],
+    ['simulate',             'common.btn.simulate'],
+    ['submit',               'common.btn.submit'],
+    ['update',               'common.btn.update'],
+    ['upload',               'common.btn.upload'],
+]);
+
+// Squash whitespace + lowercase; what we key COMMON_BUTTON_KEYS by.
+export function normalizeButtonText(s) {
+    if (s == null) return '';
+    return String(s).replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+// Lookup helper. Returns the i18n key when the button text matches a
+// whitelisted common verb, or null.
+export function inferI18nKey(text) {
+    const norm = normalizeButtonText(text);
+    if (!norm) return null;
+    return COMMON_BUTTON_KEYS.get(norm) || null;
+}
+
+// True if the element is eligible for the common-verb i18n stamp.
+// Skips elements that already declare data-i18n / data-i18n-anything,
+// have child elements (i.e. textContent mixes icon + label and the
+// safe-replace heuristic doesn't apply), or are explicitly opted out.
+export function shouldStampCommonI18n(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (!el.dataset) return false;
+    if (el.dataset.noI18n === '1' || el.dataset.noI18n === 'true') return false;
+    if (el.dataset.i18n) return false;
+    if (el.hasAttribute && el.hasAttribute('data-i18n')) return false;
+    // Mixed content (icon glyph + text) gets clobbered by textContent
+    // replacement — skip when the button has element children.
+    if (typeof el.children !== 'undefined' && el.children && el.children.length > 0) return false;
+    return true;
+}
+
 // Predicate: should the auto-titler stamp this element?
 //   - Must not already have a title
 //   - Must not opt-out via `data-no-tip`

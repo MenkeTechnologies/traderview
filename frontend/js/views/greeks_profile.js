@@ -50,20 +50,20 @@ export async function renderGreeksProfile(mount, _appState) {
                         <option data-i18n="view.greeks_profile.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.greeks_profile.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label>Strike <input id="gp-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label>T (years) <input id="gp-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
-                <label>Rate r <input id="gp-r" type="number" step="any" value="${state.params.risk_free}"></label>
-                <label>Dividend q <input id="gp-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
-                <label>σ <input id="gp-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                <label><span data-i18n="view.greeks_profile.label.strike">Strike</span> <input id="gp-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                <label><span data-i18n="view.greeks_profile.label.t">T (years)</span> <input id="gp-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
+                <label><span data-i18n="view.greeks_profile.label.r">Rate r</span> <input id="gp-r" type="number" step="any" value="${state.params.risk_free}"></label>
+                <label><span data-i18n="view.greeks_profile.label.q">Dividend q</span> <input id="gp-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
+                <label><span data-i18n="view.greeks_profile.label.sigma">σ</span> <input id="gp-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.greeks_profile.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
-                <label>Low <input id="gp-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
-                <label>High <input id="gp-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
-                <label>Points <input id="gp-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
+                <label><span data-i18n="view.greeks_profile.label.low">Low</span> <input id="gp-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
+                <label><span data-i18n="view.greeks_profile.label.high">High</span> <input id="gp-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
+                <label><span data-i18n="view.greeks_profile.label.points">Points</span> <input id="gp-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
                 <button data-i18n="view.greeks_profile.btn.50_from_strike" id="gp-defaults" class="secondary" type="button">±50% from strike</button>
                 <button data-i18n="view.greeks_profile.btn.compute" id="gp-run" class="primary" type="button">Compute</button>
             </div>

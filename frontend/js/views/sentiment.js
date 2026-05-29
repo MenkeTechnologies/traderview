@@ -39,11 +39,11 @@ export async function renderSentiment(mount, _state, symbol) {
 
         <div class="panel-grid">
             <div class="chart-panel">
-                <h2>Top sentiment <span style="color:var(--green)">deltas ↑</span></h2>
+                <h2><span data-i18n="view.sentiment.h2.top_sentiment">Top sentiment</span> <span style="color:var(--green)" data-i18n="view.sentiment.h2.deltas_up">deltas ↑</span></h2>
                 <div id="top-up"></div>
             </div>
             <div class="chart-panel">
-                <h2>Top sentiment <span style="color:var(--red)">deltas ↓</span></h2>
+                <h2><span data-i18n="view.sentiment.h2.top_sentiment">Top sentiment</span> <span style="color:var(--red)" data-i18n="view.sentiment.h2.deltas_down">deltas ↓</span></h2>
                 <div id="top-down"></div>
             </div>
         </div>
