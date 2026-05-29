@@ -168,7 +168,7 @@
             <a href="https://github.com/MenkeTechnologies/traderview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
           <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 12 broker importers · 261-tile launcher · MIT</p>
-          <p class="docs-build-line"><span id="tvLoc">192,897 Rust LOC · 6 library crates + Tauri shell · 69 tables · 31 migrations · 1,028 axum routes · 257 view modules · 261 launcher tiles · 93,399 JS LOC · 2,512 CSS LOC</span></p>
+          <p class="docs-build-line"><span id="tvLoc">192,897 Rust LOC · 6 library crates + Tauri shell · 69 tables · 31 migrations · 1,028 axum routes · 257 view modules · 261 launcher tiles · 131,207 JS LOC · 2,512 CSS LOC</span></p>
           <!-- Rust LOC derived from: find . -name '*.rs' -not -path '*/target/*' | xargs wc -l | tail -1 -->
           <!-- axum routes derived from: grep -rE '\.route\(' crates/traderview-web/src/ | wc -l -->
           <!-- JS LOC derived from: find frontend -name '*.js' | xargs wc -l | tail -1 -->
@@ -269,7 +269,7 @@ cargo run -p traderview-web --bin server
             <tr><td><code>traderview-expense</code></td><td>6,527</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
             <tr><td><code>traderview-ocr</code></td><td>814</td><td>Receipt OCR via the system <code>tesseract</code> binary + image preprocessing (binarize, deskew). Extracts merchant / amount / date for the expense matcher.</td></tr>
             <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>484</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
-            <tr class="total"><td><strong>Total</strong></td><td><strong>192,897</strong></td><td>Plus 93,399 LOC vanilla JS (257 view modules) and 2,512 LOC CSS. No bundler, no npm.</td></tr>
+            <tr class="total"><td><strong>Total</strong></td><td><strong>192,897</strong></td><td>Plus 131,207 LOC vanilla JS (257 view modules) and 2,512 LOC CSS. No bundler, no npm.</td></tr>
           </tbody>
         </table>
       </section>
@@ -337,7 +337,7 @@ cargo run -p traderview-web --bin server
 
       <section class="tutorial-section">
         <h2>Frontend — Vanilla JS + uPlot, 257 Views, 261-Tile Launcher</h2>
-        <p>Zero npm. Zero bundler. Zero JS framework. <strong>93,399 LOC vanilla ES modules + 2,512 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
+        <p>Zero npm. Zero bundler. Zero JS framework. <strong>131,207 LOC vanilla ES modules + 2,512 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
         <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 261 tiles across 8 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
         <div class="tv-card-grid">
           <div class="tv-card">
