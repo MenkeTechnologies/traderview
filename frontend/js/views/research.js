@@ -178,11 +178,11 @@ function renderSignals(s, mount) {
     indEl.innerHTML = `<table class="trades"><tbody>
         ${cell('SMA(20)', i.sma20)}${cell('SMA(50)', i.sma50)}${cell('SMA(200)', i.sma200)}
         ${cell('EMA(12)', i.ema12)}${cell('EMA(26)', i.ema26)}
-        ${cell('MACD line', i.macd_line)}${cell('MACD signal', i.macd_signal)}${cell('MACD hist', i.macd_hist)}
+        ${cell(t('view.research.ind.macd_line'), i.macd_line)}${cell(t('view.research.ind.macd_signal'), i.macd_signal)}${cell(t('view.research.ind.macd_hist'), i.macd_hist)}
         ${cell('RSI(14)', i.rsi14)}${cell('ADX(14)', i.adx14)}
         ${cell('+DI', i.plus_di)}${cell('-DI', i.minus_di)}
-        ${cell('Stoch %K', i.stoch_k)}${cell('Stoch %D', i.stoch_d)}
-        ${cell('BB upper', i.bb_upper)}${cell('BB middle', i.bb_middle)}${cell('BB lower', i.bb_lower)}
+        ${cell(t('view.research.ind.stoch_k'), i.stoch_k)}${cell(t('view.research.ind.stoch_d'), i.stoch_d)}
+        ${cell(t('view.research.ind.bb_upper'), i.bb_upper)}${cell(t('view.research.ind.bb_middle'), i.bb_middle)}${cell(t('view.research.ind.bb_lower'), i.bb_lower)}
     </tbody></table>`;
     if (s.pivots) {
         const p = s.pivots;
