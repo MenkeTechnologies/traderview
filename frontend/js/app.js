@@ -81,6 +81,42 @@ import { renderOrderBookImbalance } from './views/order_book_imbalance.js';
 import { renderCusum } from './views/cusum.js';
 import { renderOrderFlow } from './views/order_flow.js';
 import { renderVwapSlippage } from './views/vwap_slippage.js';
+import { renderPerSymbolSlippage } from './views/per_symbol_slippage.js';
+import { renderOrderStaleness } from './views/order_staleness.js';
+import { renderOpenType } from './views/open_type.js';
+import { renderMarketProfile } from './views/market_profile.js';
+import { renderOiChange } from './views/oi_change.js';
+import { renderPyramid } from './views/pyramid.js';
+import { renderHaReversal } from './views/ha_reversal.js';
+import { renderThreeBarReversal } from './views/three_bar_reversal.js';
+import { renderRangeExpansion } from './views/range_expansion.js';
+import { renderAlligator } from './views/alligator.js';
+import { renderDemarker } from './views/demarker.js';
+import { renderMurreyMath } from './views/murrey_math.js';
+import { renderDemarkPivots } from './views/demark_pivots.js';
+import { renderCypherPattern } from './views/cypher_pattern.js';
+import { renderDashboards } from './views/dashboards.js';
+import { renderTwap } from './views/twap.js';
+import { renderNewsEvent } from './views/news_event.js';
+import { renderStopLossBestOf } from './views/stop_loss_best_of.js';
+import { renderSqueezeAlerts } from './views/squeeze_alerts.js';
+import { renderFootprint } from './views/footprint.js';
+import { renderStressTest } from './views/stress_test.js';
+import { renderChandelierStop } from './views/chandelier_stop.js';
+import { renderTripleScreen } from './views/triple_screen.js';
+import { renderAlertRules } from './views/alert_rules.js';
+import { renderDailyLossLimit } from './views/daily_loss_limit.js';
+import { renderDrawdownThrottle } from './views/drawdown_throttle.js';
+import { renderGoalTracker } from './views/goal_tracker.js';
+import { renderTradePlanChecklist } from './views/trade_plan_checklist.js';
+import { renderRegimeEquity } from './views/regime_equity.js';
+import { renderVolStopClose } from './views/vol_stop_close.js';
+import { renderTimeInForce } from './views/time_in_force.js';
+import { renderClustersTradeFeatures } from './views/clusters_trade_features.js';
+import { renderClustersCorrelation } from './views/clusters_correlation.js';
+import { renderSetupsBySetup } from './views/setups_by_setup.js';
+import { renderCohortTilt } from './views/cohort_tilt.js';
+import { renderChoppiness } from './views/choppiness.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
 import { renderEconomy } from './views/economy.js';
@@ -389,6 +425,42 @@ export async function dispatch() {
             case 'cusum':           await renderCusum(mount, state); break;
             case 'order-flow':      await renderOrderFlow(mount, state); break;
             case 'vwap-slippage':   await renderVwapSlippage(mount, state); break;
+            case 'per-symbol-slippage': await renderPerSymbolSlippage(mount, state); break;
+            case 'order-staleness': await renderOrderStaleness(mount, state); break;
+            case 'open-type':       await renderOpenType(mount, state); break;
+            case 'market-profile':  await renderMarketProfile(mount, state); break;
+            case 'oi-change':       await renderOiChange(mount, state); break;
+            case 'pyramid':         await renderPyramid(mount, state); break;
+            case 'ha-reversal':     await renderHaReversal(mount, state); break;
+            case 'three-bar-reversal': await renderThreeBarReversal(mount, state); break;
+            case 'range-expansion':    await renderRangeExpansion(mount, state); break;
+            case 'alligator':          await renderAlligator(mount, state); break;
+            case 'demarker':           await renderDemarker(mount, state); break;
+            case 'murrey-math':        await renderMurreyMath(mount, state); break;
+            case 'demark-pivots':      await renderDemarkPivots(mount, state); break;
+            case 'cypher-pattern':     await renderCypherPattern(mount, state); break;
+            case 'dashboards':         await renderDashboards(mount, state); break;
+            case 'twap':               await renderTwap(mount, state); break;
+            case 'news-event':         await renderNewsEvent(mount, state); break;
+            case 'stop-loss-best-of':  await renderStopLossBestOf(mount, state); break;
+            case 'squeeze-alerts':     await renderSqueezeAlerts(mount, state); break;
+            case 'footprint':          await renderFootprint(mount, state); break;
+            case 'stress-test':        await renderStressTest(mount, state); break;
+            case 'chandelier-stop':    await renderChandelierStop(mount, state); break;
+            case 'triple-screen':      await renderTripleScreen(mount, state); break;
+            case 'alert-rules':        await renderAlertRules(mount, state); break;
+            case 'daily-loss-limit':   await renderDailyLossLimit(mount, state); break;
+            case 'drawdown-throttle':  await renderDrawdownThrottle(mount, state); break;
+            case 'goal-tracker':       await renderGoalTracker(mount, state); break;
+            case 'trade-plan-checklist': await renderTradePlanChecklist(mount, state); break;
+            case 'regime-equity':      await renderRegimeEquity(mount, state); break;
+            case 'vol-stop-close':     await renderVolStopClose(mount, state); break;
+            case 'time-in-force':      await renderTimeInForce(mount, state); break;
+            case 'clusters-trade-features': await renderClustersTradeFeatures(mount, state); break;
+            case 'clusters-correlation': await renderClustersCorrelation(mount, state); break;
+            case 'setups-by-setup':    await renderSetupsBySetup(mount, state); break;
+            case 'cohort-tilt':        await renderCohortTilt(mount, state); break;
+            case 'choppiness':         await renderChoppiness(mount, state); break;
             case 'crypto':      await renderCrypto(mount, state); break;
             case 'backtest':    await renderBacktest(mount, state); break;
             case 'economy':     await renderEconomy(mount, state); break;
@@ -459,6 +531,68 @@ export async function dispatch() {
         console.error(e);
     }
 }
+
+// View-renderer registry — exposed so the Dashboards view can mount any
+// of these inside a tile. Only includes views that don't need URL
+// params (rest[]) past the global symbol, since tile-context has none.
+export const viewRenderers = {
+    // Pattern / indicator detectors.
+    'ha-reversal':         (m, s) => renderHaReversal(m, s),
+    'three-bar-reversal':  (m, s) => renderThreeBarReversal(m, s),
+    'range-expansion':     (m, s) => renderRangeExpansion(m, s),
+    'alligator':           (m, s) => renderAlligator(m, s),
+    'demarker':            (m, s) => renderDemarker(m, s),
+    'murrey-math':         (m, s) => renderMurreyMath(m, s),
+    'demark-pivots':       (m, s) => renderDemarkPivots(m, s),
+    'cypher-pattern':      (m, s) => renderCypherPattern(m, s),
+    'cup-and-handle':      (m, s) => renderCupAndHandle(m, s),
+    'cusum':               (m, s) => renderCusum(m, s),
+    // Microstructure / TCA.
+    'vpin':                (m, s) => renderVpin(m, s),
+    'order-book-imbalance': (m, s) => renderOrderBookImbalance(m, s),
+    'order-flow':          (m, s) => renderOrderFlow(m, s),
+    'open-type':           (m, s) => renderOpenType(m, s),
+    'market-profile':      (m, s) => renderMarketProfile(m, s),
+    'oi-change':           (m, s) => renderOiChange(m, s),
+    'almgren-chriss':      (m, s) => renderAlmgrenChriss(m, s),
+    'implementation-shortfall': (m, s) => renderImplementationShortfall(m, s),
+    'market-impact':       (m, s) => renderMarketImpact(m, s),
+    'liquidity':           (m, s) => renderLiquidity(m, s),
+    'spread-tracker':      (m, s) => renderSpreadTracker(m, s),
+    'intraday-heatmap':    (m, s) => renderIntradayHeatmap(m, s),
+    'vwap-slippage':       (m, s) => renderVwapSlippage(m, s),
+    'twap':                (m, s) => renderTwap(m, s),
+    'news-event':          (m, s) => renderNewsEvent(m, s),
+    'stop-loss-best-of':   (m, s) => renderStopLossBestOf(m, s),
+    'squeeze-alerts':      (m, s) => renderSqueezeAlerts(m, s),
+    'footprint':           (m, s) => renderFootprint(m, s),
+    'stress-test':         (m, s) => renderStressTest(m, s),
+    'chandelier-stop':     (m, s) => renderChandelierStop(m, s),
+    'triple-screen':       (m, s) => renderTripleScreen(m, s),
+    'alert-rules':         (m, s) => renderAlertRules(m, s),
+    'daily-loss-limit':    (m, s) => renderDailyLossLimit(m, s),
+    'drawdown-throttle':   (m, s) => renderDrawdownThrottle(m, s),
+    'goal-tracker':        (m, s) => renderGoalTracker(m, s),
+    'trade-plan-checklist':(m, s) => renderTradePlanChecklist(m, s),
+    'regime-equity':       (m, s) => renderRegimeEquity(m, s),
+    'vol-stop-close':      (m, s) => renderVolStopClose(m, s),
+    'time-in-force':       (m, s) => renderTimeInForce(m, s),
+    'clusters-trade-features': (m, s) => renderClustersTradeFeatures(m, s),
+    'clusters-correlation': (m, s) => renderClustersCorrelation(m, s),
+    'setups-by-setup':     (m, s) => renderSetupsBySetup(m, s),
+    'cohort-tilt':         (m, s) => renderCohortTilt(m, s),
+    'choppiness':          (m, s) => renderChoppiness(m, s),
+    'per-symbol-slippage': (m, s) => renderPerSymbolSlippage(m, s),
+    'order-staleness':     (m, s) => renderOrderStaleness(m, s),
+    // Options analytics.
+    'iv-rank':             (m, s) => renderIvRank(m, s),
+    'iv-backtest':         (m, s) => renderIvBacktest(m, s),
+    'greeks-profile':      (m, s) => renderGreeksProfile(m, s),
+    'second-order-greeks': (m, s) => renderSecondOrderGreeks(m, s),
+    // Risk / sizing.
+    'deflated-sharpe':     (m, s) => renderDeflatedSharpe(m, s),
+    'pyramid':             (m, s) => renderPyramid(m, s),
+};
 
 window.addEventListener('tv:authed', () => boot());
 document.addEventListener('DOMContentLoaded', () => {

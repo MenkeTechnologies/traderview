@@ -1,0 +1,205 @@
+// Portfolio Stress-Test view — tastytrade Risk Analysis class.
+//
+// Re-prices an option portfolio under a grid of (price-shock × IV-shock)
+// shocks, with optional time-decay advancement. Renders the resulting
+// P&L matrix as a heatmap so the trader sees their tail exposure at a
+// glance — including the "delta-neutral now but down -$X if IV crushes
+// -20%" cases a single-greeks snapshot hides.
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseLegBlob, validateInputs, buildBody,
+    defaultPriceShocks, defaultIvShocks,
+    pivotGrid, heatStyleClass, makeDemoLegs,
+    fmtUSD, fmtUSDSigned, fmtPct,
+} from '../_stress_test_inputs.js';
+
+let state = {
+    legText: '',
+    priceShocks: defaultPriceShocks(),
+    ivShocks: defaultIvShocks(),
+    timeDecay: 0,
+    rate: 0.045,
+    div: 0.0,
+};
+
+export async function renderStressTest(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// PORTFOLIO STRESS TEST</h1>
+
+        <div class="chart-panel">
+            <h2>Option legs</h2>
+            <p class="muted">One leg per line: <code>symbol kind spot strike dte iv contracts entry_price</code>.
+                Multiplier is fixed at 100 (equity options). Demo loads a short SPY iron
+                condor.</p>
+            <textarea id="st-legs" rows="6" placeholder="SPY put 100 95 30 0.30 -1 1.20&#10;SPY put 100 90 30 0.30 1 0.40&#10;..."></textarea>
+            <div class="inline-form">
+                <button id="st-demo" class="secondary" type="button">Load demo (iron condor)</button>
+                <button id="st-clear" class="secondary" type="button">Clear</button>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Shock grid + market params</h2>
+            <div class="inline-form">
+                <label>Price shocks % (comma-sep, fractions e.g. -0.10 = -10%)
+                    <input id="st-ps" type="text" value="${state.priceShocks.join(',')}" style="min-width:300px"></label>
+                <label>IV shocks % (relative to current IV)
+                    <input id="st-iv" type="text" value="${state.ivShocks.join(',')}" style="min-width:240px"></label>
+            </div>
+            <div class="inline-form">
+                <label>Time-decay days
+                    <input id="st-td" type="number" step="1" min="0" value="${state.timeDecay}"></label>
+                <label>Risk-free rate
+                    <input id="st-rate" type="number" step="any" value="${state.rate}"></label>
+                <label>Dividend yield
+                    <input id="st-div" type="number" step="any" min="0" value="${state.div}"></label>
+                <button id="st-run" class="primary" type="button">Run stress test</button>
+            </div>
+            <p class="muted">Negative price-shock = downside; negative IV-shock = vol crush.
+                Worst-case + best-case cells highlighted in the heatmap below.</p>
+        </div>
+
+        <div id="st-errors" class="boot" style="display:none"></div>
+        <div id="st-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>P&amp;L heatmap (price × IV shocks)</h2>
+            <div id="st-grid" class="st-grid"></div>
+            <p class="muted">Each cell = portfolio P&amp;L under that shock pair (with time-decay
+                applied). Gold border = worst-case cell. Cyan border = best-case cell.
+                Hover any cell for full greeks under that shock.</p>
+        </div>
+
+        <div id="st-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+    document.getElementById('st-demo').addEventListener('click', () => {
+        const legs = makeDemoLegs();
+        document.getElementById('st-legs').value =
+            legs.map(l => `${l.symbol} ${l.kind} ${l.spot} ${l.strike} ${l.days_to_expiry} ${l.implied_vol} ${l.contracts} ${l.entry_price}`).join('\n');
+    });
+    document.getElementById('st-clear').addEventListener('click', () => {
+        document.getElementById('st-legs').value = '';
+    });
+    document.getElementById('st-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+}
+
+function readInputs() {
+    state.legText = document.getElementById('st-legs').value;
+    state.priceShocks = parseFloatList(document.getElementById('st-ps').value);
+    state.ivShocks = parseFloatList(document.getElementById('st-iv').value);
+    state.timeDecay = Number(document.getElementById('st-td').value);
+    state.rate = Number(document.getElementById('st-rate').value);
+    state.div = Number(document.getElementById('st-div').value);
+}
+
+function parseFloatList(s) {
+    return String(s || '').split(/[\s,]+/).filter(Boolean).map(Number).filter(Number.isFinite);
+}
+
+async function compute(tok) {
+    hideErr();
+    const errs = document.getElementById('st-errors');
+    errs.style.display = 'none';
+    const { legs, errors } = parseLegBlob(state.legText);
+    if (errors.length) {
+        const head = errors.slice(0, 8).map(e =>
+            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+        const more = errors.length > 8 ? `<br>… and ${errors.length - 8} more.` : '';
+        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+        errs.style.display = 'block';
+        if (legs.length === 0) return;
+    }
+    const err = validateInputs(legs, state.priceShocks, state.ivShocks,
+        state.timeDecay, state.rate, state.div);
+    if (err) { showErr(err); return; }
+
+    let report;
+    try {
+        report = await api.microStressTest(buildBody(
+            legs, state.priceShocks, state.ivShocks,
+            state.timeDecay, state.rate, state.div,
+        ));
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`); return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(report, legs);
+    renderGrid(report);
+}
+
+function renderSummary(report, legs) {
+    const w = report.worst_case || {};
+    const b = report.best_case || {};
+    document.getElementById('st-summary').innerHTML = [
+        card('Legs',         String(legs.length)),
+        card('Grid size',    `${state.priceShocks.length} × ${state.ivShocks.length}`),
+        card('Cells',        String((report.grid || []).length)),
+        card('Worst-case',   fmtUSDSigned(w.pnl_dollars),
+            (w.pnl_dollars || 0) < 0 ? 'neg' : 'pos'),
+        card('Worst shock',  `${fmtPct(w.price_shock_pct)} px · ${fmtPct(w.iv_shock_pct)} IV`),
+        card('Best-case',    fmtUSDSigned(b.pnl_dollars),
+            (b.pnl_dollars || 0) >= 0 ? 'pos' : 'neg'),
+        card('Best shock',   `${fmtPct(b.price_shock_pct)} px · ${fmtPct(b.iv_shock_pct)} IV`),
+        card('Time-decay',   `${state.timeDecay} days`),
+    ].join('');
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderGrid(report) {
+    const wrap = document.getElementById('st-grid');
+    const grid = report.grid || [];
+    if (!grid.length) { wrap.innerHTML = '<div class="muted">No cells.</div>'; return; }
+    const matrix = pivotGrid(grid, state.priceShocks, state.ivShocks);
+    const maxAbs = Math.max(...grid.map(c => Math.abs(c.pnl_dollars || 0)), 1);
+    const worstKey = keyOf(report.worst_case);
+    const bestKey  = keyOf(report.best_case);
+
+    // Build header row: blank corner + iv-shock columns.
+    let html = `<table class="st-table"><thead><tr><th>price ↓ / iv →</th>`;
+    for (const ivS of state.ivShocks) html += `<th>${esc(fmtPct(ivS))}</th>`;
+    html += `</tr></thead><tbody>`;
+    // Iterate price shocks top-down (most negative first = worst-case downside row at top).
+    const sortedPrice = [...state.priceShocks].sort((a, b) => b - a);
+    for (const pS of sortedPrice) {
+        const pi = state.priceShocks.indexOf(pS);
+        html += `<tr><th>${esc(fmtPct(pS))}</th>`;
+        for (let ii = 0; ii < state.ivShocks.length; ii++) {
+            const cell = matrix[pi][ii];
+            if (!cell) { html += `<td class="st-cell heat-empty"></td>`; continue; }
+            const heatCls = heatStyleClass(cell.pnl_dollars, maxAbs);
+            const ck = keyOf(cell);
+            const flag = ck === worstKey ? 'st-worst' : ck === bestKey ? 'st-best' : '';
+            const tip = `price ${fmtPct(cell.price_shock_pct)} · iv ${fmtPct(cell.iv_shock_pct)} · P&L ${fmtUSDSigned(cell.pnl_dollars)} · Δ ${fmtUSDSigned(cell.portfolio_delta_dollars)} · vega ${fmtUSDSigned(cell.portfolio_vega_dollars)} · θ ${fmtUSDSigned(cell.portfolio_theta_dollars)}`;
+            html += `<td class="st-cell ${heatCls} ${flag}" title="${esc(tip)}">${esc(fmtUSD(cell.pnl_dollars))}</td>`;
+        }
+        html += `</tr>`;
+    }
+    html += `</tbody></table>`;
+    wrap.innerHTML = html;
+}
+
+function keyOf(cell) {
+    if (!cell) return null;
+    return `${cell.price_shock_pct}|${cell.iv_shock_pct}`;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('st-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('st-err').style.display = 'none'; }

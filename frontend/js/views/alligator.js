@@ -1,0 +1,174 @@
+// Williams Alligator view — Bill Williams chaos-theory trend indicator.
+//
+// Three smoothed MAs (jaw 13 / teeth 8 / lips 5) of the median price,
+// each shifted forward (jaw +8, teeth +5, lips +3 bars). When they
+// intertwine → "alligator sleeping" (no trade). When they fan out
+// (lips above teeth above jaw, or inverse) → "alligator hunting" (trade
+// with the trend).
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseBarBlob, validateInputs, buildBody,
+    shiftLines, classifyPoint, biasBadge, biasCounts,
+    makeDemoBars, medianPrices, fmtN, fmtPct,
+} from '../_alligator_inputs.js';
+
+let state = { barText: '' };
+
+export async function renderAlligator(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// WILLIAMS ALLIGATOR</h1>
+
+        <div class="chart-panel">
+            <h2>HL bars</h2>
+            <p class="muted">Paste <code>high low</code> per line. Median price
+                ((H+L)/2) drives the three SMMAs. Demo loads 50 bars cycling through
+                sleep → uptrend → sleep → downtrend so all three biases are visible.</p>
+            <textarea id="al-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
+            <div class="inline-form">
+                <button id="al-demo" class="secondary" type="button">Load demo (50 bars, 4 phases)</button>
+                <button id="al-clear" class="secondary" type="button">Clear</button>
+                <button id="al-run" class="primary" type="button">Compute</button>
+            </div>
+        </div>
+
+        <div id="al-errors" class="boot" style="display:none"></div>
+        <div id="al-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>Median price + Alligator (jaw / teeth / lips)</h2>
+            <div id="al-chart" style="height:320px"></div>
+            <p class="muted">Cyan = median price. Blue = jaw (13-SMMA, +8 shift).
+                Red = teeth (8-SMMA, +5 shift). Green = lips (5-SMMA, +3 shift).
+                Lines fan out (green above red above blue) = hunting up. Reverse stack =
+                hunting down. Intertwined = sleeping.</p>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Bias history per bar</h2>
+            <div id="al-bias-strip"></div>
+            <p class="muted">One cell per bar — green up, red down, grey sleeping.
+                Visualizes regime transitions across the full series at a glance.</p>
+        </div>
+
+        <div id="al-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+    document.getElementById('al-demo').addEventListener('click', () => {
+        const b = makeDemoBars();
+        document.getElementById('al-bars').value =
+            b.map(x => `${x.high} ${x.low}`).join('\n');
+    });
+    document.getElementById('al-clear').addEventListener('click', () => {
+        document.getElementById('al-bars').value = '';
+    });
+    document.getElementById('al-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+}
+
+function readInputs() {
+    state.barText = document.getElementById('al-bars').value;
+}
+
+async function compute(tok) {
+    hideErr();
+    const errs = document.getElementById('al-errors');
+    errs.style.display = 'none';
+    const { bars, errors } = parseBarBlob(state.barText);
+    if (errors.length) {
+        const head = errors.slice(0, 8).map(e =>
+            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+        const more = errors.length > 8 ? `<br>… and ${errors.length - 8} more.` : '';
+        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+        errs.style.display = 'block';
+        if (bars.length === 0) return;
+    }
+    const err = validateInputs(bars);
+    if (err) { showErr(err); return; }
+    let points;
+    try {
+        points = await api.barsAlligator(buildBody(bars));
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`); return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(points, bars);
+    renderChart(bars, points);
+    renderBiasStrip(points);
+}
+
+function renderSummary(points, bars) {
+    const counts = biasCounts(points);
+    const validCount = (counts.up + counts.down + counts.sleeping);
+    const sleepingPct = validCount > 0 ? counts.sleeping / validCount : 0;
+    const lastPoint = (points || []).filter(p => p && (p.jaw || p.teeth || p.lips)).pop();
+    const currentBias = lastPoint ? classifyPoint(lastPoint) : null;
+    const badge = currentBias ? biasBadge(currentBias) : { label: '—', cls: '', hint: '' };
+    document.getElementById('al-summary').innerHTML = [
+        card('Bars',            String(bars.length)),
+        card('Points computed', String((points || []).length)),
+        card('Up bars',         String(counts.up),       counts.up ? 'pos' : ''),
+        card('Down bars',       String(counts.down),     counts.down ? 'neg' : ''),
+        card('Sleeping bars',   String(counts.sleeping)),
+        card('Sleeping %',      fmtPct(sleepingPct),     sleepingPct > 0.5 ? 'neg' : 'pos'),
+        card('Current bias',    badge.label, badge.cls),
+        card('Action',          badge.hint),
+    ].join('');
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderChart(bars, points) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('al-chart');
+    const xs = bars.map((_, i) => i);
+    const median = medianPrices(bars);
+    const totalBars = bars.length;
+    // SHIFTS pushes each SMMA series forward — destination cells past
+    // the chart end stay null since uPlot draws gaps for null.
+    const { jaw, teeth, lips } = shiftLines(points, totalBars);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 320,
+        scales: { x: {}, y: {} },
+        series: [
+            { label: 'bar #' },
+            { label: 'median', stroke: '#00e5ff', width: 0.8,
+              fill: '#00e5ff10', points: { show: false } },
+            { label: 'jaw (13)',   stroke: '#3b82f6', width: 1.5, points: { show: false } },
+            { label: 'teeth (8)',  stroke: '#ff3860', width: 1.5, points: { show: false } },
+            { label: 'lips (5)',   stroke: '#39ff14', width: 1.5, points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, median, jaw, teeth, lips], el);
+}
+
+function renderBiasStrip(points) {
+    const wrap = document.getElementById('al-bias-strip');
+    if (!Array.isArray(points) || points.length === 0) {
+        wrap.innerHTML = '<div class="muted">No points.</div>';
+        return;
+    }
+    // Color-coded cell per bar — green/red/grey by bias.
+    wrap.innerHTML = `<div class="al-strip">${points.map((p, i) => {
+        const bias = classifyPoint(p);
+        return `<div class="al-strip-cell al-bias-${bias}" title="bar ${i} · ${biasBadge(bias).label}${p ? ' · J=' + fmtN(p.jaw) + ' T=' + fmtN(p.teeth) + ' L=' + fmtN(p.lips) : ''}"></div>`;
+    }).join('')}</div>`;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('al-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('al-err').style.display = 'none'; }

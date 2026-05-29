@@ -1,0 +1,166 @@
+// Stop-Loss Best-Of view — competes N stop strategies against your
+// historical trade list and ranks them by total realized P&L.
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseTradeBlob, validateInputs, buildBody,
+    methodBadge, describeCandidate, bestByTotal, bestByAvg,
+    defaultCandidates, makeDemoTrades, fmtN, fmtSigned,
+} from '../_stop_loss_best_of_inputs.js';
+
+let state = { tradeText: '', sideLong: true, atr: 1.0 };
+
+export async function renderStopLossBestOf(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 class="view-title">// STOP-LOSS BEST-OF</h1>
+
+        <div class="chart-panel">
+            <h2>Trade outcomes</h2>
+            <p class="muted">One trade per line: <code>entry mae mfe actual_exit</code>.
+                MAE/MFE are POSITIVE excursion magnitudes (max-adverse / max-favorable in dollars).
+                Demo loads 20 mixed-outcome trades with realistic excursion ranges.</p>
+            <textarea id="sl-trades" rows="8" placeholder="100 0.8 2.5 101.7&#10;100.5 2.1 0.5 99.2&#10;..."></textarea>
+            <div class="inline-form">
+                <label>Side
+                    <select id="sl-side">
+                        <option value="long"  ${state.sideLong ? 'selected' : ''}>Long</option>
+                        <option value="short" ${!state.sideLong ? 'selected' : ''}>Short</option>
+                    </select></label>
+                <label>ATR (for ATR-multiple candidates)
+                    <input id="sl-atr" type="number" step="any" min="0" value="${state.atr}"></label>
+                <button id="sl-demo" class="secondary" type="button">Load demo (20 trades, 9 stop candidates)</button>
+                <button id="sl-clear" class="secondary" type="button">Clear</button>
+                <button id="sl-run" class="primary" type="button">Compete</button>
+            </div>
+            <p class="muted">9 candidates by default: None / $1 / $2 / 0.5% / 1% / 2% / 1×ATR / 2×ATR / 3×ATR.
+                Each is simulated against all trades; results ranked by total realized P&amp;L.</p>
+        </div>
+
+        <div id="sl-errors" class="boot" style="display:none"></div>
+        <div id="sl-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2>Candidate results (sorted best-total-first)</h2>
+            <div id="sl-results"></div>
+        </div>
+
+        <div id="sl-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+    document.getElementById('sl-demo').addEventListener('click', () => {
+        const t = makeDemoTrades(42);
+        document.getElementById('sl-trades').value =
+            t.map(x => `${x.entry} ${x.mae} ${x.mfe} ${x.actual_exit}`).join('\n');
+        document.getElementById('sl-atr').value = 1.0;
+    });
+    document.getElementById('sl-clear').addEventListener('click', () => {
+        document.getElementById('sl-trades').value = '';
+    });
+    document.getElementById('sl-run').addEventListener('click', () => {
+        readInputs();
+        void compute(tok);
+    });
+}
+
+function readInputs() {
+    state.tradeText = document.getElementById('sl-trades').value;
+    state.sideLong = document.getElementById('sl-side').value === 'long';
+    state.atr = Number(document.getElementById('sl-atr').value);
+}
+
+async function compute(tok) {
+    hideErr();
+    const errs = document.getElementById('sl-errors');
+    errs.style.display = 'none';
+    const { trades, errors } = parseTradeBlob(state.tradeText);
+    if (errors.length) {
+        const head = errors.slice(0, 8).map(e =>
+            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+        const more = errors.length > 8 ? `<br>… and ${errors.length - 8} more.` : '';
+        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+        errs.style.display = 'block';
+        if (trades.length === 0) return;
+    }
+    const candidates = defaultCandidates(state.atr);
+    const err = validateInputs(trades, candidates, state.sideLong);
+    if (err) { showErr(err); return; }
+    let results;
+    try {
+        results = await api.discStopLossBestOf(buildBody(trades, candidates, state.sideLong));
+    } catch (e) {
+        showErr(`API error: ${e.message || e}`); return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(results || [], trades, candidates);
+    renderResults(results || [], candidates);
+}
+
+function renderSummary(results, trades, candidates) {
+    const best = bestByTotal(results);
+    const bestAvg = bestByAvg(results);
+    const matched = results.length;
+    document.getElementById('sl-summary').innerHTML = [
+        card('Trades',     String(trades.length)),
+        card('Candidates', String(candidates.length)),
+        card('Results',    String(matched)),
+        card('Best total $', best ? fmtSigned(best.total_realized) : '—', best && best.total_realized >= 0 ? 'pos' : 'neg'),
+        card('Best method', best ? describeCandidate(candidatesByMethod(candidates, best)) : '—',
+            best ? methodBadge(best.method).cls : ''),
+        card('Best avg/trade $', bestAvg ? fmtSigned(bestAvg.avg_realized) : '—', bestAvg && bestAvg.avg_realized >= 0 ? 'pos' : 'neg'),
+    ].join('');
+}
+
+function candidatesByMethod(candidates, result) {
+    return candidates.find(c => c.method === result.method && c.value === result.value);
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function renderResults(results, candidates) {
+    const wrap = document.getElementById('sl-results');
+    if (!results.length) {
+        wrap.innerHTML = '<div class="muted">No results.</div>';
+        return;
+    }
+    // Sort by total realized (desc) for the table; keep raw indices for
+    // matching back to the candidate row (method + value tuple).
+    const sorted = [...results].sort((a, b) => (b.total_realized || 0) - (a.total_realized || 0));
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr>
+                <th>Rank</th><th>Method</th><th>Description</th>
+                <th>Total $</th><th>Avg $/trade</th><th>Wins</th><th>Stopped out</th>
+            </tr></thead>
+            <tbody>
+                ${sorted.map((r, i) => {
+                    const c = candidates.find(x => x.method === r.method && x.value === r.value);
+                    const badge = methodBadge(r.method);
+                    return `<tr>
+                        <td><strong>${i + 1}</strong></td>
+                        <td class="${badge.cls}">${esc(badge.label)}</td>
+                        <td>${esc(describeCandidate(c))}</td>
+                        <td class="${r.total_realized >= 0 ? 'pos' : 'neg'}">${esc(fmtSigned(r.total_realized))}</td>
+                        <td class="${r.avg_realized >= 0 ? 'pos' : 'neg'}">${esc(fmtSigned(r.avg_realized))}</td>
+                        <td>${r.winning_trades}</td>
+                        <td>${r.stopped_out_count}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('sl-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('sl-err').style.display = 'none'; }
