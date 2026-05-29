@@ -7,6 +7,16 @@
 (function () {
   'use strict';
 
+  // Lightweight i18n lookup. The full i18n module loads later via app.js,
+  // but it exposes its key→string map on `window.__appStr` once boot
+  // finishes. We use that here so theme/scheme labels follow the active
+  // locale, falling back to the literal when the map isn't ready yet.
+  function tr(key, fallback) {
+    var m = (typeof window !== 'undefined' && window.__appStr) ? window.__appStr : null;
+    if (m && m[key]) return m[key];
+    return fallback;
+  }
+
   var STORAGE = {
     theme: 'traderview-hud-theme',
     crt: 'traderview-hud-crt',
@@ -223,10 +233,10 @@
       btn.setAttribute('data-scheme', name);
       var n = document.createElement('div');
       n.className = 'scheme-btn-name';
-      n.textContent = s.label;
+      n.textContent = tr('hud.scheme.' + name + '.label', s.label);
       var d = document.createElement('div');
       d.className = 'scheme-btn-desc';
-      d.textContent = s.desc;
+      d.textContent = tr('hud.scheme.' + name + '.desc', s.desc);
       var prev = document.createElement('div');
       prev.className = 'scheme-btn-preview';
       ['--accent', '--cyan', '--magenta', '--green'].forEach(function (k) {
@@ -247,7 +257,9 @@
     document.documentElement.setAttribute('data-theme', theme);
     writeStored(STORAGE.theme, theme);
     var btn = document.getElementById('btnTheme');
-    if (btn) btn.textContent = theme === 'light' ? 'Dark' : 'Light';
+    if (btn) btn.textContent = theme === 'light'
+        ? tr('view.index.btn.theme_to_dark',  'Dark')
+        : tr('view.index.btn.theme_to_light', 'Light');
     // Re-apply the scheme so its light/dark variant takes effect.
     applyScheme(currentScheme());
   }
@@ -327,6 +339,11 @@
       var on = !document.body.classList.contains('no-neon-glow');
       applyNeon(!on);
       emitToggled('neon', !on);
+    });
+    // Re-translate theme/scheme labels when the active locale changes.
+    window.addEventListener('tv:i18n-changed', function () {
+      applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+      renderSchemeGrid(currentScheme());
     });
   });
 
