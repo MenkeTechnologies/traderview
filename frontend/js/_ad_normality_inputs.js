@@ -9,15 +9,17 @@
 // powerful at detecting tail-weight deviations. Stephens (1986) small-sample
 // correction applied.
 
+import { t } from './i18n.js';
+
 export const MIN_OBS = 8;
 
 export const DEFAULT_INPUTS = { sample: [] };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.sample))               return 'sample must be an array';
-    if (input.sample.length < MIN_OBS)              return `need at least ${MIN_OBS} observations`;
+    if (!Array.isArray(input.sample))               return t('view.ad_normality.validate.sample_array');
+    if (input.sample.length < MIN_OBS)              return t('view.ad_normality.validate.sample_min', { n: MIN_OBS });
     for (let i = 0; i < input.sample.length; i++) {
-        if (!Number.isFinite(input.sample[i]))      return `sample[${i}] not finite`;
+        if (!Number.isFinite(input.sample[i]))      return t('view.ad_normality.validate.sample_finite', { i });
     }
     return null;
 }

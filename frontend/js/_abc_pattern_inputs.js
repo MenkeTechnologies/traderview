@@ -5,6 +5,8 @@
 //   AbcConfig  = { min_b_retrace: f64, max_b_retrace: f64, min_c_extension: f64 }
 // Returns:      { events: AbcEvent[] }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_MIN_B = 0.382;
 export const DEFAULT_MAX_B = 0.618;
 export const DEFAULT_MIN_C_EXT = 1.0;
@@ -23,24 +25,24 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.swings))                       return 'swings must be an array';
-    if (input.swings.length < MIN_SWINGS)                   return `need at least ${MIN_SWINGS} swings`;
-    if (input.swings.length > MAX_SWINGS)                   return `too many swings (max ${MAX_SWINGS})`;
+    if (!Array.isArray(input.swings))                       return t('view.abc_pattern.validate.swings_array');
+    if (input.swings.length < MIN_SWINGS)                   return t('view.abc_pattern.validate.swings_min', { n: MIN_SWINGS });
+    if (input.swings.length > MAX_SWINGS)                   return t('view.abc_pattern.validate.swings_max', { n: MAX_SWINGS });
     for (let i = 0; i < input.swings.length; i++) {
         const s = input.swings[i];
-        if (!s || typeof s !== 'object')                    return `swings[${i}] not an object`;
-        if (!Number.isInteger(s.index) || s.index < 0)      return `swings[${i}].index must be a non-negative integer`;
+        if (!s || typeof s !== 'object')                    return t('view.abc_pattern.validate.swing_object', { i });
+        if (!Number.isInteger(s.index) || s.index < 0)      return t('view.abc_pattern.validate.swing_index', { i });
         if (typeof s.price !== 'number' || !Number.isFinite(s.price))
-                                                              return `swings[${i}].price not finite`;
-        if (s.kind !== 'high' && s.kind !== 'low')          return `swings[${i}].kind must be high or low`;
+                                                              return t('view.abc_pattern.validate.swing_price', { i });
+        if (s.kind !== 'high' && s.kind !== 'low')          return t('view.abc_pattern.validate.swing_kind', { i });
     }
     if (!Number.isFinite(input.min_b_retrace) || input.min_b_retrace < 0 || input.min_b_retrace > 1)
-                                                              return 'min_b_retrace must be in [0, 1]';
+                                                              return t('view.abc_pattern.validate.min_b');
     if (!Number.isFinite(input.max_b_retrace) || input.max_b_retrace < 0 || input.max_b_retrace > 1)
-                                                              return 'max_b_retrace must be in [0, 1]';
-    if (input.min_b_retrace > input.max_b_retrace)          return 'min_b_retrace > max_b_retrace';
+                                                              return t('view.abc_pattern.validate.max_b');
+    if (input.min_b_retrace > input.max_b_retrace)          return t('view.abc_pattern.validate.min_gt_max');
     if (!Number.isFinite(input.min_c_extension) || input.min_c_extension <= 0)
-                                                              return 'min_c_extension must be > 0';
+                                                              return t('view.abc_pattern.validate.min_c');
     return null;
 }
 

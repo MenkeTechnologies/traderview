@@ -3,6 +3,8 @@
 // Backend body: { bars: { high, low, close, volume }[], period, threshold, vol_multiplier }
 // Returns:      { bullish: bool[], bearish: bool[], period, threshold, vol_multiplier }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 20;
 export const DEFAULT_THRESHOLD = 0.5;
 export const DEFAULT_VOL_MULTIPLIER = 1.5;
@@ -17,24 +19,24 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                           return 'bars must be an array';
+    if (!Array.isArray(input.bars))                           return t('view.absorption.validate.bars_array');
     if (!Number.isInteger(input.period) || input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                                  return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.bars.length < input.period + 1)                 return `need at least period+1 bars (have ${input.bars.length})`;
+                                                                  return t('view.absorption.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.bars.length < input.period + 1)                 return t('view.absorption.validate.bars_min', { have: input.bars.length });
     if (!Number.isFinite(input.threshold) || input.threshold <= 0)
-                                                                  return 'threshold must be > 0';
+                                                                  return t('view.absorption.validate.threshold');
     if (!Number.isFinite(input.vol_multiplier) || input.vol_multiplier <= 0)
-                                                                  return 'vol_multiplier must be > 0';
+                                                                  return t('view.absorption.validate.vol_multiplier');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b || typeof b !== 'object')                      return `bars[${i}] not an object`;
+        if (!b || typeof b !== 'object')                      return t('view.absorption.validate.bar_object', { i });
         for (const k of ['high', 'low', 'close', 'volume']) {
             if (typeof b[k] !== 'number' || !Number.isFinite(b[k]))
-                                                                  return `bars[${i}].${k} not finite`;
+                                                                  return t('view.absorption.validate.bar_field_finite', { i, k });
         }
-        if (b.high < b.low)                                   return `bars[${i}]: high < low`;
-        if (b.close > b.high || b.close < b.low)              return `bars[${i}]: close outside [low, high]`;
-        if (b.volume <= 0)                                    return `bars[${i}]: volume must be > 0`;
+        if (b.high < b.low)                                   return t('view.absorption.validate.high_lt_low', { i });
+        if (b.close > b.high || b.close < b.low)              return t('view.absorption.validate.close_outside', { i });
+        if (b.volume <= 0)                                    return t('view.absorption.validate.volume', { i });
     }
     return null;
 }
