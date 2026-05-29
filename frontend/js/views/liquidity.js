@@ -136,7 +136,7 @@ function card(label, value, cls = '') {
 function renderRows(report) {
     const wrap = document.getElementById('lq-rows');
     if (!report.rows.length) {
-        wrap.innerHTML = '<div class="muted">No rows.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.liquidity.empty.rows">No rows.</div>`;
         return;
     }
     wrap.innerHTML = `
@@ -169,7 +169,7 @@ function renderRows(report) {
 function renderBuckets(report) {
     const wrap = document.getElementById('lq-buckets');
     if (!report.buckets.length) {
-        wrap.innerHTML = '<div class="muted">No bucketable trades (no ADV matches).</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.liquidity.empty.buckets">No bucketable trades (no ADV matches).</div>`;
         return;
     }
     const maxAbs = Math.max(...report.buckets.map(b => Math.abs(Number(b.net_pnl || 0))), 1);

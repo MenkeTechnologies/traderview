@@ -119,7 +119,7 @@ function card(label, value, cls = '') {
 function renderTpo(report) {
     const wrap = document.getElementById('mp-tpo');
     if (!report || !Array.isArray(report.levels) || !report.levels.length) {
-        wrap.innerHTML = '<div class="muted">No levels.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.market_profile.empty.levels">No levels.</div>`;
         return;
     }
     // Order top-down: highest price first (standard Sierra Chart layout).

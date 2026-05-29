@@ -147,7 +147,7 @@ function renderXInfo() {
     const info = xBaseInfo(state.session);
     document.getElementById('dp-xinfo').innerHTML = `
         <div class="${info.cls}"><strong>${esc(info.label)}</strong></div>
-        <div class="muted">Formula: <code>${esc(info.formula)}</code></div>
+        <div class="muted"><span data-i18n="view.demark_pivots.formula_prefix">Formula:</span> <code>${esc(info.formula)}</code></div>
         <div>X = <strong>${esc(fmtN(x, 4))}</strong> · pivot = X/4 = <strong>${esc(fmtN(x/4, 4))}</strong></div>
         <div class="muted">${esc(info.hint)}</div>
     `;

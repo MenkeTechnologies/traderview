@@ -80,7 +80,7 @@ function card(c) {
         <div class="label">${esc(c.label)} (${esc(c.symbol)})</div>
         <div class="value">${fmt(c.price, c.price < 10 ? 4 : 2)}</div>
         <div class="small ${chCls}">${chTxt}</div>
-        <div class="muted small">ATR(20) ${atrTxt}</div>
+        <div class="muted small">${esc(t('view.premarket.tile.atr20', { atr: atrTxt }))}</div>
         <div class="small ${magCls}">${magTxt}</div>
         ${rng}${ms}
     </div>`;

@@ -149,7 +149,7 @@ function card(label, value, cls = '') {
 function renderTable(report) {
     const wrap = document.getElementById('os-table');
     if (!report.rows || !report.rows.length) {
-        wrap.innerHTML = '<div class="muted">No orders.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.order_staleness.empty.orders">No orders.</div>`;
         return;
     }
     wrap.innerHTML = `

@@ -133,7 +133,7 @@ function renderActions(report) {
     const wrap = document.getElementById('ne-actions');
     const actions = (report && report.actions) || [];
     if (!actions.length) {
-        wrap.innerHTML = '<div class="muted">No trim actions — no high-impact events affecting open positions.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.news_event.empty.actions">No trim actions — no high-impact events affecting open positions.</div>`;
         return;
     }
     wrap.innerHTML = `

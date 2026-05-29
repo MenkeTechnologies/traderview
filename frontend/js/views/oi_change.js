@@ -131,7 +131,7 @@ function card(label, value, cls = '') {
 function renderTable(elId, alerts) {
     const wrap = document.getElementById(elId);
     if (!alerts.length) {
-        wrap.innerHTML = '<div class="muted">No alerts.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.oi_change.empty.alerts">No alerts.</div>`;
         return;
     }
     wrap.innerHTML = `

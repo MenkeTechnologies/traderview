@@ -263,7 +263,7 @@ function renderDynamicChart(points) {
 
 function renderDynamicTable(points) {
     const wrap = document.getElementById('kl-dyn-table');
-    if (!points.length) { wrap.innerHTML = '<div class="muted">No data.</div>'; return; }
+    if (!points.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.kelly.empty.data">No data.</div>`; return; }
     // Show every Nth row to keep the table small for long PnL series.
     const stride = Math.max(1, Math.floor(points.length / 20));
     const sampled = [];

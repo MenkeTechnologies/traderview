@@ -118,7 +118,7 @@ function card(label, value, cls = '') {
 function renderTable(report) {
     const wrap = document.getElementById('ps-table');
     if (!report.length) {
-        wrap.innerHTML = '<div class="muted">No symbols.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.per_symbol_slippage.empty.symbols">No symbols.</div>`;
         return;
     }
     wrap.innerHTML = `

@@ -172,7 +172,7 @@ function renderTable(r) {
     const wrap = document.getElementById('mm-table');
     const levels = r.levels || [];
     if (!levels.length) {
-        wrap.innerHTML = '<div class="muted">No levels.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.murrey_math.empty.levels">No levels.</div>`;
         return;
     }
     const { below, above } = bracketingLevels(r.current_price, levels);

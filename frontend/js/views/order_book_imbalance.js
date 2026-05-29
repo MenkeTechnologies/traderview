@@ -171,7 +171,7 @@ function renderTable(bidSizes, askSizes, levels) {
     const rows = alignLevels(bidSizes, askSizes, levels);
     const maxSize = Math.max(...rows.map(r => Math.max(r.bid, r.ask)), 1);
     const wrap = document.getElementById('obi-table');
-    if (!rows.length) { wrap.innerHTML = '<div class="muted">No levels.</div>'; return; }
+    if (!rows.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.order_book_imbalance.empty.levels">No levels.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
