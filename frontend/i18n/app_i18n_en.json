@@ -4457,6 +4457,12 @@
   "view.bavr.err.server_rejected":    "Server rejected input.",
 
   "view.bartlett.h1.title":           "// BARTLETT VARIANCE TEST",
+  "view.bartlett.validate.groups_array":     "groups must be an array",
+  "view.bartlett.validate.groups_min":       "need at least {n} groups",
+  "view.bartlett.validate.group_array":      "groups[{i}] must be an array",
+  "view.bartlett.validate.group_obs_min":    "groups[{i}] needs ≥ {n} obs",
+  "view.bartlett.validate.value_not_finite": "groups[{i}][{j}] not finite",
+  "view.bartlett.validate.total_obs_min":    "total observations must exceed group count",
   "view.bartlett.h2.groups":          "Groups",
   "view.bartlett.h2.groups_hint":     "(one group per line: LABEL v1 v2 v3 ...)",
   "view.bartlett.h2.groups_table":    "Per-group statistics",

@@ -6,6 +6,8 @@
 //   n_groups, n_total, reject_at_5pct
 // } | null
 
+import { t } from './i18n.js';
+
 export const MIN_GROUPS = 2;
 export const MIN_PER_GROUP = 2;
 
@@ -14,19 +16,19 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.groups))                       return 'groups must be an array';
-    if (input.groups.length < MIN_GROUPS)                   return `need at least ${MIN_GROUPS} groups`;
+    if (!Array.isArray(input.groups))                       return t('view.bartlett.validate.groups_array');
+    if (input.groups.length < MIN_GROUPS)                   return t('view.bartlett.validate.groups_min', { n: MIN_GROUPS });
     let total = 0;
     for (let i = 0; i < input.groups.length; i++) {
         const g = input.groups[i];
-        if (!Array.isArray(g))                              return `groups[${i}] must be an array`;
-        if (g.length < MIN_PER_GROUP)                       return `groups[${i}] needs ≥ ${MIN_PER_GROUP} obs`;
+        if (!Array.isArray(g))                              return t('view.bartlett.validate.group_array', { i });
+        if (g.length < MIN_PER_GROUP)                       return t('view.bartlett.validate.group_obs_min', { i, n: MIN_PER_GROUP });
         for (let j = 0; j < g.length; j++) {
-            if (!Number.isFinite(g[j]))                      return `groups[${i}][${j}] not finite`;
+            if (!Number.isFinite(g[j]))                      return t('view.bartlett.validate.value_not_finite', { i, j });
         }
         total += g.length;
     }
-    if (total <= input.groups.length)                       return 'total observations must exceed group count';
+    if (total <= input.groups.length)                       return t('view.bartlett.validate.total_obs_min');
     return null;
 }
 
