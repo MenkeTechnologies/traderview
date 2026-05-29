@@ -75,7 +75,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
               </tr>
             `).join('')}</tbody></table>
             <details class="ex-add">
-              <summary>+ Add execution</summary>
+              <summary data-i18n="view.trade_detail.summary.add_execution">+ Add execution</summary>
               <form id="ex-add-form" class="inline-form" style="margin-top:8px">
                 <select name="side">
                   <option data-i18n="view.trade_detail.opt.buy" value="buy">buy</option><option data-i18n="view.trade_detail.opt.sell" value="sell">sell</option>

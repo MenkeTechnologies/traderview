@@ -6041,6 +6041,7 @@
   "view.vasicek.label.sigma":        "σ (vol)",
   "view.yield_curve_pca.label.topk": "top_k factors",
   "view.alert_rules.label.tts_template": "TTS template (placeholders: {symbol} {price} {change_pct} {volume_mult} {threshold})",
+  "view.trade_detail.summary.add_execution": "+ Add execution",
   "view.trade_reviews.q.entry_per_plan": "1. Was the entry per plan?",
   "view.trade_reviews.q.exit_per_plan": "2. Was the exit per plan?",
   "view.trade_reviews.q.would_change": "3. What would you change next time?",
