@@ -166,9 +166,9 @@ function renderChart(report) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.rank') },
-            { label: 'Alloc (bps)',  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
-            { label: 'Select (bps)', stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
-            { label: 'Inter (bps)',  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: true, size: 4 } },
+            { label: t('chart.series.alloc_bps'),  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.select_bps'), stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.inter_bps'),  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: true, size: 4 } },
         ],
         axes: [
             { stroke: '#aab', size: 28,
