@@ -126,7 +126,7 @@ function renderSummary(hist, gauss, pending) {
                   && Math.abs(gauss.var_dollars - localGauss.var_dollars) < 1e-6;
     const fatTailFlag = hist.var_dollars > gauss.var_dollars * 1.05;
     document.getElementById('var-summary').innerHTML = [
-        card(t('view.var_estimator.card.historical_var'),     fmtUSD(hist.var_dollars) + (pending ? ' (local)' : ''), 'neg'),
+        card(t('view.var_estimator.card.historical_var'),     fmtUSD(hist.var_dollars) + (pending ? t('common.suffix.local') : ''), 'neg'),
         card(t('view.var_estimator.card.parametric_var'),     fmtUSD(gauss.var_dollars), 'neg'),
         card(t('view.var_estimator.card.historical_es'),      fmtUSD(hist.expected_shortfall_dollars), 'neg'),
         card(t('view.var_estimator.card.parametric_es'),      fmtUSD(gauss.expected_shortfall_dollars), 'neg'),

@@ -107,7 +107,7 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.equity, state.config);
     const parityOk = r.regime === local.regime;
     document.getElementById('re-summary').innerHTML = [
-        card(t('view.regime_equity.card.regime'),           badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.regime_equity.card.regime'),           badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.regime_equity.card.action'),           badge.hint),
         card(t('view.regime_equity.card.samples'),        String(r.n)),
         card(t('view.regime_equity.card.slope_period'),   fmtUSDSigned(r.slope_per_period, 2),

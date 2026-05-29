@@ -113,7 +113,7 @@ function renderSummary(clusters, pending) {
     const parity = clustersEq(clusters, local);
     const badge = concentrationBadge(s.topPct);
     document.getElementById('cc-summary').innerHTML = [
-        card(t('view.clusters_correlation.card.concentration'),  badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.clusters_correlation.card.concentration'),  badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.clusters_correlation.card.action'),         badge.hint),
         card(t('view.clusters_correlation.card.positions'),      String(state.positions.length)),
         card(t('view.clusters_correlation.card.clusters'),       String(s.nClusters)),

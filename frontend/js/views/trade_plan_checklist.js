@@ -154,7 +154,7 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.plan, state.config);
     const parityOk = r.all_passed === local.all_passed;
     document.getElementById('tpc-summary').innerHTML = [
-        card(t('view.trade_plan_checklist.card.verdict'), r.all_passed ? t('common.pass') : t('common.fail') + (pending ? ' (local)' : ''), allCls),
+        card(t('view.trade_plan_checklist.card.verdict'), r.all_passed ? t('common.pass') : t('common.fail') + (pending ? t('common.suffix.local') : ''), allCls),
         card(t('view.trade_plan_checklist.card.gates_passed'), `${r.gates.filter(g => g.passed).length} / ${r.gates.length}`, allCls),
         card(t('view.trade_plan_checklist.card.r_multiple'), fmtR(r.computed_r_multiple),
             r.computed_r_multiple != null && r.computed_r_multiple >= state.config.min_r_multiple ? 'pos' : 'neg'),

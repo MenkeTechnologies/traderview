@@ -153,7 +153,7 @@ function renderSummary(verdict, pending) {
     const local = localEvaluate(state.order, state.now, state.session_open);
     const parityOk = verdict.action === local.action && verdict.reason === local.reason;
     document.getElementById('tif-summary').innerHTML = [
-        card(t('view.time_in_force.card.verdict'),     badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.time_in_force.card.verdict'),     badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.time_in_force.card.reason'),      verdict.reason),
         card(t('view.time_in_force.card.tif'),         state.order.tif.toUpperCase()),
         card(t('view.time_in_force.card.original_qty'), String(state.order.original_qty)),

@@ -8260,6 +8260,7 @@
   "view.journal_ai.placeholder.api_key_saved": "*** (saved, leave blank to keep)",
   "view.journal_ai.placeholder.api_key_paste": "paste key",
   "view.tape_replay.note.bar_n":               "(bar #{n})",
+  "common.suffix.local":                       " (local)",
   "view.charts.error.generic":                  "Error: {err}",
   "view.monte_carlo.empty.stdev_zero":           "stdev was zero — distribution is a point mass.",
   "view.research.empty.no_quote":                "no quote",

@@ -136,7 +136,7 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.params);
     const parityOk = r.on_pace === local.on_pace;
     document.getElementById('gt-summary').innerHTML = [
-        card(t('view.goal_tracker.card.on_pace'),           badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.goal_tracker.card.on_pace'),           badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.goal_tracker.card.current_equity'),    fmtUSD(r.current_equity)),
         card(t('view.goal_tracker.card.period_return'),     fmtPct(r.current_pct_return),
             r.current_pct_return >= 0 ? 'pos' : 'neg'),

@@ -111,7 +111,7 @@ function renderSummary(stats, pending) {
     const best  = stats.length > 0 ? stats[0] : null;
     const worst = stats.length > 0 ? stats[stats.length - 1] : null;
     document.getElementById('sbs-summary').innerHTML = [
-        card(t('view.setups_by_setup.card.setups'),         String(stats.length) + (pending ? ' (local)' : '')),
+        card(t('view.setups_by_setup.card.setups'),         String(stats.length) + (pending ? t('common.suffix.local') : '')),
         card(t('view.setups_by_setup.card.tagged_trades'),  String(totalTrades)),
         card(t('view.setups_by_setup.card.untagged_skipped'), String(untagged),
             untagged > 0 ? 'neg' : ''),

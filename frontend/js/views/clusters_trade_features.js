@@ -121,7 +121,7 @@ function renderSummary(report, pending) {
     const inertia = totalInertia(state.features, report.assignments, report.clusters);
     document.getElementById('cl-summary').innerHTML = [
         card(t('view.clusters_trade_features.card.trades'),          String(state.features.length)),
-        card(t('view.clusters_trade_features.card.k_clusters'),    String(report.clusters.length) + (pending ? ' (local)' : '')),
+        card(t('view.clusters_trade_features.card.k_clusters'),    String(report.clusters.length) + (pending ? t('common.suffix.local') : '')),
         card(t('view.clusters_trade_features.card.total_win_rate'),  fmtPct(totalSize > 0 ? wins / totalSize : 0),
             totalSize > 0 && wins / totalSize >= 0.5 ? 'pos' : 'neg'),
         card(t('view.clusters_trade_features.card.total_mean_r'),    fmtR(meanR),    meanR >= 0 ? 'pos' : 'neg'),

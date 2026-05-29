@@ -134,7 +134,7 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.params);
     const parityOk = r.state === local.state;
     document.getElementById('dl-summary').innerHTML = [
-        card(t('view.daily_loss_limit.card.state'),          badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.daily_loss_limit.card.state'),          badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.daily_loss_limit.card.action'),         badge.hint),
         card(t('view.daily_loss_limit.card.today_p_l'),      fmtUSDSigned(state.params.today_pnl),
             state.params.today_pnl >= 0 ? 'pos' : 'neg'),

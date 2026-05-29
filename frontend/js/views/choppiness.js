@@ -107,7 +107,7 @@ function renderSummary(report, pending) {
     const labelTr  = (() => { const v = t(labelKey); return (v && v !== labelKey) ? v : badge.label; })();
     const hintTr   = (() => { const v = t(hintKey);  return (v && v !== hintKey)  ? v : badge.hint;  })();
     document.getElementById('cp-summary').innerHTML = [
-        card(t('view.choppiness.card.regime'),         labelTr + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.choppiness.card.regime'),         labelTr + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.choppiness.card.action'),         hintTr),
         card(t('view.choppiness.card.latest_ci'),      report.latest == null ? '—' : fmtN(report.latest, 2),
             badge.cls),

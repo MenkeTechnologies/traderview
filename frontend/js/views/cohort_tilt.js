@@ -103,7 +103,7 @@ function renderSummary(report, pending) {
     const top = report.by_symbol[0] || null;
     const topBadge = top ? biasBadge(top.bias) : null;
     document.getElementById('ct-summary').innerHTML = [
-        card(t('view.cohort_tilt.card.active_traders'), String(report.active_traders) + (pending ? ' (local)' : ''),
+        card(t('view.cohort_tilt.card.active_traders'), String(report.active_traders) + (pending ? t('common.suffix.local') : ''),
             report.active_traders > 0 ? 'pos' : 'neg'),
         card(t('view.cohort_tilt.card.symbols_tracked'), String(report.by_symbol.length)),
         card(t('view.cohort_tilt.card.most_lopsided'),  report.most_lopsided_symbol || '—',

@@ -121,7 +121,7 @@ function renderSummary(closeStops, chandStops, pending) {
     const cmp = compareStops(chandStops, closeStops);
     const parity = closeStops.length === chandStops.length;
     document.getElementById('vsc-summary').innerHTML = [
-        card(t('view.vol_stop_close.card.latest_close_stop'),  fmtN(summClose.latestStop, 2) + (pending ? ' (local)' : ''), 'pos'),
+        card(t('view.vol_stop_close.card.latest_close_stop'),  fmtN(summClose.latestStop, 2) + (pending ? t('common.suffix.local') : ''), 'pos'),
         card(t('view.vol_stop_close.card.latest_chand_stop'),  fmtN(summChand.latestStop, 2), 'neg'),
         card(t('view.vol_stop_close.card.stop_spread'),        fmtN(cmp.diff, 2) + ' (' + fmtPct(cmp.diffPct) + ')',
             Math.abs(cmp.diffPct) > 0.005 ? 'neg' : 'pos'),

@@ -159,7 +159,7 @@ function renderSummary(r, pending) {
         card(t('view.drawdown_throttle.card.peak_equity'),    fmtUSD(r.peak_equity)),
         card(t('view.drawdown_throttle.card.drawdown'),       fmtPct(r.drawdown_pct), r.drawdown_pct > 0.10 ? 'neg' : ''),
         card(t('view.drawdown_throttle.card.active_tier'),    `≥ ${fmtPct(r.tier_min_dd, 0)}`, cls),
-        card(t('view.drawdown_throttle.card.size_multiplier'), fmtMult(mult) + (pending ? ' (local)' : ''), cls),
+        card(t('view.drawdown_throttle.card.size_multiplier'), fmtMult(mult) + (pending ? t('common.suffix.local') : ''), cls),
         card(t('view.drawdown_throttle.card.reduce_by'),      fmtPct(1 - mult, 0), cls),
         card(t('view.drawdown_throttle.card.note'),           r.note || `DD ${fmtPct(r.drawdown_pct)} — sizing at ${fmtMult(mult)}`),
         card(t('view.drawdown_throttle.card.tiers'),          String(state.tiers.length)),

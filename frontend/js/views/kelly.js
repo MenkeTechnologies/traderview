@@ -186,7 +186,7 @@ function renderStatic(report, pending) {
     const parityOk = Math.abs(report.full_kelly - local.full_kelly) < 1e-9
                   && report.note === local.note;
     document.getElementById('kl-static-cards').innerHTML = [
-        card(t('view.kelly.card.verdict'),         badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.kelly.card.verdict'),         badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.kelly.card.action'),          badge.hint),
         card(t('view.kelly.card.full_kelly'),      fmtPct(report.full_kelly, 2),
             report.full_kelly >= 0 ? 'pos' : 'neg'),
@@ -215,7 +215,7 @@ function renderDynamic(points, pending) {
     const latest = positioned.length > 0 ? positioned[positioned.length - 1] : null;
     const stats = pnlsToStaticInput(state.pnls);
     document.getElementById('kl-dyn-cards').innerHTML = [
-        card(t('view.kelly.card.trades_n'),       String(state.pnls.length) + (pending ? ' (local)' : '')),
+        card(t('view.kelly.card.trades_n'),       String(state.pnls.length) + (pending ? t('common.suffix.local') : '')),
         card(t('view.kelly.card.window'),           String(state.window)),
         card(t('view.kelly.card.wins_losses'),    `${stats.wins} / ${stats.losses}`,
             stats.wins > stats.losses ? 'pos' : 'neg'),

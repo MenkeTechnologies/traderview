@@ -128,7 +128,7 @@ function renderSummary(resp, pending) {
     const localV = localEvaluate(state.params);
     const parity = verdict === localV ? 'pos' : 'neg';
     document.getElementById('ts-summary').innerHTML = [
-        card(t('view.triple_screen.card.verdict'),       badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.triple_screen.card.verdict'),       badge.label + (pending ? t('common.suffix.local') : ''), badge.cls),
         card(t('view.triple_screen.card.action'),        badge.hint),
         card(t('view.triple_screen.card.local_check'),   localV.toUpperCase(), parity),
         card(t('view.triple_screen.card.weekly_trend'),  state.params.weekly_trend.toUpperCase(),
