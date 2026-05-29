@@ -266,10 +266,10 @@ function renderChart(data, state, mount) {
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;">
         <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}"
               fill="#0d0d22" stroke="#222"/>
-        ${ref(data.entry_avg, '#00e5ff', 'entry')}
-        ${ref(data.exit_avg, '#00ffaa', 'exit')}
-        ${ref(data.stop_loss, '#ff1f7a', 'stop')}
-        ${ref(data.initial_target, '#ffd24a', 'target')}
+        ${ref(data.entry_avg, '#00e5ff', t('view.tape_replay.ref.entry'))}
+        ${ref(data.exit_avg, '#00ffaa', t('view.tape_replay.ref.exit'))}
+        ${ref(data.stop_loss, '#ff1f7a', t('view.tape_replay.ref.stop'))}
+        ${ref(data.initial_target, '#ffd24a', t('view.tape_replay.ref.target'))}
         ${candles}
         ${execMarkers}
         <line x1="${cx}" y1="${padT}" x2="${cx}" y2="${padT + innerH}" stroke="#fff" stroke-dasharray="3,3" opacity="0.5"/>
