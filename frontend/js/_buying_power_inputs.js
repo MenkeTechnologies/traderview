@@ -14,6 +14,8 @@
 //   5. PortfolioMargin + pdt_qualified → 6×
 //   6. PortfolioMargin → 3×
 
+import { t } from './i18n.js';
+
 export const ACCOUNT_TYPES = ['cash', 'reg_t', 'portfolio_margin'];
 export const PDT_MIN_EQUITY = 25_000;
 
@@ -27,13 +29,13 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(input) {
     if (!ACCOUNT_TYPES.includes(input.account_type))
-        return `account_type must be one of ${ACCOUNT_TYPES.join(', ')}`;
-    if (!Number.isFinite(input.equity)) return 'equity must be finite';
-    if (input.equity < 0)               return 'equity must be ≥ 0';
-    if (typeof input.is_pdt !== 'boolean')        return 'is_pdt must be boolean';
-    if (typeof input.is_day_trade !== 'boolean')  return 'is_day_trade must be boolean';
-    if (!Number.isFinite(input.share_price))      return 'share_price must be finite';
-    if (input.share_price < 0)                    return 'share_price must be ≥ 0';
+        return t('view.buying_power.validate.account_type', { allowed: ACCOUNT_TYPES.join(', ') });
+    if (!Number.isFinite(input.equity)) return t('view.buying_power.validate.equity_finite');
+    if (input.equity < 0)               return t('view.buying_power.validate.equity_positive');
+    if (typeof input.is_pdt !== 'boolean')        return t('view.buying_power.validate.is_pdt');
+    if (typeof input.is_day_trade !== 'boolean')  return t('view.buying_power.validate.is_day_trade');
+    if (!Number.isFinite(input.share_price))      return t('view.buying_power.validate.share_price_finite');
+    if (input.share_price < 0)                    return t('view.buying_power.validate.share_price_positive');
     return null;
 }
 

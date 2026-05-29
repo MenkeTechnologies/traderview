@@ -13,6 +13,8 @@
 //   else                             → comfortable
 // Rows sorted by days_to_expiry ASC (most urgent first).
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 export const URGENCIES = ['now', 'soon', 'comfortable', 'expired'];
 
@@ -71,10 +73,10 @@ export function daysBetween(a, b) {
 }
 
 export function validateInputs(positions, today, roll_window_days) {
-    if (!Array.isArray(positions)) return 'positions must be an array';
-    if (!isValidDate(today))       return 'today must be YYYY-MM-DD';
+    if (!Array.isArray(positions)) return t('view.futures_roll.validate.positions_array');
+    if (!isValidDate(today))       return t('view.futures_roll.validate.today_iso');
     if (!Number.isInteger(roll_window_days) || roll_window_days < 0)
-        return 'roll_window_days must be non-negative integer';
+        return t('view.futures_roll.validate.roll_window');
     return null;
 }
 

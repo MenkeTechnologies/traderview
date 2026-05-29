@@ -122,8 +122,8 @@ function renderSummary(rows, res) {
     cards.push(card(t('view.forward_vol_curve.card.range'), `${pctStr(fwdMin)} – ${pctStr(fwdMax)}`));
     const slopeClass = res.arbitrage_violations.length ? 'neg' : 'pos';
     const arbLabel = res.arbitrage_violations.length
-        ? `${res.arbitrage_violations.length} violation${res.arbitrage_violations.length === 1 ? '' : 's'}`
-        : 'no violations';
+        ? t(res.arbitrage_violations.length === 1 ? 'view.forward_vol_curve.arb.one' : 'view.forward_vol_curve.arb.many', { n: res.arbitrage_violations.length })
+        : t('view.forward_vol_curve.arb.none');
     cards.push(card(t('view.forward_vol_curve.card.no_arb'), arbLabel, slopeClass));
     document.getElementById('fv-summary').innerHTML = cards.join('');
 }

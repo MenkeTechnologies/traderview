@@ -11,6 +11,8 @@
 //   3. score ≥ 0.5 → okay     (strict ≥)
 //   4. else        → poor
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     long_rate: 0.05,
     funding_rate: 0.01,
@@ -20,10 +22,10 @@ export const DEFAULT_INPUTS = {
 export const TIERS = ['strong', 'okay', 'poor', 'negative'];
 
 export function validateInputs(input) {
-    if (!Number.isFinite(input.long_rate))      return 'long_rate must be finite';
-    if (!Number.isFinite(input.funding_rate))   return 'funding_rate must be finite';
-    if (!Number.isFinite(input.annualized_vol)) return 'annualized_vol must be finite';
-    if (input.annualized_vol < 0)               return 'annualized_vol must be ≥ 0';
+    if (!Number.isFinite(input.long_rate))      return t('view.carry_score.validate.long_rate');
+    if (!Number.isFinite(input.funding_rate))   return t('view.carry_score.validate.funding_rate');
+    if (!Number.isFinite(input.annualized_vol)) return t('view.carry_score.validate.vol_finite');
+    if (input.annualized_vol < 0)               return t('view.carry_score.validate.vol_positive');
     return null;
 }
 
