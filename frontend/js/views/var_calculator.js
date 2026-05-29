@@ -238,7 +238,7 @@ function renderParseErrors(errors) {
         `<div>line ${e.line_no}: ${esc(e.message)} <span class="muted">→ <code>${esc(e.raw || '')}</code></span></div>`
     ).join('');
     if (errors.length > 20) {
-        el.innerHTML += `<div class="muted">… (+${errors.length - 20} more)</div>`;
+        el.innerHTML += `<div class="muted">${esc(t("common.plus_n_more", { n: errors.length - 20 }))}</div>`;
     }
     el.style.display = 'block';
 }

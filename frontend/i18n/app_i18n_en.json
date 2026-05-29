@@ -8182,6 +8182,7 @@
   "view.dashboards.tile.err.render_failed":     "Tile render failed: {err}",
   "common.parse_errors_lead":                   "{n} parse error(s):",
   "common.and_n_more":                          "… and {n} more.",
+  "common.plus_n_more":                         "… (+{n} more)",
   "view.charts.error.generic":                  "Error: {err}",
   "view.monte_carlo.empty.stdev_zero":           "stdev was zero — distribution is a point mass.",
   "view.research.empty.no_quote":                "no quote",
