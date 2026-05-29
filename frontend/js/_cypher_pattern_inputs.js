@@ -16,7 +16,7 @@ export function parsePivotBlob(text) {
     const pivots = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { pivots, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { pivots, errors: [{ line_no: 0, raw: '', message: t('view.cypher_pattern.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -25,23 +25,23 @@ export function parsePivotBlob(text) {
         if (!s || s.startsWith('#')) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 3) {
-            errors.push({ line_no: i + 1, raw, message: `expected 3 tokens (index price H|L), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.cypher_pattern.parse.token_count', { n: parts.length }) });
             continue;
         }
         const idxNum = Number(parts[0]);
         const price = Number(parts[1]);
         const hlTok = String(parts[2]).toLowerCase();
         if (!Number.isFinite(idxNum) || !Number.isInteger(idxNum) || idxNum < 0) {
-            errors.push({ line_no: i + 1, raw, message: `index must be non-negative integer` });
+            errors.push({ line_no: i + 1, raw, message: t('view.cypher_pattern.parse.index_invalid') });
             continue;
         }
         if (!Number.isFinite(price) || price <= 0) {
-            errors.push({ line_no: i + 1, raw, message: `price must be > 0` });
+            errors.push({ line_no: i + 1, raw, message: t('view.cypher_pattern.parse.price_invalid') });
             continue;
         }
         if (hlTok !== 'h' && hlTok !== 'l' && hlTok !== 'high' && hlTok !== 'low' &&
             hlTok !== 'true' && hlTok !== 'false') {
-            errors.push({ line_no: i + 1, raw, message: `H/L must be h/l/high/low/true/false (got "${parts[2]}")` });
+            errors.push({ line_no: i + 1, raw, message: t('view.cypher_pattern.parse.hl_invalid', { tok: parts[2] }) });
             continue;
         }
         const is_high = (hlTok === 'h' || hlTok === 'high' || hlTok === 'true');
@@ -51,9 +51,9 @@ export function parsePivotBlob(text) {
 }
 
 export function validateInputs(pivots, tolerance) {
-    if (!Array.isArray(pivots) || pivots.length < 5) return 'need at least 5 pivots (X/A/B/C/D)';
-    if (!Number.isFinite(tolerance) || tolerance <= 0) return 'tolerance must be > 0';
-    if (tolerance > 0.5) return 'tolerance > 0.5 will match almost anything (typical = 0.03-0.10)';
+    if (!Array.isArray(pivots) || pivots.length < 5) return t('view.cypher_pattern.validate.pivots_min');
+    if (!Number.isFinite(tolerance) || tolerance <= 0) return t('view.cypher_pattern.validate.tol_pos');
+    if (tolerance > 0.5) return t('view.cypher_pattern.validate.tol_too_high');
     return null;
 }
 
