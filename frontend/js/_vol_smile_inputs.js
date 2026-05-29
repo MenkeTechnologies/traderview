@@ -11,6 +11,8 @@
 // dividends, set div_yield = 0; for currencies use rate_dom − rate_for.
 // (Garman-Kohlhagen convention.)
 
+import { t } from './i18n.js';
+
 /** Parse a multiline strike/IV blob. Returns { rows, errors } where
  *  rows is an array of `{ strike, iv, line_no }` and errors is an
  *  array of `{ line_no, raw, message }`. A successful parse has
@@ -80,16 +82,16 @@ export function buildSviBody(rows, spot, rate, divYield, tYears) {
  *  an error string otherwise. */
 export function validateSmileInputs(rows, spot, tYears) {
     if (!Array.isArray(rows) || rows.length < 5) {
-        return 'need at least 5 strike/IV rows for a smile fit';
+        return t('view.vol_smile.validate.rows_min');
     }
-    if (!Number.isFinite(spot) || spot <= 0) return 'spot must be > 0';
-    if (!Number.isFinite(tYears) || tYears <= 0) return 'expiry (years) must be > 0';
+    if (!Number.isFinite(spot) || spot <= 0) return t('view.vol_smile.validate.spot');
+    if (!Number.isFinite(tYears) || tYears <= 0) return t('view.vol_smile.validate.expiry');
     for (const r of rows) {
         if (!Number.isFinite(r.strike) || r.strike <= 0) {
-            return `invalid strike on line ${r.line_no}`;
+            return t('view.vol_smile.validate.strike', { line: r.line_no });
         }
         if (!Number.isFinite(r.iv) || r.iv < 0) {
-            return `invalid IV on line ${r.line_no}`;
+            return t('view.vol_smile.validate.iv', { line: r.line_no });
         }
     }
     return null;

@@ -4,6 +4,8 @@
 // Backend body: { daily_returns: f64[], position_value: f64, confidence: f64 }.
 // Returns: { method, confidence, var_dollars, expected_shortfall_dollars, n }.
 
+import { t as tr } from './i18n.js';
+
 // Parse daily returns as a CSV / whitespace / newline mix. Returns
 // always shown as decimals (0.01 = 1%, -0.02 = -2%). Optional %-suffix
 // auto-divides by 100.
@@ -30,12 +32,12 @@ export function parseReturnsBlob(text) {
 }
 
 export function validateInputs(returns, positionValue, confidence) {
-    if (!Array.isArray(returns)) return 'returns must be an array';
-    if (returns.length < 10) return 'need ≥ 10 returns for historical VaR (parametric needs only 2)';
-    if (returns.some(v => !Number.isFinite(v))) return 'all returns must be finite';
-    if (!Number.isFinite(positionValue) || positionValue <= 0) return 'position_value must be > 0';
+    if (!Array.isArray(returns)) return tr('view.var_estimator.validate.returns_array');
+    if (returns.length < 10) return tr('view.var_estimator.validate.returns_min');
+    if (returns.some(v => !Number.isFinite(v))) return tr('view.var_estimator.validate.returns_finite');
+    if (!Number.isFinite(positionValue) || positionValue <= 0) return tr('view.var_estimator.validate.position');
     if (!Number.isFinite(confidence) || confidence <= 0 || confidence >= 1)
-        return 'confidence must be in (0, 1) exclusive (e.g. 0.95)';
+        return tr('view.var_estimator.validate.confidence');
     return null;
 }
 

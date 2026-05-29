@@ -13,6 +13,8 @@
 // Local mirror reproduces the wash-sale detection, $3k cap, running
 // realized-loss accumulation, sort-by-loss-size, and totals.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // "<symbol> <qty> <avg_cost> <current_price>" per line.
@@ -100,11 +102,11 @@ export function daysBetween(a, b) {
 }
 
 export function validateInputs(losers, recent_buys, today, realized_loss_ytd, mtm_elected) {
-    if (!Array.isArray(losers))      return 'losers must be an array';
-    if (!Array.isArray(recent_buys)) return 'recent_buys must be an array';
-    if (!isValidDate(today))         return 'today must be YYYY-MM-DD';
-    if (!Number.isFinite(realized_loss_ytd)) return 'realized_loss_ytd must be finite';
-    if (typeof mtm_elected !== 'boolean')   return 'mtm_elected must be boolean';
+    if (!Array.isArray(losers))      return t('view.tax_loss_harvest.validate.losers_array');
+    if (!Array.isArray(recent_buys)) return t('view.tax_loss_harvest.validate.buys_array');
+    if (!isValidDate(today))         return t('view.tax_loss_harvest.validate.today');
+    if (!Number.isFinite(realized_loss_ytd)) return t('view.tax_loss_harvest.validate.realized_ytd');
+    if (typeof mtm_elected !== 'boolean')   return t('view.tax_loss_harvest.validate.mtm_elected');
     return null;
 }
 
