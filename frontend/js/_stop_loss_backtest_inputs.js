@@ -16,6 +16,8 @@
 // Realized when stopped: stop − entry (long) / entry − stop (short).
 // Realized when not stopped: actual_exit − entry (long) / entry − actual_exit (short).
 
+import { t as tr } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 export const METHODS = ['none', 'fixed_dollar', 'fixed_pct', 'atr_multiple'];
 
@@ -64,17 +66,17 @@ function stripComment(raw) {
 }
 
 export function validateInputs(trades, params, side_long) {
-    if (!Array.isArray(trades)) return 'trades must be an array';
+    if (!Array.isArray(trades)) return tr('view.stop_loss_backtest.validate.trades_array');
     if (!params || !METHODS.includes(params.method))
-        return `params.method must be one of ${METHODS.join(', ')}`;
-    if (!Number.isFinite(params.value)) return 'params.value must be finite';
+        return tr('view.stop_loss_backtest.validate.method', { list: METHODS.join(', ') });
+    if (!Number.isFinite(params.value)) return tr('view.stop_loss_backtest.validate.value_finite');
     if (params.method === 'fixed_pct' && (params.value < 0 || params.value > 1))
-        return 'fixed_pct value must be in [0, 1]';
+        return tr('view.stop_loss_backtest.validate.pct_range');
     if (params.method === 'fixed_dollar' && params.value < 0)
-        return 'fixed_dollar value must be ≥ 0';
+        return tr('view.stop_loss_backtest.validate.dollar_negative');
     if (!Number.isFinite(params.atr) || params.atr < 0)
-        return 'params.atr must be ≥ 0';
-    if (typeof side_long !== 'boolean') return 'side_long must be boolean';
+        return tr('view.stop_loss_backtest.validate.atr_negative');
+    if (typeof side_long !== 'boolean') return tr('view.stop_loss_backtest.validate.side_long');
     return null;
 }
 

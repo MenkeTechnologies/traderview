@@ -9,20 +9,22 @@
 //   vomma = ∂vega/∂σ  (a.k.a. volga)
 //   veta  = ∂vega/∂t
 
+import { t } from './i18n.js';
+
 export const METRICS = ['vanna', 'charm', 'vomma', 'veta'];
 
 export function validateParams(p) {
-    if (p.kind !== 'call' && p.kind !== 'put') return 'kind must be call or put';
-    if (!Number.isFinite(p.strike) || p.strike <= 0) return 'strike must be > 0';
-    if (!Number.isFinite(p.time_to_expiry) || p.time_to_expiry <= 0) return 'time_to_expiry must be > 0';
-    if (!Number.isFinite(p.risk_free)) return 'risk_free must be finite';
-    if (!Number.isFinite(p.dividend_yield) || p.dividend_yield < 0) return 'dividend_yield must be ≥ 0';
-    if (!Number.isFinite(p.sigma) || p.sigma <= 0) return 'sigma must be > 0';
-    if (!Number.isFinite(p.spot_grid_low) || p.spot_grid_low <= 0) return 'spot_grid_low must be > 0';
+    if (p.kind !== 'call' && p.kind !== 'put') return t('view.second_order_greeks.validate.kind');
+    if (!Number.isFinite(p.strike) || p.strike <= 0) return t('view.second_order_greeks.validate.strike');
+    if (!Number.isFinite(p.time_to_expiry) || p.time_to_expiry <= 0) return t('view.second_order_greeks.validate.tte');
+    if (!Number.isFinite(p.risk_free)) return t('view.second_order_greeks.validate.risk_free');
+    if (!Number.isFinite(p.dividend_yield) || p.dividend_yield < 0) return t('view.second_order_greeks.validate.div_yield');
+    if (!Number.isFinite(p.sigma) || p.sigma <= 0) return t('view.second_order_greeks.validate.sigma');
+    if (!Number.isFinite(p.spot_grid_low) || p.spot_grid_low <= 0) return t('view.second_order_greeks.validate.grid_low');
     if (!Number.isFinite(p.spot_grid_high) || p.spot_grid_high <= p.spot_grid_low)
-        return 'spot_grid_high must be > spot_grid_low';
+        return t('view.second_order_greeks.validate.grid_high');
     if (!Number.isInteger(p.n_points) || p.n_points < 5 || p.n_points > 501)
-        return 'n_points must be an integer in [5, 501]';
+        return t('view.second_order_greeks.validate.n_points');
     return null;
 }
 

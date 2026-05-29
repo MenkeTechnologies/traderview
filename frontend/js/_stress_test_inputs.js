@@ -4,6 +4,8 @@
 // iv_shocks_pct, time_decay_days, risk_free_rate, dividend_yield }.
 // Returns { grid: StressCell[], worst_case, best_case }.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 const VALID_KINDS = new Set(['call', 'put']);
 
@@ -78,14 +80,14 @@ export function parseLegBlob(text) {
 }
 
 export function validateInputs(legs, priceShocks, ivShocks, timeDecay, rate, div) {
-    if (!Array.isArray(legs) || legs.length === 0) return 'need at least 1 leg';
-    if (!Array.isArray(priceShocks) || priceShocks.length === 0) return 'need at least 1 price shock';
-    if (!Array.isArray(ivShocks) || ivShocks.length === 0) return 'need at least 1 iv shock';
-    if (!Number.isFinite(timeDecay) || timeDecay < 0) return 'time_decay_days must be ≥ 0';
-    if (!Number.isFinite(rate)) return 'risk_free_rate must be finite';
-    if (!Number.isFinite(div) || div < 0) return 'dividend_yield must be ≥ 0';
+    if (!Array.isArray(legs) || legs.length === 0) return t('view.stress_test.validate.legs_empty');
+    if (!Array.isArray(priceShocks) || priceShocks.length === 0) return t('view.stress_test.validate.price_shocks_empty');
+    if (!Array.isArray(ivShocks) || ivShocks.length === 0) return t('view.stress_test.validate.iv_shocks_empty');
+    if (!Number.isFinite(timeDecay) || timeDecay < 0) return t('view.stress_test.validate.time_decay');
+    if (!Number.isFinite(rate)) return t('view.stress_test.validate.rate');
+    if (!Number.isFinite(div) || div < 0) return t('view.stress_test.validate.div_yield');
     if (!priceShocks.every(Number.isFinite) || !ivShocks.every(Number.isFinite))
-        return 'shocks must all be finite numbers';
+        return t('view.stress_test.validate.shocks_finite');
     return null;
 }
 
