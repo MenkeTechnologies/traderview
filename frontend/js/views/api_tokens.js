@@ -16,8 +16,7 @@ export async function renderDeveloper(mount) {
             <h2 data-i18n="view.api_tokens.h2.create_token">Create token</h2>
             <form id="tok-form" class="inline-form">
                 <label><span data-i18n="view.api_tokens.label.name">Name</span>
-                    <input name="name" placeholder="n8n staging" data-i18n-placeholder="view.api_tokens.placeholder.name"
-                           data-i18n-placeholder="view.api_tokens.placeholder.name" required style="min-width:220px;"></label>
+                    <input name="name" placeholder="n8n staging" data-i18n-placeholder="view.api_tokens.placeholder.name" required style="min-width:220px;"></label>
                 <label><span data-i18n="view.api_tokens.label.scopes">Scopes</span>
                     <select name="scopes" multiple size="3" style="min-width:120px;">
                         <option data-i18n="view.api_tokens.opt.read" value="read" selected>read</option>

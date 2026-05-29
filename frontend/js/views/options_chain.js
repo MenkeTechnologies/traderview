@@ -33,8 +33,8 @@ export async function renderOptions(mount, _state, rest) {
                 <label><span data-i18n="view.options_chain.label.q">q</span>
                     <input name="q" type="number" step="any" value="0.0"></label>
                 <label><span data-i18n="view.options_chain.label.mkt">mkt (opt'l)</span>
-                    <input name="market_price" type="number" step="any" placeholder="for IV" data-i18n-placeholder="view.options_chain.placeholder.for_iv"
-                           data-i18n-placeholder="view.options_chain.placeholder.mkt"></label>
+                    <input name="market_price" type="number" step="any" placeholder="for IV"
+                           data-i18n-placeholder="view.options_chain.placeholder.for_iv"></label>
                 <button data-i18n="view.options_chain.btn.compute" class="primary" type="submit">Compute</button>
             </form>
             <div id="g-out"></div>

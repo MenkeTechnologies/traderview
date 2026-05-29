@@ -32,7 +32,7 @@ export async function renderLiveScanner(mount, _state) {
             <h2 data-i18n="view.live_scanner.h2.configure">Configure</h2>
             <form id="ls-config" class="inline-form">
                 <label><span data-i18n="view.live_scanner.label.api_key">Finnhub API key</span>
-                    <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)" data-i18n-placeholder="view.live_scanner.placeholder.api_key"
+                    <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)"
                            data-i18n-placeholder="view.live_scanner.placeholder.api_key" style="min-width:280px">
                 </label>
                 <label><span data-i18n="view.live_scanner.label.symbols">Universe (comma-sep symbols)</span>

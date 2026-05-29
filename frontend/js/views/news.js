@@ -25,7 +25,7 @@ export async function renderNews(mount) {
                     <option data-i18n="view.news.opt.by_symbol" value="symbol">by symbol</option>
                     <option data-i18n="view.news.opt.full_text_search" value="search">full-text search</option>
                 </select>
-                <input name="value" placeholder="symbol or query" data-i18n-placeholder="view.news.placeholder.value"
+                <input name="value" placeholder="symbol or query"
                        data-i18n-placeholder="view.news.placeholder.value" style="min-width:200px;">
                 <label><span data-i18n="view.news.label.limit">Limit</span>
                     <input name="limit" type="number" min="10" max="200" value="40" style="width:80px;"></label>
