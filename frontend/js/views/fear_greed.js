@@ -20,11 +20,11 @@ export async function renderFearGreed(mount) {
             <table class="trades">
                 <thead><tr><th>0–24</th><th>25–44</th><th>45–55</th><th>56–74</th><th>75–100</th></tr></thead>
                 <tbody><tr>
-                    <td class="neg">Extreme Fear</td>
-                    <td class="neg">Fear</td>
-                    <td>Neutral</td>
-                    <td class="pos">Greed</td>
-                    <td class="pos">Extreme Greed</td>
+                    <td class="neg" data-i18n="view.fear_greed.band.extreme_fear">Extreme Fear</td>
+                    <td class="neg" data-i18n="view.fear_greed.band.fear">Fear</td>
+                    <td data-i18n="view.fear_greed.band.neutral">Neutral</td>
+                    <td class="pos" data-i18n="view.fear_greed.band.greed">Greed</td>
+                    <td class="pos" data-i18n="view.fear_greed.band.extreme_greed">Extreme Greed</td>
                 </tr></tbody>
             </table>
             <p data-i18n="view.fear_greed.hint.like_all_sentiment_composites_this_is_contrarian_a" class="muted small">Like all sentiment composites this is contrarian at the extremes —

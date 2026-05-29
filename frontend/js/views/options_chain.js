@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderOptions(mount, _state, rest) {
     const tok = currentViewToken();
@@ -85,17 +86,18 @@ export async function renderOptions(mount, _state, rest) {
         gOut.innerHTML = `
             <table class="trades" style="margin-top:8px">
                 <tbody>
-                    <tr><td>Price</td><td>${fmt(g.price, 4)}</td></tr>
-                    <tr><td>Delta</td><td>${fmt(g.delta, 4)}</td></tr>
-                    <tr><td>Gamma</td><td>${fmt(g.gamma, 5)}</td></tr>
-                    <tr><td>Theta (per day)</td><td>${fmt(g.theta, 4)}</td></tr>
-                    <tr><td>Vega (per 1 vol pt)</td><td>${fmt(g.vega, 4)}</td></tr>
-                    <tr><td>Rho (per 1 rate pt)</td><td>${fmt(g.rho, 4)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.price">Price</td><td>${fmt(g.price, 4)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.delta">Delta</td><td>${fmt(g.delta, 4)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.gamma">Gamma</td><td>${fmt(g.gamma, 5)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.theta_per_day">Theta (per day)</td><td>${fmt(g.theta, 4)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.vega_per_volpt">Vega (per 1 vol pt)</td><td>${fmt(g.vega, 4)}</td></tr>
+                    <tr><td data-i18n="view.options_chain.row.rho_per_ratept">Rho (per 1 rate pt)</td><td>${fmt(g.rho, 4)}</td></tr>
                     ${out.implied_vol != null
-                        ? `<tr><td><strong>Implied vol (Newton)</strong></td><td><strong>${(out.implied_vol*100).toFixed(2)}%</strong></td></tr>`
+                        ? `<tr><td><strong data-i18n="view.options_chain.row.implied_vol_newton">Implied vol (Newton)</strong></td><td><strong>${(out.implied_vol*100).toFixed(2)}%</strong></td></tr>`
                         : ''}
                 </tbody>
             </table>`;
+        try { applyUiI18n(gOut); } catch (_) {}
     });
 }
 

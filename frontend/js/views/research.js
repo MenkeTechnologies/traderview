@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderResearch(mount, _state, sym) {
     const tok = currentViewToken();
@@ -188,7 +189,7 @@ function renderSignals(s, mount) {
             <tr><td>R3</td><td class="neg">${fmt(p.r3)}</td></tr>
             <tr><td>R2</td><td class="neg">${fmt(p.r2)}</td></tr>
             <tr><td>R1</td><td class="neg">${fmt(p.r1)}</td></tr>
-            <tr><td><strong>Pivot</strong></td><td><strong>${fmt(p.pivot)}</strong></td></tr>
+            <tr><td><strong data-i18n="view.research.pivot.pivot">Pivot</strong></td><td><strong>${fmt(p.pivot)}</strong></td></tr>
             <tr><td>S1</td><td class="pos">${fmt(p.s1)}</td></tr>
             <tr><td>S2</td><td class="pos">${fmt(p.s2)}</td></tr>
             <tr><td>S3</td><td class="pos">${fmt(p.s3)}</td></tr>
@@ -196,6 +197,7 @@ function renderSignals(s, mount) {
     } else {
         pivEl.innerHTML = '<p data-i18n="view.research.hint.need_at_least_2_daily_bars" class="muted">Need at least 2 daily bars.</p>';
     }
+    try { applyUiI18n(pivEl); } catch (_) {}
 }
 
 function renderNews(el, items) {
