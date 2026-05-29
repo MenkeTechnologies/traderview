@@ -9,6 +9,8 @@
 //   alpha_tstat, r_squared, n_observations,
 // } | null
 
+import { t } from './i18n.js';
+
 export const MIN_OBS = 10;
 
 export const DEFAULT_INPUTS = {
@@ -24,16 +26,16 @@ const FIELDS = ['portfolio_returns', 'market_excess', 'smb', 'hml', 'wml', 'risk
 
 export function validateInputs(input) {
     for (const k of FIELDS) {
-        if (!Array.isArray(input[k]))                          return `${k} must be an array`;
+        if (!Array.isArray(input[k]))                          return t('view.car4.validate.field_array', { field: k });
     }
     const n = input.portfolio_returns.length;
     for (const k of FIELDS) {
-        if (input[k].length !== n)                             return `${k} length (${input[k].length}) ≠ portfolio_returns length (${n})`;
+        if (input[k].length !== n)                             return t('view.car4.validate.field_len', { field: k, len: input[k].length, n });
     }
-    if (n < MIN_OBS)                                           return `need at least ${MIN_OBS} observations`;
+    if (n < MIN_OBS)                                           return t('view.car4.validate.obs_min', { n: MIN_OBS });
     for (const k of FIELDS) {
         for (let i = 0; i < n; i++) {
-            if (typeof input[k][i] !== 'number')               return `${k}[${i}] must be a number`;
+            if (typeof input[k][i] !== 'number')               return t('view.car4.validate.field_number', { field: k, i });
             // NaN is allowed per Rust impl — those rows get filtered.
         }
     }

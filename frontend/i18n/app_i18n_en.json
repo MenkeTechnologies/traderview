@@ -3592,6 +3592,10 @@
   "view.csm.err.server_rejected":     "Server rejected input.",
 
   "view.car4.h1.title":               "// CARHART 4-FACTOR MODEL",
+  "view.car4.validate.field_array":   "{field} must be an array",
+  "view.car4.validate.field_len":     "{field} length ({len}) ≠ portfolio_returns length ({n})",
+  "view.car4.validate.obs_min":       "need at least {n} observations",
+  "view.car4.validate.field_number":  "{field}[{i}] must be a number",
   "view.car4.h2.series":              "Series",
   "view.car4.h2.series_hint":         "(6 tokens per line: PORT MKT SMB HML WML RF — ≥ 10 valid rows)",
   "view.car4.h2.factors":             "Factor loadings",
