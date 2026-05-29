@@ -15,21 +15,23 @@
 //   S_i = w_b · (r_p − r_b)                       selection
 //   I_i = (w_p − w_b) · (r_p − r_b)               interaction
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = { inputs: [] };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.inputs))                                  return 'inputs must be an array';
-    if (input.inputs.length === 0)                                      return 'inputs must be non-empty';
+    if (!Array.isArray(input.inputs))                                  return t('view.brinson.validate.inputs_array');
+    if (input.inputs.length === 0)                                      return t('view.brinson.validate.inputs_empty');
     for (let i = 0; i < input.inputs.length; i++) {
         const s = input.inputs[i];
-        if (!s || typeof s !== 'object')                               return `inputs[${i}] must be an object`;
-        if (typeof s.sector !== 'string' || s.sector.length === 0)     return `inputs[${i}].sector must be a non-empty string`;
+        if (!s || typeof s !== 'object')                               return t('view.brinson.validate.row_object', { i });
+        if (typeof s.sector !== 'string' || s.sector.length === 0)     return t('view.brinson.validate.sector', { i });
         if (!Number.isFinite(s.portfolio_weight) || s.portfolio_weight < 0)
-                                                                        return `inputs[${i}].portfolio_weight must be ≥ 0 finite`;
+                                                                        return t('view.brinson.validate.port_weight', { i });
         if (!Number.isFinite(s.benchmark_weight) || s.benchmark_weight < 0)
-                                                                        return `inputs[${i}].benchmark_weight must be ≥ 0 finite`;
-        if (!Number.isFinite(s.portfolio_return))                      return `inputs[${i}].portfolio_return not finite`;
-        if (!Number.isFinite(s.benchmark_return))                      return `inputs[${i}].benchmark_return not finite`;
+                                                                        return t('view.brinson.validate.bench_weight', { i });
+        if (!Number.isFinite(s.portfolio_return))                      return t('view.brinson.validate.port_return', { i });
+        if (!Number.isFinite(s.benchmark_return))                      return t('view.brinson.validate.bench_return', { i });
     }
     return null;
 }
