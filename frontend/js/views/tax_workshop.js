@@ -251,25 +251,25 @@ function renderHo(mount, r) {
     const el = mount.querySelector('#ho-out');
     if (!el) return;
     el.textContent =
-`Simplified ($5/sqft, cap $1,500):  ${fmtMoney(r.simplified_deduction)}
-Actual (Form 8829):                ${fmtMoney(r.actual_deduction)}
-Business use %:                    ${fmtPct(r.business_pct)}
+`${t('view.tax_workshop.ho.simplified')}  ${fmtMoney(r.simplified_deduction)}
+${t('view.tax_workshop.ho.actual')}                ${fmtMoney(r.actual_deduction)}
+${t('view.tax_workshop.ho.business_use')}                    ${fmtPct(r.business_pct)}
 ─────────────────────────────────────────
-Recommended (${r.recommended_method}):     ${fmtMoney(r.recommended_deduction)}`;
+${t('view.tax_workshop.ho.recommended', { method: r.recommended_method })}     ${fmtMoney(r.recommended_deduction)}`;
 }
 
 function renderMi(mount, r) {
     const el = mount.querySelector('#mi-out');
     if (!el) return;
     el.textContent =
-`Total miles:        ${r.total_miles}
-  Business:         ${r.business_miles}  → ${fmtMoney(r.deduction_business)}
-  Medical:          ${r.medical_miles}  → ${fmtMoney(r.deduction_medical)}
-  Moving:           ${r.moving_miles}  → ${fmtMoney(r.deduction_moving)}
-  Charitable:       ${r.charitable_miles}  → ${fmtMoney(r.deduction_charitable)}
-Unrated (out-of-range): ${r.unrated_trips}
+`${t('view.tax_workshop.mi.total_miles')}        ${r.total_miles}
+  ${t('view.tax_workshop.mi.business')}         ${r.business_miles}  → ${fmtMoney(r.deduction_business)}
+  ${t('view.tax_workshop.mi.medical')}          ${r.medical_miles}  → ${fmtMoney(r.deduction_medical)}
+  ${t('view.tax_workshop.mi.moving')}           ${r.moving_miles}  → ${fmtMoney(r.deduction_moving)}
+  ${t('view.tax_workshop.mi.charitable')}       ${r.charitable_miles}  → ${fmtMoney(r.deduction_charitable)}
+${t('view.tax_workshop.mi.unrated')} ${r.unrated_trips}
 ─────────────────────────────────────────
-Total deduction:    ${fmtMoney(r.deduction_total)}`;
+${t('view.tax_workshop.mi.total_deduction')}    ${fmtMoney(r.deduction_total)}`;
 }
 
 function renderQt(mount, r) {
@@ -277,17 +277,17 @@ function renderQt(mount, r) {
     if (!el) return;
     const q = r.quarters;
     el.textContent =
-`Safe harbor (prior year):   ${fmtMoney(r.safe_harbor_prior_year)}
-Safe harbor (current year): ${fmtMoney(r.safe_harbor_current_year)}
-Target (the smaller):       ${fmtMoney(r.safe_harbor_target)}
-Projected annual profit:    ${fmtMoney(r.projected_annual_net_profit)}
-Projected annual tax:       ${fmtMoney(r.projected_annual_tax)}
-Remaining after withholding:${fmtMoney(r.remaining_to_pay)}
+`${t('view.tax_workshop.qt.safe_prior')}   ${fmtMoney(r.safe_harbor_prior_year)}
+${t('view.tax_workshop.qt.safe_current')} ${fmtMoney(r.safe_harbor_current_year)}
+${t('view.tax_workshop.qt.target')}       ${fmtMoney(r.safe_harbor_target)}
+${t('view.tax_workshop.qt.proj_profit')}    ${fmtMoney(r.projected_annual_net_profit)}
+${t('view.tax_workshop.qt.proj_tax')}       ${fmtMoney(r.projected_annual_tax)}
+${t('view.tax_workshop.qt.remaining')}${fmtMoney(r.remaining_to_pay)}
 ─────────────────────────────────────────
-${q[0].period_label}  due ${q[0].due_date}: ${fmtMoney(q[0].estimated_payment)}
-${q[1].period_label}  due ${q[1].due_date}: ${fmtMoney(q[1].estimated_payment)}
-${q[2].period_label}  due ${q[2].due_date}: ${fmtMoney(q[2].estimated_payment)}
-${q[3].period_label}  due ${q[3].due_date}: ${fmtMoney(q[3].estimated_payment)}`;
+${t('view.tax_workshop.qt.quarter_due', { period: q[0].period_label, date: q[0].due_date, amount: fmtMoney(q[0].estimated_payment) })}
+${t('view.tax_workshop.qt.quarter_due', { period: q[1].period_label, date: q[1].due_date, amount: fmtMoney(q[1].estimated_payment) })}
+${t('view.tax_workshop.qt.quarter_due', { period: q[2].period_label, date: q[2].due_date, amount: fmtMoney(q[2].estimated_payment) })}
+${t('view.tax_workshop.qt.quarter_due', { period: q[3].period_label, date: q[3].due_date, amount: fmtMoney(q[3].estimated_payment) })}`;
 }
 
 function renderSubs(mount, subs) {
