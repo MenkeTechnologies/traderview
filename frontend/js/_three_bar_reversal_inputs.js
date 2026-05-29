@@ -3,6 +3,8 @@
 // Backend body shape: { bars: OhlcBar[] }. No config — detection rule
 // is fixed: bar1 trend, small middle, bar3 closes past bar1's extreme.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Four-token-per-line "open high low close" with per-bar OHLC sanity
@@ -54,10 +56,18 @@ export function buildBody(bars) {
 }
 
 const KIND_BADGES = {
-    bullish: { label: 'BULLISH 3-BAR', cls: 'pos', hint: 'down → small → up; closes above bar 1 high' },
-    bearish: { label: 'BEARISH 3-BAR', cls: 'neg', hint: 'up → small → down; closes below bar 1 low' },
+    bullish: { key: 'bullish', cls: 'pos' },
+    bearish: { key: 'bearish', cls: 'neg' },
 };
-export function kindBadge(k) { return KIND_BADGES[k] || { label: String(k || '—'), cls: '', hint: '' }; }
+export function kindBadge(k) {
+    const x = KIND_BADGES[k];
+    if (!x) return { label: String(k || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.three_bar_reversal.kind.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.three_bar_reversal.kind.${x.key}.hint`),
+    };
+}
 
 // Splits events into parallel up/down null-padded series for uPlot marker
 // rendering. Bullish markers go below the bar; bearish above.

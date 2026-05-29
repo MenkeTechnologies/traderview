@@ -4,6 +4,8 @@
 // candidates: [{method, value, atr}, ...], side_long: bool }.
 // Returns MethodResult[] (one per candidate) — sorted by caller.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Four-token-per-line `entry mae mfe actual_exit`.
@@ -70,12 +72,20 @@ export function buildBody(trades, candidates, sideLong) {
 
 // Friendly per-method display label.
 const METHOD_BADGES = {
-    none:          { label: 'No stop',     cls: 'neg', desc: 'exit only at actual_exit / MFE' },
-    fixed_dollar:  { label: 'Fixed $',     cls: '',    desc: 'absolute dollar offset from entry' },
-    fixed_pct:     { label: 'Fixed %',     cls: '',    desc: 'fractional offset from entry' },
-    atr_multiple:  { label: 'N × ATR',     cls: 'pos', desc: 'volatility-scaled — adapts per instrument' },
+    none:         { key: 'none',         cls: 'neg' },
+    fixed_dollar: { key: 'fixed_dollar', cls: '' },
+    fixed_pct:    { key: 'fixed_pct',    cls: '' },
+    atr_multiple: { key: 'atr_multiple', cls: 'pos' },
 };
-export function methodBadge(m) { return METHOD_BADGES[m] || { label: String(m || '—'), cls: '', desc: '' }; }
+export function methodBadge(m) {
+    const x = METHOD_BADGES[m];
+    if (!x) return { label: String(m || '—'), cls: '', desc: '' };
+    return {
+        label: t(`view.stop_loss_best_of.method.${x.key}.label`),
+        cls: x.cls,
+        desc: t(`view.stop_loss_best_of.method.${x.key}.desc`),
+    };
+}
 
 // Renders a human-friendly candidate description combining method +
 // value (e.g., "2.5 × ATR(1.0)", "0.5% fixed").

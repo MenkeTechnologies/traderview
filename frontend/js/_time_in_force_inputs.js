@@ -7,6 +7,8 @@
 // TIF enum: 'day' | 'gtc' | 'ioc' | 'fok' | 'gtd' (snake_case).
 // Returns: { action: 'keep' | 'cancel' | 'completed', reason: string }.
 
+import { t } from './i18n.js';
+
 export const TIF_KINDS = ['day', 'gtc', 'ioc', 'fok', 'gtd'];
 
 export function validateInputs(order, nowIso, sessionOpenIso) {
@@ -122,12 +124,18 @@ export function wholeDaysBetween(fromIso, toIso) {
 }
 
 const ACTION_BADGES = {
-    keep:      { label: 'KEEP',      cls: 'pos', hint: 'Order stays live.' },
-    cancel:    { label: 'CANCEL',    cls: 'neg', hint: 'TIF condition violated — cancel this order.' },
-    completed: { label: 'COMPLETED', cls: 'pos', hint: 'Fully filled.' },
+    keep:      { key: 'keep',      cls: 'pos' },
+    cancel:    { key: 'cancel',    cls: 'neg' },
+    completed: { key: 'completed', cls: 'pos' },
 };
 export function actionBadge(a) {
-    return ACTION_BADGES[a] || { label: String(a || '—').toUpperCase(), cls: '', hint: '—' };
+    const x = ACTION_BADGES[a];
+    if (!x) return { label: String(a || '—').toUpperCase(), cls: '', hint: '—' };
+    return {
+        label: t(`view.time_in_force.action.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.time_in_force.action.${x.key}.hint`),
+    };
 }
 
 // Demo presets — one per TIF verdict path so the user can step through
