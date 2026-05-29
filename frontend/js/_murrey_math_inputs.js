@@ -47,8 +47,8 @@ export function parseBarBlob(text) {
 }
 
 export function validateInputs(bars, lookback) {
-    if (!Array.isArray(bars) || bars.length === 0) return 'need at least 1 bar';
-    if (!Number.isInteger(lookback) || lookback < 1) return 'lookback_bars must be integer ≥ 1';
+    if (!Array.isArray(bars) || bars.length === 0) return t('view.murrey_math.validate.bars_empty');
+    if (!Number.isInteger(lookback) || lookback < 1) return t('view.murrey_math.validate.lookback');
     return null;
 }
 

@@ -7,6 +7,8 @@
 // Model: w_t = min(target_vol / forecast_vol_t, max_leverage)
 // Crash filter: if trailing-cumret over crash_lookback < threshold, w_t = 0.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     momentum_returns: [],
     vol_lookback: 60,
@@ -18,25 +20,25 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.momentum_returns))             return 'momentum_returns must be an array';
+    if (!Array.isArray(input.momentum_returns))             return t('view.momentum_crash.validate.returns_array');
     for (let i = 0; i < input.momentum_returns.length; i++) {
-        if (!Number.isFinite(input.momentum_returns[i]))    return `momentum_returns[${i}] not finite`;
+        if (!Number.isFinite(input.momentum_returns[i]))    return t('view.momentum_crash.validate.return_finite', { i });
     }
     if (!Number.isInteger(input.vol_lookback) || input.vol_lookback < 5)
-                                                              return 'vol_lookback must be integer ≥ 5';
+                                                              return t('view.momentum_crash.validate.vol_lookback');
     if (!Number.isFinite(input.target_annualized_vol) || input.target_annualized_vol <= 0)
-                                                              return 'target_annualized_vol must be > 0';
+                                                              return t('view.momentum_crash.validate.target_vol');
     if (!Number.isFinite(input.periods_per_year) || input.periods_per_year <= 0)
-                                                              return 'periods_per_year must be > 0';
+                                                              return t('view.momentum_crash.validate.periods_year');
     if (!Number.isFinite(input.max_leverage) || input.max_leverage <= 0)
-                                                              return 'max_leverage must be > 0';
+                                                              return t('view.momentum_crash.validate.max_leverage');
     if (!Number.isInteger(input.crash_filter_lookback) || input.crash_filter_lookback < 1)
-                                                              return 'crash_filter_lookback must be integer ≥ 1';
+                                                              return t('view.momentum_crash.validate.crash_lookback');
     if (!Number.isFinite(input.crash_filter_threshold_pct))
-                                                              return 'crash_filter_threshold_pct must be finite';
+                                                              return t('view.momentum_crash.validate.crash_threshold');
     const required = Math.max(input.vol_lookback, input.crash_filter_lookback) + 1;
     if (input.momentum_returns.length < required)
-                                                              return `need ≥ ${required} returns (max(vol_lookback, crash_lookback) + 1)`;
+                                                              return t('view.momentum_crash.validate.returns_min', { n: required });
     return null;
 }
 

@@ -8,6 +8,8 @@
 // Local mirror uses the same LCG (Lemire's bounded-rand) as Rust so the
 // JS pre-flight matches the backend bit-for-bit at a given seed.
 
+import { t as tr } from './i18n.js';
+
 export const DEFAULT_CONFIG = {
     n_curves: 1000,
     trades_per_curve: 100,
@@ -37,16 +39,16 @@ export function parseRBlob(text) {
 
 export function validateInputs(historical_r, cfg) {
     if (!Array.isArray(historical_r) || historical_r.length === 0)
-        return 'need ≥ 1 historical R sample';
-    if (historical_r.some(v => !Number.isFinite(v))) return 'all R values must be finite';
-    if (!Number.isInteger(cfg.n_curves) || cfg.n_curves < 1)         return 'n_curves must be integer ≥ 1';
+        return tr('view.monte_carlo.validate.r_empty');
+    if (historical_r.some(v => !Number.isFinite(v))) return tr('view.monte_carlo.validate.r_finite');
+    if (!Number.isInteger(cfg.n_curves) || cfg.n_curves < 1)         return tr('view.monte_carlo.validate.n_curves');
     if (!Number.isInteger(cfg.trades_per_curve) || cfg.trades_per_curve < 1)
-        return 'trades_per_curve must be integer ≥ 1';
-    if (!Number.isFinite(cfg.start_equity) || cfg.start_equity <= 0) return 'start_equity must be > 0';
+        return tr('view.monte_carlo.validate.trades_per_curve');
+    if (!Number.isFinite(cfg.start_equity) || cfg.start_equity <= 0) return tr('view.monte_carlo.validate.start_equity');
     if (!Number.isFinite(cfg.ruin_threshold) || cfg.ruin_threshold < 0)
-        return 'ruin_threshold must be ≥ 0';
-    if (cfg.n_curves > 50_000) return 'n_curves capped at 50000 (perf)';
-    if (cfg.trades_per_curve > 10_000) return 'trades_per_curve capped at 10000 (perf)';
+        return tr('view.monte_carlo.validate.ruin_threshold');
+    if (cfg.n_curves > 50_000) return tr('view.monte_carlo.validate.n_curves_cap');
+    if (cfg.trades_per_curve > 10_000) return tr('view.monte_carlo.validate.trades_cap');
     return null;
 }
 
