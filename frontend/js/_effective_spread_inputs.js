@@ -10,6 +10,8 @@
 // price_impact      = effective − realized          (adverse selection)
 // effective/quoted ratio: < 1 = price improvement, > 1 = trades-through
 
+import { t } from './i18n.js';
+
 export const DIRECTIONS = ['buy', 'sell'];
 
 export const DEFAULT_INPUTS = {
@@ -17,16 +19,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.observations))                            return 'observations must be an array';
-    if (input.observations.length === 0)                                return 'observations must be non-empty';
+    if (!Array.isArray(input.observations))                            return t('view.effective_spread.validate.obs_array');
+    if (input.observations.length === 0)                                return t('view.effective_spread.validate.obs_empty');
     for (let i = 0; i < input.observations.length; i++) {
         const o = input.observations[i];
-        if (!o || typeof o !== 'object')                               return `observations[${i}] must be an object`;
-        if (!DIRECTIONS.includes(o.direction))                         return `observations[${i}].direction must be 'buy' or 'sell'`;
-        if (!Number.isFinite(o.trade_price))                           return `observations[${i}].trade_price not finite`;
-        if (!Number.isFinite(o.current_mid))                           return `observations[${i}].current_mid not finite`;
-        if (!Number.isFinite(o.delayed_mid))                           return `observations[${i}].delayed_mid not finite`;
-        if (!Number.isFinite(o.quoted_spread))                         return `observations[${i}].quoted_spread not finite`;
+        if (!o || typeof o !== 'object')                               return t('view.effective_spread.validate.obs_object', { i });
+        if (!DIRECTIONS.includes(o.direction))                         return t('view.effective_spread.validate.direction', { i });
+        if (!Number.isFinite(o.trade_price))                           return t('view.effective_spread.validate.trade_finite', { i });
+        if (!Number.isFinite(o.current_mid))                           return t('view.effective_spread.validate.cur_mid_finite', { i });
+        if (!Number.isFinite(o.delayed_mid))                           return t('view.effective_spread.validate.del_mid_finite', { i });
+        if (!Number.isFinite(o.quoted_spread))                         return t('view.effective_spread.validate.spread_finite', { i });
     }
     return null;
 }

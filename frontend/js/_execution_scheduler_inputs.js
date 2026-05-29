@@ -13,6 +13,7 @@
 //            the full order.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse a 1-D volume curve from text. Negative volumes are rejected
  *  with line-anchored errors. */
@@ -23,19 +24,19 @@ export function parseVolumeCurve(text) {
 /** Validation: combined inputs check before sending. */
 export function validateExecInputs(totalOrder, volumeCurve, participationRate) {
     if (!Number.isFinite(totalOrder) || totalOrder <= 0) {
-        return 'total order size must be > 0';
+        return t('view.execution_scheduler.validate.total_order');
     }
     if (!Array.isArray(volumeCurve) || volumeCurve.length === 0) {
-        return 'volume curve must have at least one bar';
+        return t('view.execution_scheduler.validate.curve_empty');
     }
     if (volumeCurve.some(v => !Number.isFinite(v) || v < 0)) {
-        return 'volume curve contains invalid (negative / non-finite) values';
+        return t('view.execution_scheduler.validate.curve_invalid');
     }
     const sum = volumeCurve.reduce((a, b) => a + b, 0);
-    if (sum <= 0) return 'volume curve sums to 0 — at least one bar must have volume';
+    if (sum <= 0) return t('view.execution_scheduler.validate.curve_zero');
     if (!Number.isFinite(participationRate)
         || participationRate <= 0 || participationRate > 1) {
-        return 'participation rate must be in (0, 1]';
+        return t('view.execution_scheduler.validate.participation');
     }
     return null;
 }

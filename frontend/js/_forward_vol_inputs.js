@@ -7,6 +7,7 @@
 // "%" → divide by 100).
 
 import { parseIv } from './_vol_smile_inputs.js';
+import { t } from './i18n.js';
 
 // Tenor unit → years.
 const TENOR_UNITS = {
@@ -83,7 +84,7 @@ export function sortRowsByTenor(rows) {
 export function checkUniqueTenors(rows) {
     for (let i = 1; i < rows.length; i++) {
         if (rows[i].tenor_years <= rows[i - 1].tenor_years) {
-            return `tenors must be strictly increasing (line ${rows[i].line_no} repeats / regresses)`;
+            return t('view.forward_vol.validate.tenors_increasing', { line: rows[i].line_no });
         }
     }
     return null;
@@ -92,13 +93,13 @@ export function checkUniqueTenors(rows) {
 /** Standard validation gate. */
 export function validateTermStructure(rows) {
     if (!Array.isArray(rows) || rows.length < 2) {
-        return 'need at least 2 tenor/iv rows for a forward-vol bootstrap';
+        return t('view.forward_vol.validate.rows_min');
     }
     if (rows.some(r => !Number.isFinite(r.tenor_years) || r.tenor_years <= 0)) {
-        return 'all tenors must be > 0';
+        return t('view.forward_vol.validate.tenors_positive');
     }
     if (rows.some(r => !Number.isFinite(r.iv) || r.iv < 0)) {
-        return 'all IVs must be ≥ 0';
+        return t('view.forward_vol.validate.ivs_non_negative');
     }
     return null;
 }
