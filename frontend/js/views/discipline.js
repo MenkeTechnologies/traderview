@@ -51,9 +51,9 @@ function render(r, mount) {
         </div>
 
         <div class="cards">
-            ${scoreCard('This week (7d)',  r.weekly)}
-            ${scoreCard('This month (30d)', r.monthly)}
-            ${scoreCard('All time',         r.all_time)}
+            ${scoreCard(t('view.discipline.window.weekly'),  r.weekly)}
+            ${scoreCard(t('view.discipline.window.monthly'), r.monthly)}
+            ${scoreCard(t('view.discipline.window.all_time'), r.all_time)}
         </div>
 
         <div class="chart-panel">
