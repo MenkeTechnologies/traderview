@@ -1,0 +1,35 @@
+{
+  "app.title": "TraderView",
+  "app.brand": "TRADERVIEW",
+  "nav.home": "⌘ Inicio",
+  "nav.dashboard": "Tablero",
+  "nav.scanner": "Escáner",
+  "nav.toggle": "Alternar navegación",
+
+  "palette.title": "Paleta de comandos",
+  "palette.placeholder": "Escribe para filtrar vistas, escáneres, indicadores…",
+  "palette.empty": "Sin coincidencias",
+  "palette.hint.up_down": "↑↓ navegar",
+  "palette.hint.enter": "↵ abrir",
+  "palette.hint.esc": "esc cerrar",
+  "palette.section.tiles": "Vistas",
+  "palette.section.favorites": "Favoritos",
+  "palette.section.bookmarks": "Marcadores",
+
+  "shortcut.command_palette": "Abrir paleta de comandos",
+  "shortcut.help": "Abrir ayuda / tutorial",
+  "shortcut.escape": "Cerrar superposiciones",
+  "shortcut.focus_search": "Enfocar filtro",
+  "shortcut.reload": "Recargar datos",
+
+  "menu.app": "Aplicación",
+  "menu.view": "Vista",
+  "menu.help": "Ayuda",
+  "menu.view.command_palette": "Paleta de comandos…",
+  "menu.help.tutorial": "Tutorial",
+
+  "locale.en": "English",
+  "locale.es": "Español",
+  "locale.de": "Deutsch",
+  "locale.ja": "日本語"
+}

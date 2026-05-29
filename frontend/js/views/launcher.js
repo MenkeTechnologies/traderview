@@ -28,6 +28,7 @@ export const TILES = [
     ['plans',           'Pre-trade Plans', '🎯',  'Setups before fills — R:R, stop',  null],
     ['sizing',          'Position Size',   '🧮',  'Risk-based qty calculator',        null],
     ['optimal-f',       'Optimal-f',       '📐',  'Vince geometric-growth-optimal bet fraction', null],
+    ['kelly',           'Kelly Sizer',     '🪙',  'Static + dynamic (rolling) Kelly fraction — full / half / quarter', 'NEW'],
     ['hotkeys',         'Hotkeys',         '⌨️',  'Keyboard shortcuts editor',        null],
     ['risk-gate',       'Risk Gate',       '🛡',   'Pre-trade rules that block bad trades', null],
 
@@ -68,6 +69,7 @@ export const TILES = [
     ['portfolio-allocator', 'Portfolio Allocator', '⚖️', 'Min-Var · Max-Div · ERC weights side-by-side', null],
     ['cov-denoiser',    'Cov Denoiser',    '🧹',  'Marchenko-Pastur eigenvalue clipping', null],
     ['var-calculator',  'VaR Calculator',  '📉',  'HS · FHS · Cornish-Fisher comparison', null],
+    ['var-estimator',   'VaR vs Gaussian', '📊',  'Historical vs parametric-Gaussian VaR + Expected Shortfall on the same returns', 'NEW'],
     ['series-smoother', 'Series Smoother', '∿',   'LOWESS · Kalman · Theil-Sen · Polynomial overlay', null],
     ['pattern-discovery', 'Pattern Discovery', '🧩', 'Matrix Profile motif + discord finder', null],
     ['execution-scheduler', 'Execution Scheduler', '🪡', 'TWAP / VWAP / POV slice schedule', null],
@@ -188,12 +190,12 @@ export const TILES = [
     ['tutorial',        'Tutorial',        '❓',  'In-app guide (also `?` hotkey)',   null],
 ];
 
-const CATEGORIES = [
+export const CATEGORIES = [
     ['live',     '// LIVE MARKETS',     ['live-scanner','halts','catalysts','premarket','tape','heatmap']],
-    ['trading',  '// TRADING',          ['dashboards','webull','live','paper','new-trade','plans','sizing','optimal-f','risk-gate','hotkeys','pyramid','news-event','stop-loss-best-of','squeeze-alerts','alert-rules','daily-loss-limit','drawdown-throttle','goal-tracker','trade-plan-checklist','time-in-force']],
+    ['trading',  '// TRADING',          ['dashboards','webull','live','paper','new-trade','plans','sizing','optimal-f','kelly','risk-gate','hotkeys','pyramid','news-event','stop-loss-best-of','squeeze-alerts','alert-rules','daily-loss-limit','drawdown-throttle','goal-tracker','trade-plan-checklist','time-in-force']],
     ['journal',  '// JOURNAL',          ['journal','ai','reviews','trade-compare','replay','tape-replay','discipline','mood','goals','clusters-trade-features','setups-by-setup']],
     ['research', '// CHARTS & RESEARCH',['charts','research','watchlists','screener','scanners','top-signals','compare','pairs','correlation','sectors','sector-rotation','breadth','fear-greed','sentiment','cohort-tilt','darkpool','short-interest','vol','vol-surface','options','option-payoff','vol-smile','monte-carlo','series-smoother','pattern-discovery','regime-detector','regime-equity','american-option','fx-option','forward-vol','yield-curve-pca','dividend-calendar','signal-decomposition','rr-butterfly','microprice','dtw','hurst','bocpd','vasicek','kalman-beta','pair-trade-calc','iv-solver','iv-rank','iv-backtest','greeks-profile','second-order-greeks','vpin','cup-and-handle','order-book-imbalance','cusum','order-flow','footprint','stress-test','chandelier-stop','vol-stop-close','triple-screen','open-type','market-profile','oi-change','ha-reversal','three-bar-reversal','range-expansion','alligator','choppiness','demarker','murrey-math','demark-pivots','cypher-pattern','earnings-cal','earnings-iv','disclosures','economy','news','crypto']],
-    ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','tax-workshop','calendar','accounts-overview','portfolio-allocator','cov-denoiser','var-calculator','execution-scheduler','almgren-chriss','implementation-shortfall','deflated-sharpe','market-impact','liquidity','spread-tracker','intraday-heatmap','vwap-slippage','twap','per-symbol-slippage','order-staleness','clusters-correlation']],
+    ['reports',  '// REPORTS',          ['dashboard','reports','r-dist','forecast','fill-quality','risk','rebalance','tax-lots','expenses','tax-workshop','calendar','accounts-overview','portfolio-allocator','cov-denoiser','var-calculator','var-estimator','execution-scheduler','almgren-chriss','implementation-shortfall','deflated-sharpe','market-impact','liquidity','spread-tracker','intraday-heatmap','vwap-slippage','twap','per-symbol-slippage','order-staleness','clusters-correlation']],
     ['strategy', '// STRATEGY & AUTOMATION', ['backtest','backtest-presets','walk-forward','custom-indicators','strategy-alerts','alerts','webhooks']],
     ['community','// COMMUNITY',        ['shares','community','mentorship','boards']],
     ['admin',    '// ADMIN & DATA',     ['import','csv-wizard','exports','accounts','tags','search','settings','developer','tutorial']],

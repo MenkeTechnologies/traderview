@@ -1,0 +1,12 @@
+{
+  "name": "traderview",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Traderview — Rust backend + vanilla JS frontend",
+  "scripts": {
+    "test":         "pnpm --filter traderview-frontend test",
+    "test:vitest":  "pnpm --filter traderview-frontend test:vitest",
+    "test:node":    "pnpm --filter traderview-frontend test:node",
+    "test:watch":   "pnpm --filter traderview-frontend test:watch"
+  }
+}

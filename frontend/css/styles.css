@@ -1726,3 +1726,59 @@ kbd {
 .mi-fill-ok               { background: #39ff14; z-index: 2; }
 .mi-fill-bust             { background: #ff3860; z-index: 2; }
 .is-bar-value { font-family: ui-monospace, monospace; font-size: 11px; text-align: right; }
+
+/* ── Command Palette ──────────────────────────────────────────── */
+.palette-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex; justify-content: center; align-items: flex-start;
+    padding-top: 12vh;
+}
+.palette-card {
+    width: min(720px, 92vw); max-height: 70vh;
+    background: #0a0d12; border: 1px solid #1f2a36;
+    border-radius: 8px; overflow: hidden;
+    box-shadow: 0 14px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px #00e5ff33;
+    display: flex; flex-direction: column;
+}
+.palette-input {
+    width: 100%; box-sizing: border-box;
+    padding: 14px 16px; background: transparent;
+    color: #e6f1ff; font: 16px/1.4 'Share Tech Mono', ui-monospace, monospace;
+    border: none; border-bottom: 1px solid #1f2a36;
+    outline: none;
+}
+.palette-input::placeholder { color: #5a6b7a; }
+.palette-results { overflow-y: auto; }
+.palette-empty { padding: 24px; color: #5a6b7a; text-align: center; font-style: italic; }
+.palette-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    align-items: center; gap: 10px;
+    padding: 8px 16px; cursor: pointer;
+    color: #d7e3ee; border-left: 3px solid transparent;
+}
+.palette-row.active {
+    background: #00e5ff14; border-left-color: #00e5ff;
+}
+.palette-row:hover { background: #1f2a3680; }
+.palette-icon { font-size: 16px; text-align: center; }
+.palette-label { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+.palette-label mark { background: #ffd84a44; color: #ffd84a; padding: 0; }
+.palette-cat { font-size: 11px; color: #5a6b7a; }
+.palette-hint { font-size: 11px; color: #5a6b7a; max-width: 280px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-hints {
+    display: flex; gap: 16px; padding: 8px 16px;
+    border-top: 1px solid #1f2a36;
+    color: #5a6b7a; font-size: 11px;
+}
+
+/* ── Locale picker (topbar) ───────────────────────────────────── */
+.locale-picker {
+    background: #0a0d12; color: #d7e3ee;
+    border: 1px solid #1f2a36; border-radius: 4px;
+    padding: 4px 8px; font: 12px 'Share Tech Mono', ui-monospace, monospace;
+    margin-left: 8px;
+}
+.locale-picker:focus { outline: 1px solid #00e5ff; }

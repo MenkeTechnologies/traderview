@@ -117,6 +117,11 @@ import { renderClustersCorrelation } from './views/clusters_correlation.js';
 import { renderSetupsBySetup } from './views/setups_by_setup.js';
 import { renderCohortTilt } from './views/cohort_tilt.js';
 import { renderChoppiness } from './views/choppiness.js';
+import { renderVarEstimator } from './views/var_estimator.js';
+import { renderKelly } from './views/kelly.js';
+import { installShortcuts } from './shortcuts.js';
+import { installCommandPalette } from './command_palette.js';
+import { bootI18n, applyUiI18n } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
 import { renderEconomy } from './views/economy.js';
@@ -247,29 +252,27 @@ function bindTabs() {
     });
     window.addEventListener('hashchange', dispatch);
     bindNavToggle();
-    bindLauncherShortcut();
+    installShortcuts();
+    installCommandPalette();
     installSymbolHotkey();
-}
-
-function bindLauncherShortcut() {
-    document.addEventListener('keydown', (e) => {
-        // Cmd-K / Ctrl-K opens the launcher with focus in the filter input.
-        // Skip when the user is editing text — otherwise Cmd-K while writing
-        // a journal note or a symbol filter would jump them out mid-keystroke.
-        const tag = (e.target && e.target.tagName || '').toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-        if (e.target && e.target.isContentEditable) return;
-        if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
-            e.preventDefault();
-            window.location.hash = 'launcher';
-        }
-        // "?" anywhere outside an input opens the tutorial.
-        if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-            e.preventDefault();
-            window.location.hash = 'tutorial';
+    void bootI18n('en').then(() => {
+        applyUiI18n();
+        const picker = document.getElementById('locale-picker');
+        if (picker) {
+            const saved = (typeof localStorage !== 'undefined') ? localStorage.getItem('tv-locale-v1') : null;
+            if (saved) picker.value = saved;
+            picker.addEventListener('change', async (e) => {
+                const { loadLocale } = await import('./i18n.js');
+                await loadLocale(e.target.value);
+            });
         }
     });
+    // Bridge: hash-based help/tutorial action from the new registry.
+    window.addEventListener('tv:open-help', () => { window.location.hash = 'tutorial'; });
 }
+
+// Cmd+K + ? are now owned by ./shortcuts.js → tv:open-palette /
+// tv:open-help events. ./command_palette.js handles the overlay.
 
 function bindNavToggle() {
     const btn = document.getElementById('navToggle');
@@ -461,6 +464,8 @@ export async function dispatch() {
             case 'setups-by-setup':    await renderSetupsBySetup(mount, state); break;
             case 'cohort-tilt':        await renderCohortTilt(mount, state); break;
             case 'choppiness':         await renderChoppiness(mount, state); break;
+            case 'var-estimator':      await renderVarEstimator(mount, state); break;
+            case 'kelly':              await renderKelly(mount, state); break;
             case 'crypto':      await renderCrypto(mount, state); break;
             case 'backtest':    await renderBacktest(mount, state); break;
             case 'economy':     await renderEconomy(mount, state); break;
@@ -530,6 +535,8 @@ export async function dispatch() {
         mount.innerHTML = `<p class="boot">Error: ${e.message}</p>`;
         console.error(e);
     }
+    // Translate any `data-i18n*` attributes the view just emitted.
+    try { applyUiI18n(mount); } catch { /* i18n optional */ }
 }
 
 // View-renderer registry — exposed so the Dashboards view can mount any
@@ -582,6 +589,8 @@ export const viewRenderers = {
     'setups-by-setup':     (m, s) => renderSetupsBySetup(m, s),
     'cohort-tilt':         (m, s) => renderCohortTilt(m, s),
     'choppiness':          (m, s) => renderChoppiness(m, s),
+    'var-estimator':       (m, s) => renderVarEstimator(m, s),
+    'kelly':               (m, s) => renderKelly(m, s),
     'per-symbol-slippage': (m, s) => renderPerSymbolSlippage(m, s),
     'order-staleness':     (m, s) => renderOrderStaleness(m, s),
     // Options analytics.

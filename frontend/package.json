@@ -5,9 +5,13 @@
   "description": "Vanilla JS frontend for the traderview desktop + web apps",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && node --test tests/*.test.mjs",
+    "test:vitest": "vitest run",
+    "test:node": "node --test tests/*.test.mjs",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "i18n:extract": "node scripts/i18n_extract.mjs",
+    "i18n:diff":    "node scripts/i18n_extract.mjs --diff"
   },
   "devDependencies": {
     "vitest": "^2.1.0",

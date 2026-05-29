@@ -19,15 +19,16 @@
     <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
 
     <header class="topbar">
-        <div class="brand">TRADERVIEW</div>
+        <div class="brand" data-i18n="app.brand">TRADERVIEW</div>
         <button id="navToggle" class="nav-toggle" type="button"
-                aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+                aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle"
+                aria-controls="primary-nav" aria-expanded="false">
             <span class="nav-toggle-bars"><span></span></span>
         </button>
         <nav class="tabs" id="primary-nav">
-            <button class="tab active" data-view="launcher" title="All views (⌘K)">⌘ Home</button>
-            <button class="tab" data-view="dashboard">Dashboard</button>
-            <button class="tab" data-view="live-scanner">Scanner</button>
+            <button class="tab active" data-view="launcher" title="All views (⌘K)" data-i18n="nav.home">⌘ Home</button>
+            <button class="tab" data-view="dashboard" data-i18n="nav.dashboard">Dashboard</button>
+            <button class="tab" data-view="live-scanner" data-i18n="nav.scanner">Scanner</button>
             <button class="tab" data-view="halts">Halts</button>
             <button class="tab" data-view="catalysts">Catalysts</button>
             <button class="tab" data-view="webull">Webull</button>
@@ -38,6 +39,35 @@
             <button class="tab" data-view="settings">⚙️</button>
         </nav>
         <div class="account-strip" id="account-strip"></div>
+        <select id="locale-picker" class="locale-picker" aria-label="Locale">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="ja">日本語</option>
+            <option value="fr">Français</option>
+            <option value="zh">中文</option>
+            <option value="ko">한국어</option>
+            <option value="ru">Русский</option>
+            <option value="pt">Português</option>
+            <option value="it">Italiano</option>
+            <option value="nl">Nederlands</option>
+            <option value="pl">Polski</option>
+            <option value="tr">Türkçe</option>
+            <option value="sv">Svenska</option>
+            <option value="da">Dansk</option>
+            <option value="fi">Suomi</option>
+            <option value="cs">Čeština</option>
+            <option value="el">Ελληνικά</option>
+            <option value="hu">Magyar</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="hi">हिन्दी</option>
+            <option value="nb">Norsk</option>
+            <option value="ro">Română</option>
+            <option value="uk">Українська</option>
+            <option value="es_419">Español (LA)</option>
+            <option value="pt_br">Português (BR)</option>
+        </select>
         <div class="hud-toggles">
             <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
             <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
