@@ -172,9 +172,9 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bench %' },
-            { label: 'asset %', stroke: '#00e5ff', width: 0, points: { show: true, size: 4 } },
-            { label: `fit (α=${report.alpha.toFixed(5)}, β=${report.beta.toFixed(3)})`,
+            { label: t('view.beta.series.bench_pct') },
+            { label: t('view.beta.series.asset_pct'), stroke: '#00e5ff', width: 0, points: { show: true, size: 4 } },
+            { label: t('view.beta.series.fit', { alpha: report.alpha.toFixed(5), beta: report.beta.toFixed(3) }),
               stroke: '#ff3860', width: 1.5, points: { show: false } },
         ],
         axes: [

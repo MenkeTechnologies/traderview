@@ -158,9 +158,9 @@ function renderChart(series) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
-            { label: 'idx' },
-            { label: 'dev ($)',    stroke: '#00e5ff', width: 1.5, points: { show: true, size: 4 } },
-            { label: 'imbalance',  stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
+            { label: t('chart.series.idx') },
+            { label: t('view.weighted_midprice.series.dev'),       stroke: '#00e5ff', width: 1.5, points: { show: true, size: 4 } },
+            { label: t('view.weighted_midprice.series.imbalance'), stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
         ],
         axes: [
             { stroke: '#aab', size: 28 },
