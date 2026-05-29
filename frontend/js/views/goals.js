@@ -140,9 +140,11 @@ async function refresh(mount, tok) {
 }
 
 function paceChip(pace) {
-    const labels = { on_track: 'on track', exceeded: 'exceeded', falling_short: 'falling short', no_target: 'no target' };
+    const key = `view.goals.pace.${pace}`;
+    const v = t(key);
+    const label = v && v !== key ? v : pace;
     return `<span style="background:${PACE_COLOR[pace] || '#444'};color:#000;padding:1px 6px;border-radius:2px;font-size:10px;">
-        ${esc(labels[pace] || pace)}
+        ${esc(label)}
     </span>`;
 }
 
