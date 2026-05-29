@@ -129,7 +129,7 @@ async function compute(tok) {
     hideErr();
     const { value: equity, errors } = parseEquity(state.equityText);
     if (errors.length && equity.length === 0) {
-        showErr(`${errors.length} parse error(s) — fix the equity values first`);
+        showErr(t('view.drawdown_throttle.err.parse_errors', { n: errors.length }));
         return;
     }
     const err = validateInputs(equity, state.tiers);

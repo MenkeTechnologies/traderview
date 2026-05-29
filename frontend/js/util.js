@@ -1,5 +1,7 @@
 // Common UI helpers reused across views.
 
+import { t } from './i18n.js';
+
 export const fmt = (n, d = 2) => {
     if (n === null || n === undefined || n === '') return '—';
     const v = Number(n);
@@ -110,26 +112,26 @@ export function makeFilter(initial = {}, onApply) {
     const wrap = document.createElement('div');
     wrap.className = 'filter-bar';
     wrap.innerHTML = `
-        <input type="text"   name="symbol"      placeholder="symbol" value="${v.symbol}">
-        <select name="side"><option value="">side</option>
-            <option value="long" ${v.side === 'long' ? 'selected' : ''}>long</option>
-            <option value="short" ${v.side === 'short' ? 'selected' : ''}>short</option>
+        <input type="text"   name="symbol"      placeholder="${esc(t('filter.placeholder.symbol'))}" value="${v.symbol}">
+        <select name="side"><option value="">${esc(t('filter.opt.side'))}</option>
+            <option value="long" ${v.side === 'long' ? 'selected' : ''}>${esc(t('filter.opt.side.long'))}</option>
+            <option value="short" ${v.side === 'short' ? 'selected' : ''}>${esc(t('filter.opt.side.short'))}</option>
         </select>
-        <select name="status"><option value="">status</option>
-            <option value="open" ${v.status === 'open' ? 'selected' : ''}>open</option>
-            <option value="closed" ${v.status === 'closed' ? 'selected' : ''}>closed</option>
+        <select name="status"><option value="">${esc(t('filter.opt.status'))}</option>
+            <option value="open" ${v.status === 'open' ? 'selected' : ''}>${esc(t('filter.opt.status.open'))}</option>
+            <option value="closed" ${v.status === 'closed' ? 'selected' : ''}>${esc(t('filter.opt.status.closed'))}</option>
         </select>
-        <select name="asset_class"><option value="">asset</option>
-            <option value="stock" ${v.asset_class === 'stock' ? 'selected' : ''}>stock</option>
-            <option value="option" ${v.asset_class === 'option' ? 'selected' : ''}>option</option>
-            <option value="future" ${v.asset_class === 'future' ? 'selected' : ''}>future</option>
-            <option value="forex" ${v.asset_class === 'forex' ? 'selected' : ''}>forex</option>
+        <select name="asset_class"><option value="">${esc(t('filter.opt.asset'))}</option>
+            <option value="stock" ${v.asset_class === 'stock' ? 'selected' : ''}>${esc(t('filter.opt.asset.stock'))}</option>
+            <option value="option" ${v.asset_class === 'option' ? 'selected' : ''}>${esc(t('filter.opt.asset.option'))}</option>
+            <option value="future" ${v.asset_class === 'future' ? 'selected' : ''}>${esc(t('filter.opt.asset.future'))}</option>
+            <option value="forex" ${v.asset_class === 'forex' ? 'selected' : ''}>${esc(t('filter.opt.asset.forex'))}</option>
         </select>
         <input type="date" name="date_from" value="${v.date_from}">
         <input type="date" name="date_to" value="${v.date_to}">
-        <input type="number" step="any" name="min_pnl" placeholder="min P&amp;L" value="${v.min_pnl}">
-        <input type="number" step="any" name="max_pnl" placeholder="max P&amp;L" value="${v.max_pnl}">
-        <button type="button" class="primary">Apply</button>
+        <input type="number" step="any" name="min_pnl" placeholder="${esc(t('filter.placeholder.min_pnl'))}" value="${v.min_pnl}">
+        <input type="number" step="any" name="max_pnl" placeholder="${esc(t('filter.placeholder.max_pnl'))}" value="${v.max_pnl}">
+        <button type="button" class="primary">${esc(t('filter.btn.apply'))}</button>
     `;
     const collect = () => {
         const f = {};
