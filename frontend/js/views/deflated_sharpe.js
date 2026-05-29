@@ -130,7 +130,7 @@ async function computeSweep(tok) {
             trials.map(n => api.anlyDeflatedSharpe(buildBody({ ...state.params, n_trials: n }))),
         );
     } catch (e) {
-        showErr(`Trials sweep failed: ${e.message || e}`); return;
+        showErr(t('view.deflated_sharpe.error.sweep', { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     const points = results

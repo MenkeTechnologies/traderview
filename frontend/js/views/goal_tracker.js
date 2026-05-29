@@ -109,7 +109,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     if (state.parseErrors && state.parseErrors.length && state.params.equity.length === 0) {
-        showErr(`${state.parseErrors.length} parse error(s) in equity history — first: ${state.parseErrors[0].message}`);
+        showErr(t('view.goal_tracker.error.parse', { n: state.parseErrors.length, first: state.parseErrors[0].message }));
         return;
     }
     const err = validateInputs(state.params);
