@@ -163,8 +163,8 @@ function renderChart(report) {
         series: [
             { label: t('chart.series.lag') },
             { label: 'ρ̂(k)',  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
-            { label: '+band', stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: '−band', stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.plus_band'), stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.minus_band'), stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },
