@@ -7,6 +7,7 @@
 
 import { parseMatrix } from './_portfolio_allocator_inputs.js';
 import { parseLabelList } from './_portfolio_allocator_inputs.js';
+import { t } from './i18n.js';
 
 /** Parse a multiline yield-curve history. One row per date, columns =
  *  tenors. Delegates to the shared matrix parser. */
@@ -23,22 +24,22 @@ export function parseTenorLabels(text) {
 /** Validation gate. */
 export function validatePcaInputs(curves, topK) {
     if (!Array.isArray(curves) || curves.length < 5) {
-        return 'need at least 5 dated curves for a stable PCA';
+        return t('view.yield_curve_pca.validate.curves_min');
     }
     if (!Array.isArray(curves[0]) || curves[0].length < 2) {
-        return 'each curve must have at least 2 tenors';
+        return t('view.yield_curve_pca.validate.tenors_min');
     }
     const n = curves[0].length;
     for (let i = 0; i < curves.length; i++) {
         if (!Array.isArray(curves[i]) || curves[i].length !== n) {
-            return `row ${i + 1} has ${curves[i]?.length ?? 0} columns, expected ${n}`;
+            return t('view.yield_curve_pca.validate.row_cols', { row: i + 1, got: curves[i]?.length ?? 0, n });
         }
         if (curves[i].some(v => !Number.isFinite(v))) {
-            return `row ${i + 1} contains non-finite values`;
+            return t('view.yield_curve_pca.validate.row_finite', { row: i + 1 });
         }
     }
     if (!Number.isInteger(topK) || topK < 1 || topK > n) {
-        return `top_k must be an integer in [1, ${n}]`;
+        return t('view.yield_curve_pca.validate.top_k', { n });
     }
     return null;
 }

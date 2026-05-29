@@ -8,18 +8,20 @@
 // Stoikov microprice: bid_p · ask_size + ask_p · bid_size / total_size
 // — biased toward the side with LESS size (the side likely to fill first).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     quotes: [],
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.quotes))                                    return 'quotes must be an array';
-    if (input.quotes.length === 0)                                       return 'quotes must be non-empty';
+    if (!Array.isArray(input.quotes))                                    return t('view.weighted_midprice.validate.quotes_array');
+    if (input.quotes.length === 0)                                       return t('view.weighted_midprice.validate.quotes_empty');
     for (let i = 0; i < input.quotes.length; i++) {
         const q = input.quotes[i];
-        if (!q || typeof q !== 'object')                                 return `quotes[${i}] must be an object`;
+        if (!q || typeof q !== 'object')                                 return t('view.weighted_midprice.validate.quote_object', { i });
         for (const f of ['bid_price','bid_size','ask_price','ask_size']) {
-            if (!Number.isFinite(q[f]))                                  return `quotes[${i}].${f} not finite`;
+            if (!Number.isFinite(q[f]))                                  return t('view.weighted_midprice.validate.field_finite', { i, f });
         }
     }
     return null;

@@ -9,6 +9,8 @@
 //
 // Bidirectional ±30-day window. Boundary 30 days exactly = INSIDE.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 const WASH_WINDOW_DAYS = 30;
 
@@ -102,8 +104,8 @@ export function makeDeterministicUuid(n) {
 }
 
 export function validateInputs(closings, openings) {
-    if (!Array.isArray(closings)) return 'closings must be an array';
-    if (!Array.isArray(openings)) return 'openings must be an array';
+    if (!Array.isArray(closings)) return t('view.wash_sale.validate.closings_array');
+    if (!Array.isArray(openings)) return t('view.wash_sale.validate.openings_array');
     return null;
 }
 
