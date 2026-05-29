@@ -5,6 +5,8 @@
 // floor/Camarilla/Woodie/Fibonacci pivots in that the X-base formula
 // depends on close-vs-open direction, NOT (H+L+C)/3.
 
+import { t } from './i18n.js';
+
 export function validateInputs(p) {
     for (const k of ['open', 'high', 'low', 'close']) {
         if (!Number.isFinite(p[k]) || p[k] <= 0) return `${k} must be > 0`;
@@ -29,25 +31,25 @@ export function buildBody(p) {
 export function xBaseInfo(p) {
     if (p.close < p.open) {
         return {
-            label: 'BEARISH X — low-heavy',
+            label: t('view.demark_pivots.xbase.bearish.label'),
             cls: 'neg',
             formula: 'X = H + 2·L + C',
-            hint: 'prior session sold off; X weighted toward low → pivot biases down',
+            hint: t('view.demark_pivots.xbase.bearish.hint'),
         };
     }
     if (p.close > p.open) {
         return {
-            label: 'BULLISH X — high-heavy',
+            label: t('view.demark_pivots.xbase.bullish.label'),
             cls: 'pos',
             formula: 'X = 2·H + L + C',
-            hint: 'prior session rallied; X weighted toward high → pivot biases up',
+            hint: t('view.demark_pivots.xbase.bullish.hint'),
         };
     }
     return {
-        label: 'NEUTRAL X — close-heavy',
+        label: t('view.demark_pivots.xbase.neutral.label'),
         cls: '',
         formula: 'X = H + L + 2·C',
-        hint: 'doji close = open; X weighted toward close → pivot at center',
+        hint: t('view.demark_pivots.xbase.neutral.hint'),
     };
 }
 
@@ -65,14 +67,14 @@ export function computeX(p) {
 // the pivot system. Used for the "trade bias" hint.
 export function tradeBias(spotNow, levels) {
     if (!Number.isFinite(spotNow) || !levels) return { label: '—', cls: '', hint: '' };
-    if (spotNow >= levels.r1) return { label: 'ABOVE R1', cls: 'neg',
-        hint: 'breakout above DeMark resistance — momentum long or wait for retest' };
-    if (spotNow <= levels.s1) return { label: 'BELOW S1', cls: 'pos',
-        hint: 'breakdown below DeMark support — momentum short or wait for retest' };
-    if (spotNow >= levels.pivot) return { label: 'PIVOT → R1', cls: '',
-        hint: 'upper band — long bias targeting R1' };
-    return { label: 'S1 → PIVOT', cls: '',
-        hint: 'lower band — short bias targeting S1' };
+    if (spotNow >= levels.r1) return { label: t('view.demark_pivots.bias.above_r1.label'), cls: 'neg',
+        hint: t('view.demark_pivots.bias.above_r1.hint') };
+    if (spotNow <= levels.s1) return { label: t('view.demark_pivots.bias.below_s1.label'), cls: 'pos',
+        hint: t('view.demark_pivots.bias.below_s1.hint') };
+    if (spotNow >= levels.pivot) return { label: t('view.demark_pivots.bias.pivot_r1.label'), cls: '',
+        hint: t('view.demark_pivots.bias.pivot_r1.hint') };
+    return { label: t('view.demark_pivots.bias.s1_pivot.label'), cls: '',
+        hint: t('view.demark_pivots.bias.s1_pivot.hint') };
 }
 
 // 4 deterministic demo presets matching the X-base formula branches +

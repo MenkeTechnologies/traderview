@@ -5,6 +5,7 @@
 // symmetric); the view also displays signed for direction context.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 // Realized history can include sign (direction of post-event move).
 // Negative values are kept as-is — backend abs()'es them.
@@ -31,15 +32,15 @@ export function buildBody(implied, realized) {
 // the edge magnitude. Display badge + color + action hint.
 export function recommendationBadge(rec, edgePct) {
     const sign = Number.isFinite(edgePct) ? (edgePct >= 0 ? '+' : '') : '';
-    const edgeStr = Number.isFinite(edgePct) ? `${sign}${edgePct.toFixed(2)}% edge` : '';
+    const edgeStr = Number.isFinite(edgePct) ? t('view.iv_backtest.edge_fmt', { sign, pct: edgePct.toFixed(2) }) : '';
     switch (rec) {
-        case 'long':  return { label: `LONG straddle · ${edgeStr}`,  cls: 'pos',
-                                hint: 'implied is cheap vs historical realized — buy premium' };
-        case 'short': return { label: `SHORT straddle · ${edgeStr}`, cls: 'neg',
-                                hint: 'implied is rich vs historical realized — sell premium' };
+        case 'long':  return { label: t('view.iv_backtest.rec.long.label',    { edge: edgeStr }), cls: 'pos',
+                                hint: t('view.iv_backtest.rec.long.hint') };
+        case 'short': return { label: t('view.iv_backtest.rec.short.label',   { edge: edgeStr }), cls: 'neg',
+                                hint: t('view.iv_backtest.rec.short.hint') };
         case 'neutral':
-        default:      return { label: `NEUTRAL · ${edgeStr}`,        cls: '',
-                                hint: 'no clear edge — small position or sit out' };
+        default:      return { label: t('view.iv_backtest.rec.neutral.label', { edge: edgeStr }), cls: '',
+                                hint: t('view.iv_backtest.rec.neutral.hint') };
     }
 }
 
