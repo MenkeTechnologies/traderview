@@ -8,6 +8,8 @@
 
 export const DEFAULT_RISK_FREE = 0.0;
 export const DEFAULT_PERIODS_PER_YEAR = 252.0;
+import { t } from './i18n.js';
+
 export const MIN_OBS = 2;
 
 export const DEFAULT_INPUTS = {
@@ -17,14 +19,14 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.equity))                       return 'equity must be an array';
-    if (input.equity.length < MIN_OBS)                      return `need at least ${MIN_OBS} equity points`;
-    if (!Number.isFinite(input.risk_free_total))            return 'risk_free_total must be finite';
+    if (!Array.isArray(input.equity))                       return t('view.burke.validate.equity_array');
+    if (input.equity.length < MIN_OBS)                      return t('view.burke.validate.equity_min', { n: MIN_OBS });
+    if (!Number.isFinite(input.risk_free_total))            return t('view.burke.validate.rf_finite');
     if (!Number.isFinite(input.periods_per_year) || input.periods_per_year <= 0)
-                                                             return 'periods_per_year must be positive finite';
+                                                             return t('view.burke.validate.periods_pos');
     for (let i = 0; i < input.equity.length; i++) {
-        if (!Number.isFinite(input.equity[i]))              return `equity[${i}] not finite`;
-        if (input.equity[i] <= 0)                           return `equity[${i}] must be > 0`;
+        if (!Number.isFinite(input.equity[i]))              return t('view.burke.validate.equity_not_finite', { i });
+        if (input.equity[i] <= 0)                           return t('view.burke.validate.equity_pos', { i });
     }
     return null;
 }

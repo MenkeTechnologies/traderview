@@ -6,6 +6,8 @@
 //
 // > 1.5 → strong sell pressure; < 0.67 → strong buy pressure; ≈1 balanced.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 60;
 export const MIN_PERIOD = 2;
 export const MAX_PERIOD = 1000;
@@ -16,19 +18,19 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                      return 'bars must be an array';
-    if (!Number.isInteger(input.period))                 return 'period must be an integer';
+    if (!Array.isArray(input.bars))                      return t('view.bavr.validate.bars_array');
+    if (!Number.isInteger(input.period))                 return t('view.bavr.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                          return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.bars.length < input.period)                return `need at least period (${input.period}) bars`;
+                                                          return t('view.bavr.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.bars.length < input.period)                return t('view.bavr.validate.bars_min_period', { period: input.period });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.bavr.validate.bar_missing', { i });
         if (typeof b.bid_volume !== 'number' || typeof b.ask_volume !== 'number')
-                                                            return `bars[${i}] bid_volume / ask_volume must be numbers`;
+                                                            return t('view.bavr.validate.bar_vol_num', { i });
         if (!Number.isFinite(b.bid_volume) || !Number.isFinite(b.ask_volume))
-                                                            return `bars[${i}] not finite`;
-        if (b.bid_volume < 0 || b.ask_volume < 0)          return `bars[${i}] volumes must be ≥ 0`;
+                                                            return t('view.bavr.validate.bar_not_finite', { i });
+        if (b.bid_volume < 0 || b.ask_volume < 0)          return t('view.bavr.validate.bar_vol_non_neg', { i });
     }
     return null;
 }
