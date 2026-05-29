@@ -178,7 +178,7 @@ function renderChart(volumeCurve, pov, twap, vwap) {
     // line with point markers, which makes the per-bar peaks visible
     // without custom canvas painting.
     const series = [
-        { label: 'bar' },
+        { label: t('chart.series.bar') },
         // Reference: expected volume in muted grey.
         { label: 'volume', stroke: 'rgba(170,170,170,0.45)', width: 1,
           fill: 'rgba(170,170,170,0.05)' },

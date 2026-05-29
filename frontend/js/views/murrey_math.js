@@ -159,7 +159,7 @@ function renderChart(bars, r) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
-            { label: 'close', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             ...levelSeries,
         ],

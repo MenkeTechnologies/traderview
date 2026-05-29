@@ -188,7 +188,7 @@ function renderChart(bars, cand) {
 
     const series = [
         { label: t('chart.series.bar_num') },
-        { label: 'close', stroke: '#aab', width: 1.0,
+        { label: t('chart.series.close'), stroke: '#aab', width: 1.0,
           fill: '#aab1A', points: { show: false } },
     ];
     const data = [xs, closes];

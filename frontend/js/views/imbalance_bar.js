@@ -156,9 +156,9 @@ function renderChart(bars) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'imbalance', stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
-            { label: 'close',     stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
+            { label: t('chart.series.close'),     stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
         ],
         axes: [
             { stroke: '#aab', size: 28,

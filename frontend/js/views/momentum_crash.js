@@ -211,7 +211,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'leverage',    stroke: '#ffd84a', width: 1.5, points: { show: false } },
             { label: 'cum managed', stroke: '#00e5ff', width: 1.5, points: { show: false }, scale: 'y2' },
             { label: 'cum raw',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },

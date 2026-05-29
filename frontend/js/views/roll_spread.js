@@ -162,7 +162,7 @@ function renderChart(series) {
         title: '', width: el.clientWidth || 600, height: 300,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'spread', stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [

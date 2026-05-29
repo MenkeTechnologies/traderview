@@ -175,8 +175,8 @@ function renderChart(report) {
         series: [
             { label: 'cum width' },
             { label: 'mid',  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
-            { label: 'high', stroke: '#3ad96b', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: 'low',  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.high'), stroke: '#3ad96b', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.low'),  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

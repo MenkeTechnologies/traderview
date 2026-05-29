@@ -156,7 +156,7 @@ function renderChart() {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'r_t²',          stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
             { label: '|r_t|·|r_{t-1}|', stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],

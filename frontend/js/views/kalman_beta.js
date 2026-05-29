@@ -221,7 +221,7 @@ function renderReturnsChart(asset, bench) {
         title: '', width: el.clientWidth || 800, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'asset', stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: 'bench', stroke: '#ff9f1a', width: 1.5, points: { show: false } },
         ],
@@ -240,7 +240,7 @@ function renderBetaChart(betas) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'β (Kalman)', stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.08)', points: { show: false } },
             { label: 'β = 1 reference', stroke: '#ff9f1a', width: 1,

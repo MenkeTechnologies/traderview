@@ -206,7 +206,7 @@ function renderChart(returns, probState1) {
             prob: { auto: false, range: [0, 1] },
         },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'return', stroke: 'rgba(170,170,170,0.7)', width: 1,
               points: { show: false }, scale: 'y' },
             { label: 'P(state 1)', stroke: '#ff3860', width: 2,

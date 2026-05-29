@@ -179,7 +179,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: { auto: true } },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'width %', stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: 'squeeze', stroke: '#ffd84a', width: 0,   points: { show: true, size: 6 } },
         ],

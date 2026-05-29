@@ -155,7 +155,7 @@ function renderChart(series) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: { auto: true } },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'amihud',
               stroke: '#00e5ff',
               width: 1.5,

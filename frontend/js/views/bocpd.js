@@ -181,7 +181,7 @@ function renderCpChart(returns, res) {
             prob: { auto: false, range: [0, 1] },
         },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'return',       stroke: 'rgba(170,170,170,0.7)', width: 1,
               points: { show: false }, scale: 'ret' },
             { label: 'P(change pt)', stroke: '#ff3860', width: 2,
@@ -207,7 +207,7 @@ function renderRlChart(res) {
         title: '', width: el.clientWidth || 800, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'expected run length', stroke: '#00e5ff', width: 1.5,
               fill: 'rgba(0,229,255,0.08)', points: { show: false } },
         ],

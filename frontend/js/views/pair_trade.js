@@ -224,7 +224,7 @@ function renderPriceChart(y, x, beta) {
         title: '', width: el.clientWidth || 800, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'y',   stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: 'β·x', stroke: '#ff9f1a', width: 1.5, points: { show: false } },
         ],
@@ -245,7 +245,7 @@ function renderZChart(zs) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar' },
+            { label: t('chart.series.bar') },
             { label: 'z',        stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.06)', points: { show: false } },
             { label: '+entry',   stroke: '#ff9f1a', width: 1, dash: [4, 4], points: { show: false } },
