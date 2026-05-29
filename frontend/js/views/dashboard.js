@@ -142,6 +142,6 @@ function renderMiniCalendar(el, cells) {
             ? `rgba(35, 209, 96, ${0.15 + intensity * 0.7})`
             : `rgba(255, 56, 96, ${0.15 + intensity * 0.7})`;
         return `<div class="cal-cell" style="background:${color}"
-            title="${c.day} · ${fmtMoney(v)} · ${c.trades} trades"></div>`;
+            title="${esc(t('view.dashboard.cal.tooltip', { day: c.day, pnl: fmtMoney(v), n: c.trades }))}"></div>`;
     }).join('');
 }

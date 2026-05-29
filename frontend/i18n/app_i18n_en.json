@@ -8369,6 +8369,7 @@
   "view.tape_replay.ref.exit":        "exit",
   "view.tape_replay.ref.stop":        "stop",
   "view.tape_replay.ref.target":      "target",
+  "view.dashboard.cal.tooltip":       "{day} · {pnl} · {n} trades",
   "view.charts.error.generic":                  "Error: {err}",
   "view.monte_carlo.empty.stdev_zero":           "stdev was zero — distribution is a point mass.",
   "view.research.empty.no_quote":                "no quote",
