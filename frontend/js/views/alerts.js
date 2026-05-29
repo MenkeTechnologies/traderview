@@ -18,11 +18,11 @@ export async function renderAlerts(mount) {
     const rules = await api.alerts();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// ALERTS</h1>
-        <p class="muted small">Audio + voice alerts on price / % / volume / signal triggers. Polls every 60s.</p>
+        <h1 data-i18n="view.alerts.h1.alerts" class="view-title">// ALERTS</h1>
+        <p data-i18n="view.alerts.hint.audio_voice_alerts_on_price_volume_signal_triggers" class="muted small">Audio + voice alerts on price / % / volume / signal triggers. Polls every 60s.</p>
 
         <div class="chart-panel">
-            <h2>New alert</h2>
+            <h2 data-i18n="view.alerts.h2.new_alert">New alert</h2>
             <form id="alert-form" class="inline-form">
                 <input name="symbol" placeholder="symbol" required style="text-transform:uppercase">
                 <select name="trigger">
@@ -33,17 +33,17 @@ export async function renderAlerts(mount) {
                     ${SOUNDS.map(s => `<option value="${s}">${s}</option>`).join('')}
                 </select>
                 <input name="voice_text" placeholder="voice message (optional)">
-                <button class="primary" type="submit">Create</button>
-                <button type="button" class="link" id="test-bell">test bell</button>
-                <button type="button" class="link" id="test-voice">test voice</button>
+                <button data-i18n="view.alerts.btn.create" class="primary" type="submit">Create</button>
+                <button data-i18n="view.alerts.btn.test_bell" type="button" class="link" id="test-bell">test bell</button>
+                <button data-i18n="view.alerts.btn.test_voice" type="button" class="link" id="test-voice">test voice</button>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>Active rules</h2>
+            <h2 data-i18n="view.alerts.h2.active_rules">Active rules</h2>
             ${rules.length ? `<table class="trades">
-                <thead><tr><th>Symbol</th><th>Trigger</th><th>Threshold</th>
-                    <th>Sound</th><th>Voice</th><th>Last fired</th><th>Count</th><th></th></tr></thead>
+                <thead><tr><th data-i18n="view.alerts.th.symbol">Symbol</th><th data-i18n="view.alerts.th.trigger">Trigger</th><th data-i18n="view.alerts.th.threshold">Threshold</th>
+                    <th data-i18n="view.alerts.th.sound">Sound</th><th data-i18n="view.alerts.th.voice">Voice</th><th data-i18n="view.alerts.th.last_fired">Last fired</th><th data-i18n="view.alerts.th.count">Count</th><th></th></tr></thead>
                 <tbody>${rules.map(r => `
                     <tr>
                         <td>${esc(r.symbol)}</td>
@@ -57,9 +57,9 @@ export async function renderAlerts(mount) {
                             <button class="link" data-tog="${r.id}" data-en="${r.enabled}">
                                 ${r.enabled ? 'disable' : 'enable'}
                             </button>
-                            <button class="link" data-del="${r.id}">delete</button>
+                            <button data-i18n="view.alerts.btn.delete" class="link" data-del="${r.id}">delete</button>
                         </td>
-                    </tr>`).join('')}</tbody></table>` : '<p class="muted">No alert rules yet.</p>'}
+                    </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.alerts.hint.no_alert_rules_yet" class="muted">No alert rules yet.</p>'}
         </div>
     `;
     mount.querySelector('#alert-form').addEventListener('submit', async (e) => {

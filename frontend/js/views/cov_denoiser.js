@@ -18,6 +18,7 @@ import {
     frobeniusRelDelta,
 } from '../_cov_denoiser_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_COV = `# Sample covariance matrix (symmetric, N×N). Whitespace or comma
 # separator. # comments OK.
 # Demo: 8 assets with one strong factor + small idiosyncratic noise.
@@ -40,18 +41,18 @@ export async function renderCovDenoiser(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// COV DENOISER (M-P)</h1>
+        <h1 data-i18n="view.cov_denoiser.h1.cov_denoiser_m_p" class="view-title">// COV DENOISER (M-P)</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.cov_denoiser.h2.inputs">Inputs</h2>
             <textarea id="cd-cov" rows="11"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.covText)}</textarea>
             <div class="inline-form" style="margin-top:8px">
-                <label>T (observations used to estimate the cov)
+                <label><span data-i18n="view.cov_denoiser.label.t">T (observations used to estimate the cov)</span>
                     <input id="cd-t" type="number" step="1" min="1" value="${state.numObservations}"></label>
-                <button id="cd-run" class="primary" type="button">Denoise</button>
+                <button data-i18n="view.cov_denoiser.btn.denoise" id="cd-run" class="primary" type="button">Denoise</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.cov_denoiser.hint.marchenko_pastur_clipping_eigenvalues_inside_the_n" class="muted">
                 Marchenko-Pastur clipping: eigenvalues inside the noise bulk are flattened
                 to their average; only signal eigenvalues survive. Trace is preserved.
                 Pipe the cleaned cov into the Portfolio Allocator for more robust weights
@@ -64,9 +65,9 @@ export async function renderCovDenoiser(mount, _appState) {
         <div id="cd-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Eigenvalue spectrum</h2>
+            <h2 data-i18n="view.cov_denoiser.h2.eigenvalue_spectrum">Eigenvalue spectrum</h2>
             <div id="cd-eigen-chart" style="width:100%;height:280px"></div>
-            <p class="muted">
+            <p data-i18n="view.cov_denoiser.hint.cyan_markers_original_sample_eigenvalues_sorted_de" class="muted">
                 Cyan markers = original sample eigenvalues (sorted descending).
                 Red dashed line = λ_max bulk threshold. Anything above the line is
                 "signal" (preserved); anything at or below is "noise" (replaced by the
@@ -75,7 +76,7 @@ export async function renderCovDenoiser(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Cleaned covariance</h2>
+            <h2 data-i18n="view.cov_denoiser.h2.cleaned_covariance">Cleaned covariance</h2>
             <div id="cd-cleaned"></div>
         </div>
 
@@ -120,14 +121,14 @@ function renderSummary(originalCov, res) {
     const q = n / state.numObservations;
     const relDelta = frobeniusRelDelta(originalCov, res.cleaned_covariance);
     const cards = [];
-    cards.push(card('Matrix size N', String(n)));
-    cards.push(card('Observations T', String(state.numObservations)));
-    cards.push(card('q = N / T', q.toFixed(3)));
-    cards.push(card('Signal eigenvalues', String(res.signal_count), res.signal_count > 0 ? 'pos' : ''));
-    cards.push(card('Bulk (replaced)', String(res.bulk_count)));
-    cards.push(card('λ_max threshold', res.lambda_max.toFixed(6)));
-    cards.push(card('Bulk eigenvalue avg', res.bulk_eigenvalue_avg.toFixed(6)));
-    cards.push(card('Frobenius rel Δ',
+    cards.push(card(t('view.cov_denoiser.card.matrix_size_n'), String(n)));
+    cards.push(card(t('view.cov_denoiser.card.observations_t'), String(state.numObservations)));
+    cards.push(card(t('view.cov_denoiser.card.q_n_t'), q.toFixed(3)));
+    cards.push(card(t('view.cov_denoiser.card.signal_eigenvalues'), String(res.signal_count), res.signal_count > 0 ? 'pos' : ''));
+    cards.push(card(t('view.cov_denoiser.card.bulk_replaced'), String(res.bulk_count)));
+    cards.push(card(t('view.cov_denoiser.card.max_threshold'), res.lambda_max.toFixed(6)));
+    cards.push(card(t('view.cov_denoiser.card.bulk_eigenvalue_avg'), res.bulk_eigenvalue_avg.toFixed(6)));
+    cards.push(card(t('view.cov_denoiser.card.frobenius_rel'),
         relDelta == null ? '—' : (relDelta * 100).toFixed(2) + '%'));
     document.getElementById('cd-summary').innerHTML = cards.join('');
 }

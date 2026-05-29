@@ -17,6 +17,7 @@ import {
     MODELS, validateValues, defaultValues, normalDensityCurve,
 } from '../_monte_carlo_models.js';
 
+import { t } from '../i18n.js';
 let state = {
     modelId: 'gbm',
     values: defaultValues('gbm'),
@@ -27,33 +28,33 @@ export async function renderMonteCarlo(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// MONTE CARLO</h1>
+        <h1 data-i18n="view.monte_carlo.h1.monte_carlo" class="view-title">// MONTE CARLO</h1>
 
         <div class="chart-panel">
-            <h2>Model</h2>
+            <h2 data-i18n="view.monte_carlo.h2.model">Model</h2>
             <div class="inline-form">
-                <label>Stochastic model
+                <label><span data-i18n="view.monte_carlo.label.model">Stochastic model</span>
                     <select id="mc-model">
                         ${Object.entries(MODELS).map(([id, m]) =>
                             `<option value="${id}" ${id === state.modelId ? 'selected' : ''}>${esc(m.label)}</option>`
                         ).join('')}
                     </select>
                 </label>
-                <button id="mc-run" class="primary" type="button">Run</button>
+                <button data-i18n="view.monte_carlo.btn.run" id="mc-run" class="primary" type="button">Run</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Parameters</h2>
+            <h2 data-i18n="view.monte_carlo.h2.parameters">Parameters</h2>
             <div id="mc-params" class="inline-form"></div>
         </div>
 
         <div id="mc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2 id="mc-chart-title">Terminal-price distribution (normal approximation)</h2>
+            <h2 data-i18n="view.monte_carlo.h2.terminal_price_distribution_normal_approximation" id="mc-chart-title">Terminal-price distribution (normal approximation)</h2>
             <div id="mc-chart" style="width:100%;height:340px"></div>
-            <p class="muted" id="mc-chart-caption">
+            <p data-i18n="view.monte_carlo.hint.density_curve_is_a_normal_approximation_around_mea" class="muted" id="mc-chart-caption">
                 Density curve is a normal approximation around (mean, stdev). For jump
                 models the real distribution is skewed and fat-tailed — use the reported
                 skew to gauge how misleading the normal is.
@@ -122,7 +123,7 @@ async function runSim(mount, tok) {
     if (!viewIsCurrent(tok)) return;
 
     const stats = model.extractTerminalStats(res);
-    if (!stats) { showErr('simulator returned unexpected shape'); return; }
+    if (!stats) { showErr(t('view.monte_carlo.err.simulator_returned_unexpected_shape')); return; }
     state.lastStats = stats;
     renderSummary(stats);
     renderChart(stats);
@@ -130,13 +131,13 @@ async function runSim(mount, tok) {
 
 function renderSummary(stats) {
     const cards = [];
-    cards.push(card('Mean (terminal)', formatN(stats.mean, 4)));
-    cards.push(card('Stdev (terminal)', formatN(stats.stdev, 4)));
-    if (Number.isFinite(stats.min)) cards.push(card('Min', formatN(stats.min, 4)));
-    if (Number.isFinite(stats.max)) cards.push(card('Max', formatN(stats.max, 4)));
+    cards.push(card(t('view.monte_carlo.card.mean_terminal'), formatN(stats.mean, 4)));
+    cards.push(card(t('view.monte_carlo.card.stdev_terminal'), formatN(stats.stdev, 4)));
+    if (Number.isFinite(stats.min)) cards.push(card(t('view.monte_carlo.card.min'), formatN(stats.min, 4)));
+    if (Number.isFinite(stats.max)) cards.push(card(t('view.monte_carlo.card.max'), formatN(stats.max, 4)));
     if (Number.isFinite(stats.skew)) {
         const cls = stats.skew < 0 ? 'neg' : 'pos';
-        cards.push(card('Skew (log-return)', formatN(stats.skew, 4), cls));
+        cards.push(card(t('view.monte_carlo.card.skew_log_return'), formatN(stats.skew, 4), cls));
     }
     if (stats.extra) {
         for (const [label, value] of Object.entries(stats.extra)) {
@@ -144,7 +145,7 @@ function renderSummary(stats) {
         }
     }
     if (Number.isFinite(stats.paths_run)) {
-        cards.push(card('Paths run', String(stats.paths_run)));
+        cards.push(card(t('view.monte_carlo.card.paths_run'), String(stats.paths_run)));
     }
     document.getElementById('mc-summary').innerHTML = cards.join('');
 }

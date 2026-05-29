@@ -5,10 +5,13 @@
 import { TILES, CATEGORIES } from './views/launcher.js';
 import { loadState } from './_favorites_storage.js';
 import {
-    buildTileItems, buildFavoriteItems, buildBookmarkItems,
+    buildTileItems, buildFavoriteItems, buildBookmarkItems, buildActionItems,
     categoriesByViewId, tilesByViewId,
     filterAndRank, highlightLabel, moveSelection,
 } from './_command_palette_inputs.js';
+import { listShortcuts } from './shortcuts.js';
+import { formatKey } from './_shortcuts.js';
+import { loadState as loadRecents, listRecents, buildRecentItems } from './_recents_storage.js';
 import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
 
@@ -100,11 +103,18 @@ function renderRow(item, i) {
     const segs = highlightLabel(item.label, _query)
         .map(s => s.hit ? `<mark>${esc(s.ch)}</mark>` : esc(s.ch)).join('');
     const cat = item.category ? `<span class="palette-cat">${esc(item.category)}</span>` : '';
+    // Action rows put the chip in <kbd> for visual hierarchy; view rows
+    // keep the description in <span class="palette-hint">.
+    const hintHtml = item.hint
+        ? (item.kind === 'action'
+            ? `<kbd class="palette-kbd">${esc(item.hint)}</kbd>`
+            : `<span class="palette-hint">${esc(item.hint)}</span>`)
+        : '';
     return `<div class="palette-row" data-idx="${i}" data-view="${esc(item.viewId)}">
         <span class="palette-icon">${esc(item.icon || '·')}</span>
         <span class="palette-label">${segs}</span>
         ${cat}
-        ${item.hint ? `<span class="palette-hint">${esc(item.hint)}</span>` : ''}
+        ${hintHtml}
     </div>`;
 }
 
@@ -146,8 +156,13 @@ function onRowClick(e) {
 }
 
 function activate(it) {
-    if (!it || !it.viewId) return;
+    if (!it) return;
     close();
+    if (it.kind === 'action' && it.actionKey) {
+        window.dispatchEvent(new CustomEvent(it.actionKey, { detail: { source: 'palette', item: it } }));
+        return;
+    }
+    if (!it.viewId) return;
     if (it.viewId !== window.location.hash.replace(/^#/, '').split('?')[0]) {
         window.location.hash = it.viewId;
     } else {
@@ -166,5 +181,13 @@ function buildAllItems() {
         favs = buildFavoriteItems(fav.favorites || [], byVid);
         bms  = buildBookmarkItems(fav.bookmarks || [], byVid);
     } catch { /* favorites module unavailable; fine */ }
-    return [...favs, ...bms, ...tileItems];
+    let recents = [];
+    try {
+        const r = loadRecents();
+        const currentView = (window.location.hash || '').replace(/^#/, '').split('/')[0];
+        recents = buildRecentItems(listRecents(r, currentView), byVid);
+    } catch { /* recents module unavailable; fine */ }
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+    const actions = buildActionItems(listShortcuts(), t, (sc) => formatKey(sc, isMac));
+    return [...recents, ...favs, ...bms, ...actions, ...tileItems];
 }

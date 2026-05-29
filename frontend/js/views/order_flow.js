@@ -14,23 +14,24 @@ import {
     fmtN, fmtImbalance,
 } from '../_order_flow_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { tickText: '' };
 
 export async function renderOrderFlow(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ORDER FLOW · AGGRESSOR CLASSIFICATION</h1>
+        <h1 data-i18n="view.order_flow.h1.order_flow_aggressor_classification" class="view-title">// ORDER FLOW · AGGRESSOR CLASSIFICATION</h1>
 
         <div class="chart-panel">
-            <h2>Tick stream</h2>
+            <h2 data-i18n="view.order_flow.h2.tick_stream">Tick stream</h2>
             <p class="muted">Paste <code>price volume bid ask</code> per line. Trades at
                 ask = BUY, at bid = SELL, mid-spread falls back to tick rule (vs prior price).
                 Demo loads 400 ticks with engineered net-buy pressure.</p>
             <textarea id="of-ticks" rows="8" placeholder="100.05 250 100.04 100.05&#10;100.04 1200 100.04 100.05&#10;..."></textarea>
             <div class="inline-form">
-                <button id="of-demo" class="secondary" type="button">Load demo (400 ticks, buy pressure)</button>
-                <button id="of-clear" class="secondary" type="button">Clear</button>
-                <button id="of-run" class="primary" type="button">Classify</button>
+                <button data-i18n="view.order_flow.btn.load_demo_400_ticks_buy_pressure" id="of-demo" class="secondary" type="button">Load demo (400 ticks, buy pressure)</button>
+                <button data-i18n="view.order_flow.btn.clear" id="of-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_flow.btn.classify" id="of-run" class="primary" type="button">Classify</button>
             </div>
         </div>
 
@@ -38,16 +39,16 @@ export async function renderOrderFlow(mount, _appState) {
         <div id="of-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Imbalance gauge</h2>
+            <h2 data-i18n="view.order_flow.h2.imbalance_gauge">Imbalance gauge</h2>
             <div id="of-gauge"></div>
-            <p class="muted">(buy − sell) / (buy + sell). Cyan = aggressive buying,
+            <p data-i18n="view.order_flow.hint.buy_sell_buy_sell_cyan_aggressive_buying_red_insti" class="muted">(buy − sell) / (buy + sell). Cyan = aggressive buying,
                 red = institutional dumping. Excludes uncertain volume.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Cumulative flow</h2>
+            <h2 data-i18n="view.order_flow.h2.cumulative_flow">Cumulative flow</h2>
             <div id="of-chart" style="height:260px"></div>
-            <p class="muted">Cyan = cumulative aggressive-buy volume. Magenta (drawn
+            <p data-i18n="view.order_flow.hint.cyan_cumulative_aggressive_buy_volume_magenta_draw" class="muted">Cyan = cumulative aggressive-buy volume. Magenta (drawn
                 negative for visual contrast) = cumulative sell. Yellow = net (buy − sell).
                 Smooth-rising net = sustained accumulation. Steep drop = distribution.</p>
         </div>
@@ -110,14 +111,14 @@ function renderSummary(report, classified) {
     const sellTicks = (classified || []).filter(c => c.side === 'sell').length;
     const uncTicks  = (classified || []).filter(c => c.side === 'uncertain').length;
     document.getElementById('of-summary').innerHTML = [
-        card('Total ticks',     String((classified || []).length)),
-        card('Buy ticks',       String(buyTicks), buyTicks ? 'pos' : ''),
-        card('Sell ticks',      String(sellTicks), sellTicks ? 'neg' : ''),
-        card('Uncertain ticks', String(uncTicks)),
-        card('Buy volume',      fmtN(report.buy_volume),       'pos'),
-        card('Sell volume',     fmtN(report.sell_volume),      'neg'),
-        card('Net volume',      fmtN(report.net_volume),       report.net_volume >= 0 ? 'pos' : 'neg'),
-        card('Imbalance ratio', fmtImbalance(report.imbalance_ratio),
+        card(t('view.order_flow.card.total_ticks'),     String((classified || []).length)),
+        card(t('view.order_flow.card.buy_ticks'),       String(buyTicks), buyTicks ? 'pos' : ''),
+        card(t('view.order_flow.card.sell_ticks'),      String(sellTicks), sellTicks ? 'neg' : ''),
+        card(t('view.order_flow.card.uncertain_ticks'), String(uncTicks)),
+        card(t('view.order_flow.card.buy_volume'),      fmtN(report.buy_volume),       'pos'),
+        card(t('view.order_flow.card.sell_volume'),     fmtN(report.sell_volume),      'neg'),
+        card(t('view.order_flow.card.net_volume'),      fmtN(report.net_volume),       report.net_volume >= 0 ? 'pos' : 'neg'),
+        card(t('view.order_flow.card.imbalance_ratio'), fmtImbalance(report.imbalance_ratio),
             report.imbalance_ratio > 0.1 ? 'pos'
                 : report.imbalance_ratio < -0.1 ? 'neg' : ''),
     ].join('');

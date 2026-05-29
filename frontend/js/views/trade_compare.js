@@ -12,7 +12,7 @@ let selectedIds = [];
 export async function renderTradeCompare(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.trade_compare.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// TRADE COMPARISON — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Pick 2-4 closed trades from the picker. The right pane shows
@@ -23,11 +23,11 @@ export async function renderTradeCompare(mount, state) {
 
         <div style="display:grid;grid-template-columns:340px 1fr;gap:10px;">
             <div class="chart-panel">
-                <h2>Picker</h2>
+                <h2 data-i18n="view.trade_compare.h2.picker">Picker</h2>
                 <input id="tc-search" placeholder="filter by symbol…" style="width:100%;margin-bottom:8px;">
                 <div id="tc-picker" style="max-height:500px;overflow:auto;"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
             </div>
-            <div id="tc-result"><p class="muted small">Select 2-4 trades from the picker.</p></div>
+            <div id="tc-result"><p data-i18n="view.trade_compare.hint.select_2_4_trades_from_the_picker" class="muted small">Select 2-4 trades from the picker.</p></div>
         </div>
     `;
     try {
@@ -50,7 +50,7 @@ export async function renderTradeCompare(mount, state) {
 function renderPicker(trades, mount, tok) {
     const el = mount.querySelector('#tc-picker');
     if (!el) return;
-    if (!trades.length) { el.innerHTML = '<p class="muted small">no closed trades</p>'; return; }
+    if (!trades.length) { el.innerHTML = '<p data-i18n="view.trade_compare.hint.no_closed_trades" class="muted small">no closed trades</p>'; return; }
     el.innerHTML = trades.map(t => {
         const sel = selectedIds.includes(t.id);
         const cls = (t.net_pnl ?? 0) >= 0 ? 'pos' : 'neg';
@@ -82,7 +82,7 @@ function renderPicker(trades, mount, tok) {
             if (selectedIds.length >= 2) await runCompare(mount, tok);
             else {
                 const r = mount.querySelector('#tc-result');
-                if (r) r.innerHTML = '<p class="muted small">Select at least 2 trades.</p>';
+                if (r) r.innerHTML = '<p data-i18n="view.trade_compare.hint.select_at_least_2_trades" class="muted small">Select at least 2 trades.</p>';
             }
         });
     });
@@ -108,11 +108,11 @@ function render(r, out) {
     if (r.rows.length < 2) { out.innerHTML = `<p class="boot">Got ${r.rows.length} resolvable trades — need ≥ 2.</p>`; return; }
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>Normalized P/L overlay (% return vs entry)</h2>
+            <h2 data-i18n="view.trade_compare.h2.normalized_p_l_overlay_return_vs_entry">Normalized P/L overlay (% return vs entry)</h2>
             ${overlaySvg(r.rows)}
         </div>
         <div class="chart-panel">
-            <h2>Side-by-side stats</h2>
+            <h2 data-i18n="view.trade_compare.h2.side_by_side_stats">Side-by-side stats</h2>
             ${statsTable(r.rows)}
         </div>
     `;
@@ -122,7 +122,7 @@ function overlaySvg(rows) {
     const W = 1000, H = 320, padL = 56, padR = 10, padT = 14, padB = 28;
     const innerW = W - padL - padR, innerH = H - padT - padB;
     const allY = rows.flatMap(r => r.curve.map(p => p.pnl_pct));
-    if (!allY.length) return '<p class="muted small">no curve data</p>';
+    if (!allY.length) return '<p data-i18n="view.trade_compare.hint.no_curve_data" class="muted small">no curve data</p>';
     const yMin = Math.min(0, ...allY) * 1.05;
     const yMax = Math.max(0, ...allY) * 1.05;
     const sx = (t) => padL + t * innerW;
@@ -172,7 +172,7 @@ function statsTable(rows) {
             return td(v, c);
         }).join('')}</tr>`;
     return `<table class="trades">
-        <thead><tr><th>Metric</th>${headerRow}</tr></thead>
+        <thead><tr><th data-i18n="view.trade_compare.th.metric">Metric</th>${headerRow}</tr></thead>
         <tbody>
             ${metricRow('Opened',   r => td(new Date(r.opened_at).toLocaleString()))}
             ${metricRow('Closed',   r => td(r.closed_at ? new Date(r.closed_at).toLocaleString() : '—'))}

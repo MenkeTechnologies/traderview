@@ -12,25 +12,26 @@ import {
     makeDemoTicks, fmtN, fmtPrice, fmtSigned,
 } from '../_footprint_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { tickText: '', tickSize: 0.05 };
 
 export async function renderFootprint(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// FOOTPRINT · BID/ASK PER PRICE LEVEL</h1>
+        <h1 data-i18n="view.footprint.h1.footprint_bid_ask_per_price_level" class="view-title">// FOOTPRINT · BID/ASK PER PRICE LEVEL</h1>
 
         <div class="chart-panel">
-            <h2>Classified tick stream</h2>
+            <h2 data-i18n="view.footprint.h2.classified_tick_stream">Classified tick stream</h2>
             <p class="muted">One tick per line: <code>bar_id price volume side</code>
                 where side ∈ {buy, sell, uncertain}. Demo loads 4 bars with engineered
                 patterns: balanced churn → absorption at low → drive up → rejection at high.</p>
             <textarea id="fp-ticks" rows="8" placeholder="0 100.00 50 buy&#10;0 100.00 50 sell&#10;..."></textarea>
             <div class="inline-form">
-                <label>Tick size (price quantization)
+                <label><span data-i18n="view.footprint.label.tick_size">Tick size (price quantization)</span>
                     <input id="fp-ts" type="number" step="any" min="0" value="${state.tickSize}"></label>
-                <button id="fp-demo" class="secondary" type="button">Load demo (4 bars, 4 patterns)</button>
-                <button id="fp-clear" class="secondary" type="button">Clear</button>
-                <button id="fp-run" class="primary" type="button">Build footprint</button>
+                <button data-i18n="view.footprint.btn.load_demo_4_bars_4_patterns" id="fp-demo" class="secondary" type="button">Load demo (4 bars, 4 patterns)</button>
+                <button data-i18n="view.footprint.btn.clear" id="fp-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.footprint.btn.build_footprint" id="fp-run" class="primary" type="button">Build footprint</button>
             </div>
         </div>
 
@@ -38,7 +39,7 @@ export async function renderFootprint(mount, _appState) {
         <div id="fp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Footprint bars</h2>
+            <h2 data-i18n="view.footprint.h2.footprint_bars">Footprint bars</h2>
             <div id="fp-grid" class="fp-grid"></div>
             <p class="muted">Each column = one bar. Each row = one price level. Cells show
                 <strong>bid × ask</strong>; row color is the per-cell delta (green = ask
@@ -46,7 +47,7 @@ export async function renderFootprint(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Imbalance hotspots (largest abs(delta) cells)</h2>
+            <h2 data-i18n="view.footprint.h2.imbalance_hotspots_largest_abs_delta_cells">Imbalance hotspots (largest abs(delta) cells)</h2>
             <div id="fp-hotspots"></div>
         </div>
 
@@ -101,12 +102,12 @@ async function compute(tok) {
 function renderSummary(r) {
     const s = summarize(r);
     document.getElementById('fp-summary').innerHTML = [
-        card('Bars',         String(s.barCount)),
-        card('Total volume', fmtN(s.totalVolume)),
-        card('Net delta',    fmtSigned(s.totalDelta), s.totalDelta >= 0 ? 'pos' : 'neg'),
-        card('Max |bar delta|', fmtN(s.maxAbsDelta)),
-        card('Last POC',     s.lastPoc != null ? fmtPrice(s.lastPoc, state.tickSize) : '—'),
-        card('Tick size',    fmtN(state.tickSize, 4)),
+        card(t('view.footprint.card.bars'),         String(s.barCount)),
+        card(t('view.footprint.card.total_volume'), fmtN(s.totalVolume)),
+        card(t('view.footprint.card.net_delta'),    fmtSigned(s.totalDelta), s.totalDelta >= 0 ? 'pos' : 'neg'),
+        card(t('view.footprint.card.max_bar_delta'), fmtN(s.maxAbsDelta)),
+        card(t('view.footprint.card.last_poc'),     s.lastPoc != null ? fmtPrice(s.lastPoc, state.tickSize) : '—'),
+        card(t('view.footprint.card.tick_size'),    fmtN(state.tickSize, 4)),
     ].join('');
 }
 
@@ -149,7 +150,7 @@ function renderGrid(report) {
     </th>`).join('');
     wrap.innerHTML = `
         <table class="fp-table">
-            <thead><tr><th>Price</th>${headerCells}</tr></thead>
+            <thead><tr><th data-i18n="view.footprint.th.price">Price</th>${headerCells}</tr></thead>
             <tbody>${rowsHtml}</tbody>
             <tfoot><tr><th></th>${footerCells}</tr></tfoot>
         </table>
@@ -163,8 +164,8 @@ function renderHotspots(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Bar</th><th>Price</th><th>Bid vol</th>
-                <th>Ask vol</th><th>Δ</th>
+                <th>#</th><th data-i18n="view.footprint.th.bar">Bar</th><th data-i18n="view.footprint.th.price_2">Price</th><th data-i18n="view.footprint.th.bid_vol">Bid vol</th>
+                <th data-i18n="view.footprint.th.ask_vol">Ask vol</th><th>Δ</th>
             </tr></thead>
             <tbody>
                 ${hots.map((h, i) => `<tr>

@@ -46,30 +46,30 @@ async function renderList(mount) {
     const boards = await api.listDashboards().catch(() => []);
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// BOARDS</h1>
-        <p class="muted small">Custom dashboards. Open each board in its own browser window
+        <h1 data-i18n="view.boards.h1.boards" class="view-title">// BOARDS</h1>
+        <p data-i18n="view.boards.hint.custom_dashboards_open_each_board_in_its_own_brows" class="muted small">Custom dashboards. Open each board in its own browser window
             and snap to a monitor for a multi-screen trading rig. Drag widgets from the
             palette to add; click × to remove; drag widget headers to reposition.</p>
 
         <div class="chart-panel">
             <form id="b-new" class="inline-form">
                 <input name="name" placeholder="board name" required style="min-width:240px;">
-                <button class="primary" type="submit">Create board</button>
+                <button data-i18n="view.boards.btn.create_board" class="primary" type="submit">Create board</button>
             </form>
         </div>
 
         <div class="chart-panel">
             <h2>Your boards (${boards.length})</h2>
             ${boards.length === 0
-                ? '<p class="muted small">No boards yet.</p>'
+                ? '<p data-i18n="view.boards.hint.no_boards_yet" class="muted small">No boards yet.</p>'
                 : `<table class="trades">
-                    <thead><tr><th>Name</th><th>Widgets</th><th>Updated</th><th></th></tr></thead>
+                    <thead><tr><th data-i18n="view.boards.th.name">Name</th><th data-i18n="view.boards.th.widgets">Widgets</th><th data-i18n="view.boards.th.updated">Updated</th><th></th></tr></thead>
                     <tbody>
                         ${boards.map(b => `<tr>
                             <td><a href="#boards/${b.id}">${esc(b.name)}</a></td>
                             <td>${Array.isArray(b.layout) ? b.layout.length : 0}</td>
                             <td class="small">${new Date(b.updated_at).toLocaleString()}</td>
-                            <td><button class="btn b-del" data-id="${b.id}">Delete</button></td>
+                            <td><button data-i18n="view.boards.btn.delete" class="btn b-del" data-id="${b.id}">Delete</button></td>
                         </tr>`).join('')}
                     </tbody>
                 </table>`}
@@ -107,12 +107,12 @@ async function renderBoard(mount, id) {
 
     mount.innerHTML = `
         <h1 class="view-title">// BOARD — <span id="b-name">${esc(board.name)}</span>
-            <button id="b-rename" class="btn" style="font-size:10px;">rename</button>
+            <button data-i18n="view.boards.btn.rename" id="b-rename" class="btn" style="font-size:10px;">rename</button>
             <span id="b-save" class="muted small" style="margin-left:8px;">saved</span>
         </h1>
 
         <div class="chart-panel">
-            <h2>Palette — drag onto grid</h2>
+            <h2 data-i18n="view.boards.h2.palette_drag_onto_grid">Palette — drag onto grid</h2>
             <div id="palette" style="display:flex;flex-wrap:wrap;gap:6px;">
                 ${WIDGET_KINDS.map(k => `
                     <div class="palette-tile" draggable="true" data-kind="${k.kind}"
@@ -352,7 +352,7 @@ async function mountMiniChart(body, w, tok) {
             const resp = await api.bars(w.params.symbol, '1d', from, to);
             if (!viewIsCurrent(tok)) return;
             const bars = resp.bars || [];
-            if (!bars.length) { body.innerHTML = '<p class="muted small">no bars</p>'; return; }
+            if (!bars.length) { body.innerHTML = '<p data-i18n="view.boards.hint.no_bars" class="muted small">no bars</p>'; return; }
             const closes = bars.map(b => Number(b.close));
             const lo = Math.min(...closes), hi = Math.max(...closes);
             const last = closes[closes.length - 1], first = closes[0];
@@ -428,7 +428,7 @@ async function mountWatchlist(body, w, tok) {
             const wls = await api.watchlists();
             if (!viewIsCurrent(tok)) return;
             const def = wls.find(x => x.is_default) || wls[0];
-            if (!def) { body.innerHTML = '<p class="muted small">no watchlist</p>'; return; }
+            if (!def) { body.innerHTML = '<p data-i18n="view.boards.hint.no_watchlist" class="muted small">no watchlist</p>'; return; }
             const syms = await api.watchlistSymbols(def.id);
             if (!viewIsCurrent(tok)) return;
             const rows = (syms || []).slice(0, w.params.limit || 10)
@@ -437,7 +437,7 @@ async function mountWatchlist(body, w, tok) {
             if (!viewIsCurrent(tok)) return;
             body.innerHTML = `
                 <table class="trades" style="font-size:11px;">
-                    <thead><tr><th>Sym</th><th>Last</th><th>%</th></tr></thead>
+                    <thead><tr><th data-i18n="view.boards.th.sym">Sym</th><th data-i18n="view.boards.th.last">Last</th><th>%</th></tr></thead>
                     <tbody>
                     ${rows.map((s, i) => {
                         const q = quotes[i];
@@ -463,9 +463,9 @@ async function mountAlerts(body, w, tok) {
             const rules = await api.alerts().catch(() => []);
             if (!viewIsCurrent(tok)) return;
             const rows = rules.slice(0, w.params.limit || 10);
-            if (!rows.length) { body.innerHTML = '<p class="muted small">no alert rules</p>'; return; }
+            if (!rows.length) { body.innerHTML = '<p data-i18n="view.boards.hint.no_alert_rules" class="muted small">no alert rules</p>'; return; }
             body.innerHTML = `<table class="trades" style="font-size:11px;">
-                <thead><tr><th>Name</th><th>Symbol</th><th>Status</th><th>Fired</th></tr></thead>
+                <thead><tr><th data-i18n="view.boards.th.name_2">Name</th><th data-i18n="view.boards.th.symbol">Symbol</th><th data-i18n="view.boards.th.status">Status</th><th data-i18n="view.boards.th.fired">Fired</th></tr></thead>
                 <tbody>
                 ${rows.map(r => `<tr>
                     <td>${esc(r.name || '')}</td>

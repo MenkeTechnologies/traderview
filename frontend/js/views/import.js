@@ -5,7 +5,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderImportView(mount, state) {
     const tok = currentViewToken();
     if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">Create an account first (Accounts tab).</p>';
+        mount.innerHTML = '<p data-i18n="view.import.hint.create_an_account_first_accounts_tab" class="boot">Create an account first (Accounts tab).</p>';
         return;
     }
     const [sources, history] = await Promise.all([
@@ -14,35 +14,35 @@ export async function renderImportView(mount, state) {
     ]);
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// IMPORT</h1>
+        <h1 data-i18n="view.import.h1.import" class="view-title">// IMPORT</h1>
         <div class="chart-panel">
-            <h2>New import</h2>
+            <h2 data-i18n="view.import.h2.new_import">New import</h2>
             <div class="import-form">
-                <label>Broker
+                <label><span data-i18n="view.import.label.broker">Broker</span>
                     <select id="source">
                         ${sources.sources.map(s => `<option value="${s}">${esc(s)}</option>`).join('')}
                     </select>
                 </label>
-                <div class="dropzone" id="drop">Drop CSV here, or click to pick.</div>
+                <div class="dropzone" id="drop" data-i18n="view.import.dropzone">Drop CSV here, or click to pick.</div>
                 <input type="file" id="file" accept=".csv,text/csv" hidden>
-                <button class="primary" id="go">Upload</button>
+                <button data-i18n="view.import.btn.upload" class="primary" id="go">Upload</button>
             </div>
             <pre id="import-result" class="result"></pre>
         </div>
 
         <div class="chart-panel">
-            <h2>History</h2>
+            <h2 data-i18n="view.import.h2.history">History</h2>
             ${history.length ? `
                 <table class="trades">
-                    <thead><tr><th>When</th><th>Source</th><th>Filename</th>
-                    <th>Rows</th><th>SHA256</th></tr></thead>
+                    <thead><tr><th data-i18n="view.import.th.when">When</th><th data-i18n="view.import.th.source">Source</th><th data-i18n="view.import.th.filename">Filename</th>
+                    <th data-i18n="view.import.th.rows">Rows</th><th data-i18n="view.import.th.sha256">SHA256</th></tr></thead>
                     <tbody>${history.map(h => `
                         <tr><td>${fmtDateTime(h.imported_at)}</td>
                         <td>${esc(h.source)}</td>
                         <td>${esc(h.filename)}</td>
                         <td>${h.row_count}</td>
                         <td class="muted">${esc(h.sha256.slice(0, 8))}…</td></tr>
-                    `).join('')}</tbody></table>` : '<p class="muted">No imports yet.</p>'}
+                    `).join('')}</tbody></table>` : '<p data-i18n="view.import.hint.no_imports_yet" class="muted">No imports yet.</p>'}
         </div>
     `;
 

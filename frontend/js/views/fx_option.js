@@ -32,15 +32,15 @@ export async function renderFxOption(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// FX OPTION (GARMAN-KOHLHAGEN)</h1>
+        <h1 data-i18n="view.fx_option.h1.fx_option_garman_kohlhagen" class="view-title">// FX OPTION (GARMAN-KOHLHAGEN)</h1>
 
         <div class="chart-panel">
-            <h2>Contract</h2>
+            <h2 data-i18n="view.fx_option.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label>Kind
                     <select id="fx-kind">
-                        <option value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call (right to buy foreign)</option>
-                        <option value="put"  ${state.params.kind === 'put' ? 'selected' : ''}>Put (right to sell foreign)</option>
+                        <option data-i18n="view.fx_option.opt.call_right_to_buy_foreign" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call (right to buy foreign)</option>
+                        <option data-i18n="view.fx_option.opt.put_right_to_sell_foreign" value="put"  ${state.params.kind === 'put' ? 'selected' : ''}>Put (right to sell foreign)</option>
                     </select></label>
                 <label>Spot (dom/for) <input id="fx-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
                 <label>Strike <input id="fx-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
@@ -48,7 +48,7 @@ export async function renderFxOption(mount, _appState) {
                 <label>Rate domestic <input id="fx-rd" type="number" step="any" value="${state.params.rate_dom}"></label>
                 <label>Rate foreign <input id="fx-rf" type="number" step="any" value="${state.params.rate_for}"></label>
                 <label>σ (FX vol) <input id="fx-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
-                <button id="fx-run" class="primary" type="button">Price</button>
+                <button data-i18n="view.fx_option.btn.price" id="fx-run" class="primary" type="button">Price</button>
             </div>
             <p class="muted">
                 Spot is quoted as <em>domestic per 1 unit of foreign</em> — e.g. EURUSD 1.0850
@@ -60,9 +60,9 @@ export async function renderFxOption(mount, _appState) {
         <div id="fx-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Price vs spot</h2>
+            <h2 data-i18n="view.fx_option.h2.price_vs_spot">Price vs spot</h2>
             <div id="fx-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.fx_option.hint.garman_kohlhagen_price_across_20_of_the_input_spot" class="muted">
                 Garman-Kohlhagen price across ±20% of the input spot. The orange marker is
                 the backend's response at the user's spot — should sit exactly on the curve
                 (sanity check that the local closed-form matches the Rust module).

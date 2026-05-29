@@ -20,6 +20,7 @@ import {
     imbalanceSweep, fmtPrice, fmtBps, fmtImbalance,
 } from '../_microprice_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULTS = { bid: 100.00, ask: 100.05, bid_size: 1500, ask_size: 400 };
 
 let state = { quote: { ...DEFAULTS } };
@@ -28,18 +29,18 @@ export async function renderMicroprice(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// MICROPRICE</h1>
+        <h1 data-i18n="view.microprice.h1.microprice" class="view-title">// MICROPRICE</h1>
 
         <div class="chart-panel">
-            <h2>L1 quote</h2>
+            <h2 data-i18n="view.microprice.h2.l1_quote">L1 quote</h2>
             <div class="inline-form">
                 <label>Bid    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}"></label>
                 <label>Ask    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}"></label>
                 <label>Bid size <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}"></label>
                 <label>Ask size <input id="mp-ask-sz" type="number" step="1"   min="0" value="${state.quote.ask_size}"></label>
-                <button id="mp-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.microprice.btn.compute" id="mp-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.microprice.hint.microprice_bid_ask_size_total_ask_bid_size_total_w" class="muted">
                 Microprice = bid · (ask_size / total) + ask · (bid_size / total). When the bid
                 queue dwarfs the ask queue, the next print is likely to lift the offer →
                 microprice biases toward the ask.
@@ -49,9 +50,9 @@ export async function renderMicroprice(mount, _appState) {
         <div id="mp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Imbalance sweep</h2>
+            <h2 data-i18n="view.microprice.h2.imbalance_sweep">Imbalance sweep</h2>
             <div id="mp-chart" style="width:100%;height:300px"></div>
-            <p class="muted">
+            <p data-i18n="view.microprice.hint.cyan_line_microprice_across_every_possible_imbalan" class="muted">
                 Cyan line: microprice across every possible imbalance, given the current
                 bid/ask spread. Orange marker: your current snapshot. The line interpolates
                 linearly from bid (pure-ask-size queue, imbalance=0) to ask (pure-bid-size,
@@ -112,16 +113,16 @@ async function compute(mount, tok) {
 function renderSummary(bar, fromBackend) {
     const biasCls = bar.bias_bps > 0 ? 'pos' : (bar.bias_bps < 0 ? 'neg' : '');
     document.getElementById('mp-summary').innerHTML = [
-        card('Microprice', fmtPrice(bar.microprice), '',
+        card(t('view.microprice.card.microprice'), fmtPrice(bar.microprice), '',
             `<div class="vc-row"><span class="muted">source</span>
                 <strong>${fromBackend ? 'backend' : 'local preview…'}</strong></div>`),
-        card('Midpoint', fmtPrice(bar.midpoint), '',
+        card(t('view.microprice.card.midpoint'), fmtPrice(bar.midpoint), '',
             `<div class="vc-row"><span class="muted">spread</span>
                 <strong>${fmtPrice(state.quote.ask - state.quote.bid)}</strong></div>`),
-        card('Imbalance', fmtImbalance(bar.imbalance), '',
+        card(t('view.microprice.card.imbalance'), fmtImbalance(bar.imbalance), '',
             `<div class="vc-row"><span class="muted">${bar.imbalance > 0.5 ? 'bid-heavy' : (bar.imbalance < 0.5 ? 'ask-heavy' : 'balanced')}</span>
                 <strong>${(bar.imbalance * 100).toFixed(1)}% bid / ${((1 - bar.imbalance) * 100).toFixed(1)}% ask</strong></div>`),
-        card('Bias vs midpoint', fmtBps(bar.bias_bps), biasCls,
+        card(t('view.microprice.card.bias_vs_midpoint'), fmtBps(bar.bias_bps), biasCls,
             `<div class="vc-row"><span class="muted">interp</span>
                 <strong>${biasInterp(bar.bias_bps)}</strong></div>`),
     ].join('');

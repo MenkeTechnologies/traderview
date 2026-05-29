@@ -11,12 +11,12 @@ export async function renderLivePositions(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) {
-        mount.innerHTML = `<p class="boot">No account selected.</p>`;
+        mount.innerHTML = `<p data-i18n="view.live_positions.hint.no_account_selected" class="boot">No account selected.</p>`;
         return;
     }
     mount.innerHTML = `
         <h1 class="view-title">// LIVE P/L — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Snapshot of every open trade with fresh Yahoo quotes (60s
+        <p data-i18n="view.live_positions.hint.snapshot_of_every_open_trade_with_fresh_yahoo_quot" class="muted small">Snapshot of every open trade with fresh Yahoo quotes (60s
             server-cached). Unrealized P/L honors multiplier and side (long/short). Day P/L
             uses the quote's prev_close. Refreshes every 30 seconds.</p>
 
@@ -79,7 +79,7 @@ function renderTable(r, mount) {
     if (!tbl) return;
     if (!r.positions.length) {
         tbl.innerHTML =
-            '<div class="chart-panel"><p class="muted small">No open positions.</p></div>';
+            '<div class="chart-panel"><p data-i18n="view.live_positions.hint.no_open_positions" class="muted small">No open positions.</p></div>';
         return;
     }
     // Sort by absolute unrealized P/L desc to surface movers.
@@ -109,9 +109,9 @@ function renderTable(r, mount) {
         <div class="chart-panel">
             <table class="trades">
                 <thead><tr>
-                    <th>Symbol</th><th>Qty</th><th>Entry</th><th>Last</th>
-                    <th>Δ today</th><th>Notional</th><th>UPnL</th><th>UPnL %</th>
-                    <th>Day P/L</th><th>State</th>
+                    <th data-i18n="view.live_positions.th.symbol">Symbol</th><th data-i18n="view.live_positions.th.qty">Qty</th><th data-i18n="view.live_positions.th.entry">Entry</th><th data-i18n="view.live_positions.th.last">Last</th>
+                    <th data-i18n="view.live_positions.th.today">Δ today</th><th data-i18n="view.live_positions.th.notional">Notional</th><th data-i18n="view.live_positions.th.upnl">UPnL</th><th data-i18n="view.live_positions.th.upnl_2">UPnL %</th>
+                    <th data-i18n="view.live_positions.th.day_p_l">Day P/L</th><th data-i18n="view.live_positions.th.state">State</th>
                 </tr></thead>
                 <tbody>${sorted.map(row).join('')}</tbody>
             </table>

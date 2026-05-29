@@ -56,18 +56,18 @@ export async function renderYieldCurvePca(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// YIELD CURVE PCA</h1>
+        <h1 data-i18n="view.yield_curve_pca.h1.yield_curve_pca" class="view-title">// YIELD CURVE PCA</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.yield_curve_pca.h2.inputs">Inputs</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>Yield curves (T × N)</h3>
+                    <h3 data-i18n="view.yield_curve_pca.h3.yield_curves_t_n">Yield curves (T × N)</h3>
                     <textarea id="yp-curves" rows="14"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.curvesText)}</textarea>
                 </div>
                 <div>
-                    <h3>Tenor labels</h3>
+                    <h3 data-i18n="view.yield_curve_pca.h3.tenor_labels">Tenor labels</h3>
                     <textarea id="yp-tenors" rows="14"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.tenorsText)}</textarea>
                 </div>
@@ -75,7 +75,7 @@ export async function renderYieldCurvePca(mount, _appState) {
             <div class="inline-form" style="margin-top:10px">
                 <label>top_k factors
                     <input id="yp-topk" type="number" step="1" min="1" max="20" value="${state.topK}"></label>
-                <button id="yp-run" class="primary" type="button">Decompose</button>
+                <button data-i18n="view.yield_curve_pca.btn.decompose" id="yp-run" class="primary" type="button">Decompose</button>
             </div>
         </div>
 
@@ -84,18 +84,18 @@ export async function renderYieldCurvePca(mount, _appState) {
         <div id="yp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Factor loadings vs tenor</h2>
+            <h2 data-i18n="view.yield_curve_pca.h2.factor_loadings_vs_tenor">Factor loadings vs tenor</h2>
             <div id="yp-loadings-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.yield_curve_pca.hint.each_line_is_one_principal_component_s_loading_acr" class="muted">
                 Each line is one principal component's loading across tenors. PC1 should be
                 approximately flat (level shift), PC2 monotone (slope), PC3 bowed (curvature).
             </p>
         </div>
 
         <div class="chart-panel">
-            <h2>Variance explained per factor</h2>
+            <h2 data-i18n="view.yield_curve_pca.h2.variance_explained_per_factor">Variance explained per factor</h2>
             <div id="yp-variance-chart" style="width:100%;height:240px"></div>
-            <p class="muted">
+            <p data-i18n="view.yield_curve_pca.hint.empirically_the_first_3_factors_carry_95_of_curve_" class="muted">
                 Empirically the first 3 factors carry &gt;95% of curve-change variance.
             </p>
         </div>

@@ -10,7 +10,7 @@ export async function renderEarningsIv(mount, _state, symbol) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// EARNINGS-WEEK IV SCANNER</h1>
+        <h1 data-i18n="view.earnings_iv.h1.earnings_week_iv_scanner" class="view-title">// EARNINGS-WEEK IV SCANNER</h1>
         <p class="muted small">
             Ranks every symbol with earnings in the next N days by the gap between
             implied move (ATM straddle ÷ spot) and the 8-quarter median realized move.
@@ -19,15 +19,17 @@ export async function renderEarningsIv(mount, _state, symbol) {
 
         <div class="chart-panel">
             <form id="ivf" class="inline-form">
-                <label>Universe
+                <label><span data-i18n="view.earnings_iv.label.universe">Universe</span>
                     <select name="watchlist_id">
-                        <option value="">all my watchlists</option>
+                        <option data-i18n="view.earnings_iv.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Horizon (days) <input name="horizon_days" type="number" value="7"></label>
-                <label>Limit <input name="limit" type="number" value="50"></label>
-                <button class="primary" type="submit">Scan</button>
+                <label><span data-i18n="view.earnings_iv.label.horizon_days">Horizon (days)</span>
+                    <input name="horizon_days" type="number" value="7"></label>
+                <label><span data-i18n="view.earnings_iv.label.limit">Limit</span>
+                    <input name="limit" type="number" value="50"></label>
+                <button data-i18n="view.earnings_iv.btn.scan" class="primary" type="submit">Scan</button>
             </form>
         </div>
 
@@ -58,15 +60,15 @@ export async function renderEarningsIv(mount, _state, symbol) {
 
 function renderTable(hits) {
     if (!hits.length) {
-        return '<p class="muted">No earnings inside the horizon for your universe. Add some watchlist symbols and rerun.</p>';
+        return '<p data-i18n="view.earnings_iv.hint.no_earnings_inside_the_horizon_for_your_universe_a" class="muted">No earnings inside the horizon for your universe. Add some watchlist symbols and rerun.</p>';
     }
     return `<div class="chart-panel">
         <h2>${hits.length} candidates</h2>
         <table class="trades">
             <thead><tr>
-                <th>Symbol</th><th>Earnings</th><th>Days</th>
-                <th>Implied Move</th><th>Median Realized</th><th>Edge</th>
-                <th>Reco</th><th>Long P&L</th><th>Short P&L</th><th>n</th>
+                <th data-i18n="view.earnings_iv.th.symbol">Symbol</th><th data-i18n="view.earnings_iv.th.earnings">Earnings</th><th data-i18n="view.earnings_iv.th.days">Days</th>
+                <th data-i18n="view.earnings_iv.th.implied_move">Implied Move</th><th data-i18n="view.earnings_iv.th.median_realized">Median Realized</th><th data-i18n="view.earnings_iv.th.edge">Edge</th>
+                <th data-i18n="view.earnings_iv.th.reco">Reco</th><th data-i18n="view.earnings_iv.th.long_p_l">Long P&L</th><th data-i18n="view.earnings_iv.th.short_p_l">Short P&L</th><th>n</th>
             </tr></thead>
             <tbody>${hits.map(h => {
                 const rec = h.recommendation;
@@ -86,7 +88,7 @@ function renderTable(hits) {
                 </tr>`;
             }).join('')}</tbody>
         </table>
-        <p class="muted small">Long/Short P&L is per-quarter average return on $1 of premium across the historical sample.</p>
+        <p data-i18n="view.earnings_iv.hint.long_short_p_l_is_per_quarter_average_return_on_1_" class="muted small">Long/Short P&L is per-quarter average return on $1 of premium across the historical sample.</p>
     </div>`;
 }
 
@@ -128,7 +130,7 @@ async function renderDetail(mount, sym) {
             <div class="chart-panel">
                 <h2>Straddle backtest — ${r.backtest.samples} historical earnings</h2>
                 <table class="trades">
-                    <thead><tr><th>Strategy</th><th>Avg P&L / $1 premium</th><th>Win rate</th></tr></thead>
+                    <thead><tr><th data-i18n="view.earnings_iv.th.strategy">Strategy</th><th data-i18n="view.earnings_iv.th.avg_p_l_1_premium">Avg P&L / $1 premium</th><th data-i18n="view.earnings_iv.th.win_rate">Win rate</th></tr></thead>
                     <tbody>
                         <tr><td>LONG straddle (buy call + put)</td>
                             <td class="${r.backtest.long_avg_pnl >= 0 ? 'pos' : 'neg'}">${(r.backtest.long_avg_pnl * 100).toFixed(1)}%</td>
@@ -141,10 +143,10 @@ async function renderDetail(mount, sym) {
             </div>
 
             <div class="chart-panel">
-                <h2>Historical earnings moves</h2>
+                <h2 data-i18n="view.earnings_iv.h2.historical_earnings_moves">Historical earnings moves</h2>
                 ${r.historical.length ? `<table class="trades">
-                    <thead><tr><th>Date</th><th>Close before</th><th>Close after</th>
-                        <th>Abs move %</th><th>Direction</th></tr></thead>
+                    <thead><tr><th data-i18n="view.earnings_iv.th.date">Date</th><th data-i18n="view.earnings_iv.th.close_before">Close before</th><th data-i18n="view.earnings_iv.th.close_after">Close after</th>
+                        <th data-i18n="view.earnings_iv.th.abs_move">Abs move %</th><th data-i18n="view.earnings_iv.th.direction">Direction</th></tr></thead>
                     <tbody>${r.historical.map(h => `
                         <tr><td>${esc(h.earnings_date)}</td>
                         <td>${fmt(h.close_before)}</td>
@@ -152,7 +154,7 @@ async function renderDetail(mount, sym) {
                         <td class="${h.abs_move_pct > r.implied_move_pct ? 'pos' : 'neg'}">${fmt(h.abs_move_pct, 2)}%</td>
                         <td class="${h.direction === 'up' ? 'pos' : 'neg'}">${h.direction}</td></tr>
                     `).join('')}</tbody>
-                </table>` : '<p class="muted">No historical earnings moves in cached price bars yet — wait a moment for the prices fetcher.</p>'}
+                </table>` : '<p data-i18n="view.earnings_iv.hint.no_historical_earnings_moves_in_cached_price_bars_" class="muted">No historical earnings moves in cached price bars yet — wait a moment for the prices fetcher.</p>'}
             </div>
 
             <div class="chart-panel">

@@ -10,32 +10,33 @@ import {
     defaultCandidates, makeDemoTrades, fmtN, fmtSigned,
 } from '../_stop_loss_best_of_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { tradeText: '', sideLong: true, atr: 1.0 };
 
 export async function renderStopLossBestOf(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// STOP-LOSS BEST-OF</h1>
+        <h1 data-i18n="view.stop_loss_best_of.h1.stop_loss_best_of" class="view-title">// STOP-LOSS BEST-OF</h1>
 
         <div class="chart-panel">
-            <h2>Trade outcomes</h2>
+            <h2 data-i18n="view.stop_loss_best_of.h2.trade_outcomes">Trade outcomes</h2>
             <p class="muted">One trade per line: <code>entry mae mfe actual_exit</code>.
                 MAE/MFE are POSITIVE excursion magnitudes (max-adverse / max-favorable in dollars).
                 Demo loads 20 mixed-outcome trades with realistic excursion ranges.</p>
             <textarea id="sl-trades" rows="8" placeholder="100 0.8 2.5 101.7&#10;100.5 2.1 0.5 99.2&#10;..."></textarea>
             <div class="inline-form">
-                <label>Side
+                <label><span data-i18n="view.stop_loss_best_of.label.side">Side</span>
                     <select id="sl-side">
-                        <option value="long"  ${state.sideLong ? 'selected' : ''}>Long</option>
-                        <option value="short" ${!state.sideLong ? 'selected' : ''}>Short</option>
+                        <option data-i18n="view.stop_loss_best_of.opt.long" value="long"  ${state.sideLong ? 'selected' : ''}>Long</option>
+                        <option data-i18n="view.stop_loss_best_of.opt.short" value="short" ${!state.sideLong ? 'selected' : ''}>Short</option>
                     </select></label>
-                <label>ATR (for ATR-multiple candidates)
+                <label><span data-i18n="view.stop_loss_best_of.label.atr">ATR (for ATR-multiple candidates)</span>
                     <input id="sl-atr" type="number" step="any" min="0" value="${state.atr}"></label>
-                <button id="sl-demo" class="secondary" type="button">Load demo (20 trades, 9 stop candidates)</button>
-                <button id="sl-clear" class="secondary" type="button">Clear</button>
-                <button id="sl-run" class="primary" type="button">Compete</button>
+                <button data-i18n="view.stop_loss_best_of.btn.load_demo_20_trades_9_stop_candidates" id="sl-demo" class="secondary" type="button">Load demo (20 trades, 9 stop candidates)</button>
+                <button data-i18n="view.stop_loss_best_of.btn.clear" id="sl-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.stop_loss_best_of.btn.compete" id="sl-run" class="primary" type="button">Compete</button>
             </div>
-            <p class="muted">9 candidates by default: None / $1 / $2 / 0.5% / 1% / 2% / 1×ATR / 2×ATR / 3×ATR.
+            <p data-i18n="view.stop_loss_best_of.hint.9_candidates_by_default_none_1_2_0_5_1_2_1_atr_2_a" class="muted">9 candidates by default: None / $1 / $2 / 0.5% / 1% / 2% / 1×ATR / 2×ATR / 3×ATR.
                 Each is simulated against all trades; results ranked by total realized P&amp;L.</p>
         </div>
 
@@ -43,7 +44,7 @@ export async function renderStopLossBestOf(mount, _appState) {
         <div id="sl-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Candidate results (sorted best-total-first)</h2>
+            <h2 data-i18n="view.stop_loss_best_of.h2.candidate_results_sorted_best_total_first">Candidate results (sorted best-total-first)</h2>
             <div id="sl-results"></div>
         </div>
 
@@ -102,11 +103,11 @@ function renderSummary(results, trades, candidates) {
     const bestAvg = bestByAvg(results);
     const matched = results.length;
     document.getElementById('sl-summary').innerHTML = [
-        card('Trades',     String(trades.length)),
-        card('Candidates', String(candidates.length)),
-        card('Results',    String(matched)),
+        card(t('view.stop_loss_best_of.card.trades'),     String(trades.length)),
+        card(t('view.stop_loss_best_of.card.candidates'), String(candidates.length)),
+        card(t('view.stop_loss_best_of.card.results'),    String(matched)),
         card('Best total $', best ? fmtSigned(best.total_realized) : '—', best && best.total_realized >= 0 ? 'pos' : 'neg'),
-        card('Best method', best ? describeCandidate(candidatesByMethod(candidates, best)) : '—',
+        card(t('view.stop_loss_best_of.card.best_method'), best ? describeCandidate(candidatesByMethod(candidates, best)) : '—',
             best ? methodBadge(best.method).cls : ''),
         card('Best avg/trade $', bestAvg ? fmtSigned(bestAvg.avg_realized) : '—', bestAvg && bestAvg.avg_realized >= 0 ? 'pos' : 'neg'),
     ].join('');
@@ -135,8 +136,8 @@ function renderResults(results, candidates) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Rank</th><th>Method</th><th>Description</th>
-                <th>Total $</th><th>Avg $/trade</th><th>Wins</th><th>Stopped out</th>
+                <th data-i18n="view.stop_loss_best_of.th.rank">Rank</th><th data-i18n="view.stop_loss_best_of.th.method">Method</th><th data-i18n="view.stop_loss_best_of.th.description">Description</th>
+                <th data-i18n="view.stop_loss_best_of.th.total">Total $</th><th data-i18n="view.stop_loss_best_of.th.avg_trade">Avg $/trade</th><th data-i18n="view.stop_loss_best_of.th.wins">Wins</th><th data-i18n="view.stop_loss_best_of.th.stopped_out">Stopped out</th>
             </tr></thead>
             <tbody>
                 ${sorted.map((r, i) => {

@@ -24,8 +24,8 @@ export async function renderDisclosures(mount) {
     ]);
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// DISCLOSURES — INSIDER + CONGRESS</h1>
-        <p class="muted small">
+        <h1 data-i18n="view.disclosures.h1.disclosures_insider_congress" class="view-title">// DISCLOSURES — INSIDER + CONGRESS</h1>
+        <p data-i18n="view.disclosures.hint.polls_sec_edgar_form_4_senate_efd_house_clerk_ever" class="muted small">
             Polls SEC EDGAR Form 4 + Senate eFD + House Clerk every 20 seconds.
             Sub-30s alerts vs Quiver Quant's ~5min. Configure watchers to fire
             audio + browser-push when your rule matches.
@@ -33,36 +33,36 @@ export async function renderDisclosures(mount) {
 
         <div class="chart-panel">
             <div class="inline-form">
-                <button class="primary" id="poll-now">Poll now</button>
+                <button data-i18n="view.disclosures.btn.poll_now" class="primary" id="poll-now">Poll now</button>
                 <span class="muted" id="poll-status"></span>
             </div>
         </div>
 
         <div class="panel-grid">
             <div class="chart-panel">
-                <h2>New watcher</h2>
+                <h2 data-i18n="view.disclosures.h2.new_watcher">New watcher</h2>
                 <form id="w-form" class="inline-form">
                     <input name="name" placeholder="name" required>
                     <input name="symbols" placeholder="symbols (CSV, blank = any)">
                     <input name="filers" placeholder="filer names (CSV, blank = any)">
                     <input name="min_amount_usd" type="number" placeholder="min $ amount">
-                    <button class="primary" type="submit">Create</button>
+                    <button data-i18n="view.disclosures.btn.create" class="primary" type="submit">Create</button>
                 </form>
                 ${watchers.length ? `<table class="trades" style="margin-top:10px">
-                    <thead><tr><th>Name</th><th>Symbols</th><th>Filers</th>
-                        <th>Min $</th><th>On</th><th></th></tr></thead>
+                    <thead><tr><th data-i18n="view.disclosures.th.name">Name</th><th data-i18n="view.disclosures.th.symbols">Symbols</th><th data-i18n="view.disclosures.th.filers">Filers</th>
+                        <th data-i18n="view.disclosures.th.min">Min $</th><th data-i18n="view.disclosures.th.on">On</th><th></th></tr></thead>
                     <tbody>${watchers.map(w => `
                         <tr><td>${esc(w.name)}</td>
                         <td>${esc((w.symbols || []).join(', '))}</td>
                         <td>${esc((w.filers || []).join(', '))}</td>
                         <td>${w.min_amount_usd != null ? '$' + fmt(w.min_amount_usd) : '—'}</td>
                         <td>${w.enabled ? '✓' : '—'}</td>
-                        <td><button class="link" data-del-w="${w.id}">delete</button></td></tr>
-                    `).join('')}</tbody></table>` : '<p class="muted small" style="margin-top:8px">No watchers yet.</p>'}
+                        <td><button data-i18n="view.disclosures.btn.delete" class="link" data-del-w="${w.id}">delete</button></td></tr>
+                    `).join('')}</tbody></table>` : '<p data-i18n="view.disclosures.hint.no_watchers_yet" class="muted small" style="margin-top:8px">No watchers yet.</p>'}
             </div>
 
             <div class="chart-panel" style="grid-column: 1 / -1">
-                <h2>Live feed · auto-refreshes every 20s</h2>
+                <h2 data-i18n="view.disclosures.h2.live_feed_auto_refreshes_every_20s">Live feed · auto-refreshes every 20s</h2>
                 <div id="feed">${renderFeed(filings)}</div>
             </div>
         </div>
@@ -166,10 +166,10 @@ async function refreshFeed(watchers, mount, tok) {
 }
 
 function renderFeed(items) {
-    if (!items.length) return '<p class="muted">No disclosures cached yet — hit "Poll now" to fetch.</p>';
+    if (!items.length) return '<p data-i18n="view.disclosures.hint.no_disclosures_cached_yet_hit_poll_now_to_fetch" class="muted">No disclosures cached yet — hit "Poll now" to fetch.</p>';
     return `<table class="trades">
-        <thead><tr><th>Filed</th><th>Kind</th><th>Filer</th><th>Symbol</th>
-            <th>Tx</th><th>Shares</th><th>Amount</th><th>Source</th></tr></thead>
+        <thead><tr><th data-i18n="view.disclosures.th.filed">Filed</th><th data-i18n="view.disclosures.th.kind">Kind</th><th data-i18n="view.disclosures.th.filer">Filer</th><th data-i18n="view.disclosures.th.symbol">Symbol</th>
+            <th data-i18n="view.disclosures.th.tx">Tx</th><th data-i18n="view.disclosures.th.shares">Shares</th><th data-i18n="view.disclosures.th.amount">Amount</th><th data-i18n="view.disclosures.th.source">Source</th></tr></thead>
         <tbody>${items.map(d => `
             <tr>
                 <td>${fmtDateTime(d.filed_at)}</td>

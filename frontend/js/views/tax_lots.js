@@ -7,7 +7,7 @@ export async function renderTaxLots(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) {
-        mount.innerHTML = `<p class="boot">No account selected. Create one on the Accounts tab first.</p>`;
+        mount.innerHTML = `<p data-i18n="view.tax_lots.hint.no_account_selected_create_one_on_the_accounts_tab" class="boot">No account selected. Create one on the Accounts tab first.</p>`;
         return;
     }
     const now = new Date();
@@ -24,21 +24,21 @@ export async function renderTaxLots(mount, state) {
             but not lot-matched in v1.</p>
 
         <form id="tx-form" class="inline-form">
-            <label>Year
+            <label><span data-i18n="view.tax_lots.label.year">Year</span>
                 <select name="year">
                     ${years.map(y => `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`).join('')}
                 </select>
             </label>
-            <label>Method
+            <label><span data-i18n="view.tax_lots.label.method">Method</span>
                 <select name="method">
-                    <option value="fifo" selected>FIFO</option>
-                    <option value="lifo">LIFO</option>
+                    <option data-i18n="view.tax_lots.opt.fifo" value="fifo" selected>FIFO</option>
+                    <option data-i18n="view.tax_lots.opt.lifo" value="lifo">LIFO</option>
                 </select>
             </label>
-            <button class="primary" type="submit">Build report</button>
+            <button data-i18n="view.tax_lots.btn.build_report" class="primary" type="submit">Build report</button>
         </form>
 
-        <div id="tx-out"><p class="muted small">Pick a year + method and run.</p></div>
+        <div id="tx-out"><p data-i18n="view.tax_lots.hint.pick_a_year_method_and_run" class="muted small">Pick a year + method and run.</p></div>
     `;
     mount.querySelector('#tx-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -88,11 +88,11 @@ function renderReport(r, out) {
         <div class="chart-panel">
             <h2>Realized events (${r.realized.length}) — method: ${r.method.toUpperCase()}</h2>
             ${r.realized.length === 0
-                ? '<p class="muted small">No closed lots in this year.</p>'
+                ? '<p data-i18n="view.tax_lots.hint.no_closed_lots_in_this_year" class="muted small">No closed lots in this year.</p>'
                 : `<table class="trades">
                     <thead><tr>
-                        <th>Symbol</th><th>Acquired</th><th>Disposed</th><th>Days</th><th>Term</th>
-                        <th>Qty</th><th>Basis</th><th>Proceeds</th><th>Gain/Loss</th><th>Wash</th>
+                        <th data-i18n="view.tax_lots.th.symbol">Symbol</th><th data-i18n="view.tax_lots.th.acquired">Acquired</th><th data-i18n="view.tax_lots.th.disposed">Disposed</th><th data-i18n="view.tax_lots.th.days">Days</th><th data-i18n="view.tax_lots.th.term">Term</th>
+                        <th data-i18n="view.tax_lots.th.qty">Qty</th><th data-i18n="view.tax_lots.th.basis">Basis</th><th data-i18n="view.tax_lots.th.proceeds">Proceeds</th><th data-i18n="view.tax_lots.th.gain_loss">Gain/Loss</th><th data-i18n="view.tax_lots.th.wash">Wash</th>
                     </tr></thead>
                     <tbody>
                         ${r.realized.map(rv => `<tr>
@@ -114,11 +114,11 @@ function renderReport(r, out) {
         <div class="chart-panel">
             <h2>Open lots (${r.open_lots.length})</h2>
             ${r.open_lots.length === 0
-                ? '<p class="muted small">No open lots.</p>'
+                ? '<p data-i18n="view.tax_lots.hint.no_open_lots" class="muted small">No open lots.</p>'
                 : `<table class="trades">
                     <thead><tr>
-                        <th>Symbol</th><th>Acquired</th><th>Held</th><th>Term</th>
-                        <th>Qty</th><th>Cost/sh</th><th>Basis</th>
+                        <th data-i18n="view.tax_lots.th.symbol_2">Symbol</th><th data-i18n="view.tax_lots.th.acquired_2">Acquired</th><th data-i18n="view.tax_lots.th.held">Held</th><th data-i18n="view.tax_lots.th.term_2">Term</th>
+                        <th data-i18n="view.tax_lots.th.qty_2">Qty</th><th data-i18n="view.tax_lots.th.cost_sh">Cost/sh</th><th data-i18n="view.tax_lots.th.basis_2">Basis</th>
                     </tr></thead>
                     <tbody>
                         ${r.open_lots.map(l => `<tr>
@@ -132,7 +132,7 @@ function renderReport(r, out) {
                         </tr>`).join('')}
                     </tbody>
                 </table>`}
-            <p class="muted small">Holding-period clock on open lots is current as of now — closing
+            <p data-i18n="view.tax_lots.hint.holding_period_clock_on_open_lots_is_current_as_of" class="muted small">Holding-period clock on open lots is current as of now — closing
                 these positions today would realize at their displayed term.</p>
         </div>
     `;

@@ -11,35 +11,36 @@ import {
     makeDemoEquity, fmtUSD, fmtPct, fmtMult,
 } from '../_drawdown_throttle_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { equityText: '', tiers: DEFAULT_TIERS.map(t => ({ ...t })) };
 
 export async function renderDrawdownThrottle(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DRAWDOWN THROTTLE</h1>
+        <h1 data-i18n="view.drawdown_throttle.h1.drawdown_throttle" class="view-title">// DRAWDOWN THROTTLE</h1>
 
         <div class="chart-panel">
-            <h2>Equity history</h2>
-            <p class="muted">One value per line — most-recent last. Demo presets land in
+            <h2 data-i18n="view.drawdown_throttle.h2.equity_history">Equity history</h2>
+            <p data-i18n="view.drawdown_throttle.hint.one_value_per_line_most_recent_last_demo_presets_l" class="muted">One value per line — most-recent last. Demo presets land in
                 each tier so the trader sees the full throttle ladder in action.</p>
             <textarea id="dt-eq" rows="6" placeholder="10000&#10;10500&#10;11000&#10;..."></textarea>
             <div class="inline-form">
-                <button id="dt-demo-shallow" class="secondary" type="button">Demo: shallow 3% (OK)</button>
-                <button id="dt-demo-mild"    class="secondary" type="button">Demo: 7% (0.75×)</button>
-                <button id="dt-demo-mid"     class="secondary" type="button">Demo: 12% (0.50×)</button>
-                <button id="dt-demo-deep"    class="secondary" type="button">Demo: 17% (0.25×)</button>
-                <button id="dt-demo-crisis"  class="secondary" type="button">Demo: 25% (0.10×)</button>
-                <button id="dt-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_shallow_3_ok" id="dt-demo-shallow" class="secondary" type="button">Demo: shallow 3% (OK)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_7_0_75" id="dt-demo-mild"    class="secondary" type="button">Demo: 7% (0.75×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_12_0_50" id="dt-demo-mid"     class="secondary" type="button">Demo: 12% (0.50×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_17_0_25" id="dt-demo-deep"    class="secondary" type="button">Demo: 17% (0.25×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_25_0_10" id="dt-demo-crisis"  class="secondary" type="button">Demo: 25% (0.10×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.clear" id="dt-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Throttle tiers (min_dd ascending)</h2>
+            <h2 data-i18n="view.drawdown_throttle.h2.throttle_tiers_min_dd_ascending">Throttle tiers (min_dd ascending)</h2>
             <div id="dt-tiers"></div>
             <div class="inline-form">
-                <button id="dt-tier-add" class="secondary" type="button">+ Add tier</button>
-                <button id="dt-tier-reset" class="secondary" type="button">Reset to defaults</button>
-                <button id="dt-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.drawdown_throttle.btn.add_tier" id="dt-tier-add" class="secondary" type="button">+ Add tier</button>
+                <button data-i18n="view.drawdown_throttle.btn.reset_to_defaults" id="dt-tier-reset" class="secondary" type="button">Reset to defaults</button>
+                <button data-i18n="view.drawdown_throttle.btn.evaluate" id="dt-run" class="primary" type="button">Evaluate</button>
             </div>
             <p class="muted">Tiers must be ascending by <code>min_dd</code>. The active tier
                 is the LARGEST <code>min_dd</code> that current DD ≥ it.</p>
@@ -48,9 +49,9 @@ export async function renderDrawdownThrottle(mount, _appState) {
         <div id="dt-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Equity curve + rolling peak + underwater drawdown</h2>
+            <h2 data-i18n="view.drawdown_throttle.h2.equity_curve_rolling_peak_underwater_drawdown">Equity curve + rolling peak + underwater drawdown</h2>
             <div id="dt-chart" style="height:300px"></div>
-            <p class="muted">Cyan = equity. Yellow = rolling peak. Red = underwater
+            <p data-i18n="view.drawdown_throttle.hint.cyan_equity_yellow_rolling_peak_red_underwater_pea" class="muted">Cyan = equity. Yellow = rolling peak. Red = underwater
                 (peak − current as a negative %). Active throttle tier highlighted in legend.</p>
         </div>
 
@@ -88,7 +89,7 @@ function renderTiers() {
     if (!wrap) return;
     wrap.innerHTML = `
         <table class="lq-table">
-            <thead><tr><th>#</th><th>Min DD (decimal)</th><th>Size multiplier</th><th>Remove</th></tr></thead>
+            <thead><tr><th>#</th><th data-i18n="view.drawdown_throttle.th.min_dd_decimal">Min DD (decimal)</th><th data-i18n="view.drawdown_throttle.th.size_multiplier">Size multiplier</th><th data-i18n="view.drawdown_throttle.th.remove">Remove</th></tr></thead>
             <tbody>
                 ${state.tiers.map((t, i) => `
                     <tr>
@@ -154,14 +155,14 @@ function renderSummary(r, pending) {
     const mult = r.active_multiplier;
     const cls = multiplierCls(mult);
     document.getElementById('dt-summary').innerHTML = [
-        card('Current equity', fmtUSD(r.current_equity)),
-        card('Peak equity',    fmtUSD(r.peak_equity)),
-        card('Drawdown',       fmtPct(r.drawdown_pct), r.drawdown_pct > 0.10 ? 'neg' : ''),
-        card('Active tier',    `≥ ${fmtPct(r.tier_min_dd, 0)}`, cls),
-        card('Size multiplier', fmtMult(mult) + (pending ? ' (local)' : ''), cls),
-        card('Reduce by',      fmtPct(1 - mult, 0), cls),
-        card('Note',           r.note || `DD ${fmtPct(r.drawdown_pct)} — sizing at ${fmtMult(mult)}`),
-        card('Tiers',          String(state.tiers.length)),
+        card(t('view.drawdown_throttle.card.current_equity'), fmtUSD(r.current_equity)),
+        card(t('view.drawdown_throttle.card.peak_equity'),    fmtUSD(r.peak_equity)),
+        card(t('view.drawdown_throttle.card.drawdown'),       fmtPct(r.drawdown_pct), r.drawdown_pct > 0.10 ? 'neg' : ''),
+        card(t('view.drawdown_throttle.card.active_tier'),    `≥ ${fmtPct(r.tier_min_dd, 0)}`, cls),
+        card(t('view.drawdown_throttle.card.size_multiplier'), fmtMult(mult) + (pending ? ' (local)' : ''), cls),
+        card(t('view.drawdown_throttle.card.reduce_by'),      fmtPct(1 - mult, 0), cls),
+        card(t('view.drawdown_throttle.card.note'),           r.note || `DD ${fmtPct(r.drawdown_pct)} — sizing at ${fmtMult(mult)}`),
+        card(t('view.drawdown_throttle.card.tiers'),          String(state.tiers.length)),
     ].join('');
 }
 

@@ -19,6 +19,7 @@ import {
     fmtN, dirCss,
 } from '../_cusum_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CFG = {
     reference_mean: 0.0,
     reference_stdev: 1.0,
@@ -31,22 +32,22 @@ let state = { seriesText: '', config: { ...DEFAULT_CFG } };
 export async function renderCusum(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CUSUM · CHANGE-POINT DETECTOR</h1>
+        <h1 data-i18n="view.cusum.h1.cusum_change_point_detector" class="view-title">// CUSUM · CHANGE-POINT DETECTOR</h1>
 
         <div class="chart-panel">
-            <h2>Series</h2>
-            <p class="muted">Paste one signed value per line — typically log-returns or
+            <h2 data-i18n="view.cusum.h2.series">Series</h2>
+            <p data-i18n="view.cusum.hint.paste_one_signed_value_per_line_typically_log_retu" class="muted">Paste one signed value per line — typically log-returns or
                 vol-normalized returns. Demo loads 200 bars where mean flips at bar 100.</p>
             <textarea id="cu-series" rows="6" placeholder="0.0025&#10;-0.001&#10;0.004&#10;..."></textarea>
             <div class="inline-form">
-                <button id="cu-demo" class="secondary" type="button">Load demo (200 bars, regime flip @ 100)</button>
-                <button id="cu-clear" class="secondary" type="button">Clear</button>
-                <button id="cu-autofit" class="secondary" type="button">Auto-fit mean / stdev from series</button>
+                <button data-i18n="view.cusum.btn.load_demo_200_bars_regime_flip_100" id="cu-demo" class="secondary" type="button">Load demo (200 bars, regime flip @ 100)</button>
+                <button data-i18n="view.cusum.btn.clear" id="cu-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.cusum.btn.auto_fit_mean_stdev_from_series" id="cu-autofit" class="secondary" type="button">Auto-fit mean / stdev from series</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Config</h2>
+            <h2 data-i18n="view.cusum.h2.config">Config</h2>
             <div class="inline-form">
                 <label>Reference mean
                     <input id="cu-mean" type="number" step="any" value="${state.config.reference_mean}"></label>
@@ -56,9 +57,9 @@ export async function renderCusum(mount, _appState) {
                     <input id="cu-thr" type="number" step="any" min="0" value="${state.config.threshold_stdevs}"></label>
                 <label>Slack
                     <input id="cu-slk" type="number" step="any" min="0" value="${state.config.slack}"></label>
-                <button id="cu-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.cusum.btn.detect" id="cu-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.cusum.hint.threshold_stdevs_reference_stdev_trigger_level_sla" class="muted">
                 threshold_stdevs × reference_stdev = trigger level. Slack subtracts a
                 small amount each bar to suppress noise (typically 0.5 × stdev).
                 A high threshold + zero slack = chatty detector. Low threshold + large
@@ -69,15 +70,15 @@ export async function renderCusum(mount, _appState) {
         <div id="cu-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Series + event markers</h2>
+            <h2 data-i18n="view.cusum.h2.series_event_markers">Series + event markers</h2>
             <div id="cu-chart" style="height:280px"></div>
-            <p class="muted">Cyan = the series itself. Green dots = UP change-points
+            <p data-i18n="view.cusum.hint.cyan_the_series_itself_green_dots_up_change_points" class="muted">Cyan = the series itself. Green dots = UP change-points
                 (regime mean shifted higher). Red dots = DOWN change-points (mean shifted lower).
                 Marker height = CUSUM value at the firing bar (how hard the threshold was busted).</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Event log</h2>
+            <h2 data-i18n="view.cusum.h2.event_log">Event log</h2>
             <div id="cu-events"></div>
         </div>
 
@@ -145,14 +146,14 @@ function renderSummary(report, series) {
     const dnCount = events.filter(e => e.direction === 'down').length;
     const lastEvent = events[events.length - 1];
     document.getElementById('cu-summary').innerHTML = [
-        card('Bars',          String(series.length)),
-        card('Events',        String(report.n_events || 0),
+        card(t('view.cusum.card.bars'),          String(series.length)),
+        card(t('view.cusum.card.events'),        String(report.n_events || 0),
             (report.n_events || 0) > 0 ? '' : 'pos'),
-        card('Up events',     String(upCount), upCount > 0 ? 'pos' : ''),
-        card('Down events',   String(dnCount), dnCount > 0 ? 'neg' : ''),
-        card('Final g+',      fmtN(report.final_g_pos)),
-        card('Final g−',      fmtN(report.final_g_neg)),
-        card('Last event',    lastEvent
+        card(t('view.cusum.card.up_events'),     String(upCount), upCount > 0 ? 'pos' : ''),
+        card(t('view.cusum.card.down_events'),   String(dnCount), dnCount > 0 ? 'neg' : ''),
+        card(t('view.cusum.card.final_g'),      fmtN(report.final_g_pos)),
+        card(t('view.cusum.card.final_g_2'),      fmtN(report.final_g_neg)),
+        card(t('view.cusum.card.last_event'),    lastEvent
             ? `bar ${lastEvent.bar_index} ${lastEvent.direction.toUpperCase()}`
             : '—',
             lastEvent ? dirCss(lastEvent.direction) : ''),
@@ -197,7 +198,7 @@ function renderEvents(report) {
     }
     wrap.innerHTML = `
         <table class="lq-table">
-            <thead><tr><th>#</th><th>Bar index</th><th>Direction</th><th>CUSUM value</th></tr></thead>
+            <thead><tr><th>#</th><th data-i18n="view.cusum.th.bar_index">Bar index</th><th data-i18n="view.cusum.th.direction">Direction</th><th data-i18n="view.cusum.th.cusum_value">CUSUM value</th></tr></thead>
             <tbody>
                 ${events.map((e, i) => `<tr>
                     <td>${i + 1}</td>

@@ -12,6 +12,7 @@ import {
     tierBadge, fmtHours, makeDemoData, nowIso,
 } from '../_order_staleness_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_THRESH = { warn_hours: 24, stale_hours: 72, forgotten_hours: 168 };
 
 let state = {
@@ -23,36 +24,36 @@ let state = {
 export async function renderOrderStaleness(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ORDER STALENESS</h1>
+        <h1 data-i18n="view.order_staleness.h1.order_staleness" class="view-title">// ORDER STALENESS</h1>
 
         <div class="chart-panel">
-            <h2>Resting orders</h2>
+            <h2 data-i18n="view.order_staleness.h2.resting_orders">Resting orders</h2>
             <p class="muted">One line per order: <code>id symbol placed_at [last_modified_at] side</code>.
                 Timestamps accept ISO 8601 (<code>2024-06-15T10:00:00Z</code>). Side is one of
                 <code>buy / sell / buy_stop / sell_stop</code>. Modifying an order resets the
                 staleness clock — treated as "re-confirming intent."</p>
             <textarea id="os-orders" rows="8" placeholder="A1 AAPL 2024-06-15T10:00:00Z buy&#10;B1 TSLA 2024-06-14T10:00:00Z 2024-06-15T08:00:00Z sell_stop"></textarea>
             <div class="inline-form">
-                <button id="os-demo" class="secondary" type="button">Load demo (12 orders across all tiers)</button>
-                <button id="os-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_staleness.btn.load_demo_12_orders_across_all_tiers" id="os-demo" class="secondary" type="button">Load demo (12 orders across all tiers)</button>
+                <button data-i18n="view.order_staleness.btn.clear" id="os-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Reference time + thresholds</h2>
+            <h2 data-i18n="view.order_staleness.h2.reference_time_thresholds">Reference time + thresholds</h2>
             <div class="inline-form">
                 <label>Now (ISO 8601)
                     <input id="os-now" type="text" value="${state.now}"></label>
-                <button id="os-nownow" class="secondary" type="button">now = current time</button>
+                <button data-i18n="view.order_staleness.btn.now_current_time" id="os-nownow" class="secondary" type="button">now = current time</button>
                 <label>Warn (h)
                     <input id="os-warn" type="number" step="any" min="0" value="${state.thresholds.warn_hours}"></label>
                 <label>Stale (h)
                     <input id="os-stale" type="number" step="any" min="0" value="${state.thresholds.stale_hours}"></label>
                 <label>Forgotten (h)
                     <input id="os-forgot" type="number" step="any" min="0" value="${state.thresholds.forgotten_hours}"></label>
-                <button id="os-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.order_staleness.btn.evaluate" id="os-run" class="primary" type="button">Evaluate</button>
             </div>
-            <p class="muted">Industry defaults: 24h warn / 72h stale / 168h forgotten.
+            <p data-i18n="view.order_staleness.hint.industry_defaults_24h_warn_72h_stale_168h_forgotte" class="muted">Industry defaults: 24h warn / 72h stale / 168h forgotten.
                 Tight intraday traders use 1h/4h/24h. Position traders use 7d/30d/90d.</p>
         </div>
 
@@ -60,9 +61,9 @@ export async function renderOrderStaleness(mount, _appState) {
         <div id="os-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Orders sorted most-stale first</h2>
+            <h2 data-i18n="view.order_staleness.h2.orders_sorted_most_stale_first">Orders sorted most-stale first</h2>
             <div id="os-table"></div>
-            <p class="muted">STALE/FORGOTTEN rows are candidates to cancel. Most accidental
+            <p data-i18n="view.order_staleness.hint.stale_forgotten_rows_are_candidates_to_cancel_most" class="muted">STALE/FORGOTTEN rows are candidates to cancel. Most accidental
                 "what was that fill?" P&amp;L surprises come from forgotten resting orders.</p>
         </div>
 
@@ -131,12 +132,12 @@ function renderSummary(r) {
     const total = (r.fresh_count + r.aging_count + r.stale_count + r.forgotten_count) || 0;
     const liabilityPct = total > 0 ? (r.stale_count + r.forgotten_count) / total : 0;
     document.getElementById('os-summary').innerHTML = [
-        card('Total orders',    String(total)),
-        card('Fresh',           String(r.fresh_count),     r.fresh_count ? 'pos' : ''),
-        card('Aging',           String(r.aging_count)),
-        card('Stale',           String(r.stale_count),     r.stale_count ? 'neg' : ''),
-        card('Forgotten',       String(r.forgotten_count), r.forgotten_count ? 'neg' : ''),
-        card('Liability %',     (liabilityPct * 100).toFixed(0) + '%',
+        card(t('view.order_staleness.card.total_orders'),    String(total)),
+        card(t('view.order_staleness.card.fresh'),           String(r.fresh_count),     r.fresh_count ? 'pos' : ''),
+        card(t('view.order_staleness.card.aging'),           String(r.aging_count)),
+        card(t('view.order_staleness.card.stale'),           String(r.stale_count),     r.stale_count ? 'neg' : ''),
+        card(t('view.order_staleness.card.forgotten'),       String(r.forgotten_count), r.forgotten_count ? 'neg' : ''),
+        card(t('view.order_staleness.card.liability'),     (liabilityPct * 100).toFixed(0) + '%',
             liabilityPct > 0.25 ? 'neg' : liabilityPct === 0 ? 'pos' : ''),
     ].join('');
 }
@@ -157,7 +158,7 @@ function renderTable(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Order ID</th><th>Symbol</th><th>Age</th><th>Tier</th>
+                <th data-i18n="view.order_staleness.th.order_id">Order ID</th><th data-i18n="view.order_staleness.th.symbol">Symbol</th><th data-i18n="view.order_staleness.th.age">Age</th><th data-i18n="view.order_staleness.th.tier">Tier</th>
             </tr></thead>
             <tbody>
                 ${report.rows.map(r => {

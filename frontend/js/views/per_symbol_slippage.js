@@ -13,24 +13,25 @@ import {
     makeDemoRecords, fmtBps, fmtPct, fmtN,
 } from '../_per_symbol_slippage_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { recordsText: '' };
 
 export async function renderPerSymbolSlippage(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// PER-SYMBOL SLIPPAGE</h1>
+        <h1 data-i18n="view.per_symbol_slippage.h1.per_symbol_slippage" class="view-title">// PER-SYMBOL SLIPPAGE</h1>
 
         <div class="chart-panel">
-            <h2>Slippage records</h2>
+            <h2 data-i18n="view.per_symbol_slippage.h2.slippage_records">Slippage records</h2>
             <p class="muted">Paste <code>symbol slippage_bps</code> per line. Signed bps —
                 positive = trader-favorable (beat benchmark). Demo loads 108 fills
                 across 6 symbols spanning the full execution-quality spectrum from
                 ETF to micro-cap.</p>
             <textarea id="ps-recs" rows="6" placeholder="AAPL -2.5&#10;SPY 7.0&#10;ILQD -28.0&#10;..."></textarea>
             <div class="inline-form">
-                <button id="ps-demo" class="secondary" type="button">Load demo (108 fills, 6 symbols)</button>
-                <button id="ps-clear" class="secondary" type="button">Clear</button>
-                <button id="ps-run" class="primary" type="button">Aggregate</button>
+                <button data-i18n="view.per_symbol_slippage.btn.load_demo_108_fills_6_symbols" id="ps-demo" class="secondary" type="button">Load demo (108 fills, 6 symbols)</button>
+                <button data-i18n="view.per_symbol_slippage.btn.clear" id="ps-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.per_symbol_slippage.btn.aggregate" id="ps-run" class="primary" type="button">Aggregate</button>
             </div>
         </div>
 
@@ -38,9 +39,9 @@ export async function renderPerSymbolSlippage(mount, _appState) {
         <div id="ps-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Per-symbol breakdown</h2>
+            <h2 data-i18n="view.per_symbol_slippage.h2.per_symbol_breakdown">Per-symbol breakdown</h2>
             <div id="ps-table"></div>
-            <p class="muted">Sorted worst-mean-first. POOR / TERRIBLE rows are where
+            <p data-i18n="view.per_symbol_slippage.hint.sorted_worst_mean_first_poor_terrible_rows_are_whe" class="muted">Sorted worst-mean-first. POOR / TERRIBLE rows are where
                 your sizing is bigger than the book can absorb — shrink position there
                 or stop trading the name.</p>
         </div>
@@ -98,12 +99,12 @@ function renderSummary(report, records) {
     const aggMean = allBps.length ? allBps.reduce((a, b) => a + b, 0) / allBps.length : NaN;
     const beatRate = allBps.length ? allBps.filter(v => v > 0).length / allBps.length : NaN;
     document.getElementById('ps-summary').innerHTML = [
-        card('Symbols',         String(report.length)),
-        card('Total fills',     String(records.length)),
-        card('Mean slip',       fmtBps(aggMean), aggMean > 0 ? 'pos' : aggMean < 0 ? 'neg' : ''),
-        card('Beat rate',       fmtPct(beatRate), beatRate >= 0.5 ? 'pos' : 'neg'),
-        card('Worst symbol',    worst ? `${worst.symbol} ${fmtBps(worst.mean_bps)}` : '—', 'neg'),
-        card('Best symbol',     best ? `${best.symbol} ${fmtBps(best.mean_bps)}`   : '—', 'pos'),
+        card(t('view.per_symbol_slippage.card.symbols'),         String(report.length)),
+        card(t('view.per_symbol_slippage.card.total_fills'),     String(records.length)),
+        card(t('view.per_symbol_slippage.card.mean_slip'),       fmtBps(aggMean), aggMean > 0 ? 'pos' : aggMean < 0 ? 'neg' : ''),
+        card(t('view.per_symbol_slippage.card.beat_rate'),       fmtPct(beatRate), beatRate >= 0.5 ? 'pos' : 'neg'),
+        card(t('view.per_symbol_slippage.card.worst_symbol'),    worst ? `${worst.symbol} ${fmtBps(worst.mean_bps)}` : '—', 'neg'),
+        card(t('view.per_symbol_slippage.card.best_symbol'),     best ? `${best.symbol} ${fmtBps(best.mean_bps)}`   : '—', 'pos'),
     ].join('');
 }
 
@@ -123,9 +124,9 @@ function renderTable(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Symbol</th><th>Grade</th><th>Trades</th>
-                <th>Mean</th><th>Median</th><th>Stdev</th>
-                <th>Worst</th><th>Best</th><th>Beat rate</th>
+                <th data-i18n="view.per_symbol_slippage.th.symbol">Symbol</th><th data-i18n="view.per_symbol_slippage.th.grade">Grade</th><th data-i18n="view.per_symbol_slippage.th.trades">Trades</th>
+                <th data-i18n="view.per_symbol_slippage.th.mean">Mean</th><th data-i18n="view.per_symbol_slippage.th.median">Median</th><th data-i18n="view.per_symbol_slippage.th.stdev">Stdev</th>
+                <th data-i18n="view.per_symbol_slippage.th.worst">Worst</th><th data-i18n="view.per_symbol_slippage.th.best">Best</th><th data-i18n="view.per_symbol_slippage.th.beat_rate">Beat rate</th>
             </tr></thead>
             <tbody>
                 ${report.map(r => {

@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "i18n:extract": "node scripts/i18n_extract.mjs",
-    "i18n:diff":    "node scripts/i18n_extract.mjs --diff"
+    "i18n:diff":    "node scripts/i18n_extract.mjs --diff",
+    "i18n:migrate": "node scripts/i18n_migrate.mjs && node scripts/i18n_migrate_js.mjs",
+    "i18n:migrate:dry": "node scripts/i18n_migrate.mjs --dry-run && node scripts/i18n_migrate_js.mjs --dry-run"
   },
   "devDependencies": {
     "vitest": "^2.1.0",

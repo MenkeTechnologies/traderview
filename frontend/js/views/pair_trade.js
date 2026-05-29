@@ -20,6 +20,7 @@ import {
     fmtSignal, signalCssClass,
 } from '../_pair_trade_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_Y = `# Y leg prices (the dependent leg in the OLS β regression).
 # Demo: cointegrated pair — y wanders around 2 × x + 50 with noise.
 ${synthY(150).join('\n')}
@@ -81,18 +82,18 @@ export async function renderPairTrade(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// PAIR TRADE</h1>
+        <h1 data-i18n="view.pair_trade.h1.pair_trade" class="view-title">// PAIR TRADE</h1>
 
         <div class="chart-panel">
-            <h2>Price series</h2>
+            <h2 data-i18n="view.pair_trade.h2.price_series">Price series</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>y leg (dependent)</h3>
+                    <h3 data-i18n="view.pair_trade.h3.y_leg_dependent">y leg (dependent)</h3>
                     <textarea id="pt-y" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.yText)}</textarea>
                 </div>
                 <div>
-                    <h3>x leg (independent / hedge)</h3>
+                    <h3 data-i18n="view.pair_trade.h3.x_leg_independent_hedge">x leg (independent / hedge)</h3>
                     <textarea id="pt-x" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.xText)}</textarea>
                 </div>
@@ -100,7 +101,7 @@ export async function renderPairTrade(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Signal thresholds (z-score bands)</h2>
+            <h2 data-i18n="view.pair_trade.h2.signal_thresholds_z_score_bands">Signal thresholds (z-score bands)</h2>
             <div class="inline-form">
                 <label>Entry z (enter when |z| &gt;)
                     <input id="pt-entry" type="number" step="any" min="0" value="${state.config.entry_z}"></label>
@@ -108,9 +109,9 @@ export async function renderPairTrade(mount, _appState) {
                     <input id="pt-exit"  type="number" step="any" min="0" value="${state.config.exit_z}"></label>
                 <label>Stop z (bail when |z| &gt;)
                     <input id="pt-stop"  type="number" step="any" min="0" value="${state.config.stop_z}"></label>
-                <button id="pt-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.pair_trade.btn.analyze" id="pt-run" class="primary" type="button">Analyze</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.pair_trade.hint.is_fit_by_ols_regression_of_y_on_x_spread_y_x_z_sp" class="muted">
                 β is fit by OLS regression of y on x. Spread = y − β·x. Z = (spread − mean) /
                 stdev. Convention: positive z → spread expensive (sell y, buy x); negative
                 z → spread cheap (buy y, sell x). exit_z must be &lt; entry_z; stop_z must be &gt; entry_z.
@@ -122,9 +123,9 @@ export async function renderPairTrade(mount, _appState) {
         <div id="pt-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Price overlay (y vs β·x)</h2>
+            <h2 data-i18n="view.pair_trade.h2.price_overlay_y_vs_x">Price overlay (y vs β·x)</h2>
             <div id="pt-price-chart" style="width:100%;height:280px"></div>
-            <p class="muted">
+            <p data-i18n="view.pair_trade.hint.if_is_right_the_two_lines_track_each_other_and_the" class="muted">
                 If β is right, the two lines track each other and their difference (the
                 spread) oscillates around 0. Visible drift between them = the spread is
                 widening — opportunity if mean-reverting, danger if cointegration broke.
@@ -132,9 +133,9 @@ export async function renderPairTrade(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Spread z-score (history)</h2>
+            <h2 data-i18n="view.pair_trade.h2.spread_z_score_history">Spread z-score (history)</h2>
             <div id="pt-z-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.pair_trade.hint.cyan_z_score_dashed_orange_entry_band_dashed_red_s" class="muted">
                 Cyan: z-score. Dashed orange: ±entry band. Dashed red: ±stop band. Bars
                 outside the entry band would have triggered an entry signal; bars between
                 ±exit band would have triggered an exit.
@@ -190,16 +191,16 @@ async function analyze(mount, tok) {
 
 function renderSummary(res, local) {
     const cards = [];
-    cards.push(card('Signal', fmtSignal(res.signal), signalCssClass(res.signal)));
-    cards.push(card('Hedge ratio β', res.hedge_ratio.toFixed(4)));
-    cards.push(card('Current z', res.current_z.toFixed(3),
+    cards.push(card(t('view.pair_trade.card.signal'), fmtSignal(res.signal), signalCssClass(res.signal)));
+    cards.push(card(t('view.pair_trade.card.hedge_ratio'), res.hedge_ratio.toFixed(4)));
+    cards.push(card(t('view.pair_trade.card.current_z'), res.current_z.toFixed(3),
         Math.abs(res.current_z) > state.config.entry_z ? 'pos' : ''));
-    cards.push(card('Current spread', res.current_spread.toFixed(4), '',
+    cards.push(card(t('view.pair_trade.card.current_spread'), res.current_spread.toFixed(4), '',
         `<div class="vc-row"><span class="muted">mean / σ</span>
             <strong>${res.spread_mean.toFixed(4)} / ${res.spread_stdev.toFixed(4)}</strong></div>`));
-    cards.push(card('Entry crossings (history)',
+    cards.push(card(t('view.pair_trade.card.entry_crossings_history'),
         String(countCrossings(local.zs, state.config.entry_z))));
-    cards.push(card('Stop crossings (history)',
+    cards.push(card(t('view.pair_trade.card.stop_crossings_history'),
         String(countCrossings(local.zs, state.config.stop_z)),
         countCrossings(local.zs, state.config.stop_z) > 0 ? 'neg' : 'pos'));
     document.getElementById('pt-summary').innerHTML = cards.join('');

@@ -14,25 +14,25 @@ const PACE_COLOR = {
 export async function renderGoals(mount, state) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// GOALS</h1>
+        <h1 data-i18n="view.goals.h1.goals" class="view-title">// GOALS</h1>
         <p class="muted small">Set monthly / quarterly / yearly P/L + win-rate + max-drawdown
             targets. Progress is computed live from closed trades whose <code>opened_at</code>
             falls in the window. Run-rate projection extrapolates current P/L pace to the end
             of the period so you know if you're on track today.</p>
 
         <div class="chart-panel">
-            <h2>Create goal</h2>
+            <h2 data-i18n="view.goals.h2.create_goal">Create goal</h2>
             <form id="g-form" class="inline-form">
                 <input name="name" placeholder="name" required style="min-width:180px;">
                 <select name="period">
-                    <option value="monthly">monthly</option>
-                    <option value="quarterly">quarterly</option>
-                    <option value="yearly">yearly</option>
-                    <option value="custom">custom</option>
+                    <option data-i18n="view.goals.opt.monthly" value="monthly">monthly</option>
+                    <option data-i18n="view.goals.opt.quarterly" value="quarterly">quarterly</option>
+                    <option data-i18n="view.goals.opt.yearly" value="yearly">yearly</option>
+                    <option data-i18n="view.goals.opt.custom" value="custom">custom</option>
                 </select>
                 <label>Account
                     <select name="account_id">
-                        <option value="">(all)</option>
+                        <option data-i18n="view.goals.opt.all" value="">(all)</option>
                         ${state.accounts.map(a => `<option value="${a.id}">${esc(a.broker)} · ${esc(a.name)}</option>`).join('')}
                     </select>
                 </label>
@@ -41,7 +41,7 @@ export async function renderGoals(mount, state) {
                 <label>Target P/L $ <input name="target_pnl" type="number" step="any" style="width:110px;"></label>
                 <label>Target win % <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60"></label>
                 <label>Max DD %     <input name="target_max_drawdown_pct" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="10"></label>
-                <button class="primary" type="submit">Create</button>
+                <button data-i18n="view.goals.btn.create" class="primary" type="submit">Create</button>
                 <span id="g-status" class="muted small"></span>
             </form>
         </div>
@@ -112,7 +112,7 @@ async function refresh(mount, tok) {
     try {
         const goals = await api.listGoals();
         if (!viewIsCurrent(tok)) return;
-        if (!goals.length) { el.innerHTML = '<div class="chart-panel"><p class="muted small">No goals yet — create one above.</p></div>'; return; }
+        if (!goals.length) { el.innerHTML = '<div class="chart-panel"><p data-i18n="view.goals.hint.no_goals_yet_create_one_above" class="muted small">No goals yet — create one above.</p></div>'; return; }
         // Fetch progress for each goal in parallel.
         const progressList = await Promise.all(goals.map(g =>
             api.goalProgress(g.id).catch(() => null)));
@@ -161,7 +161,7 @@ function card(p) {
     return `<div class="chart-panel" style="margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
             <h2 style="margin:0;">${esc(g.name)} <span class="muted small">${esc(g.period)} · ${g.start_date} → ${g.end_date}${acct}</span></h2>
-            <button class="btn g-del" data-id="${g.id}">Delete</button>
+            <button data-i18n="view.goals.btn.delete" class="btn g-del" data-id="${g.id}">Delete</button>
         </div>
         <div class="cards">
             <div class="card"><div class="label">Window progress</div>

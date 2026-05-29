@@ -29,25 +29,25 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                     ${e.trade_id ? `· <a href="#trade/${e.trade_id}">trade</a>` : ''}
                 </div>
                 <div class="body">${md(e.body_md)}</div>
-                <button class="link" data-del="${e.id}">delete</button>
+                <button data-i18n="view.journal.btn.delete" class="link" data-del="${e.id}">delete</button>
             </div>
         `).join('') || `<p class="muted">No ${isGeneral ? 'general' : 'entries for this day'} yet.</p>`}</div>
         <div class="chart-panel">
-            <h2>New entry</h2>
+            <h2 data-i18n="view.journal.h2.new_entry">New entry</h2>
             ${isGeneral ? '' : `
                 <select id="mood">
-                    <option value="">no mood</option>
-                    <option value="-2">-2 frustrated</option>
-                    <option value="-1">-1 off</option>
-                    <option value="0">0 neutral</option>
-                    <option value="1">+1 focused</option>
-                    <option value="2">+2 confident</option>
+                    <option data-i18n="view.journal.opt.no_mood" value="">no mood</option>
+                    <option data-i18n="view.journal.opt.2_frustrated" value="-2">-2 frustrated</option>
+                    <option data-i18n="view.journal.opt.1_off" value="-1">-1 off</option>
+                    <option data-i18n="view.journal.opt.0_neutral" value="0">0 neutral</option>
+                    <option data-i18n="view.journal.opt.1_focused" value="1">+1 focused</option>
+                    <option data-i18n="view.journal.opt.2_confident" value="2">+2 confident</option>
                 </select>
             `}
             <textarea id="body" placeholder="What happened today? Setups taken / missed? Process notes?"></textarea>
             <div class="inline-form">
-                <button class="primary" id="save">Save</button>
-                <button class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+                <button data-i18n="view.journal.btn.save" class="primary" id="save">Save</button>
+                <button data-i18n="view.journal.btn.insert_template" class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
             </div>
         </div>
     `;

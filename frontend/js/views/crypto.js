@@ -18,14 +18,14 @@ const pct = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + Number(n).toFixed(2
 export async function renderCrypto(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CRYPTO</h1>
+        <h1 data-i18n="view.crypto.h1.crypto" class="view-title">// CRYPTO</h1>
         <div id="c-glob" class="cards">loading…</div>
         <div class="chart-panel">
-            <h2>Top-100 by market cap</h2>
+            <h2 data-i18n="view.crypto.h2.top_100_by_market_cap">Top-100 by market cap</h2>
             <div id="c-table">loading…</div>
         </div>
         <div class="chart-panel">
-            <h2>Bitcoin on-chain</h2>
+            <h2 data-i18n="view.crypto.h2.bitcoin_on_chain">Bitcoin on-chain</h2>
             <div id="c-onchain" class="cards">loading…</div>
         </div>
     `;
@@ -64,11 +64,11 @@ function renderGlobal(g, mount) {
 function renderTable(rows, mount) {
     const el = mount.querySelector('#c-table');
     if (!el) return;
-    if (!rows.length) { el.innerHTML = '<p class="muted">CoinGecko rate limit hit — retry in a minute.</p>'; return; }
+    if (!rows.length) { el.innerHTML = '<p data-i18n="view.crypto.hint.coingecko_rate_limit_hit_retry_in_a_minute" class="muted">CoinGecko rate limit hit — retry in a minute.</p>'; return; }
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>#</th><th></th><th>Coin</th><th>Price</th>
-            <th>24h</th><th>7d</th><th>Mcap</th><th>Vol 24h</th>
-            <th>Circ supply</th><th>ATH</th><th>From ATH</th></tr></thead>
+        <thead><tr><th>#</th><th></th><th data-i18n="view.crypto.th.coin">Coin</th><th data-i18n="view.crypto.th.price">Price</th>
+            <th data-i18n="view.crypto.th.24h">24h</th><th data-i18n="view.crypto.th.7d">7d</th><th data-i18n="view.crypto.th.mcap">Mcap</th><th data-i18n="view.crypto.th.vol_24h">Vol 24h</th>
+            <th data-i18n="view.crypto.th.circ_supply">Circ supply</th><th data-i18n="view.crypto.th.ath">ATH</th><th data-i18n="view.crypto.th.from_ath">From ATH</th></tr></thead>
         <tbody>${rows.map(r => `
             <tr>
                 <td>${r.market_cap_rank ?? '—'}</td>

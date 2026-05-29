@@ -8,12 +8,12 @@ export async function renderResearch(mount, _state, sym) {
     const tok = currentViewToken();
     if (!sym) {
         mount.innerHTML = `
-            <h1 class="view-title">// RESEARCH</h1>
+            <h1 data-i18n="view.research.h1.research" class="view-title">// RESEARCH</h1>
             <form id="rs-form" class="inline-form">
                 <input name="symbol" placeholder="symbol — AAPL, NVDA, ^GSPC, BTC-USD" required autofocus style="min-width:300px;text-transform:uppercase">
-                <button class="primary" type="submit">Research</button>
+                <button data-i18n="view.research.btn.research" class="primary" type="submit">Research</button>
             </form>
-            <p class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD).</p>
+            <p data-i18n="view.research.hint.tip_anything_yahoo_recognizes_works_stocks_indices" class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD).</p>
         `;
         mount.querySelector('#rs-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -29,44 +29,44 @@ export async function renderResearch(mount, _state, sym) {
         </h1>
         <div id="rs-quote" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading quote…</div></div></div>
         <div class="chart-panel">
-            <h2>Daily chart (1y)</h2>
+            <h2 data-i18n="view.research.h2.daily_chart_1y">Daily chart (1y)</h2>
             <div id="rs-chart"></div>
         </div>
         <div class="panel-grid">
             <div class="chart-panel">
-                <h2>Signals + Score</h2>
+                <h2 data-i18n="view.research.h2.signals_score">Signals + Score</h2>
                 <div id="rs-signals">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Indicators</h2>
+                <h2 data-i18n="view.research.h2.indicators">Indicators</h2>
                 <div id="rs-indicators">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Pivots (classic)</h2>
+                <h2 data-i18n="view.research.h2.pivots_classic">Pivots (classic)</h2>
                 <div id="rs-pivots">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Latest News</h2>
+                <h2 data-i18n="view.research.h2.latest_news">Latest News</h2>
                 <div id="rs-news">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Analyst Recommendations</h2>
+                <h2 data-i18n="view.research.h2.analyst_recommendations">Analyst Recommendations</h2>
                 <div id="rs-recs">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Fundamentals</h2>
+                <h2 data-i18n="view.research.h2.fundamentals">Fundamentals</h2>
                 <div id="rs-fund">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Earnings</h2>
+                <h2 data-i18n="view.research.h2.earnings">Earnings</h2>
                 <div id="rs-earn">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Insider Activity</h2>
+                <h2 data-i18n="view.research.h2.insider_activity">Insider Activity</h2>
                 <div id="rs-ins">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Holders</h2>
+                <h2 data-i18n="view.research.h2.holders">Holders</h2>
                 <div id="rs-hold">loading…</div>
             </div>
         </div>
@@ -160,7 +160,7 @@ function renderSignals(s, mount) {
             <div class="score-label">${s.summary.toUpperCase()}</div>
         </div>
         <table class="trades" style="margin-top:8px">
-            <thead><tr><th>Signal</th><th>Side</th><th>Weight</th><th>Detail</th></tr></thead>
+            <thead><tr><th data-i18n="view.research.th.signal">Signal</th><th data-i18n="view.research.th.side">Side</th><th data-i18n="view.research.th.weight">Weight</th><th data-i18n="view.research.th.detail">Detail</th></tr></thead>
             <tbody>${s.signals.map(sig => `
                 <tr>
                     <td>${esc(sig.name)}</td>
@@ -194,12 +194,12 @@ function renderSignals(s, mount) {
             <tr><td>S3</td><td class="pos">${fmt(p.s3)}</td></tr>
         </tbody></table>`;
     } else {
-        pivEl.innerHTML = '<p class="muted">Need at least 2 daily bars.</p>';
+        pivEl.innerHTML = '<p data-i18n="view.research.hint.need_at_least_2_daily_bars" class="muted">Need at least 2 daily bars.</p>';
     }
 }
 
 function renderNews(el, items) {
-    if (!items || !items.length) { el.innerHTML = '<p class="muted">No news.</p>'; return; }
+    if (!items || !items.length) { el.innerHTML = '<p data-i18n="view.research.hint.no_news" class="muted">No news.</p>'; return; }
     el.innerHTML = items.map(n => `
         <div class="news-item">
             <a href="${esc(n.link || '#')}" target="_blank" rel="noopener noreferrer">${esc(n.title || '(no title)')}</a>
@@ -210,11 +210,11 @@ function renderNews(el, items) {
 }
 
 function renderRecs(el, r) {
-    if (!r) { el.innerHTML = '<p class="muted">no data</p>'; return; }
+    if (!r) { el.innerHTML = '<p data-i18n="view.research.hint.no_data" class="muted">no data</p>'; return; }
     const trend = r.recommendationTrend?.trend || [];
-    if (!trend.length) { el.innerHTML = '<p class="muted">No analyst data.</p>'; return; }
+    if (!trend.length) { el.innerHTML = '<p data-i18n="view.research.hint.no_analyst_data" class="muted">No analyst data.</p>'; return; }
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>Period</th><th>Strong Buy</th><th>Buy</th><th>Hold</th><th>Sell</th><th>Strong Sell</th></tr></thead>
+        <thead><tr><th data-i18n="view.research.th.period">Period</th><th data-i18n="view.research.th.strong_buy">Strong Buy</th><th data-i18n="view.research.th.buy">Buy</th><th data-i18n="view.research.th.hold">Hold</th><th data-i18n="view.research.th.sell">Sell</th><th data-i18n="view.research.th.strong_sell">Strong Sell</th></tr></thead>
         <tbody>${trend.map(t => `
             <tr><td>${esc(t.period)}</td>
                 <td class="pos">${t.strongBuy ?? '—'}</td>
@@ -233,7 +233,7 @@ function rawVal(v) {
 }
 
 function renderFund(el, f) {
-    if (!f) { el.innerHTML = '<p class="muted">no data</p>'; return; }
+    if (!f) { el.innerHTML = '<p data-i18n="view.research.hint.no_data_2" class="muted">no data</p>'; return; }
     const sd = f.summaryDetail || {};
     const ks = f.defaultKeyStatistics || {};
     const fd = f.financialData || {};
@@ -268,7 +268,7 @@ function renderFund(el, f) {
 }
 
 function renderEarnings(el, e) {
-    if (!e) { el.innerHTML = '<p class="muted">no data</p>'; return; }
+    if (!e) { el.innerHTML = '<p data-i18n="view.research.hint.no_data_3" class="muted">no data</p>'; return; }
     const cal = e.calendarEvents?.earnings || {};
     const next = cal.earningsDate?.[0]?.fmt;
     const eps = cal.earningsAverage?.fmt;
@@ -281,7 +281,7 @@ function renderEarnings(el, e) {
             <div class="card"><div class="label">Revenue est.</div><div class="value">${rev || '—'}</div></div>
         </div>
         ${hist.length ? `<table class="trades"><thead><tr>
-            <th>Period</th><th>EPS Est</th><th>EPS Actual</th><th>Surprise %</th>
+            <th data-i18n="view.research.th.period_2">Period</th><th data-i18n="view.research.th.eps_est">EPS Est</th><th data-i18n="view.research.th.eps_actual">EPS Actual</th><th data-i18n="view.research.th.surprise">Surprise %</th>
         </tr></thead><tbody>${hist.map(h => `
             <tr><td>${esc(h.period || '')}</td>
                 <td>${rawVal(h.epsEstimate)}</td>
@@ -292,11 +292,11 @@ function renderEarnings(el, e) {
 }
 
 function renderInsiders(el, i) {
-    if (!i) { el.innerHTML = '<p class="muted">no data</p>'; return; }
+    if (!i) { el.innerHTML = '<p data-i18n="view.research.hint.no_data_4" class="muted">no data</p>'; return; }
     const tx = i.insiderTransactions?.transactions || [];
-    if (!tx.length) { el.innerHTML = '<p class="muted">No transactions.</p>'; return; }
+    if (!tx.length) { el.innerHTML = '<p data-i18n="view.research.hint.no_transactions" class="muted">No transactions.</p>'; return; }
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>Date</th><th>Filer</th><th>Position</th><th>Tx</th><th>Shares</th><th>Value</th></tr></thead>
+        <thead><tr><th data-i18n="view.research.th.date">Date</th><th data-i18n="view.research.th.filer">Filer</th><th data-i18n="view.research.th.position">Position</th><th data-i18n="view.research.th.tx">Tx</th><th data-i18n="view.research.th.shares">Shares</th><th data-i18n="view.research.th.value">Value</th></tr></thead>
         <tbody>${tx.slice(0, 15).map(t => `
             <tr><td>${rawVal(t.startDate)}</td>
             <td>${esc(t.filerName || '')}</td>
@@ -308,7 +308,7 @@ function renderInsiders(el, i) {
 }
 
 function renderHolders(el, h) {
-    if (!h) { el.innerHTML = '<p class="muted">no data</p>'; return; }
+    if (!h) { el.innerHTML = '<p data-i18n="view.research.hint.no_data_5" class="muted">no data</p>'; return; }
     const b = h.majorHoldersBreakdown || {};
     const inst = h.institutionOwnership?.ownershipList || [];
     el.innerHTML = `
@@ -317,7 +317,7 @@ function renderHolders(el, h) {
             <div class="card"><div class="label">Institutions %</div><div class="value">${rawVal(b.institutionsPercentHeld)}</div></div>
             <div class="card"><div class="label">Inst. count</div><div class="value">${rawVal(b.institutionsCount)}</div></div>
         </div>
-        ${inst.length ? `<table class="trades"><thead><tr><th>Holder</th><th>% out</th><th>Shares</th><th>Reported</th></tr></thead>
+        ${inst.length ? `<table class="trades"><thead><tr><th data-i18n="view.research.th.holder">Holder</th><th data-i18n="view.research.th.out">% out</th><th data-i18n="view.research.th.shares_2">Shares</th><th data-i18n="view.research.th.reported">Reported</th></tr></thead>
         <tbody>${inst.slice(0, 15).map(h => `
             <tr><td>${esc(h.organization || '')}</td>
             <td>${rawVal(h.pctHeld)}</td>

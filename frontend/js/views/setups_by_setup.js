@@ -12,31 +12,32 @@ import {
     fmtUSD, fmtUSDSigned, fmtPct, fmtPF, fmtR,
 } from '../_setups_by_setup_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { rows: makeDemoRows('mixed') };
 
 export async function renderSetupsBySetup(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// SETUPS — RANKED BY P&amp;L</h1>
+        <h1 data-i18n="view.setups_by_setup.h1.setups_ranked_by_pandl" class="view-title">// SETUPS — RANKED BY P&amp;L</h1>
 
         <div class="chart-panel">
             <h2>Trades (per line: <code>setup net_pnl [risk_amount]</code>; "-" = untagged)</h2>
             <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded">${esc(rowsToBlob(state.rows))}</textarea>
             <div class="inline-form">
-                <button id="sbs-run" class="primary" type="button">Analyze</button>
-                <button id="sbs-demo-mixed"    class="secondary" type="button">Demo: 3 setups mixed</button>
-                <button id="sbs-demo-winner"   class="secondary" type="button">Demo: single winner</button>
-                <button id="sbs-demo-loser"    class="secondary" type="button">Demo: single loser</button>
-                <button id="sbs-demo-untag"    class="secondary" type="button">Demo: with untagged</button>
-                <button id="sbs-demo-scratch"  class="secondary" type="button">Demo: all scratches</button>
+                <button data-i18n="view.setups_by_setup.btn.analyze" id="sbs-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_3_setups_mixed" id="sbs-demo-mixed"    class="secondary" type="button">Demo: 3 setups mixed</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_single_winner" id="sbs-demo-winner"   class="secondary" type="button">Demo: single winner</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_single_loser" id="sbs-demo-loser"    class="secondary" type="button">Demo: single loser</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_with_untagged" id="sbs-demo-untag"    class="secondary" type="button">Demo: with untagged</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_all_scratches" id="sbs-demo-scratch"  class="secondary" type="button">Demo: all scratches</button>
             </div>
-            <p class="muted">Risk amount enables R-multiple. Net P&L &gt; 0 = win, &lt; 0 = loss, == 0 = scratch. Untagged trades ("-") are sent to the backend but excluded from any setup bucket — matches backend "no setup tag → not in the catalog".</p>
+            <p data-i18n="view.setups_by_setup.hint.risk_amount_enables_r_multiple_net_p_l_0_win_0_los" class="muted">Risk amount enables R-multiple. Net P&L &gt; 0 = win, &lt; 0 = loss, == 0 = scratch. Untagged trades ("-") are sent to the backend but excluded from any setup bucket — matches backend "no setup tag → not in the catalog".</p>
         </div>
 
         <div id="sbs-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Per-setup leaderboard</h2>
+            <h2 data-i18n="view.setups_by_setup.h2.per_setup_leaderboard">Per-setup leaderboard</h2>
             <div id="sbs-stats"></div>
         </div>
 
@@ -110,21 +111,21 @@ function renderSummary(stats, pending) {
     const best  = stats.length > 0 ? stats[0] : null;
     const worst = stats.length > 0 ? stats[stats.length - 1] : null;
     document.getElementById('sbs-summary').innerHTML = [
-        card('Setups',         String(stats.length) + (pending ? ' (local)' : '')),
-        card('Tagged trades',  String(totalTrades)),
-        card('Untagged (skipped)', String(untagged),
+        card(t('view.setups_by_setup.card.setups'),         String(stats.length) + (pending ? ' (local)' : '')),
+        card(t('view.setups_by_setup.card.tagged_trades'),  String(totalTrades)),
+        card(t('view.setups_by_setup.card.untagged_skipped'), String(untagged),
             untagged > 0 ? 'neg' : ''),
-        card('Total net P&L',  fmtUSDSigned(totalNet),
+        card(t('view.setups_by_setup.card.total_net_p_l'),  fmtUSDSigned(totalNet),
             totalNet >= 0 ? 'pos' : 'neg'),
-        card('Total win rate', fmtPct(winRate),
+        card(t('view.setups_by_setup.card.total_win_rate'), fmtPct(winRate),
             winRate >= 0.5 ? 'pos' : 'neg'),
-        card('Wins / Losses',  `${totalWins} / ${totalLosses}`,
+        card(t('view.setups_by_setup.card.wins_losses'),  `${totalWins} / ${totalLosses}`,
             totalWins > totalLosses ? 'pos' : 'neg'),
-        card('Best setup',     best ? `${best.setup}: ${fmtUSDSigned(best.net_pnl)}` : '—',
+        card(t('view.setups_by_setup.card.best_setup'),     best ? `${best.setup}: ${fmtUSDSigned(best.net_pnl)}` : '—',
             best && best.net_pnl >= 0 ? 'pos' : 'neg'),
-        card('Worst setup',    worst ? `${worst.setup}: ${fmtUSDSigned(worst.net_pnl)}` : '—',
+        card(t('view.setups_by_setup.card.worst_setup'),    worst ? `${worst.setup}: ${fmtUSDSigned(worst.net_pnl)}` : '—',
             worst && worst.net_pnl >= 0 ? 'pos' : 'neg'),
-        card('Local parity',   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.setups_by_setup.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -153,11 +154,11 @@ function renderStats(stats) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Setup</th><th>Verdict</th>
-                <th>Trades</th><th>W/L/S</th><th>Win%</th>
-                <th>Net P&L</th><th>Expectancy</th><th>Avg win</th><th>Avg loss</th>
-                <th>Profit factor</th><th>Avg R</th>
-                <th>Largest win</th><th>Largest loss</th>
+                <th>#</th><th data-i18n="view.setups_by_setup.th.setup">Setup</th><th data-i18n="view.setups_by_setup.th.verdict">Verdict</th>
+                <th data-i18n="view.setups_by_setup.th.trades">Trades</th><th data-i18n="view.setups_by_setup.th.w_l_s">W/L/S</th><th data-i18n="view.setups_by_setup.th.win">Win%</th>
+                <th data-i18n="view.setups_by_setup.th.net_p_l">Net P&L</th><th data-i18n="view.setups_by_setup.th.expectancy">Expectancy</th><th data-i18n="view.setups_by_setup.th.avg_win">Avg win</th><th data-i18n="view.setups_by_setup.th.avg_loss">Avg loss</th>
+                <th data-i18n="view.setups_by_setup.th.profit_factor">Profit factor</th><th data-i18n="view.setups_by_setup.th.avg_r">Avg R</th>
+                <th data-i18n="view.setups_by_setup.th.largest_win">Largest win</th><th data-i18n="view.setups_by_setup.th.largest_loss">Largest loss</th>
             </tr></thead>
             <tbody>
                 ${stats.map((s, i) => {

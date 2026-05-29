@@ -18,31 +18,32 @@ import {
     fmtN, fmtImbalance,
 } from '../_order_book_imbalance_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { bidText: '', askText: '', levels: 5 };
 
 export async function renderOrderBookImbalance(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ORDER-BOOK IMBALANCE</h1>
+        <h1 data-i18n="view.order_book_imbalance.h1.order_book_imbalance" class="view-title">// ORDER-BOOK IMBALANCE</h1>
 
         <div class="chart-panel">
-            <h2>Bid sizes (top-of-book first)</h2>
+            <h2 data-i18n="view.order_book_imbalance.h2.bid_sizes_top_of_book_first">Bid sizes (top-of-book first)</h2>
             <textarea id="obi-bid" rows="4" placeholder="500&#10;380&#10;290&#10;220&#10;180"></textarea>
         </div>
 
         <div class="chart-panel">
-            <h2>Ask sizes</h2>
+            <h2 data-i18n="view.order_book_imbalance.h2.ask_sizes">Ask sizes</h2>
             <textarea id="obi-ask" rows="4" placeholder="120&#10;100&#10;80&#10;60&#10;50"></textarea>
             <div class="inline-form">
-                <label>Levels (top-N to aggregate)
+                <label><span data-i18n="view.order_book_imbalance.label.levels">Levels (top-N to aggregate)</span>
                     <input id="obi-lvls" type="number" step="1" min="1" max="50" value="${state.levels}"></label>
-                <button id="obi-balanced" class="secondary" type="button">Demo: balanced</button>
-                <button id="obi-bidp" class="secondary" type="button">Demo: bid pressure</button>
-                <button id="obi-askp" class="secondary" type="button">Demo: ask pressure</button>
-                <button id="obi-clear" class="secondary" type="button">Clear</button>
-                <button id="obi-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.order_book_imbalance.btn.demo_balanced" id="obi-balanced" class="secondary" type="button">Demo: balanced</button>
+                <button data-i18n="view.order_book_imbalance.btn.demo_bid_pressure" id="obi-bidp" class="secondary" type="button">Demo: bid pressure</button>
+                <button data-i18n="view.order_book_imbalance.btn.demo_ask_pressure" id="obi-askp" class="secondary" type="button">Demo: ask pressure</button>
+                <button data-i18n="view.order_book_imbalance.btn.clear" id="obi-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_book_imbalance.btn.compute" id="obi-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">Imbalance = (Σbid − Σask) / (Σbid + Σask) over top-N levels.
+            <p data-i18n="view.order_book_imbalance.hint.imbalance_bid_ask_bid_ask_over_top_n_levels_range_" class="muted">Imbalance = (Σbid − Σask) / (Σbid + Σask) over top-N levels.
                 Range [-1, 1]. Used by HFT firms as a microsecond-scale directional signal.</p>
         </div>
 
@@ -50,14 +51,14 @@ export async function renderOrderBookImbalance(mount, _appState) {
         <div id="obi-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Imbalance gauge</h2>
+            <h2 data-i18n="view.order_book_imbalance.h2.imbalance_gauge">Imbalance gauge</h2>
             <div id="obi-gauge"></div>
-            <p class="muted">Cyan = bid skew. Magenta = ask skew. Midline = balanced.
+            <p data-i18n="view.order_book_imbalance.hint.cyan_bid_skew_magenta_ask_skew_midline_balanced_qu" class="muted">Cyan = bid skew. Magenta = ask skew. Midline = balanced.
                 Quartile marks at ±0.1 (bid/ask) and ±0.3 (strong).</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Per-level breakdown</h2>
+            <h2 data-i18n="view.order_book_imbalance.h2.per_level_breakdown">Per-level breakdown</h2>
             <div id="obi-table"></div>
         </div>
 
@@ -122,13 +123,13 @@ function renderSummary(r, bidLevels, askLevels) {
     const badge = biasBadge(r.bias);
     const ratio = r.total_ask_size > 0 ? r.total_bid_size / r.total_ask_size : Infinity;
     document.getElementById('obi-summary').innerHTML = [
-        card('Imbalance',    fmtImbalance(r.imbalance), badge.cls),
-        card('Bias',         badge.label, badge.cls),
-        card('Bid total',    fmtN(r.total_bid_size), 'pos'),
-        card('Ask total',    fmtN(r.total_ask_size), 'neg'),
-        card('Bid/Ask ratio', Number.isFinite(ratio) ? ratio.toFixed(3) : '∞'),
-        card('Levels seen',  `${Math.min(bidLevels, state.levels)} bid / ${Math.min(askLevels, state.levels)} ask`),
-        card('Action',       badge.hint),
+        card(t('view.order_book_imbalance.card.imbalance'),    fmtImbalance(r.imbalance), badge.cls),
+        card(t('view.order_book_imbalance.card.bias'),         badge.label, badge.cls),
+        card(t('view.order_book_imbalance.card.bid_total'),    fmtN(r.total_bid_size), 'pos'),
+        card(t('view.order_book_imbalance.card.ask_total'),    fmtN(r.total_ask_size), 'neg'),
+        card(t('view.order_book_imbalance.card.bid_ask_ratio'), Number.isFinite(ratio) ? ratio.toFixed(3) : '∞'),
+        card(t('view.order_book_imbalance.card.levels_seen'),  `${Math.min(bidLevels, state.levels)} bid / ${Math.min(askLevels, state.levels)} ask`),
+        card(t('view.order_book_imbalance.card.action'),       badge.hint),
     ].join('');
 }
 
@@ -174,11 +175,11 @@ function renderTable(bidSizes, askSizes, levels) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Level</th>
-                <th style="text-align:right">Bid</th>
-                <th>Bid bar</th>
-                <th>Ask bar</th>
-                <th>Ask</th>
+                <th data-i18n="view.order_book_imbalance.th.level">Level</th>
+                <th data-i18n="view.order_book_imbalance.th.bid" style="text-align:right">Bid</th>
+                <th data-i18n="view.order_book_imbalance.th.bid_bar">Bid bar</th>
+                <th data-i18n="view.order_book_imbalance.th.ask_bar">Ask bar</th>
+                <th data-i18n="view.order_book_imbalance.th.ask">Ask</th>
             </tr></thead>
             <tbody>
                 ${rows.map(r => {

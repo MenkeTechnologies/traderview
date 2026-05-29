@@ -20,6 +20,7 @@ import {
     fmtBig, fmtSeconds, fmtPct,
 } from '../_almgren_chriss_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_PARAMS = {
     total_shares:    1_000_000,
     horizon_seconds: 23_400,   // 6.5h trading day
@@ -35,35 +36,35 @@ let state = { params: { ...DEFAULT_PARAMS } };
 export async function renderAlmgrenChriss(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ALMGREN-CHRISS · OPTIMAL EXECUTION</h1>
+        <h1 data-i18n="view.almgren_chriss.h1.almgren_chriss_optimal_execution" class="view-title">// ALMGREN-CHRISS · OPTIMAL EXECUTION</h1>
 
         <div class="chart-panel">
-            <h2>Parent order</h2>
+            <h2 data-i18n="view.almgren_chriss.h2.parent_order">Parent order</h2>
             <div class="inline-form">
-                <label>Total shares (signed; − for sell)
+                <label><span data-i18n="view.almgren_chriss.label.total_shares">Total shares (signed; − for sell)</span>
                     <input id="ac-X" type="number" step="any" value="${state.params.total_shares}"></label>
-                <label>Horizon (seconds)
+                <label><span data-i18n="view.almgren_chriss.label.horizon_seconds">Horizon (seconds)</span>
                     <input id="ac-T" type="number" step="any" min="0" value="${state.params.horizon_seconds}"></label>
-                <label>Slices
+                <label><span data-i18n="view.almgren_chriss.label.slices">Slices</span>
                     <input id="ac-n" type="number" step="1" min="1" max="2000" value="${state.params.n_intervals}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Impact &amp; risk parameters</h2>
+            <h2 data-i18n="view.almgren_chriss.h2.impact_and_risk_parameters">Impact &amp; risk parameters</h2>
             <div class="inline-form">
-                <label>η (temp impact)
+                <label><span data-i18n="view.almgren_chriss.label.eta">η (temp impact)</span>
                     <input id="ac-eta" type="number" step="any" min="0" value="${state.params.eta}"></label>
-                <label>γ (perm impact)
+                <label><span data-i18n="view.almgren_chriss.label.gamma">γ (perm impact)</span>
                     <input id="ac-gamma" type="number" step="any" min="0" value="${state.params.gamma}"></label>
-                <label>λ (risk aversion)
+                <label><span data-i18n="view.almgren_chriss.label.lambda">λ (risk aversion)</span>
                     <input id="ac-lambda" type="number" step="any" min="0" value="${state.params.lambda}"></label>
-                <label>σ (per-√s vol)
+                <label><span data-i18n="view.almgren_chriss.label.sigma">σ (per-√s vol)</span>
                     <input id="ac-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
-                <button id="ac-run" class="primary" type="button">Solve</button>
-                <button id="ac-frontier" class="secondary" type="button">+ Plot frontier (λ sweep)</button>
+                <button data-i18n="view.almgren_chriss.btn.solve" id="ac-run" class="primary" type="button">Solve</button>
+                <button data-i18n="view.almgren_chriss.btn.plot_frontier_sweep" id="ac-frontier" class="secondary" type="button">+ Plot frontier (λ sweep)</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.almgren_chriss.hint.controls_how_front_loaded_the_trajectory_is_0_coll" class="muted">
                 κ = √(λσ²/η) controls how front-loaded the trajectory is. λ→0 collapses to TWAP
                 (uniform liquidation, minimum impact, maximum timing risk). λ→∞ front-loads
                 aggressively, eating impact cost to dump timing risk. The frontier shows the
@@ -79,9 +80,9 @@ export async function renderAlmgrenChriss(mount, _appState) {
         <div class="chart-panel"><h2>Trade schedule v<sub>k</sub></h2>
             <div id="ac-chart-sched" style="height:240px"></div></div>
 
-        <div class="chart-panel"><h2>Efficient frontier (λ sweep)</h2>
+        <div class="chart-panel"><h2 data-i18n="view.almgren_chriss.h2.efficient_frontier_sweep">Efficient frontier (λ sweep)</h2>
             <div id="ac-chart-frontier" style="height:280px"></div>
-            <p class="muted">Each dot is a solve at one λ. The dashed white marker is
+            <p data-i18n="view.almgren_chriss.hint.each_dot_is_a_solve_at_one_the_dashed_white_marker" class="muted">Each dot is a solve at one λ. The dashed white marker is
                 your currently selected λ. Move down-right = more patient. Up-left =
                 more urgent.</p>
         </div>
@@ -158,14 +159,14 @@ function renderSummary(r) {
     const concentration = avgSlice > 0 ? maxSlice / avgSlice : 0;
     document.getElementById('ac-summary').innerHTML = [
         card('κ',                   r.kappa.toExponential(3)),
-        card('Half-life (κ)',       fmtSeconds(halfLife)),
+        card(t('view.almgren_chriss.card.half_life'),       fmtSeconds(halfLife)),
         card('Expected impact $',   fmtBig(r.expected_impact_cost)),
-        card('Risk variance',       fmtBig(r.risk_variance)),
-        card('Slices',              String(r.trade_schedule.length)),
-        card('Max-slice / avg',     concentration.toFixed(2) + '×'),
-        card('Total traded',        fmtBig(trades.reduce((a, b) => a + b, 0)),
+        card(t('view.almgren_chriss.card.risk_variance'),       fmtBig(r.risk_variance)),
+        card(t('view.almgren_chriss.card.slices'),              String(r.trade_schedule.length)),
+        card(t('view.almgren_chriss.card.max_slice_avg'),     concentration.toFixed(2) + '×'),
+        card(t('view.almgren_chriss.card.total_traded'),        fmtBig(trades.reduce((a, b) => a + b, 0)),
             Math.sign(state.params.total_shares) >= 0 ? 'pos' : 'neg'),
-        card('First-slice share',   fmtPct(trades.length ? trades[0] / trades.reduce((a, b) => a + b, 0) : 0)),
+        card(t('view.almgren_chriss.card.first_slice_share'),   fmtPct(trades.length ? trades[0] / trades.reduce((a, b) => a + b, 0) : 0)),
     ].join('');
 }
 

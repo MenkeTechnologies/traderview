@@ -28,9 +28,9 @@ export async function renderWebull(mount, _state) {
                 <label>access_token <input name="access_token" type="password" required style="min-width:340px"></label>
                 <label>t_token (trade actions; optional for read-only) <input name="t_token" type="password" style="min-width:340px"></label>
                 <label>account_id (optional override) <input name="account_id" type="text" style="min-width:140px"></label>
-                <button class="primary" type="submit">Connect</button>
+                <button data-i18n="view.webull.btn.connect" class="primary" type="submit">Connect</button>
             </form>
-            <p class="muted small">All endpoints used are read-only: positions, today's orders, account summary. Order entry is intentionally not implemented.</p>
+            <p data-i18n="view.webull.hint.all_endpoints_used_are_read_only_positions_today_s" class="muted small">All endpoints used are read-only: positions, today's orders, account summary. Order entry is intentionally not implemented.</p>
         </details>
 
         <div class="cards" id="wb-account">
@@ -45,20 +45,20 @@ export async function renderWebull(mount, _state) {
             <h2>Open positions <span class="muted small" id="wb-fetched">—</span></h2>
             <table class="trades" id="wb-pos">
                 <thead><tr>
-                    <th>Symbol</th><th>Side</th><th>Asset</th><th>Qty</th>
-                    <th>Avg cost</th><th>Last</th><th>Mkt value</th>
-                    <th>Unrealized</th><th>%</th><th>Day P/L</th>
+                    <th data-i18n="view.webull.th.symbol">Symbol</th><th data-i18n="view.webull.th.side">Side</th><th data-i18n="view.webull.th.asset">Asset</th><th data-i18n="view.webull.th.qty">Qty</th>
+                    <th data-i18n="view.webull.th.avg_cost">Avg cost</th><th data-i18n="view.webull.th.last">Last</th><th data-i18n="view.webull.th.mkt_value">Mkt value</th>
+                    <th data-i18n="view.webull.th.unrealized">Unrealized</th><th>%</th><th data-i18n="view.webull.th.day_p_l">Day P/L</th>
                 </tr></thead>
                 <tbody><tr><td colspan="10" class="muted">waiting for first poll…</td></tr></tbody>
             </table>
         </div>
 
         <div class="chart-panel">
-            <h2>Today's filled orders</h2>
+            <h2 data-i18n="view.webull.h2.today_s_filled_orders">Today's filled orders</h2>
             <table class="trades" id="wb-orders">
                 <thead><tr>
-                    <th>Time</th><th>Symbol</th><th>Side</th>
-                    <th>Qty</th><th>Avg fill</th><th>Status</th>
+                    <th data-i18n="view.webull.th.time">Time</th><th data-i18n="view.webull.th.symbol_2">Symbol</th><th data-i18n="view.webull.th.side_2">Side</th>
+                    <th data-i18n="view.webull.th.qty_2">Qty</th><th data-i18n="view.webull.th.avg_fill">Avg fill</th><th data-i18n="view.webull.th.status">Status</th>
                 </tr></thead>
                 <tbody><tr><td colspan="6" class="muted">waiting for first poll…</td></tr></tbody>
             </table>

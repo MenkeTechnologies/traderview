@@ -13,6 +13,7 @@ import {
     fmtUSD, fmtUSDSigned, fmtPct, clusterColor,
 } from '../_clusters_correlation_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     positions: makeDemoPositions('mega-cap-tech'),
     correlations: makeDemoCorrelations('mega-cap-tech'),
@@ -22,7 +23,7 @@ let state = {
 export async function renderClustersCorrelation(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CORRELATION CLUSTERS</h1>
+        <h1 data-i18n="view.clusters_correlation.h1.correlation_clusters" class="view-title">// CORRELATION CLUSTERS</h1>
 
         <div class="chart-panel">
             <h2>Positions <small class="muted">(per line: <code>SYMBOL notional</code>, neg = short)</small></h2>
@@ -30,23 +31,23 @@ export async function renderClustersCorrelation(mount, _appState) {
             <h2>Correlations <small class="muted">(per line: <code>A B corr</code>, order doesn't matter)</small></h2>
             <textarea id="cc-corr" rows="6" placeholder="AAPL MSFT 0.85">${esc(correlationsToBlob(state.correlations))}</textarea>
             <div class="inline-form">
-                <label>Threshold |ρ|
+                <label><span data-i18n="view.clusters_correlation.label.threshold">Threshold |ρ|</span>
                     <input id="cc-thr" type="number" step="any" min="0" max="1" value="${state.threshold}"></label>
-                <button id="cc-run" class="primary" type="button">Cluster</button>
+                <button data-i18n="view.clusters_correlation.btn.cluster" id="cc-run" class="primary" type="button">Cluster</button>
             </div>
             <div class="inline-form">
-                <button id="cc-demo-tech"     class="secondary" type="button">Demo: mega-cap-tech cluster</button>
-                <button id="cc-demo-inverse"  class="secondary" type="button">Demo: inverse pair (QQQ/SQQQ)</button>
-                <button id="cc-demo-chain"    class="secondary" type="button">Demo: A-B-C transitive chain</button>
-                <button id="cc-demo-diverse"  class="secondary" type="button">Demo: all singletons</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_mega_cap_tech_cluster" id="cc-demo-tech"     class="secondary" type="button">Demo: mega-cap-tech cluster</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_inverse_pair_qqq_sqqq" id="cc-demo-inverse"  class="secondary" type="button">Demo: inverse pair (QQQ/SQQQ)</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_a_b_c_transitive_chain" id="cc-demo-chain"    class="secondary" type="button">Demo: A-B-C transitive chain</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_all_singletons" id="cc-demo-diverse"  class="secondary" type="button">Demo: all singletons</button>
             </div>
-            <p class="muted">Positions cluster if there's a chain of pairs each with |ρ| ≥ threshold. Threshold is inclusive (≥). Missing pairs default to ρ = 0.</p>
+            <p data-i18n="view.clusters_correlation.hint.positions_cluster_if_there_s_a_chain_of_pairs_each" class="muted">Positions cluster if there's a chain of pairs each with |ρ| ≥ threshold. Threshold is inclusive (≥). Missing pairs default to ρ = 0.</p>
         </div>
 
         <div id="cc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Clusters (sorted by gross exposure)</h2>
+            <h2 data-i18n="view.clusters_correlation.h2.clusters_sorted_by_gross_exposure">Clusters (sorted by gross exposure)</h2>
             <div id="cc-clusters"></div>
         </div>
 
@@ -112,19 +113,19 @@ function renderSummary(clusters, pending) {
     const parity = clustersEq(clusters, local);
     const badge = concentrationBadge(s.topPct);
     document.getElementById('cc-summary').innerHTML = [
-        card('Concentration',  badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Action',         badge.hint),
-        card('Positions',      String(state.positions.length)),
-        card('Clusters',       String(s.nClusters)),
-        card('Singletons',     String(s.singletons),
+        card(t('view.clusters_correlation.card.concentration'),  badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.clusters_correlation.card.action'),         badge.hint),
+        card(t('view.clusters_correlation.card.positions'),      String(state.positions.length)),
+        card(t('view.clusters_correlation.card.clusters'),       String(s.nClusters)),
+        card(t('view.clusters_correlation.card.singletons'),     String(s.singletons),
             s.singletons === state.positions.length ? 'pos' : ''),
-        card('Largest cluster size', String(s.maxClusterSize),
+        card(t('view.clusters_correlation.card.largest_cluster_size'), String(s.maxClusterSize),
             s.maxClusterSize >= 4 ? 'neg' : ''),
-        card('Top cluster %',  fmtPct(s.topPct), badge.cls),
-        card('Total gross',    fmtUSD(s.totalGross)),
-        card('Total net',      fmtUSDSigned(s.totalNet),
+        card(t('view.clusters_correlation.card.top_cluster'),  fmtPct(s.topPct), badge.cls),
+        card(t('view.clusters_correlation.card.total_gross'),    fmtUSD(s.totalGross)),
+        card(t('view.clusters_correlation.card.total_net'),      fmtUSDSigned(s.totalNet),
             s.totalNet >= 0 ? 'pos' : 'neg'),
-        card('Local parity',   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.clusters_correlation.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -154,8 +155,8 @@ function renderClusters(clusters) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Members</th><th>Size</th>
-                <th>Gross exposure</th><th>Net exposure</th><th>Direction</th>
+                <th>#</th><th data-i18n="view.clusters_correlation.th.members">Members</th><th data-i18n="view.clusters_correlation.th.size">Size</th>
+                <th data-i18n="view.clusters_correlation.th.gross_exposure">Gross exposure</th><th data-i18n="view.clusters_correlation.th.net_exposure">Net exposure</th><th data-i18n="view.clusters_correlation.th.direction">Direction</th>
             </tr></thead>
             <tbody>
                 ${clusters.map((c, i) => `<tr>

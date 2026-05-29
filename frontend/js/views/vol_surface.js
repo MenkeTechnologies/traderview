@@ -6,7 +6,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderVolSurface(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VOL SURFACE</h1>
+        <h1 data-i18n="view.vol_surface.h1.vol_surface" class="view-title">// VOL SURFACE</h1>
         <p class="muted small">IV grid across moneyness × expiration. Color intensity shows IV
             relative to the surface min/max — bright red = highest IV (richest options), deep
             blue = lowest (cheapest). Use OTM puts (negative moneyness) and OTM calls (positive)
@@ -14,12 +14,14 @@ export async function renderVolSurface(mount) {
             usually signals an upcoming binary event.</p>
 
         <form id="vsForm" class="filter-form">
-            <label>Symbol <input type="text" id="vsSym" value="SPY" required></label>
-            <label># expirations <input type="number" id="vsN" value="8" min="1" max="16"></label>
-            <button type="submit" class="btn">Build surface</button>
+            <label><span data-i18n="view.vol_surface.label.symbol">Symbol</span>
+                <input type="text" id="vsSym" value="SPY" required></label>
+            <label><span data-i18n="view.vol_surface.label.n_expirations"># expirations</span>
+                <input type="number" id="vsN" value="8" min="1" max="16"></label>
+            <button data-i18n="view.vol_surface.btn.build_surface" type="submit" class="btn">Build surface</button>
         </form>
 
-        <div id="vsOut"><p class="muted small">Enter a symbol to fetch its surface.</p></div>
+        <div id="vsOut"><p data-i18n="view.vol_surface.hint.enter_a_symbol_to_fetch_its_surface" class="muted small">Enter a symbol to fetch its surface.</p></div>
     `;
     mount.querySelector('#vsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -60,11 +62,11 @@ function renderSurface(s, out, mount) {
             <div id="vsHeat"></div>
         </div>
         <div class="chart-panel">
-            <h2>ATM term structure</h2>
+            <h2 data-i18n="view.vol_surface.h2.atm_term_structure">ATM term structure</h2>
             <div id="vsTerm"></div>
         </div>
         <div class="chart-panel">
-            <h2>Front-month skew</h2>
+            <h2 data-i18n="view.vol_surface.h2.front_month_skew">Front-month skew</h2>
             <div id="vsSkew"></div>
         </div>
     `;
@@ -101,9 +103,9 @@ function renderHeatmap(s, mount) {
     heatEl.innerHTML = `
         <table class="trades" style="table-layout:fixed;">
             <thead><tr>
-                <th>Expiration</th>
+                <th data-i18n="view.vol_surface.th.expiration">Expiration</th>
                 ${s.moneyness.map(m => `<th>${moneynessLabel(m)}</th>`).join('')}
-                <th>ATM IV</th>
+                <th data-i18n="view.vol_surface.th.atm_iv">ATM IV</th>
             </tr></thead>
             <tbody>${s.expirations.map(rowHtml).join('')}</tbody>
         </table>
@@ -116,7 +118,7 @@ function renderTermSvg(s, mount) {
     const termEl = mount.querySelector('#vsTerm');
     if (!termEl) return;
     const pts = s.term_structure;
-    if (!pts.length) { termEl.innerHTML = '<p class="muted small">no ATM IV resolved</p>'; return; }
+    if (!pts.length) { termEl.innerHTML = '<p data-i18n="view.vol_surface.hint.no_atm_iv_resolved" class="muted small">no ATM IV resolved</p>'; return; }
     const w = 700, h = 220, pad = 40;
     const xs = pts.map(p => p.days_to_expiry);
     const ys = pts.map(p => p.atm_iv * 100);
@@ -148,11 +150,11 @@ function renderSkewSvg(s, mount) {
     const skewEl = mount.querySelector('#vsSkew');
     if (!skewEl) return;
     const pts = s.front_skew;
-    if (!pts.length) { skewEl.innerHTML = '<p class="muted small">no skew data</p>'; return; }
+    if (!pts.length) { skewEl.innerHTML = '<p data-i18n="view.vol_surface.hint.no_skew_data" class="muted small">no skew data</p>'; return; }
     const w = 700, h = 220, pad = 40;
     const xs = pts.map(p => p.moneyness * 100);
     const allY = pts.flatMap(p => [p.call_iv, p.put_iv]).filter(v => v != null).map(v => v * 100);
-    if (!allY.length) { skewEl.innerHTML = '<p class="muted small">no skew IVs resolved</p>'; return; }
+    if (!allY.length) { skewEl.innerHTML = '<p data-i18n="view.vol_surface.hint.no_skew_ivs_resolved" class="muted small">no skew IVs resolved</p>'; return; }
     const xMin = Math.min(...xs), xMax = Math.max(...xs);
     const yMin = Math.min(...allY), yMax = Math.max(...allY);
     const sx = (x) => pad + (x - xMin) / Math.max(xMax - xMin, 1) * (w - 2 * pad);

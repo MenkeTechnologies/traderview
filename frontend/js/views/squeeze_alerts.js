@@ -15,32 +15,33 @@ import { esc } from '../util.js';
 import * as engine from '../_squeeze_alerts_inputs.js';
 import * as audio from '../_audio_alerts.js';
 
+import { t } from '../i18n.js';
 let settings = engine.loadSettings();
 let lastEvents = [];
 
 export async function renderSqueezeAlerts(mount, _appState) {
     const caps = audio.audioCapabilities();
     mount.innerHTML = `
-        <h1 class="view-title">// SQUEEZE ALERTS · BELL + TTS</h1>
+        <h1 data-i18n="view.squeeze_alerts.h1.squeeze_alerts_bell_tts" class="view-title">// SQUEEZE ALERTS · BELL + TTS</h1>
 
         <div class="chart-panel">
-            <h2>Audio capability</h2>
+            <h2 data-i18n="view.squeeze_alerts.h2.audio_capability">Audio capability</h2>
             <div class="cards">
-                ${card('Web Audio',   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
-                ${card('Speech (TTS)', caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
+                ${card(t('view.squeeze_alerts.card.web_audio'),   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
+                ${card(t('view.squeeze_alerts.card.speech_tts'), caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
             </div>
             <div class="inline-form" style="margin-top:8px">
-                <button id="sq-test-bell"  class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 Test bell</button>
-                <button id="sq-test-alarm" class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🚨 Test alarm</button>
-                <button id="sq-test-tts"   class="secondary" type="button" ${!caps.tts   ? 'disabled' : ''}>🗣️ Test TTS</button>
+                <button data-i18n="view.squeeze_alerts.btn.test_bell" id="sq-test-bell"  class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 Test bell</button>
+                <button data-i18n="view.squeeze_alerts.btn.test_alarm" id="sq-test-alarm" class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🚨 Test alarm</button>
+                <button data-i18n="view.squeeze_alerts.btn.test_tts" id="sq-test-tts"   class="secondary" type="button" ${!caps.tts   ? 'disabled' : ''}>🗣️ Test TTS</button>
             </div>
-            <p class="muted">Browser autoplay policy: audio context unlocks after your first
+            <p data-i18n="view.squeeze_alerts.hint.browser_autoplay_policy_audio_context_unlocks_afte" class="muted">Browser autoplay policy: audio context unlocks after your first
                 click anywhere on the page. If "Test bell" fails silently, click any button on
                 the page first then retry.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Settings</h2>
+            <h2 data-i18n="view.squeeze_alerts.h2.settings">Settings</h2>
             <div class="inline-form">
                 <label>Price threshold (% as decimal, 0.05 = 5%)
                     <input id="sq-pt" type="number" step="any" min="0" value="${settings.price_threshold_pct}"></label>
@@ -61,15 +62,15 @@ export async function renderSqueezeAlerts(mount, _appState) {
             <div class="inline-form">
                 <label>Watchlist (comma-separated, blank = all symbols)
                     <input id="sq-wl" type="text" value="${esc(settings.watchlist.join(','))}" style="min-width:300px"></label>
-                <button id="sq-save"    class="primary"   type="button">Save settings</button>
-                <button id="sq-default" class="secondary" type="button">Reset defaults</button>
+                <button data-i18n="view.squeeze_alerts.btn.save_settings" id="sq-save"    class="primary"   type="button">Save settings</button>
+                <button data-i18n="view.squeeze_alerts.btn.reset_defaults" id="sq-default" class="secondary" type="button">Reset defaults</button>
             </div>
-            <p class="muted">All settings persist in localStorage. Watchlist gates which
+            <p data-i18n="view.squeeze_alerts.hint.all_settings_persist_in_localstorage_watchlist_gat" class="muted">All settings persist in localStorage. Watchlist gates which
                 symbols can fire — leave blank to alert on every symbol that breaches.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Tick feed</h2>
+            <h2 data-i18n="view.squeeze_alerts.h2.tick_feed">Tick feed</h2>
             <p class="muted">One tick per line: <code>symbol unix_ts price volume</code>.
                 Demo loads 3 symbols over 30 minutes — AAPL ramps +8% in the last 5
                 minutes on 4× volume (normal alert), SMID gaps +12% on 6× volume (CRITICAL
@@ -78,14 +79,14 @@ export async function renderSqueezeAlerts(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>ADV table</h2>
+            <h2 data-i18n="view.squeeze_alerts.h2.adv_table">ADV table</h2>
             <p class="muted">One per line: <code>symbol adv_shares</code>.</p>
             <textarea id="sq-adv" rows="3" placeholder="AAPL 50000000&#10;MSFT 25000000&#10;SMID 250000"></textarea>
             <div class="inline-form">
-                <button id="sq-demo" class="secondary" type="button">Load demo (3 symbols, 60 ticks each, 30 min span)</button>
-                <button id="sq-clear" class="secondary" type="button">Clear feeds</button>
-                <button id="sq-replay" class="primary" type="button">▶ Replay alerts (audio + TTS will fire)</button>
-                <button id="sq-stop-tts" class="secondary" type="button">⏹ Stop TTS</button>
+                <button data-i18n="view.squeeze_alerts.btn.load_demo_3_symbols_60_ticks_each_30_min_span" id="sq-demo" class="secondary" type="button">Load demo (3 symbols, 60 ticks each, 30 min span)</button>
+                <button data-i18n="view.squeeze_alerts.btn.clear_feeds" id="sq-clear" class="secondary" type="button">Clear feeds</button>
+                <button data-i18n="view.squeeze_alerts.btn.replay_alerts_audio_tts_will_fire" id="sq-replay" class="primary" type="button">▶ Replay alerts (audio + TTS will fire)</button>
+                <button data-i18n="view.squeeze_alerts.btn.stop_tts" id="sq-stop-tts" class="secondary" type="button">⏹ Stop TTS</button>
             </div>
         </div>
 
@@ -93,7 +94,7 @@ export async function renderSqueezeAlerts(mount, _appState) {
         <div id="sq-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Detected squeeze events (chronological)</h2>
+            <h2 data-i18n="view.squeeze_alerts.h2.detected_squeeze_events_chronological">Detected squeeze events (chronological)</h2>
             <div id="sq-events"></div>
         </div>
     `;
@@ -210,11 +211,11 @@ function renderSummary(ticks, events) {
     const critical = events.filter(e => e.severity === 'critical').length;
     const lastEv = events[events.length - 1];
     document.getElementById('sq-summary').innerHTML = [
-        card('Ticks',            String(ticks.length)),
-        card('Symbols alerting', String(symbols.size), symbols.size ? 'neg' : 'pos'),
-        card('Events',           String(events.length), events.length ? 'neg' : 'pos'),
-        card('Critical',         String(critical), critical ? 'neg' : ''),
-        card('Last event',       lastEv
+        card(t('view.squeeze_alerts.card.ticks'),            String(ticks.length)),
+        card(t('view.squeeze_alerts.card.symbols_alerting'), String(symbols.size), symbols.size ? 'neg' : 'pos'),
+        card(t('view.squeeze_alerts.card.events'),           String(events.length), events.length ? 'neg' : 'pos'),
+        card(t('view.squeeze_alerts.card.critical'),         String(critical), critical ? 'neg' : ''),
+        card(t('view.squeeze_alerts.card.last_event'),       lastEv
             ? `${lastEv.symbol} ${engine.fmtPct(lastEv.price_change_pct)} ${engine.fmtMult(lastEv.volume_multiplier)} @ ${engine.fmtTime(lastEv.ts)}`
             : '—',
             lastEv && lastEv.severity === 'critical' ? 'neg' : ''),
@@ -237,8 +238,8 @@ function renderEvents(events) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Time</th><th>Symbol</th>
-                <th>Price Δ</th><th>Vol ×</th><th>Severity</th><th>TTS phrase</th>
+                <th>#</th><th data-i18n="view.squeeze_alerts.th.time">Time</th><th data-i18n="view.squeeze_alerts.th.symbol">Symbol</th>
+                <th data-i18n="view.squeeze_alerts.th.price">Price Δ</th><th data-i18n="view.squeeze_alerts.th.vol">Vol ×</th><th data-i18n="view.squeeze_alerts.th.severity">Severity</th><th data-i18n="view.squeeze_alerts.th.tts_phrase">TTS phrase</th>
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => `

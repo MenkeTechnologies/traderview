@@ -7,7 +7,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderEquityForecast(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.equity_forecast.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// EQUITY FORECAST — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Bootstraps R-multiples from your closed-trade history and
@@ -37,7 +37,7 @@ export async function renderEquityForecast(mount, state) {
                 <label>Seed (opt)
                     <input name="seed" type="number" style="width:120px;">
                 </label>
-                <button class="primary" type="submit">Run forecast</button>
+                <button data-i18n="view.equity_forecast.btn.run_forecast" class="primary" type="submit">Run forecast</button>
                 <span id="ef-status" class="muted small"></span>
             </form>
         </div>
@@ -100,19 +100,19 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Equity fan (p5 / p25 / p50 / p75 / p95)</h2>
+            <h2 data-i18n="view.equity_forecast.h2.equity_fan_p5_p25_p50_p75_p95">Equity fan (p5 / p25 / p50 / p75 / p95)</h2>
             ${fanSvg(r)}
         </div>
 
         <div class="chart-panel">
-            <h2>Sample paths (first 50)</h2>
+            <h2 data-i18n="view.equity_forecast.h2.sample_paths_first_50">Sample paths (first 50)</h2>
             ${spaghettiSvg(r)}
         </div>
     `;
 }
 
 function fanSvg(r) {
-    if (!r.steps_stats.length) return '<p class="muted small">no data</p>';
+    if (!r.steps_stats.length) return '<p data-i18n="view.equity_forecast.hint.no_data" class="muted small">no data</p>';
     const W = 1000, H = 380, padL = 60, padR = 10, padT = 10, padB = 30;
     const innerW = W - padL - padR, innerH = H - padT - padB;
     const stats = r.steps_stats;
@@ -163,7 +163,7 @@ function fanSvg(r) {
 }
 
 function spaghettiSvg(r) {
-    if (!r.sample_paths.length) return '<p class="muted small">no sample paths</p>';
+    if (!r.sample_paths.length) return '<p data-i18n="view.equity_forecast.hint.no_sample_paths" class="muted small">no sample paths</p>';
     const W = 1000, H = 240, padL = 60, padR = 10, padT = 10, padB = 24;
     const innerW = W - padL - padR, innerH = H - padT - padB;
     const allY = r.sample_paths.flat().concat([r.starting_equity]);

@@ -16,6 +16,7 @@ import {
     METRICS, fmtN, defaultSpotGrid,
 } from '../_greeks_profile_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_PARAMS = {
     kind: 'call',
     strike: 100,
@@ -39,15 +40,15 @@ export async function renderGreeksProfile(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// GREEKS PROFILE</h1>
+        <h1 data-i18n="view.greeks_profile.h1.greeks_profile" class="view-title">// GREEKS PROFILE</h1>
 
         <div class="chart-panel">
-            <h2>Contract</h2>
+            <h2 data-i18n="view.greeks_profile.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label>Kind
                     <select id="gp-kind">
-                        <option value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
-                        <option value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
+                        <option data-i18n="view.greeks_profile.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
+                        <option data-i18n="view.greeks_profile.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label>Strike <input id="gp-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
                 <label>T (years) <input id="gp-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
@@ -58,15 +59,15 @@ export async function renderGreeksProfile(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Spot grid</h2>
+            <h2 data-i18n="view.greeks_profile.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
                 <label>Low <input id="gp-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
                 <label>High <input id="gp-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
                 <label>Points <input id="gp-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
-                <button id="gp-defaults" class="secondary" type="button">±50% from strike</button>
-                <button id="gp-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.greeks_profile.btn.50_from_strike" id="gp-defaults" class="secondary" type="button">±50% from strike</button>
+                <button data-i18n="view.greeks_profile.btn.compute" id="gp-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.greeks_profile.hint.each_greek_plotted_as_a_function_of_spot_across_th" class="muted">
                 Each greek plotted as a function of spot across the chosen grid. ATM marker
                 shows where spot = strike. Quick sanity: ATM call delta ≈ 0.5, gamma peaks
                 near ATM, vega peaks near ATM, theta most negative near ATM (max time-decay).
@@ -132,14 +133,14 @@ function renderSummary(res, series) {
     const i = res.atm_index;
     const atm = res.points[i] || {};
     document.getElementById('gp-summary').innerHTML = [
-        card('ATM spot', fmtN(atm.spot, 2)),
-        card('Price @ ATM', fmtN(atm.price)),
-        card('Δ @ ATM', fmtN(atm.delta), atm.delta >= 0 ? 'pos' : 'neg'),
-        card('Γ @ ATM', fmtN(atm.gamma, 6)),
-        card('Vega @ ATM', fmtN(atm.vega)),
-        card('Θ @ ATM', fmtN(atm.theta), atm.theta < 0 ? 'neg' : ''),
-        card('ρ @ ATM', fmtN(atm.rho)),
-        card('Grid points', String(series.spots.length)),
+        card(t('view.greeks_profile.card.atm_spot'), fmtN(atm.spot, 2)),
+        card(t('view.greeks_profile.card.price_atm'), fmtN(atm.price)),
+        card(t('view.greeks_profile.card.atm'), fmtN(atm.delta), atm.delta >= 0 ? 'pos' : 'neg'),
+        card(t('view.greeks_profile.card.atm_2'), fmtN(atm.gamma, 6)),
+        card(t('view.greeks_profile.card.vega_atm'), fmtN(atm.vega)),
+        card(t('view.greeks_profile.card.atm_3'), fmtN(atm.theta), atm.theta < 0 ? 'neg' : ''),
+        card(t('view.greeks_profile.card.atm_4'), fmtN(atm.rho)),
+        card(t('view.greeks_profile.card.grid_points'), String(series.spots.length)),
     ].join('');
 }
 

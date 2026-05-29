@@ -33,11 +33,12 @@ const TILE_INDEX = new Map(TILES.map(t => [t[0], { label: t[1], glyph: t[2], des
 
 let state = store.loadState();
 let editMode = false;
+let _wired = false;
 
 export async function renderDashboards(mount, _appState) {
     state = store.loadState();
     mount.innerHTML = `
-        <h1 class="view-title">// DASHBOARDS</h1>
+        <h1 data-i18n="view.dashboards.h1.dashboards" class="view-title">// DASHBOARDS</h1>
         <div class="db-shell">
             <aside id="db-sidebar" class="db-sidebar"></aside>
             <section id="db-main" class="db-main"></section>
@@ -45,6 +46,19 @@ export async function renderDashboards(mount, _appState) {
     `;
     renderSidebar();
     await renderActive();
+    if (!_wired) {
+        _wired = true;
+        // External mutations (e.g. launcher 📌 pin button) wake this view
+        // so the active dashboard's tile list refreshes without a manual
+        // reload. Only paints when this view is currently active.
+        window.addEventListener('tv:dashboards-changed', () => {
+            if ((window.location.hash || '').replace(/^#/, '').split('/')[0] !== 'dashboard'
+                && (window.location.hash || '').replace(/^#/, '').split('/')[0] !== 'dashboards') return;
+            state = store.loadState();
+            renderSidebar();
+            void renderActive();
+        });
+    }
 }
 
 function persist() {
@@ -67,19 +81,19 @@ function renderSidebar() {
         </ul>
         <div class="db-sidebar-actions">
             <input id="db-new-name" type="text" placeholder="new dashboard name">
-            <button id="db-new" class="primary" type="button">+ Create</button>
+            <button data-i18n="view.dashboards.btn.create" id="db-new" class="primary" type="button">+ Create</button>
         </div>
         <hr>
         <div class="db-sidebar-actions">
-            <button id="db-rename"     class="secondary" type="button">Rename active</button>
-            <button id="db-duplicate"  class="secondary" type="button">Duplicate active</button>
-            <button id="db-delete"     class="secondary" type="button">Delete active</button>
+            <button data-i18n="view.dashboards.btn.rename_active" id="db-rename"     class="secondary" type="button">Rename active</button>
+            <button data-i18n="view.dashboards.btn.duplicate_active" id="db-duplicate"  class="secondary" type="button">Duplicate active</button>
+            <button data-i18n="view.dashboards.btn.delete_active" id="db-delete"     class="secondary" type="button">Delete active</button>
             <button id="db-edit"       class="${editMode ? 'primary' : 'secondary'}" type="button">${editMode ? 'Done editing' : 'Edit layout'}</button>
         </div>
         <hr>
         <div class="db-sidebar-actions">
-            <button id="db-export"     class="secondary" type="button">Export all (JSON)</button>
-            <button id="db-import"     class="secondary" type="button">Import (JSON)</button>
+            <button data-i18n="view.dashboards.btn.export_all_json" id="db-export"     class="secondary" type="button">Export all (JSON)</button>
+            <button data-i18n="view.dashboards.btn.import_json" id="db-import"     class="secondary" type="button">Import (JSON)</button>
         </div>
         <hr>
         <div id="db-favs-section"></div>
@@ -178,7 +192,7 @@ function renderFavsSection() {
     if (!fState.favorites.length && !fState.bookmarks.length) {
         wrap.innerHTML = `
             <div class="db-sidebar-head">★ FAVORITES</div>
-            <p class="muted" style="font-size:11px">
+            <p data-i18n="view.dashboards.hint.no_favorites_yet_click_on_any_launcher_tile_to_fav" class="muted" style="font-size:11px">
                 No favorites yet. Click ★ on any launcher tile to favorite it.
                 Add this favorite view as a tile here with one click.
             </p>
@@ -266,7 +280,7 @@ async function renderActive() {
 function renderPicker() {
     return `
         <div class="chart-panel db-picker">
-            <h3>+ Add tile</h3>
+            <h3 data-i18n="view.dashboards.h3.add_tile">+ Add tile</h3>
             <input id="db-pick-search" type="text" placeholder="filter views…" class="db-pick-search">
             <div id="db-pick-grid" class="db-pick-grid"></div>
         </div>

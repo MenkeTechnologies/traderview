@@ -26,10 +26,10 @@ export async function renderTapeReplay(mount, state, tradeId = '') {
 
 async function renderPicker(mount, state, tok) {
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.tape_replay.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
-        <h1 class="view-title">// TAPE REPLAY</h1>
-        <p class="muted small">Re-watch the exact bar sequence around any of your closed trades
+        <h1 data-i18n="view.tape_replay.h1.tape_replay" class="view-title">// TAPE REPLAY</h1>
+        <p data-i18n="view.tape_replay.hint.re_watch_the_exact_bar_sequence_around_any_of_your" class="muted small">Re-watch the exact bar sequence around any of your closed trades
             with execution markers fading in at their fill timestamps. Auto-picks bar interval
             from hold duration (1m/5m/1h/1d). Use the replay to ask "what would I do differently"
             and drop client-side journal notes at the cursor.</p>
@@ -51,9 +51,9 @@ async function renderPicker(mount, state, tok) {
         const listEl = mount.querySelector('#tr-list');
         if (!listEl) return;
         listEl.innerHTML = trades.length === 0
-            ? '<p class="muted small">No closed trades on this account.</p>'
+            ? '<p data-i18n="view.tape_replay.hint.no_closed_trades_on_this_account" class="muted small">No closed trades on this account.</p>'
             : `<table class="trades">
-                <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Opened</th><th>Closed</th><th>Net P/L</th></tr></thead>
+                <thead><tr><th data-i18n="view.tape_replay.th.symbol">Symbol</th><th data-i18n="view.tape_replay.th.side">Side</th><th data-i18n="view.tape_replay.th.qty">Qty</th><th data-i18n="view.tape_replay.th.opened">Opened</th><th data-i18n="view.tape_replay.th.closed">Closed</th><th data-i18n="view.tape_replay.th.net_p_l">Net P/L</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>`;
     } catch (e) {
@@ -64,7 +64,7 @@ async function renderPicker(mount, state, tok) {
 }
 
 async function renderReplay(mount, tradeId, tok) {
-    mount.innerHTML = `<h1 class="view-title">// TAPE REPLAY</h1>
+    mount.innerHTML = `<h1 data-i18n="view.tape_replay.h1.tape_replay_2" class="view-title">// TAPE REPLAY</h1>
         <div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading replay…</div></div>`;
     let data;
     try { data = await api.tapeReplay(tradeId); }
@@ -96,9 +96,9 @@ async function renderReplay(mount, tradeId, tok) {
 
         <div class="chart-panel">
             <div class="inline-form" style="margin-bottom:8px;">
-                <button class="btn" id="tr-play">▶ Play</button>
-                <button class="btn" id="tr-rewind">⏮ Rewind</button>
-                <label>Speed
+                <button data-i18n="view.tape_replay.btn.play" class="btn" id="tr-play">▶ Play</button>
+                <button data-i18n="view.tape_replay.btn.rewind" class="btn" id="tr-rewind">⏮ Rewind</button>
+                <label><span data-i18n="view.tape_replay.label.speed">Speed</span>
                     <select id="tr-speed">
                         ${SPEEDS.map(s => `<option value="${s}" ${s === state.speed ? 'selected' : ''}>${s}×</option>`).join('')}
                     </select>
@@ -110,10 +110,10 @@ async function renderReplay(mount, tradeId, tok) {
         </div>
 
         <div class="chart-panel">
-            <h2>What I'd do differently (client-side, this session only)</h2>
+            <h2 data-i18n="view.tape_replay.h2.what_i_d_do_differently_client_side_this_session_o">What I'd do differently (client-side, this session only)</h2>
             <form id="tr-note-form" class="inline-form">
                 <input id="tr-note" placeholder="Drop note at current cursor" style="flex:1;min-width:240px;">
-                <button class="primary" type="submit">Pin at cursor</button>
+                <button data-i18n="view.tape_replay.btn.pin_at_cursor" class="primary" type="submit">Pin at cursor</button>
             </form>
             <div id="tr-notes" style="margin-top:8px;"></div>
         </div>
@@ -191,7 +191,7 @@ function renderChart(data, state, mount) {
     const el = mount.querySelector('#tr-chart');
     if (!el) return;
     const bars = data.bars;
-    if (!bars.length) { el.innerHTML = '<p class="muted small">No bars cached for this trade window.</p>'; return; }
+    if (!bars.length) { el.innerHTML = '<p data-i18n="view.tape_replay.hint.no_bars_cached_for_this_trade_window" class="muted small">No bars cached for this trade window.</p>'; return; }
     const visible = bars.slice(0, state.idx + 1);
     const W = 980, H = 360, padL = 50, padR = 10, padT = 10, padB = 28;
     const innerW = W - padL - padR, innerH = H - padT - padB;
@@ -284,7 +284,7 @@ function renderChart(data, state, mount) {
 function renderNotes(notes, mount) {
     const el = mount.querySelector('#tr-notes');
     if (!el) return;
-    if (!notes.length) { el.innerHTML = '<p class="muted small">No notes yet.</p>'; return; }
+    if (!notes.length) { el.innerHTML = '<p data-i18n="view.tape_replay.hint.no_notes_yet" class="muted small">No notes yet.</p>'; return; }
     el.innerHTML = `<ol style="padding-left:18px;">
         ${notes.map(n => `<li class="small">
             <span class="muted">${esc(new Date(n.time_iso || Date.now()).toLocaleString())}</span>

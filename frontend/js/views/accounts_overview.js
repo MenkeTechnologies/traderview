@@ -7,7 +7,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderAccountsOverview(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ACCOUNTS OVERVIEW</h1>
+        <h1 data-i18n="view.accounts_overview.h1.accounts_overview" class="view-title">// ACCOUNTS OVERVIEW</h1>
         <p class="muted small">Side-by-side snapshot of every account you own. P/L windows
             (today / MTD / YTD) are computed from <code>trades.opened_at</code> UTC dates.
             Open-position fields pull fresh quotes (60s server cache) and aggregate the same
@@ -63,15 +63,15 @@ function render(r, mount) {
 }
 
 function accountTable(accounts) {
-    if (!accounts.length) return '<p class="muted small">No accounts.</p>';
+    if (!accounts.length) return '<p data-i18n="view.accounts_overview.hint.no_accounts" class="muted small">No accounts.</p>';
     const cls = (v) => v == null ? '' : v >= 0 ? 'pos' : 'neg';
     return `<table class="trades">
         <thead><tr>
-            <th>Broker · Name</th><th>Ccy</th>
-            <th>Today</th><th>MTD</th><th>YTD</th><th>All-time</th>
-            <th>Trades</th><th>Win%</th>
-            <th>Best</th><th>Worst</th>
-            <th>Open</th><th>Unrealized</th>
+            <th data-i18n="view.accounts_overview.th.broker_name">Broker · Name</th><th data-i18n="view.accounts_overview.th.ccy">Ccy</th>
+            <th data-i18n="view.accounts_overview.th.today">Today</th><th data-i18n="view.accounts_overview.th.mtd">MTD</th><th data-i18n="view.accounts_overview.th.ytd">YTD</th><th data-i18n="view.accounts_overview.th.all_time">All-time</th>
+            <th data-i18n="view.accounts_overview.th.trades">Trades</th><th data-i18n="view.accounts_overview.th.win">Win%</th>
+            <th data-i18n="view.accounts_overview.th.best">Best</th><th data-i18n="view.accounts_overview.th.worst">Worst</th>
+            <th data-i18n="view.accounts_overview.th.open">Open</th><th data-i18n="view.accounts_overview.th.unrealized">Unrealized</th>
         </tr></thead>
         <tbody>
         ${accounts.map(a => `<tr>

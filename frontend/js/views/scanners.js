@@ -21,14 +21,14 @@ export async function renderScanners(mount) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// SCANNERS</h1>
-        <p class="muted small">Warrior/Zendoo-style preset scans across your watchlist universe.
+        <h1 data-i18n="view.scanners.h1.scanners" class="view-title">// SCANNERS</h1>
+        <p data-i18n="view.scanners.hint.warrior_zendoo_style_preset_scans_across_your_watc" class="muted small">Warrior/Zendoo-style preset scans across your watchlist universe.
         Click a preset to run.</p>
 
         <div class="chart-panel">
-            <label>Universe
+            <label><span data-i18n="view.scanners.label.universe">Universe</span>
                 <select id="wl">
-                    <option value="">all my watchlists</option>
+                    <option data-i18n="view.scanners.opt.all_my_watchlists" value="">all my watchlists</option>
                     ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                 </select>
             </label>
@@ -70,8 +70,8 @@ function renderHits(r) {
         <h2>${esc(r.label)} · ${r.hits.length} hits of ${r.universe_size} scanned</h2>
         ${r.hits.length ? `<table class="trades">
             <thead><tr>
-                <th>Symbol</th><th>Price</th><th>Gap%</th><th>Day%</th><th>Δ vs prior</th>
-                <th>Vol</th><th>RVol</th><th>HOD dist</th><th>52w</th>
+                <th data-i18n="view.scanners.th.symbol">Symbol</th><th data-i18n="view.scanners.th.price">Price</th><th data-i18n="view.scanners.th.gap">Gap%</th><th data-i18n="view.scanners.th.day">Day%</th><th data-i18n="view.scanners.th.vs_prior">Δ vs prior</th>
+                <th data-i18n="view.scanners.th.vol">Vol</th><th data-i18n="view.scanners.th.rvol">RVol</th><th data-i18n="view.scanners.th.hod_dist">HOD dist</th><th data-i18n="view.scanners.th.52w">52w</th>
             </tr></thead><tbody>${r.hits.map(h => {
                 const cls = h.change_pct >= 0 ? 'pos' : 'neg';
                 return `<tr>
@@ -85,6 +85,6 @@ function renderHits(r) {
                     <td>${fmt(h.hod_dist_pct, 2)}%</td>
                     <td>${fmt(h.year_high_pct, 1)}% / ${fmt(h.year_low_pct, 1)}%</td>
                 </tr>`;
-            }).join('')}</tbody></table>` : '<p class="muted">No matches.</p>'}
+            }).join('')}</tbody></table>` : '<p data-i18n="view.scanners.hint.no_matches" class="muted">No matches.</p>'}
     </div>`;
 }

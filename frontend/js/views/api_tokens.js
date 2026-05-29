@@ -8,7 +8,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderDeveloper(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DEVELOPER — PUBLIC API</h1>
+        <h1 data-i18n="view.api_tokens.h1.developer_public_api" class="view-title">// DEVELOPER — PUBLIC API</h1>
         <p class="muted small">Personal Access Tokens authenticate third-party integrations
             against the same endpoints the UI uses. Pass them as
             <code>Authorization: Bearer pat_&lt;prefix&gt;_&lt;secret&gt;</code>. Tokens are
@@ -16,14 +16,14 @@ export async function renderDeveloper(mount) {
             time and never recoverable afterwards. Revoke a token to cut access immediately.</p>
 
         <div class="chart-panel">
-            <h2>Create token</h2>
+            <h2 data-i18n="view.api_tokens.h2.create_token">Create token</h2>
             <form id="tok-form" class="inline-form">
                 <label>Name <input name="name" placeholder="n8n staging" required style="min-width:220px;"></label>
                 <label>Scopes
                     <select name="scopes" multiple size="3" style="min-width:120px;">
-                        <option value="read" selected>read</option>
-                        <option value="write">write</option>
-                        <option value="admin">admin</option>
+                        <option data-i18n="view.api_tokens.opt.read" value="read" selected>read</option>
+                        <option data-i18n="view.api_tokens.opt.write" value="write">write</option>
+                        <option data-i18n="view.api_tokens.opt.admin" value="admin">admin</option>
                     </select>
                 </label>
                 <label>Expires (optional)
@@ -33,18 +33,18 @@ export async function renderDeveloper(mount) {
                     <input name="rate_limit_per_min" type="number" min="1" max="10000"
                            value="60" style="width:90px;">
                 </label>
-                <button class="primary" type="submit">Generate</button>
+                <button data-i18n="view.api_tokens.btn.generate" class="primary" type="submit">Generate</button>
             </form>
             <div id="tok-new"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Active tokens</h2>
+            <h2 data-i18n="view.api_tokens.h2.active_tokens">Active tokens</h2>
             <div id="tok-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Example use (curl)</h2>
+            <h2 data-i18n="view.api_tokens.h2.example_use_curl">Example use (curl)</h2>
             <pre style="background:#0d0d22;padding:12px;overflow:auto;font-size:11px;">curl -H "Authorization: Bearer pat_xxx_yyy" \\
      ${esc(window.location.origin)}/api/trades?status=closed&amp;limit=50</pre>
         </div>
@@ -63,7 +63,7 @@ export async function renderDeveloper(mount) {
         };
         const out = mount.querySelector('#tok-new');
         if (!out) return;
-        out.innerHTML = '<p class="muted small">generating…</p>';
+        out.innerHTML = '<p data-i18n="view.api_tokens.hint.generating" class="muted small">generating…</p>';
         try {
             const r = await api.createApiToken(body);
             if (!viewIsCurrent(tok)) return;
@@ -96,15 +96,15 @@ async function loadList(mount, tok) {
         const el2 = mount.querySelector('#tok-list');
         if (!el2) return;
         if (!rows.length) {
-            el2.innerHTML = '<p class="muted small">No tokens yet.</p>';
+            el2.innerHTML = '<p data-i18n="view.api_tokens.hint.no_tokens_yet" class="muted small">No tokens yet.</p>';
             return;
         }
         el2.innerHTML = `
             <table class="trades">
                 <thead><tr>
-                    <th>Name</th><th>Prefix</th><th>Scopes</th><th>Rate/min</th>
-                    <th>Created</th><th>Last used</th><th>Uses</th><th>Expires</th>
-                    <th>Status</th><th></th>
+                    <th data-i18n="view.api_tokens.th.name">Name</th><th data-i18n="view.api_tokens.th.prefix">Prefix</th><th data-i18n="view.api_tokens.th.scopes">Scopes</th><th data-i18n="view.api_tokens.th.rate_min">Rate/min</th>
+                    <th data-i18n="view.api_tokens.th.created">Created</th><th data-i18n="view.api_tokens.th.last_used">Last used</th><th data-i18n="view.api_tokens.th.uses">Uses</th><th data-i18n="view.api_tokens.th.expires">Expires</th>
+                    <th data-i18n="view.api_tokens.th.status">Status</th><th></th>
                 </tr></thead>
                 <tbody>
                     ${rows.map(t => `<tr>
@@ -123,7 +123,7 @@ async function loadList(mount, tok) {
                         <td class="small ${t.revoked_at ? 'neg' : 'pos'}">${t.revoked_at ? 'revoked' : 'active'}</td>
                         <td>${t.revoked_at
                             ? ''
-                            : `<button class="btn revoke-btn" data-id="${t.id}">Revoke</button>`}</td>
+                            : `<button data-i18n="view.api_tokens.btn.revoke" class="btn revoke-btn" data-id="${t.id}">Revoke</button>`}</td>
                     </tr>`).join('')}
                 </tbody>
             </table>

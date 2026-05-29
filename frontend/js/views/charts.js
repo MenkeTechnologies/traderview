@@ -10,40 +10,40 @@ export async function renderCharts(mount, _state, symbol = '') {
     const tok = currentViewToken();
     if (!symbol) symbol = 'SPY';
     mount.innerHTML = `
-        <h1 class="view-title">// CHARTS</h1>
+        <h1 data-i18n="view.charts.h1.charts" class="view-title">// CHARTS</h1>
         <div class="chart-toolbar">
             <label>Symbol <input id="sym" value="${esc(symbol)}"></label>
             <label>Interval
                 <select id="iv">
-                    <option value="1m">1m</option>
-                    <option value="5m">5m</option>
-                    <option value="15m">15m</option>
-                    <option value="1h">1h</option>
-                    <option value="1d" selected>1d</option>
-                    <option value="1w">1w</option>
+                    <option data-i18n="view.charts.opt.1m" value="1m">1m</option>
+                    <option data-i18n="view.charts.opt.5m" value="5m">5m</option>
+                    <option data-i18n="view.charts.opt.15m" value="15m">15m</option>
+                    <option data-i18n="view.charts.opt.1h" value="1h">1h</option>
+                    <option data-i18n="view.charts.opt.1d" value="1d" selected>1d</option>
+                    <option data-i18n="view.charts.opt.1w" value="1w">1w</option>
                 </select>
             </label>
             <label>From <input type="date" id="from"></label>
             <label>To <input type="date" id="to"></label>
-            <button class="primary" id="load">Load</button>
+            <button data-i18n="view.charts.btn.load" class="primary" id="load">Load</button>
         </div>
 
         <div class="chart-toolbar" id="drawToolbar">
             <span class="muted small">Tool:</span>
-            <button class="btn tool-btn active" data-tool="select">Select</button>
-            <button class="btn tool-btn" data-tool="trendline">Trendline</button>
-            <button class="btn tool-btn" data-tool="hline">H-line</button>
-            <button class="btn tool-btn" data-tool="fib">Fib</button>
-            <button class="btn tool-btn" data-tool="text">Text</button>
+            <button data-i18n="view.charts.btn.select" class="btn tool-btn active" data-tool="select">Select</button>
+            <button data-i18n="view.charts.btn.trendline" class="btn tool-btn" data-tool="trendline">Trendline</button>
+            <button data-i18n="view.charts.btn.h_line" class="btn tool-btn" data-tool="hline">H-line</button>
+            <button data-i18n="view.charts.btn.fib" class="btn tool-btn" data-tool="fib">Fib</button>
+            <button data-i18n="view.charts.btn.text" class="btn tool-btn" data-tool="text">Text</button>
             <span class="muted small">Color:</span>
             <span id="colorPicker"></span>
-            <button class="btn" id="clearDrawings" style="margin-left:auto;">Clear all</button>
+            <button data-i18n="view.charts.btn.clear_all" class="btn" id="clearDrawings" style="margin-left:auto;">Clear all</button>
         </div>
 
         <div class="chart-toolbar">
             <span class="muted small">Indicators:</span>
             <select id="indicatorSel" multiple size="3" style="min-width:240px;"></select>
-            <button class="btn" id="indicatorReload">Apply</button>
+            <button data-i18n="view.charts.btn.apply" class="btn" id="indicatorReload">Apply</button>
             <a href="#custom-indicators" class="small muted">manage…</a>
         </div>
 
@@ -55,7 +55,7 @@ export async function renderCharts(mount, _state, symbol = '') {
                      xmlns="http://www.w3.org/2000/svg"></svg>
             </div>
         </div>
-        <p class="muted small" id="drawHint">
+        <p data-i18n="view.charts.hint.trendline_fib_click_two_points_h_line_text_click_o" class="muted small" id="drawHint">
             Trendline/Fib: click two points. H-line/Text: click once. Drawings persist per symbol.
         </p>
     `;
@@ -144,7 +144,17 @@ export async function renderCharts(mount, _state, symbol = '') {
         if (!viewIsCurrent(tok)) return;
         drawAll(ds);
     });
-    window.addEventListener('resize', () => { sizeOverlay(ds); drawAll(ds); });
+    // Self-cleaning resize listener: once a later navigation bumps the
+    // view token, the handler removes itself so multiple charts visits
+    // don't accumulate parallel listeners on the window.
+    const onResize = () => {
+        if (!viewIsCurrent(tok)) {
+            window.removeEventListener('resize', onResize);
+            return;
+        }
+        sizeOverlay(ds); drawAll(ds);
+    };
+    window.addEventListener('resize', onResize);
     load();
 }
 

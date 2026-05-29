@@ -13,7 +13,7 @@ const KINDS = [
 export async function renderWalkForward(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// WALK-FORWARD OPTIMIZATION</h1>
+        <h1 data-i18n="view.walk_forward.h1.walk_forward_optimization" class="view-title">// WALK-FORWARD OPTIMIZATION</h1>
         <p class="muted small">Rolling in-sample / out-of-sample sweep. For each window we
             (1) sweep the full preset grid on the IS slice, (2) pick the best params, (3) run
             those params on the OOS slice with the running equity. OOS slices stitch into one
@@ -35,14 +35,14 @@ export async function renderWalkForward(mount) {
                 <label>Capital <input name="capital" type="number" value="10000" style="width:110px"></label>
                 <label>Fee/trade <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
                 <select name="metric">
-                    <option value="return" selected>Maximize return</option>
-                    <option value="sharpe">Maximize Sharpe</option>
+                    <option data-i18n="view.walk_forward.opt.maximize_return" value="return" selected>Maximize return</option>
+                    <option data-i18n="view.walk_forward.opt.maximize_sharpe" value="sharpe">Maximize Sharpe</option>
                 </select>
-                <button class="primary" type="submit">Run walk-forward</button>
+                <button data-i18n="view.walk_forward.btn.run_walk_forward" class="primary" type="submit">Run walk-forward</button>
             </form>
         </div>
 
-        <div id="wf-out"><p class="muted small">Pick a long-history symbol (SPY, QQQ, AAPL) and run.</p></div>
+        <div id="wf-out"><p data-i18n="view.walk_forward.hint.pick_a_long_history_symbol_spy_qqq_aapl_and_run" class="muted small">Pick a long-history symbol (SPY, QQQ, AAPL) and run.</p></div>
     `;
     mount.querySelector('#wf-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -99,7 +99,7 @@ function renderResult(r, body, out, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Baseline (single best fit, entire series) — for comparison</h2>
+            <h2 data-i18n="view.walk_forward.h2.baseline_single_best_fit_entire_series_for_compari">Baseline (single best fit, entire series) — for comparison</h2>
             <div class="cards">
                 <div class="card"><div class="label">Baseline params</div>
                     <div class="value small">${esc(JSON.stringify(r.baseline_params))}</div></div>
@@ -110,7 +110,7 @@ function renderResult(r, body, out, mount) {
                 <div class="card"><div class="label">Baseline trades</div>
                     <div class="value">${r.baseline_summary.trades}</div></div>
             </div>
-            <p class="muted small">If baseline ≫ total_OOS, the headline strategy is over-fitted; the parameter set that won on the full history would not have survived rolling re-fits.</p>
+            <p data-i18n="view.walk_forward.hint.if_baseline_total_oos_the_headline_strategy_is_ove" class="muted small">If baseline ≫ total_OOS, the headline strategy is over-fitted; the parameter set that won on the full history would not have survived rolling re-fits.</p>
         </div>
 
         <div class="chart-panel">
@@ -119,12 +119,12 @@ function renderResult(r, body, out, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Per-window IS vs OOS</h2>
+            <h2 data-i18n="view.walk_forward.h2.per_window_is_vs_oos">Per-window IS vs OOS</h2>
             <table class="trades">
                 <thead><tr>
-                    <th>#</th><th>IS range</th><th>OOS range</th><th>Chosen params</th>
-                    <th>IS return</th><th>IS Sharpe</th>
-                    <th>OOS return</th><th>OOS Sharpe</th><th>OOS trades</th><th>Equity after</th>
+                    <th>#</th><th data-i18n="view.walk_forward.th.is_range">IS range</th><th data-i18n="view.walk_forward.th.oos_range">OOS range</th><th data-i18n="view.walk_forward.th.chosen_params">Chosen params</th>
+                    <th data-i18n="view.walk_forward.th.is_return">IS return</th><th data-i18n="view.walk_forward.th.is_sharpe">IS Sharpe</th>
+                    <th data-i18n="view.walk_forward.th.oos_return">OOS return</th><th data-i18n="view.walk_forward.th.oos_sharpe">OOS Sharpe</th><th data-i18n="view.walk_forward.th.oos_trades">OOS trades</th><th data-i18n="view.walk_forward.th.equity_after">Equity after</th>
                 </tr></thead>
                 <tbody>
                     ${r.windows.map(w => `<tr>

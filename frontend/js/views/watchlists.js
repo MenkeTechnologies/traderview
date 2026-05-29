@@ -15,7 +15,7 @@ export async function renderWatchlists(mount) {
     const active = lists[0];
 
     mount.innerHTML = `
-        <h1 class="view-title">// WATCHLISTS</h1>
+        <h1 data-i18n="view.watchlists.h1.watchlists" class="view-title">// WATCHLISTS</h1>
 
         <div class="chart-panel">
             <div class="inline-form" id="wl-bar">
@@ -25,7 +25,7 @@ export async function renderWatchlists(mount) {
                     </button>`).join('')}
                 <form id="wl-create" class="inline-form" style="display:inline-flex">
                     <input name="name" placeholder="new watchlist" required>
-                    <button class="primary" type="submit">+ Add list</button>
+                    <button data-i18n="view.watchlists.btn.add_list" class="primary" type="submit">+ Add list</button>
                 </form>
             </div>
         </div>
@@ -34,10 +34,10 @@ export async function renderWatchlists(mount) {
             <h2 id="wl-name">${esc(active.name)}</h2>
             <form id="add-sym" class="inline-form" style="margin-bottom:10px">
                 <input name="symbol" placeholder="symbol (e.g. AAPL)" required style="text-transform:uppercase">
-                <button class="primary" type="submit">+ Add symbol</button>
-                <button class="primary" type="button" id="rename-wl"
+                <button data-i18n="view.watchlists.btn.add_symbol" class="primary" type="submit">+ Add symbol</button>
+                <button data-i18n="view.watchlists.btn.rename" class="primary" type="button" id="rename-wl"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Rename</button>
-                <button class="link" id="delete-wl">delete list</button>
+                <button data-i18n="view.watchlists.btn.delete_list" class="link" id="delete-wl">delete list</button>
             </form>
             <div id="wl-table"></div>
         </div>
@@ -96,15 +96,15 @@ export async function renderWatchlists(mount) {
         const elNow = mount.querySelector('#wl-table');
         if (!elNow) return;
         if (!data.symbols.length) {
-            elNow.innerHTML = '<p class="muted">No symbols yet. Add one above.</p>';
+            elNow.innerHTML = '<p data-i18n="view.watchlists.hint.no_symbols_yet_add_one_above" class="muted">No symbols yet. Add one above.</p>';
             return;
         }
         const byKey = new Map(data.quotes.map(q => [q.symbol, q]));
         elNow.innerHTML = `
             <table class="trades">
                 <thead><tr>
-                    <th>Symbol</th><th>Price</th><th>Change</th>
-                    <th>Day Hi/Lo</th><th>Volume</th><th>State</th><th></th>
+                    <th data-i18n="view.watchlists.th.symbol">Symbol</th><th data-i18n="view.watchlists.th.price">Price</th><th data-i18n="view.watchlists.th.change">Change</th>
+                    <th data-i18n="view.watchlists.th.day_hi_lo">Day Hi/Lo</th><th data-i18n="view.watchlists.th.volume">Volume</th><th data-i18n="view.watchlists.th.state">State</th><th></th>
                 </tr></thead>
                 <tbody>${data.symbols.map(sym => {
                     const q = byKey.get(sym);
@@ -118,7 +118,7 @@ export async function renderWatchlists(mount) {
                             ${q?.day_low  != null ? fmt(q.day_low)  : '—'}</td>
                         <td>${q?.volume != null ? q.volume.toLocaleString() : '—'}</td>
                         <td>${q?.market_state || '—'}</td>
-                        <td><button class="link" data-rm="${sym}">remove</button></td>
+                        <td><button data-i18n="view.watchlists.btn.remove" class="link" data-rm="${sym}">remove</button></td>
                     </tr>`;
                 }).join('')}</tbody>
             </table>`;

@@ -90,11 +90,15 @@ function ensureHud() {
     hud.className = 'tv-symbol-hud';
     hud.style.display = 'none';
     hud.innerHTML = `
-        <span class="tv-symbol-hud-prompt">Symbol</span>
+        <span class="tv-symbol-hud-prompt" data-i18n="symbol_hud.prompt">Symbol</span>
         <span class="tv-symbol-hud-value" id="tv-symbol-hud-value"></span>
-        <span class="tv-symbol-hud-hint">enter to jump · esc to cancel</span>
+        <span class="tv-symbol-hud-hint" data-i18n="symbol_hud.hint">enter to jump · esc to cancel</span>
     `;
     document.body.appendChild(hud);
+    // Translate inline strings if the i18n catalog is ready.
+    try {
+        void import('./i18n.js').then(m => m.applyUiI18n(hud));
+    } catch (_) { /* i18n not boot-ready yet */ }
     return hud;
 }
 

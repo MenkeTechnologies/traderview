@@ -14,25 +14,26 @@ import {
     makeDemoBars, fmtN, fmtPct,
 } from '../_murrey_math_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { barText: '', lookback: 64 };
 
 export async function renderMurreyMath(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// MURREY MATH LEVELS</h1>
+        <h1 data-i18n="view.murrey_math.h1.murrey_math_levels" class="view-title">// MURREY MATH LEVELS</h1>
 
         <div class="chart-panel">
-            <h2>HLC bars</h2>
+            <h2 data-i18n="view.murrey_math.h2.hlc_bars">HLC bars</h2>
             <p class="muted">Paste <code>high low close</code> per line. Murrey
                 auto-detects the octave by rounding the lookback range to a
                 power-of-2 base. Demo loads 80 bars in a ~10-point oscillating range.</p>
             <textarea id="mm-bars" rows="6" placeholder="100.6 99.4 100.0&#10;100.8 99.6 100.2&#10;..."></textarea>
             <div class="inline-form">
-                <label>Lookback bars
+                <label><span data-i18n="view.murrey_math.label.lookback">Lookback bars</span>
                     <input id="mm-lb" type="number" step="1" min="1" value="${state.lookback}"></label>
-                <button id="mm-demo" class="secondary" type="button">Load demo (80 bars, ~10-pt range)</button>
-                <button id="mm-clear" class="secondary" type="button">Clear</button>
-                <button id="mm-run" class="primary" type="button">Compute levels</button>
+                <button data-i18n="view.murrey_math.btn.load_demo_80_bars_10_pt_range" id="mm-demo" class="secondary" type="button">Load demo (80 bars, ~10-pt range)</button>
+                <button data-i18n="view.murrey_math.btn.clear" id="mm-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.murrey_math.btn.compute_levels" id="mm-run" class="primary" type="button">Compute levels</button>
             </div>
         </div>
 
@@ -40,17 +41,17 @@ export async function renderMurreyMath(mount, _appState) {
         <div id="mm-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close + Murrey levels</h2>
+            <h2 data-i18n="view.murrey_math.h2.close_murrey_levels">Close + Murrey levels</h2>
             <div id="mm-chart" style="height:340px"></div>
-            <p class="muted">Cyan = close. Yellow solid = 4/8 (major S/R mid). Red dashed = 8/8
+            <p data-i18n="view.murrey_math.hint.cyan_close_yellow_solid_4_8_major_s_r_mid_red_dash" class="muted">Cyan = close. Yellow solid = 4/8 (major S/R mid). Red dashed = 8/8
                 ultimate resistance + green dashed = 0/8 ultimate support. Grey dashed = octave
                 interior + thin extension levels above/below.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Level table</h2>
+            <h2 data-i18n="view.murrey_math.h2.level_table">Level table</h2>
             <div id="mm-table"></div>
-            <p class="muted">All 13 levels (−2/8 to 10/8) with significance + distance from price.
+            <p data-i18n="view.murrey_math.hint.all_13_levels_2_8_to_10_8_with_significance_distan" class="muted">All 13 levels (−2/8 to 10/8) with significance + distance from price.
                 The two bracketing levels (immediately above and below current price) are highlighted.</p>
         </div>
 
@@ -97,7 +98,7 @@ async function compute(tok) {
         showErr(`API error: ${e.message || e}`); return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!res) { showErr('Backend returned null — likely degenerate price range'); return; }
+    if (!res) { showErr(t('view.murrey_math.err.backend_returned_null_likely_degenerate_price_rang')); return; }
     renderSummary(res, bars);
     renderChart(bars, res);
     renderTable(res);
@@ -110,14 +111,14 @@ function renderSummary(r, bars) {
     const nearestVal = r.nearest_level ? r.nearest_level[1] : NaN;
     const nearestSig = significanceOf(nearestLbl);
     document.getElementById('mm-summary').innerHTML = [
-        card('Bars',           String(bars.length)),
-        card('Lookback',       String(state.lookback)),
-        card('Current price',  fmtN(r.current_price, 2)),
-        card('Octave position', pos, pos === 'lower half' ? 'pos' : pos === 'upper half' ? 'neg' : ''),
-        card('Bracket below',  below ? `${below[0]} @ ${fmtN(below[1], 4)}` : '—', 'pos'),
-        card('Bracket above',  above ? `${above[0]} @ ${fmtN(above[1], 4)}` : '—', 'neg'),
-        card('Nearest level',  `${nearestLbl} @ ${fmtN(nearestVal, 4)}`, nearestSig.cls),
-        card('Distance to nearest', fmtPct(r.distance_to_nearest_pct)),
+        card(t('view.murrey_math.card.bars'),           String(bars.length)),
+        card(t('view.murrey_math.card.lookback'),       String(state.lookback)),
+        card(t('view.murrey_math.card.current_price'),  fmtN(r.current_price, 2)),
+        card(t('view.murrey_math.card.octave_position'), pos, pos === 'lower half' ? 'pos' : pos === 'upper half' ? 'neg' : ''),
+        card(t('view.murrey_math.card.bracket_below'),  below ? `${below[0]} @ ${fmtN(below[1], 4)}` : '—', 'pos'),
+        card(t('view.murrey_math.card.bracket_above'),  above ? `${above[0]} @ ${fmtN(above[1], 4)}` : '—', 'neg'),
+        card(t('view.murrey_math.card.nearest_level'),  `${nearestLbl} @ ${fmtN(nearestVal, 4)}`, nearestSig.cls),
+        card(t('view.murrey_math.card.distance_to_nearest'), fmtPct(r.distance_to_nearest_pct)),
     ].join('');
 }
 
@@ -182,7 +183,7 @@ function renderTable(r) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Level</th><th>Price</th><th>Significance</th><th>Rank</th><th>Δ from current</th><th>Bracket?</th>
+                <th data-i18n="view.murrey_math.th.level">Level</th><th data-i18n="view.murrey_math.th.price">Price</th><th data-i18n="view.murrey_math.th.significance">Significance</th><th data-i18n="view.murrey_math.th.rank">Rank</th><th data-i18n="view.murrey_math.th.from_current">Δ from current</th><th data-i18n="view.murrey_math.th.bracket">Bracket?</th>
             </tr></thead>
             <tbody>
                 ${sorted.map(([lbl, v]) => {

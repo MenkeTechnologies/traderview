@@ -15,23 +15,24 @@ import {
     makeDemoBars, medianPrices, fmtN, fmtPct,
 } from '../_alligator_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { barText: '' };
 
 export async function renderAlligator(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// WILLIAMS ALLIGATOR</h1>
+        <h1 data-i18n="view.alligator.h1.williams_alligator" class="view-title">// WILLIAMS ALLIGATOR</h1>
 
         <div class="chart-panel">
-            <h2>HL bars</h2>
+            <h2 data-i18n="view.alligator.h2.hl_bars">HL bars</h2>
             <p class="muted">Paste <code>high low</code> per line. Median price
                 ((H+L)/2) drives the three SMMAs. Demo loads 50 bars cycling through
                 sleep → uptrend → sleep → downtrend so all three biases are visible.</p>
             <textarea id="al-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
             <div class="inline-form">
-                <button id="al-demo" class="secondary" type="button">Load demo (50 bars, 4 phases)</button>
-                <button id="al-clear" class="secondary" type="button">Clear</button>
-                <button id="al-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.alligator.btn.load_demo_50_bars_4_phases" id="al-demo" class="secondary" type="button">Load demo (50 bars, 4 phases)</button>
+                <button data-i18n="view.alligator.btn.clear" id="al-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.alligator.btn.compute" id="al-run" class="primary" type="button">Compute</button>
             </div>
         </div>
 
@@ -39,18 +40,18 @@ export async function renderAlligator(mount, _appState) {
         <div id="al-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Median price + Alligator (jaw / teeth / lips)</h2>
+            <h2 data-i18n="view.alligator.h2.median_price_alligator_jaw_teeth_lips">Median price + Alligator (jaw / teeth / lips)</h2>
             <div id="al-chart" style="height:320px"></div>
-            <p class="muted">Cyan = median price. Blue = jaw (13-SMMA, +8 shift).
+            <p data-i18n="view.alligator.hint.cyan_median_price_blue_jaw_13_smma_8_shift_red_tee" class="muted">Cyan = median price. Blue = jaw (13-SMMA, +8 shift).
                 Red = teeth (8-SMMA, +5 shift). Green = lips (5-SMMA, +3 shift).
                 Lines fan out (green above red above blue) = hunting up. Reverse stack =
                 hunting down. Intertwined = sleeping.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Bias history per bar</h2>
+            <h2 data-i18n="view.alligator.h2.bias_history_per_bar">Bias history per bar</h2>
             <div id="al-bias-strip"></div>
-            <p class="muted">One cell per bar — green up, red down, grey sleeping.
+            <p data-i18n="view.alligator.hint.one_cell_per_bar_green_up_red_down_grey_sleeping_v" class="muted">One cell per bar — green up, red down, grey sleeping.
                 Visualizes regime transitions across the full series at a glance.</p>
         </div>
 
@@ -109,14 +110,14 @@ function renderSummary(points, bars) {
     const currentBias = lastPoint ? classifyPoint(lastPoint) : null;
     const badge = currentBias ? biasBadge(currentBias) : { label: '—', cls: '', hint: '' };
     document.getElementById('al-summary').innerHTML = [
-        card('Bars',            String(bars.length)),
-        card('Points computed', String((points || []).length)),
-        card('Up bars',         String(counts.up),       counts.up ? 'pos' : ''),
-        card('Down bars',       String(counts.down),     counts.down ? 'neg' : ''),
-        card('Sleeping bars',   String(counts.sleeping)),
-        card('Sleeping %',      fmtPct(sleepingPct),     sleepingPct > 0.5 ? 'neg' : 'pos'),
-        card('Current bias',    badge.label, badge.cls),
-        card('Action',          badge.hint),
+        card(t('view.alligator.card.bars'),            String(bars.length)),
+        card(t('view.alligator.card.points_computed'), String((points || []).length)),
+        card(t('view.alligator.card.up_bars'),         String(counts.up),       counts.up ? 'pos' : ''),
+        card(t('view.alligator.card.down_bars'),       String(counts.down),     counts.down ? 'neg' : ''),
+        card(t('view.alligator.card.sleeping_bars'),   String(counts.sleeping)),
+        card(t('view.alligator.card.sleeping'),      fmtPct(sleepingPct),     sleepingPct > 0.5 ? 'neg' : 'pos'),
+        card(t('view.alligator.card.current_bias'),    badge.label, badge.cls),
+        card(t('view.alligator.card.action'),          badge.hint),
     ].join('');
 }
 

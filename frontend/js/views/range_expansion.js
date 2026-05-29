@@ -15,6 +15,7 @@ import {
     dirBadge, eventMarkers, makeDemoBars, fmtN,
 } from '../_range_expansion_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CFG = { lookback: 5, min_expansion_atrs: 1.5, prior_atr_max: 0.7 };
 const DEFAULT_ATR_PERIOD = 14;
 
@@ -23,22 +24,22 @@ let state = { barText: '', atrPeriod: DEFAULT_ATR_PERIOD, config: { ...DEFAULT_C
 export async function renderRangeExpansion(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// RANGE EXPANSION</h1>
+        <h1 data-i18n="view.range_expansion.h1.range_expansion" class="view-title">// RANGE EXPANSION</h1>
 
         <div class="chart-panel">
-            <h2>HLC bars</h2>
+            <h2 data-i18n="view.range_expansion.h2.hlc_bars">HLC bars</h2>
             <p class="muted">Paste <code>high low close</code> per line. ATR is computed
                 locally (Wilder smoothing). Demo loads 30 bars with engineered compression
                 resolving UP and a second compression resolving DOWN.</p>
             <textarea id="re-bars" rows="6" placeholder="100.5 99.5 100.0&#10;100.8 99.8 100.3&#10;..."></textarea>
             <div class="inline-form">
-                <button id="re-demo" class="secondary" type="button">Load demo (30 bars, 2 expansions)</button>
-                <button id="re-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.range_expansion.btn.load_demo_30_bars_2_expansions" id="re-demo" class="secondary" type="button">Load demo (30 bars, 2 expansions)</button>
+                <button data-i18n="view.range_expansion.btn.clear" id="re-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Config</h2>
+            <h2 data-i18n="view.range_expansion.h2.config">Config</h2>
             <div class="inline-form">
                 <label>ATR period
                     <input id="re-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
@@ -48,9 +49,9 @@ export async function renderRangeExpansion(mount, _appState) {
                     <input id="re-min" type="number" step="0.1" min="0" value="${state.config.min_expansion_atrs}"></label>
                 <label>Prior ATR max (compression cap)
                     <input id="re-prior" type="number" step="0.1" min="0" value="${state.config.prior_atr_max}"></label>
-                <button id="re-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.range_expansion.btn.detect" id="re-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">Industry defaults (Raschke): ATR-14, lookback 5, ≥1.5× ATR for
+            <p data-i18n="view.range_expansion.hint.industry_defaults_raschke_atr_14_lookback_5_1_5_at" class="muted">Industry defaults (Raschke): ATR-14, lookback 5, ≥1.5× ATR for
                 the expansion bar, &lt;0.7× ATR for at least one compression bar in the lookback.
                 Prior-ATR-max must be &lt; min-expansion-atrs (compression then expansion).</p>
         </div>
@@ -59,15 +60,15 @@ export async function renderRangeExpansion(mount, _appState) {
         <div id="re-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close series + ATR + expansion markers</h2>
+            <h2 data-i18n="view.range_expansion.h2.close_series_atr_expansion_markers">Close series + ATR + expansion markers</h2>
             <div id="re-chart" style="height:300px"></div>
-            <p class="muted">Cyan = close. Yellow = ATR(period). Green dot above bar =
+            <p data-i18n="view.range_expansion.hint.cyan_close_yellow_atr_period_green_dot_above_bar_u" class="muted">Cyan = close. Yellow = ATR(period). Green dot above bar =
                 UP expansion. Red dot below bar = DOWN expansion. Marker placement reveals
                 direction at a glance.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Event log</h2>
+            <h2 data-i18n="view.range_expansion.h2.event_log">Event log</h2>
             <div id="re-events"></div>
         </div>
 
@@ -134,12 +135,12 @@ function renderSummary(report, bars, atr) {
     const validAtr = atr.filter(Number.isFinite);
     const avgAtr = validAtr.length ? validAtr.reduce((a, b) => a + b, 0) / validAtr.length : NaN;
     document.getElementById('re-summary').innerHTML = [
-        card('Bars',       String(bars.length)),
-        card('Events',     String(report.n_events || 0)),
-        card('UP',         String(ups),   ups   ? 'pos' : ''),
-        card('DOWN',       String(downs), downs ? 'neg' : ''),
-        card('Avg ATR',    fmtN(avgAtr)),
-        card('Last event', last
+        card(t('view.range_expansion.card.bars'),       String(bars.length)),
+        card(t('view.range_expansion.card.events'),     String(report.n_events || 0)),
+        card(t('view.range_expansion.card.up'),         String(ups),   ups   ? 'pos' : ''),
+        card(t('view.range_expansion.card.down'),       String(downs), downs ? 'neg' : ''),
+        card(t('view.range_expansion.card.avg_atr'),    fmtN(avgAtr)),
+        card(t('view.range_expansion.card.last_event'), last
             ? `bar ${last.bar_index} ${dirBadge(last.direction).label} ${fmtN(last.range_atrs)}× ATR`
             : '—',
             last ? dirBadge(last.direction).cls : ''),
@@ -192,8 +193,8 @@ function renderEvents(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Bar idx</th><th>Direction</th>
-                <th>Range × ATR</th><th>Compressed bars in lookback</th>
+                <th>#</th><th data-i18n="view.range_expansion.th.bar_idx">Bar idx</th><th data-i18n="view.range_expansion.th.direction">Direction</th>
+                <th data-i18n="view.range_expansion.th.range_atr">Range × ATR</th><th data-i18n="view.range_expansion.th.compressed_bars_in_lookback">Compressed bars in lookback</th>
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => {

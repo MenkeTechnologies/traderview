@@ -20,6 +20,7 @@ import {
     fmtDate, fmtYield, fmtAmount,
 } from '../_dividend_calendar_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_SYMBOLS = `# One symbol per token (line / comma / space separated).
 # Demo: a handful of well-known dividend payers.
 KO  PG  JNJ  XOM  CVX  T  VZ  MCD  WMT  PEP  HD  IBM  PFE  MRK  ABBV
@@ -44,23 +45,23 @@ export async function renderDividendCalendar(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// DIVIDEND YIELD CALENDAR</h1>
+        <h1 data-i18n="view.dividend_calendar.h1.dividend_yield_calendar" class="view-title">// DIVIDEND YIELD CALENDAR</h1>
 
         <div class="chart-panel">
-            <h2>Symbols</h2>
+            <h2 data-i18n="view.dividend_calendar.h2.symbols">Symbols</h2>
             <textarea id="dc-text" rows="5"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
             <div class="inline-form" style="margin-top:10px">
-                <label>Horizon
+                <label><span data-i18n="view.dividend_calendar.label.horizon">Horizon</span>
                     <select id="dc-horizon">
                         ${HORIZON_OPTIONS.map(o =>
                             `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(o.label)}</option>`
                         ).join('')}
                     </select></label>
-                <button id="dc-load-watchlist" class="secondary" type="button">Load from watchlist</button>
-                <button id="dc-run" class="primary" type="button">Fetch dividends</button>
+                <button data-i18n="view.dividend_calendar.btn.load_from_watchlist" id="dc-load-watchlist" class="secondary" type="button">Load from watchlist</button>
+                <button data-i18n="view.dividend_calendar.btn.fetch_dividends" id="dc-run" class="primary" type="button">Fetch dividends</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.dividend_calendar.hint.pulls_per_symbol_dividend_data_in_parallel_from_th" class="muted">
                 Pulls per-symbol dividend data in parallel from the research backend.
                 Symbols without dividend data (non-payers, ETFs, ADRs) are silently
                 skipped. Past-dated ex-dates are filtered out.
@@ -70,7 +71,7 @@ export async function renderDividendCalendar(mount, _appState) {
         <div id="dc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Upcoming dividends</h2>
+            <h2 data-i18n="view.dividend_calendar.h2.upcoming_dividends">Upcoming dividends</h2>
             <div id="dc-table"></div>
         </div>
 
@@ -105,7 +106,7 @@ async function loadFromWatchlist(mount, tok) {
         const wls = await api.watchlists();
         if (!viewIsCurrent(tok)) return;
         if (!Array.isArray(wls) || wls.length === 0) {
-            showErr('No watchlists found. Add one under the Watchlists view first.');
+            showErr(t('view.dividend_calendar.err.no_watchlists_found_add_one_under_the_watchlists_v'));
             return;
         }
         const first = wls[0];
@@ -124,7 +125,7 @@ async function runFetch(mount, tok) {
     hideErr();
     const symbols = parseSymbolList(state.text);
     if (symbols.length === 0) {
-        showErr('No symbols parsed from input');
+        showErr(t('view.dividend_calendar.err.no_symbols_parsed_from_input'));
         return;
     }
     document.getElementById('dc-table').innerHTML = '<div class="boot">Fetching dividend data…</div>';
@@ -172,11 +173,11 @@ function renderSummary(requested, rows) {
         : NaN;
     const maxYield = yields.length ? Math.max(...yields) : NaN;
     document.getElementById('dc-summary').innerHTML = [
-        card('Symbols requested', String(requested)),
-        card('Dividend payers found', String(rows.length)),
+        card(t('view.dividend_calendar.card.symbols_requested'), String(requested)),
+        card(t('view.dividend_calendar.card.dividend_payers_found'), String(rows.length)),
         card(`In horizon (${state.horizon === 'all' ? 'all upcoming' : state.horizon + 'd'})`, String(filtered.length)),
-        card('Avg yield (paying set)', fmtYield(avgYield)),
-        card('Max yield', fmtYield(maxYield)),
+        card(t('view.dividend_calendar.card.avg_yield_paying_set'), fmtYield(avgYield)),
+        card(t('view.dividend_calendar.card.max_yield'), fmtYield(maxYield)),
     ].join('');
 }
 
@@ -217,14 +218,14 @@ function renderTable(rows) {
     document.getElementById('dc-table').innerHTML = `
         <table class="trades dc-table">
             <thead><tr>
-                <th>Symbol</th>
-                <th>Ex-date</th>
-                <th>Days to ex</th>
-                <th>Pay date</th>
-                <th>Amount / yr</th>
-                <th>Indicated yield</th>
-                <th>Last paid (amount)</th>
-                <th>Last paid (date)</th>
+                <th data-i18n="view.dividend_calendar.th.symbol">Symbol</th>
+                <th data-i18n="view.dividend_calendar.th.ex_date">Ex-date</th>
+                <th data-i18n="view.dividend_calendar.th.days_to_ex">Days to ex</th>
+                <th data-i18n="view.dividend_calendar.th.pay_date">Pay date</th>
+                <th data-i18n="view.dividend_calendar.th.amount_yr">Amount / yr</th>
+                <th data-i18n="view.dividend_calendar.th.indicated_yield">Indicated yield</th>
+                <th data-i18n="view.dividend_calendar.th.last_paid_amount">Last paid (amount)</th>
+                <th data-i18n="view.dividend_calendar.th.last_paid_date">Last paid (date)</th>
             </tr></thead>
             <tbody>${rowHtml}</tbody>
         </table>`;

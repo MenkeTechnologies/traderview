@@ -17,6 +17,7 @@ import {
     fmtN, fmtPct,
 } from '../_vpin_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CONFIG = {
     volume_per_bucket: 50_000,
     window_buckets: 50,
@@ -34,23 +35,23 @@ let state = {
 export async function renderVpin(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VPIN · TOXIC ORDER-FLOW DETECTOR</h1>
+        <h1 data-i18n="view.vpin.h1.vpin_toxic_order_flow_detector" class="view-title">// VPIN · TOXIC ORDER-FLOW DETECTOR</h1>
 
         <div class="chart-panel">
-            <h2>Tick stream</h2>
+            <h2 data-i18n="view.vpin.h2.tick_stream">Tick stream</h2>
             <p class="muted">Paste <code>price volume</code> per line (whitespace- or comma-separated).
                 Lines starting with <code>#</code> are ignored. Demo data
                 injects a benign random-walk regime followed by a toxic burst
                 so the VPIN line clearly crosses the 0.5 threshold.</p>
             <textarea id="vp-ticks" rows="8" placeholder="100.05 250&#10;100.06 1200&#10;100.04 500&#10;..."></textarea>
             <div class="inline-form">
-                <button id="vp-demo" class="secondary" type="button">Load demo (1500 ticks)</button>
-                <button id="vp-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.vpin.btn.load_demo_1500_ticks" id="vp-demo" class="secondary" type="button">Load demo (1500 ticks)</button>
+                <button data-i18n="view.vpin.btn.clear" id="vp-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Config</h2>
+            <h2 data-i18n="view.vpin.h2.config">Config</h2>
             <div class="inline-form">
                 <label>Volume per bucket
                     <input id="vp-vpb" type="number" step="any" min="1" value="${state.config.volume_per_bucket}"></label>
@@ -58,7 +59,7 @@ export async function renderVpin(mount, _appState) {
                     <input id="vp-wb"  type="number" step="1" min="1" max="2000" value="${state.config.window_buckets}"></label>
                 <label>Return window (ticks)
                     <input id="vp-rw"  type="number" step="1" min="2" max="10000" value="${state.config.return_window}"></label>
-                <button id="vp-run" class="primary" type="button">Compute VPIN</button>
+                <button data-i18n="view.vpin.btn.compute_vpin" id="vp-run" class="primary" type="button">Compute VPIN</button>
             </div>
             <p class="muted">VPIN ≥ ${TOXIC_THRESHOLD} marks a "toxic" bucket — informed
                 traders running through the book. Was used to flag the 2010 flash crash
@@ -69,15 +70,15 @@ export async function renderVpin(mount, _appState) {
         <div id="vp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>VPIN time series</h2>
+            <h2 data-i18n="view.vpin.h2.vpin_time_series">VPIN time series</h2>
             <div id="vp-chart-vpin" style="height:260px"></div>
             <p class="muted">Red dashed = ${TOXIC_THRESHOLD} toxic threshold. Spikes above the line are flow-toxicity alerts.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Bucket buy / sell volume</h2>
+            <h2 data-i18n="view.vpin.h2.bucket_buy_sell_volume">Bucket buy / sell volume</h2>
             <div id="vp-chart-vol" style="height:240px"></div>
-            <p class="muted">Cyan = buy-classified volume. Magenta = sell-classified. Vertical asymmetry per bucket = imbalance = VPIN's numerator.</p>
+            <p data-i18n="view.vpin.hint.cyan_buy_classified_volume_magenta_sell_classified" class="muted">Cyan = buy-classified volume. Magenta = sell-classified. Vertical asymmetry per bucket = imbalance = VPIN's numerator.</p>
         </div>
 
         <div id="vp-err" class="boot" style="display:none;color:var(--red)"></div>
@@ -141,15 +142,15 @@ function renderSummary(report, ticks) {
         toxicCount: 0, toxicPct: 0, totalBuy: 0, totalSell: 0, buySellSkew: 0,
     };
     document.getElementById('vp-summary').innerHTML = [
-        card('Ticks',         String(ticks.length)),
-        card('Buckets',       String(s.nBuckets)),
-        card('Max VPIN',      fmtN(s.maxVpin), s.maxVpin >= TOXIC_THRESHOLD ? 'neg' : 'pos'),
-        card('Avg VPIN',      fmtN(s.avgVpin), s.avgVpin >= TOXIC_THRESHOLD ? 'neg' : 'pos'),
-        card('Toxic buckets', `${s.toxicCount} (${fmtPct(s.toxicPct)})`,
+        card(t('view.vpin.card.ticks'),         String(ticks.length)),
+        card(t('view.vpin.card.buckets'),       String(s.nBuckets)),
+        card(t('view.vpin.card.max_vpin'),      fmtN(s.maxVpin), s.maxVpin >= TOXIC_THRESHOLD ? 'neg' : 'pos'),
+        card(t('view.vpin.card.avg_vpin'),      fmtN(s.avgVpin), s.avgVpin >= TOXIC_THRESHOLD ? 'neg' : 'pos'),
+        card(t('view.vpin.card.toxic_buckets'), `${s.toxicCount} (${fmtPct(s.toxicPct)})`,
             s.toxicCount > 0 ? 'neg' : 'pos'),
-        card('Buy vol',       formatVolume(s.totalBuy)),
-        card('Sell vol',      formatVolume(s.totalSell)),
-        card('B/S skew',      fmtPct(s.buySellSkew), s.buySellSkew > 0 ? 'pos' : 'neg'),
+        card(t('view.vpin.card.buy_vol'),       formatVolume(s.totalBuy)),
+        card(t('view.vpin.card.sell_vol'),      formatVolume(s.totalSell)),
+        card(t('view.vpin.card.b_s_skew'),      fmtPct(s.buySellSkew), s.buySellSkew > 0 ? 'pos' : 'neg'),
     ].join('');
 }
 

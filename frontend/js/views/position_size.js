@@ -9,8 +9,8 @@ export async function renderPositionSize(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
     mount.innerHTML = `
-        <h1 class="view-title">// POSITION SIZING</h1>
-        <p class="muted small">Three industry methods side-by-side. Risk-per-share is computed
+        <h1 data-i18n="view.position_size.h1.position_sizing" class="view-title">// POSITION SIZING</h1>
+        <p data-i18n="view.position_size.hint.three_industry_methods_side_by_side_risk_per_share" class="muted small">Three industry methods side-by-side. Risk-per-share is computed
             from the entry/stop distance per side. Correlation drag halves your share count
             at ρ=1 (one perfectly-correlated open position), reduces by 33% at ρ=0.5, and so on.
             Kelly defaults to half-Kelly because full Kelly is brutal in real drawdowns.</p>
@@ -19,8 +19,8 @@ export async function renderPositionSize(mount, state) {
             <form id="ps-form" class="inline-form">
                 <label>Side
                     <select name="side">
-                        <option value="long" selected>long</option>
-                        <option value="short">short</option>
+                        <option data-i18n="view.position_size.opt.long" value="long" selected>long</option>
+                        <option data-i18n="view.position_size.opt.short" value="short">short</option>
                     </select>
                 </label>
                 <label>Entry  <input name="entry" type="number" step="any" required value="50" style="width:90px;"></label>
@@ -45,14 +45,14 @@ export async function renderPositionSize(mount, state) {
                 <label>Avg win  <input name="avg_win"  type="number" step="any" min="0" value="1.5" style="width:90px;"></label>
                 <label>Avg loss <input name="avg_loss" type="number" step="any" min="0" value="1.0" style="width:90px;"></label>
                 <label>Fractional <input name="frac_k" type="number" step="0.05" min="0" max="1" value="0.5" style="width:80px;"></label>
-                <button type="button" class="btn" id="ps-fill-history" ${acct ? '' : 'disabled'}
+                <button data-i18n="view.position_size.btn.pull_from_history" type="button" class="btn" id="ps-fill-history" ${acct ? '' : 'disabled'}
                         title="${acct ? 'Pull win-rate + avg win/loss from this account history' : 'no account selected'}">
                     Pull from history
                 </button>
                 <span class="muted small" id="ps-fill-status"></span>
             </form>
             <div style="margin-top:8px;">
-                <button class="primary" id="ps-go">Compute</button>
+                <button data-i18n="view.position_size.btn.compute" class="primary" id="ps-go">Compute</button>
                 <span class="muted small" id="ps-status"></span>
             </div>
         </div>
@@ -139,7 +139,7 @@ function render(r, mount) {
     };
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.position_size.h2.inputs">Inputs</h2>
             <div class="muted small">
                 ${r.inputs.side} · entry $${fmt(r.inputs.entry)} · stop $${fmt(r.inputs.stop)} ·
                 equity $${fmt(r.inputs.equity)} ·
@@ -151,7 +151,7 @@ function render(r, mount) {
                 </ul>`}
         </div>
         <div class="chart-panel">
-            <h2>Sized by method</h2>
+            <h2 data-i18n="view.position_size.h2.sized_by_method">Sized by method</h2>
             <div class="cards">
                 ${sizing(r.fixed_fractional, '#00e5ff')}
                 ${sizing(r.r_based, '#7af0a8')}
@@ -159,7 +159,7 @@ function render(r, mount) {
             </div>
         </div>
         ${r.recommended ? `<div class="chart-panel">
-            <h2>Recommended</h2>
+            <h2 data-i18n="view.position_size.h2.recommended">Recommended</h2>
             <div class="cards">${sizing(r.recommended, '#ffd24a')}</div>
         </div>` : ''}
     `;

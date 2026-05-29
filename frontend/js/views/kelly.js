@@ -13,6 +13,7 @@ import {
     sizeBadge, fmtPct, fmtNum, fmtUSD, fmtUSDSigned,
 } from '../_kelly_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     winRate: 0.60,
     payoffRatio: 2.0,
@@ -23,23 +24,23 @@ let state = {
 export async function renderKelly(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// KELLY SIZER</h1>
+        <h1 data-i18n="view.kelly.h1.kelly_sizer" class="view-title">// KELLY SIZER</h1>
 
         <div class="chart-panel">
-            <h2>Static Kelly</h2>
+            <h2 data-i18n="view.kelly.h2.static_kelly">Static Kelly</h2>
             <div class="inline-form">
-                <label>Win rate (0–1)
+                <label><span data-i18n="view.kelly.label.win_rate">Win rate (0–1)</span>
                     <input id="kl-wr" type="number" step="any" min="0" max="1" value="${state.winRate}"></label>
-                <label>Payoff ratio (avg win / avg loss)
+                <label><span data-i18n="view.kelly.label.payoff_ratio">Payoff ratio (avg win / avg loss)</span>
                     <input id="kl-payoff" type="number" step="any" min="0" value="${state.payoffRatio}"></label>
-                <button id="kl-run-static" class="primary" type="button">Compute static</button>
+                <button data-i18n="view.kelly.btn.compute_static" id="kl-run-static" class="primary" type="button">Compute static</button>
             </div>
             <div class="inline-form">
-                <button id="kl-demo-positive"  class="secondary" type="button">Demo: 60% wr × 2:1</button>
-                <button id="kl-demo-tiny"      class="secondary" type="button">Demo: tiny edge (50.1%)</button>
-                <button id="kl-demo-extreme"   class="secondary" type="button">Demo: extreme (90% × 5:1)</button>
-                <button id="kl-demo-noedge"    class="secondary" type="button">Demo: no edge (50% × 1:1)</button>
-                <button id="kl-demo-negative"  class="secondary" type="button">Demo: negative (40% × 1:1)</button>
+                <button data-i18n="view.kelly.btn.demo_60_wr_2_1" id="kl-demo-positive"  class="secondary" type="button">Demo: 60% wr × 2:1</button>
+                <button data-i18n="view.kelly.btn.demo_tiny_edge_50_1" id="kl-demo-tiny"      class="secondary" type="button">Demo: tiny edge (50.1%)</button>
+                <button data-i18n="view.kelly.btn.demo_extreme_90_5_1" id="kl-demo-extreme"   class="secondary" type="button">Demo: extreme (90% × 5:1)</button>
+                <button data-i18n="view.kelly.btn.demo_no_edge_50_1_1" id="kl-demo-noedge"    class="secondary" type="button">Demo: no edge (50% × 1:1)</button>
+                <button data-i18n="view.kelly.btn.demo_negative_40_1_1" id="kl-demo-negative"  class="secondary" type="button">Demo: negative (40% × 1:1)</button>
             </div>
         </div>
 
@@ -49,30 +50,30 @@ export async function renderKelly(mount, _appState) {
             <h2>Dynamic Kelly <small class="muted">(rolling window over trade PnLs)</small></h2>
             <textarea id="kl-pnls" rows="5" placeholder="200&#10;-100&#10;200&#10;-100&#10;...">${esc(pnlsToBlob(state.pnls))}</textarea>
             <div class="inline-form">
-                <label>Window (last N trades)
+                <label><span data-i18n="view.kelly.label.window">Window (last N trades)</span>
                     <input id="kl-win" type="number" step="1" min="1" value="${state.window}"></label>
-                <button id="kl-run-dyn" class="primary" type="button">Compute dynamic</button>
-                <button id="kl-import-static" class="secondary" type="button">Derive static (wr / payoff) from these PnLs</button>
+                <button data-i18n="view.kelly.btn.compute_dynamic" id="kl-run-dyn" class="primary" type="button">Compute dynamic</button>
+                <button data-i18n="view.kelly.btn.derive_static_wr_payoff_from_these_pnls" id="kl-import-static" class="secondary" type="button">Derive static (wr / payoff) from these PnLs</button>
             </div>
             <div class="inline-form">
-                <button id="kl-demo-pos-pnl"  class="secondary" type="button">Demo PnLs: positive edge</button>
-                <button id="kl-demo-neg-pnl"  class="secondary" type="button">Demo PnLs: negative edge</button>
-                <button id="kl-demo-be-pnl"   class="secondary" type="button">Demo PnLs: break-even</button>
-                <button id="kl-demo-ext-pnl"  class="secondary" type="button">Demo PnLs: extreme edge</button>
-                <button id="kl-demo-switch-pnl" class="secondary" type="button">Demo PnLs: regime switch</button>
+                <button data-i18n="view.kelly.btn.demo_pnls_positive_edge" id="kl-demo-pos-pnl"  class="secondary" type="button">Demo PnLs: positive edge</button>
+                <button data-i18n="view.kelly.btn.demo_pnls_negative_edge" id="kl-demo-neg-pnl"  class="secondary" type="button">Demo PnLs: negative edge</button>
+                <button data-i18n="view.kelly.btn.demo_pnls_break_even" id="kl-demo-be-pnl"   class="secondary" type="button">Demo PnLs: break-even</button>
+                <button data-i18n="view.kelly.btn.demo_pnls_extreme_edge" id="kl-demo-ext-pnl"  class="secondary" type="button">Demo PnLs: extreme edge</button>
+                <button data-i18n="view.kelly.btn.demo_pnls_regime_switch" id="kl-demo-switch-pnl" class="secondary" type="button">Demo PnLs: regime switch</button>
             </div>
         </div>
 
         <div id="kl-dyn-cards" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Rolling Kelly fraction over trades</h2>
+            <h2 data-i18n="view.kelly.h2.rolling_kelly_fraction_over_trades">Rolling Kelly fraction over trades</h2>
             <div id="kl-dyn-chart" style="height:340px"></div>
-            <p class="muted">Cyan = raw Kelly fraction. Yellow = half-Kelly (clamped ≥ 0). Red dashed = zero line.</p>
+            <p data-i18n="view.kelly.hint.cyan_raw_kelly_fraction_yellow_half_kelly_clamped_" class="muted">Cyan = raw Kelly fraction. Yellow = half-Kelly (clamped ≥ 0). Red dashed = zero line.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Per-trade window stats</h2>
+            <h2 data-i18n="view.kelly.h2.per_trade_window_stats">Per-trade window stats</h2>
             <div id="kl-dyn-table"></div>
         </div>
 
@@ -185,18 +186,18 @@ function renderStatic(report, pending) {
     const parityOk = Math.abs(report.full_kelly - local.full_kelly) < 1e-9
                   && report.note === local.note;
     document.getElementById('kl-static-cards').innerHTML = [
-        card('Verdict',         badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Action',          badge.hint),
-        card('Full Kelly',      fmtPct(report.full_kelly, 2),
+        card(t('view.kelly.card.verdict'),         badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.kelly.card.action'),          badge.hint),
+        card(t('view.kelly.card.full_kelly'),      fmtPct(report.full_kelly, 2),
             report.full_kelly >= 0 ? 'pos' : 'neg'),
-        card('Half Kelly',      fmtPct(report.half_kelly, 2)),
-        card('Quarter Kelly',   fmtPct(report.quarter_kelly, 2)),
-        card('Recommended f',   fmtPct(report.recommended_f, 2),
+        card(t('view.kelly.card.half_kelly'),      fmtPct(report.half_kelly, 2)),
+        card(t('view.kelly.card.quarter_kelly'),   fmtPct(report.quarter_kelly, 2)),
+        card(t('view.kelly.card.recommended_f'),   fmtPct(report.recommended_f, 2),
             report.recommended_f > 0 ? 'pos' : ''),
-        card('Note',            report.note || '—'),
-        card('p × b vs q',      `${(state.winRate * state.payoffRatio).toFixed(3)} vs ${(1 - state.winRate).toFixed(3)}`,
+        card(t('view.kelly.card.note'),            report.note || '—'),
+        card(t('view.kelly.card.p_b_vs_q'),      `${(state.winRate * state.payoffRatio).toFixed(3)} vs ${(1 - state.winRate).toFixed(3)}`,
             (state.winRate * state.payoffRatio) > (1 - state.winRate) ? 'pos' : 'neg'),
-        card('Local parity',    parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.kelly.card.local_parity'),    parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -214,22 +215,22 @@ function renderDynamic(points, pending) {
     const latest = positioned.length > 0 ? positioned[positioned.length - 1] : null;
     const stats = pnlsToStaticInput(state.pnls);
     document.getElementById('kl-dyn-cards').innerHTML = [
-        card('Trades (n)',       String(state.pnls.length) + (pending ? ' (local)' : '')),
-        card('Window',           String(state.window)),
-        card('Wins / Losses',    `${stats.wins} / ${stats.losses}`,
+        card(t('view.kelly.card.trades_n'),       String(state.pnls.length) + (pending ? ' (local)' : '')),
+        card(t('view.kelly.card.window'),           String(state.window)),
+        card(t('view.kelly.card.wins_losses'),    `${stats.wins} / ${stats.losses}`,
             stats.wins > stats.losses ? 'pos' : 'neg'),
-        card('Overall win rate', fmtPct(stats.win_rate, 1)),
-        card('Overall payoff',   fmtNum(stats.payoff_ratio, 3),
+        card(t('view.kelly.card.overall_win_rate'), fmtPct(stats.win_rate, 1)),
+        card(t('view.kelly.card.overall_payoff'),   fmtNum(stats.payoff_ratio, 3),
             stats.payoff_ratio >= 1 ? 'pos' : 'neg'),
-        card('Latest Kelly',     latest && latest.kelly_fraction != null
+        card(t('view.kelly.card.latest_kelly'),     latest && latest.kelly_fraction != null
             ? fmtPct(latest.kelly_fraction, 2) : '—',
             latest && latest.kelly_fraction > 0 ? 'pos' : 'neg'),
-        card('Latest half-Kelly', latest && latest.half_kelly_fraction != null
+        card(t('view.kelly.card.latest_half_kelly'), latest && latest.half_kelly_fraction != null
             ? fmtPct(latest.half_kelly_fraction, 2) : '—',
             latest && latest.half_kelly_fraction > 0 ? 'pos' : ''),
-        card('Latest payoff',    latest && latest.window_payoff_ratio != null
+        card(t('view.kelly.card.latest_payoff'),    latest && latest.window_payoff_ratio != null
             ? fmtNum(latest.window_payoff_ratio, 3) : '—'),
-        card('Local parity',     parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.kelly.card.local_parity_2'),     parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -274,8 +275,8 @@ function renderDynamicTable(points) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>PnL</th><th>Window WR</th><th>Window Payoff</th>
-                <th>Kelly</th><th>Half-Kelly</th>
+                <th>#</th><th data-i18n="view.kelly.th.pnl">PnL</th><th data-i18n="view.kelly.th.window_wr">Window WR</th><th data-i18n="view.kelly.th.window_payoff">Window Payoff</th>
+                <th data-i18n="view.kelly.th.kelly">Kelly</th><th data-i18n="view.kelly.th.half_kelly">Half-Kelly</th>
             </tr></thead>
             <tbody>
                 ${sampled.map(({ i, p }) => `<tr>

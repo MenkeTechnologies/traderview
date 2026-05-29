@@ -19,6 +19,7 @@ import {
     topChangePoints, countAboveThreshold, fmtHazardPct,
 } from '../_bocpd_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_RETURNS = `# Paste a return series. One value per token.
 # Demo: 100 low-vol returns, then 100 high-vol returns. BOCPD should
 # flag a clear change point near index 100.
@@ -53,26 +54,26 @@ export async function renderBocpd(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// BAYESIAN CHANGE POINTS</h1>
+        <h1 data-i18n="view.bocpd.h1.bayesian_change_points" class="view-title">// BAYESIAN CHANGE POINTS</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.bocpd.h2.inputs">Inputs</h2>
             <div class="inline-form">
-                <label>Hazard rate (per-bar prior)
+                <label><span data-i18n="view.bocpd.label.hazard">Hazard rate (per-bar prior)</span>
                     <input id="bo-hazard" type="number" step="any" min="0.0001" max="0.5" value="${state.hazard}"></label>
-                <label>Threshold (P ≥)
+                <label><span data-i18n="view.bocpd.label.threshold">Threshold (P ≥)</span>
                     <input id="bo-thresh" type="number" step="0.01" min="0" max="1" value="${state.threshold}"></label>
-                <label>Show top-K
+                <label><span data-i18n="view.bocpd.label.top_k">Show top-K</span>
                     <input id="bo-topk" type="number" step="1" min="1" max="20" value="${state.topK}"></label>
-                <button id="bo-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.bocpd.btn.detect" id="bo-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.bocpd.hint.hazard_the_per_bar_prior_probability_that_the_unde" class="muted">
                 Hazard = the per-bar prior probability that the underlying distribution
                 changes. Lower hazard → fewer, sharper detections. The threshold filters
                 the displayed change points by posterior probability — change to 0 to see
                 every bar's score.
             </p>
-            <h3>Return series</h3>
+            <h3 data-i18n="view.bocpd.h3.return_series">Return series</h3>
             <textarea id="bo-text" rows="9"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
@@ -82,18 +83,18 @@ export async function renderBocpd(mount, _appState) {
         <div id="bo-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Returns + change-point probability</h2>
+            <h2 data-i18n="view.bocpd.h2.returns_change_point_probability">Returns + change-point probability</h2>
             <div id="bo-cp-chart" style="width:100%;height:300px"></div>
-            <p class="muted">
+            <p data-i18n="view.bocpd.hint.returns_on_left_axis_grey_change_point_probability" class="muted">
                 Returns on left axis (grey). Change-point probability on right axis (red);
                 values near 1 mark bars where BOCPD is confident the regime shifted.
             </p>
         </div>
 
         <div class="chart-panel">
-            <h2>Expected run length (bars since last change)</h2>
+            <h2 data-i18n="view.bocpd.h2.expected_run_length_bars_since_last_change">Expected run length (bars since last change)</h2>
             <div id="bo-rl-chart" style="width:100%;height:240px"></div>
-            <p class="muted">
+            <p data-i18n="view.bocpd.hint.sawtooth_pattern_climbs_by_1_each_calm_bar_drops_t" class="muted">
                 Sawtooth pattern: climbs by 1 each calm bar, drops to ~0 at every detected
                 change point. Long flat-rising stretches = stable regime; frequent resets =
                 noisy regime with many detected breaks.
@@ -101,7 +102,7 @@ export async function renderBocpd(mount, _appState) {
         </div>
 
         <div id="bo-detected" class="chart-panel" style="display:none">
-            <h2>Top change points (sorted by probability)</h2>
+            <h2 data-i18n="view.bocpd.h2.top_change_points_sorted_by_probability">Top change points (sorted by probability)</h2>
             <div id="bo-detected-body"></div>
         </div>
 
@@ -126,7 +127,7 @@ async function detect(mount, tok) {
     const err = validateInputs(parsed.value, state.hazard);
     if (err) { showErr(err); return; }
     if (!Number.isFinite(state.threshold) || state.threshold < 0 || state.threshold > 1) {
-        showErr('threshold must be in [0, 1]'); return;
+        showErr(t('view.bocpd.err.threshold_must_be_in_0_1')); return;
     }
 
     let res;
@@ -148,11 +149,11 @@ async function detect(mount, tok) {
 function renderSummary(returns, res) {
     const detected = countAboveThreshold(res.change_point_probability, state.threshold);
     document.getElementById('bo-summary').innerHTML = [
-        card('Hazard (per-bar)', fmtHazardPct(res.hazard)),
-        card('Threshold', `${(state.threshold * 100).toFixed(1)}%`),
+        card(t('view.bocpd.card.hazard_per_bar'), fmtHazardPct(res.hazard)),
+        card(t('view.bocpd.card.threshold'), `${(state.threshold * 100).toFixed(1)}%`),
         card(`Change points ≥ threshold`, String(detected),
             detected > 0 ? 'pos' : ''),
-        card('Series length', String(returns.length)),
+        card(t('view.bocpd.card.series_length'), String(returns.length)),
     ].join('');
 }
 

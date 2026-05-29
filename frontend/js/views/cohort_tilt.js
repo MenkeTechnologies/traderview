@@ -11,37 +11,38 @@ import {
     fmtPct, fmtSignedInt, symbolColor,
 } from '../_cohort_tilt_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { positions: makeDemoPositions('mixed') };
 
 export async function renderCohortTilt(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// COHORT TILT</h1>
+        <h1 data-i18n="view.cohort_tilt.h1.cohort_tilt" class="view-title">// COHORT TILT</h1>
 
         <div class="chart-panel">
             <h2>Cohort positions <small class="muted">(per line: <code>trader_id SYMBOL net_contracts</code> — signed: + long, - short, 0 flat)</small></h2>
             <textarea id="ct-blob" rows="10" placeholder="L0 ES 3&#10;S0 ES -3&#10;a NQ 1">${esc(positionsToBlob(state.positions))}</textarea>
             <div class="inline-form">
-                <button id="ct-run" class="primary" type="button">Aggregate</button>
-                <button id="ct-demo-mixed"  class="secondary" type="button">Demo: 4 symbols mixed bias</button>
-                <button id="ct-demo-long"   class="secondary" type="button">Demo: strongly long ES</button>
-                <button id="ct-demo-short"  class="secondary" type="button">Demo: strongly short NQ</button>
-                <button id="ct-demo-flat"   class="secondary" type="button">Demo: all flat (no active)</button>
-                <button id="ct-demo-cross"  class="secondary" type="button">Demo: same trader cross-symbol</button>
+                <button data-i18n="view.cohort_tilt.btn.aggregate" id="ct-run" class="primary" type="button">Aggregate</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_4_symbols_mixed_bias" id="ct-demo-mixed"  class="secondary" type="button">Demo: 4 symbols mixed bias</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_strongly_long_es" id="ct-demo-long"   class="secondary" type="button">Demo: strongly long ES</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_strongly_short_nq" id="ct-demo-short"  class="secondary" type="button">Demo: strongly short NQ</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_all_flat_no_active" id="ct-demo-flat"   class="secondary" type="button">Demo: all flat (no active)</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_same_trader_cross_symbol" id="ct-demo-cross"  class="secondary" type="button">Demo: same trader cross-symbol</button>
             </div>
-            <p class="muted">Bias buckets: ≥75% strongly long, ≥60% long, 40–60% balanced, ≥25% short, &lt;25% strongly short. Symbols sorted by lopsidedness |long_ratio − 0.5| desc.</p>
+            <p data-i18n="view.cohort_tilt.hint.bias_buckets_75_strongly_long_60_long_40_60_balanc" class="muted">Bias buckets: ≥75% strongly long, ≥60% long, 40–60% balanced, ≥25% short, &lt;25% strongly short. Symbols sorted by lopsidedness |long_ratio − 0.5| desc.</p>
         </div>
 
         <div id="ct-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Long-ratio bars (0% = all short, 50% = balanced, 100% = all long)</h2>
+            <h2 data-i18n="view.cohort_tilt.h2.long_ratio_bars_0_all_short_50_balanced_100_all_lo">Long-ratio bars (0% = all short, 50% = balanced, 100% = all long)</h2>
             <div id="ct-bars"></div>
-            <p class="muted">Bar fill colored by bias. Track at 50% midline. Symbols with all-flat traders show "—".</p>
+            <p data-i18n="view.cohort_tilt.hint.bar_fill_colored_by_bias_track_at_50_midline_symbo" class="muted">Bar fill colored by bias. Track at 50% midline. Symbols with all-flat traders show "—".</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Per-symbol detail</h2>
+            <h2 data-i18n="view.cohort_tilt.h2.per_symbol_detail">Per-symbol detail</h2>
             <div id="ct-table"></div>
         </div>
 
@@ -102,20 +103,20 @@ function renderSummary(report, pending) {
     const top = report.by_symbol[0] || null;
     const topBadge = top ? biasBadge(top.bias) : null;
     document.getElementById('ct-summary').innerHTML = [
-        card('Active traders', String(report.active_traders) + (pending ? ' (local)' : ''),
+        card(t('view.cohort_tilt.card.active_traders'), String(report.active_traders) + (pending ? ' (local)' : ''),
             report.active_traders > 0 ? 'pos' : 'neg'),
-        card('Symbols tracked', String(report.by_symbol.length)),
-        card('Most lopsided',  report.most_lopsided_symbol || '—',
+        card(t('view.cohort_tilt.card.symbols_tracked'), String(report.by_symbol.length)),
+        card(t('view.cohort_tilt.card.most_lopsided'),  report.most_lopsided_symbol || '—',
             top && top.long_ratio != null ? topBadge.cls : ''),
-        card('Top bias',       topBadge ? topBadge.label : '—',
+        card(t('view.cohort_tilt.card.top_bias'),       topBadge ? topBadge.label : '—',
             topBadge ? topBadge.cls : ''),
-        card('Top long ratio', top ? fmtPct(top.long_ratio) : '—',
+        card(t('view.cohort_tilt.card.top_long_ratio'), top ? fmtPct(top.long_ratio) : '—',
             topBadge ? topBadge.cls : ''),
-        card('Cohort long ratio', cohortR == null ? '—' : fmtPct(cohortR),
+        card(t('view.cohort_tilt.card.cohort_long_ratio'), cohortR == null ? '—' : fmtPct(cohortR),
             cohortBias ? cohortBias.cls : ''),
-        card('Cohort bias',    cohortBias ? cohortBias.label : '—',
+        card(t('view.cohort_tilt.card.cohort_bias'),    cohortBias ? cohortBias.label : '—',
             cohortBias ? cohortBias.cls : ''),
-        card('Local parity',   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.cohort_tilt.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -187,9 +188,9 @@ function renderTable(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Symbol</th><th>Bias</th>
-                <th>Long</th><th>Short</th><th>Flat</th>
-                <th>Long ratio</th><th>Net contracts</th><th>Lopsidedness</th>
+                <th>#</th><th data-i18n="view.cohort_tilt.th.symbol">Symbol</th><th data-i18n="view.cohort_tilt.th.bias">Bias</th>
+                <th data-i18n="view.cohort_tilt.th.long">Long</th><th data-i18n="view.cohort_tilt.th.short">Short</th><th data-i18n="view.cohort_tilt.th.flat">Flat</th>
+                <th data-i18n="view.cohort_tilt.th.long_ratio">Long ratio</th><th data-i18n="view.cohort_tilt.th.net_contracts">Net contracts</th><th data-i18n="view.cohort_tilt.th.lopsidedness">Lopsidedness</th>
             </tr></thead>
             <tbody>
                 ${report.by_symbol.map((s, i) => {

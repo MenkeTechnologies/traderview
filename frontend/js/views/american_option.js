@@ -22,6 +22,7 @@ import {
     fmtMoney, ciHalfWidth,
 } from '../_american_option_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_PARAMS = {
     kind: 'put',     // puts are where early exercise matters most
     spot: 90,
@@ -41,34 +42,43 @@ export async function renderAmericanOption(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// AMERICAN OPTION (LSMC)</h1>
+        <h1 data-i18n="view.american_option.h1.american_option_lsmc" class="view-title">// AMERICAN OPTION (LSMC)</h1>
 
         <div class="chart-panel">
-            <h2>Contract</h2>
+            <h2 data-i18n="view.american_option.h2.contract">Contract</h2>
             <div class="inline-form">
-                <label>Kind
+                <label><span data-i18n="view.american_option.label.kind">Kind</span>
                     <select id="ao-kind">
-                        <option value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
-                        <option value="put" ${state.params.kind === 'put' ? 'selected' : ''}>Put</option>
+                        <option data-i18n="view.american_option.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
+                        <option data-i18n="view.american_option.opt.put" value="put" ${state.params.kind === 'put' ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label>Spot <input id="ao-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
-                <label>Strike <input id="ao-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label>T (years) <input id="ao-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
-                <label>Rate r <input id="ao-rate" type="number" step="any" value="${state.params.rate}"></label>
-                <label>Dividend q <input id="ao-div" type="number" step="any" min="0" value="${state.params.dividend}"></label>
-                <label>σ <input id="ao-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                <label><span data-i18n="view.american_option.label.spot">Spot</span>
+                    <input id="ao-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
+                <label><span data-i18n="view.american_option.label.strike">Strike</span>
+                    <input id="ao-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                <label><span data-i18n="view.american_option.label.t_years">T (years)</span>
+                    <input id="ao-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
+                <label><span data-i18n="view.american_option.label.rate">Rate r</span>
+                    <input id="ao-rate" type="number" step="any" value="${state.params.rate}"></label>
+                <label><span data-i18n="view.american_option.label.dividend">Dividend q</span>
+                    <input id="ao-div" type="number" step="any" min="0" value="${state.params.dividend}"></label>
+                <label><span data-i18n="view.american_option.label.sigma">σ</span>
+                    <input id="ao-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Monte Carlo settings</h2>
+            <h2 data-i18n="view.american_option.h2.monte_carlo_settings">Monte Carlo settings</h2>
             <div class="inline-form">
-                <label>Steps <input id="ao-steps" type="number" step="1" min="2" value="${state.params.steps}"></label>
-                <label>Paths <input id="ao-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
-                <label>Seed (0 = auto) <input id="ao-seed" type="number" step="1" min="0" value="${state.params.seed}"></label>
-                <button id="ao-run" class="primary" type="button">Price</button>
+                <label><span data-i18n="view.american_option.label.steps">Steps</span>
+                    <input id="ao-steps" type="number" step="1" min="2" value="${state.params.steps}"></label>
+                <label><span data-i18n="view.american_option.label.paths">Paths</span>
+                    <input id="ao-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
+                <label><span data-i18n="view.american_option.label.seed">Seed (0 = auto)</span>
+                    <input id="ao-seed" type="number" step="1" min="0" value="${state.params.seed}"></label>
+                <button data-i18n="view.american_option.btn.price" id="ao-run" class="primary" type="button">Price</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.american_option.hint.longstaff_schwartz_2001_regression_monte_carlo_lar" class="muted">
                 Longstaff-Schwartz 2001 regression-Monte-Carlo. Larger paths shrink the standard
                 error as 1/√N. Default 5,000 paths gives ~1% SE for at-the-money options.
             </p>
@@ -77,7 +87,7 @@ export async function renderAmericanOption(mount, _appState) {
         <div id="ao-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Sensitivity to spot</h2>
+            <h2 data-i18n="view.american_option.h2.sensitivity_to_spot">Sensitivity to spot</h2>
             <div id="ao-chart" style="width:100%;height:340px"></div>
             <p class="muted" id="ao-chart-caption">
                 Click <em>Price</em> first. The chart plots the European Black-Scholes price
@@ -146,23 +156,23 @@ function renderSummary(res) {
     const halfWidth = ciHalfWidth(res.standard_error);
 
     const cards = [];
-    cards.push(card('American (LSMC)', fmtMoney(res.price), '', `
+    cards.push(card(t('view.american_option.card.american_lsmc'), fmtMoney(res.price), '', `
         <div class="vc-row"><span class="muted">95% CI</span> <strong>±${fmtMoney(halfWidth)}</strong></div>
         <div class="vc-row"><span class="muted">SE</span> <strong>${fmtMoney(res.standard_error, 5)}</strong></div>
         <div class="vc-row"><span class="muted">Paths</span> <strong>${res.paths_run}</strong></div>
     `));
-    cards.push(card('European (BS reference)', fmtMoney(european), '', `
+    cards.push(card(t('view.american_option.card.european_bs_reference'), fmtMoney(european), '', `
         <div class="vc-row"><span class="muted">Computed</span> <strong>closed-form</strong></div>
         <div class="vc-row"><span class="muted">No MC error</span> <strong>—</strong></div>
     `));
-    cards.push(card('Early-exercise premium',
+    cards.push(card(t('view.american_option.card.early_exercise_premium'),
         eep == null ? '—' : fmtMoney(eep),
         eep != null && eep > 0 ? 'pos' : (eep != null && eep < 0 ? 'neg' : ''),
         `<div class="vc-row"><span class="muted">% of American price</span>
              <strong>${eepPct == null ? '—' : eepPct.toFixed(2) + '%'}</strong></div>
          <div class="vc-row"><span class="muted">Sign</span>
              <strong>${eep == null ? '—' : (eep > 0 ? 'EE valuable' : 'within MC noise')}</strong></div>`));
-    cards.push(card('Intrinsic value (parity floor)', fmtMoney(intrinsic), '', `
+    cards.push(card(t('view.american_option.card.intrinsic_value_parity_floor'), fmtMoney(intrinsic), '', `
         <div class="vc-row"><span class="muted">${p.kind === 'call' ? 'max(S - K, 0)' : 'max(K - S, 0)'}</span>
             <strong>${fmtMoney(intrinsic)}</strong></div>
         <div class="vc-row"><span class="muted">LSMC ≥ intrinsic</span>

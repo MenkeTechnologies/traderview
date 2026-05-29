@@ -23,7 +23,7 @@ export async function renderCatalysts(mount, _state) {
                 voice alerts
             </label>
         </h1>
-        <p class="muted small">
+        <p data-i18n="view.catalysts.hint.sec_edgar_every_6s_business_wire_pr_newswire_globe" class="muted small">
             SEC EDGAR (every 6s) + Business Wire / PR Newswire / GlobeNewswire /
             AccessWire (every 30s). Tickers auto-extracted via NER.
             Filter for your watchlist on the left; voice alerts fire when
@@ -31,20 +31,20 @@ export async function renderCatalysts(mount, _state) {
         </p>
 
         <div class="chart-panel">
-            <h2>Voice alert filter (comma-sep symbols)</h2>
+            <h2 data-i18n="view.catalysts.h2.voice_alert_filter_comma_sep_symbols">Voice alert filter (comma-sep symbols)</h2>
             <form id="cat-watch" class="inline-form">
                 <input name="symbols" type="text" placeholder="GME,AMC,SPCE,..." style="min-width:360px">
-                <button class="primary" type="submit">Set</button>
+                <button data-i18n="view.catalysts.btn.set" class="primary" type="submit">Set</button>
                 <span class="muted small" id="cat-watch-state"></span>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>Live feed</h2>
+            <h2 data-i18n="view.catalysts.h2.live_feed">Live feed</h2>
             <table class="trades" id="cat-table">
                 <thead><tr>
-                    <th>Time</th><th>Source</th><th>Form</th>
-                    <th>Tickers</th><th>Headline</th>
+                    <th data-i18n="view.catalysts.th.time">Time</th><th data-i18n="view.catalysts.th.source">Source</th><th data-i18n="view.catalysts.th.form">Form</th>
+                    <th data-i18n="view.catalysts.th.tickers">Tickers</th><th data-i18n="view.catalysts.th.headline">Headline</th>
                 </tr></thead>
                 <tbody><tr><td colspan="5" class="muted">connecting…</td></tr></tbody>
             </table>

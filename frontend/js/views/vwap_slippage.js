@@ -12,37 +12,38 @@ import {
     makeDemoData, fmtN, fmtBps, fmtVol,
 } from '../_vwap_slippage_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { side: 'long', fillPrice: 100, barText: '' };
 
 export async function renderVwapSlippage(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VWAP SLIPPAGE · TCA BENCHMARK</h1>
+        <h1 data-i18n="view.vwap_slippage.h1.vwap_slippage_tca_benchmark" class="view-title">// VWAP SLIPPAGE · TCA BENCHMARK</h1>
 
         <div class="chart-panel">
-            <h2>Trade</h2>
+            <h2 data-i18n="view.vwap_slippage.h2.trade">Trade</h2>
             <div class="inline-form">
-                <label>Side
+                <label><span data-i18n="view.vwap_slippage.label.side">Side</span>
                     <select id="vw-side">
-                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long (buy entry)</option>
-                        <option value="short" ${state.side === 'short' ? 'selected' : ''}>Short (sell entry)</option>
+                        <option data-i18n="view.vwap_slippage.opt.long_buy_entry" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long (buy entry)</option>
+                        <option data-i18n="view.vwap_slippage.opt.short_sell_entry" value="short" ${state.side === 'short' ? 'selected' : ''}>Short (sell entry)</option>
                     </select></label>
-                <label>Fill price
+                <label><span data-i18n="view.vwap_slippage.label.fill_price">Fill price</span>
                     <input id="vw-fill" type="number" step="any" min="0" value="${state.fillPrice}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Bars during the trade's open window</h2>
+            <h2 data-i18n="view.vwap_slippage.h2.bars_during_the_trade_s_open_window">Bars during the trade's open window</h2>
             <p class="muted">One line per bar: <code>typical_price volume</code>.
                 Typical = (high+low+close)/3. Pre-computed by the caller so this
                 view stays agnostic about whether you're feeding 1-second, 1-minute,
                 or 1-hour bars. Demo loads 200 bars with an intentional below-VWAP long fill.</p>
             <textarea id="vw-bars" rows="6" placeholder="100.05 1200&#10;100.08 850&#10;..."></textarea>
             <div class="inline-form">
-                <button id="vw-demo" class="secondary" type="button">Load demo (200 bars, fill beats VWAP)</button>
-                <button id="vw-clear" class="secondary" type="button">Clear</button>
-                <button id="vw-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.vwap_slippage.btn.load_demo_200_bars_fill_beats_vwap" id="vw-demo" class="secondary" type="button">Load demo (200 bars, fill beats VWAP)</button>
+                <button data-i18n="view.vwap_slippage.btn.clear" id="vw-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.vwap_slippage.btn.analyze" id="vw-run" class="primary" type="button">Analyze</button>
             </div>
         </div>
 
@@ -50,9 +51,9 @@ export async function renderVwapSlippage(mount, _appState) {
         <div id="vw-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Typical price + rolling VWAP + fill reference</h2>
+            <h2 data-i18n="view.vwap_slippage.h2.typical_price_rolling_vwap_fill_reference">Typical price + rolling VWAP + fill reference</h2>
             <div id="vw-chart" style="height:280px"></div>
-            <p class="muted">Cyan = typical price per bar. Yellow = rolling VWAP (the
+            <p data-i18n="view.vwap_slippage.hint.cyan_typical_price_per_bar_yellow_rolling_vwap_the" class="muted">Cyan = typical price per bar. Yellow = rolling VWAP (the
                 benchmark). Magenta dashed = your fill price. For LONG entries you want
                 magenta BELOW yellow at trade close; for SHORT entries you want it ABOVE.</p>
         </div>
@@ -116,18 +117,18 @@ function renderSummary(r, bars) {
     const localChk = localVwap(bars);
     const totalVol = bars.reduce((a, b) => a + (b.volume || 0), 0);
     document.getElementById('vw-summary').innerHTML = [
-        card('VWAP (backend)', fmtN(vwap)),
-        card('VWAP (local)',   fmtN(localChk),
+        card(t('view.vwap_slippage.card.vwap_backend'), fmtN(vwap)),
+        card(t('view.vwap_slippage.card.vwap_local'),   fmtN(localChk),
             Math.abs(vwap - localChk) < 1e-6 ? 'pos' : 'neg'),
-        card('Fill price',     fmtN(fill)),
+        card(t('view.vwap_slippage.card.fill_price'),     fmtN(fill)),
         card('Slippage $',     fmtN(slipDollars),
             slipDollars > 0 ? 'pos' : slipDollars < 0 ? 'neg' : ''),
-        card('Slippage bps',   fmtBps(r.slippage_bps),
+        card(t('view.vwap_slippage.card.slippage_bps'),   fmtBps(r.slippage_bps),
             r.slippage_bps > 0 ? 'pos' : r.slippage_bps < 0 ? 'neg' : ''),
-        card('Beat VWAP?',     r.beat_vwap ? 'YES' : 'NO',
+        card(t('view.vwap_slippage.card.beat_vwap'),     r.beat_vwap ? 'YES' : 'NO',
             r.beat_vwap ? 'pos' : 'neg'),
-        card('Bars',           String(bars.length)),
-        card('Total volume',   fmtVol(totalVol)),
+        card(t('view.vwap_slippage.card.bars'),           String(bars.length)),
+        card(t('view.vwap_slippage.card.total_volume'),   fmtVol(totalVol)),
     ].join('');
 }
 

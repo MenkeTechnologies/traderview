@@ -49,25 +49,25 @@ export async function renderPortfolioAllocator(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// PORTFOLIO ALLOCATOR</h1>
+        <h1 data-i18n="view.portfolio_allocator.h1.portfolio_allocator" class="view-title">// PORTFOLIO ALLOCATOR</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.portfolio_allocator.h2.inputs">Inputs</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>Covariance (N×N)</h3>
+                    <h3 data-i18n="view.portfolio_allocator.h3.covariance_n_n">Covariance (N×N)</h3>
                     <textarea id="pa-cov" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.covText)}</textarea>
                 </div>
                 <div>
-                    <h3>Asset labels (optional)</h3>
+                    <h3 data-i18n="view.portfolio_allocator.h3.asset_labels_optional">Asset labels (optional)</h3>
                     <textarea id="pa-labels" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.labelsText)}</textarea>
                 </div>
                 <div>
-                    <h3>Excess returns (optional)</h3>
+                    <h3 data-i18n="view.portfolio_allocator.h3.excess_returns_optional">Excess returns (optional)</h3>
                     <textarea id="pa-excess" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.excessText)}</textarea>
                 </div>
             </div>
-            <button id="pa-run" class="primary" type="button" style="margin-top:10px">Allocate</button>
+            <button data-i18n="view.portfolio_allocator.btn.allocate" id="pa-run" class="primary" type="button" style="margin-top:10px">Allocate</button>
         </div>
 
         <div id="pa-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -135,7 +135,7 @@ function renderResults({ labels, mv, mxd, erc }) {
             <div id="pa-mv-weights"></div>
             <h4>Tangency weights</h4>
             <div id="pa-mv-tan-weights"></div>
-        ` : '<p class="muted">MV solver returned null (covariance not invertible?).</p>')}
+        ` : '<p data-i18n="view.portfolio_allocator.hint.mv_solver_returned_null_covariance_not_invertible" class="muted">MV solver returned null (covariance not invertible?).</p>')}
 
         ${cardSection('Maximum Diversification', mxd ? `
             ${kv('Diversification ratio', mxd.diversification_ratio?.toFixed(3))}
@@ -143,7 +143,7 @@ function renderResults({ labels, mv, mxd, erc }) {
             ${kv('Wtd-avg single-asset vol', mxd.weighted_average_volatility?.toFixed(4))}
             <h4>Weights</h4>
             <div id="pa-mxd-weights"></div>
-        ` : '<p class="muted">MaxDiv solver returned null.</p>')}
+        ` : '<p data-i18n="view.portfolio_allocator.hint.maxdiv_solver_returned_null" class="muted">MaxDiv solver returned null.</p>')}
 
         ${cardSection('Equal Risk Contribution', erc ? `
             ${kv('Portfolio vol', erc.portfolio_stdev?.toFixed(4))}
@@ -152,7 +152,7 @@ function renderResults({ labels, mv, mxd, erc }) {
             <div id="pa-erc-weights"></div>
             <h4>Risk contributions (should be ≈ ${(100 / labels.length).toFixed(1)}% each)</h4>
             <div id="pa-erc-risk"></div>
-        ` : '<p class="muted">ERC solver returned null.</p>')}
+        ` : '<p data-i18n="view.portfolio_allocator.hint.erc_solver_returned_null" class="muted">ERC solver returned null.</p>')}
     `;
 
     if (mv) {

@@ -64,18 +64,18 @@ const ROWS = [
 export async function renderCompare(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// STOCK COMPARISON</h1>
-        <p class="muted small">Side-by-side fundamentals + multi-horizon returns + 252-bar relative-strength
+        <h1 data-i18n="view.compare.h1.stock_comparison" class="view-title">// STOCK COMPARISON</h1>
+        <p data-i18n="view.compare.hint.side_by_side_fundamentals_multi_horizon_returns_25" class="muted small">Side-by-side fundamentals + multi-horizon returns + 252-bar relative-strength
             overlay (each line rebased to 100 at the window start). Up to 4 symbols, comma-separated.
             Best metric in each row is highlighted in green; worst in red.</p>
 
         <form id="cmp-form" class="inline-form">
             <input name="symbols" placeholder="AAPL,MSFT,GOOGL,AMZN" value="AAPL,MSFT,GOOGL,AMZN"
                    required style="min-width:340px;text-transform:uppercase">
-            <button class="primary" type="submit">Compare</button>
+            <button data-i18n="view.compare.btn.compare" class="primary" type="submit">Compare</button>
         </form>
 
-        <div id="cmp-out"><p class="muted small">Enter 2-4 tickers and run.</p></div>
+        <div id="cmp-out"><p data-i18n="view.compare.hint.enter_2_4_tickers_and_run" class="muted small">Enter 2-4 tickers and run.</p></div>
     `;
     mount.querySelector('#cmp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -103,7 +103,7 @@ function renderReport(r, out, mount) {
     }
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>Relative strength — 252-bar normalized to 100</h2>
+            <h2 data-i18n="view.compare.h2.relative_strength_252_bar_normalized_to_100">Relative strength — 252-bar normalized to 100</h2>
             <div id="cmp-rs"></div>
         </div>
         <div class="chart-panel">
@@ -117,7 +117,7 @@ function renderReport(r, out, mount) {
 
 function renderTable(rows) {
     let html = `<table class="trades" style="table-layout:fixed;">
-        <thead><tr><th>Metric</th>${rows.map((row, i) => `<th style="color:${COLORS[i]}">${esc(row.symbol)}</th>`).join('')}</tr></thead>
+        <thead><tr><th data-i18n="view.compare.th.metric">Metric</th>${rows.map((row, i) => `<th style="color:${COLORS[i]}">${esc(row.symbol)}</th>`).join('')}</tr></thead>
         <tbody>`;
     for (const grp of ROWS) {
         html += `<tr><td colspan="${rows.length + 1}" class="muted small" style="background:#1a1d2e;">${esc(grp.group)}</td></tr>`;
@@ -171,7 +171,7 @@ function renderRsSvg(rows, mount) {
     const rsEl = mount.querySelector('#cmp-rs');
     if (!rsEl) return;
     if (!series.length) {
-        rsEl.innerHTML = '<p class="muted small">no cached bars for any symbol — populate the prices cache first.</p>';
+        rsEl.innerHTML = '<p data-i18n="view.compare.hint.no_cached_bars_for_any_symbol_populate_the_prices_" class="muted small">no cached bars for any symbol — populate the prices cache first.</p>';
         return;
     }
     const w = 1000, h = 320, pad = 50;

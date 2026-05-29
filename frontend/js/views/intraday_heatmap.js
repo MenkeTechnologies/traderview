@@ -13,23 +13,24 @@ import {
     fmtUSD, fmtPct,
 } from '../_intraday_heatmap_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { tradesText: '', sessionOnly: true };
 
 export async function renderIntradayHeatmap(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// INTRADAY HEATMAP · 15-MIN P&amp;L</h1>
+        <h1 data-i18n="view.intraday_heatmap.h1.intraday_heatmap_15_min_pandl" class="view-title">// INTRADAY HEATMAP · 15-MIN P&amp;L</h1>
 
         <div class="chart-panel">
-            <h2>Trade ledger</h2>
+            <h2 data-i18n="view.intraday_heatmap.h2.trade_ledger">Trade ledger</h2>
             <p class="muted">One line per trade: <code>timestamp pnl</code>.
                 Timestamps accept ISO 8601 (<code>2024-01-15T14:30:00Z</code>) or
                 bare <code>HH:MM</code> (anchored to a fixed epoch date).</p>
             <textarea id="ih-trades" rows="8" placeholder="09:35 125.50&#10;09:45 -42.00&#10;..."></textarea>
             <div class="inline-form">
-                <button id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>
-                <button id="ih-clear" class="secondary" type="button">Clear</button>
-                <button id="ih-run" class="primary" type="button">Build heatmap</button>
+                <button data-i18n="view.intraday_heatmap.btn.load_demo_200_trades" id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>
+                <button data-i18n="view.intraday_heatmap.btn.clear" id="ih-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.intraday_heatmap.btn.build_heatmap" id="ih-run" class="primary" type="button">Build heatmap</button>
                 <label><input id="ih-session" type="checkbox" checked> Session hours only (09:00-16:00)</label>
             </div>
         </div>
@@ -38,9 +39,9 @@ export async function renderIntradayHeatmap(mount, _appState) {
         <div id="ih-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>15-min P&amp;L heatmap</h2>
+            <h2 data-i18n="view.intraday_heatmap.h2.15_min_pandl_heatmap">15-min P&amp;L heatmap</h2>
             <div id="ih-grid" class="ih-grid"></div>
-            <p class="muted">Color intensity scaled to the global max-abs PnL.
+            <p data-i18n="view.intraday_heatmap.hint.color_intensity_scaled_to_the_global_max_abs_pnl_g" class="muted">Color intensity scaled to the global max-abs PnL.
                 Green = winning bucket. Red = losing. Dark = empty.
                 Hover any cell for trade count / avg / win-rate.</p>
         </div>
@@ -99,12 +100,12 @@ function renderSummary(report, trades) {
     const totalWins   = report.buckets.reduce((a, b) => a + b.win_count, 0);
     const winRate = totalTrades > 0 ? totalWins / totalTrades : NaN;
     document.getElementById('ih-summary').innerHTML = [
-        card('Trades',          String(trades.length)),
-        card('Total P&L',       fmtUSD(totalPnl), totalPnl >= 0 ? 'pos' : 'neg'),
-        card('Win rate',        fmtPct(winRate)),
-        card('Active buckets',  `${activeBuckets} / 96`),
-        card('Best 15-min',     report.best_bucket_label || '—', 'pos'),
-        card('Worst 15-min',    report.worst_bucket_label || '—', 'neg'),
+        card(t('view.intraday_heatmap.card.trades'),          String(trades.length)),
+        card(t('view.intraday_heatmap.card.total_p_l'),       fmtUSD(totalPnl), totalPnl >= 0 ? 'pos' : 'neg'),
+        card(t('view.intraday_heatmap.card.win_rate'),        fmtPct(winRate)),
+        card(t('view.intraday_heatmap.card.active_buckets'),  `${activeBuckets} / 96`),
+        card(t('view.intraday_heatmap.card.best_15_min'),     report.best_bucket_label || '—', 'pos'),
+        card(t('view.intraday_heatmap.card.worst_15_min'),    report.worst_bucket_label || '—', 'neg'),
     ].join('');
 }
 

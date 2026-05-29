@@ -21,6 +21,7 @@ import {
     validateTermStructure, buildBody, forwardVolStepSeries,
 } from '../_forward_vol_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_TEXT = `# Term structure of implied volatility.
 #   tenor  iv     (whitespace or comma separated)
 #   tenor accepts "1D" "1W" "1M" "3M" "1Y" "2Y" or bare years (e.g. 0.25).
@@ -40,14 +41,14 @@ export async function renderForwardVolCurve(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// FORWARD VOL CURVE</h1>
+        <h1 data-i18n="view.forward_vol_curve.h1.forward_vol_curve" class="view-title">// FORWARD VOL CURVE</h1>
 
         <div class="chart-panel">
-            <h2>Term structure</h2>
+            <h2 data-i18n="view.forward_vol_curve.h2.term_structure">Term structure</h2>
             <textarea id="fv-text" rows="10"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
-            <button id="fv-run" class="primary" type="button" style="margin-top:10px">Bootstrap</button>
-            <p class="muted">
+            <button data-i18n="view.forward_vol_curve.btn.bootstrap" id="fv-run" class="primary" type="button" style="margin-top:10px">Bootstrap</button>
+            <p data-i18n="view.forward_vol_curve.hint.variance_additivity_t_accumulates_linearly_across_" class="muted">
                 Variance additivity: σ²·t accumulates linearly across non-overlapping windows.
                 A negative back-end forward variance flags a calendar-arb violation.
             </p>
@@ -58,9 +59,9 @@ export async function renderForwardVolCurve(mount, _appState) {
         <div id="fv-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Spot IV vs forward IV</h2>
+            <h2 data-i18n="view.forward_vol_curve.h2.spot_iv_vs_forward_iv">Spot IV vs forward IV</h2>
             <div id="fv-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.forward_vol_curve.hint.cyan_line_spot_iv_at_each_tenor_interpolation_pure" class="muted">
                 Cyan line = spot IV at each tenor (interpolation purely cosmetic).
                 Orange step = bootstrapped forward vol active over each tenor window.
                 Red markers flag violation intervals.
@@ -68,7 +69,7 @@ export async function renderForwardVolCurve(mount, _appState) {
         </div>
 
         <div id="fv-violations" class="chart-panel" style="display:none">
-            <h2>Arbitrage violations</h2>
+            <h2 data-i18n="view.forward_vol_curve.h2.arbitrage_violations">Arbitrage violations</h2>
             <div id="fv-violations-body"></div>
         </div>
 
@@ -115,15 +116,15 @@ function renderSummary(rows, res) {
         : NaN;
     const fwdMin = res.forward_vols.length ? Math.min(...res.forward_vols) : NaN;
     const fwdMax = res.forward_vols.length ? Math.max(...res.forward_vols) : NaN;
-    cards.push(card('Tenors', String(rows.length)));
-    cards.push(card('Forward intervals', String(res.forward_vols.length)));
-    cards.push(card('Mean forward vol', pctStr(fwdAvg)));
-    cards.push(card('Range', `${pctStr(fwdMin)} – ${pctStr(fwdMax)}`));
+    cards.push(card(t('view.forward_vol_curve.card.tenors'), String(rows.length)));
+    cards.push(card(t('view.forward_vol_curve.card.forward_intervals'), String(res.forward_vols.length)));
+    cards.push(card(t('view.forward_vol_curve.card.mean_forward_vol'), pctStr(fwdAvg)));
+    cards.push(card(t('view.forward_vol_curve.card.range'), `${pctStr(fwdMin)} – ${pctStr(fwdMax)}`));
     const slopeClass = res.arbitrage_violations.length ? 'neg' : 'pos';
     const arbLabel = res.arbitrage_violations.length
         ? `${res.arbitrage_violations.length} violation${res.arbitrage_violations.length === 1 ? '' : 's'}`
         : 'no violations';
-    cards.push(card('No-arb', arbLabel, slopeClass));
+    cards.push(card(t('view.forward_vol_curve.card.no_arb'), arbLabel, slopeClass));
     document.getElementById('fv-summary').innerHTML = cards.join('');
 }
 

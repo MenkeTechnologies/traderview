@@ -55,16 +55,16 @@ export async function renderSeriesSmoother(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// SERIES SMOOTHER</h1>
+        <h1 data-i18n="view.series_smoother.h1.series_smoother" class="view-title">// SERIES SMOOTHER</h1>
 
         <div class="chart-panel">
-            <h2>Series</h2>
+            <h2 data-i18n="view.series_smoother.h2.series">Series</h2>
             <textarea id="ss-text" rows="8"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
 
         <div class="chart-panel">
-            <h2>Smoothers</h2>
+            <h2 data-i18n="view.series_smoother.h2.smoothers">Smoothers</h2>
             <div class="ss-smoothers">
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="lowess" ${state.enabled.lowess ? 'checked' : ''}>
@@ -89,7 +89,7 @@ export async function renderSeriesSmoother(mount, _appState) {
                     <label>degree <input type="number" step="1" min="1" max="10" value="${state.opts.poly_degree}" data-opt="poly_degree"></label>
                 </div>
             </div>
-            <button id="ss-run" class="primary" type="button" style="margin-top:10px">Smooth</button>
+            <button data-i18n="view.series_smoother.btn.smooth" id="ss-run" class="primary" type="button" style="margin-top:10px">Smooth</button>
         </div>
 
         <div id="ss-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -97,7 +97,7 @@ export async function renderSeriesSmoother(mount, _appState) {
         <div id="ss-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Series + smoothers</h2>
+            <h2 data-i18n="view.series_smoother.h2.series_smoothers">Series + smoothers</h2>
             <div id="ss-chart" style="width:100%;height:380px"></div>
         </div>
 

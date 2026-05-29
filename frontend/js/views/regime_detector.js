@@ -18,6 +18,7 @@ import {
     expectedDwell, highVolBarFraction,
 } from '../_regime_detector_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_RETURNS = `# Daily returns (decimal). One per token.
 # Demo: 200 calm bars then 100 high-vol bars (regime change at index 200).
 ${synthRegimeDemo().join('\n')}
@@ -49,21 +50,21 @@ export async function renderRegimeDetector(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// REGIME DETECTOR</h1>
+        <h1 data-i18n="view.regime_detector.h1.regime_detector" class="view-title">// REGIME DETECTOR</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.regime_detector.h2.inputs">Inputs</h2>
             <div class="inline-form">
-                <label>Bars per year (annualization)
+                <label><span data-i18n="view.regime_detector.label.bars_per_year">Bars per year (annualization)</span>
                     <input id="rd-bpy" type="number" step="1" min="1" value="${state.barsPerYear}"></label>
-                <button id="rd-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.regime_detector.btn.detect" id="rd-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.regime_detector.hint.2_state_markov_switching_via_hamilton_kim_filter_b" class="muted">
                 2-state Markov-switching via Hamilton-Kim filter + Baum-Welch EM. State 1 is
                 the higher-vol state by convention. Annualization uses √N scaling for σ and
                 linear scaling for μ.
             </p>
-            <h3>Return series</h3>
+            <h3 data-i18n="view.regime_detector.h3.return_series">Return series</h3>
             <textarea id="rd-text" rows="10"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
@@ -73,9 +74,9 @@ export async function renderRegimeDetector(mount, _appState) {
         <div id="rd-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Returns + P(high-vol state) overlay</h2>
+            <h2 data-i18n="view.regime_detector.h2.returns_p_high_vol_state_overlay">Returns + P(high-vol state) overlay</h2>
             <div id="rd-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.regime_detector.hint.returns_on_the_left_axis_grey_state_1_probability_" class="muted">
                 Returns on the left axis (grey). State-1 probability on the right axis (red);
                 values near 1 mark bars classified as the high-vol regime.
             </p>
@@ -104,7 +105,7 @@ async function detect(mount, tok) {
     const err = validateReturns(parsed.value);
     if (err) { showErr(err); return; }
     if (!Number.isFinite(state.barsPerYear) || state.barsPerYear < 1) {
-        showErr('bars per year must be ≥ 1'); return;
+        showErr(t('view.regime_detector.err.bars_per_year_must_be_1')); return;
     }
 
     let res;

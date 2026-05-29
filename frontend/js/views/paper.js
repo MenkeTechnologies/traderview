@@ -61,33 +61,33 @@ export async function renderPaper(mount) {
 
         <div class="panel-grid">
             <div class="chart-panel">
-                <h2>Order ticket</h2>
+                <h2 data-i18n="view.paper.h2.order_ticket">Order ticket</h2>
                 <form id="ord-form" class="inline-form">
                     <input name="symbol" placeholder="symbol" required style="text-transform:uppercase">
                     <select name="side">
-                        <option value="buy">BUY</option>
-                        <option value="sell">SELL</option>
-                        <option value="short">SHORT</option>
-                        <option value="cover">COVER</option>
+                        <option data-i18n="view.paper.opt.buy" value="buy">BUY</option>
+                        <option data-i18n="view.paper.opt.sell" value="sell">SELL</option>
+                        <option data-i18n="view.paper.opt.short" value="short">SHORT</option>
+                        <option data-i18n="view.paper.opt.cover" value="cover">COVER</option>
                     </select>
                     <input name="qty" type="number" step="any" placeholder="qty" required>
                     <select name="order_type">
-                        <option value="market">market</option>
-                        <option value="limit">limit</option>
-                        <option value="stop">stop</option>
+                        <option data-i18n="view.paper.opt.market" value="market">market</option>
+                        <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
+                        <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
                     </select>
                     <input name="limit_price" type="number" step="any" placeholder="limit">
                     <input name="stop_price"  type="number" step="any" placeholder="stop">
-                    <button class="primary" type="submit">SUBMIT</button>
+                    <button data-i18n="view.paper.btn.submit" class="primary" type="submit">SUBMIT</button>
                 </form>
-                <button class="link" id="reset">Reset account ($200k)</button>
+                <button data-i18n="view.paper.btn.reset_account_200k" class="link" id="reset">Reset account ($200k)</button>
             </div>
 
             <div class="chart-panel">
-                <h2>Open positions</h2>
+                <h2 data-i18n="view.paper.h2.open_positions">Open positions</h2>
                 ${positions.length ? `<table class="trades">
-                    <thead><tr><th>Sym</th><th>Qty</th><th>Avg</th><th>Last</th>
-                    <th>Unrealized</th><th>Realized</th></tr></thead>
+                    <thead><tr><th data-i18n="view.paper.th.sym">Sym</th><th data-i18n="view.paper.th.qty">Qty</th><th data-i18n="view.paper.th.avg">Avg</th><th data-i18n="view.paper.th.last">Last</th>
+                    <th data-i18n="view.paper.th.unrealized">Unrealized</th><th data-i18n="view.paper.th.realized">Realized</th></tr></thead>
                     <tbody>${positions.map(p => {
                         const q = quotes[p.symbol];
                         const last = q ? Number(q.price) : null;
@@ -101,15 +101,15 @@ export async function renderPaper(mount) {
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
                         </tr>`;
-                    }).join('')}</tbody></table>` : '<p class="muted">No open positions.</p>'}
+                    }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Order history</h2>
+            <h2 data-i18n="view.paper.h2.order_history">Order history</h2>
             ${orders.length ? `<table class="trades">
-                <thead><tr><th>Submitted</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Type</th>
-                <th>Status</th><th>Fill price</th><th>Filled</th></tr></thead>
+                <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
+                <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th></tr></thead>
                 <tbody>${orders.map(o => `
                     <tr>
                         <td>${fmtDateTime(o.submitted_at)}</td>
@@ -120,7 +120,7 @@ export async function renderPaper(mount) {
                         <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
-                    </tr>`).join('')}</tbody></table>` : '<p class="muted">No orders yet.</p>'}
+                    </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_orders_yet" class="muted">No orders yet.</p>'}
         </div>
     `;
 

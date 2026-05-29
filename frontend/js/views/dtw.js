@@ -20,6 +20,7 @@ import {
     normalizedDistance, maxStretch, pathToSeries,
 } from '../_dtw_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_A = `# Series A — sine wave starting at index 0
 ${synthSine(60, 0).join('\n')}
 `;
@@ -51,28 +52,28 @@ export async function renderDtw(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// DYNAMIC TIME WARPING</h1>
+        <h1 data-i18n="view.dtw.h1.dynamic_time_warping" class="view-title">// DYNAMIC TIME WARPING</h1>
 
         <div class="chart-panel">
-            <h2>Series</h2>
+            <h2 data-i18n="view.dtw.h2.series">Series</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>Series A</h3>
+                    <h3 data-i18n="view.dtw.h3.series_a">Series A</h3>
                     <textarea id="dt-a" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.textA)}</textarea>
                 </div>
                 <div>
-                    <h3>Series B</h3>
+                    <h3 data-i18n="view.dtw.h3.series_b">Series B</h3>
                     <textarea id="dt-b" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.textB)}</textarea>
                 </div>
             </div>
             <div class="inline-form" style="margin-top:8px">
-                <label>Band radius (0 = unconstrained)
+                <label><span data-i18n="view.dtw.label.band_radius">Band radius (0 = unconstrained)</span>
                     <input id="dt-band" type="number" step="1" min="0" value="${state.bandRadius}"></label>
-                <button id="dt-run" class="primary" type="button">Warp</button>
+                <button data-i18n="view.dtw.btn.warp" id="dt-run" class="primary" type="button">Warp</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.dtw.hint.sakoe_chiba_band_constrains_the_warping_path_so_i_" class="muted">
                 Sakoe-Chiba band constrains the warping path so |i−j| ≤ radius. Set 0 to
                 disable (full O(n·m) DP); set a small radius (~10-20% of series length) to
                 speed up long series and avoid pathological cross-warps.
@@ -84,14 +85,14 @@ export async function renderDtw(mount, _appState) {
         <div id="dt-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Series overlay (raw, no alignment)</h2>
+            <h2 data-i18n="view.dtw.h2.series_overlay_raw_no_alignment">Series overlay (raw, no alignment)</h2>
             <div id="dt-overlay-chart" style="width:100%;height:280px"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Warping path</h2>
+            <h2 data-i18n="view.dtw.h2.warping_path">Warping path</h2>
             <div id="dt-path-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.dtw.hint.cyan_optimal_alignment_from_dtw_a_s_index_b_s_inde" class="muted">
                 Cyan: optimal alignment from DTW (A's index ↔ B's index). Dashed orange:
                 diagonal reference (y = x). Departures from the diagonal indicate where DTW
                 found one series leading or lagging the other.
@@ -140,12 +141,12 @@ function renderSummary(a, b, res) {
     const norm = normalizedDistance(res.distance, pathLen);
     const ms = maxStretch(res.path);
     document.getElementById('dt-summary').innerHTML = [
-        card('DTW distance', res.distance.toFixed(4)),
-        card('Path length', String(pathLen)),
-        card('Distance / pair (normalized)', norm == null ? '—' : norm.toFixed(6)),
-        card('Max stretch (|i − j|)', String(ms),
+        card(t('view.dtw.card.dtw_distance'), res.distance.toFixed(4)),
+        card(t('view.dtw.card.path_length'), String(pathLen)),
+        card(t('view.dtw.card.distance_pair_normalized'), norm == null ? '—' : norm.toFixed(6)),
+        card(t('view.dtw.card.max_stretch_i_j'), String(ms),
             ms === 0 ? 'pos' : (ms > Math.max(a.length, b.length) / 4 ? 'neg' : '')),
-        card('Series lengths', `A=${a.length}, B=${b.length}`),
+        card(t('view.dtw.card.series_lengths'), `A=${a.length}, B=${b.length}`),
     ].join('');
 }
 

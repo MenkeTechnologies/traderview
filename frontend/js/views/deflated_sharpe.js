@@ -24,6 +24,7 @@ import {
     fmtSR, fmtProb, fmtZ,
 } from '../_deflated_sharpe_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULTS = {
     observed_sharpe: 1.5,
     n_observations: 252,
@@ -37,10 +38,10 @@ let state = { params: { ...DEFAULTS } };
 export async function renderDeflatedSharpe(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DEFLATED SHARPE RATIO</h1>
+        <h1 data-i18n="view.deflated_sharpe.h1.deflated_sharpe_ratio" class="view-title">// DEFLATED SHARPE RATIO</h1>
 
         <div class="chart-panel">
-            <h2>Backtest sample</h2>
+            <h2 data-i18n="view.deflated_sharpe.h2.backtest_sample">Backtest sample</h2>
             <div class="inline-form">
                 <label>Observed SR
                     <input id="ds-sr" type="number" step="any" value="${state.params.observed_sharpe}"></label>
@@ -52,8 +53,8 @@ export async function renderDeflatedSharpe(mount, _appState) {
                     <input id="ds-kurt" type="number" step="any" value="${state.params.kurtosis}"></label>
                 <label>Trials run
                     <input id="ds-trials" type="number" step="1" min="1" value="${state.params.n_trials}"></label>
-                <button id="ds-run" class="primary" type="button">Deflate</button>
-                <button id="ds-sweep" class="secondary" type="button">+ Trials sweep</button>
+                <button data-i18n="view.deflated_sharpe.btn.deflate" id="ds-run" class="primary" type="button">Deflate</button>
+                <button data-i18n="view.deflated_sharpe.btn.trials_sweep" id="ds-sweep" class="secondary" type="button">+ Trials sweep</button>
             </div>
             <p class="muted">
                 The deflated threshold SR<sub>★</sub> ≈ √(2 ln N) is the noise floor
@@ -66,16 +67,16 @@ export async function renderDeflatedSharpe(mount, _appState) {
         <div id="ds-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>SR comparison</h2>
+            <h2 data-i18n="view.deflated_sharpe.h2.sr_comparison">SR comparison</h2>
             <div id="ds-srbar"></div>
-            <p class="muted">Cyan = observed SR. Magenta = deflated threshold (the noise floor).
+            <p data-i18n="view.deflated_sharpe.hint.cyan_observed_sr_magenta_deflated_threshold_the_no" class="muted">Cyan = observed SR. Magenta = deflated threshold (the noise floor).
                 If cyan doesn't clearly exceed magenta you're inside the multiple-testing band.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Trials sensitivity</h2>
+            <h2 data-i18n="view.deflated_sharpe.h2.trials_sensitivity">Trials sensitivity</h2>
             <div id="ds-sweep-chart" style="height:260px"></div>
-            <p class="muted">PSR vs N_trials. Tells you how fragile your conclusion is —
+            <p data-i18n="view.deflated_sharpe.hint.psr_vs_n_trials_tells_you_how_fragile_your_conclus" class="muted">PSR vs N_trials. Tells you how fragile your conclusion is —
                 if PSR collapses past N = 100 you've overfit even by Bailey-LdP's
                 generous benchmark.</p>
         </div>
@@ -142,14 +143,14 @@ function renderSummary(r) {
     const tier = confidenceTier(r.probability_true_sr_above_threshold);
     const headroom = r.observed_sharpe - r.deflated_threshold_sharpe;
     document.getElementById('ds-summary').innerHTML = [
-        card('Observed SR',     fmtSR(r.observed_sharpe)),
-        card('Deflated SR★',    fmtSR(r.deflated_threshold_sharpe)),
-        card('Headroom',        fmtSR(headroom), headroom > 0 ? 'pos' : 'neg'),
-        card('SR variance',     fmtSR(r.sharpe_variance)),
-        card('z-score',         fmtZ(r.z_score),  r.z_score >= 1.96 ? 'pos' : 'neg'),
-        card('PSR (P[SR>★])',   fmtProb(r.probability_true_sr_above_threshold), tier.cls),
-        card('Confidence',      tier.label, tier.cls),
-        card('n / trials',      `${state.params.n_observations} / ${state.params.n_trials}`),
+        card(t('view.deflated_sharpe.card.observed_sr'),     fmtSR(r.observed_sharpe)),
+        card(t('view.deflated_sharpe.card.deflated_sr'),    fmtSR(r.deflated_threshold_sharpe)),
+        card(t('view.deflated_sharpe.card.headroom'),        fmtSR(headroom), headroom > 0 ? 'pos' : 'neg'),
+        card(t('view.deflated_sharpe.card.sr_variance'),     fmtSR(r.sharpe_variance)),
+        card(t('view.deflated_sharpe.card.z_score'),         fmtZ(r.z_score),  r.z_score >= 1.96 ? 'pos' : 'neg'),
+        card(t('view.deflated_sharpe.card.psr_p_sr'),   fmtProb(r.probability_true_sr_above_threshold), tier.cls),
+        card(t('view.deflated_sharpe.card.confidence'),      tier.label, tier.cls),
+        card(t('view.deflated_sharpe.card.n_trials'),      `${state.params.n_observations} / ${state.params.n_trials}`),
     ].join('');
 }
 

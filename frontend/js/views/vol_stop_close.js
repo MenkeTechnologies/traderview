@@ -11,6 +11,7 @@ import {
     localVolStopClose, localChandelier, compareStops, makeDemoBars,
 } from '../_vol_stop_close_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     bars: makeDemoBars('wicks'),
     side: 'long',
@@ -21,7 +22,7 @@ let state = {
 export async function renderVolStopClose(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VOL-STOP (CLOSE-BASED)</h1>
+        <h1 data-i18n="view.vol_stop_close.h1.vol_stop_close_based" class="view-title">// VOL-STOP (CLOSE-BASED)</h1>
 
         <div class="chart-panel">
             <h2>Paste HLC bars (one per line: <code>high low close</code>)</h2>
@@ -29,8 +30,8 @@ export async function renderVolStopClose(mount, _appState) {
             <div class="inline-form">
                 <label>Side
                     <select id="vsc-side">
-                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
-                        <option value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
+                        <option data-i18n="view.vol_stop_close.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
+                        <option data-i18n="view.vol_stop_close.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label>Lookback (bars)
                     <input id="vsc-lb" type="number" step="1" min="1" value="${state.cfg.lookback}"></label>
@@ -38,23 +39,23 @@ export async function renderVolStopClose(mount, _appState) {
                     <input id="vsc-mult" type="number" step="any" min="0" value="${state.cfg.atr_multiplier}"></label>
                 <label>ATR period
                     <input id="vsc-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
-                <button id="vsc-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.vol_stop_close.btn.compute" id="vsc-run" class="primary" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button id="vsc-demo-wicks"    class="secondary" type="button">Demo: wick-spike (long)</button>
-                <button id="vsc-demo-rev"      class="secondary" type="button">Demo: uptrend → reversal</button>
-                <button id="vsc-demo-down"     class="secondary" type="button">Demo: downtrend → bounce</button>
-                <button id="vsc-demo-chop"     class="secondary" type="button">Demo: chop with wicks</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_wick_spike_long" id="vsc-demo-wicks"    class="secondary" type="button">Demo: wick-spike (long)</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_uptrend_reversal" id="vsc-demo-rev"      class="secondary" type="button">Demo: uptrend → reversal</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_downtrend_bounce" id="vsc-demo-down"     class="secondary" type="button">Demo: downtrend → bounce</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_chop_with_wicks" id="vsc-demo-chop"     class="secondary" type="button">Demo: chop with wicks</button>
             </div>
-            <p class="muted">Both stops use the same ATR + multiplier. Close-based references highest CLOSE in window; Chandelier references highest HIGH. On the wick-spike demo, watch Chandelier ratchet up to the wick while close-based ignores it.</p>
+            <p data-i18n="view.vol_stop_close.hint.both_stops_use_the_same_atr_multiplier_close_based" class="muted">Both stops use the same ATR + multiplier. Close-based references highest CLOSE in window; Chandelier references highest HIGH. On the wick-spike demo, watch Chandelier ratchet up to the wick while close-based ignores it.</p>
         </div>
 
         <div id="vsc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close vs both stops</h2>
+            <h2 data-i18n="view.vol_stop_close.h2.close_vs_both_stops">Close vs both stops</h2>
             <div id="vsc-chart" style="height:340px"></div>
-            <p class="muted">Cyan = close. Yellow = close-based vol-stop. Red dashed = chandelier (high-based). Red dots = triggers (filled = close-based, hollow = chandelier).</p>
+            <p data-i18n="view.vol_stop_close.hint.cyan_close_yellow_close_based_vol_stop_red_dashed_" class="muted">Cyan = close. Yellow = close-based vol-stop. Red dashed = chandelier (high-based). Red dots = triggers (filled = close-based, hollow = chandelier).</p>
         </div>
 
         <div id="vsc-err" class="boot" style="display:none;color:var(--red)"></div>
@@ -120,24 +121,24 @@ function renderSummary(closeStops, chandStops, pending) {
     const cmp = compareStops(chandStops, closeStops);
     const parity = closeStops.length === chandStops.length;
     document.getElementById('vsc-summary').innerHTML = [
-        card('Latest close-stop',  fmtN(summClose.latestStop, 2) + (pending ? ' (local)' : ''), 'pos'),
-        card('Latest chand-stop',  fmtN(summChand.latestStop, 2), 'neg'),
-        card('Stop spread',        fmtN(cmp.diff, 2) + ' (' + fmtPct(cmp.diffPct) + ')',
+        card(t('view.vol_stop_close.card.latest_close_stop'),  fmtN(summClose.latestStop, 2) + (pending ? ' (local)' : ''), 'pos'),
+        card(t('view.vol_stop_close.card.latest_chand_stop'),  fmtN(summChand.latestStop, 2), 'neg'),
+        card(t('view.vol_stop_close.card.stop_spread'),        fmtN(cmp.diff, 2) + ' (' + fmtPct(cmp.diffPct) + ')',
             Math.abs(cmp.diffPct) > 0.005 ? 'neg' : 'pos'),
-        card('Latest close',       fmtN(summClose.latestClose, 2)),
-        card('Distance (close-stop → close)', fmtPct(summClose.distancePct), 'pos'),
-        card('Distance (chand-stop → close)', fmtPct(summChand.distancePct)),
-        card('Triggers (close)',   String(summClose.triggerCount),
+        card(t('view.vol_stop_close.card.latest_close'),       fmtN(summClose.latestClose, 2)),
+        card(t('view.vol_stop_close.card.distance_close_stop_close'), fmtPct(summClose.distancePct), 'pos'),
+        card(t('view.vol_stop_close.card.distance_chand_stop_close'), fmtPct(summChand.distancePct)),
+        card(t('view.vol_stop_close.card.triggers_close'),   String(summClose.triggerCount),
             summClose.triggerCount > 0 ? 'neg' : 'pos'),
-        card('Triggers (chand)',   String(summChand.triggerCount),
+        card(t('view.vol_stop_close.card.triggers_chand'),   String(summChand.triggerCount),
             summChand.triggerCount > 0 ? 'neg' : 'pos'),
-        card('Agreement bars',     String(cmp.agreement)),
-        card('Disagreement bars',  String(cmp.disagreement),
+        card(t('view.vol_stop_close.card.agreement_bars'),     String(cmp.agreement)),
+        card(t('view.vol_stop_close.card.disagreement_bars'),  String(cmp.disagreement),
             cmp.disagreement === 0 ? 'pos' : 'neg'),
-        card('Side',               state.side.toUpperCase(),
+        card(t('view.vol_stop_close.card.side'),               state.side.toUpperCase(),
             state.side === 'long' ? 'pos' : 'neg'),
-        card('Sample size',        String(state.bars.length)),
-        card('Parity (lengths)',   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.vol_stop_close.card.sample_size'),        String(state.bars.length)),
+        card(t('view.vol_stop_close.card.parity_lengths'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 

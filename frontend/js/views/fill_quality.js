@@ -9,7 +9,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderFillQuality(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.fill_quality.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// FILL QUALITY — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Bar-level approximation — TraderView caches daily OHLC, not
@@ -65,7 +65,7 @@ function render(r, mount) {
         ${bucketPanel('By hour of day (ET)', r.by_hour_et)}
 
         <div class="chart-panel">
-            <h2>Latest 50 fills</h2>
+            <h2 data-i18n="view.fill_quality.h2.latest_50_fills">Latest 50 fills</h2>
             ${sampleTable(r.samples.slice(0, 50))}
         </div>
     `;
@@ -75,11 +75,11 @@ function bucketPanel(title, rows) {
     return `<div class="chart-panel">
         <h2>${esc(title)}</h2>
         ${rows.length === 0
-            ? '<p class="muted small">no data</p>'
+            ? '<p data-i18n="view.fill_quality.hint.no_data" class="muted small">no data</p>'
             : `<table class="trades">
                 <thead><tr>
-                    <th>Bucket</th><th>N</th><th>Avg eff</th>
-                    <th>Avg slip (bps)</th><th>Median</th><th>Worst</th>
+                    <th data-i18n="view.fill_quality.th.bucket">Bucket</th><th>N</th><th data-i18n="view.fill_quality.th.avg_eff">Avg eff</th>
+                    <th data-i18n="view.fill_quality.th.avg_slip_bps">Avg slip (bps)</th><th data-i18n="view.fill_quality.th.median">Median</th><th data-i18n="view.fill_quality.th.worst">Worst</th>
                 </tr></thead>
                 <tbody>
                 ${rows.map(b => {
@@ -100,12 +100,12 @@ function bucketPanel(title, rows) {
 }
 
 function sampleTable(samples) {
-    if (!samples.length) return '<p class="muted small">no fills</p>';
+    if (!samples.length) return '<p data-i18n="view.fill_quality.hint.no_fills" class="muted small">no fills</p>';
     return `<table class="trades">
         <thead><tr>
-            <th>When</th><th>Symbol</th><th>Side</th><th>Qty</th>
-            <th>Fill</th><th>Day O/H/L/C</th>
-            <th>Typical</th><th>In-range</th><th>Eff</th><th>Slip bps</th>
+            <th data-i18n="view.fill_quality.th.when">When</th><th data-i18n="view.fill_quality.th.symbol">Symbol</th><th data-i18n="view.fill_quality.th.side">Side</th><th data-i18n="view.fill_quality.th.qty">Qty</th>
+            <th data-i18n="view.fill_quality.th.fill">Fill</th><th data-i18n="view.fill_quality.th.day_o_h_l_c">Day O/H/L/C</th>
+            <th data-i18n="view.fill_quality.th.typical">Typical</th><th data-i18n="view.fill_quality.th.in_range">In-range</th><th data-i18n="view.fill_quality.th.eff">Eff</th><th data-i18n="view.fill_quality.th.slip_bps">Slip bps</th>
         </tr></thead>
         <tbody>
         ${samples.map(s => {

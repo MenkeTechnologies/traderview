@@ -6,19 +6,19 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderEconomy(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// ECONOMIC CALENDAR</h1>
+        <h1 data-i18n="view.economy.h1.economic_calendar" class="view-title">// ECONOMIC CALENDAR</h1>
         <form id="ec-form" class="inline-form">
-            <label>Horizon (days)
+            <label><span data-i18n="view.economy.label.horizon">Horizon (days)</span>
                 <input name="days" type="number" value="60" min="1" max="365" style="width:90px">
             </label>
-            <label>Min importance
+            <label><span data-i18n="view.economy.label.min_importance">Min importance</span>
                 <select name="importance">
-                    <option value="low">All (low+)</option>
-                    <option value="medium" selected>Medium+</option>
-                    <option value="high">High only</option>
+                    <option data-i18n="view.economy.opt.all_low" value="low">All (low+)</option>
+                    <option data-i18n="view.economy.opt.medium" value="medium" selected>Medium+</option>
+                    <option data-i18n="view.economy.opt.high_only" value="high">High only</option>
                 </select>
             </label>
-            <button class="primary" type="submit">Load</button>
+            <button data-i18n="view.economy.btn.load" class="primary" type="submit">Load</button>
         </form>
         <div id="ec">loading…</div>
     `;
@@ -48,7 +48,7 @@ function renderEvents(evs, mount) {
     const ecEl = mount.querySelector('#ec');
     if (!ecEl) return;
     if (!evs.length) {
-        ecEl.innerHTML = '<p class="muted">No events in horizon.</p>';
+        ecEl.innerHTML = '<p data-i18n="view.economy.hint.no_events_in_horizon" class="muted">No events in horizon.</p>';
         return;
     }
     // Group by day.
@@ -65,8 +65,8 @@ function renderEvents(evs, mount) {
             <div class="chart-panel">
                 <h2>${esc(day)} · ${dayName(day)}</h2>
                 <table class="trades">
-                    <thead><tr><th>Time (ET)</th><th>Importance</th><th>Event</th>
-                        <th>Category</th><th>Country</th></tr></thead>
+                    <thead><tr><th data-i18n="view.economy.th.time_et">Time (ET)</th><th data-i18n="view.economy.th.importance">Importance</th><th data-i18n="view.economy.th.event">Event</th>
+                        <th data-i18n="view.economy.th.category">Category</th><th data-i18n="view.economy.th.country">Country</th></tr></thead>
                     <tbody>${items.map(e => `
                         <tr>
                             <td>${esc(e.when_et.slice(11, 16))}</td>

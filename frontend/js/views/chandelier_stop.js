@@ -13,6 +13,7 @@ import {
     makeDemoBars, fmtN, fmtPct,
 } from '../_chandelier_stop_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CFG = { lookback: 22, atr_multiplier: 3.0 };
 const DEFAULT_ATR_PERIOD = 14;
 
@@ -21,27 +22,27 @@ let state = { barText: '', side: 'long', atrPeriod: DEFAULT_ATR_PERIOD, config: 
 export async function renderChandelierStop(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CHANDELIER STOP</h1>
+        <h1 data-i18n="view.chandelier_stop.h1.chandelier_stop" class="view-title">// CHANDELIER STOP</h1>
 
         <div class="chart-panel">
-            <h2>HLC bars</h2>
+            <h2 data-i18n="view.chandelier_stop.h2.hlc_bars">HLC bars</h2>
             <p class="muted">Paste <code>high low close</code> per line. ATR computed
                 locally (Wilder smoothing). Demo loads 60 bars: 40-bar uptrend → 20-bar
                 reversal — long stop should trigger on the way down.</p>
             <textarea id="cs-bars" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.5&#10;..."></textarea>
             <div class="inline-form">
-                <button id="cs-demo" class="secondary" type="button">Load demo (60 bars, uptrend → reversal)</button>
-                <button id="cs-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.chandelier_stop.btn.load_demo_60_bars_uptrend_reversal" id="cs-demo" class="secondary" type="button">Load demo (60 bars, uptrend → reversal)</button>
+                <button data-i18n="view.chandelier_stop.btn.clear" id="cs-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Config</h2>
+            <h2 data-i18n="view.chandelier_stop.h2.config">Config</h2>
             <div class="inline-form">
                 <label>Side
                     <select id="cs-side">
-                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
-                        <option value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
+                        <option data-i18n="view.chandelier_stop.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
+                        <option data-i18n="view.chandelier_stop.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label>ATR period
                     <input id="cs-atrp" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
@@ -49,9 +50,9 @@ export async function renderChandelierStop(mount, _appState) {
                     <input id="cs-lb"  type="number" step="1" min="1" value="${state.config.lookback}"></label>
                 <label>ATR multiplier
                     <input id="cs-mul" type="number" step="0.1" min="0" value="${state.config.atr_multiplier}"></label>
-                <button id="cs-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.chandelier_stop.btn.compute" id="cs-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">LeBeau defaults: ATR-22 lookback, 3.0× multiplier. Tighter
+            <p data-i18n="view.chandelier_stop.hint.lebeau_defaults_atr_22_lookback_3_0_multiplier_tig" class="muted">LeBeau defaults: ATR-22 lookback, 3.0× multiplier. Tighter
                 multipliers (2.0×) trail closer but trigger on noise; looser (4.0×) catch
                 only structural reversals.</p>
         </div>
@@ -60,9 +61,9 @@ export async function renderChandelierStop(mount, _appState) {
         <div id="cs-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close + trailing stop + trigger markers</h2>
+            <h2 data-i18n="view.chandelier_stop.h2.close_trailing_stop_trigger_markers">Close + trailing stop + trigger markers</h2>
             <div id="cs-chart" style="height:320px"></div>
-            <p class="muted">Cyan = close. Yellow = chandelier stop (ratcheted). Red dot =
+            <p data-i18n="view.chandelier_stop.hint.cyan_close_yellow_chandelier_stop_ratcheted_red_do" class="muted">Cyan = close. Yellow = chandelier stop (ratcheted). Red dot =
                 trigger fired on this bar. Long stop trails BELOW price; short stop trails ABOVE.</p>
         </div>
 
@@ -128,16 +129,16 @@ async function compute(tok) {
 function renderSummary(stops, bars) {
     const s = summarize(stops, bars, state.side);
     document.getElementById('cs-summary').innerHTML = [
-        card('Bars',          String(bars.length)),
-        card('Latest close',  fmtN(s.latestClose)),
-        card('Latest stop',   fmtN(s.latestStop)),
-        card('Distance',      fmtPct(s.distancePct),
+        card(t('view.chandelier_stop.card.bars'),          String(bars.length)),
+        card(t('view.chandelier_stop.card.latest_close'),  fmtN(s.latestClose)),
+        card(t('view.chandelier_stop.card.latest_stop'),   fmtN(s.latestStop)),
+        card(t('view.chandelier_stop.card.distance'),      fmtPct(s.distancePct),
             s.distancePct >= 0 ? 'pos' : 'neg'),
-        card('Triggers',      String(s.triggerCount), s.triggerCount ? 'neg' : 'pos'),
-        card('First trigger', s.firstTriggerIdx >= 0 ? `bar ${s.firstTriggerIdx}` : '—',
+        card(t('view.chandelier_stop.card.triggers'),      String(s.triggerCount), s.triggerCount ? 'neg' : 'pos'),
+        card(t('view.chandelier_stop.card.first_trigger'), s.firstTriggerIdx >= 0 ? `bar ${s.firstTriggerIdx}` : '—',
             s.firstTriggerIdx >= 0 ? 'neg' : ''),
-        card('Side',          state.side.toUpperCase(), state.side === 'long' ? 'pos' : 'neg'),
-        card('Stop math',     `${state.config.lookback}-bar HH/LL ± ${state.config.atr_multiplier}× ATR`),
+        card(t('view.chandelier_stop.card.side'),          state.side.toUpperCase(), state.side === 'long' ? 'pos' : 'neg'),
+        card(t('view.chandelier_stop.card.stop_math'),     `${state.config.lookback}-bar HH/LL ± ${state.config.atr_multiplier}× ATR`),
     ].join('');
 }
 

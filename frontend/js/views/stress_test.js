@@ -16,6 +16,7 @@ import {
     fmtUSD, fmtUSDSigned, fmtPct,
 } from '../_stress_test_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     legText: '',
     priceShocks: defaultPriceShocks(),
@@ -28,22 +29,22 @@ let state = {
 export async function renderStressTest(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// PORTFOLIO STRESS TEST</h1>
+        <h1 data-i18n="view.stress_test.h1.portfolio_stress_test" class="view-title">// PORTFOLIO STRESS TEST</h1>
 
         <div class="chart-panel">
-            <h2>Option legs</h2>
+            <h2 data-i18n="view.stress_test.h2.option_legs">Option legs</h2>
             <p class="muted">One leg per line: <code>symbol kind spot strike dte iv contracts entry_price</code>.
                 Multiplier is fixed at 100 (equity options). Demo loads a short SPY iron
                 condor.</p>
             <textarea id="st-legs" rows="6" placeholder="SPY put 100 95 30 0.30 -1 1.20&#10;SPY put 100 90 30 0.30 1 0.40&#10;..."></textarea>
             <div class="inline-form">
-                <button id="st-demo" class="secondary" type="button">Load demo (iron condor)</button>
-                <button id="st-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.stress_test.btn.load_demo_iron_condor" id="st-demo" class="secondary" type="button">Load demo (iron condor)</button>
+                <button data-i18n="view.stress_test.btn.clear" id="st-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Shock grid + market params</h2>
+            <h2 data-i18n="view.stress_test.h2.shock_grid_market_params">Shock grid + market params</h2>
             <div class="inline-form">
                 <label>Price shocks % (comma-sep, fractions e.g. -0.10 = -10%)
                     <input id="st-ps" type="text" value="${state.priceShocks.join(',')}" style="min-width:300px"></label>
@@ -57,9 +58,9 @@ export async function renderStressTest(mount, _appState) {
                     <input id="st-rate" type="number" step="any" value="${state.rate}"></label>
                 <label>Dividend yield
                     <input id="st-div" type="number" step="any" min="0" value="${state.div}"></label>
-                <button id="st-run" class="primary" type="button">Run stress test</button>
+                <button data-i18n="view.stress_test.btn.run_stress_test" id="st-run" class="primary" type="button">Run stress test</button>
             </div>
-            <p class="muted">Negative price-shock = downside; negative IV-shock = vol crush.
+            <p data-i18n="view.stress_test.hint.negative_price_shock_downside_negative_iv_shock_vo" class="muted">Negative price-shock = downside; negative IV-shock = vol crush.
                 Worst-case + best-case cells highlighted in the heatmap below.</p>
         </div>
 
@@ -67,9 +68,9 @@ export async function renderStressTest(mount, _appState) {
         <div id="st-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>P&amp;L heatmap (price × IV shocks)</h2>
+            <h2 data-i18n="view.stress_test.h2.pandl_heatmap_price_iv_shocks">P&amp;L heatmap (price × IV shocks)</h2>
             <div id="st-grid" class="st-grid"></div>
-            <p class="muted">Each cell = portfolio P&amp;L under that shock pair (with time-decay
+            <p data-i18n="view.stress_test.hint.each_cell_portfolio_pandl_under_that_shock_pair_wi" class="muted">Each cell = portfolio P&amp;L under that shock pair (with time-decay
                 applied). Gold border = worst-case cell. Cyan border = best-case cell.
                 Hover any cell for full greeks under that shock.</p>
         </div>
@@ -138,16 +139,16 @@ function renderSummary(report, legs) {
     const w = report.worst_case || {};
     const b = report.best_case || {};
     document.getElementById('st-summary').innerHTML = [
-        card('Legs',         String(legs.length)),
-        card('Grid size',    `${state.priceShocks.length} × ${state.ivShocks.length}`),
-        card('Cells',        String((report.grid || []).length)),
-        card('Worst-case',   fmtUSDSigned(w.pnl_dollars),
+        card(t('view.stress_test.card.legs'),         String(legs.length)),
+        card(t('view.stress_test.card.grid_size'),    `${state.priceShocks.length} × ${state.ivShocks.length}`),
+        card(t('view.stress_test.card.cells'),        String((report.grid || []).length)),
+        card(t('view.stress_test.card.worst_case'),   fmtUSDSigned(w.pnl_dollars),
             (w.pnl_dollars || 0) < 0 ? 'neg' : 'pos'),
-        card('Worst shock',  `${fmtPct(w.price_shock_pct)} px · ${fmtPct(w.iv_shock_pct)} IV`),
-        card('Best-case',    fmtUSDSigned(b.pnl_dollars),
+        card(t('view.stress_test.card.worst_shock'),  `${fmtPct(w.price_shock_pct)} px · ${fmtPct(w.iv_shock_pct)} IV`),
+        card(t('view.stress_test.card.best_case'),    fmtUSDSigned(b.pnl_dollars),
             (b.pnl_dollars || 0) >= 0 ? 'pos' : 'neg'),
-        card('Best shock',   `${fmtPct(b.price_shock_pct)} px · ${fmtPct(b.iv_shock_pct)} IV`),
-        card('Time-decay',   `${state.timeDecay} days`),
+        card(t('view.stress_test.card.best_shock'),   `${fmtPct(b.price_shock_pct)} px · ${fmtPct(b.iv_shock_pct)} IV`),
+        card(t('view.stress_test.card.time_decay'),   `${state.timeDecay} days`),
     ].join('');
 }
 
@@ -168,7 +169,7 @@ function renderGrid(report) {
     const bestKey  = keyOf(report.best_case);
 
     // Build header row: blank corner + iv-shock columns.
-    let html = `<table class="st-table"><thead><tr><th>price ↓ / iv →</th>`;
+    let html = `<table class="st-table"><thead><tr><th data-i18n="view.stress_test.th.price_iv">price ↓ / iv →</th>`;
     for (const ivS of state.ivShocks) html += `<th>${esc(fmtPct(ivS))}</th>`;
     html += `</tr></thead><tbody>`;
     // Iterate price shocks top-down (most negative first = worst-case downside row at top).

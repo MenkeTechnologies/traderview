@@ -12,15 +12,16 @@ import {
     makeDemoData, chartSpan, fmtN, yesNo,
 } from '../_open_type_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { params: makeDemoData('auction') };
 
 export async function renderOpenType(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// OPEN TYPE · DALTON AMT</h1>
+        <h1 data-i18n="view.open_type.h1.open_type_dalton_amt" class="view-title">// OPEN TYPE · DALTON AMT</h1>
 
         <div class="chart-panel">
-            <h2>Today's opening range (first 30-60 min)</h2>
+            <h2 data-i18n="view.open_type.h2.today_s_opening_range_first_30_60_min">Today's opening range (first 30-60 min)</h2>
             <div class="inline-form">
                 <label>Open price <input id="ot-open" type="number" step="any" min="0" value="${state.params.open_price}"></label>
                 <label>OR high   <input id="ot-orh"  type="number" step="any" min="0" value="${state.params.opening_range_high}"></label>
@@ -30,7 +31,7 @@ export async function renderOpenType(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Prior-day reference</h2>
+            <h2 data-i18n="view.open_type.h2.prior_day_reference">Prior-day reference</h2>
             <div class="inline-form">
                 <label>Prior high   <input id="ot-ph"  type="number" step="any" min="0" value="${state.params.prior_day_high}"></label>
                 <label>Prior low    <input id="ot-pl"  type="number" step="any" min="0" value="${state.params.prior_day_low}"></label>
@@ -38,13 +39,13 @@ export async function renderOpenType(mount, _appState) {
                 <label>VAL (Value Area Low)  <input id="ot-val" type="number" step="any" min="0" value="${state.params.prior_day_val}"></label>
             </div>
             <div class="inline-form">
-                <button id="ot-demo-drive"   class="secondary" type="button">Demo: Drive Up</button>
-                <button id="ot-demo-test"    class="secondary" type="button">Demo: Test Drive Up</button>
-                <button id="ot-demo-reject"  class="secondary" type="button">Demo: Rejection Reverse</button>
-                <button id="ot-demo-auction" class="secondary" type="button">Demo: Auction</button>
-                <button id="ot-run" class="primary" type="button">Classify</button>
+                <button data-i18n="view.open_type.btn.demo_drive_up" id="ot-demo-drive"   class="secondary" type="button">Demo: Drive Up</button>
+                <button data-i18n="view.open_type.btn.demo_test_drive_up" id="ot-demo-test"    class="secondary" type="button">Demo: Test Drive Up</button>
+                <button data-i18n="view.open_type.btn.demo_rejection_reverse" id="ot-demo-reject"  class="secondary" type="button">Demo: Rejection Reverse</button>
+                <button data-i18n="view.open_type.btn.demo_auction" id="ot-demo-auction" class="secondary" type="button">Demo: Auction</button>
+                <button data-i18n="view.open_type.btn.classify" id="ot-run" class="primary" type="button">Classify</button>
             </div>
-            <p class="muted">VAH/VAL = the 70% volume-weighted value area from the prior session.
+            <p data-i18n="view.open_type.hint.vah_val_the_70_volume_weighted_value_area_from_the" class="muted">VAH/VAL = the 70% volume-weighted value area from the prior session.
                 Most market-profile platforms (Sierra, Bookmap) print these as horizontal lines
                 on yesterday's profile.</p>
         </div>
@@ -52,9 +53,9 @@ export async function renderOpenType(mount, _appState) {
         <div id="ot-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Reference levels schematic</h2>
+            <h2 data-i18n="view.open_type.h2.reference_levels_schematic">Reference levels schematic</h2>
             <div id="ot-chart" style="height:280px"></div>
-            <p class="muted">Yellow = prior H/L (extreme range). Cyan = VAH/VAL (value area).
+            <p data-i18n="view.open_type.hint.yellow_prior_h_l_extreme_range_cyan_vah_val_value_" class="muted">Yellow = prior H/L (extreme range). Cyan = VAH/VAL (value area).
                 Magenta = opening range H/L. Red dot = open price. Green dot = OR close.
                 Distance + direction visually reveals the verdict.</p>
         </div>
@@ -119,12 +120,12 @@ async function compute(tok) {
 function renderSummary(r) {
     const badge = typeBadge(r.open_type);
     document.getElementById('ot-summary').innerHTML = [
-        card('Open Type',         badge.label, badge.cls),
-        card('Above prior high?', yesNo(r.above_prior_high),    r.above_prior_high ? 'pos' : ''),
-        card('Below prior low?',  yesNo(r.below_prior_low),     r.below_prior_low ? 'neg' : ''),
-        card('Inside prior value?', yesNo(r.inside_prior_value), r.inside_prior_value ? '' : ''),
-        card('Action',            badge.hint),
-        card('Backend note',      r.note || '—'),
+        card(t('view.open_type.card.open_type'),         badge.label, badge.cls),
+        card(t('view.open_type.card.above_prior_high'), yesNo(r.above_prior_high),    r.above_prior_high ? 'pos' : ''),
+        card(t('view.open_type.card.below_prior_low'),  yesNo(r.below_prior_low),     r.below_prior_low ? 'neg' : ''),
+        card(t('view.open_type.card.inside_prior_value'), yesNo(r.inside_prior_value), r.inside_prior_value ? '' : ''),
+        card(t('view.open_type.card.action'),            badge.hint),
+        card(t('view.open_type.card.backend_note'),      r.note || '—'),
     ].join('');
 }
 

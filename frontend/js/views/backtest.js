@@ -17,8 +17,8 @@ const PRESETS = [
 export async function renderBacktest(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// STRATEGY BACKTEST</h1>
-        <p class="muted small">Bar-by-bar over cached daily price bars. Long-only, single-position, 95% allocation.
+        <h1 data-i18n="view.backtest.h1.strategy_backtest" class="view-title">// STRATEGY BACKTEST</h1>
+        <p data-i18n="view.backtest.hint.bar_by_bar_over_cached_daily_price_bars_long_only_" class="muted small">Bar-by-bar over cached daily price bars. Long-only, single-position, 95% allocation.
             Optimistic fills at signal-bar close — apply your own slippage knob.</p>
 
         <div class="chart-panel">
@@ -28,10 +28,13 @@ export async function renderBacktest(mount) {
                     ${PRESETS.map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join('')}
                 </select>
                 <span id="param-slot"></span>
-                <label>Days <input name="days" type="number" value="730" style="width:90px"></label>
-                <label>Capital <input name="capital" type="number" value="10000" style="width:110px"></label>
-                <label>Fee/trade <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
-                <button class="primary" type="submit">Run</button>
+                <label><span data-i18n="view.backtest.label.days">Days</span>
+                    <input name="days" type="number" value="730" style="width:90px"></label>
+                <label><span data-i18n="view.backtest.label.capital">Capital</span>
+                    <input name="capital" type="number" value="10000" style="width:110px"></label>
+                <label><span data-i18n="view.backtest.label.fee_trade">Fee/trade</span>
+                    <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
+                <button data-i18n="view.backtest.btn.run" class="primary" type="submit">Run</button>
             </form>
         </div>
 
@@ -112,14 +115,14 @@ function render(r) {
             <div class="card"><div class="label">% time in market</div><div class="value">${s.bars_in_market_pct.toFixed(0)}%</div></div>
         </div>
         <div class="chart-panel">
-            <h2>Equity curve</h2>
+            <h2 data-i18n="view.backtest.h2.equity_curve">Equity curve</h2>
             <div id="bt-eq"></div>
         </div>
         <div class="chart-panel">
             <h2>Trades · ${r.trades.length}</h2>
             <table class="trades">
-                <thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>Bars</th>
-                <th>Entry $</th><th>Exit $</th><th>Qty</th><th>P&L</th><th>%</th></tr></thead>
+                <thead><tr><th>#</th><th data-i18n="view.backtest.th.entry">Entry</th><th data-i18n="view.backtest.th.exit">Exit</th><th data-i18n="view.backtest.th.bars">Bars</th>
+                <th data-i18n="view.backtest.th.entry_2">Entry $</th><th data-i18n="view.backtest.th.exit_2">Exit $</th><th data-i18n="view.backtest.th.qty">Qty</th><th data-i18n="view.backtest.th.p_l">P&L</th><th>%</th></tr></thead>
                 <tbody>${r.trades.map((t, i) => `
                     <tr>
                         <td>${i+1}</td>

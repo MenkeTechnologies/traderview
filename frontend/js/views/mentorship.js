@@ -7,26 +7,26 @@ export async function renderMentorship(mount) {
     const [mentors, mentees] = await Promise.all([api.mentors(), api.mentees()]);
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// MENTORSHIP</h1>
+        <h1 data-i18n="view.mentorship.h1.mentorship" class="view-title">// MENTORSHIP</h1>
 
         <div class="panel-grid">
             <div class="chart-panel">
-                <h2>Your mentors (people watching you)</h2>
+                <h2 data-i18n="view.mentorship.h2.your_mentors_people_watching_you">Your mentors (people watching you)</h2>
                 ${listTable(mentors, 'mentor_id', false)}
             </div>
             <div class="chart-panel">
-                <h2>Your mentees (people you watch)</h2>
+                <h2 data-i18n="view.mentorship.h2.your_mentees_people_you_watch">Your mentees (people you watch)</h2>
                 ${listTable(mentees, 'mentee_id', true)}
             </div>
             <div class="chart-panel">
-                <h2>Invite a mentor (paste their user ID)</h2>
+                <h2 data-i18n="view.mentorship.h2.invite_a_mentor_paste_their_user_id">Invite a mentor (paste their user ID)</h2>
                 <form id="mentor-form" class="inline-form">
                     <input name="mentor_id" placeholder="mentor user UUID" required>
                     <select name="scope">
-                        <option value="read">read-only</option>
-                        <option value="comment">read + comment</option>
+                        <option data-i18n="view.mentorship.opt.read_only" value="read">read-only</option>
+                        <option data-i18n="view.mentorship.opt.read_comment" value="comment">read + comment</option>
                     </select>
-                    <button class="primary" type="submit">Invite</button>
+                    <button data-i18n="view.mentorship.btn.invite" class="primary" type="submit">Invite</button>
                 </form>
             </div>
         </div>
@@ -55,9 +55,9 @@ export async function renderMentorship(mount) {
 }
 
 function listTable(rows, idCol, isMentor) {
-    if (!rows.length) return '<p class="muted">None.</p>';
+    if (!rows.length) return '<p data-i18n="view.mentorship.hint.none" class="muted">None.</p>';
     return `<table class="trades"><thead><tr>
-        <th>UUID</th><th>Status</th><th>Scope</th><th>Created</th><th>Accepted</th><th></th>
+        <th data-i18n="view.mentorship.th.uuid">UUID</th><th data-i18n="view.mentorship.th.status">Status</th><th data-i18n="view.mentorship.th.scope">Scope</th><th data-i18n="view.mentorship.th.created">Created</th><th data-i18n="view.mentorship.th.accepted">Accepted</th><th></th>
     </tr></thead><tbody>${rows.map(r => `
         <tr><td class="muted small">${esc(r[idCol])}</td>
         <td>${r.status}</td>
@@ -65,8 +65,8 @@ function listTable(rows, idCol, isMentor) {
         <td>${fmtDateTime(r.created_at)}</td>
         <td>${r.accepted_at ? fmtDateTime(r.accepted_at) : '—'}</td>
         <td>
-            ${isMentor && r.status === 'pending' ? `<button class="link" data-accept="${r.id}">accept</button>` : ''}
-            <button class="link" data-revoke="${r.id}">revoke</button>
+            ${isMentor && r.status === 'pending' ? `<button data-i18n="view.mentorship.btn.accept" class="link" data-accept="${r.id}">accept</button>` : ''}
+            <button data-i18n="view.mentorship.btn.revoke" class="link" data-revoke="${r.id}">revoke</button>
         </td></tr>
     `).join('')}</tbody></table>`;
 }

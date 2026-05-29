@@ -11,8 +11,8 @@ let lastQuery = { mode: 'recent', sym: '', q: '' };
 export async function renderNews(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// NEWS</h1>
-        <p class="muted small">Yahoo headlines polled per watchlist symbol every 5 minutes,
+        <h1 data-i18n="view.news.h1.news" class="view-title">// NEWS</h1>
+        <p data-i18n="view.news.hint.yahoo_headlines_polled_per_watchlist_symbol_every_" class="muted small">Yahoo headlines polled per watchlist symbol every 5 minutes,
             scored with the same WSB-aware sentiment lexicon used for social feeds, and
             indexed for full-text search via Postgres tsvector / websearch_to_tsquery.
             Color stripe on each row maps to sentiment: red (negative) → grey → green (positive).</p>
@@ -20,14 +20,16 @@ export async function renderNews(mount) {
         <div class="chart-panel">
             <form id="n-form" class="inline-form">
                 <select name="mode">
-                    <option value="recent">recent (global)</option>
-                    <option value="symbol">by symbol</option>
-                    <option value="search">full-text search</option>
+                    <option data-i18n="view.news.opt.recent_global" value="recent">recent (global)</option>
+                    <option data-i18n="view.news.opt.by_symbol" value="symbol">by symbol</option>
+                    <option data-i18n="view.news.opt.full_text_search" value="search">full-text search</option>
                 </select>
-                <input name="value" placeholder="symbol or query" style="min-width:200px;">
-                <label>Limit <input name="limit" type="number" min="10" max="200" value="40" style="width:80px;"></label>
-                <button class="primary" type="submit">Fetch</button>
-                <button type="button" class="btn" id="n-poll-now">Poll now</button>
+                <input name="value" placeholder="symbol or query"
+                       data-i18n-placeholder="view.news.placeholder.value" style="min-width:200px;">
+                <label><span data-i18n="view.news.label.limit">Limit</span>
+                    <input name="limit" type="number" min="10" max="200" value="40" style="width:80px;"></label>
+                <button data-i18n="view.news.btn.fetch" class="primary" type="submit">Fetch</button>
+                <button data-i18n="view.news.btn.poll_now" type="button" class="btn" id="n-poll-now">Poll now</button>
                 <span id="n-status" class="muted small"></span>
             </form>
         </div>
@@ -103,7 +105,7 @@ async function refresh(mount, tok) {
 }
 
 function renderList(el, items) {
-    if (!items.length) { el.innerHTML = '<p class="muted small">no items</p>'; return; }
+    if (!items.length) { el.innerHTML = '<p data-i18n="view.news.hint.no_items" class="muted small">no items</p>'; return; }
     el.innerHTML = items.map(n => row(n)).join('');
 }
 

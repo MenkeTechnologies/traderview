@@ -3,12 +3,12 @@ import { fmtMoney } from '../util.js';
 
 export async function renderCalendar(mount, state) {
     if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">No account.</p>';
+        mount.innerHTML = '<p data-i18n="view.calendar.hint.no_account" class="boot">No account.</p>';
         return;
     }
     const cells = await api.calendar(state.accountId);
     if (!cells.length) {
-        mount.innerHTML = '<p class="boot">No data yet.</p>';
+        mount.innerHTML = '<p data-i18n="view.calendar.hint.no_data_yet" class="boot">No data yet.</p>';
         return;
     }
     const byDay = new Map(cells.map(c => [c.day, c]));
@@ -54,7 +54,7 @@ export async function renderCalendar(mount, state) {
     }).join('');
 
     mount.innerHTML = `
-        <h1 class="view-title">// CALENDAR</h1>
+        <h1 data-i18n="view.calendar.h1.calendar" class="view-title">// CALENDAR</h1>
         <div class="cal-months">${monthHtml}</div>
     `;
 }

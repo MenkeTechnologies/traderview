@@ -6,8 +6,8 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderHeatmap(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// MARKET HEATMAP</h1>
-        <p class="muted small">~150 S&P 500 names grouped by GICS sector, colored by today's % change. Your watchlist symbols add to a "Watchlist" pseudo-sector.</p>
+        <h1 data-i18n="view.heatmap.h1.market_heatmap" class="view-title">// MARKET HEATMAP</h1>
+        <p data-i18n="view.heatmap.hint.150_s_p_500_names_grouped_by_gics_sector_colored_b" class="muted small">~150 S&P 500 names grouped by GICS sector, colored by today's % change. Your watchlist symbols add to a "Watchlist" pseudo-sector.</p>
         <div id="hm">loading…</div>
     `;
     try {
@@ -57,5 +57,5 @@ function renderTiles(r, mount) {
     }).join('');
 
     const el = mount.querySelector('#hm');
-    if (el) el.innerHTML = html || '<p class="muted">No quotes cached yet — refresh in a minute.</p>';
+    if (el) el.innerHTML = html || '<p data-i18n="view.heatmap.hint.no_quotes_cached_yet_refresh_in_a_minute" class="muted">No quotes cached yet — refresh in a minute.</p>';
 }

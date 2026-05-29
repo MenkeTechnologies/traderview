@@ -119,8 +119,103 @@ import { renderCohortTilt } from './views/cohort_tilt.js';
 import { renderChoppiness } from './views/choppiness.js';
 import { renderVarEstimator } from './views/var_estimator.js';
 import { renderKelly } from './views/kelly.js';
+import { renderMcTrades } from './views/mc_trades.js';
+import { renderKeyboardShortcuts } from './views/keyboard_shortcuts.js';
+import { renderCommissionOptimizer } from './views/commission_optimizer.js';
+import { renderMarginRunway } from './views/margin_runway.js';
+import { renderRiskParity } from './views/risk_parity.js';
+import { renderRiskOnOff } from './views/risk_on_off.js';
+import { renderRiskReward } from './views/risk_reward.js';
+import { renderTaxLossHarvest } from './views/tax_loss_harvest.js';
+import { renderWashSale } from './views/wash_sale.js';
+import { renderBuyingPower } from './views/buying_power.js';
+import { renderMarginCall } from './views/margin_call.js';
+import { renderVixTermStructure } from './views/vix_term_structure.js';
+import { renderCurrencyExposure } from './views/currency_exposure.js';
+import { renderBondDuration } from './views/bond_duration.js';
+import { renderCarryScore } from './views/carry_score.js';
+import { renderYieldCurve } from './views/yield_curve.js';
+import { renderCostBasis } from './views/cost_basis.js';
+import { renderStopLossBacktest } from './views/stop_loss_backtest.js';
+import { renderFuturesRoll } from './views/futures_roll.js';
+import { renderHeatmapDowHour } from './views/heatmap_dow_hour.js';
+import { renderAtrCone } from './views/atr_cone.js';
+import { renderRoundLevels } from './views/round_levels.js';
+import { renderKylesLambda } from './views/kyles_lambda.js';
+import { renderHawkesIntensity } from './views/hawkes_intensity.js';
+import { renderKagiChart } from './views/kagi_chart.js';
+import { renderRiskParitySolver } from './views/risk_parity_solver.js';
+import { renderVolumeAtPrice } from './views/volume_at_price.js';
+import { renderHerfindahl } from './views/herfindahl.js';
+import { renderRollSpread } from './views/roll_spread.js';
+import { renderThreeLineBreak } from './views/three_line_break.js';
+import { renderMomentumCrash } from './views/momentum_crash.js';
+import { renderEffectiveSpread } from './views/effective_spread.js';
+import { renderWeightedMidprice } from './views/weighted_midprice.js';
+import { renderMarginalVar } from './views/marginal_var.js';
+import { renderRangeBar } from './views/range_bar.js';
+import { renderTickBar } from './views/tick_bar.js';
+import { renderVolumeBar } from './views/volume_bar.js';
+import { renderDollarBar } from './views/dollar_bar.js';
+import { renderActiveShare } from './views/active_share.js';
+import { renderBrinson } from './views/brinson.js';
+import { renderEquivolume } from './views/equivolume.js';
+import { renderImbalanceBar } from './views/imbalance_bar.js';
+import { renderBlackLitterman } from './views/black_litterman.js';
+import { renderAdfTest } from './views/adf_test.js';
+import { renderAroon } from './views/aroon.js';
+import { renderAmihud } from './views/amihud.js';
+import { renderBreadthThrust } from './views/breadth_thrust.js';
+import { renderBollingerSqueeze } from './views/bollinger_squeeze.js';
+import { renderBalanceOfPower } from './views/balance_of_power.js';
+import { renderAnchoredMomentum } from './views/anchored_momentum.js';
+import { renderAcf } from './views/acf.js';
+import { renderBeta } from './views/beta.js';
+import { renderBrierScore } from './views/brier_score.js';
+import { renderBipowerVariation } from './views/bipower_variation.js';
+import { renderBootstrapPnl } from './views/bootstrap_pnl.js';
+import { renderBlockBootstrap } from './views/block_bootstrap.js';
+import { renderAdNormality } from './views/ad_normality.js';
+import { renderArchLm } from './views/arch_lm.js';
+import { renderAlma } from './views/alma.js';
+import { renderAlphatrend } from './views/alphatrend.js';
+import { renderAtrChannel } from './views/atr_channel.js';
+import { renderAtrTrailStop } from './views/atr_trail_stop.js';
+import { renderAdl } from './views/adl.js';
+import { renderAsi } from './views/asi.js';
+import { renderAdOscillator } from './views/ad_oscillator.js';
+import { renderBetaShrink } from './views/beta_shrink.js';
+import { renderBartlett } from './views/bartlett.js';
+import { renderBidAskVol } from './views/bid_ask_vol.js';
+import { renderBbw } from './views/bbw.js';
+import { renderBbwp } from './views/bbwp.js';
+import { renderBbPercentB } from './views/bb_pb.js';
+import { renderBbd } from './views/bbd.js';
+import { renderBbOsc } from './views/bb_osc.js';
+import { renderBorrowRate } from './views/borrow_rate.js';
+import { renderBpTest } from './views/bp_test.js';
+import { renderBurke } from './views/burke.js';
+import { renderCamarilla } from './views/camarilla.js';
+import { renderBgTest } from './views/bg_test.js';
+import { renderCsi } from './views/csi.js';
+import { renderCarhart4 } from './views/carhart4.js';
+import { renderCsm } from './views/csm.js';
+import { renderChaikinOsc } from './views/chaikin_osc.js';
+import { renderCdmi } from './views/cdmi.js';
+import { renderCks } from './views/cks.js';
+import { renderCmo } from './views/cmo.js';
+import { renderCti } from './views/cti.js';
+import { renderCvi } from './views/cvi.js';
+import { renderChandelier } from './views/chandelier.js';
+import { renderCholesky } from './views/cholesky.js';
+import { renderAbcPattern } from './views/abc_pattern.js';
+import { renderAbsorption } from './views/absorption.js';
+import { renderFavoritesManager } from './views/favorites_manager.js';
 import { installShortcuts } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
+import { installToasts } from './toast.js';
+import { installContextMenu, registerContextItems } from './context_menu.js';
+import { installTooltips, upgradeTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
 import { renderBacktest } from './views/backtest.js';
@@ -254,27 +349,134 @@ function bindTabs() {
     bindNavToggle();
     installShortcuts();
     installCommandPalette();
+    installToasts();
+    installContextMenu();
+    // Register a per-scope item for the launcher recents block so users can
+    // wipe their navigation history without leaving the page.
+    registerContextItems('launcher-recents', [
+        { id: 'clear_recents', labelKey: 'ctxmenu.clear_recents',
+          actionKey: 'tv:clear-recents', section: 'view' },
+    ]);
+    installTooltips();
     installSymbolHotkey();
     void bootI18n('en').then(() => {
         applyUiI18n();
         const picker = document.getElementById('locale-picker');
         if (picker) {
             const saved = (typeof localStorage !== 'undefined') ? localStorage.getItem('tv-locale-v1') : null;
-            if (saved) picker.value = saved;
+            if (saved) {
+                picker.value = saved;
+                // Apply saved locale on boot so it doesn't snap back to en
+                // after the first applyUiI18n pass above.
+                if (saved !== 'en') {
+                    void (async () => {
+                        try {
+                            const { loadLocale } = await import('./i18n.js');
+                            await loadLocale(saved);
+                        } catch (_) { /* missing catalog — fall back to en */ }
+                    })();
+                }
+            }
+            // Remember the prior selection so we can revert on failed load.
+            let priorLocale = picker.value;
             picker.addEventListener('change', async (e) => {
+                const locale = e.target.value;
+                const labelText = picker.options[picker.selectedIndex].text;
                 const { loadLocale } = await import('./i18n.js');
-                await loadLocale(e.target.value);
+                const keyCount = await loadLocale(locale);
+                const toast = await import('./toast.js');
+                const i18n  = await import('./i18n.js');
+                if (keyCount === 0) {
+                    // Failure: missing catalog / network error. Revert + toast.
+                    picker.value = priorLocale;
+                    toast.showToast(
+                        i18n.t('toast.locale_failed', { locale: labelText }),
+                        { level: 'error' });
+                    return;
+                }
+                priorLocale = locale;
+                try { localStorage.setItem('tv-locale-v1', locale); } catch (_) {}
+                toast.showToast(
+                    i18n.t('toast.locale_changed', { locale: labelText }),
+                    { level: 'success' });
             });
         }
     });
     // Bridge: hash-based help/tutorial action from the new registry.
-    window.addEventListener('tv:open-help', () => { window.location.hash = 'tutorial'; });
+    window.addEventListener('tv:open-help', () => { window.location.hash = 'keyboard-shortcuts'; });
+    window.addEventListener('tv:go-home',   () => { window.location.hash = 'launcher'; });
+    // Toast on HUD toggles so keyboard-only users see feedback (the
+    // visible change can be subtle in some scheme combos).
+    window.addEventListener('tv:hud-toggled', (e) => {
+        void (async () => {
+            try {
+                const toast = await import('./toast.js');
+                const i18n  = await import('./i18n.js');
+                const d = e && e.detail || {};
+                const kind = d.kind;
+                const on = !!d.on;
+                if (!['theme', 'crt', 'neon'].includes(kind)) return;
+                // theme reports `on=true` for LIGHT (since light is the "on" state in the emitter)
+                // but the user-facing label should say "Light" / "Dark".
+                let msg;
+                if (kind === 'theme') {
+                    msg = i18n.t(on ? 'toast.theme_light' : 'toast.theme_dark');
+                } else {
+                    msg = i18n.t(on ? `toast.${kind}_on` : `toast.${kind}_off`);
+                }
+                toast.showToast(msg, { level: 'success' });
+            } catch (_) { /* toast/i18n unavailable */ }
+        })();
+    });
+    window.addEventListener('tv:cycle-locale', () => {
+        const picker = document.getElementById('locale-picker');
+        if (!picker || picker.options.length === 0) return;
+        const next = (picker.selectedIndex + 1) % picker.options.length;
+        picker.selectedIndex = next;
+        picker.dispatchEvent(new Event('change'));
+    });
+    window.addEventListener('tv:open-settings', () => { window.location.hash = 'settings'; });
+    window.addEventListener('tv:focus-search', () => {
+        // Per-view priority: explicit search input → type=search → input with
+        // placeholder hinting search/filter/find. Bails silently if none.
+        const candidates = [
+            '#launcher-q', '#ks-filter', '#palette-input',
+            'input[type=search]:not([disabled])',
+            'input:not([disabled])[placeholder*="search" i]',
+            'input:not([disabled])[placeholder*="filter" i]',
+            'input:not([disabled])[placeholder*="find" i]',
+        ];
+        for (const sel of candidates) {
+            const el = document.querySelector(sel);
+            if (el && typeof el.focus === 'function') {
+                el.focus();
+                if (typeof el.select === 'function') el.select();
+                return;
+            }
+        }
+    });
+    window.addEventListener('tv:clear-recents', () => {
+        void (async () => {
+            try {
+                const r = await import('./_recents_storage.js');
+                const toast = await import('./toast.js');
+                const i18n = await import('./i18n.js');
+                r.saveState(r.clearRecents(r.loadState()));
+                toast.showToast(i18n.t('toast.recents_cleared'), { level: 'success' });
+                // Re-paint launcher if we're on it.
+                if ((window.location.hash || '').replace(/^#/, '').split('/')[0] === 'launcher') {
+                    window.dispatchEvent(new HashChangeEvent('hashchange'));
+                }
+            } catch (_) { /* storage / toast unavailable */ }
+        })();
+    });
 }
 
 // Cmd+K + ? are now owned by ./shortcuts.js → tv:open-palette /
 // tv:open-help events. ./command_palette.js handles the overlay.
 
 function bindNavToggle() {
+    bindTopPaletteButton();
     const btn = document.getElementById('navToggle');
     if (!btn) return;
     btn.addEventListener('click', () => {
@@ -295,6 +497,16 @@ function bindNavToggle() {
         if (!tabs.contains(e.target) && !btn.contains(e.target)) {
             closeNavDrawer();
         }
+    });
+}
+
+// Topbar palette button — used to live as `onclick=` in index.html, which
+// the release-build CSP refuses to execute. Bind via JS instead.
+function bindTopPaletteButton() {
+    const btn = document.getElementById('topPalette');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('tv:open-palette'));
     });
 }
 
@@ -350,6 +562,13 @@ export async function dispatch() {
     bumpViewToken();
     const hash = (window.location.hash || '#launcher').slice(1);
     const [view, ...rest] = hash.split('/');
+    // Track recents (pure, localStorage-backed). Best-effort; never blocks
+    // the dispatch path. Skipped views (launcher, keyboard-shortcuts, …)
+    // are filtered inside push().
+    try {
+        const r = await import('./_recents_storage.js');
+        r.saveState(r.push(r.loadState(), view));
+    } catch (_) { /* storage unavailable */ }
     // For symbol-aware views, fall back to the global ticker store when
     // the URL doesn't carry one. Lets the user type a ticker once on
     // any page, then navigate freely — every symbol-aware view picks
@@ -466,6 +685,98 @@ export async function dispatch() {
             case 'choppiness':         await renderChoppiness(mount, state); break;
             case 'var-estimator':      await renderVarEstimator(mount, state); break;
             case 'kelly':              await renderKelly(mount, state); break;
+            case 'mc-trades':          await renderMcTrades(mount, state); break;
+            case 'keyboard-shortcuts': await renderKeyboardShortcuts(mount, state); break;
+            case 'commission-optimizer': await renderCommissionOptimizer(mount, state); break;
+            case 'margin-runway':      await renderMarginRunway(mount, state); break;
+            case 'risk-parity':        await renderRiskParity(mount, state); break;
+            case 'risk-on-off':        await renderRiskOnOff(mount, state); break;
+            case 'risk-reward':        await renderRiskReward(mount, state); break;
+            case 'tax-loss-harvest':   await renderTaxLossHarvest(mount, state); break;
+            case 'wash-sale':          await renderWashSale(mount, state); break;
+            case 'buying-power':       await renderBuyingPower(mount, state); break;
+            case 'margin-call':        await renderMarginCall(mount, state); break;
+            case 'vix-term-structure': await renderVixTermStructure(mount, state); break;
+            case 'currency-exposure': await renderCurrencyExposure(mount, state); break;
+            case 'bond-duration':     await renderBondDuration(mount, state); break;
+            case 'carry-score':       await renderCarryScore(mount, state); break;
+            case 'yield-curve':       await renderYieldCurve(mount, state); break;
+            case 'cost-basis':        await renderCostBasis(mount, state); break;
+            case 'stop-loss-backtest': await renderStopLossBacktest(mount, state); break;
+            case 'futures-roll':      await renderFuturesRoll(mount, state); break;
+            case 'heatmap-dow-hour':  await renderHeatmapDowHour(mount, state); break;
+            case 'atr-cone':          await renderAtrCone(mount, state); break;
+            case 'round-levels':      await renderRoundLevels(mount, state); break;
+            case 'kyles-lambda':      await renderKylesLambda(mount, state); break;
+            case 'hawkes':            await renderHawkesIntensity(mount, state); break;
+            case 'kagi':              await renderKagiChart(mount, state); break;
+            case 'risk-parity-solver': await renderRiskParitySolver(mount, state); break;
+            case 'volume-at-price':    await renderVolumeAtPrice(mount, state); break;
+            case 'herfindahl':         await renderHerfindahl(mount, state); break;
+            case 'roll-spread':        await renderRollSpread(mount, state); break;
+            case 'three-line-break':   await renderThreeLineBreak(mount, state); break;
+            case 'momentum-crash':     await renderMomentumCrash(mount, state); break;
+            case 'effective-spread':   await renderEffectiveSpread(mount, state); break;
+            case 'weighted-midprice':  await renderWeightedMidprice(mount, state); break;
+            case 'marginal-var':       await renderMarginalVar(mount, state); break;
+            case 'range-bar':          await renderRangeBar(mount, state); break;
+            case 'tick-bar':           await renderTickBar(mount, state); break;
+            case 'volume-bar':         await renderVolumeBar(mount, state); break;
+            case 'dollar-bar':         await renderDollarBar(mount, state); break;
+            case 'active-share':       await renderActiveShare(mount, state); break;
+            case 'brinson':            await renderBrinson(mount, state); break;
+            case 'equivolume':         await renderEquivolume(mount, state); break;
+            case 'imbalance-bar':      await renderImbalanceBar(mount, state); break;
+            case 'black-litterman':    await renderBlackLitterman(mount, state); break;
+            case 'adf-test':           await renderAdfTest(mount, state); break;
+            case 'aroon':              await renderAroon(mount, state); break;
+            case 'amihud':             await renderAmihud(mount, state); break;
+            case 'breadth-thrust':     await renderBreadthThrust(mount, state); break;
+            case 'bb-squeeze':         await renderBollingerSqueeze(mount, state); break;
+            case 'balance-of-power':   await renderBalanceOfPower(mount, state); break;
+            case 'anchored-momentum':  await renderAnchoredMomentum(mount, state); break;
+            case 'acf':                await renderAcf(mount, state); break;
+            case 'beta':               await renderBeta(mount, state); break;
+            case 'brier-score':        await renderBrierScore(mount, state); break;
+            case 'bipower-variation':  await renderBipowerVariation(mount, state); break;
+            case 'bootstrap-pnl':      await renderBootstrapPnl(mount, state); break;
+            case 'block-bootstrap':    await renderBlockBootstrap(mount, state); break;
+            case 'ad-normality':       await renderAdNormality(mount, state); break;
+            case 'arch-lm':            await renderArchLm(mount, state); break;
+            case 'alma':               await renderAlma(mount, state); break;
+            case 'alphatrend':         await renderAlphatrend(mount, state); break;
+            case 'atr-channel':        await renderAtrChannel(mount, state); break;
+            case 'atr-trailing-stop':  await renderAtrTrailStop(mount, state); break;
+            case 'adl':                await renderAdl(mount, state); break;
+            case 'asi':                await renderAsi(mount, state); break;
+            case 'ad-oscillator':      await renderAdOscillator(mount, state); break;
+            case 'beta-shrinkage':     await renderBetaShrink(mount, state); break;
+            case 'bartlett-variance':  await renderBartlett(mount, state); break;
+            case 'bid-ask-volume-ratio': await renderBidAskVol(mount, state); break;
+            case 'bollinger-band-width': await renderBbw(mount, state); break;
+            case 'bollinger-bandwidth-percentile': await renderBbwp(mount, state); break;
+            case 'bollinger-percent-b': await renderBbPercentB(mount, state); break;
+            case 'bollinger-band-distance': await renderBbd(mount, state); break;
+            case 'bollinger-oscillators': await renderBbOsc(mount, state); break;
+            case 'borrow-rate-indicator': await renderBorrowRate(mount, state); break;
+            case 'breusch-pagan':      await renderBpTest(mount, state); break;
+            case 'burke-ratio':        await renderBurke(mount, state); break;
+            case 'camarilla-pivots':   await renderCamarilla(mount, state); break;
+            case 'breusch-godfrey':    await renderBgTest(mount, state); break;
+            case 'candle-strength-index': await renderCsi(mount, state); break;
+            case 'carhart-4':          await renderCarhart4(mount, state); break;
+            case 'centered-smoothed-momentum': await renderCsm(mount, state); break;
+            case 'chaikin-oscillator': await renderChaikinOsc(mount, state); break;
+            case 'chande-dynamic-momentum': await renderCdmi(mount, state); break;
+            case 'chande-kroll-stop':  await renderCks(mount, state); break;
+            case 'chande-momentum-oscillator': await renderCmo(mount, state); break;
+            case 'chande-trend-index': await renderCti(mount, state); break;
+            case 'chande-volatility-index': await renderCvi(mount, state); break;
+            case 'chandelier-exit':    await renderChandelier(mount, state); break;
+            case 'cholesky':           await renderCholesky(mount, state); break;
+            case 'abc-pattern':        await renderAbcPattern(mount, state); break;
+            case 'absorption':         await renderAbsorption(mount, state); break;
+            case 'favorites':          await renderFavoritesManager(mount, state); break;
             case 'crypto':      await renderCrypto(mount, state); break;
             case 'backtest':    await renderBacktest(mount, state); break;
             case 'economy':     await renderEconomy(mount, state); break;
@@ -537,6 +848,8 @@ export async function dispatch() {
     }
     // Translate any `data-i18n*` attributes the view just emitted.
     try { applyUiI18n(mount); } catch { /* i18n optional */ }
+    // Upgrade any `data-tip` attributes the view emitted to native titles.
+    try { upgradeTooltips(mount); } catch { /* tooltip optional */ }
 }
 
 // View-renderer registry — exposed so the Dashboards view can mount any
@@ -591,6 +904,98 @@ export const viewRenderers = {
     'choppiness':          (m, s) => renderChoppiness(m, s),
     'var-estimator':       (m, s) => renderVarEstimator(m, s),
     'kelly':               (m, s) => renderKelly(m, s),
+    'mc-trades':           (m, s) => renderMcTrades(m, s),
+    'keyboard-shortcuts':  (m, s) => renderKeyboardShortcuts(m, s),
+    'commission-optimizer': (m, s) => renderCommissionOptimizer(m, s),
+    'margin-runway':       (m, s) => renderMarginRunway(m, s),
+    'risk-parity':         (m, s) => renderRiskParity(m, s),
+    'risk-on-off':         (m, s) => renderRiskOnOff(m, s),
+    'risk-reward':         (m, s) => renderRiskReward(m, s),
+    'tax-loss-harvest':    (m, s) => renderTaxLossHarvest(m, s),
+    'wash-sale':           (m, s) => renderWashSale(m, s),
+    'buying-power':        (m, s) => renderBuyingPower(m, s),
+    'margin-call':         (m, s) => renderMarginCall(m, s),
+    'vix-term-structure':  (m, s) => renderVixTermStructure(m, s),
+    'currency-exposure':   (m, s) => renderCurrencyExposure(m, s),
+    'bond-duration':       (m, s) => renderBondDuration(m, s),
+    'carry-score':         (m, s) => renderCarryScore(m, s),
+    'yield-curve':         (m, s) => renderYieldCurve(m, s),
+    'cost-basis':          (m, s) => renderCostBasis(m, s),
+    'stop-loss-backtest':  (m, s) => renderStopLossBacktest(m, s),
+    'futures-roll':        (m, s) => renderFuturesRoll(m, s),
+    'heatmap-dow-hour':    (m, s) => renderHeatmapDowHour(m, s),
+    'atr-cone':            (m, s) => renderAtrCone(m, s),
+    'round-levels':        (m, s) => renderRoundLevels(m, s),
+    'kyles-lambda':        (m, s) => renderKylesLambda(m, s),
+    'hawkes':              (m, s) => renderHawkesIntensity(m, s),
+    'kagi':                (m, s) => renderKagiChart(m, s),
+    'risk-parity-solver':  (m, s) => renderRiskParitySolver(m, s),
+    'volume-at-price':     (m, s) => renderVolumeAtPrice(m, s),
+    'herfindahl':          (m, s) => renderHerfindahl(m, s),
+    'roll-spread':         (m, s) => renderRollSpread(m, s),
+    'three-line-break':    (m, s) => renderThreeLineBreak(m, s),
+    'momentum-crash':      (m, s) => renderMomentumCrash(m, s),
+    'effective-spread':    (m, s) => renderEffectiveSpread(m, s),
+    'weighted-midprice':   (m, s) => renderWeightedMidprice(m, s),
+    'marginal-var':        (m, s) => renderMarginalVar(m, s),
+    'range-bar':           (m, s) => renderRangeBar(m, s),
+    'tick-bar':            (m, s) => renderTickBar(m, s),
+    'volume-bar':          (m, s) => renderVolumeBar(m, s),
+    'dollar-bar':          (m, s) => renderDollarBar(m, s),
+    'active-share':        (m, s) => renderActiveShare(m, s),
+    'brinson':             (m, s) => renderBrinson(m, s),
+    'equivolume':          (m, s) => renderEquivolume(m, s),
+    'imbalance-bar':       (m, s) => renderImbalanceBar(m, s),
+    'black-litterman':     (m, s) => renderBlackLitterman(m, s),
+    'adf-test':            (m, s) => renderAdfTest(m, s),
+    'aroon':               (m, s) => renderAroon(m, s),
+    'amihud':              (m, s) => renderAmihud(m, s),
+    'breadth-thrust':      (m, s) => renderBreadthThrust(m, s),
+    'bb-squeeze':          (m, s) => renderBollingerSqueeze(m, s),
+    'balance-of-power':    (m, s) => renderBalanceOfPower(m, s),
+    'anchored-momentum':   (m, s) => renderAnchoredMomentum(m, s),
+    'acf':                 (m, s) => renderAcf(m, s),
+    'beta':                (m, s) => renderBeta(m, s),
+    'brier-score':         (m, s) => renderBrierScore(m, s),
+    'bipower-variation':   (m, s) => renderBipowerVariation(m, s),
+    'bootstrap-pnl':       (m, s) => renderBootstrapPnl(m, s),
+    'block-bootstrap':     (m, s) => renderBlockBootstrap(m, s),
+    'ad-normality':        (m, s) => renderAdNormality(m, s),
+    'arch-lm':             (m, s) => renderArchLm(m, s),
+    'alma':                (m, s) => renderAlma(m, s),
+    'alphatrend':          (m, s) => renderAlphatrend(m, s),
+    'atr-channel':         (m, s) => renderAtrChannel(m, s),
+    'atr-trailing-stop':   (m, s) => renderAtrTrailStop(m, s),
+    'adl':                 (m, s) => renderAdl(m, s),
+    'asi':                 (m, s) => renderAsi(m, s),
+    'ad-oscillator':       (m, s) => renderAdOscillator(m, s),
+    'beta-shrinkage':      (m, s) => renderBetaShrink(m, s),
+    'bartlett-variance':   (m, s) => renderBartlett(m, s),
+    'bid-ask-volume-ratio': (m, s) => renderBidAskVol(m, s),
+    'bollinger-band-width': (m, s) => renderBbw(m, s),
+    'bollinger-bandwidth-percentile': (m, s) => renderBbwp(m, s),
+    'bollinger-percent-b':  (m, s) => renderBbPercentB(m, s),
+    'bollinger-band-distance': (m, s) => renderBbd(m, s),
+    'bollinger-oscillators': (m, s) => renderBbOsc(m, s),
+    'borrow-rate-indicator': (m, s) => renderBorrowRate(m, s),
+    'breusch-pagan':       (m, s) => renderBpTest(m, s),
+    'burke-ratio':         (m, s) => renderBurke(m, s),
+    'camarilla-pivots':    (m, s) => renderCamarilla(m, s),
+    'breusch-godfrey':     (m, s) => renderBgTest(m, s),
+    'candle-strength-index': (m, s) => renderCsi(m, s),
+    'carhart-4':           (m, s) => renderCarhart4(m, s),
+    'centered-smoothed-momentum': (m, s) => renderCsm(m, s),
+    'chaikin-oscillator':  (m, s) => renderChaikinOsc(m, s),
+    'chande-dynamic-momentum': (m, s) => renderCdmi(m, s),
+    'chande-kroll-stop':   (m, s) => renderCks(m, s),
+    'chande-momentum-oscillator': (m, s) => renderCmo(m, s),
+    'chande-trend-index':  (m, s) => renderCti(m, s),
+    'chande-volatility-index': (m, s) => renderCvi(m, s),
+    'chandelier-exit':     (m, s) => renderChandelier(m, s),
+    'cholesky':            (m, s) => renderCholesky(m, s),
+    'abc-pattern':         (m, s) => renderAbcPattern(m, s),
+    'absorption':          (m, s) => renderAbsorption(m, s),
+    'favorites':           (m, s) => renderFavoritesManager(m, s),
     'per-symbol-slippage': (m, s) => renderPerSymbolSlippage(m, s),
     'order-staleness':     (m, s) => renderOrderStaleness(m, s),
     // Options analytics.

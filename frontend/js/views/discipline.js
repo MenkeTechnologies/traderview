@@ -8,7 +8,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderDiscipline(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.discipline.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// DISCIPLINE — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Streaks computed from chronological closed-trade P/L sign.
@@ -49,7 +49,7 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Last-60 trade outcome sparkline</h2>
+            <h2 data-i18n="view.discipline.h2.last_60_trade_outcome_sparkline">Last-60 trade outcome sparkline</h2>
             ${streakSpark(s.sparkline)}
         </div>
 
@@ -60,7 +60,7 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Rule pass rates (all linked trades)</h2>
+            <h2 data-i18n="view.discipline.h2.rule_pass_rates_all_linked_trades">Rule pass rates (all linked trades)</h2>
             ${ruleBars(r.rule_breakdown)}
         </div>
 
@@ -72,7 +72,7 @@ function render(r, mount) {
 }
 
 function streakSpark(bits) {
-    if (!bits.length) return '<p class="muted small">No closed trades yet.</p>';
+    if (!bits.length) return '<p data-i18n="view.discipline.hint.no_closed_trades_yet" class="muted small">No closed trades yet.</p>';
     const W = 720, H = 36, gap = 1;
     const cellW = Math.max(2, (W - bits.length * gap) / bits.length);
     return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block;">
@@ -111,13 +111,13 @@ function ruleBars(rb) {
 }
 
 function ruleTable(rows) {
-    if (!rows.length) return '<p class="muted small">No linked plans yet — create a trade plan in the Plans tab and link it to a trade.</p>';
+    if (!rows.length) return '<p data-i18n="view.discipline.hint.no_linked_plans_yet_create_a_trade_plan_in_the_pla" class="muted small">No linked plans yet — create a trade plan in the Plans tab and link it to a trade.</p>';
     const tick = (b) => b ? '<span class="pos">✓</span>' : '<span class="neg">✗</span>';
     return `<table class="trades">
         <thead><tr>
-            <th>Date</th><th>Symbol</th>
-            <th>stop_set</th><th>stop_honored</th><th>qty_within</th><th>direction_match</th>
-            <th>Pass</th>
+            <th data-i18n="view.discipline.th.date">Date</th><th data-i18n="view.discipline.th.symbol">Symbol</th>
+            <th data-i18n="view.discipline.th.stop_set">stop_set</th><th data-i18n="view.discipline.th.stop_honored">stop_honored</th><th data-i18n="view.discipline.th.qty_within">qty_within</th><th data-i18n="view.discipline.th.direction_match">direction_match</th>
+            <th data-i18n="view.discipline.th.pass">Pass</th>
         </tr></thead>
         <tbody>
         ${rows.map(r => `<tr>

@@ -13,27 +13,28 @@ import {
     stageResults, verdictBadge, makeDemoData, fmtN,
 } from '../_triple_screen_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { params: makeDemoData('buy') };
 
 export async function renderTripleScreen(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// TRIPLE SCREEN · ELDER</h1>
+        <h1 data-i18n="view.triple_screen.h1.triple_screen_elder" class="view-title">// TRIPLE SCREEN · ELDER</h1>
 
         <div class="chart-panel">
-            <h2>Screen 1 — Long-tide (weekly trend)</h2>
+            <h2 data-i18n="view.triple_screen.h2.screen_1_long_tide_weekly_trend">Screen 1 — Long-tide (weekly trend)</h2>
             <div class="inline-form">
                 <label>Weekly trend
                     <select id="ts-trend">
-                        <option value="up"      ${state.params.weekly_trend === 'up'      ? 'selected' : ''}>UP</option>
-                        <option value="down"    ${state.params.weekly_trend === 'down'    ? 'selected' : ''}>DOWN</option>
-                        <option value="neutral" ${state.params.weekly_trend === 'neutral' ? 'selected' : ''}>NEUTRAL</option>
+                        <option data-i18n="view.triple_screen.opt.up" value="up"      ${state.params.weekly_trend === 'up'      ? 'selected' : ''}>UP</option>
+                        <option data-i18n="view.triple_screen.opt.down" value="down"    ${state.params.weekly_trend === 'down'    ? 'selected' : ''}>DOWN</option>
+                        <option data-i18n="view.triple_screen.opt.neutral" value="neutral" ${state.params.weekly_trend === 'neutral' ? 'selected' : ''}>NEUTRAL</option>
                     </select></label>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Screen 2 — Intermediate-wave (daily oscillator)</h2>
+            <h2 data-i18n="view.triple_screen.h2.screen_2_intermediate_wave_daily_oscillator">Screen 2 — Intermediate-wave (daily oscillator)</h2>
             <div class="inline-form">
                 <label>Oscillator value (RSI / stoch)
                     <input id="ts-osc" type="number" step="any" value="${state.params.daily_oscillator_value}"></label>
@@ -42,30 +43,30 @@ export async function renderTripleScreen(mount, _appState) {
                 <label>Overbought threshold
                     <input id="ts-ob"  type="number" step="any" value="${state.params.overbought_threshold}"></label>
             </div>
-            <p class="muted">In an UP tide, pull-back below oversold = entry zone.
+            <p data-i18n="view.triple_screen.hint.in_an_up_tide_pull_back_below_oversold_entry_zone_" class="muted">In an UP tide, pull-back below oversold = entry zone.
                 In a DOWN tide, rally above overbought = entry zone.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Screen 3 — Short-ripple (intraday breakout)</h2>
+            <h2 data-i18n="view.triple_screen.h2.screen_3_short_ripple_intraday_breakout">Screen 3 — Short-ripple (intraday breakout)</h2>
             <div class="inline-form">
                 <label><input id="ts-buy"  type="checkbox" ${state.params.intraday_breakout_up   ? 'checked' : ''}> Intraday breakout UP</label>
                 <label><input id="ts-sell" type="checkbox" ${state.params.intraday_breakout_down ? 'checked' : ''}> Intraday breakout DOWN</label>
-                <button id="ts-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.triple_screen.btn.evaluate" id="ts-run" class="primary" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button id="ts-demo-buy"      class="secondary" type="button">Demo: BUY (all aligned long)</button>
-                <button id="ts-demo-sell"     class="secondary" type="button">Demo: SELL (all aligned short)</button>
-                <button id="ts-demo-no-pb"    class="secondary" type="button">Demo: WAIT — no pullback</button>
-                <button id="ts-demo-no-bo"    class="secondary" type="button">Demo: WAIT — no breakout</button>
-                <button id="ts-demo-neutral"  class="secondary" type="button">Demo: WAIT — neutral tide</button>
+                <button data-i18n="view.triple_screen.btn.demo_buy_all_aligned_long" id="ts-demo-buy"      class="secondary" type="button">Demo: BUY (all aligned long)</button>
+                <button data-i18n="view.triple_screen.btn.demo_sell_all_aligned_short" id="ts-demo-sell"     class="secondary" type="button">Demo: SELL (all aligned short)</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_no_pullback" id="ts-demo-no-pb"    class="secondary" type="button">Demo: WAIT — no pullback</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_no_breakout" id="ts-demo-no-bo"    class="secondary" type="button">Demo: WAIT — no breakout</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_neutral_tide" id="ts-demo-neutral"  class="secondary" type="button">Demo: WAIT — neutral tide</button>
             </div>
         </div>
 
         <div id="ts-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Screen cascade</h2>
+            <h2 data-i18n="view.triple_screen.h2.screen_cascade">Screen cascade</h2>
             <div id="ts-cascade"></div>
         </div>
 
@@ -127,17 +128,17 @@ function renderSummary(resp, pending) {
     const localV = localEvaluate(state.params);
     const parity = verdict === localV ? 'pos' : 'neg';
     document.getElementById('ts-summary').innerHTML = [
-        card('Verdict',       badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Action',        badge.hint),
-        card('Local check',   localV.toUpperCase(), parity),
-        card('Weekly trend',  state.params.weekly_trend.toUpperCase(),
+        card(t('view.triple_screen.card.verdict'),       badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.triple_screen.card.action'),        badge.hint),
+        card(t('view.triple_screen.card.local_check'),   localV.toUpperCase(), parity),
+        card(t('view.triple_screen.card.weekly_trend'),  state.params.weekly_trend.toUpperCase(),
             state.params.weekly_trend === 'up' ? 'pos' :
             state.params.weekly_trend === 'down' ? 'neg' : ''),
-        card('Daily osc',     fmtN(state.params.daily_oscillator_value)),
-        card('Bands',         `${fmtN(state.params.oversold_threshold)} / ${fmtN(state.params.overbought_threshold)}`),
-        card('Intraday up?',  state.params.intraday_breakout_up ? 'YES' : 'NO',
+        card(t('view.triple_screen.card.daily_osc'),     fmtN(state.params.daily_oscillator_value)),
+        card(t('view.triple_screen.card.bands'),         `${fmtN(state.params.oversold_threshold)} / ${fmtN(state.params.overbought_threshold)}`),
+        card(t('view.triple_screen.card.intraday_up'),  state.params.intraday_breakout_up ? 'YES' : 'NO',
             state.params.intraday_breakout_up ? 'pos' : ''),
-        card('Intraday down?', state.params.intraday_breakout_down ? 'YES' : 'NO',
+        card(t('view.triple_screen.card.intraday_down'), state.params.intraday_breakout_down ? 'YES' : 'NO',
             state.params.intraday_breakout_down ? 'neg' : ''),
     ].join('');
 }
@@ -156,7 +157,7 @@ function renderCascade() {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Screen</th><th>Pass?</th><th>Detail</th>
+                <th>#</th><th data-i18n="view.triple_screen.th.screen">Screen</th><th data-i18n="view.triple_screen.th.pass">Pass?</th><th data-i18n="view.triple_screen.th.detail">Detail</th>
             </tr></thead>
             <tbody>
                 ${stages.map((s, i) => `<tr>

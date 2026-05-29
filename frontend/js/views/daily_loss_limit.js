@@ -12,15 +12,16 @@ import {
     makeDemoData, fmtUSD, fmtUSDSigned, fmtPct,
 } from '../_daily_loss_limit_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { params: makeDemoData('cut-size') };
 
 export async function renderDailyLossLimit(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DAILY LOSS LIMIT</h1>
+        <h1 data-i18n="view.daily_loss_limit.h1.daily_loss_limit" class="view-title">// DAILY LOSS LIMIT</h1>
 
         <div class="chart-panel">
-            <h2>Account</h2>
+            <h2 data-i18n="view.daily_loss_limit.h2.account">Account</h2>
             <div class="inline-form">
                 <label>Account equity ($)
                     <input id="dl-eq" type="number" step="any" min="0" value="${state.params.account_equity}"></label>
@@ -30,7 +31,7 @@ export async function renderDailyLossLimit(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Limit config</h2>
+            <h2 data-i18n="view.daily_loss_limit.h2.limit_config">Limit config</h2>
             <div class="inline-form">
                 <label>Max daily $ loss (0 = pct only)
                     <input id="dl-md" type="number" step="any" min="0" value="${state.params.max_daily_loss_dollars}"></label>
@@ -44,24 +45,24 @@ export async function renderDailyLossLimit(mount, _appState) {
                     <input id="dl-ct" type="number" step="any" min="0" max="5" value="${state.params.cut_size_threshold}"></label>
                 <label>Kill threshold
                     <input id="dl-kt" type="number" step="any" min="0" max="5" value="${state.params.kill_threshold}"></label>
-                <button id="dl-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.daily_loss_limit.btn.evaluate" id="dl-run" class="primary" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button id="dl-demo-ok"      class="secondary" type="button">Demo: OK (profit day)</button>
-                <button id="dl-demo-warn"    class="secondary" type="button">Demo: WARNING (60%)</button>
-                <button id="dl-demo-cut"     class="secondary" type="button">Demo: CUT SIZE (80%)</button>
-                <button id="dl-demo-kill"    class="secondary" type="button">Demo: KILL SWITCH (over)</button>
-                <button id="dl-demo-tight"   class="secondary" type="button">Demo: tight pct-binds</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_ok_profit_day" id="dl-demo-ok"      class="secondary" type="button">Demo: OK (profit day)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_warning_60" id="dl-demo-warn"    class="secondary" type="button">Demo: WARNING (60%)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_cut_size_80" id="dl-demo-cut"     class="secondary" type="button">Demo: CUT SIZE (80%)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_kill_switch_over" id="dl-demo-kill"    class="secondary" type="button">Demo: KILL SWITCH (over)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_tight_pct_binds" id="dl-demo-tight"   class="secondary" type="button">Demo: tight pct-binds</button>
             </div>
-            <p class="muted">Binding limit = the SMALLER of (account_equity × max_pct) and (max_$ cap when set). Pct-only mode: set max_$ to 0.</p>
+            <p data-i18n="view.daily_loss_limit.hint.binding_limit_the_smaller_of_account_equity_max_pc" class="muted">Binding limit = the SMALLER of (account_equity × max_pct) and (max_$ cap when set). Pct-only mode: set max_$ to 0.</p>
         </div>
 
         <div id="dl-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Loss vs limit</h2>
+            <h2 data-i18n="view.daily_loss_limit.h2.loss_vs_limit">Loss vs limit</h2>
             <div id="dl-bar"></div>
-            <p class="muted">Track marks at warning (yellow) / cut-size (orange) / kill (red).
+            <p data-i18n="view.daily_loss_limit.hint.track_marks_at_warning_yellow_cut_size_orange_kill" class="muted">Track marks at warning (yellow) / cut-size (orange) / kill (red).
                 Fill color reflects current state. 0% = no loss; 100% = at the binding cap.</p>
         </div>
 
@@ -133,15 +134,15 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.params);
     const parityOk = r.state === local.state;
     document.getElementById('dl-summary').innerHTML = [
-        card('State',          badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Action',         badge.hint),
-        card('Today P&L',      fmtUSDSigned(state.params.today_pnl),
+        card(t('view.daily_loss_limit.card.state'),          badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.daily_loss_limit.card.action'),         badge.hint),
+        card(t('view.daily_loss_limit.card.today_p_l'),      fmtUSDSigned(state.params.today_pnl),
             state.params.today_pnl >= 0 ? 'pos' : 'neg'),
-        card('Realized loss',  fmtUSD(decToNum(r.today_realized_loss))),
-        card('Binding limit',  fmtUSD(decToNum(r.binding_limit))),
-        card('% of limit',     fmtPct(decToNum(r.pct_of_limit)), badge.cls),
-        card('Note',           r.note || badge.hint),
-        card('Local check',    local.state.toUpperCase(), parityOk ? 'pos' : 'neg'),
+        card(t('view.daily_loss_limit.card.realized_loss'),  fmtUSD(decToNum(r.today_realized_loss))),
+        card(t('view.daily_loss_limit.card.binding_limit'),  fmtUSD(decToNum(r.binding_limit))),
+        card(t('view.daily_loss_limit.card.of_limit'),     fmtPct(decToNum(r.pct_of_limit)), badge.cls),
+        card(t('view.daily_loss_limit.card.note'),           r.note || badge.hint),
+        card(t('view.daily_loss_limit.card.local_check'),    local.state.toUpperCase(), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 

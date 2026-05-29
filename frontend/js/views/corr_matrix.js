@@ -8,37 +8,38 @@ export async function renderCorrMatrix(mount) {
     const wls = await api.watchlists().catch(() => []);
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// CORRELATION MATRIX</h1>
-        <p class="muted small">Pairwise Pearson correlation on log-returns of cached daily bars
+        <h1 data-i18n="view.corr_matrix.h1.correlation_matrix" class="view-title">// CORRELATION MATRIX</h1>
+        <p data-i18n="view.corr_matrix.hint.pairwise_pearson_correlation_on_log_returns_of_cac" class="muted small">Pairwise Pearson correlation on log-returns of cached daily bars
             with intersected dates (pairs need ≥30 common observations to score). Red = strongly
             positive (moves together — overlap risk if both long), green = strongly negative
             (true diversifier), grey = uncorrelated. The diagonal is fixed at 1.</p>
 
         <div class="chart-panel">
             <form id="cm-form" class="inline-form">
-                <label>Source
+                <label><span data-i18n="view.corr_matrix.label.source">Source</span>
                     <select name="mode">
-                        <option value="watchlist">watchlist</option>
-                        <option value="symbols">custom symbols</option>
+                        <option data-i18n="view.corr_matrix.opt.watchlist" value="watchlist">watchlist</option>
+                        <option data-i18n="view.corr_matrix.opt.custom_symbols" value="symbols">custom symbols</option>
                     </select>
                 </label>
-                <label id="cm-wl-label">Watchlist
+                <label id="cm-wl-label"><span data-i18n="view.corr_matrix.label.watchlist">Watchlist</span>
                     <select name="watchlist_id">
                         ${wls.map(w => `<option value="${w.id}">${esc(w.name)}${w.is_default ? ' ★' : ''}</option>`).join('')}
                     </select>
                 </label>
-                <label id="cm-syms-label" style="display:none;">Symbols
-                    <input name="symbols" placeholder="SPY,QQQ,IWM,DIA,GLD,TLT,USO,XLE" style="min-width:280px;">
+                <label id="cm-syms-label" style="display:none;"><span data-i18n="view.corr_matrix.label.symbols">Symbols</span>
+                    <input name="symbols" placeholder="SPY,QQQ,IWM,DIA,GLD,TLT,USO,XLE"
+                           data-i18n-placeholder="view.corr_matrix.placeholder.symbols" style="min-width:280px;">
                 </label>
-                <label>Days
+                <label><span data-i18n="view.corr_matrix.label.days">Days</span>
                     <input name="days" type="number" min="30" max="730" value="90" style="width:80px;">
                 </label>
-                <button class="primary" type="submit">Compute</button>
+                <button data-i18n="view.corr_matrix.btn.compute" class="primary" type="submit">Compute</button>
                 <span id="cm-status" class="muted small"></span>
             </form>
         </div>
 
-        <div id="cm-out"><p class="muted small">Pick a watchlist or paste symbols and compute.</p></div>
+        <div id="cm-out"><p data-i18n="view.corr_matrix.hint.pick_a_watchlist_or_paste_symbols_and_compute" class="muted small">Pick a watchlist or paste symbols and compute.</p></div>
     `;
     const modeSel = mount.querySelector('#cm-form [name=mode]');
     modeSel.addEventListener('change', () => {
@@ -93,7 +94,7 @@ function colorForCorr(v) {
 function render(r, out) {
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>Heatmap</h2>
+            <h2 data-i18n="view.corr_matrix.h2.heatmap">Heatmap</h2>
             <div style="overflow:auto;">
                 <table class="corr-matrix">
                     <thead>
@@ -116,20 +117,20 @@ function render(r, out) {
         </div>
 
         <div class="chart-panel">
-            <h2>Most correlated pairs (overlap risk if both long)</h2>
+            <h2 data-i18n="view.corr_matrix.h2.most_correlated_pairs_overlap_risk_if_both_long">Most correlated pairs (overlap risk if both long)</h2>
             ${pairTable(r.top_correlated)}
         </div>
         <div class="chart-panel">
-            <h2>Most diversifying pairs (best hedges)</h2>
+            <h2 data-i18n="view.corr_matrix.h2.most_diversifying_pairs_best_hedges">Most diversifying pairs (best hedges)</h2>
             ${pairTable(r.top_diversifying)}
         </div>
     `;
 }
 
 function pairTable(pairs) {
-    if (!pairs.length) return '<p class="muted small">no pairs</p>';
+    if (!pairs.length) return '<p data-i18n="view.corr_matrix.hint.no_pairs" class="muted small">no pairs</p>';
     return `<table class="trades">
-        <thead><tr><th>Pair</th><th>ρ</th><th>Samples</th></tr></thead>
+        <thead><tr><th data-i18n="view.corr_matrix.th.pair">Pair</th><th>ρ</th><th data-i18n="view.corr_matrix.th.samples">Samples</th></tr></thead>
         <tbody>
         ${pairs.map(p => {
             const v = p.value;

@@ -19,6 +19,7 @@ import {
     histogram, formatLoss,
 } from '../_var_calculator_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_RETURNS = `# Paste daily returns (decimal, e.g. -0.012 or 0.018).
 # One per line OR comma/space separated. # comments OK.
 # 252 synthetic days (-2% to +2% with mild left skew) for demo:
@@ -57,25 +58,25 @@ export async function renderVarCalculator(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// VAR / EXPECTED SHORTFALL</h1>
+        <h1 data-i18n="view.var_calculator.h1.var_expected_shortfall" class="view-title">// VAR / EXPECTED SHORTFALL</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.var_calculator.h2.inputs">Inputs</h2>
             <div class="inline-form">
-                <label>Confidence
+                <label><span data-i18n="view.var_calculator.label.confidence">Confidence</span>
                     <input id="vc-conf" type="number" step="0.01" min="0.5" max="0.999"
                            value="${state.confidence}"></label>
-                <label>EWMA λ (FHS only)
+                <label><span data-i18n="view.var_calculator.label.ewma_lambda">EWMA λ (FHS only)</span>
                     <input id="vc-lambda" type="number" step="0.01" min="0.5" max="0.999"
                            value="${state.ewmaLambda}"></label>
-                <button id="vc-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.var_calculator.btn.compute" id="vc-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.var_calculator.hint.confidence_0_95_95_var_5_tail_higher_confidence_de" class="muted">
                 Confidence 0.95 = 95% VaR (5% tail). Higher confidence ⇒ deeper-in-tail estimate.
                 EWMA λ controls how quickly FHS adapts to recent vol — 0.94 is the RiskMetrics
                 default (≈ 25-day half-life).
             </p>
-            <h3>Return series</h3>
+            <h3 data-i18n="view.var_calculator.h3.return_series">Return series</h3>
             <textarea id="vc-text" rows="10"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
@@ -85,9 +86,9 @@ export async function renderVarCalculator(mount, _appState) {
         <div id="vc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Empirical distribution with VaR markers</h2>
+            <h2 data-i18n="view.var_calculator.h2.empirical_distribution_with_var_markers">Empirical distribution with VaR markers</h2>
             <div id="vc-chart" style="width:100%;height:340px"></div>
-            <p class="muted" id="vc-chart-caption">
+            <p data-i18n="view.var_calculator.hint.histogram_of_pasted_returns_vertical_lines_mark_th" class="muted" id="vc-chart-caption">
                 Histogram of pasted returns. Vertical lines mark the negative of each
                 method's VaR (a 5% VaR of 2% appears as a line at −0.02 on the x-axis).
             </p>
@@ -119,11 +120,11 @@ async function compute(mount, tok) {
 
     if (!Number.isFinite(state.confidence)
         || state.confidence <= 0.5 || state.confidence >= 1) {
-        showErr('confidence must be in (0.5, 1)'); return;
+        showErr(t('view.var_calculator.err.confidence_must_be_in_0_5_1')); return;
     }
     if (!Number.isFinite(state.ewmaLambda)
         || state.ewmaLambda <= 0.5 || state.ewmaLambda >= 1) {
-        showErr('EWMA λ must be in (0.5, 1)'); return;
+        showErr(t('view.var_calculator.err.ewma_must_be_in_0_5_1')); return;
     }
 
     const alpha = confidenceToAlpha(state.confidence);

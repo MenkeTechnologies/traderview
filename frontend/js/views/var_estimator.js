@@ -12,6 +12,7 @@ import {
     fmtUSD, fmtUSDSigned, fmtPct, fmtN,
 } from '../_var_estimator_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     returns: makeDemoReturns('normal'),
     positionValue: 100_000,
@@ -21,44 +22,45 @@ let state = {
 export async function renderVarEstimator(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VALUE AT RISK</h1>
+        <h1 data-i18n="view.var_estimator.h1.value_at_risk" class="view-title">// VALUE AT RISK</h1>
 
         <div class="chart-panel">
             <h2>Daily returns <small class="muted">(decimal or with % suffix; csv/space/newline mix)</small></h2>
             <textarea id="var-blob" rows="6" placeholder="0.005&#10;-0.012&#10;0.003&#10;-0.5%&#10;...">${esc(returnsToBlob(state.returns))}</textarea>
             <div class="inline-form">
-                <label>Position value ($)
+                <label><span data-i18n="view.var_estimator.label.position_value">Position value ($)</span>
                     <input id="var-pv" type="number" step="any" min="0" value="${state.positionValue}"></label>
-                <label>Confidence <small class="muted">(0.95 / 0.99 / 0.999)</small>
+                <label><span data-i18n="view.var_estimator.label.confidence">Confidence</span>
+                    <small class="muted" data-i18n="view.var_estimator.hint.confidence">(0.95 / 0.99 / 0.999)</small>
                     <select id="var-conf">
                         <option value="0.90"  ${state.confidence === 0.90  ? 'selected' : ''}>90%</option>
                         <option value="0.95"  ${state.confidence === 0.95  ? 'selected' : ''}>95%</option>
                         <option value="0.99"  ${state.confidence === 0.99  ? 'selected' : ''}>99%</option>
                         <option value="0.999" ${state.confidence === 0.999 ? 'selected' : ''}>99.9%</option>
                     </select></label>
-                <button id="var-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.var_estimator.btn.compute" id="var-run" class="primary" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button id="var-demo-normal"    class="secondary" type="button">Demo: normal returns</button>
-                <button id="var-demo-fat"       class="secondary" type="button">Demo: fat-tailed</button>
-                <button id="var-demo-crisis"    class="secondary" type="button">Demo: 30-day crisis embedded</button>
-                <button id="var-demo-low-vol"   class="secondary" type="button">Demo: low-vol drift</button>
-                <button id="var-demo-walk"      class="secondary" type="button">Demo: random walk</button>
+                <button data-i18n="view.var_estimator.btn.demo_normal_returns" id="var-demo-normal"    class="secondary" type="button">Demo: normal returns</button>
+                <button data-i18n="view.var_estimator.btn.demo_fat_tailed" id="var-demo-fat"       class="secondary" type="button">Demo: fat-tailed</button>
+                <button data-i18n="view.var_estimator.btn.demo_30_day_crisis_embedded" id="var-demo-crisis"    class="secondary" type="button">Demo: 30-day crisis embedded</button>
+                <button data-i18n="view.var_estimator.btn.demo_low_vol_drift" id="var-demo-low-vol"   class="secondary" type="button">Demo: low-vol drift</button>
+                <button data-i18n="view.var_estimator.btn.demo_random_walk" id="var-demo-walk"      class="secondary" type="button">Demo: random walk</button>
             </div>
-            <p class="muted">Historical = empirical percentile of loss distribution. Parametric assumes Gaussian (μ ± z·σ). When historical &gt; parametric, fat tails are punishing your model. Expected Shortfall (CVaR) = mean loss BEYOND VaR — always ≥ VaR.</p>
+            <p data-i18n="view.var_estimator.hint.historical_empirical_percentile_of_loss_distributi" class="muted">Historical = empirical percentile of loss distribution. Parametric assumes Gaussian (μ ± z·σ). When historical &gt; parametric, fat tails are punishing your model. Expected Shortfall (CVaR) = mean loss BEYOND VaR — always ≥ VaR.</p>
         </div>
 
         <div id="var-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Method comparison</h2>
+            <h2 data-i18n="view.var_estimator.h2.method_comparison">Method comparison</h2>
             <div id="var-compare"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Loss distribution (positive numbers = $ losses)</h2>
+            <h2 data-i18n="view.var_estimator.h2.loss_distribution_positive_numbers_losses">Loss distribution (positive numbers = $ losses)</h2>
             <div id="var-hist" style="height:340px"></div>
-            <p class="muted">Histogram of daily losses. Yellow dashed = historical VaR, red dashed = historical ES, cyan dashed = parametric VaR.</p>
+            <p data-i18n="view.var_estimator.hint.histogram_of_daily_losses_yellow_dashed_historical" class="muted">Histogram of daily losses. Yellow dashed = historical VaR, red dashed = historical ES, cyan dashed = parametric VaR.</p>
         </div>
 
         <div id="var-err" class="boot" style="display:none;color:var(--red)"></div>
@@ -124,26 +126,26 @@ function renderSummary(hist, gauss, pending) {
                   && Math.abs(gauss.var_dollars - localGauss.var_dollars) < 1e-6;
     const fatTailFlag = hist.var_dollars > gauss.var_dollars * 1.05;
     document.getElementById('var-summary').innerHTML = [
-        card('Historical VaR',     fmtUSD(hist.var_dollars) + (pending ? ' (local)' : ''), 'neg'),
-        card('Parametric VaR',     fmtUSD(gauss.var_dollars), 'neg'),
-        card('Historical ES',      fmtUSD(hist.expected_shortfall_dollars), 'neg'),
-        card('Parametric ES',      fmtUSD(gauss.expected_shortfall_dollars), 'neg'),
-        card('Confidence',         fmtPct(state.confidence, 1)),
-        card('Position value',     fmtUSD(state.positionValue)),
-        card('Sample size',        String(stats.n)),
-        card('Mean return',        fmtPct(stats.mean, 3),
+        card(t('view.var_estimator.card.historical_var'),     fmtUSD(hist.var_dollars) + (pending ? ' (local)' : ''), 'neg'),
+        card(t('view.var_estimator.card.parametric_var'),     fmtUSD(gauss.var_dollars), 'neg'),
+        card(t('view.var_estimator.card.historical_es'),      fmtUSD(hist.expected_shortfall_dollars), 'neg'),
+        card(t('view.var_estimator.card.parametric_es'),      fmtUSD(gauss.expected_shortfall_dollars), 'neg'),
+        card(t('view.var_estimator.card.confidence'),         fmtPct(state.confidence, 1)),
+        card(t('view.var_estimator.card.position_value'),     fmtUSD(state.positionValue)),
+        card(t('view.var_estimator.card.sample_size'),        String(stats.n)),
+        card(t('view.var_estimator.card.mean_return'),        fmtPct(stats.mean, 3),
             stats.mean >= 0 ? 'pos' : 'neg'),
-        card('Stdev (vol)',        fmtPct(stats.stdev, 3)),
-        card('Skewness',           fmtN(stats.skewness, 3),
+        card(t('view.var_estimator.card.stdev_vol'),        fmtPct(stats.stdev, 3)),
+        card(t('view.var_estimator.card.skewness'),           fmtN(stats.skewness, 3),
             stats.skewness < -0.5 ? 'neg' : ''),
-        card('Excess kurtosis',    fmtN(stats.kurtosis, 3),
+        card(t('view.var_estimator.card.excess_kurtosis'),    fmtN(stats.kurtosis, 3),
             stats.kurtosis > 1 ? 'neg' : ''),
-        card('Worst day',          fmtPct(stats.min, 3), 'neg'),
-        card('Worst-day σ-multiple', fmtN(stats.fattest_left_tail, 2) + 'σ',
+        card(t('view.var_estimator.card.worst_day'),          fmtPct(stats.min, 3), 'neg'),
+        card(t('view.var_estimator.card.worst_day_multiple'), fmtN(stats.fattest_left_tail, 2) + 'σ',
             stats.fattest_left_tail < -3 ? 'neg' : ''),
-        card('Fat-tail vs Gaussian', fatTailFlag ? 'FLAGGED' : 'within tolerance',
+        card(t('view.var_estimator.card.fat_tail_vs_gaussian'), fatTailFlag ? 'FLAGGED' : 'within tolerance',
             fatTailFlag ? 'neg' : 'pos'),
-        card('Local parity',       parityOk ? 'OK' : 'DIVERGED',
+        card(t('view.var_estimator.card.local_parity'),       parityOk ? 'OK' : 'DIVERGED',
             parityOk ? 'pos' : 'neg'),
     ].join('');
 }
@@ -155,8 +157,8 @@ function renderCompare(hist, gauss) {
     document.getElementById('var-compare').innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Method</th><th>VaR</th><th>Expected Shortfall</th>
-                <th>ES − VaR (tail severity)</th><th>n</th>
+                <th data-i18n="view.var_estimator.th.method">Method</th><th data-i18n="view.var_estimator.th.var">VaR</th><th data-i18n="view.var_estimator.th.expected_shortfall">Expected Shortfall</th>
+                <th data-i18n="view.var_estimator.th.es_var_tail_severity">ES − VaR (tail severity)</th><th>n</th>
             </tr></thead>
             <tbody>
                 <tr>

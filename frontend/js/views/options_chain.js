@@ -10,23 +10,31 @@ export async function renderOptions(mount, _state, rest) {
         <h1 class="view-title">// OPTIONS · ${esc(sym)}</h1>
         <form id="of" class="inline-form">
             <input name="sym" value="${esc(sym)}" style="text-transform:uppercase">
-            <select name="exp" id="expsel"><option>loading…</option></select>
+            <select name="exp" id="expsel"><option data-i18n="view.options_chain.opt.loading">loading…</option></select>
             <label>r <input name="r" value="0.045" type="number" step="any" style="width:80px"></label>
-            <button class="primary" type="submit">Load</button>
+            <button data-i18n="view.options_chain.btn.load" class="primary" type="submit">Load</button>
         </form>
         <div id="oc-mount">loading…</div>
         <div class="chart-panel" style="margin-top:14px">
-            <h2>Greeks calculator</h2>
+            <h2 data-i18n="view.options_chain.h2.greeks_calculator">Greeks calculator</h2>
             <form id="gf" class="inline-form">
-                <select name="kind"><option value="call">call</option><option value="put">put</option></select>
-                <label>S <input name="s" type="number" step="any" value="100"></label>
-                <label>K <input name="k" type="number" step="any" value="100"></label>
-                <label>T (yrs) <input name="t" type="number" step="any" value="0.25"></label>
-                <label>σ (vol) <input name="sigma" type="number" step="any" value="0.30"></label>
-                <label>r <input name="r" type="number" step="any" value="0.045"></label>
-                <label>q <input name="q" type="number" step="any" value="0.0"></label>
-                <label>mkt (opt'l) <input name="market_price" type="number" step="any" placeholder="for IV"></label>
-                <button class="primary" type="submit">Compute</button>
+                <select name="kind"><option data-i18n="view.options_chain.opt.call" value="call">call</option><option data-i18n="view.options_chain.opt.put" value="put">put</option></select>
+                <label><span data-i18n="view.options_chain.label.s">S</span>
+                    <input name="s" type="number" step="any" value="100"></label>
+                <label><span data-i18n="view.options_chain.label.k">K</span>
+                    <input name="k" type="number" step="any" value="100"></label>
+                <label><span data-i18n="view.options_chain.label.t">T (yrs)</span>
+                    <input name="t" type="number" step="any" value="0.25"></label>
+                <label><span data-i18n="view.options_chain.label.sigma">σ (vol)</span>
+                    <input name="sigma" type="number" step="any" value="0.30"></label>
+                <label><span data-i18n="view.options_chain.label.r">r</span>
+                    <input name="r" type="number" step="any" value="0.045"></label>
+                <label><span data-i18n="view.options_chain.label.q">q</span>
+                    <input name="q" type="number" step="any" value="0.0"></label>
+                <label><span data-i18n="view.options_chain.label.mkt">mkt (opt'l)</span>
+                    <input name="market_price" type="number" step="any" placeholder="for IV"
+                           data-i18n-placeholder="view.options_chain.placeholder.mkt"></label>
+                <button data-i18n="view.options_chain.btn.compute" class="primary" type="submit">Compute</button>
             </form>
             <div id="g-out"></div>
         </div>
@@ -110,14 +118,14 @@ function renderChain(chain, r, mount) {
             <h2>${esc(chain.symbol)} · spot ${fmt(chain.spot)} · exp ${esc(chain.expiration)} · T = ${(t*365).toFixed(0)}d</h2>
             <table class="trades">
                 <thead><tr>
-                    <th colspan="6" style="text-align:center;color:var(--green)">CALLS</th>
-                    <th>Strike</th>
-                    <th colspan="6" style="text-align:center;color:var(--red)">PUTS</th>
+                    <th data-i18n="view.options_chain.th.calls" colspan="6" style="text-align:center;color:var(--green)">CALLS</th>
+                    <th data-i18n="view.options_chain.th.strike">Strike</th>
+                    <th data-i18n="view.options_chain.th.puts" colspan="6" style="text-align:center;color:var(--red)">PUTS</th>
                 </tr>
                 <tr>
-                    <th>Δ</th><th>IV</th><th>OI</th><th>Vol</th><th>Bid</th><th>Ask</th>
+                    <th>Δ</th><th data-i18n="view.options_chain.th.iv">IV</th><th data-i18n="view.options_chain.th.oi">OI</th><th data-i18n="view.options_chain.th.vol">Vol</th><th data-i18n="view.options_chain.th.bid">Bid</th><th data-i18n="view.options_chain.th.ask">Ask</th>
                     <th></th>
-                    <th>Bid</th><th>Ask</th><th>Vol</th><th>OI</th><th>IV</th><th>Δ</th>
+                    <th data-i18n="view.options_chain.th.bid_2">Bid</th><th data-i18n="view.options_chain.th.ask_2">Ask</th><th data-i18n="view.options_chain.th.vol_2">Vol</th><th data-i18n="view.options_chain.th.oi_2">OI</th><th data-i18n="view.options_chain.th.iv_2">IV</th><th>Δ</th>
                 </tr></thead>
                 <tbody>${strikes.map(k => {
                     const c = callBy.get(k);

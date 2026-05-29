@@ -7,10 +7,10 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderRDist(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.r_distribution.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// R-MULTIPLE DISTRIBUTION — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">R = net_pnl ÷ risk_amount per trade — requires risk_amount set
+        <p data-i18n="view.r_distribution.hint.r_net_pnl_risk_amount_per_trade_requires_risk_amou" class="muted small">R = net_pnl ÷ risk_amount per trade — requires risk_amount set
             on entry. Histogram bins 0.5R from -5R to +5R with tails clamped to the edges.
             SQN = √N × mean(R) ÷ stdev(R) per Van Tharp: under 1.6 poor, 1.6-1.9 below average,
             2.0-2.4 average, 2.5-2.9 good, 3.0-5.0 excellent, &gt;5 suspect (likely curve-fit).</p>
@@ -60,12 +60,12 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Histogram (0.5R bins)</h2>
+            <h2 data-i18n="view.r_distribution.h2.histogram_0_5r_bins">Histogram (0.5R bins)</h2>
             ${histogramSvg(r.bins, s)}
         </div>
 
         <div class="chart-panel">
-            <h2>Per-tag breakdown (sorted by SQN)</h2>
+            <h2 data-i18n="view.r_distribution.h2.per_tag_breakdown_sorted_by_sqn">Per-tag breakdown (sorted by SQN)</h2>
             ${tagTable(r.by_tag)}
         </div>
     `;
@@ -113,10 +113,10 @@ function histogramSvg(bins, stats) {
 }
 
 function tagTable(tags) {
-    if (!tags.length) return '<p class="muted small">No tagged trades with risk_amount set.</p>';
+    if (!tags.length) return '<p data-i18n="view.r_distribution.hint.no_tagged_trades_with_risk_amount_set" class="muted small">No tagged trades with risk_amount set.</p>';
     return `<table class="trades">
         <thead><tr>
-            <th>Tag</th><th>Samples</th><th>Mean R</th><th>SQN</th>
+            <th data-i18n="view.r_distribution.th.tag">Tag</th><th data-i18n="view.r_distribution.th.samples">Samples</th><th data-i18n="view.r_distribution.th.mean_r">Mean R</th><th data-i18n="view.r_distribution.th.sqn">SQN</th>
         </tr></thead>
         <tbody>
         ${tags.map(t => {

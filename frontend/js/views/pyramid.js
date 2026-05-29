@@ -15,6 +15,7 @@ import {
     avgCostSeries, fmtN, fmtInt, fmtUSD,
 } from '../_pyramid_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     kind: 'pyramid_up', side: 'long',
     initialQty: 100, initialEntry: 100,
@@ -24,20 +25,20 @@ let state = {
 export async function renderPyramid(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// PYRAMID · ENTRY MANAGEMENT</h1>
+        <h1 data-i18n="view.pyramid.h1.pyramid_entry_management" class="view-title">// PYRAMID · ENTRY MANAGEMENT</h1>
 
         <div class="chart-panel">
-            <h2>Strategy</h2>
+            <h2 data-i18n="view.pyramid.h2.strategy">Strategy</h2>
             <div class="inline-form">
                 <label>Kind
                     <select id="py-kind">
-                        <option value="pyramid_up" ${state.kind === 'pyramid_up' ? 'selected' : ''}>Pyramid Up (add to winners)</option>
-                        <option value="scale_in"   ${state.kind === 'scale_in'   ? 'selected' : ''}>Scale In (avg down / up against)</option>
+                        <option data-i18n="view.pyramid.opt.pyramid_up_add_to_winners" value="pyramid_up" ${state.kind === 'pyramid_up' ? 'selected' : ''}>Pyramid Up (add to winners)</option>
+                        <option data-i18n="view.pyramid.opt.scale_in_avg_down_up_against" value="scale_in"   ${state.kind === 'scale_in'   ? 'selected' : ''}>Scale In (avg down / up against)</option>
                     </select></label>
                 <label>Side
                     <select id="py-side">
-                        <option value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
-                        <option value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
+                        <option data-i18n="view.pyramid.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
+                        <option data-i18n="view.pyramid.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label>Initial qty
                     <input id="py-iq" type="number" step="any" min="0" value="${state.initialQty}"></label>
@@ -47,18 +48,18 @@ export async function renderPyramid(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Tranche ladder</h2>
+            <h2 data-i18n="view.pyramid.h2.tranche_ladder">Tranche ladder</h2>
             <p class="muted">One tranche per line: <code>trigger_price qty</code>.
                 Pyramid-Up: tranches must move INTO profit. Scale-In: tranches must
                 move AGAINST you within your planned ladder. Misordered tranches are
                 flagged by both the local pre-flight and the backend.</p>
             <textarea id="py-tranches" rows="5" placeholder="105 75&#10;110 50&#10;115 25"></textarea>
             <div class="inline-form">
-                <button id="py-demo-pu-long"  class="secondary" type="button">Demo: Pyramid Up Long</button>
-                <button id="py-demo-pu-short" class="secondary" type="button">Demo: Pyramid Up Short</button>
-                <button id="py-demo-si-long"  class="secondary" type="button">Demo: Scale In Long</button>
-                <button id="py-demo-si-short" class="secondary" type="button">Demo: Scale In Short</button>
-                <button id="py-run" class="primary" type="button">Build plan</button>
+                <button data-i18n="view.pyramid.btn.demo_pyramid_up_long" id="py-demo-pu-long"  class="secondary" type="button">Demo: Pyramid Up Long</button>
+                <button data-i18n="view.pyramid.btn.demo_pyramid_up_short" id="py-demo-pu-short" class="secondary" type="button">Demo: Pyramid Up Short</button>
+                <button data-i18n="view.pyramid.btn.demo_scale_in_long" id="py-demo-si-long"  class="secondary" type="button">Demo: Scale In Long</button>
+                <button data-i18n="view.pyramid.btn.demo_scale_in_short" id="py-demo-si-short" class="secondary" type="button">Demo: Scale In Short</button>
+                <button data-i18n="view.pyramid.btn.build_plan" id="py-run" class="primary" type="button">Build plan</button>
             </div>
         </div>
 
@@ -67,14 +68,14 @@ export async function renderPyramid(mount, _appState) {
         <div id="py-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>State evolution</h2>
+            <h2 data-i18n="view.pyramid.h2.state_evolution">State evolution</h2>
             <div id="py-table"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Average cost curve</h2>
+            <h2 data-i18n="view.pyramid.h2.average_cost_curve">Average cost curve</h2>
             <div id="py-chart" style="height:260px"></div>
-            <p class="muted">Cyan = avg cost per share/contract after each tranche fires.
+            <p data-i18n="view.pyramid.hint.cyan_avg_cost_per_share_contract_after_each_tranch" class="muted">Cyan = avg cost per share/contract after each tranche fires.
                 Pyramid-Up curves AWAY from initial entry (avg cost rises with adds);
                 Scale-In curves TOWARD initial entry (avg cost moves favorably).</p>
         </div>
@@ -156,11 +157,11 @@ function renderSummary(r) {
     const finalAvg   = decToNum(r.final_avg_cost);
     const finalNotnl = decToNum(r.final_notional);
     document.getElementById('py-summary').innerHTML = [
-        card('States',         String((r.states || []).length)),
-        card('Final qty',      fmtInt(finalQty)),
-        card('Final avg cost', fmtN(finalAvg)),
-        card('Final notional', fmtUSD(finalNotnl)),
-        card('Plan misordered', r.plan_misordered ? 'YES' : 'NO',
+        card(t('view.pyramid.card.states'),         String((r.states || []).length)),
+        card(t('view.pyramid.card.final_qty'),      fmtInt(finalQty)),
+        card(t('view.pyramid.card.final_avg_cost'), fmtN(finalAvg)),
+        card(t('view.pyramid.card.final_notional'), fmtUSD(finalNotnl)),
+        card(t('view.pyramid.card.plan_misordered'), r.plan_misordered ? 'YES' : 'NO',
             r.plan_misordered ? 'neg' : 'pos'),
     ].join('');
 }
@@ -182,8 +183,8 @@ function renderTable(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Label</th><th>Trigger $</th><th>Added qty</th>
-                <th>Total qty</th><th>Avg cost</th><th>Notional</th>
+                <th data-i18n="view.pyramid.th.label">Label</th><th data-i18n="view.pyramid.th.trigger">Trigger $</th><th data-i18n="view.pyramid.th.added_qty">Added qty</th>
+                <th data-i18n="view.pyramid.th.total_qty">Total qty</th><th data-i18n="view.pyramid.th.avg_cost">Avg cost</th><th data-i18n="view.pyramid.th.notional">Notional</th>
             </tr></thead>
             <tbody>
                 ${states.map(s => `<tr>

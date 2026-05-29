@@ -14,29 +14,30 @@ import {
     fmtN, fmtInt, fmtPct, trimFractionFor,
 } from '../_news_event_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { positionsText: '', eventsText: '' };
 
 export async function renderNewsEvent(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// NEWS EVENT HANDLER</h1>
+        <h1 data-i18n="view.news_event.h1.news_event_handler" class="view-title">// NEWS EVENT HANDLER</h1>
 
         <div class="chart-panel">
-            <h2>Open positions</h2>
+            <h2 data-i18n="view.news_event.h2.open_positions">Open positions</h2>
             <p class="muted">One line per position: <code>symbol qty</code>.</p>
             <textarea id="ne-pos" rows="5" placeholder="AAPL 100&#10;TSLA 50&#10;MSFT 200"></textarea>
         </div>
 
         <div class="chart-panel">
-            <h2>Upcoming news events</h2>
+            <h2 data-i18n="view.news_event.h2.upcoming_news_events">Upcoming news events</h2>
             <p class="muted">One event per line: <code>event_name &lt;low|medium|high|critical&gt; [comma,sep,symbols]</code>.
                 Omit symbols for market-wide events (e.g., FOMC, NFP).
                 Event-name can contain spaces; the parser finds the impact token automatically.</p>
             <textarea id="ne-ev" rows="5" placeholder="FOMC critical&#10;CPI high TSLA&#10;Retail sales medium MSFT&#10;Fed minutes low ILQD"></textarea>
             <div class="inline-form">
-                <button id="ne-demo" class="secondary" type="button">Load demo (5 positions, 4 events spanning all tiers)</button>
-                <button id="ne-clear" class="secondary" type="button">Clear</button>
-                <button id="ne-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.news_event.btn.load_demo_5_positions_4_events_spanning_all_tiers" id="ne-demo" class="secondary" type="button">Load demo (5 positions, 4 events spanning all tiers)</button>
+                <button data-i18n="view.news_event.btn.clear" id="ne-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.news_event.btn.evaluate" id="ne-run" class="primary" type="button">Evaluate</button>
             </div>
         </div>
 
@@ -44,9 +45,9 @@ export async function renderNewsEvent(mount, _appState) {
         <div id="ne-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Trim recommendations</h2>
+            <h2 data-i18n="view.news_event.h2.trim_recommendations">Trim recommendations</h2>
             <div id="ne-actions"></div>
-            <p class="muted">Trim percent by impact: Low=0% (no action) · Medium=25% · High=50% · Critical=100% (full close).
+            <p data-i18n="view.news_event.hint.trim_percent_by_impact_low_0_no_action_medium_25_h" class="muted">Trim percent by impact: Low=0% (no action) · Medium=25% · High=50% · Critical=100% (full close).
                 If multiple events affect a position, the highest-impact one wins.</p>
         </div>
 
@@ -111,14 +112,14 @@ function renderSummary(report, positions, events) {
     const totalQty = positions.reduce((a, p) => a + (p.current_qty || 0), 0);
     const trimPct = totalQty > 0 ? s.totalTrim / totalQty : 0;
     document.getElementById('ne-summary').innerHTML = [
-        card('Positions',  String(s.positionCount)),
-        card('Events',     String(events.length)),
-        card('Actions',    String(s.actionCount), s.actionCount ? 'neg' : 'pos'),
-        card('Unchanged',  String(s.unchanged), s.unchanged ? 'pos' : ''),
-        card('Total qty',  fmtInt(totalQty)),
-        card('Total trim', fmtInt(s.totalTrim), s.totalTrim ? 'neg' : ''),
-        card('Trim % of book', fmtPct(trimPct), trimPct > 0.5 ? 'neg' : ''),
-        card('Critical actions', String(s.critical), s.critical ? 'neg' : ''),
+        card(t('view.news_event.card.positions'),  String(s.positionCount)),
+        card(t('view.news_event.card.events'),     String(events.length)),
+        card(t('view.news_event.card.actions'),    String(s.actionCount), s.actionCount ? 'neg' : 'pos'),
+        card(t('view.news_event.card.unchanged'),  String(s.unchanged), s.unchanged ? 'pos' : ''),
+        card(t('view.news_event.card.total_qty'),  fmtInt(totalQty)),
+        card(t('view.news_event.card.total_trim'), fmtInt(s.totalTrim), s.totalTrim ? 'neg' : ''),
+        card(t('view.news_event.card.trim_of_book'), fmtPct(trimPct), trimPct > 0.5 ? 'neg' : ''),
+        card(t('view.news_event.card.critical_actions'), String(s.critical), s.critical ? 'neg' : ''),
     ].join('');
     void trimFractionFor; // re-exported for spec / future hint UI
 }
@@ -140,8 +141,8 @@ function renderActions(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Symbol</th><th>Current</th><th>Recommended</th>
-                <th>Trim</th><th>Trim %</th><th>Reason</th>
+                <th data-i18n="view.news_event.th.symbol">Symbol</th><th data-i18n="view.news_event.th.current">Current</th><th data-i18n="view.news_event.th.recommended">Recommended</th>
+                <th data-i18n="view.news_event.th.trim">Trim</th><th data-i18n="view.news_event.th.trim_2">Trim %</th><th data-i18n="view.news_event.th.reason">Reason</th>
             </tr></thead>
             <tbody>
                 ${actions.map(a => {

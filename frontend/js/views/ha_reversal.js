@@ -13,6 +13,7 @@ import {
     fmtN, fmtPct,
 } from '../_ha_reversal_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CFG = { min_body_ratio: 0.6, strong_streak: 3, weak_streak: 2 };
 
 let state = { barText: '', config: { ...DEFAULT_CFG } };
@@ -20,33 +21,33 @@ let state = { barText: '', config: { ...DEFAULT_CFG } };
 export async function renderHaReversal(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// HEIKIN-ASHI REVERSAL</h1>
+        <h1 data-i18n="view.ha_reversal.h1.heikin_ashi_reversal" class="view-title">// HEIKIN-ASHI REVERSAL</h1>
 
         <div class="chart-panel">
-            <h2>OHLC bars</h2>
+            <h2 data-i18n="view.ha_reversal.h2.ohlc_bars">OHLC bars</h2>
             <p class="muted">Paste <code>open high low close</code> per line. Bars
                 are converted to Heikin-Ashi candles client-side; the backend
                 detects color-flip reversal events on the HA series.
                 Demo loads 30 bars with bull-bear-bull regime structure.</p>
             <textarea id="ha-bars" rows="6" placeholder="100.50 101.20 100.00 100.85&#10;100.85 101.50 100.40 101.30&#10;..."></textarea>
             <div class="inline-form">
-                <button id="ha-demo" class="secondary" type="button">Load demo (30 bars, multi-regime)</button>
-                <button id="ha-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.ha_reversal.btn.load_demo_30_bars_multi_regime" id="ha-demo" class="secondary" type="button">Load demo (30 bars, multi-regime)</button>
+                <button data-i18n="view.ha_reversal.btn.clear" id="ha-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Flip config</h2>
+            <h2 data-i18n="view.ha_reversal.h2.flip_config">Flip config</h2>
             <div class="inline-form">
-                <label>Min body ratio (Strong)
+                <label><span data-i18n="view.ha_reversal.label.body_ratio">Min body ratio (Strong)</span>
                     <input id="ha-body" type="number" step="0.01" min="0" max="1" value="${state.config.min_body_ratio}"></label>
-                <label>Strong streak (≥ bars)
+                <label><span data-i18n="view.ha_reversal.label.strong_streak">Strong streak (≥ bars)</span>
                     <input id="ha-strong" type="number" step="1" min="1" value="${state.config.strong_streak}"></label>
-                <label>Weak streak (≥ bars)
+                <label><span data-i18n="view.ha_reversal.label.weak_streak">Weak streak (≥ bars)</span>
                     <input id="ha-weak" type="number" step="1" min="1" value="${state.config.weak_streak}"></label>
-                <button id="ha-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.ha_reversal.btn.detect" id="ha-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">Strong flips need both a long prior same-color streak (default 3+)
+            <p data-i18n="view.ha_reversal.hint.strong_flips_need_both_a_long_prior_same_color_str" class="muted">Strong flips need both a long prior same-color streak (default 3+)
                 AND a decisive body (default ≥60% of bar range). Weak flips only need the
                 shorter streak (default 2+) — earlier signal, less reliable.</p>
         </div>
@@ -55,14 +56,14 @@ export async function renderHaReversal(mount, _appState) {
         <div id="ha-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Raw close + HA close + flip markers</h2>
+            <h2 data-i18n="view.ha_reversal.h2.raw_close_ha_close_flip_markers">Raw close + HA close + flip markers</h2>
             <div id="ha-chart" style="height:280px"></div>
-            <p class="muted">Magenta = raw close. Cyan = HA close. Green dot = BEAR→BULL
+            <p data-i18n="view.ha_reversal.hint.magenta_raw_close_cyan_ha_close_green_dot_bear_bul" class="muted">Magenta = raw close. Cyan = HA close. Green dot = BEAR→BULL
                 flip (placed below HA low). Red dot = BULL→BEAR flip (placed above HA high).</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Event log</h2>
+            <h2 data-i18n="view.ha_reversal.h2.event_log">Event log</h2>
             <div id="ha-events"></div>
         </div>
 
@@ -127,13 +128,13 @@ function renderSummary(report, bars) {
     const dnFlips = events.filter(e => e.direction === 'bullish_to_bearish').length;
     const last = events[events.length - 1];
     document.getElementById('ha-summary').innerHTML = [
-        card('Bars',         String(bars.length)),
-        card('Events',       String(report.n_events || 0)),
-        card('Strong',       String(strong), strong ? 'pos' : ''),
-        card('Weak',         String(weak)),
-        card('BEAR → BULL',  String(upFlips), upFlips ? 'pos' : ''),
-        card('BULL → BEAR',  String(dnFlips), dnFlips ? 'neg' : ''),
-        card('Last event',   last
+        card(t('view.ha_reversal.card.bars'),         String(bars.length)),
+        card(t('view.ha_reversal.card.events'),       String(report.n_events || 0)),
+        card(t('view.ha_reversal.card.strong'),       String(strong), strong ? 'pos' : ''),
+        card(t('view.ha_reversal.card.weak'),         String(weak)),
+        card(t('view.ha_reversal.card.bear_bull'),  String(upFlips), upFlips ? 'pos' : ''),
+        card(t('view.ha_reversal.card.bull_bear'),  String(dnFlips), dnFlips ? 'neg' : ''),
+        card(t('view.ha_reversal.card.last_event'),   last
             ? `bar ${last.bar_index} ${dirBadge(last.direction).label} (${strengthBadge(last.strength).label})`
             : '—',
             last ? dirBadge(last.direction).cls : ''),
@@ -184,8 +185,8 @@ function renderEvents(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Bar idx</th><th>Direction</th><th>Strength</th>
-                <th>Prior streak</th><th>Body ratio</th>
+                <th>#</th><th data-i18n="view.ha_reversal.th.bar_idx">Bar idx</th><th data-i18n="view.ha_reversal.th.direction">Direction</th><th data-i18n="view.ha_reversal.th.strength">Strength</th>
+                <th data-i18n="view.ha_reversal.th.prior_streak">Prior streak</th><th data-i18n="view.ha_reversal.th.body_ratio">Body ratio</th>
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => {

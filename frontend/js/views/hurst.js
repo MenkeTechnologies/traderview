@@ -15,6 +15,7 @@ import {
     regimeLabel, regimeStrength, regimeCssClass,
 } from '../_hurst_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_RETURNS = `# Paste a return series. One value per token.
 # Demo: 500 random-walk returns (should give H ≈ 0.5).
 ${synthRandomWalk(500).join('\n')}
@@ -45,24 +46,24 @@ export async function renderHurst(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// HURST EXPONENT</h1>
+        <h1 data-i18n="view.hurst.h1.hurst_exponent" class="view-title">// HURST EXPONENT</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.hurst.h2.inputs">Inputs</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>Return series</h3>
+                    <h3 data-i18n="view.hurst.h3.return_series">Return series</h3>
                     <textarea id="hu-returns" rows="11"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.returnsText)}</textarea>
                 </div>
                 <div>
-                    <h3>Chunk sizes (R/S regression points)</h3>
+                    <h3 data-i18n="view.hurst.h3.chunk_sizes_r_s_regression_points">Chunk sizes (R/S regression points)</h3>
                     <textarea id="hu-chunks" rows="11"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.chunkText)}</textarea>
                 </div>
             </div>
-            <button id="hu-run" class="primary" type="button" style="margin-top:8px">Estimate</button>
-            <p class="muted">
+            <button data-i18n="view.hurst.btn.estimate" id="hu-run" class="primary" type="button" style="margin-top:8px">Estimate</button>
+            <p data-i18n="view.hurst.hint.the_r_s_log_log_regression_slope_is_the_hurst_expo" class="muted">
                 The R/S log-log regression slope is the Hurst exponent. H &lt; 0.5 =
                 anti-persistent (mean-reverting), H ≈ 0.5 = random walk, H &gt; 0.5 =
                 persistent (long-memory / trending). R² flags fit quality — low R² means
@@ -75,9 +76,9 @@ export async function renderHurst(mount, _appState) {
         <div id="hu-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>R/S regression (log-log)</h2>
+            <h2 data-i18n="view.hurst.h2.r_s_regression_log_log">R/S regression (log-log)</h2>
             <div id="hu-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.hurst.hint.cyan_log_n_vs_log_r_s_scatter_from_the_backend_ora" class="muted">
                 Cyan: log(n) vs log(R/S) scatter from the backend. Orange dashed: linear-
                 fit line (slope = H). A clean straight line implies a meaningful Hurst
                 estimate; scatter / curvature implies the series mixes regimes.
@@ -124,14 +125,14 @@ function renderSummary(res) {
     const label = regimeLabel(res.hurst);
     const strength = regimeStrength(res.hurst);
     document.getElementById('hu-summary').innerHTML = [
-        card('Hurst H', res.hurst.toFixed(4), cls,
+        card(t('view.hurst.card.hurst_h'), res.hurst.toFixed(4), cls,
             `<div class="vc-row"><span class="muted">distance from 0.5</span>
                 <strong>${Math.abs(res.hurst - 0.5).toFixed(3)}</strong></div>`),
-        card('Regime', `${label} (${strength})`, cls),
-        card('R² of log-log fit', res.r_squared.toFixed(4),
+        card(t('view.hurst.card.regime'), `${label} (${strength})`, cls),
+        card(t('view.hurst.card.r_of_log_log_fit'), res.r_squared.toFixed(4),
             res.r_squared >= 0.95 ? 'pos' : (res.r_squared < 0.80 ? 'neg' : ''),
             `<div class="vc-row"><span class="muted">${res.r_squared >= 0.95 ? 'clean linear fit — H is trustworthy' : (res.r_squared < 0.80 ? 'noisy — multi-regime series?' : 'acceptable')}</span><strong></strong></div>`),
-        card('Regression points', String(res.log_n.length)),
+        card(t('view.hurst.card.regression_points'), String(res.log_n.length)),
     ].join('');
 }
 

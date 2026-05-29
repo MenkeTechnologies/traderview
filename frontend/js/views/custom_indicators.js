@@ -16,31 +16,32 @@ const KINDS = [
 export async function renderCustomIndicators(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CUSTOM INDICATORS</h1>
-        <p class="muted small">Save named indicator + parameter combos (SMA, EMA, RSI, Bollinger,
+        <h1 data-i18n="view.custom_indicators.h1.custom_indicators" class="view-title">// CUSTOM INDICATORS</h1>
+        <p data-i18n="view.custom_indicators.hint.save_named_indicator_parameter_combos_sma_ema_rsi_" class="muted small">Save named indicator + parameter combos (SMA, EMA, RSI, Bollinger,
             MACD). The Charts tab gets a multi-select to overlay any of them on the SVG cursor.
             Backend evaluates the chosen presets against cached bars and returns one series
             per output line (Bollinger emits 3, MACD emits 3, scalars emit 1).</p>
 
         <div class="chart-panel">
-            <h2>Create / update preset</h2>
+            <h2 data-i18n="view.custom_indicators.h2.create_update_preset">Create / update preset</h2>
             <form id="ci-form" class="inline-form">
                 <input name="name" placeholder="name (e.g. 'EMA-21 trend')" required style="min-width:200px;">
                 <select name="kind">
                     ${KINDS.map(k => `<option value="${k.id}">${esc(k.label)}</option>`).join('')}
                 </select>
                 <span id="ci-params"></span>
-                <label>Color
+                <label><span data-i18n="view.custom_indicators.label.color">Color</span>
                     <input name="color" type="color" value="#00e5ff" style="width:48px;height:28px;padding:0;">
                 </label>
-                <label><input name="is_default" type="checkbox"> default</label>
-                <button class="primary" type="submit">Save</button>
+                <label><input name="is_default" type="checkbox">
+                    <span data-i18n="view.custom_indicators.label.is_default">default</span></label>
+                <button data-i18n="view.custom_indicators.btn.save" class="primary" type="submit">Save</button>
                 <span id="ci-status" class="muted small"></span>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>Saved presets</h2>
+            <h2 data-i18n="view.custom_indicators.h2.saved_presets">Saved presets</h2>
             <div id="ci-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
     `;
@@ -98,16 +99,16 @@ async function refresh(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         const el2 = mount.querySelector('#ci-list');
         if (!el2) return;
-        if (!rows.length) { el2.innerHTML = '<p class="muted small">No saved indicators yet.</p>'; return; }
+        if (!rows.length) { el2.innerHTML = '<p data-i18n="view.custom_indicators.hint.no_saved_indicators_yet" class="muted small">No saved indicators yet.</p>'; return; }
         el2.innerHTML = `<table class="trades">
-            <thead><tr><th>Name</th><th>Definition</th><th>Color</th><th>Default</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="view.custom_indicators.th.name">Name</th><th data-i18n="view.custom_indicators.th.definition">Definition</th><th data-i18n="view.custom_indicators.th.color">Color</th><th data-i18n="view.custom_indicators.th.default">Default</th><th></th></tr></thead>
             <tbody>
             ${rows.map(r => `<tr>
                 <td>${esc(r.name)}</td>
                 <td class="small"><code>${esc(JSON.stringify(r.definition))}</code></td>
                 <td><span style="display:inline-block;width:16px;height:16px;background:${esc(r.color)};border-radius:2px;border:1px solid var(--border);"></span></td>
                 <td>${r.is_default ? '<span class="pos">★</span>' : ''}</td>
-                <td><button class="btn ci-del" data-id="${r.id}">Delete</button></td>
+                <td><button data-i18n="view.custom_indicators.btn.delete" class="btn ci-del" data-id="${r.id}">Delete</button></td>
             </tr>`).join('')}
             </tbody></table>`;
         el2.querySelectorAll('.ci-del').forEach(b =>

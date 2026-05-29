@@ -43,10 +43,10 @@ export async function renderVolSmile(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// VOL SMILE</h1>
+        <h1 data-i18n="view.vol_smile.h1.vol_smile" class="view-title">// VOL SMILE</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.vol_smile.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label>Spot
                     <input id="vs-spot" type="number" step="any" value="${state.spot}"></label>
@@ -56,7 +56,7 @@ export async function renderVolSmile(mount, _appState) {
                     <input id="vs-rate" type="number" step="any" value="${state.rate}"></label>
                 <label>Div yield
                     <input id="vs-q" type="number" step="any" value="${state.div_yield}"></label>
-                <button id="vs-fit" class="primary" type="button">Fit</button>
+                <button data-i18n="view.vol_smile.btn.fit" id="vs-fit" class="primary" type="button">Fit</button>
             </div>
             <p class="muted">
                 Paste quotes below — one per line, two whitespace-OR-comma
@@ -72,9 +72,9 @@ export async function renderVolSmile(mount, _appState) {
         <div id="vs-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Smile</h2>
+            <h2 data-i18n="view.vol_smile.h2.smile">Smile</h2>
             <div id="vs-chart" style="width:100%;height:340px"></div>
-            <p class="muted">Solid = SVI fitted curve · Markers = raw paste</p>
+            <p data-i18n="view.vol_smile.hint.solid_svi_fitted_curve_markers_raw_paste" class="muted">Solid = SVI fitted curve · Markers = raw paste</p>
         </div>
 
         <div id="vs-err" class="boot" style="display:none;color:var(--red)"></div>

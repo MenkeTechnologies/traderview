@@ -14,6 +14,7 @@ import {
     reconstructionResidual,
 } from '../_signal_decomposition_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_TEXT = `# Demo: 128 points of trend + 2 cycles + noise. Pick a method below.
 ${synthDemoSeries(128).join('\n')}
 `;
@@ -45,24 +46,24 @@ export async function renderSignalDecomposition(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// SIGNAL DECOMPOSITION</h1>
+        <h1 data-i18n="view.signal_decomposition.h1.signal_decomposition" class="view-title">// SIGNAL DECOMPOSITION</h1>
 
         <div class="chart-panel">
-            <h2>Method</h2>
+            <h2 data-i18n="view.signal_decomposition.h2.method">Method</h2>
             <div class="inline-form">
-                <label>Decomposition
+                <label><span data-i18n="view.signal_decomposition.label.method">Decomposition</span>
                     <select id="sd-method">
                         ${Object.entries(METHODS).map(([id, m]) =>
                             `<option value="${id}" ${id === state.methodId ? 'selected' : ''}>${esc(m.label)}</option>`
                         ).join('')}
                     </select></label>
-                <button id="sd-run" class="primary" type="button">Decompose</button>
+                <button data-i18n="view.signal_decomposition.btn.decompose" id="sd-run" class="primary" type="button">Decompose</button>
             </div>
             <div id="sd-opts" class="inline-form" style="margin-top:8px"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Series</h2>
+            <h2 data-i18n="view.signal_decomposition.h2.series">Series</h2>
             <textarea id="sd-text" rows="8"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
@@ -72,9 +73,9 @@ export async function renderSignalDecomposition(mount, _appState) {
         <div id="sd-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Components</h2>
+            <h2 data-i18n="view.signal_decomposition.h2.components">Components</h2>
             <div id="sd-components"></div>
-            <p class="muted">
+            <p data-i18n="view.signal_decomposition.hint.each_subplot_is_one_component_for_emd_high_freq_im" class="muted">
                 Each subplot is one component. For EMD: high-freq IMFs first, residual last.
                 For Wavelet: detail levels first, smooth approximation last. For SSA: trend
                 on top, noise residual below.
@@ -145,7 +146,7 @@ async function decompose(mount, tok) {
 
     const components = method.toComponents(res);
     if (!components || components.length === 0) {
-        showErr('backend returned no components');
+        showErr(t('view.signal_decomposition.err.backend_returned_no_components'));
         return;
     }
 
@@ -155,25 +156,25 @@ async function decompose(mount, tok) {
 
 function renderSummary(series, components, res) {
     const cards = [];
-    cards.push(card('Series length', String(series.length)));
-    cards.push(card('Components', String(components.length)));
+    cards.push(card(t('view.signal_decomposition.card.series_length'), String(series.length)));
+    cards.push(card(t('view.signal_decomposition.card.components'), String(components.length)));
     if (state.methodId === 'emd' && Array.isArray(res.iterations)) {
         const totalIter = res.iterations.reduce((a, b) => a + b, 0);
-        cards.push(card('Total sift iterations', String(totalIter)));
+        cards.push(card(t('view.signal_decomposition.card.total_sift_iterations'), String(totalIter)));
     }
     if (state.methodId === 'wavelet' && res.used_length != null) {
-        cards.push(card('Used length (2^L)', String(res.used_length)));
+        cards.push(card(t('view.signal_decomposition.card.used_length_2_l'), String(res.used_length)));
     }
     if (state.methodId === 'ssa' && Array.isArray(res.singular_values)) {
         const top = res.singular_values[0] ?? NaN;
         const total = res.singular_values.reduce((a, b) => a + b, 0);
         const topPct = total > 0 ? (top / total * 100) : NaN;
-        cards.push(card('1st singular value share',
+        cards.push(card(t('view.signal_decomposition.card.1st_singular_value_share'),
             Number.isFinite(topPct) ? `${topPct.toFixed(1)}%` : '—'));
     }
     const recon = reconstructionResidual(series, components);
     if (recon != null) {
-        cards.push(card('Max reconstruction error',
+        cards.push(card(t('view.signal_decomposition.card.max_reconstruction_error'),
             recon < 1e-9 ? '< 1e-9 (exact)' : recon.toExponential(2)));
     }
     document.getElementById('sd-summary').innerHTML = cards.join('');

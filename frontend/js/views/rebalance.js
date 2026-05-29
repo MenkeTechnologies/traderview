@@ -32,10 +32,10 @@ const PRESETS = {
 export async function renderRebalance(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.rebalance.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// REBALANCE — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Set target weights per symbol; the engine snapshots your open
+        <p data-i18n="view.rebalance.hint.set_target_weights_per_symbol_the_engine_snapshots" class="muted small">Set target weights per symbol; the engine snapshots your open
             positions, fetches fresh quotes, and computes the exact whole-share trade list
             to drift back to target. Max-trades cap keeps a rebalance from blowing into 30+
             orders. Export trades as CSV for manual broker entry — TraderView never sends orders.</p>
@@ -44,7 +44,7 @@ export async function renderRebalance(mount, state) {
             <form id="rb-form" class="inline-form">
                 <label>Preset
                     <select name="preset">
-                        <option value="">(custom)</option>
+                        <option data-i18n="view.rebalance.opt.custom" value="">(custom)</option>
                         ${Object.keys(PRESETS).map(k => `<option>${esc(k)}</option>`).join('')}
                     </select>
                 </label>
@@ -54,8 +54,8 @@ export async function renderRebalance(mount, state) {
                 <label>Max trades
                     <input name="max_trades" type="number" min="1" max="200" value="20" style="width:80px;">
                 </label>
-                <button class="primary" id="rb-go" type="button">Compute plan</button>
-                <button class="btn" id="rb-csv" type="button">Download trades CSV</button>
+                <button data-i18n="view.rebalance.btn.compute_plan" class="primary" id="rb-go" type="button">Compute plan</button>
+                <button data-i18n="view.rebalance.btn.download_trades_csv" class="btn" id="rb-csv" type="button">Download trades CSV</button>
                 <span id="rb-status" class="muted small"></span>
             </form>
             <textarea id="rb-targets" rows="8"
@@ -168,18 +168,18 @@ function render(r, mount) {
             ${tradeTable(p.trades)}
         </div>
         <div class="chart-panel">
-            <h2>All positions — current vs target</h2>
+            <h2 data-i18n="view.rebalance.h2.all_positions_current_vs_target">All positions — current vs target</h2>
             ${positionsTable(p.rows)}
         </div>
     `;
 }
 
 function tradeTable(trades) {
-    if (!trades.length) return '<p class="muted small">No trades — already balanced.</p>';
+    if (!trades.length) return '<p data-i18n="view.rebalance.hint.no_trades_already_balanced" class="muted small">No trades — already balanced.</p>';
     return `<table class="trades">
         <thead><tr>
-            <th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>$ value</th>
-            <th>Current → Target qty</th>
+            <th data-i18n="view.rebalance.th.symbol">Symbol</th><th data-i18n="view.rebalance.th.side">Side</th><th data-i18n="view.rebalance.th.qty">Qty</th><th data-i18n="view.rebalance.th.price">Price</th><th>$ value</th>
+            <th data-i18n="view.rebalance.th.current_target_qty">Current → Target qty</th>
         </tr></thead>
         <tbody>
         ${trades.map(t => `<tr>
@@ -194,11 +194,11 @@ function tradeTable(trades) {
 }
 
 function positionsTable(rows) {
-    if (!rows.length) return '<p class="muted small">no rows</p>';
+    if (!rows.length) return '<p data-i18n="view.rebalance.hint.no_rows" class="muted small">no rows</p>';
     return `<table class="trades">
         <thead><tr>
-            <th>Symbol</th><th>Current %</th><th>Target %</th><th>Drift %</th>
-            <th>Current $</th><th>Target $</th><th>Δ qty</th>
+            <th data-i18n="view.rebalance.th.symbol_2">Symbol</th><th data-i18n="view.rebalance.th.current">Current %</th><th data-i18n="view.rebalance.th.target">Target %</th><th data-i18n="view.rebalance.th.drift">Drift %</th>
+            <th data-i18n="view.rebalance.th.current_2">Current $</th><th data-i18n="view.rebalance.th.target_2">Target $</th><th data-i18n="view.rebalance.th.qty_2">Δ qty</th>
         </tr></thead>
         <tbody>
         ${rows.map(r => `<tr>

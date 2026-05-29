@@ -6,14 +6,14 @@ export async function renderCommunity(mount, _state, catSlug) {
     const tok = currentViewToken();
     const cats = await api.forumCategories();
     if (!viewIsCurrent(tok)) return;
-    if (!cats.length) { mount.innerHTML = '<p class="boot">No forum categories.</p>'; return; }
+    if (!cats.length) { mount.innerHTML = '<p data-i18n="view.community.hint.no_forum_categories" class="boot">No forum categories.</p>'; return; }
     if (!catSlug) catSlug = cats[0].slug;
     const cat = cats.find(c => c.slug === catSlug) || cats[0];
     const threads = await api.forumThreadsIn(cat.slug);
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
-        <h1 class="view-title">// COMMUNITY</h1>
+        <h1 data-i18n="view.community.h1.community" class="view-title">// COMMUNITY</h1>
         <div class="forum-cats">${cats.map(c =>
             `<a class="forum-cat ${c.id === cat.id ? 'active' : ''}" href="#community/${c.slug}">${esc(c.name)}</a>`
         ).join('')}</div>
@@ -23,12 +23,12 @@ export async function renderCommunity(mount, _state, catSlug) {
             <form id="thread-form">
                 <input name="title" placeholder="title" required>
                 <textarea name="body_md" placeholder="markdown body" required></textarea>
-                <button class="primary" type="submit">Post</button>
+                <button data-i18n="view.community.btn.post" class="primary" type="submit">Post</button>
             </form>
         </div>
 
         <table class="trades">
-            <thead><tr><th>Title</th><th>Posts</th><th>Views</th><th>Last post</th></tr></thead>
+            <thead><tr><th data-i18n="view.community.th.title">Title</th><th data-i18n="view.community.th.posts">Posts</th><th data-i18n="view.community.th.views">Views</th><th data-i18n="view.community.th.last_post">Last post</th></tr></thead>
             <tbody>${threads.map(t => `
                 <tr>
                     <td>${t.is_pinned ? '📌 ' : ''}<a href="#community/${cat.slug}/${t.slug}">${esc(t.title)}</a></td>
@@ -64,12 +64,12 @@ export async function renderCommunityThread(mount, _state, catSlug, threadSlug) 
                 <div class="body">${md(p.body_md)}</div>
             </div>
         `).join('')}</div>
-        ${thread.is_locked ? '<p class="muted">Thread is locked.</p>' : `
+        ${thread.is_locked ? '<p data-i18n="view.community.hint.thread_is_locked" class="muted">Thread is locked.</p>' : `
             <div class="chart-panel">
-                <h2>Reply</h2>
+                <h2 data-i18n="view.community.h2.reply">Reply</h2>
                 <form id="reply-form">
                     <textarea name="body_md" placeholder="markdown reply" required></textarea>
-                    <button class="primary" type="submit">Post</button>
+                    <button data-i18n="view.community.btn.post_2" class="primary" type="submit">Post</button>
                 </form>
             </div>
         `}

@@ -12,15 +12,16 @@ import {
     makeDemoData, todayIso, fmtUSD, fmtPct,
 } from '../_goal_tracker_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { params: makeDemoData('on-pace') };
 
 export async function renderGoalTracker(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// GOAL TRACKER</h1>
+        <h1 data-i18n="view.goal_tracker.h1.goal_tracker" class="view-title">// GOAL TRACKER</h1>
 
         <div class="chart-panel">
-            <h2>Period goals</h2>
+            <h2 data-i18n="view.goal_tracker.h2.period_goals">Period goals</h2>
             <div class="inline-form">
                 <label>Period start ($)
                     <input id="gt-eq0" type="number" step="any" min="0" value="${state.params.period_start_equity}"></label>
@@ -36,32 +37,32 @@ export async function renderGoalTracker(mount, _appState) {
                     <input id="gt-pe" type="text" value="${esc(state.params.period_end)}"></label>
                 <label>Today (YYYY-MM-DD)
                     <input id="gt-today" type="text" value="${esc(state.params.today)}"></label>
-                <button id="gt-today-now" class="secondary" type="button">today = now</button>
+                <button data-i18n="view.goal_tracker.btn.today_now" id="gt-today-now" class="secondary" type="button">today = now</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Equity history</h2>
+            <h2 data-i18n="view.goal_tracker.h2.equity_history">Equity history</h2>
             <textarea id="gt-eq" rows="5" placeholder="100000&#10;105000&#10;110000">${state.params.equity.join('\n')}</textarea>
             <div class="inline-form">
-                <button id="gt-demo-ahead"  class="secondary" type="button">Demo: AHEAD</button>
-                <button id="gt-demo-onpace" class="secondary" type="button">Demo: ON PACE</button>
-                <button id="gt-demo-behind" class="secondary" type="button">Demo: BEHIND</button>
-                <button id="gt-demo-kill"   class="secondary" type="button">Demo: KILL SWITCH</button>
-                <button id="gt-demo-out"    class="secondary" type="button">Demo: OUT-OF-PERIOD</button>
-                <button id="gt-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.goal_tracker.btn.demo_ahead" id="gt-demo-ahead"  class="secondary" type="button">Demo: AHEAD</button>
+                <button data-i18n="view.goal_tracker.btn.demo_on_pace" id="gt-demo-onpace" class="secondary" type="button">Demo: ON PACE</button>
+                <button data-i18n="view.goal_tracker.btn.demo_behind" id="gt-demo-behind" class="secondary" type="button">Demo: BEHIND</button>
+                <button data-i18n="view.goal_tracker.btn.demo_kill_switch" id="gt-demo-kill"   class="secondary" type="button">Demo: KILL SWITCH</button>
+                <button data-i18n="view.goal_tracker.btn.demo_out_of_period" id="gt-demo-out"    class="secondary" type="button">Demo: OUT-OF-PERIOD</button>
+                <button data-i18n="view.goal_tracker.btn.evaluate" id="gt-run" class="primary" type="button">Evaluate</button>
             </div>
         </div>
 
         <div id="gt-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Target progress</h2>
+            <h2 data-i18n="view.goal_tracker.h2.target_progress">Target progress</h2>
             <div id="gt-progress"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Equity curve</h2>
+            <h2 data-i18n="view.goal_tracker.h2.equity_curve">Equity curve</h2>
             <div id="gt-chart" style="height:260px"></div>
         </div>
 
@@ -135,21 +136,21 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.params);
     const parityOk = r.on_pace === local.on_pace;
     document.getElementById('gt-summary').innerHTML = [
-        card('On pace',           badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Current equity',    fmtUSD(r.current_equity)),
-        card('Period return',     fmtPct(r.current_pct_return),
+        card(t('view.goal_tracker.card.on_pace'),           badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.goal_tracker.card.current_equity'),    fmtUSD(r.current_equity)),
+        card(t('view.goal_tracker.card.period_return'),     fmtPct(r.current_pct_return),
             r.current_pct_return >= 0 ? 'pos' : 'neg'),
-        card('% of target',       fmtPct(r.pct_of_target, 1),
+        card(t('view.goal_tracker.card.of_target'),       fmtPct(r.pct_of_target, 1),
             r.pct_of_target >= 1 ? 'pos' : r.pct_of_target >= 0.5 ? '' : 'neg'),
-        card('Drawdown',          fmtPct(r.current_dd_pct),
+        card(t('view.goal_tracker.card.drawdown'),          fmtPct(r.current_dd_pct),
             r.kill_switch_breached ? 'neg' : ''),
-        card('Kill switch?',      r.kill_switch_breached ? 'BREACHED' : 'OK',
+        card(t('view.goal_tracker.card.kill_switch'),      r.kill_switch_breached ? 'BREACHED' : 'OK',
             r.kill_switch_breached ? 'neg' : 'pos'),
-        card('Days elapsed',      `${r.days_elapsed} / ${r.days_total}`),
-        card('Annualized pace',   fmtPct(r.annualized_pace, 2),
+        card(t('view.goal_tracker.card.days_elapsed'),      `${r.days_elapsed} / ${r.days_total}`),
+        card(t('view.goal_tracker.card.annualized_pace'),   fmtPct(r.annualized_pace, 2),
             r.annualized_pace >= 0 ? 'pos' : 'neg'),
-        card('Action',            badge.hint),
-        card('Local parity',      parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.goal_tracker.card.action'),            badge.hint),
+        card(t('view.goal_tracker.card.local_parity'),      parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 

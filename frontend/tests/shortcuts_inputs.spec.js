@@ -103,6 +103,65 @@ test('defaults: escape is bare Escape', () => {
     expect(e.keys.key).toBe('Escape');
 });
 
+test('defaults: toggle_favorite is Cmd-or-Ctrl + D', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'toggle_favorite');
+    expect(sc.keys.key).toBe('d');
+    expect(sc.keys.meta && sc.keys.ctrl).toBe(true);
+    expect(sc.actionKey).toBe('tv:toggle-favorite');
+});
+
+test('defaults: open_new_tab is Cmd-or-Ctrl + N → tv:open-new-tab', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'open_new_tab');
+    expect(sc.keys.key).toBe('n');
+    expect(sc.actionKey).toBe('tv:open-new-tab');
+});
+
+test('defaults: add_bookmark is Cmd-or-Ctrl + B → tv:add-bookmark', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'add_bookmark');
+    expect(sc.keys.key).toBe('b');
+    expect(sc.keys.meta && sc.keys.ctrl).toBe(true);
+    expect(sc.actionKey).toBe('tv:add-bookmark');
+});
+
+test('defaults: theme/crt/neon toggles use Shift to avoid common conflicts', () => {
+    for (const id of ['toggle_theme', 'toggle_crt', 'toggle_neon']) {
+        const sc = DEFAULT_SHORTCUTS.find(s => s.id === id);
+        expect(sc).toBeTruthy();
+        expect(sc.keys.shift).toBe(true);
+        expect(sc.keys.meta && sc.keys.ctrl).toBe(true);
+        expect(sc.actionKey).toBe(`tv:${id.replace(/_/g, '-')}`);
+    }
+});
+
+test('defaults: open_settings is Cmd-or-Ctrl + , → tv:open-settings', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'open_settings');
+    expect(sc.keys.key).toBe(',');
+    expect(sc.keys.meta && sc.keys.ctrl).toBe(true);
+    expect(sc.actionKey).toBe('tv:open-settings');
+});
+
+test('defaults: focus_search shortcut bound (consumed by tv:focus-search listener)', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'focus_search');
+    expect(sc.keys.key).toBe('/');
+    expect(sc.actionKey).toBe('tv:focus-search');
+});
+
+test('defaults: go_home is Cmd-or-Ctrl + Shift + H → tv:go-home', () => {
+    const sc = DEFAULT_SHORTCUTS.find(s => s.id === 'go_home');
+    expect(sc.keys.key).toBe('h');
+    expect(sc.keys.shift).toBe(true);
+    expect(sc.actionKey).toBe('tv:go-home');
+});
+
+test('defaults: every id is unique', () => {
+    const ids = DEFAULT_SHORTCUTS.map(s => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+});
+
+test('defaults: every actionKey starts with tv:', () => {
+    for (const s of DEFAULT_SHORTCUTS) expect(s.actionKey.startsWith('tv:')).toBe(true);
+});
+
 // ── loadShortcuts (overrides via localStorage) ────────────────────
 
 test('loadShortcuts: no overrides → defaults', () => {

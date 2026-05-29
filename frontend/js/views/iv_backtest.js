@@ -19,33 +19,34 @@ import {
     fmtPct, fmtPnl, fmtWinRate,
 } from '../_iv_backtest_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { implied: 4.5, realizedText: '' };
 
 export async function renderIvBacktest(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// IV BACKTEST · EARNINGS STRADDLE</h1>
+        <h1 data-i18n="view.iv_backtest.h1.iv_backtest_earnings_straddle" class="view-title">// IV BACKTEST · EARNINGS STRADDLE</h1>
 
         <div class="chart-panel">
-            <h2>Event setup</h2>
+            <h2 data-i18n="view.iv_backtest.h2.event_setup">Event setup</h2>
             <div class="inline-form">
-                <label>Implied move (%) — what the ATM straddle is pricing for the event
+                <label><span data-i18n="view.iv_backtest.label.implied">Implied move (%) — what the ATM straddle is pricing for the event</span>
                     <input id="ib-imp" type="number" step="any" min="0" max="100" value="${state.implied}"></label>
-                <button id="ib-run" class="primary" type="button">Backtest</button>
+                <button data-i18n="view.iv_backtest.btn.backtest" id="ib-run" class="primary" type="button">Backtest</button>
             </div>
-            <p class="muted">Implied move ≈ ATM straddle debit / spot × 100.
+            <p data-i18n="view.iv_backtest.hint.implied_move_atm_straddle_debit_spot_100_if_you_re" class="muted">Implied move ≈ ATM straddle debit / spot × 100.
                 If you're not sure, options chains usually print it as "Expected Move."</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Historical realized post-event moves (%)</h2>
-            <p class="muted">One signed value per line — the % move from the close before
+            <h2 data-i18n="view.iv_backtest.h2.historical_realized_post_event_moves">Historical realized post-event moves (%)</h2>
+            <p data-i18n="view.iv_backtest.hint.one_signed_value_per_line_the_move_from_the_close_" class="muted">One signed value per line — the % move from the close before
                 the event to the close after. Signs are kept for direction context but the
                 backend computes on |realized|, since long-straddle P&amp;L is symmetric.</p>
             <textarea id="ib-real" rows="6" placeholder="7.2&#10;-8.5&#10;5.1&#10;..."></textarea>
             <div class="inline-form">
-                <button id="ib-demo" class="secondary" type="button">Load demo (16 quarters, realized &gt; implied)</button>
-                <button id="ib-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.iv_backtest.btn.load_demo_16_quarters_realized_implied" id="ib-demo" class="secondary" type="button">Load demo (16 quarters, realized &gt; implied)</button>
+                <button data-i18n="view.iv_backtest.btn.clear" id="ib-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -53,17 +54,17 @@ export async function renderIvBacktest(mount, _appState) {
         <div id="ib-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Realized distribution + implied reference</h2>
+            <h2 data-i18n="view.iv_backtest.h2.realized_distribution_implied_reference">Realized distribution + implied reference</h2>
             <div id="ib-hist-chart" style="height:280px"></div>
-            <p class="muted">Bars = histogram of |realized| %. Orange dashed = implied move.
+            <p data-i18n="view.iv_backtest.hint.bars_histogram_of_realized_orange_dashed_implied_m" class="muted">Bars = histogram of |realized| %. Orange dashed = implied move.
                 If most of the mass sits to the RIGHT of the dashed line, realized has
                 historically beaten implied — the straddle was underpriced.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Per-event P&amp;L (long straddle, $1 of premium)</h2>
+            <h2 data-i18n="view.iv_backtest.h2.per_event_pandl_long_straddle_1_of_premium">Per-event P&amp;L (long straddle, $1 of premium)</h2>
             <div id="ib-pnl-chart" style="height:220px"></div>
-            <p class="muted">Each dot = one historical event's long-straddle P&amp;L per $1 of premium.
+            <p data-i18n="view.iv_backtest.hint.each_dot_one_historical_event_s_long_straddle_pand" class="muted">Each dot = one historical event's long-straddle P&amp;L per $1 of premium.
                 Positive = realized beat implied. Negative = implied was rich.</p>
         </div>
 
@@ -117,15 +118,15 @@ async function compute(tok) {
 function renderSummary(r) {
     const badge = recommendationBadge(r.recommendation, r.edge_pct);
     document.getElementById('ib-summary').innerHTML = [
-        card('Samples',          String(r.samples)),
-        card('Implied',          fmtPct(r.implied_move_pct)),
-        card('Median realized',  fmtPct(r.median_realized_pct), r.median_realized_pct > r.implied_move_pct ? 'pos' : 'neg'),
-        card('Avg realized',     fmtPct(r.avg_realized_pct)),
+        card(t('view.iv_backtest.card.samples'),          String(r.samples)),
+        card(t('view.iv_backtest.card.implied'),          fmtPct(r.implied_move_pct)),
+        card(t('view.iv_backtest.card.median_realized'),  fmtPct(r.median_realized_pct), r.median_realized_pct > r.implied_move_pct ? 'pos' : 'neg'),
+        card(t('view.iv_backtest.card.avg_realized'),     fmtPct(r.avg_realized_pct)),
         card('Long P&L /$1',     fmtPnl(r.long_avg_pnl), r.long_avg_pnl >= 0 ? 'pos' : 'neg'),
-        card('Long win rate',    fmtWinRate(r.long_win_rate)),
+        card(t('view.iv_backtest.card.long_win_rate'),    fmtWinRate(r.long_win_rate)),
         card('Short P&L /$1',    fmtPnl(r.short_avg_pnl), r.short_avg_pnl >= 0 ? 'pos' : 'neg'),
-        card('Recommendation',   badge.label, badge.cls),
-        card('Action',           badge.hint),
+        card(t('view.iv_backtest.card.recommendation'),   badge.label, badge.cls),
+        card(t('view.iv_backtest.card.action'),           badge.hint),
     ].join('');
 }
 

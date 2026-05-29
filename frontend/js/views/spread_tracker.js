@@ -14,25 +14,26 @@ import {
     fmtBps, fmtN, fmtPct,
 } from '../_spread_tracker_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { quotesText: '' };
 
 export async function renderSpreadTracker(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// SPREAD TRACKER · COST OF IMMEDIACY</h1>
+        <h1 data-i18n="view.spread_tracker.h1.spread_tracker_cost_of_immediacy" class="view-title">// SPREAD TRACKER · COST OF IMMEDIACY</h1>
 
         <div class="chart-panel">
-            <h2>Quote samples</h2>
+            <h2 data-i18n="view.spread_tracker.h2.quote_samples">Quote samples</h2>
             <p class="muted">Paste <code>bid ask</code> per line. Demo loads 300
                 samples that include a 20-sample pathological burst near the end
                 (a feed glitch / circuit breaker analog).</p>
             <textarea id="st-quotes" rows="8" placeholder="100.04 100.05&#10;100.05 100.06&#10;..."></textarea>
             <div class="inline-form">
-                <button id="st-demo" class="secondary" type="button">Load demo (300 quotes)</button>
-                <button id="st-clear" class="secondary" type="button">Clear</button>
-                <button id="st-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.spread_tracker.btn.load_demo_300_quotes" id="st-demo" class="secondary" type="button">Load demo (300 quotes)</button>
+                <button data-i18n="view.spread_tracker.btn.clear" id="st-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.spread_tracker.btn.analyze" id="st-run" class="primary" type="button">Analyze</button>
             </div>
-            <p class="muted">Regime cuts at 5 / 25 / 100 bps. Wide → use limit orders.
+            <p data-i18n="view.spread_tracker.hint.regime_cuts_at_5_25_100_bps_wide_use_limit_orders_" class="muted">Regime cuts at 5 / 25 / 100 bps. Wide → use limit orders.
                 Pathological → feed broken or illiquid name; sit out.</p>
         </div>
 
@@ -40,21 +41,21 @@ export async function renderSpreadTracker(mount, _appState) {
         <div id="st-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Backend note</h2>
+            <h2 data-i18n="view.spread_tracker.h2.backend_note">Backend note</h2>
             <div id="st-note" class="muted">—</div>
         </div>
 
         <div class="chart-panel">
-            <h2>Spread bps over time</h2>
+            <h2 data-i18n="view.spread_tracker.h2.spread_bps_over_time">Spread bps over time</h2>
             <div id="st-chart" style="height:280px"></div>
-            <p class="muted">Cyan = spread bps. Dashed reference lines: green = 5 bps (tight),
+            <p data-i18n="view.spread_tracker.hint.cyan_spread_bps_dashed_reference_lines_green_5_bps" class="muted">Cyan = spread bps. Dashed reference lines: green = 5 bps (tight),
                 yellow = 25 bps (normal cap), red = 100 bps (pathological cliff).</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Mid price track</h2>
+            <h2 data-i18n="view.spread_tracker.h2.mid_price_track">Mid price track</h2>
             <div id="st-mid-chart" style="height:200px"></div>
-            <p class="muted">Just so you see if the spread blew out alongside a real
+            <p data-i18n="view.spread_tracker.hint.just_so_you_see_if_the_spread_blew_out_alongside_a" class="muted">Just so you see if the spread blew out alongside a real
                 price move (newsy event) vs. a pure feed glitch (mid steady).</p>
         </div>
 
@@ -109,14 +110,14 @@ function renderSummary(r) {
     const regime = r.regime || 'normal';
     const cls = REGIME_CSS[regime] || '';
     document.getElementById('st-summary').innerHTML = [
-        card('Regime',          REGIME_LABELS[regime] || regime, cls),
-        card('Valid samples',   String(r.samples)),
-        card('Avg spread',      fmtBps(r.avg_spread_bps), cls),
-        card('Min spread',      fmtBps(r.min_spread_bps), 'pos'),
-        card('Max spread',      fmtBps(r.max_spread_bps), r.max_spread_bps > REGIME_THRESHOLDS.wide ? 'neg' : ''),
-        card('Avg mid',         fmtN(r.avg_mid, 2)),
-        card('Pathological %',  fmtPct(r.pathological_pct), r.pathological_pct > 0 ? 'neg' : 'pos'),
-        card('Half-spread cost', fmtBps(r.avg_spread_bps / 2)),
+        card(t('view.spread_tracker.card.regime'),          REGIME_LABELS[regime] || regime, cls),
+        card(t('view.spread_tracker.card.valid_samples'),   String(r.samples)),
+        card(t('view.spread_tracker.card.avg_spread'),      fmtBps(r.avg_spread_bps), cls),
+        card(t('view.spread_tracker.card.min_spread'),      fmtBps(r.min_spread_bps), 'pos'),
+        card(t('view.spread_tracker.card.max_spread'),      fmtBps(r.max_spread_bps), r.max_spread_bps > REGIME_THRESHOLDS.wide ? 'neg' : ''),
+        card(t('view.spread_tracker.card.avg_mid'),         fmtN(r.avg_mid, 2)),
+        card(t('view.spread_tracker.card.pathological'),  fmtPct(r.pathological_pct), r.pathological_pct > 0 ? 'neg' : 'pos'),
+        card(t('view.spread_tracker.card.half_spread_cost'), fmtBps(r.avg_spread_bps / 2)),
     ].join('');
 }
 

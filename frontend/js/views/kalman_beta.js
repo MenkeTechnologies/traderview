@@ -21,6 +21,7 @@ import {
     summarizeBetaTrace, fmtBeta,
 } from '../_kalman_beta_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_ASSET = `# Asset returns (the "y"). Demo: synthetic high-beta stock whose
 # β to bench drifts from ~1.5 to ~2.5 over 200 days.
 ${synthAsset(200).join('\n')}
@@ -77,18 +78,18 @@ export async function renderKalmanBeta(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// KALMAN DYNAMIC β</h1>
+        <h1 data-i18n="view.kalman_beta.h1.kalman_dynamic" class="view-title">// KALMAN DYNAMIC β</h1>
 
         <div class="chart-panel">
-            <h2>Returns</h2>
+            <h2 data-i18n="view.kalman_beta.h2.returns">Returns</h2>
             <div class="op-inputs-grid">
                 <div>
-                    <h3>Asset returns (y)</h3>
+                    <h3 data-i18n="view.kalman_beta.h3.asset_returns_y">Asset returns (y)</h3>
                     <textarea id="kb-asset" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.assetText)}</textarea>
                 </div>
                 <div>
-                    <h3>Bench returns (x)</h3>
+                    <h3 data-i18n="view.kalman_beta.h3.bench_returns_x">Bench returns (x)</h3>
                     <textarea id="kb-bench" rows="10"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.benchText)}</textarea>
                 </div>
@@ -96,19 +97,19 @@ export async function renderKalmanBeta(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Kalman hyperparameters</h2>
+            <h2 data-i18n="view.kalman_beta.h2.kalman_hyperparameters">Kalman hyperparameters</h2>
             <div class="inline-form">
-                <label>Q (process noise)
+                <label><span data-i18n="view.kalman_beta.label.q">Q (process noise)</span>
                     <input id="kb-q"    type="number" step="any" min="0" value="${state.params.process_noise_q}"></label>
-                <label>R (observation noise)
+                <label><span data-i18n="view.kalman_beta.label.r">R (observation noise)</span>
                     <input id="kb-r"    type="number" step="any" min="1e-12" value="${state.params.obs_noise_r}"></label>
-                <label>β₀ (prior mean)
+                <label><span data-i18n="view.kalman_beta.label.beta0">β₀ (prior mean)</span>
                     <input id="kb-b0"   type="number" step="any" value="${state.params.beta0}"></label>
-                <label>P₀ (prior variance)
+                <label><span data-i18n="view.kalman_beta.label.p0">P₀ (prior variance)</span>
                     <input id="kb-p0"   type="number" step="any" min="1e-12" value="${state.params.p0}"></label>
-                <button id="kb-run" class="primary" type="button">Run</button>
+                <button data-i18n="view.kalman_beta.btn.run" id="kb-run" class="primary" type="button">Run</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.kalman_beta.hint.lower_q_smoother_assumes_slow_drift_higher_q_adapt" class="muted">
                 Lower Q → smoother β (assumes slow drift). Higher Q → β adapts faster.
                 Lower R → trust observations more (β tracks noise). Try Q=1e-4 + R=1e-4
                 for daily equity pairs as a starting point.
@@ -120,14 +121,14 @@ export async function renderKalmanBeta(mount, _appState) {
         <div id="kb-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Return series (raw, for context)</h2>
+            <h2 data-i18n="view.kalman_beta.h2.return_series_raw_for_context">Return series (raw, for context)</h2>
             <div id="kb-returns-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Time-varying β</h2>
+            <h2 data-i18n="view.kalman_beta.h2.time_varying">Time-varying β</h2>
             <div id="kb-beta-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.kalman_beta.hint.cyan_per_bar_estimate_from_the_kalman_filter_orang" class="muted">
                 Cyan: per-bar β estimate from the Kalman filter. Orange dashed: β = 1
                 reference (would mean perfect 1:1 hedge ratio).
             </p>
@@ -191,14 +192,14 @@ function renderSummary(betas) {
     }
     const driftCls = s.drift > 0 ? 'pos' : (s.drift < 0 ? 'neg' : '');
     const cards = [
-        card('Latest β', fmtBeta(s.latest)),
-        card('Mean β',   fmtBeta(s.mean)),
-        card('β range',  `${fmtBeta(s.min)} – ${fmtBeta(s.max)}`),
-        card('Stdev of β trace', fmtBeta(s.stdev)),
-        card('Drift (latest − first)', fmtBeta(s.drift), driftCls,
+        card(t('view.kalman_beta.card.latest'), fmtBeta(s.latest)),
+        card(t('view.kalman_beta.card.mean'),   fmtBeta(s.mean)),
+        card(t('view.kalman_beta.card.range'),  `${fmtBeta(s.min)} – ${fmtBeta(s.max)}`),
+        card(t('view.kalman_beta.card.stdev_of_trace'), fmtBeta(s.stdev)),
+        card(t('view.kalman_beta.card.drift_latest_first'), fmtBeta(s.drift), driftCls,
             `<div class="vc-row"><span class="muted">first → latest</span>
                 <strong>${fmtBeta(s.first)} → ${fmtBeta(s.latest)}</strong></div>`),
-        card('Finite β samples', String(s.count)),
+        card(t('view.kalman_beta.card.finite_samples'), String(s.count)),
     ];
     document.getElementById('kb-summary').innerHTML = cards.join('');
 }

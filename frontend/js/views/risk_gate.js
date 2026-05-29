@@ -28,7 +28,7 @@ export async function renderRiskGate(mount, state) {
     const accountId = state.accountId;
 
     mount.innerHTML = `
-        <h1 class="view-title">// RISK GATE</h1>
+        <h1 data-i18n="view.risk_gate.h1.risk_gate" class="view-title">// RISK GATE</h1>
         <p class="muted small">
             Pre-trade rules that veto bad trades <em>before</em> they reach the broker.
             <code>discipline</code> tells you what you already broke; this stops the next one.
@@ -36,41 +36,41 @@ export async function renderRiskGate(mount, state) {
         </p>
 
         <div class="chart-panel" style="border-left:3px solid #ff2a6d">
-            <h2>🛑 Kill switch</h2>
+            <h2 data-i18n="view.risk_gate.h2.kill_switch">🛑 Kill switch</h2>
             <p class="muted small">Halt every trade entry across all rules with one click. Toggles a <code>kill_switch</code> rule that always blocks. Disable here when ready to resume.</p>
-            <button id="rg-kill" class="primary" type="button" style="background:#ff2a6d">Toggle kill switch</button>
+            <button data-i18n="view.risk_gate.btn.toggle_kill_switch" id="rg-kill" class="primary" type="button" style="background:#ff2a6d">Toggle kill switch</button>
             <span id="rg-kill-state" class="muted small" style="margin-left:10px">checking…</span>
         </div>
 
         <div class="chart-panel">
-            <h2>Today's compliance snapshot</h2>
-            <p class="muted small">Live ping of the gate with a near-zero-risk synthetic trade — shows which rules would fire on a probe entry RIGHT NOW. Click refresh after every trade close.</p>
-            <button id="rg-snap-refresh" class="primary" type="button">Refresh snapshot</button>
+            <h2 data-i18n="view.risk_gate.h2.today_s_compliance_snapshot">Today's compliance snapshot</h2>
+            <p data-i18n="view.risk_gate.hint.live_ping_of_the_gate_with_a_near_zero_risk_synthe" class="muted small">Live ping of the gate with a near-zero-risk synthetic trade — shows which rules would fire on a probe entry RIGHT NOW. Click refresh after every trade close.</p>
+            <button data-i18n="view.risk_gate.btn.refresh_snapshot" id="rg-snap-refresh" class="primary" type="button">Refresh snapshot</button>
             <pre id="rg-snap-out" class="boot">click refresh to evaluate</pre>
         </div>
 
         <div class="chart-panel">
-            <h2>Install a preset</h2>
-            <p class="muted small">One-click curated rule pack. Existing rules are kept — review + delete after install if you want a clean slate.</p>
+            <h2 data-i18n="view.risk_gate.h2.install_a_preset">Install a preset</h2>
+            <p data-i18n="view.risk_gate.hint.one_click_curated_rule_pack_existing_rules_are_kep" class="muted small">One-click curated rule pack. Existing rules are kept — review + delete after install if you want a clean slate.</p>
             <div class="inline-form" id="rg-presets">
-                <button class="primary" data-preset="beginner">Beginner (strict — 1% trade, 3% day, requires plan + stop)</button>
-                <button class="primary" data-preset="intermediate">Intermediate (1% trade, 5% day, requires stop)</button>
-                <button class="primary" data-preset="aggressive">Aggressive (daily cap + cool-down only)</button>
+                <button data-i18n="view.risk_gate.btn.beginner_strict_1_trade_3_day_requires_plan_stop" class="primary" data-preset="beginner">Beginner (strict — 1% trade, 3% day, requires plan + stop)</button>
+                <button data-i18n="view.risk_gate.btn.intermediate_1_trade_5_day_requires_stop" class="primary" data-preset="intermediate">Intermediate (1% trade, 5% day, requires stop)</button>
+                <button data-i18n="view.risk_gate.btn.aggressive_daily_cap_cool_down_only" class="primary" data-preset="aggressive">Aggressive (daily cap + cool-down only)</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Active rules</h2>
+            <h2 data-i18n="view.risk_gate.h2.active_rules">Active rules</h2>
             <table class="trades" id="rg-rules">
                 <thead><tr>
-                    <th>Type</th><th>Config</th><th>Account</th><th>Enabled</th><th></th>
+                    <th data-i18n="view.risk_gate.th.type">Type</th><th data-i18n="view.risk_gate.th.config">Config</th><th data-i18n="view.risk_gate.th.account">Account</th><th data-i18n="view.risk_gate.th.enabled">Enabled</th><th></th>
                 </tr></thead>
                 <tbody><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
             </table>
         </div>
 
         <div class="chart-panel">
-            <h2>Add rule</h2>
+            <h2 data-i18n="view.risk_gate.h2.add_rule">Add rule</h2>
             <form id="rg-add" class="inline-form">
                 <label>Rule type
                     <select name="type" id="rg-type">
@@ -82,21 +82,21 @@ export async function renderRiskGate(mount, state) {
                 <div id="rg-fields" style="display:flex;gap:8px;flex-wrap:wrap"></div>
                 <label>Scope
                     <select name="account_id">
-                        <option value="">All accounts</option>
+                        <option data-i18n="view.risk_gate.opt.all_accounts" value="">All accounts</option>
                         ${(state.accounts || []).map(a =>
                             `<option value="${esc(a.id)}">${esc(a.broker)} · ${esc(a.name)}</option>`
                         ).join('')}
                     </select>
                 </label>
-                <button class="primary" type="submit">Add</button>
+                <button data-i18n="view.risk_gate.btn.add" class="primary" type="submit">Add</button>
             </form>
         </div>
 
         <div class="chart-panel">
             <h2>Fires by rule <span class="muted small">— last 30 days</span></h2>
-            <p class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
+            <p data-i18n="view.risk_gate.hint.which_rules_trigger_most_high_fire_rules_are_worki" class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
             <table class="trades" id="rg-by-rule">
-                <thead><tr><th>Rule</th><th>Total fires</th><th>Blocks</th><th>Warnings</th></tr></thead>
+                <thead><tr><th data-i18n="view.risk_gate.th.rule">Rule</th><th data-i18n="view.risk_gate.th.total_fires">Total fires</th><th data-i18n="view.risk_gate.th.blocks">Blocks</th><th data-i18n="view.risk_gate.th.warnings">Warnings</th></tr></thead>
                 <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
             </table>
         </div>
@@ -105,28 +105,28 @@ export async function renderRiskGate(mount, state) {
             <h2>Recent fires <span class="muted small">— rules that saved you</span></h2>
             <table class="trades" id="rg-fires">
                 <thead><tr>
-                    <th>Time</th><th>Symbol</th><th>Outcome</th><th>Rules that fired</th>
+                    <th data-i18n="view.risk_gate.th.time">Time</th><th data-i18n="view.risk_gate.th.symbol">Symbol</th><th data-i18n="view.risk_gate.th.outcome">Outcome</th><th data-i18n="view.risk_gate.th.rules_that_fired">Rules that fired</th>
                 </tr></thead>
                 <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
             </table>
         </div>
 
         <div class="chart-panel">
-            <h2>Dry-run a proposed trade</h2>
+            <h2 data-i18n="view.risk_gate.h2.dry_run_a_proposed_trade">Dry-run a proposed trade</h2>
             <p class="muted small">Same call <code>POST /api/risk-gate/evaluate</code> the New Trade form will make before submitting. Use this to verify your rules.</p>
             <form id="rg-eval" class="inline-form">
                 <label>Symbol <input name="symbol" value="AAPL" required></label>
                 <label>Side
                     <select name="side">
-                        <option value="long">Long</option>
-                        <option value="short">Short</option>
+                        <option data-i18n="view.risk_gate.opt.long" value="long">Long</option>
+                        <option data-i18n="view.risk_gate.opt.short" value="short">Short</option>
                     </select></label>
                 <label>Qty <input name="qty" type="number" step="any" value="100" required></label>
                 <label>Entry <input name="entry_price" type="number" step="any" value="150" required></label>
                 <label>Stop loss <input name="stop_loss" type="number" step="any" value="149"></label>
                 <label>Multiplier <input name="multiplier" type="number" step="any" value="1"></label>
                 <label><input type="checkbox" name="has_attached_plan" checked> Plan attached</label>
-                <button class="primary" type="submit">Evaluate</button>
+                <button data-i18n="view.risk_gate.btn.evaluate" class="primary" type="submit">Evaluate</button>
             </form>
             <pre id="rg-eval-out" class="boot">—</pre>
         </div>
@@ -320,7 +320,7 @@ async function reloadRules(mount, tok) {
                 <td>
                     <input type="checkbox" data-toggle="${esc(r.id)}" ${r.enabled ? 'checked' : ''}>
                 </td>
-                <td><button class="link" data-del="${esc(r.id)}">delete</button></td>
+                <td><button data-i18n="view.risk_gate.btn.delete" class="link" data-del="${esc(r.id)}">delete</button></td>
             </tr>
         `).join('');
         tb.querySelectorAll('[data-toggle]').forEach(cb => {

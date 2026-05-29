@@ -9,8 +9,8 @@ export async function renderPairs(mount) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// PAIRS / CORRELATION</h1>
-        <p class="muted small">Pearson correlation matrix over log-returns + per-pair OLS spread &amp; z-score
+        <h1 data-i18n="view.pairs.h1.pairs_correlation" class="view-title">// PAIRS / CORRELATION</h1>
+        <p data-i18n="view.pairs.hint.pearson_correlation_matrix_over_log_returns_per_pa" class="muted small">Pearson correlation matrix over log-returns + per-pair OLS spread &amp; z-score
         (mean-reversion stat-arb signal — |z| ≥ 2 → consider fading).</p>
 
         <div class="chart-panel">
@@ -20,24 +20,24 @@ export async function renderPairs(mount) {
                 </label>
                 <label>or watchlist
                     <select name="wl">
-                        <option value="">— ignore —</option>
+                        <option data-i18n="view.pairs.opt.ignore" value="">— ignore —</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
                 <label>Days <input name="days" type="number" value="90" style="width:80px"></label>
-                <button class="primary" type="submit">Run</button>
+                <button data-i18n="view.pairs.btn.run" class="primary" type="submit">Run</button>
             </form>
         </div>
 
         <div id="cmatrix"></div>
 
         <div class="chart-panel">
-            <h2>Pair analyzer</h2>
+            <h2 data-i18n="view.pairs.h2.pair_analyzer">Pair analyzer</h2>
             <form id="pf" class="inline-form">
                 <input name="a" placeholder="A (KO)" required style="width:90px;text-transform:uppercase">
                 <input name="b" placeholder="B (PEP)" required style="width:90px;text-transform:uppercase">
                 <label>Days <input name="days" type="number" value="180" style="width:80px"></label>
-                <button class="primary" type="submit">Analyze</button>
+                <button data-i18n="view.pairs.btn.analyze" class="primary" type="submit">Analyze</button>
             </form>
             <div id="pair-out"></div>
         </div>
@@ -125,9 +125,9 @@ function renderPairOut(el, a, b, r, mount) {
                 <div class="value ${zCls}">${r.latest_zscore.toFixed(2)}</div></div>
             <div class="card"><div class="label">Samples</div><div class="value">${r.samples}</div></div>
         </div>
-        <div class="chart-panel"><h2>Trade signal</h2><p><strong>${reco}</strong></p></div>
-        <div class="chart-panel"><h2>Spread series</h2><div id="sp-chart"></div></div>
-        <div class="chart-panel"><h2>Z-score</h2><div id="z-chart"></div></div>
+        <div class="chart-panel"><h2 data-i18n="view.pairs.h2.trade_signal">Trade signal</h2><p><strong>${reco}</strong></p></div>
+        <div class="chart-panel"><h2 data-i18n="view.pairs.h2.spread_series">Spread series</h2><div id="sp-chart"></div></div>
+        <div class="chart-panel"><h2 data-i18n="view.pairs.h2.z_score">Z-score</h2><div id="z-chart"></div></div>
     `;
     const labels = r.spread_series.map((_, i) => String(i));
     const spChart = mount.querySelector('#sp-chart');

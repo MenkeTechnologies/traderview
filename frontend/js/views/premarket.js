@@ -8,8 +8,8 @@ let timer = null;
 export async function renderPremarket(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// PRE-MARKET / OVERNIGHT</h1>
-        <p class="muted small">Cross-asset overnight tape: index futures, commodities, crypto, FX.
+        <h1 data-i18n="view.premarket.h1.pre_market_overnight" class="view-title">// PRE-MARKET / OVERNIGHT</h1>
+        <p data-i18n="view.premarket.hint.cross_asset_overnight_tape_index_futures_commoditi" class="muted small">Cross-asset overnight tape: index futures, commodities, crypto, FX.
             Each gap is normalized by 20-day ATR — magnitudes above 1.0× ATR are statistically
             significant moves vs the security's own recent volatility. High-importance economic
             releases scheduled for today appear at the bottom. Refreshes every 30s.</p>
@@ -91,7 +91,7 @@ function renderEvents(events, fetched, mount) {
     if (!events || !events.length) {
         el.innerHTML = `
             <div class="chart-panel">
-                <h2>Today's high-impact releases</h2>
+                <h2 data-i18n="view.premarket.h2.today_s_high_impact_releases">Today's high-impact releases</h2>
                 <p class="muted small">No high-importance scheduled releases today (per static
                     economic calendar). Updated ${new Date(fetched).toLocaleTimeString(undefined, { hour12: false })}.</p>
             </div>`;
@@ -101,7 +101,7 @@ function renderEvents(events, fetched, mount) {
         <div class="chart-panel">
             <h2>Today's high-impact releases (${events.length})</h2>
             <table class="trades">
-                <thead><tr><th>Time (ET)</th><th>Event</th><th>Category</th><th>Source</th></tr></thead>
+                <thead><tr><th data-i18n="view.premarket.th.time_et">Time (ET)</th><th data-i18n="view.premarket.th.event">Event</th><th data-i18n="view.premarket.th.category">Category</th><th data-i18n="view.premarket.th.source">Source</th></tr></thead>
                 <tbody>
                     ${events.map(e => `<tr>
                         <td>${esc(e.when_et.split('T')[1].slice(0, 5))}</td>

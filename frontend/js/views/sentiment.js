@@ -15,8 +15,8 @@ export async function renderSentiment(mount, _state, symbol) {
     if (symbol) return renderSymbol(mount, symbol.toUpperCase(), tok);
 
     mount.innerHTML = `
-        <h1 class="view-title">// SENTIMENT — WSB + STOCKTWITS</h1>
-        <p class="muted small">
+        <h1 data-i18n="view.sentiment.h1.sentiment_wsb_stocktwits" class="view-title">// SENTIMENT — WSB + STOCKTWITS</h1>
+        <p data-i18n="view.sentiment.hint.lexicon_scorer_wsb_aware_over_reddit_r_wallstreetb" class="muted small">
             Lexicon scorer (WSB-aware) over Reddit r/wallstreetbets new posts +
             StockTwits symbol streams. Auto-polls every 60s server-side; this
             view also refreshes every 60s.
@@ -24,15 +24,15 @@ export async function renderSentiment(mount, _state, symbol) {
 
         <div class="chart-panel">
             <div class="inline-form">
-                <label>Window
+                <label><span data-i18n="view.sentiment.label.window">Window</span>
                     <select id="hours">
-                        <option value="1">last hour</option>
-                        <option value="4">last 4h</option>
-                        <option value="24" selected>last 24h</option>
-                        <option value="168">last 7d</option>
+                        <option data-i18n="view.sentiment.opt.last_hour" value="1">last hour</option>
+                        <option data-i18n="view.sentiment.opt.last_4h" value="4">last 4h</option>
+                        <option data-i18n="view.sentiment.opt.last_24h" value="24" selected>last 24h</option>
+                        <option data-i18n="view.sentiment.opt.last_7d" value="168">last 7d</option>
                     </select>
                 </label>
-                <button class="primary" id="poll-now">Poll now</button>
+                <button data-i18n="view.sentiment.btn.poll_now" class="primary" id="poll-now">Poll now</button>
                 <span class="muted" id="poll-status"></span>
             </div>
         </div>
@@ -49,12 +49,12 @@ export async function renderSentiment(mount, _state, symbol) {
         </div>
 
         <div class="chart-panel">
-            <h2>Most-mentioned (volume)</h2>
+            <h2 data-i18n="view.sentiment.h2.most_mentioned_volume">Most-mentioned (volume)</h2>
             <div id="top-volume"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Live feed</h2>
+            <h2 data-i18n="view.sentiment.h2.live_feed">Live feed</h2>
             <div id="feed"></div>
         </div>
     `;
@@ -123,9 +123,9 @@ async function refresh(mount, tok) {
 }
 
 function rankedTable(rows, dir) {
-    if (!rows.length) return '<p class="muted">No symbols match in this window yet.</p>';
+    if (!rows.length) return '<p data-i18n="view.sentiment.hint.no_symbols_match_in_this_window_yet" class="muted">No symbols match in this window yet.</p>';
     return `<table class="trades">
-        <thead><tr><th>#</th><th>Sym</th><th>Sent</th><th>Δ Sent</th><th>Mentions</th><th>Δ Vol</th></tr></thead>
+        <thead><tr><th>#</th><th data-i18n="view.sentiment.th.sym">Sym</th><th data-i18n="view.sentiment.th.sent">Sent</th><th data-i18n="view.sentiment.th.sent_2">Δ Sent</th><th data-i18n="view.sentiment.th.mentions">Mentions</th><th data-i18n="view.sentiment.th.vol">Δ Vol</th></tr></thead>
         <tbody>${rows.map((r, i) => {
             const sd = Number(r.sentiment_delta);
             const sc = Number(r.avg_sentiment);
@@ -142,9 +142,9 @@ function rankedTable(rows, dir) {
 }
 
 function volumeTable(rows) {
-    if (!rows.length) return '<p class="muted">No mentions yet.</p>';
+    if (!rows.length) return '<p data-i18n="view.sentiment.hint.no_mentions_yet" class="muted">No mentions yet.</p>';
     return `<table class="trades">
-        <thead><tr><th>#</th><th>Sym</th><th>Mentions</th><th>Avg Sent</th><th>Δ Sent</th></tr></thead>
+        <thead><tr><th>#</th><th data-i18n="view.sentiment.th.sym_2">Sym</th><th data-i18n="view.sentiment.th.mentions_2">Mentions</th><th data-i18n="view.sentiment.th.avg_sent">Avg Sent</th><th data-i18n="view.sentiment.th.sent_3">Δ Sent</th></tr></thead>
         <tbody>${rows.map((r, i) => {
             const sc = Number(r.avg_sentiment);
             const sd = Number(r.sentiment_delta);
@@ -159,9 +159,9 @@ function volumeTable(rows) {
 }
 
 function feedTable(items) {
-    if (!items.length) return '<p class="muted">No posts cached yet — try "Poll now".</p>';
+    if (!items.length) return '<p data-i18n="view.sentiment.hint.no_posts_cached_yet_try_poll_now" class="muted">No posts cached yet — try "Poll now".</p>';
     return `<table class="trades">
-        <thead><tr><th>When</th><th>Source</th><th>Sym</th><th>Sent</th><th>Author</th><th>Snippet</th></tr></thead>
+        <thead><tr><th data-i18n="view.sentiment.th.when">When</th><th data-i18n="view.sentiment.th.source">Source</th><th data-i18n="view.sentiment.th.sym_3">Sym</th><th data-i18n="view.sentiment.th.sent_4">Sent</th><th data-i18n="view.sentiment.th.author">Author</th><th data-i18n="view.sentiment.th.snippet">Snippet</th></tr></thead>
         <tbody>${items.map(m => {
             const sc = Number(m.sentiment);
             const cls = sc >= 0.1 ? 'pos' : sc <= -0.1 ? 'neg' : '';
@@ -184,15 +184,15 @@ async function renderSymbol(mount, sym, tok) {
         <div id="sym-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
 
         <div class="chart-panel">
-            <h2>Hourly mention volume (last 7d)</h2>
+            <h2 data-i18n="view.sentiment.h2.hourly_mention_volume_last_7d">Hourly mention volume (last 7d)</h2>
             <div id="sent-vol-chart"></div>
         </div>
         <div class="chart-panel">
-            <h2>Hourly avg sentiment</h2>
+            <h2 data-i18n="view.sentiment.h2.hourly_avg_sentiment">Hourly avg sentiment</h2>
             <div id="sent-score-chart"></div>
         </div>
         <div class="chart-panel">
-            <h2>Recent mentions</h2>
+            <h2 data-i18n="view.sentiment.h2.recent_mentions">Recent mentions</h2>
             <div id="sent-list"></div>
         </div>
     `;

@@ -94,6 +94,14 @@ export function reportApiFail(method, path, status, body) {
         message: `${method} ${path} → ${status}`,
         extra: { method, path, status, body: String(body).slice(0, 1024) },
     });
+    // Fan out to any UI listener (e.g. a global toast handler). Detail is
+    // intentionally minimal — listeners that want the body can read the
+    // server log instead.
+    try {
+        window.dispatchEvent(new CustomEvent('tv:api-error', {
+            detail: { method, path, status },
+        }));
+    } catch (_) { /* SSR / no DOM */ }
 }
 
 // Bring console.error into the same pipeline so plain `console.error()`

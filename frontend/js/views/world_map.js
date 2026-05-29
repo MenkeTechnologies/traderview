@@ -55,7 +55,7 @@ export async function renderWorldMarkets(mount) {
     mount.innerHTML = `
         <div class="markets-panel">
             <div class="markets-header">
-                <h2>// WORLD MARKETS</h2>
+                <h2 data-i18n="view.world_map.h2.world_markets">// WORLD MARKETS</h2>
                 <span class="market-status" id="market-status">loading…</span>
             </div>
             <div class="world-map-wrap" id="world-map-wrap">

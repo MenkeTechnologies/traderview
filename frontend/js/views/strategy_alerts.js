@@ -34,22 +34,24 @@ const TEMPLATES = {
 export async function renderStrategyAlerts(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// STRATEGY ALERTS</h1>
-        <p class="muted small">Compound AND/OR/NOT rules over price + RSI/SMA/EMA + change-pct +
+        <h1 data-i18n="view.strategy_alerts.h1.strategy_alerts" class="view-title">// STRATEGY ALERTS</h1>
+        <p data-i18n="view.strategy_alerts.hint.compound_and_or_not_rules_over_price_rsi_sma_ema_c" class="muted small">Compound AND/OR/NOT rules over price + RSI/SMA/EMA + change-pct +
             pct-of-high + ^VIX / ^CPC / ^ADD quote leaves. Server evaluates every 60s and fires
             on the false→true edge so a persistent condition won't spam. Connected webhooks
             fan-out on every fire. AST is JSON; pick a template to start.</p>
 
         <div class="chart-panel">
             <form id="sa-form" class="inline-form">
-                <input name="name" placeholder="rule name" required style="min-width:240px;">
-                <label>Template
+                <input name="name" placeholder="rule name"
+                       data-i18n-placeholder="view.strategy_alerts.placeholder.name"
+                       required style="min-width:240px;">
+                <label><span data-i18n="view.strategy_alerts.label.template">Template</span>
                     <select name="template">
-                        <option value="">(custom)</option>
+                        <option data-i18n="view.strategy_alerts.opt.custom" value="">(custom)</option>
                         ${Object.keys(TEMPLATES).map(k => `<option>${esc(k)}</option>`).join('')}
                     </select>
                 </label>
-                <button class="primary" type="submit">Create</button>
+                <button data-i18n="view.strategy_alerts.btn.create" class="primary" type="submit">Create</button>
             </form>
             <textarea id="sa-ast" rows="10"
                 style="width:100%;font-family:'Share Tech Mono',monospace;font-size:11px;background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:8px;margin-top:8px;"
@@ -57,14 +59,14 @@ export async function renderStrategyAlerts(mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Active rules</h2>
+            <h2 data-i18n="view.strategy_alerts.h2.active_rules">Active rules</h2>
             <div id="sa-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
-            <button id="sa-eval-now" class="btn">Evaluate now</button>
+            <button data-i18n="view.strategy_alerts.btn.evaluate_now" id="sa-eval-now" class="btn">Evaluate now</button>
             <span id="sa-status" class="muted small" style="margin-left:8px;"></span>
         </div>
 
         <div class="chart-panel">
-            <h2>Recent fires</h2>
+            <h2 data-i18n="view.strategy_alerts.h2.recent_fires">Recent fires</h2>
             <div id="sa-fires"></div>
         </div>
     `;
@@ -139,11 +141,11 @@ async function refresh(mount, tok) {
 function renderRules(rules, mount, tok) {
     const el = mount.querySelector('#sa-list');
     if (!el) return;
-    if (!rules.length) { el.innerHTML = '<p class="muted small">No rules yet.</p>'; return; }
+    if (!rules.length) { el.innerHTML = '<p data-i18n="view.strategy_alerts.hint.no_rules_yet" class="muted small">No rules yet.</p>'; return; }
     el.innerHTML = `<table class="trades">
         <thead><tr>
-            <th>Name</th><th>Enabled</th><th>Last truth</th><th>Fires</th>
-            <th>Last eval</th><th>Last fired</th><th>Error</th><th></th>
+            <th data-i18n="view.strategy_alerts.th.name">Name</th><th data-i18n="view.strategy_alerts.th.enabled">Enabled</th><th data-i18n="view.strategy_alerts.th.last_truth">Last truth</th><th data-i18n="view.strategy_alerts.th.fires">Fires</th>
+            <th data-i18n="view.strategy_alerts.th.last_eval">Last eval</th><th data-i18n="view.strategy_alerts.th.last_fired">Last fired</th><th data-i18n="view.strategy_alerts.th.error">Error</th><th></th>
         </tr></thead>
         <tbody>
         ${rules.map(r => `<tr>
@@ -156,7 +158,7 @@ function renderRules(rules, mount, tok) {
             <td class="small neg">${esc(r.last_eval_error || '')}</td>
             <td>
                 <button class="btn sa-toggle" data-id="${r.id}">${r.enabled ? 'Disable' : 'Enable'}</button>
-                <button class="btn sa-del" data-id="${r.id}">Delete</button>
+                <button data-i18n="view.strategy_alerts.btn.delete" class="btn sa-del" data-id="${r.id}">Delete</button>
             </td>
         </tr>
         <tr><td colspan="8"><pre class="muted small" style="margin:0;font-size:10px;background:#070714;padding:6px;overflow:auto;">${esc(JSON.stringify(r.ast))}</pre></td></tr>
@@ -191,10 +193,10 @@ function renderRules(rules, mount, tok) {
 function renderFires(fires, rules, mount) {
     const el = mount.querySelector('#sa-fires');
     if (!el) return;
-    if (!fires.length) { el.innerHTML = '<p class="muted small">No fires yet.</p>'; return; }
+    if (!fires.length) { el.innerHTML = '<p data-i18n="view.strategy_alerts.hint.no_fires_yet" class="muted small">No fires yet.</p>'; return; }
     const nameOf = (id) => rules.find(r => r.id === id)?.name || id;
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>When</th><th>Rule</th><th>Snapshot</th></tr></thead>
+        <thead><tr><th data-i18n="view.strategy_alerts.th.when">When</th><th data-i18n="view.strategy_alerts.th.rule">Rule</th><th data-i18n="view.strategy_alerts.th.snapshot">Snapshot</th></tr></thead>
         <tbody>
         ${fires.map(f => `<tr>
             <td class="small">${new Date(f.fired_at).toLocaleString()}</td>

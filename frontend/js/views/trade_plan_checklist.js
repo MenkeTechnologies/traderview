@@ -13,6 +13,7 @@ import {
     fmtPct, fmtR,
 } from '../_trade_plan_checklist_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     plan: makeDemoData('good'),
     config: { ...DEFAULT_CONFIG },
@@ -21,18 +22,18 @@ let state = {
 export async function renderTradePlanChecklist(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// TRADE PLAN CHECKLIST</h1>
+        <h1 data-i18n="view.trade_plan_checklist.h1.trade_plan_checklist" class="view-title">// TRADE PLAN CHECKLIST</h1>
 
         <div class="chart-panel">
-            <h2>Planned trade</h2>
+            <h2 data-i18n="view.trade_plan_checklist.h2.planned_trade">Planned trade</h2>
             <label style="display:block;margin-bottom:6px">Thesis (free text)
                 <textarea id="tpc-thesis" rows="3" placeholder="Why does this work? Catalyst? Setup? Confirmation?">${esc(state.plan.thesis)}</textarea>
             </label>
             <div class="inline-form">
                 <label>Side
                     <select id="tpc-side">
-                        <option value="long"  ${state.plan.is_long  ? 'selected' : ''}>Long</option>
-                        <option value="short" ${!state.plan.is_long ? 'selected' : ''}>Short</option>
+                        <option data-i18n="view.trade_plan_checklist.opt.long" value="long"  ${state.plan.is_long  ? 'selected' : ''}>Long</option>
+                        <option data-i18n="view.trade_plan_checklist.opt.short" value="short" ${!state.plan.is_long ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label>Entry $
                     <input id="tpc-entry" type="number" step="any" min="0" value="${state.plan.entry_price}"></label>
@@ -50,7 +51,7 @@ export async function renderTradePlanChecklist(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Gate config</h2>
+            <h2 data-i18n="view.trade_plan_checklist.h2.gate_config">Gate config</h2>
             <div class="inline-form">
                 <label>Min thesis words
                     <input id="tpc-mw" type="number" step="1" min="0" value="${state.config.min_thesis_words}"></label>
@@ -58,23 +59,23 @@ export async function renderTradePlanChecklist(mount, _appState) {
                     <input id="tpc-mr" type="number" step="any" min="0" value="${state.config.min_r_multiple}"></label>
                 <label>Max risk % (decimal — 0.02 = 2%)
                     <input id="tpc-mrp" type="number" step="any" min="0" max="1" value="${state.config.max_risk_pct_per_trade}"></label>
-                <button id="tpc-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.trade_plan_checklist.btn.evaluate" id="tpc-run" class="primary" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button id="tpc-demo-good"     class="secondary" type="button">Demo: GOOD plan</button>
-                <button id="tpc-demo-no-stop"  class="secondary" type="button">Demo: missing stop</button>
-                <button id="tpc-demo-weak-r"   class="secondary" type="button">Demo: weak R</button>
-                <button id="tpc-demo-oversize" class="secondary" type="button">Demo: oversize risk</button>
-                <button id="tpc-demo-wrong"    class="secondary" type="button">Demo: wrong direction</button>
-                <button id="tpc-demo-short"    class="secondary" type="button">Demo: SHORT (good)</button>
-                <button id="tpc-demo-noth"     class="secondary" type="button">Demo: no thesis</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_good_plan" id="tpc-demo-good"     class="secondary" type="button">Demo: GOOD plan</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_missing_stop" id="tpc-demo-no-stop"  class="secondary" type="button">Demo: missing stop</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_weak_r" id="tpc-demo-weak-r"   class="secondary" type="button">Demo: weak R</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_oversize_risk" id="tpc-demo-oversize" class="secondary" type="button">Demo: oversize risk</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_wrong_direction" id="tpc-demo-wrong"    class="secondary" type="button">Demo: wrong direction</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_short_good" id="tpc-demo-short"    class="secondary" type="button">Demo: SHORT (good)</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_no_thesis" id="tpc-demo-noth"     class="secondary" type="button">Demo: no thesis</button>
             </div>
         </div>
 
         <div id="tpc-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Gate results</h2>
+            <h2 data-i18n="view.trade_plan_checklist.h2.gate_results">Gate results</h2>
             <div id="tpc-gates"></div>
         </div>
 
@@ -152,15 +153,15 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.plan, state.config);
     const parityOk = r.all_passed === local.all_passed;
     document.getElementById('tpc-summary').innerHTML = [
-        card('Verdict', r.all_passed ? 'PASS' : 'FAIL' + (pending ? ' (local)' : ''), allCls),
-        card('Gates passed', `${r.gates.filter(g => g.passed).length} / ${r.gates.length}`, allCls),
-        card('R-multiple', fmtR(r.computed_r_multiple),
+        card(t('view.trade_plan_checklist.card.verdict'), r.all_passed ? 'PASS' : 'FAIL' + (pending ? ' (local)' : ''), allCls),
+        card(t('view.trade_plan_checklist.card.gates_passed'), `${r.gates.filter(g => g.passed).length} / ${r.gates.length}`, allCls),
+        card(t('view.trade_plan_checklist.card.r_multiple'), fmtR(r.computed_r_multiple),
             r.computed_r_multiple != null && r.computed_r_multiple >= state.config.min_r_multiple ? 'pos' : 'neg'),
-        card('Risk %', fmtPct(r.risk_pct),
+        card(t('view.trade_plan_checklist.card.risk'), fmtPct(r.risk_pct),
             r.risk_pct <= state.config.max_risk_pct_per_trade ? 'pos' : 'neg'),
-        card('Side',  state.plan.is_long ? 'LONG' : 'SHORT',
+        card(t('view.trade_plan_checklist.card.side'),  state.plan.is_long ? 'LONG' : 'SHORT',
             state.plan.is_long ? 'pos' : 'neg'),
-        card('Local parity', parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.trade_plan_checklist.card.local_parity'), parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -178,7 +179,7 @@ function renderGates(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Gate</th><th>Pass?</th><th>Detail</th>
+                <th>#</th><th data-i18n="view.trade_plan_checklist.th.gate">Gate</th><th data-i18n="view.trade_plan_checklist.th.pass">Pass?</th><th data-i18n="view.trade_plan_checklist.th.detail">Detail</th>
             </tr></thead>
             <tbody>
                 ${gates.map((g, i) => `<tr>

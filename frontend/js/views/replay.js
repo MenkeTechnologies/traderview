@@ -8,7 +8,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderReplay(mount, state, day) {
     const tok = currentViewToken();
     if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">No account.</p>';
+        mount.innerHTML = '<p data-i18n="view.replay.hint.no_account" class="boot">No account.</p>';
         return;
     }
     if (!day) day = new Date().toISOString().slice(0, 10);
@@ -26,11 +26,11 @@ export async function renderReplay(mount, state, day) {
                 </select>
             </div>
             <div class="chart-panel">
-                <h2 id="replay-title">Chart</h2>
+                <h2 data-i18n="view.replay.h2.chart" id="replay-title">Chart</h2>
                 <div id="replay-chart"></div>
                 <div id="replay-execs"></div>
             </div>
-        ` : '<p class="muted">No closed trades on this day.</p>'}
+        ` : '<p data-i18n="view.replay.hint.no_closed_trades_on_this_day" class="muted">No closed trades on this day.</p>'}
     `;
     const dayEl = mount.querySelector('#day');
     if (dayEl) dayEl.addEventListener('change', (e) => {
@@ -68,7 +68,7 @@ export async function renderReplay(mount, state, day) {
         if (!execsEl) return;
         execsEl.innerHTML = `
             <table class="trades">
-                <thead><tr><th>Time</th><th>Side</th><th>Qty</th><th>Price</th><th>Fee</th></tr></thead>
+                <thead><tr><th data-i18n="view.replay.th.time">Time</th><th data-i18n="view.replay.th.side">Side</th><th data-i18n="view.replay.th.qty">Qty</th><th data-i18n="view.replay.th.price">Price</th><th data-i18n="view.replay.th.fee">Fee</th></tr></thead>
                 <tbody>${execs.map(e => `
                     <tr><td>${fmtDateTime(e.executed_at)}</td>
                     <td>${e.side}</td><td>${fmt(e.qty, 0)}</td>

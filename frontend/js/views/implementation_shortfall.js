@@ -21,6 +21,7 @@ import {
     fillKind, fmtUSD, fmtBps, fmtPct, COMPONENT_KEYS,
 } from '../_implementation_shortfall_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULTS = {
     direction:               'buy',
     decision_mid:            100.00,
@@ -37,15 +38,15 @@ let state = { params: { ...DEFAULTS } };
 export async function renderImplementationShortfall(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// IMPLEMENTATION SHORTFALL</h1>
+        <h1 data-i18n="view.implementation_shortfall.h1.implementation_shortfall" class="view-title">// IMPLEMENTATION SHORTFALL</h1>
 
         <div class="chart-panel">
-            <h2>Order lifecycle</h2>
+            <h2 data-i18n="view.implementation_shortfall.h2.order_lifecycle">Order lifecycle</h2>
             <div class="inline-form">
                 <label>Direction
                     <select id="is-dir">
-                        <option value="buy"  ${state.params.direction === 'buy'  ? 'selected' : ''}>Buy</option>
-                        <option value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
+                        <option data-i18n="view.implementation_shortfall.opt.buy" value="buy"  ${state.params.direction === 'buy'  ? 'selected' : ''}>Buy</option>
+                        <option data-i18n="view.implementation_shortfall.opt.sell" value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
                     </select></label>
                 <label>Decision mid
                     <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}"></label>
@@ -61,9 +62,9 @@ export async function renderImplementationShortfall(mount, _appState) {
                     <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}"></label>
                 <label>Filled qty
                     <input id="is-fq" type="number" step="1" min="0" value="${state.params.filled_qty}"></label>
-                <button id="is-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.implementation_shortfall.btn.analyze" id="is-run" class="primary" type="button">Analyze</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.implementation_shortfall.hint.buy_convention_a_positive_cost_means_the_trader_pa" class="muted">
                 Buy convention: a positive $ cost means the trader paid up.
                 Negative = captured liquidity / favorable drift. Total in bps
                 normalizes against intended notional (qty × decision_mid).
@@ -72,11 +73,11 @@ export async function renderImplementationShortfall(mount, _appState) {
 
         <div id="is-summary" class="cards"></div>
 
-        <div class="chart-panel"><h2>Cost attribution</h2>
+        <div class="chart-panel"><h2 data-i18n="view.implementation_shortfall.h2.cost_attribution">Cost attribution</h2>
             <div id="is-bars"></div>
         </div>
 
-        <div class="chart-panel"><h2>Backend note</h2>
+        <div class="chart-panel"><h2 data-i18n="view.implementation_shortfall.h2.backend_note">Backend note</h2>
             <div id="is-note" class="muted">—</div>
         </div>
 
@@ -128,14 +129,14 @@ function renderSummary(r) {
     const fill = fillKind(state.params.intended_qty, state.params.filled_qty);
     const fillPct = state.params.filled_qty / state.params.intended_qty;
     document.getElementById('is-summary').innerHTML = [
-        card('Direction',     state.params.direction.toUpperCase()),
-        card('Fill',          fill.toUpperCase() + ' · ' + fmtPct(fillPct), fill === 'full' ? 'pos' : 'neg'),
+        card(t('view.implementation_shortfall.card.direction'),     state.params.direction.toUpperCase()),
+        card(t('view.implementation_shortfall.card.fill'),          fill.toUpperCase() + ' · ' + fmtPct(fillPct), fill === 'full' ? 'pos' : 'neg'),
         card('Spread $',      fmtUSD(r.spread_cost),      costSignClass(r.spread_cost)),
         card('Timing $',      fmtUSD(r.timing_cost),      costSignClass(r.timing_cost)),
         card('Impact $',      fmtUSD(r.impact_cost),      costSignClass(r.impact_cost)),
         card('Opportunity $', fmtUSD(r.opportunity_cost), costSignClass(r.opportunity_cost)),
         card('Total $',       fmtUSD(r.total_dollars),    costSignClass(r.total_dollars)),
-        card('Total bps',     fmtBps(r.total_bps),        costSignClass(r.total_bps)),
+        card(t('view.implementation_shortfall.card.total_bps'),     fmtBps(r.total_bps),        costSignClass(r.total_bps)),
     ].join('');
 }
 

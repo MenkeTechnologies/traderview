@@ -9,15 +9,16 @@ import {
     makeDemoOrder, localDtToIsoUtc, isoUtcToLocalDt, isoToDate,
 } from '../_time_in_force_inputs.js';
 
+import { t } from '../i18n.js';
 let state = makeDemoOrder('gtc-keep');
 
 export async function renderTimeInForce(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// TIME IN FORCE</h1>
+        <h1 data-i18n="view.time_in_force.h1.time_in_force" class="view-title">// TIME IN FORCE</h1>
 
         <div class="chart-panel">
-            <h2>Order</h2>
+            <h2 data-i18n="view.time_in_force.h2.order">Order</h2>
             <div class="inline-form">
                 <label>TIF
                     <select id="tif-kind">
@@ -37,37 +38,37 @@ export async function renderTimeInForce(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Clock + session</h2>
+            <h2 data-i18n="view.time_in_force.h2.clock_session">Clock + session</h2>
             <div class="inline-form">
                 <label>Now
                     <input id="tif-now" type="datetime-local" value="${esc(isoUtcToLocalDt(state.now))}"></label>
                 <label>Session open (UTC date)
                     <input id="tif-sess" type="date" value="${esc(state.session_open)}"></label>
-                <button id="tif-now-snap" class="secondary" type="button">Snap "now" + session to current time</button>
-                <button id="tif-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.time_in_force.btn.snap_now_session_to_current_time" id="tif-now-snap" class="secondary" type="button">Snap "now" + session to current time</button>
+                <button data-i18n="view.time_in_force.btn.evaluate" id="tif-run" class="primary" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button id="tif-demo-day-keep"    class="secondary" type="button">DAY → keep</button>
-                <button id="tif-demo-day-cancel"  class="secondary" type="button">DAY → cancel (next session)</button>
-                <button id="tif-demo-gtc-keep"    class="secondary" type="button">GTC → keep (30d old)</button>
+                <button data-i18n="view.time_in_force.btn.day_keep" id="tif-demo-day-keep"    class="secondary" type="button">DAY → keep</button>
+                <button data-i18n="view.time_in_force.btn.day_cancel_next_session" id="tif-demo-day-cancel"  class="secondary" type="button">DAY → cancel (next session)</button>
+                <button data-i18n="view.time_in_force.btn.gtc_keep_30d_old" id="tif-demo-gtc-keep"    class="secondary" type="button">GTC → keep (30d old)</button>
                 <button id="tif-demo-gtc-cancel"  class="secondary" type="button">GTC → cancel (>90d)</button>
-                <button id="tif-demo-ioc"         class="secondary" type="button">IOC → cancel (partial)</button>
-                <button id="tif-demo-fok-no"      class="secondary" type="button">FOK → cancel (no fill)</button>
-                <button id="tif-demo-fok-partial" class="secondary" type="button">FOK → cancel (partial)</button>
-                <button id="tif-demo-fok-done"    class="secondary" type="button">FOK → completed</button>
-                <button id="tif-demo-gtd-keep"    class="secondary" type="button">GTD → keep (future date)</button>
-                <button id="tif-demo-gtd-cancel"  class="secondary" type="button">GTD → cancel (past date)</button>
-                <button id="tif-demo-gtd-miss"    class="secondary" type="button">GTD → cancel (no date)</button>
-                <button id="tif-demo-completed"   class="secondary" type="button">→ completed (fully filled)</button>
+                <button data-i18n="view.time_in_force.btn.ioc_cancel_partial" id="tif-demo-ioc"         class="secondary" type="button">IOC → cancel (partial)</button>
+                <button data-i18n="view.time_in_force.btn.fok_cancel_no_fill" id="tif-demo-fok-no"      class="secondary" type="button">FOK → cancel (no fill)</button>
+                <button data-i18n="view.time_in_force.btn.fok_cancel_partial" id="tif-demo-fok-partial" class="secondary" type="button">FOK → cancel (partial)</button>
+                <button data-i18n="view.time_in_force.btn.fok_completed" id="tif-demo-fok-done"    class="secondary" type="button">FOK → completed</button>
+                <button data-i18n="view.time_in_force.btn.gtd_keep_future_date" id="tif-demo-gtd-keep"    class="secondary" type="button">GTD → keep (future date)</button>
+                <button data-i18n="view.time_in_force.btn.gtd_cancel_past_date" id="tif-demo-gtd-cancel"  class="secondary" type="button">GTD → cancel (past date)</button>
+                <button data-i18n="view.time_in_force.btn.gtd_cancel_no_date" id="tif-demo-gtd-miss"    class="secondary" type="button">GTD → cancel (no date)</button>
+                <button data-i18n="view.time_in_force.btn.completed_fully_filled" id="tif-demo-completed"   class="secondary" type="button">→ completed (fully filled)</button>
             </div>
         </div>
 
         <div id="tif-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>TIF cheat sheet</h2>
+            <h2 data-i18n="view.time_in_force.h2.tif_cheat_sheet">TIF cheat sheet</h2>
             <table class="lq-table">
-                <thead><tr><th>TIF</th><th>Semantics</th><th>Cancel trigger</th></tr></thead>
+                <thead><tr><th data-i18n="view.time_in_force.th.tif">TIF</th><th data-i18n="view.time_in_force.th.semantics">Semantics</th><th data-i18n="view.time_in_force.th.cancel_trigger">Cancel trigger</th></tr></thead>
                 <tbody>
                     <tr><td><strong>DAY</strong></td><td>Expires at session close.</td><td>session_open &gt; placed_date</td></tr>
                     <tr><td><strong>GTC</strong></td><td>Good Till Cancelled (with 90-day broker timeout).</td><td>age &gt; 90 days</td></tr>
@@ -152,16 +153,16 @@ function renderSummary(verdict, pending) {
     const local = localEvaluate(state.order, state.now, state.session_open);
     const parityOk = verdict.action === local.action && verdict.reason === local.reason;
     document.getElementById('tif-summary').innerHTML = [
-        card('Verdict',     badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Reason',      verdict.reason),
-        card('TIF',         state.order.tif.toUpperCase()),
-        card('Original qty', String(state.order.original_qty)),
-        card('Filled qty',   String(state.order.filled_qty),
+        card(t('view.time_in_force.card.verdict'),     badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.time_in_force.card.reason'),      verdict.reason),
+        card(t('view.time_in_force.card.tif'),         state.order.tif.toUpperCase()),
+        card(t('view.time_in_force.card.original_qty'), String(state.order.original_qty)),
+        card(t('view.time_in_force.card.filled_qty'),   String(state.order.filled_qty),
             state.order.filled_qty > 0 ? 'pos' : ''),
-        card('Remaining qty', String(state.order.original_qty - state.order.filled_qty),
+        card(t('view.time_in_force.card.remaining_qty'), String(state.order.original_qty - state.order.filled_qty),
             (state.order.original_qty - state.order.filled_qty) > 0 ? 'neg' : 'pos'),
-        card('Good until',   state.order.good_until || '—'),
-        card('Local parity', parityOk ? 'OK' : `DIVERGED (${local.action}: ${local.reason})`,
+        card(t('view.time_in_force.card.good_until'),   state.order.good_until || '—'),
+        card(t('view.time_in_force.card.local_parity'), parityOk ? 'OK' : `DIVERGED (${local.action}: ${local.reason})`,
             parityOk ? 'pos' : 'neg'),
     ].join('');
 }

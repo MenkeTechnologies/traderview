@@ -15,7 +15,7 @@ export async function renderTaxWorkshop(mount, _state) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// TAX WORKSHOP</h1>
+        <h1 data-i18n="view.tax_workshop.h1.tax_workshop" class="view-title">// TAX WORKSHOP</h1>
         <p class="muted small">
             Trader-as-business calculators. Math lives in <code>traderview-expense</code>
             and is unit-tested against hand-rolled IRS scenarios. Inputs are
@@ -23,7 +23,7 @@ export async function renderTaxWorkshop(mount, _state) {
         </p>
 
         <div class="chart-panel">
-            <h2>// Schedule SE — Self-Employment Tax</h2>
+            <h2 data-i18n="view.tax_workshop.h2.schedule_se_self_employment_tax">// Schedule SE — Self-Employment Tax</h2>
             <form id="se-form" class="inline-form">
                 <label>Net profit (Schedule C line 31)
                     <input name="net_profit_schedule_c" type="number" step="any" value="50000" required></label>
@@ -31,20 +31,20 @@ export async function renderTaxWorkshop(mount, _state) {
                     <input name="w2_ss_wages" type="number" step="any" value="0"></label>
                 <label>Filing status
                     <select name="filing_status">
-                        <option value="single">Single</option>
-                        <option value="married_joint">Married Joint</option>
-                        <option value="married_separate">Married Separate</option>
-                        <option value="head_of_household">Head of Household</option>
+                        <option data-i18n="view.tax_workshop.opt.single" value="single">Single</option>
+                        <option data-i18n="view.tax_workshop.opt.married_joint" value="married_joint">Married Joint</option>
+                        <option data-i18n="view.tax_workshop.opt.married_separate" value="married_separate">Married Separate</option>
+                        <option data-i18n="view.tax_workshop.opt.head_of_household" value="head_of_household">Head of Household</option>
                     </select></label>
                 <label>Tax year
                     <input name="year" type="number" value="2026" required></label>
-                <button class="primary" type="submit">Compute</button>
+                <button data-i18n="view.tax_workshop.btn.compute" class="primary" type="submit">Compute</button>
             </form>
             <pre id="se-out" class="boot">—</pre>
         </div>
 
         <div class="chart-panel">
-            <h2>// Home Office — Form 8829 vs Simplified</h2>
+            <h2 data-i18n="view.tax_workshop.h2.home_office_form_8829_vs_simplified">// Home Office — Form 8829 vs Simplified</h2>
             <form id="ho-form" class="inline-form">
                 <label>Business sqft
                     <input name="business_use_sqft" type="number" step="any" value="200" required></label>
@@ -62,37 +62,37 @@ export async function renderTaxWorkshop(mount, _state) {
                     <input name="annual_repairs" type="number" step="any" value="0"></label>
                 <label>Annual depreciation
                     <input name="annual_depreciation" type="number" step="any" value="0"></label>
-                <button class="primary" type="submit">Compute</button>
+                <button data-i18n="view.tax_workshop.btn.compute_2" class="primary" type="submit">Compute</button>
             </form>
             <pre id="ho-out" class="boot">—</pre>
         </div>
 
         <div class="chart-panel">
-            <h2>// Mileage — Standard Method</h2>
-            <p class="muted small">Add trips. IRS standard rate is applied per trip date (handles 2022 mid-year split).</p>
+            <h2 data-i18n="view.tax_workshop.h2.mileage_standard_method">// Mileage — Standard Method</h2>
+            <p data-i18n="view.tax_workshop.hint.add_trips_irs_standard_rate_is_applied_per_trip_da" class="muted small">Add trips. IRS standard rate is applied per trip date (handles 2022 mid-year split).</p>
             <form id="mi-form" class="inline-form">
                 <label>Date <input name="date" type="date" required></label>
                 <label>Miles <input name="miles" type="number" step="any" required></label>
                 <label>Purpose
                     <select name="purpose">
-                        <option value="business">Business</option>
-                        <option value="medical">Medical</option>
-                        <option value="moving">Moving</option>
-                        <option value="charitable">Charitable</option>
+                        <option data-i18n="view.tax_workshop.opt.business" value="business">Business</option>
+                        <option data-i18n="view.tax_workshop.opt.medical" value="medical">Medical</option>
+                        <option data-i18n="view.tax_workshop.opt.moving" value="moving">Moving</option>
+                        <option data-i18n="view.tax_workshop.opt.charitable" value="charitable">Charitable</option>
                     </select></label>
                 <label>Note <input name="note" type="text" placeholder="e.g. Conference travel"></label>
-                <button class="primary" type="submit">Add Trip</button>
+                <button data-i18n="view.tax_workshop.btn.add_trip" class="primary" type="submit">Add Trip</button>
             </form>
             <table class="trades" id="mi-table">
-                <thead><tr><th>Date</th><th>Miles</th><th>Purpose</th><th>Note</th></tr></thead>
+                <thead><tr><th data-i18n="view.tax_workshop.th.date">Date</th><th data-i18n="view.tax_workshop.th.miles">Miles</th><th data-i18n="view.tax_workshop.th.purpose">Purpose</th><th data-i18n="view.tax_workshop.th.note">Note</th></tr></thead>
                 <tbody><tr><td colspan="4" class="muted">No trips added yet.</td></tr></tbody>
             </table>
-            <button id="mi-compute" class="primary" type="button" style="margin-top:8px">Compute Deduction</button>
+            <button data-i18n="view.tax_workshop.btn.compute_deduction" id="mi-compute" class="primary" type="button" style="margin-top:8px">Compute Deduction</button>
             <pre id="mi-out" class="boot">—</pre>
         </div>
 
         <div class="chart-panel">
-            <h2>// Quarterly Estimated Tax — Form 1040-ES</h2>
+            <h2 data-i18n="view.tax_workshop.h2.quarterly_estimated_tax_form_1040_es">// Quarterly Estimated Tax — Form 1040-ES</h2>
             <form id="qt-form" class="inline-form">
                 <label>Tax year
                     <input name="tax_year" type="number" value="2026" required></label>
@@ -108,18 +108,18 @@ export async function renderTaxWorkshop(mount, _state) {
                     <input name="estimated_effective_tax_rate" type="number" step="any" value="0.28" required></label>
                 <label>Withholding YTD
                     <input name="withholding_ytd" type="number" step="any" value="0"></label>
-                <button class="primary" type="submit">Forecast</button>
+                <button data-i18n="view.tax_workshop.btn.forecast" class="primary" type="submit">Forecast</button>
             </form>
             <pre id="qt-out" class="boot">—</pre>
         </div>
 
         <div class="chart-panel">
-            <h2>// Recurring Subscription Detector</h2>
-            <p class="muted small">Scans your imported transactions for monthly/quarterly/annual charges with stable amounts. Largest annual leak first.</p>
-            <button id="sub-run" class="primary" type="button">Detect from my transactions</button>
+            <h2 data-i18n="view.tax_workshop.h2.recurring_subscription_detector">// Recurring Subscription Detector</h2>
+            <p data-i18n="view.tax_workshop.hint.scans_your_imported_transactions_for_monthly_quart" class="muted small">Scans your imported transactions for monthly/quarterly/annual charges with stable amounts. Largest annual leak first.</p>
+            <button data-i18n="view.tax_workshop.btn.detect_from_my_transactions" id="sub-run" class="primary" type="button">Detect from my transactions</button>
             <table class="trades" id="sub-table">
                 <thead><tr>
-                    <th>Merchant</th><th>Cadence</th><th>Median</th><th>Samples</th><th>Projected/yr</th>
+                    <th data-i18n="view.tax_workshop.th.merchant">Merchant</th><th data-i18n="view.tax_workshop.th.cadence">Cadence</th><th data-i18n="view.tax_workshop.th.median">Median</th><th data-i18n="view.tax_workshop.th.samples">Samples</th><th data-i18n="view.tax_workshop.th.projected_yr">Projected/yr</th>
                 </tr></thead>
                 <tbody><tr><td colspan="5" class="muted">Click detect to scan.</td></tr></tbody>
             </table>

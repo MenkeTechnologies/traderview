@@ -21,7 +21,7 @@ let mapping = {};
 export async function renderCsvWizard(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.csv_wizard.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// CSV WIZARD — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Upload any CSV — Notion exports, Excel sheets, hand-rolled logs.
@@ -31,7 +31,7 @@ export async function renderCsvWizard(mount, state) {
             executions(broker_order_id, executed_at, symbol, side, qty, price).</p>
 
         <div class="chart-panel">
-            <h2>1 — Upload CSV</h2>
+            <h2 data-i18n="view.csv_wizard.h2.1_upload_csv">1 — Upload CSV</h2>
             <input type="file" id="cw-file" accept=".csv,text/csv">
             <span id="cw-status" class="muted small" style="margin-left:8px;"></span>
         </div>
@@ -84,14 +84,14 @@ function renderMap(mount) {
     if (!parsedCsv) return;
     const headers = parsedCsv.headers;
     const opts = (cur) =>
-        `<option value="">(unmapped)</option>` +
+        `<option data-i18n="view.csv_wizard.opt.unmapped" value="">(unmapped)</option>` +
         headers.map(h => `<option value="${esc(h)}" ${cur === h ? 'selected' : ''}>${esc(h)}</option>`).join('');
     const mapEl = mount.querySelector('#cw-map');
     if (!mapEl) return;
     mapEl.innerHTML = `<div class="chart-panel">
-        <h2>2 — Map columns</h2>
+        <h2 data-i18n="view.csv_wizard.h2.2_map_columns">2 — Map columns</h2>
         <table class="trades" style="width:auto;">
-            <thead><tr><th>Canonical field</th><th>CSV column</th><th>Hint</th></tr></thead>
+            <thead><tr><th data-i18n="view.csv_wizard.th.canonical_field">Canonical field</th><th data-i18n="view.csv_wizard.th.csv_column">CSV column</th><th data-i18n="view.csv_wizard.th.hint">Hint</th></tr></thead>
             <tbody>
             ${FIELDS.map(f => `<tr>
                 <td><strong>${esc(f.key)}</strong>${f.required ? ' <span class="neg">*</span>' : ''}</td>
@@ -100,7 +100,7 @@ function renderMap(mount) {
             </tr>`).join('')}
             </tbody>
         </table>
-        <p class="muted small">Auto-guesses based on header names. Adjust as needed.</p>
+        <p data-i18n="view.csv_wizard.hint.auto_guesses_based_on_header_names_adjust_as_neede" class="muted small">Auto-guesses based on header names. Adjust as needed.</p>
     </div>`;
     mapEl.querySelectorAll('select[data-field]').forEach(sel => {
         const f = sel.dataset.field;
@@ -137,9 +137,9 @@ function renderPreview(mount) {
     const el = mount.querySelector('#cw-preview');
     if (!el) return;
     el.innerHTML = `<div class="chart-panel">
-        <h2>3 — Preview (first 20 rows after mapping)</h2>
+        <h2 data-i18n="view.csv_wizard.h2.3_preview_first_20_rows_after_mapping">3 — Preview (first 20 rows after mapping)</h2>
         ${mapped.length === 0
-            ? '<p class="muted small">Map at least the required fields to preview.</p>'
+            ? '<p data-i18n="view.csv_wizard.hint.map_at_least_the_required_fields_to_preview" class="muted small">Map at least the required fields to preview.</p>'
             : `<table class="trades">
                 <thead><tr>${mapped.map(m => `<th>${esc(m.field)}</th>`).join('')}</tr></thead>
                 <tbody>
@@ -155,8 +155,8 @@ function renderCommit(accountId, mount, tok) {
     const commitEl = mount.querySelector('#cw-commit');
     if (!commitEl) return;
     commitEl.innerHTML = `<div class="chart-panel">
-        <h2>4 — Commit</h2>
-        <button class="primary" id="cw-go">Insert rows into account</button>
+        <h2 data-i18n="view.csv_wizard.h2.4_commit">4 — Commit</h2>
+        <button data-i18n="view.csv_wizard.btn.insert_rows_into_account" class="primary" id="cw-go">Insert rows into account</button>
         <span id="cw-go-status" class="muted small" style="margin-left:8px;"></span>
     </div>`;
     mount.querySelector('#cw-go').addEventListener('click', async () => {
@@ -204,7 +204,7 @@ function renderResult(r, mount) {
     const el = mount.querySelector('#cw-result');
     if (!el) return;
     el.innerHTML = `<div class="chart-panel">
-        <h2>5 — Result</h2>
+        <h2 data-i18n="view.csv_wizard.h2.5_result">5 — Result</h2>
         <div class="cards">
             <div class="card"><div class="label">Inserted</div>
                 <div class="value pos">${r.inserted}</div></div>
@@ -216,7 +216,7 @@ function renderResult(r, mount) {
                 <div class="value small"><code>${esc(r.import_id)}</code></div></div>
         </div>
         ${r.failed_rows.length === 0 ? '' : `<table class="trades">
-            <thead><tr><th>Row #</th><th>Reason</th></tr></thead>
+            <thead><tr><th data-i18n="view.csv_wizard.th.row">Row #</th><th data-i18n="view.csv_wizard.th.reason">Reason</th></tr></thead>
             <tbody>
             ${r.failed_rows.slice(0, 50).map(f => `<tr>
                 <td>${f.row_index + 1}</td>

@@ -10,6 +10,7 @@ import {
     fmtN, fmtPct,
 } from '../_choppiness_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     bars: makeDemoBars('trend-then-chop'),
     period: 14,
@@ -18,32 +19,32 @@ let state = {
 export async function renderChoppiness(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CHOPPINESS INDEX</h1>
+        <h1 data-i18n="view.choppiness.h1.choppiness_index" class="view-title">// CHOPPINESS INDEX</h1>
 
         <div class="chart-panel">
             <h2>Paste OHLC bars (per line: <code>high low close</code>)</h2>
             <textarea id="cp-blob" rows="6" placeholder="100.5 99.5 100.0&#10;100.6 99.4 100.1&#10;...">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
-                <label>Lookback period
+                <label><span data-i18n="view.choppiness.label.period">Lookback period</span>
                     <input id="cp-per" type="number" step="1" min="2" max="200" value="${state.period}"></label>
-                <button id="cp-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.choppiness.btn.compute" id="cp-run" class="primary" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button id="cp-demo-trend-up"   class="secondary" type="button">Demo: trending up</button>
-                <button id="cp-demo-trend-dn"   class="secondary" type="button">Demo: trending down</button>
-                <button id="cp-demo-choppy"     class="secondary" type="button">Demo: choppy</button>
-                <button id="cp-demo-mixed"      class="secondary" type="button">Demo: mixed drift</button>
-                <button id="cp-demo-switch"     class="secondary" type="button">Demo: trend → chop switch</button>
+                <button data-i18n="view.choppiness.btn.demo_trending_up" id="cp-demo-trend-up"   class="secondary" type="button">Demo: trending up</button>
+                <button data-i18n="view.choppiness.btn.demo_trending_down" id="cp-demo-trend-dn"   class="secondary" type="button">Demo: trending down</button>
+                <button data-i18n="view.choppiness.btn.demo_choppy" id="cp-demo-choppy"     class="secondary" type="button">Demo: choppy</button>
+                <button data-i18n="view.choppiness.btn.demo_mixed_drift" id="cp-demo-mixed"      class="secondary" type="button">Demo: mixed drift</button>
+                <button data-i18n="view.choppiness.btn.demo_trend_chop_switch" id="cp-demo-switch"     class="secondary" type="button">Demo: trend → chop switch</button>
             </div>
-            <p class="muted">Formula: CI = 100 × log10(ΣTR / (max H − min L)) / log10(period). Default period 14. Reference bands: 61.8 (choppy line), 38.2 (trending line).</p>
+            <p data-i18n="view.choppiness.hint.formula_ci_100_log10_tr_max_h_min_l_log10_period_d" class="muted">Formula: CI = 100 × log10(ΣTR / (max H − min L)) / log10(period). Default period 14. Reference bands: 61.8 (choppy line), 38.2 (trending line).</p>
         </div>
 
         <div id="cp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close + Choppiness Index</h2>
+            <h2 data-i18n="view.choppiness.h2.close_choppiness_index">Close + Choppiness Index</h2>
             <div id="cp-chart" style="height:380px"></div>
-            <p class="muted">Cyan = close (left axis). Yellow = CI (right axis 0–100). Red dashed = 61.8 (chop), green dashed = 38.2 (trend).</p>
+            <p data-i18n="view.choppiness.hint.cyan_close_left_axis_yellow_ci_right_axis_0_100_re" class="muted">Cyan = close (left axis). Yellow = CI (right axis 0–100). Red dashed = 61.8 (chop), green dashed = 38.2 (trend).</p>
         </div>
 
         <div id="cp-err" class="boot" style="display:none;color:var(--red)"></div>
@@ -102,21 +103,21 @@ function renderSummary(report, pending) {
     const totalEvaluated = buckets.trending + buckets.mixed + buckets.choppy;
     const switchEvt = lastRegimeSwitch(report.series);
     document.getElementById('cp-summary').innerHTML = [
-        card('Regime',         badge.label + (pending ? ' (local)' : ''), badge.cls),
-        card('Action',         badge.hint),
-        card('Latest CI',      report.latest == null ? '—' : fmtN(report.latest, 2),
+        card(t('view.choppiness.card.regime'),         badge.label + (pending ? ' (local)' : ''), badge.cls),
+        card(t('view.choppiness.card.action'),         badge.hint),
+        card(t('view.choppiness.card.latest_ci'),      report.latest == null ? '—' : fmtN(report.latest, 2),
             badge.cls),
-        card('Note',           report.note),
-        card('% bars trending', totalEvaluated > 0 ? fmtPct(buckets.trending / totalEvaluated) : '—',
+        card(t('view.choppiness.card.note'),           report.note),
+        card(t('view.choppiness.card.bars_trending'), totalEvaluated > 0 ? fmtPct(buckets.trending / totalEvaluated) : '—',
             buckets.trending > buckets.choppy ? 'pos' : ''),
-        card('% bars mixed',    totalEvaluated > 0 ? fmtPct(buckets.mixed / totalEvaluated) : '—'),
-        card('% bars choppy',   totalEvaluated > 0 ? fmtPct(buckets.choppy / totalEvaluated) : '—',
+        card(t('view.choppiness.card.bars_mixed'),    totalEvaluated > 0 ? fmtPct(buckets.mixed / totalEvaluated) : '—'),
+        card(t('view.choppiness.card.bars_choppy'),   totalEvaluated > 0 ? fmtPct(buckets.choppy / totalEvaluated) : '—',
             buckets.choppy > buckets.trending ? 'neg' : ''),
-        card('Warmup bars',    String(buckets.warmup)),
-        card('Last switch',    switchEvt
+        card(t('view.choppiness.card.warmup_bars'),    String(buckets.warmup)),
+        card(t('view.choppiness.card.last_switch'),    switchEvt
             ? `bar ${switchEvt.switchedAt}: ${switchEvt.fromRegime} → ${switchEvt.toRegime}`
             : 'no switch in window'),
-        card('Local parity',   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.choppiness.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 

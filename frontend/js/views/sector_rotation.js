@@ -8,7 +8,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderSectorRotation(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// SECTOR ROTATION</h1>
+        <h1 data-i18n="view.sector_rotation.h1.sector_rotation" class="view-title">// SECTOR ROTATION</h1>
         <p class="muted small">For each SPDR sector ETF (XLK/XLF/XLE/XLV/XLY/XLP/XLI/XLB/XLU/XLRE/XLC),
             relative-strength versus SPY across 5/20/60-day windows. Ranks color the cells:
             rank 1-3 = green (leadership), 4-7 = grey (in line), 8-11 = red (laggards).
@@ -99,7 +99,7 @@ function render(r, mount) {
     if (!out) return;
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>Leadership</h2>
+            <h2 data-i18n="view.sector_rotation.h2.leadership">Leadership</h2>
             <div class="muted small">${leadership}</div>
             <p class="muted small" style="margin-top:6px;">
                 SPY benchmark returns: ${r.windows.map((w, i) =>
@@ -110,7 +110,7 @@ function render(r, mount) {
         <div class="chart-panel">
             <h2>Heatmap (${n} sectors × ${r.windows.length} windows)</h2>
             <table class="corr-matrix">
-                <thead><tr><th>Sector</th>${headers}<th>60-day RS line</th></tr></thead>
+                <thead><tr><th data-i18n="view.sector_rotation.th.sector">Sector</th>${headers}<th data-i18n="view.sector_rotation.th.60_day_rs_line">60-day RS line</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>
             <p class="muted small">Computed ${new Date(r.computed_at).toLocaleString()}.

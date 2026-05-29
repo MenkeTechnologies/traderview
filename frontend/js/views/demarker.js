@@ -13,26 +13,27 @@ import {
     makeDemoBars, fmtN, fmtPct,
 } from '../_demarker_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { barText: '', period: 14 };
 
 export async function renderDemarker(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DEMARKER OSCILLATOR</h1>
+        <h1 data-i18n="view.demarker.h1.demarker_oscillator" class="view-title">// DEMARKER OSCILLATOR</h1>
 
         <div class="chart-panel">
-            <h2>HL bars</h2>
+            <h2 data-i18n="view.demarker.h2.hl_bars">HL bars</h2>
             <p class="muted">Paste <code>high low</code> per line. Demo loads 60 bars
                 cycling through uptrend → chop → downtrend so OB and OS readings both fire.</p>
             <textarea id="dm-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
             <div class="inline-form">
-                <label>Period
+                <label><span data-i18n="view.demarker.label.period">Period</span>
                     <input id="dm-period" type="number" step="1" min="2" value="${state.period}"></label>
-                <button id="dm-demo" class="secondary" type="button">Load demo (60 bars, OB+OS cycle)</button>
-                <button id="dm-clear" class="secondary" type="button">Clear</button>
-                <button id="dm-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.demarker.btn.load_demo_60_bars_ob_os_cycle" id="dm-demo" class="secondary" type="button">Load demo (60 bars, OB+OS cycle)</button>
+                <button data-i18n="view.demarker.btn.clear" id="dm-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.demarker.btn.compute" id="dm-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">Bounded [0, 1]. ≥0.70 = overbought (setup for short / mean-reversion).
+            <p data-i18n="view.demarker.hint.bounded_0_1_0_70_overbought_setup_for_short_mean_r" class="muted">Bounded [0, 1]. ≥0.70 = overbought (setup for short / mean-reversion).
                 ≤0.30 = oversold (setup for long / mean-reversion). Crossovers from neutral into
                 an extreme region are surfaced as event alerts.</p>
         </div>
@@ -43,12 +44,12 @@ export async function renderDemarker(mount, _appState) {
         <div class="chart-panel">
             <h2>DeMarker(${state.period}) series</h2>
             <div id="dm-chart" style="height:280px"></div>
-            <p class="muted">Cyan = DeMarker. Red dashed = 0.70 OB threshold. Green dashed =
+            <p data-i18n="view.demarker.hint.cyan_demarker_red_dashed_0_70_ob_threshold_green_d" class="muted">Cyan = DeMarker. Red dashed = 0.70 OB threshold. Green dashed =
                 0.30 OS threshold. Yellow = 0.50 mid.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Crossing events</h2>
+            <h2 data-i18n="view.demarker.h2.crossing_events">Crossing events</h2>
             <div id="dm-events"></div>
         </div>
 
@@ -112,14 +113,14 @@ function renderSummary(values, bars) {
     const reg = regimeOf(latest.value);
     const badge = regimeBadge(reg);
     document.getElementById('dm-summary').innerHTML = [
-        card('Bars',          String(bars.length)),
-        card('Finite values', String(finite)),
-        card('Overbought',    `${counts.overbought} · ${fmtPct(obPct)}`, counts.overbought ? 'neg' : ''),
-        card('Oversold',      `${counts.oversold} · ${fmtPct(osPct)}`,   counts.oversold ? 'pos' : ''),
-        card('Neutral',       String(counts.neutral)),
-        card('Latest value',  fmtN(latest.value), badge.cls),
-        card('Latest regime', badge.label, badge.cls),
-        card('Action',        badge.hint),
+        card(t('view.demarker.card.bars'),          String(bars.length)),
+        card(t('view.demarker.card.finite_values'), String(finite)),
+        card(t('view.demarker.card.overbought'),    `${counts.overbought} · ${fmtPct(obPct)}`, counts.overbought ? 'neg' : ''),
+        card(t('view.demarker.card.oversold'),      `${counts.oversold} · ${fmtPct(osPct)}`,   counts.oversold ? 'pos' : ''),
+        card(t('view.demarker.card.neutral'),       String(counts.neutral)),
+        card(t('view.demarker.card.latest_value'),  fmtN(latest.value), badge.cls),
+        card(t('view.demarker.card.latest_regime'), badge.label, badge.cls),
+        card(t('view.demarker.card.action'),        badge.hint),
     ].join('');
 }
 
@@ -166,7 +167,7 @@ function renderEvents(values) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Bar idx</th><th>Regime</th><th>DeMarker value</th><th>Action</th>
+                <th>#</th><th data-i18n="view.demarker.th.bar_idx">Bar idx</th><th data-i18n="view.demarker.th.regime">Regime</th><th data-i18n="view.demarker.th.demarker_value">DeMarker value</th><th data-i18n="view.demarker.th.action">Action</th>
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => {

@@ -12,8 +12,8 @@ export async function renderAiSettings(mount) {
     const cfg = await api.getAiSettings().catch(() => ({}));
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// AI / LLM SETTINGS</h1>
-        <p class="muted small">Configure a provider for AI trade-journal analysis.
+        <h1 data-i18n="view.journal_ai.h1.ai_llm_settings" class="view-title">// AI / LLM SETTINGS</h1>
+        <p data-i18n="view.journal_ai.hint.configure_a_provider_for_ai_trade_journal_analysis" class="muted small">Configure a provider for AI trade-journal analysis.
             Anthropic / OpenAI require an API key; Ollama runs locally with no key.
             The stored key is redacted on read — leave the field blank to keep the
             current key when saving other fields.</p>
@@ -21,10 +21,10 @@ export async function renderAiSettings(mount) {
         <form id="ai-form" class="inline-form">
             <label>Provider
                 <select name="provider">
-                    <option value="">(none)</option>
-                    <option value="anthropic" ${cfg.provider === 'anthropic' ? 'selected' : ''}>Anthropic</option>
-                    <option value="openai"    ${cfg.provider === 'openai'    ? 'selected' : ''}>OpenAI</option>
-                    <option value="ollama"    ${cfg.provider === 'ollama'    ? 'selected' : ''}>Ollama (local)</option>
+                    <option data-i18n="view.journal_ai.opt.none" value="">(none)</option>
+                    <option data-i18n="view.journal_ai.opt.anthropic" value="anthropic" ${cfg.provider === 'anthropic' ? 'selected' : ''}>Anthropic</option>
+                    <option data-i18n="view.journal_ai.opt.openai" value="openai"    ${cfg.provider === 'openai'    ? 'selected' : ''}>OpenAI</option>
+                    <option data-i18n="view.journal_ai.opt.ollama_local" value="ollama"    ${cfg.provider === 'ollama'    ? 'selected' : ''}>Ollama (local)</option>
                 </select>
             </label>
             <label>Model
@@ -44,7 +44,7 @@ export async function renderAiSettings(mount) {
                                     value="${cfg.max_tokens ?? 800}" style="width:90px;"></label>
             <label>Temp <input name="temperature" type="number" min="0" max="2" step="0.05"
                               value="${cfg.temperature ?? 0.2}" style="width:80px;"></label>
-            <button class="primary" type="submit">Save</button>
+            <button data-i18n="view.journal_ai.btn.save" class="primary" type="submit">Save</button>
             <span id="ai-save-status" class="muted small"></span>
         </form>
 
@@ -92,10 +92,10 @@ export async function renderAiAnalyze(mount, tradeId) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <div class="chart-panel">
-            <h2>AI analysis</h2>
+            <h2 data-i18n="view.journal_ai.h2.ai_analysis">AI analysis</h2>
             <div id="ai-status" class="muted small">checking cache…</div>
             <div id="ai-body"></div>
-            <button class="btn" id="ai-run">Run analysis</button>
+            <button data-i18n="view.journal_ai.btn.run_analysis" class="btn" id="ai-run">Run analysis</button>
         </div>
     `;
     const status = mount.querySelector('#ai-status');

@@ -28,17 +28,19 @@ export async function renderLiveScanner(mount, _state) {
         </h1>
 
         <div class="chart-panel">
-            <h2>Configure</h2>
+            <h2 data-i18n="view.live_scanner.h2.configure">Configure</h2>
             <form id="ls-config" class="inline-form">
-                <label>Finnhub API key
-                    <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)" style="min-width:280px">
+                <label><span data-i18n="view.live_scanner.label.api_key">Finnhub API key</span>
+                    <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)"
+                           data-i18n-placeholder="view.live_scanner.placeholder.api_key" style="min-width:280px">
                 </label>
-                <label>Universe (comma-sep symbols)
-                    <input name="symbols" type="text" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..." style="min-width:320px">
+                <label><span data-i18n="view.live_scanner.label.symbols">Universe (comma-sep symbols)</span>
+                    <input name="symbols" type="text" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..."
+                           data-i18n-placeholder="view.live_scanner.placeholder.symbols" style="min-width:320px">
                 </label>
-                <button class="primary" type="submit">Connect</button>
+                <button data-i18n="view.live_scanner.btn.connect" class="primary" type="submit">Connect</button>
             </form>
-            <p class="muted small">
+            <p data-i18n="view.live_scanner.hint.finnhub_s_free_websocket_gives_25_subscriptions_pe" class="muted small">
                 Finnhub's free WebSocket gives 25 subscriptions per connection.
                 Larger universes chunk across parallel connections automatically.
                 Key is held in process memory only — never written to disk.
@@ -46,12 +48,12 @@ export async function renderLiveScanner(mount, _state) {
         </div>
 
         <div class="scanner-grid">
-            <div class="scanner-panel"><h3>Top Gappers</h3><div id="p-gap"></div></div>
-            <div class="scanner-panel"><h3>Top Gainers (intraday)</h3><div id="p-gain"></div></div>
-            <div class="scanner-panel"><h3>Top Losers (intraday)</h3><div id="p-loss"></div></div>
-            <div class="scanner-panel"><h3>High of Day</h3><div id="p-hod"></div></div>
-            <div class="scanner-panel"><h3>Volume Leaders</h3><div id="p-vol"></div></div>
-            <div class="scanner-panel"><h3>Ross 5-Pillar (Gap≥10%, Price≤$20)</h3><div id="p-ross"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.top_gappers">Top Gappers</h3><div id="p-gap"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.top_gainers_intraday">Top Gainers (intraday)</h3><div id="p-gain"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.top_losers_intraday">Top Losers (intraday)</h3><div id="p-loss"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.high_of_day">High of Day</h3><div id="p-hod"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.volume_leaders">Volume Leaders</h3><div id="p-vol"></div></div>
+            <div class="scanner-panel"><h3 data-i18n="view.live_scanner.h3.ross_5_pillar_gap_10_price_20">Ross 5-Pillar (Gap≥10%, Price≤$20)</h3><div id="p-ross"></div></div>
         </div>
     `;
 
@@ -160,7 +162,7 @@ function panel(mount, id, rows, pctField) {
         return;
     }
     el.innerHTML = `<table class="trades scanner-table">
-        <thead><tr><th>Sym</th><th>Last</th><th>${pctLabel(pctField)}</th><th>Vol</th></tr></thead>
+        <thead><tr><th data-i18n="view.live_scanner.th.sym">Sym</th><th data-i18n="view.live_scanner.th.last">Last</th><th>${pctLabel(pctField)}</th><th data-i18n="view.live_scanner.th.vol">Vol</th></tr></thead>
         <tbody>${rows.map(s => {
             const v = s[pctField] ?? 0;
             const cls = v >= 0 ? 'pos' : 'neg';

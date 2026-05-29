@@ -11,7 +11,7 @@ const MOOD_OPTS = [
 export async function renderTradeReviews(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.trade_reviews.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// REVIEWS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Every closed trade with <strong>|R| ≥ 2</strong> auto-queues
@@ -68,15 +68,15 @@ function renderInbox(items, accountId, mount, tok) {
     const el = mount.querySelector('#tr-inbox');
     if (!el) return;
     if (!items.length) {
-        el.innerHTML = '<div class="chart-panel"><p class="muted small">✓ Inbox zero — every high-|R| trade has been reviewed.</p></div>';
+        el.innerHTML = '<div class="chart-panel"><p data-i18n="view.trade_reviews.hint.inbox_zero_every_high_r_trade_has_been_reviewed" class="muted small">✓ Inbox zero — every high-|R| trade has been reviewed.</p></div>';
         return;
     }
     el.innerHTML = `<div class="chart-panel">
         <h2>Needs review (${items.length})</h2>
         <table class="trades">
             <thead><tr>
-                <th>Closed</th><th>Symbol</th><th>Side</th>
-                <th>Net P/L</th><th>R</th><th></th>
+                <th data-i18n="view.trade_reviews.th.closed">Closed</th><th data-i18n="view.trade_reviews.th.symbol">Symbol</th><th data-i18n="view.trade_reviews.th.side">Side</th>
+                <th data-i18n="view.trade_reviews.th.net_p_l">Net P/L</th><th>R</th><th></th>
             </tr></thead>
             <tbody>
             ${items.map(i => `<tr>
@@ -85,7 +85,7 @@ function renderInbox(items, accountId, mount, tok) {
                 <td>${esc(i.side)}</td>
                 <td class="${i.net_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(i.net_pnl)}</td>
                 <td class="${i.r_multiple >= 0 ? 'pos' : 'neg'}">${(i.r_multiple >= 0 ? '+' : '') + i.r_multiple.toFixed(2)}R</td>
-                <td><button class="btn tr-open" data-tid="${i.trade_id}" data-sym="${esc(i.symbol)}" data-r="${i.r_multiple.toFixed(2)}">Review</button></td>
+                <td><button data-i18n="view.trade_reviews.btn.review" class="btn tr-open" data-tid="${i.trade_id}" data-sym="${esc(i.symbol)}" data-r="${i.r_multiple.toFixed(2)}">Review</button></td>
             </tr>`).join('')}
             </tbody>
         </table>
@@ -140,8 +140,8 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
                             style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;">
                     </label>
                     <div style="display:flex;gap:8px;justify-content:flex-end;">
-                        <button type="button" class="btn" id="tr-cancel">Cancel</button>
-                        <button class="primary" type="submit">Save review</button>
+                        <button data-i18n="view.trade_reviews.btn.cancel" type="button" class="btn" id="tr-cancel">Cancel</button>
+                        <button data-i18n="view.trade_reviews.btn.save_review" class="primary" type="submit">Save review</button>
                     </div>
                 </form>
             </div>
@@ -179,8 +179,8 @@ function renderHistory(rows, mount) {
         <h2>Recent reviews (${rows.length})</h2>
         <table class="trades">
             <thead><tr>
-                <th>When</th><th>Trade</th><th>Entry / Exit per plan</th>
-                <th>Mood</th><th>Setup</th><th>Would change</th>
+                <th data-i18n="view.trade_reviews.th.when">When</th><th data-i18n="view.trade_reviews.th.trade">Trade</th><th data-i18n="view.trade_reviews.th.entry_exit_per_plan">Entry / Exit per plan</th>
+                <th data-i18n="view.trade_reviews.th.mood">Mood</th><th data-i18n="view.trade_reviews.th.setup">Setup</th><th data-i18n="view.trade_reviews.th.would_change">Would change</th>
             </tr></thead>
             <tbody>
             ${rows.map(r => {

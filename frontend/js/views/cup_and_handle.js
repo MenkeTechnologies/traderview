@@ -16,6 +16,7 @@ import {
     makeDemoBars, fmtN, fmtPct, depthQuality,
 } from '../_cup_and_handle_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_CONFIG = {
     cup_min_bars: 30,
     cup_max_bars: 250,
@@ -32,22 +33,22 @@ let state = { config: { ...DEFAULT_CONFIG }, barText: '' };
 export async function renderCupAndHandle(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CUP &amp; HANDLE · IBD PATTERN DETECTOR</h1>
+        <h1 data-i18n="view.cup_and_handle.h1.cup_and_handle_ibd_pattern_detector" class="view-title">// CUP &amp; HANDLE · IBD PATTERN DETECTOR</h1>
 
         <div class="chart-panel">
-            <h2>OHLC bars</h2>
+            <h2 data-i18n="view.cup_and_handle.h2.ohlc_bars">OHLC bars</h2>
             <p class="muted">Paste <code>high low close</code> per line.
                 Demo loads a synthetic 122-bar cup with an 8% handle that
                 triggers the canonical IBD pivot buy-point.</p>
             <textarea id="ch-bars" rows="8" placeholder="100.50 99.20 100.10&#10;101.30 100.00 100.85&#10;..."></textarea>
             <div class="inline-form">
-                <button id="ch-demo" class="secondary" type="button">Load demo (122 bars)</button>
-                <button id="ch-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.cup_and_handle.btn.load_demo_122_bars" id="ch-demo" class="secondary" type="button">Load demo (122 bars)</button>
+                <button data-i18n="view.cup_and_handle.btn.clear" id="ch-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Config</h2>
+            <h2 data-i18n="view.cup_and_handle.h2.config">Config</h2>
             <div class="inline-form">
                 <label>Cup bars (min)
                     <input id="ch-cmin" type="number" step="1" min="4" value="${state.config.cup_min_bars}"></label>
@@ -65,9 +66,9 @@ export async function renderCupAndHandle(mount, _appState) {
                     <input id="ch-hmax" type="number" step="1" min="1" value="${state.config.handle_max_bars}"></label>
                 <label>Max handle depth %
                     <input id="ch-hdep" type="number" step="0.01" min="0" max="1" value="${state.config.max_handle_depth_pct}"></label>
-                <button id="ch-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.cup_and_handle.btn.detect" id="ch-run" class="primary" type="button">Detect</button>
             </div>
-            <p class="muted">Canonical IBD defaults: 30-250 cup bars, 10-33% depth, ≤5% rim asymmetry,
+            <p data-i18n="view.cup_and_handle.hint.canonical_ibd_defaults_30_250_cup_bars_10_33_depth" class="muted">Canonical IBD defaults: 30-250 cup bars, 10-33% depth, ≤5% rim asymmetry,
                 5-25 handle bars, ≤15% handle dip. Loosen depth/handle to surface near-misses
                 during base-building.</p>
         </div>
@@ -76,9 +77,9 @@ export async function renderCupAndHandle(mount, _appState) {
         <div id="ch-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close series + pattern markers</h2>
+            <h2 data-i18n="view.cup_and_handle.h2.close_series_pattern_markers">Close series + pattern markers</h2>
             <div id="ch-chart" style="height:300px"></div>
-            <p class="muted">Yellow = left rim. Magenta = trough. Cyan = right rim. Orange =
+            <p data-i18n="view.cup_and_handle.hint.yellow_left_rim_magenta_trough_cyan_right_rim_oran" class="muted">Yellow = left rim. Magenta = trough. Cyan = right rim. Orange =
                 handle low. Green dashed = pivot (IBD buy-point = right-rim high).</p>
         </div>
 
@@ -143,9 +144,9 @@ async function compute(tok) {
 function renderSummary(cand, bars) {
     if (!cand) {
         document.getElementById('ch-summary').innerHTML = [
-            card('Pattern', 'NONE', 'neg'),
-            card('Bars scanned', String(bars.length)),
-            card('Hint', 'try loosening depth / handle bounds'),
+            card(t('view.cup_and_handle.card.pattern'), 'NONE', 'neg'),
+            card(t('view.cup_and_handle.card.bars_scanned'), String(bars.length)),
+            card(t('view.cup_and_handle.card.hint'), 'try loosening depth / handle bounds'),
         ].join('');
         return;
     }
@@ -156,11 +157,11 @@ function renderSummary(cand, bars) {
             ? { label: 'normal (5-15%)', cls: '' }
             : { label: 'wide (>15%)', cls: 'neg' };
     document.getElementById('ch-summary').innerHTML = [
-        card('Pattern',        'DETECTED', 'pos'),
-        card('Cup depth',      fmtPct(cand.depth_pct) + ' · ' + q.label, q.cls),
-        card('Handle depth',   fmtPct(cand.handle_depth_pct) + ' · ' + handleQ.label, handleQ.cls),
-        card('Cup length',     String(cand.right_rim_index - cand.left_rim_index) + ' bars'),
-        card('Handle length',  String(cand.last_index - cand.right_rim_index) + ' bars'),
+        card(t('view.cup_and_handle.card.pattern_2'),        'DETECTED', 'pos'),
+        card(t('view.cup_and_handle.card.cup_depth'),      fmtPct(cand.depth_pct) + ' · ' + q.label, q.cls),
+        card(t('view.cup_and_handle.card.handle_depth'),   fmtPct(cand.handle_depth_pct) + ' · ' + handleQ.label, handleQ.cls),
+        card(t('view.cup_and_handle.card.cup_length'),     String(cand.right_rim_index - cand.left_rim_index) + ' bars'),
+        card(t('view.cup_and_handle.card.handle_length'),  String(cand.last_index - cand.right_rim_index) + ' bars'),
         card('Left rim $',     fmtN(cand.left_rim_price)),
         card('Right rim $',    fmtN(cand.right_rim_price)),
         card('Trough $',       fmtN(cand.trough_price)),

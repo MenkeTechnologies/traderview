@@ -1,0 +1,189 @@
+// Effective + realized spread view — Lee-Ready / Bessembinder TCA.
+//
+// i18n throughout.
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { t } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    parseObsBlob, obsToBlob, validateInputs, buildBody, localAnalyze,
+    executionBadge, adverseBadge, enrich,
+    makeDemoInput,
+    fmtUSD, fmtUSDSigned, fmtBps, fmtRatio, fmtInt, dirLabelKey,
+} from '../_effective_spread_inputs.js';
+
+let state = { ...makeDemoInput('at-quote') };
+
+export async function renderEffectiveSpread(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 data-i18n="view.eff_spread.h1.title" class="view-title">// EFFECTIVE SPREAD</h1>
+
+        <div class="chart-panel" data-context-scope="eff-spread">
+            <h2 data-i18n="view.eff_spread.h2.obs">Observations
+                <small data-i18n="view.eff_spread.h2.obs_hint" class="muted">(per line: trade_price current_mid delayed_mid quoted_spread direction)</small></h2>
+            <textarea id="es-blob" rows="8"
+                      data-tip="view.eff_spread.tip.obs"
+                      placeholder="100.05 100.00 100.00 0.10 buy&#10;99.95 100.00 100.00 0.10 sell">${esc(obsToBlob(state.observations))}</textarea>
+
+            <div class="inline-form">
+                <button data-i18n="view.eff_spread.btn.compute" id="es-run" class="primary"
+                        data-tip="view.eff_spread.tip.compute" type="button">Analyze</button>
+            </div>
+            <div class="inline-form">
+                <button data-i18n="view.eff_spread.btn.demo_at_quote"   id="es-demo-atq"     class="secondary" type="button">Demo: at-quote trades</button>
+                <button data-i18n="view.eff_spread.btn.demo_improve"    id="es-demo-imp"     class="secondary" type="button">Demo: price improvement</button>
+                <button data-i18n="view.eff_spread.btn.demo_adverse"    id="es-demo-adv"     class="secondary" type="button">Demo: adverse selection (informed flow)</button>
+                <button data-i18n="view.eff_spread.btn.demo_lp_wins"    id="es-demo-lpw"     class="secondary" type="button">Demo: LP wins (uninformed)</button>
+                <button data-i18n="view.eff_spread.btn.demo_trade_thru" id="es-demo-tt"      class="secondary" type="button">Demo: trade-through</button>
+                <button data-i18n="view.eff_spread.btn.demo_mixed"      id="es-demo-mix"     class="secondary" type="button">Demo: mixed quality</button>
+                <button data-i18n="view.eff_spread.btn.demo_tight"      id="es-demo-tight"   class="secondary" type="button">Demo: penny-spread market</button>
+                <button data-i18n="view.eff_spread.btn.demo_wide"       id="es-demo-wide"    class="secondary" type="button">Demo: wide-spread (50¢)</button>
+            </div>
+            <p data-i18n="view.eff_spread.hint.about" class="muted">effective = 2·D·(trade − mid). realized = 2·D·(trade − mid_delayed). impact = effective − realized. eff/quoted ratio: &lt;1 = price improvement, &gt;1 = trade-through. D=+1 buy, −1 sell.</p>
+        </div>
+
+        <div id="es-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.eff_spread.h2.table">Per-observation breakdown</h2>
+            <div id="es-table"></div>
+        </div>
+
+        <div id="es-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+    const loadDemo = (k) => {
+        state = makeDemoInput(k);
+        document.getElementById('es-blob').value = obsToBlob(state.observations);
+    };
+    document.getElementById('es-demo-atq').addEventListener('click',   () => { loadDemo('at-quote');           void compute(tok); });
+    document.getElementById('es-demo-imp').addEventListener('click',   () => { loadDemo('price-improvement'); void compute(tok); });
+    document.getElementById('es-demo-adv').addEventListener('click',   () => { loadDemo('adverse-selection'); void compute(tok); });
+    document.getElementById('es-demo-lpw').addEventListener('click',   () => { loadDemo('lp-wins');           void compute(tok); });
+    document.getElementById('es-demo-tt').addEventListener('click',    () => { loadDemo('trade-through');     void compute(tok); });
+    document.getElementById('es-demo-mix').addEventListener('click',   () => { loadDemo('mixed-quality');     void compute(tok); });
+    document.getElementById('es-demo-tight').addEventListener('click', () => { loadDemo('tight-market');      void compute(tok); });
+    document.getElementById('es-demo-wide').addEventListener('click',  () => { loadDemo('large-tick');        void compute(tok); });
+    document.getElementById('es-run').addEventListener('click', () => { readInputs(); void compute(tok); });
+    void compute(tok);
+}
+
+function readInputs() {
+    const p = parseObsBlob(document.getElementById('es-blob').value);
+    if (p.errors.length) {
+        showErr(`${t('view.eff_spread.err.parse_prefix')}: `
+            + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        return;
+    }
+    hideErr();
+    state.observations = p.observations;
+}
+
+async function compute(tok) {
+    hideErr();
+    const err = validateInputs(state);
+    if (err) { showErr(err); return; }
+    const local = localAnalyze(state.observations);
+    if (!local) { showErr(t('view.eff_spread.err.degenerate')); return; }
+    renderSummary(local, true);
+    renderTable();
+    let resp;
+    try {
+        resp = await api.microEffectiveSpread(buildBody(state));
+    } catch (e) {
+        showErr(`${t('view.eff_spread.err.api')}: ${e.message || e}`);
+        return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    if (!resp) { showErr(t('view.eff_spread.err.server_rejected')); return; }
+    renderSummary(resp, false);
+    renderTable();
+}
+
+function renderSummary(report, pending) {
+    const local = localAnalyze(state.observations);
+    const parityOk = !!local
+        && Math.abs(local.avg_effective_spread - report.avg_effective_spread) < 1e-9
+        && Math.abs(local.avg_realized_spread - report.avg_realized_spread)   < 1e-9
+        && local.n_observations === report.n_observations;
+    const exBadge = executionBadge(report);
+    const adBadge = adverseBadge(report);
+    const localTag = pending ? ` (${t('view.eff_spread.tag.local')})` : '';
+    const refPrice = state.observations.length > 0 ? state.observations[0].current_mid : NaN;
+    document.getElementById('es-summary').innerHTML = [
+        card(t('view.eff_spread.card.exec'),       t(exBadge.key) + localTag, exBadge.cls),
+        card(t('view.eff_spread.card.adverse'),    t(adBadge.key), adBadge.cls),
+        card(t('view.eff_spread.card.n'),          fmtInt(report.n_observations)),
+        card(t('view.eff_spread.card.quoted'),     fmtUSD(report.avg_quoted_spread)),
+        card(t('view.eff_spread.card.quoted_bps'), fmtBps(report.avg_quoted_spread, refPrice)),
+        card(t('view.eff_spread.card.effective'),  fmtUSD(report.avg_effective_spread)),
+        card(t('view.eff_spread.card.effective_bps'), fmtBps(report.avg_effective_spread, refPrice)),
+        card(t('view.eff_spread.card.realized'),   fmtUSDSigned(report.avg_realized_spread),
+             report.avg_realized_spread > 0 ? 'pos' : report.avg_realized_spread < 0 ? 'neg' : ''),
+        card(t('view.eff_spread.card.impact'),     fmtUSDSigned(report.avg_price_impact),
+             report.avg_price_impact > 0 ? 'neg' : report.avg_price_impact < 0 ? 'pos' : ''),
+        card(t('view.eff_spread.card.ratio'),      fmtRatio(report.effective_to_quoted_ratio),
+             report.effective_to_quoted_ratio < 1 ? 'pos' : report.effective_to_quoted_ratio > 1.05 ? 'neg' : ''),
+        card(t('view.eff_spread.card.parity'),
+             parityOk ? t('view.eff_spread.tag.ok') : t('view.eff_spread.tag.diverged'),
+             parityOk ? 'pos' : 'neg'),
+    ].join('');
+}
+
+function renderTable() {
+    const wrap = document.getElementById('es-table');
+    if (!state.observations || state.observations.length === 0) {
+        wrap.innerHTML = `<div class="muted" data-i18n="view.eff_spread.empty">${esc(t('view.eff_spread.empty'))}</div>`;
+        return;
+    }
+    const enriched = state.observations.map(enrich);
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr>
+                <th data-i18n="view.eff_spread.col.idx">#</th>
+                <th data-i18n="view.eff_spread.col.dir">Dir</th>
+                <th data-i18n="view.eff_spread.col.trade">Trade</th>
+                <th data-i18n="view.eff_spread.col.mid">Mid</th>
+                <th data-i18n="view.eff_spread.col.mid_delayed">Mid (delayed)</th>
+                <th data-i18n="view.eff_spread.col.quoted">Quoted</th>
+                <th data-i18n="view.eff_spread.col.effective">Effective</th>
+                <th data-i18n="view.eff_spread.col.realized">Realized</th>
+                <th data-i18n="view.eff_spread.col.impact">Impact</th>
+            </tr></thead>
+            <tbody>
+                ${enriched.map((o, i) => {
+                    const dirCls = o.direction === 'buy' ? 'pos' : 'neg';
+                    const impactCls = o.price_impact > 0 ? 'neg' : o.price_impact < 0 ? 'pos' : '';
+                    const realizedCls = o.realized_spread > 0 ? 'pos' : o.realized_spread < 0 ? 'neg' : '';
+                    return `<tr>
+                        <td>${i + 1}</td>
+                        <td data-i18n="${esc(dirLabelKey(o.direction))}" class="${dirCls}">${esc(t(dirLabelKey(o.direction)))}</td>
+                        <td>${esc(fmtUSD(o.trade_price, 4))}</td>
+                        <td>${esc(fmtUSD(o.current_mid, 4))}</td>
+                        <td>${esc(fmtUSD(o.delayed_mid, 4))}</td>
+                        <td>${esc(fmtUSD(o.quoted_spread, 4))}</td>
+                        <td>${esc(fmtUSD(o.effective_spread, 4))}</td>
+                        <td class="${realizedCls}">${esc(fmtUSDSigned(o.realized_spread, 4))}</td>
+                        <td class="${impactCls}">${esc(fmtUSDSigned(o.price_impact, 4))}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('es-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('es-err').style.display = 'none'; }

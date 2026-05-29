@@ -6,7 +6,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderRisk(mount, state) {
     const tok = currentViewToken();
     if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">No account.</p>';
+        mount.innerHTML = '<p data-i18n="view.risk.hint.no_account" class="boot">No account.</p>';
         return;
     }
     const [s, summary, eq] = await Promise.all([
@@ -40,18 +40,18 @@ export async function renderRisk(mount, state) {
         </div>
 
         <div class="chart-panel">
-            <h2>Goal progress</h2>
+            <h2 data-i18n="view.risk.h2.goal_progress">Goal progress</h2>
             ${goal > 0 ? `
                 <div class="risk-bar-wrap">
                     <div class="risk-bar pos" style="width:${goalPct.toFixed(1)}%"></div>
                     <span class="risk-bar-label">${goalPct.toFixed(1)}% of ${fmtMoney(goal)}</span>
                 </div>
                 ${hitGoal ? '<p class="pos"><strong>🎯 Goal hit — consider stopping for the day.</strong></p>' : ''}
-            ` : '<p class="muted">Set a daily profit goal under Settings to enable progress tracking.</p>'}
+            ` : '<p data-i18n="view.risk.hint.set_a_daily_profit_goal_under_settings_to_enable_p" class="muted">Set a daily profit goal under Settings to enable progress tracking.</p>'}
         </div>
 
         <div class="chart-panel">
-            <h2>Max-loss tracker</h2>
+            <h2 data-i18n="view.risk.h2.max_loss_tracker">Max-loss tracker</h2>
             ${maxLoss > 0 ? `
                 <div class="risk-bar-wrap">
                     <div class="risk-bar neg" style="width:${lossPct.toFixed(1)}%"></div>
@@ -59,15 +59,17 @@ export async function renderRisk(mount, state) {
                 </div>
                 ${hitMax ? '<p class="neg"><strong>🚨 Daily max loss hit — STOP TRADING.</strong></p>' :
                   (lossPct > 60 ? '<p class="neg"><strong>⚠️ Approaching max loss — be cautious.</strong></p>' : '')}
-            ` : '<p class="muted">Set a daily max loss under Settings to enable the tracker.</p>'}
+            ` : '<p data-i18n="view.risk.hint.set_a_daily_max_loss_under_settings_to_enable_the_" class="muted">Set a daily max loss under Settings to enable the tracker.</p>'}
         </div>
 
         <div class="chart-panel">
-            <h2>Adjust limits</h2>
+            <h2 data-i18n="view.risk.h2.adjust_limits">Adjust limits</h2>
             <form id="risk-form" class="inline-form">
-                <label>Daily profit goal <input name="goal" type="number" step="any" value="${goal}"></label>
-                <label>Daily max loss <input name="max" type="number" step="any" value="${maxLoss}"></label>
-                <button class="primary" type="submit">Save</button>
+                <label><span data-i18n="view.risk.label.goal">Daily profit goal</span>
+                    <input name="goal" type="number" step="any" value="${goal}"></label>
+                <label><span data-i18n="view.risk.label.max_loss">Daily max loss</span>
+                    <input name="max" type="number" step="any" value="${maxLoss}"></label>
+                <button data-i18n="view.risk.btn.save" class="primary" type="submit">Save</button>
             </form>
         </div>
     `;

@@ -7,14 +7,14 @@ export async function renderScreener(mount) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// SCREENER</h1>
-        <p class="muted small">Runs technical signals across your watchlists, returns ranked hits. Score range -10..+10.</p>
+        <h1 data-i18n="view.screener.h1.screener" class="view-title">// SCREENER</h1>
+        <p data-i18n="view.screener.hint.runs_technical_signals_across_your_watchlists_retu" class="muted small">Runs technical signals across your watchlists, returns ranked hits. Score range -10..+10.</p>
 
         <div class="chart-panel">
             <form id="sc-form" class="inline-form">
                 <label>Watchlist
                     <select name="watchlist_id">
-                        <option value="">all my watchlists</option>
+                        <option data-i18n="view.screener.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
@@ -22,15 +22,15 @@ export async function renderScreener(mount) {
                 <label>Max score <input name="max_score" type="number"></label>
                 <label>Summary
                     <select name="summary">
-                        <option value="">any</option>
-                        <option value="buy">buy</option>
-                        <option value="hold">hold</option>
-                        <option value="sell">sell</option>
+                        <option data-i18n="view.screener.opt.any" value="">any</option>
+                        <option data-i18n="view.screener.opt.buy" value="buy">buy</option>
+                        <option data-i18n="view.screener.opt.hold" value="hold">hold</option>
+                        <option data-i18n="view.screener.opt.sell" value="sell">sell</option>
                     </select>
                 </label>
                 <label>History days <input name="days" type="number" value="365"></label>
                 <label>Limit <input name="limit" type="number" value="50"></label>
-                <button class="primary" type="submit">Run</button>
+                <button data-i18n="view.screener.btn.run" class="primary" type="submit">Run</button>
             </form>
         </div>
 
@@ -61,9 +61,9 @@ function renderResult(r) {
     return `<div class="chart-panel">
         <h2>${r.hits.length} hits of ${r.universe_size} symbols scanned</h2>
         ${r.hits.length ? `<table class="trades">
-            <thead><tr><th>Symbol</th><th>Score</th><th>Summary</th>
-            <th>Close</th><th>RSI(14)</th><th>SMA(50)</th><th>SMA(200)</th>
-            <th>MACD hist</th><th>Signals</th></tr></thead>
+            <thead><tr><th data-i18n="view.screener.th.symbol">Symbol</th><th data-i18n="view.screener.th.score">Score</th><th data-i18n="view.screener.th.summary">Summary</th>
+            <th data-i18n="view.screener.th.close">Close</th><th data-i18n="view.screener.th.rsi_14">RSI(14)</th><th data-i18n="view.screener.th.sma_50">SMA(50)</th><th data-i18n="view.screener.th.sma_200">SMA(200)</th>
+            <th data-i18n="view.screener.th.macd_hist">MACD hist</th><th data-i18n="view.screener.th.signals">Signals</th></tr></thead>
             <tbody>${r.hits.map(h => {
                 const cls = h.score >= 3 ? 'pos' : h.score <= -3 ? 'neg' : '';
                 return `<tr>
@@ -78,6 +78,6 @@ function renderResult(r) {
                     <td>${h.signal_count}</td>
                 </tr>`;
             }).join('')}</tbody>
-        </table>` : '<p class="muted">No hits.</p>'}
+        </table>` : '<p data-i18n="view.screener.hint.no_hits" class="muted">No hits.</p>'}
     </div>`;
 }

@@ -8,9 +8,9 @@ export async function renderDashboard(mount, state) {
     const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = `
-            <h1 class="view-title">// DASHBOARD</h1>
+            <h1 data-i18n="view.dashboard.h1.dashboard" class="view-title">// DASHBOARD</h1>
             <div id="world-markets-mount"></div>
-            <p class="boot">No account yet. Add one via Accounts, then import or add trades.</p>
+            <p data-i18n="view.dashboard.hint.no_account_yet_add_one_via_accounts_then_import_or" class="boot">No account yet. Add one via Accounts, then import or add trades.</p>
         `;
         const wm = mount.querySelector('#world-markets-mount');
         if (wm) renderWorldMarkets(wm);
@@ -24,7 +24,7 @@ export async function renderDashboard(mount, state) {
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
-        <h1 class="view-title">// DASHBOARD</h1>
+        <h1 data-i18n="view.dashboard.h1.dashboard_2" class="view-title">// DASHBOARD</h1>
         <div id="world-markets-mount"></div>
         <div class="cards">
             ${statCard('Net P&L', fmtMoney(summary.net_pnl), pnlClass(summary.net_pnl))}
@@ -42,22 +42,22 @@ export async function renderDashboard(mount, state) {
         </div>
 
         <div class="chart-panel">
-            <h2>Equity Curve</h2>
+            <h2 data-i18n="view.dashboard.h2.equity_curve">Equity Curve</h2>
             <div id="equity-chart"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Last 90 Days</h2>
+            <h2 data-i18n="view.dashboard.h2.last_90_days">Last 90 Days</h2>
             <div class="mini-cal" id="mini-cal"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>🛡 Risk Gate · today</h2>
+            <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
             <div id="dash-rg" class="muted small">loading…</div>
         </div>
 
         <div class="chart-panel">
-            <h2>📐 Discipline score · last 7 days</h2>
+            <h2 data-i18n="view.dashboard.h2.discipline_score_last_7_days">📐 Discipline score · last 7 days</h2>
             <div id="dash-disc">loading…</div>
         </div>
     `;

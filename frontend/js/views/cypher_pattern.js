@@ -17,25 +17,26 @@ import {
     fmtN, fmtRatio,
 } from '../_cypher_pattern_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { pivotText: '', tolerance: 0.05 };
 
 export async function renderCypherPattern(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// CYPHER HARMONIC PATTERN</h1>
+        <h1 data-i18n="view.cypher_pattern.h1.cypher_harmonic_pattern" class="view-title">// CYPHER HARMONIC PATTERN</h1>
 
         <div class="chart-panel">
-            <h2>Pivots</h2>
+            <h2 data-i18n="view.cypher_pattern.h2.pivots">Pivots</h2>
             <p class="muted">Paste <code>index price H|L</code> per line. Pivots must
                 alternate high/low. Demo loads a 5-pivot bullish Cypher with tolerance 0.10
                 (the more permissive setting most retail screeners use).</p>
             <textarea id="cy-pivots" rows="6" placeholder="0 100 L&#10;10 130 H&#10;20 115 L&#10;30 134.08 H&#10;40 106.42 L"></textarea>
             <div class="inline-form">
-                <label>Tolerance (typical 0.03-0.10)
+                <label><span data-i18n="view.cypher_pattern.label.tolerance">Tolerance (typical 0.03-0.10)</span>
                     <input id="cy-tol" type="number" step="any" min="0" max="0.5" value="${state.tolerance}"></label>
-                <button id="cy-demo" class="secondary" type="button">Load demo (5-pivot bullish Cypher, tol=0.10)</button>
-                <button id="cy-clear" class="secondary" type="button">Clear</button>
-                <button id="cy-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.cypher_pattern.btn.load_demo_5_pivot_bullish_cypher_tol_0_10" id="cy-demo" class="secondary" type="button">Load demo (5-pivot bullish Cypher, tol=0.10)</button>
+                <button data-i18n="view.cypher_pattern.btn.clear" id="cy-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.cypher_pattern.btn.detect" id="cy-run" class="primary" type="button">Detect</button>
             </div>
         </div>
 
@@ -43,14 +44,14 @@ export async function renderCypherPattern(mount, _appState) {
         <div id="cy-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Pivot chart with XABCD overlay</h2>
+            <h2 data-i18n="view.cypher_pattern.h2.pivot_chart_with_xabcd_overlay">Pivot chart with XABCD overlay</h2>
             <div id="cy-chart" style="height:320px"></div>
-            <p class="muted">Cyan = pivot price connecting line. Yellow dots = pivots. When
+            <p data-i18n="view.cypher_pattern.hint.cyan_pivot_price_connecting_line_yellow_dots_pivot" class="muted">Cyan = pivot price connecting line. Yellow dots = pivots. When
                 a Cypher matches, X/A/B/C/D markers are highlighted on the first match's pivots.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Pattern matches</h2>
+            <h2 data-i18n="view.cypher_pattern.h2.pattern_matches">Pattern matches</h2>
             <div id="cy-matches"></div>
         </div>
 
@@ -111,13 +112,13 @@ function renderSummary(matches, pivots) {
         return (b == null || q > b.q) ? { match: m, q } : b;
     }, null);
     document.getElementById('cy-summary').innerHTML = [
-        card('Pivots',         String(pivots.length)),
-        card('Matches',        String(matches.length)),
-        card('Bullish',        String(bull), bull ? 'pos' : ''),
-        card('Bearish',        String(bear), bear ? 'neg' : ''),
-        card('Best quality',   best ? qualityGrade(best.q).label + ' · ' + fmtN(best.q, 3) : '—',
+        card(t('view.cypher_pattern.card.pivots'),         String(pivots.length)),
+        card(t('view.cypher_pattern.card.matches'),        String(matches.length)),
+        card(t('view.cypher_pattern.card.bullish'),        String(bull), bull ? 'pos' : ''),
+        card(t('view.cypher_pattern.card.bearish'),        String(bear), bear ? 'neg' : ''),
+        card(t('view.cypher_pattern.card.best_quality'),   best ? qualityGrade(best.q).label + ' · ' + fmtN(best.q, 3) : '—',
             best ? qualityGrade(best.q).cls : ''),
-        card('Tolerance used', String(state.tolerance)),
+        card(t('view.cypher_pattern.card.tolerance_used'), String(state.tolerance)),
     ].join('');
 }
 
@@ -170,9 +171,9 @@ function renderMatches(matches) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Direction</th><th>Grade</th>
-                <th>X idx</th><th>A idx</th><th>B idx</th><th>C idx</th><th>D idx</th>
-                <th>AB/XA</th><th>BC/AB</th><th>CD/XC</th><th>AD/XA</th>
+                <th>#</th><th data-i18n="view.cypher_pattern.th.direction">Direction</th><th data-i18n="view.cypher_pattern.th.grade">Grade</th>
+                <th data-i18n="view.cypher_pattern.th.x_idx">X idx</th><th data-i18n="view.cypher_pattern.th.a_idx">A idx</th><th data-i18n="view.cypher_pattern.th.b_idx">B idx</th><th data-i18n="view.cypher_pattern.th.c_idx">C idx</th><th data-i18n="view.cypher_pattern.th.d_idx">D idx</th>
+                <th data-i18n="view.cypher_pattern.th.ab_xa">AB/XA</th><th data-i18n="view.cypher_pattern.th.bc_ab">BC/AB</th><th data-i18n="view.cypher_pattern.th.cd_xc">CD/XC</th><th data-i18n="view.cypher_pattern.th.ad_xa">AD/XA</th>
             </tr></thead>
             <tbody>
                 ${matches.map((m, i) => {

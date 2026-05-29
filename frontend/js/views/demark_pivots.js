@@ -13,6 +13,7 @@ import {
     tradeBias, makeDemoSession, chartSpan, fmtN,
 } from '../_demark_pivots_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     session: makeDemoSession('bullish'),
     spotNow: 105,
@@ -21,10 +22,10 @@ let state = {
 export async function renderDemarkPivots(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// DEMARK PIVOTS</h1>
+        <h1 data-i18n="view.demark_pivots.h1.demark_pivots" class="view-title">// DEMARK PIVOTS</h1>
 
         <div class="chart-panel">
-            <h2>Prior session OHLC</h2>
+            <h2 data-i18n="view.demark_pivots.h2.prior_session_ohlc">Prior session OHLC</h2>
             <div class="inline-form">
                 <label>Open  <input id="dp-o" type="number" step="any" min="0" value="${state.session.open}"></label>
                 <label>High  <input id="dp-h" type="number" step="any" min="0" value="${state.session.high}"></label>
@@ -32,21 +33,21 @@ export async function renderDemarkPivots(mount, _appState) {
                 <label>Close <input id="dp-c" type="number" step="any" min="0" value="${state.session.close}"></label>
             </div>
             <div class="inline-form">
-                <button id="dp-demo-bull"   class="secondary" type="button">Demo: bullish session</button>
-                <button id="dp-demo-bear"   class="secondary" type="button">Demo: bearish session</button>
-                <button id="dp-demo-doji"   class="secondary" type="button">Demo: doji</button>
-                <button id="dp-demo-inside" class="secondary" type="button">Demo: inside day</button>
+                <button data-i18n="view.demark_pivots.btn.demo_bullish_session" id="dp-demo-bull"   class="secondary" type="button">Demo: bullish session</button>
+                <button data-i18n="view.demark_pivots.btn.demo_bearish_session" id="dp-demo-bear"   class="secondary" type="button">Demo: bearish session</button>
+                <button data-i18n="view.demark_pivots.btn.demo_doji" id="dp-demo-doji"   class="secondary" type="button">Demo: doji</button>
+                <button data-i18n="view.demark_pivots.btn.demo_inside_day" id="dp-demo-inside" class="secondary" type="button">Demo: inside day</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Today's spot</h2>
+            <h2 data-i18n="view.demark_pivots.h2.today_s_spot">Today's spot</h2>
             <div class="inline-form">
                 <label>Spot now (for trade-bias card)
                     <input id="dp-spot" type="number" step="any" min="0" value="${state.spotNow}"></label>
-                <button id="dp-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.demark_pivots.btn.compute" id="dp-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">DeMark's X-base formula switches on close-vs-open direction:
+            <p data-i18n="view.demark_pivots.hint.demark_s_x_base_formula_switches_on_close_vs_open_" class="muted">DeMark's X-base formula switches on close-vs-open direction:
                 bearish session → low-heavy X; bullish → high-heavy X; doji → close-heavy X.
                 Pivot = X/4, R1 = X/2 − low, S1 = X/2 − high.</p>
         </div>
@@ -54,14 +55,14 @@ export async function renderDemarkPivots(mount, _appState) {
         <div id="dp-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>X-base math (shown)</h2>
+            <h2 data-i18n="view.demark_pivots.h2.x_base_math_shown">X-base math (shown)</h2>
             <div id="dp-xinfo" class="boot"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Schematic — prior session + pivot levels</h2>
+            <h2 data-i18n="view.demark_pivots.h2.schematic_prior_session_pivot_levels">Schematic — prior session + pivot levels</h2>
             <div id="dp-chart" style="height:280px"></div>
-            <p class="muted">Magenta = prior OHLC envelope. Yellow = pivot. Red dashed = R1.
+            <p data-i18n="view.demark_pivots.hint.magenta_prior_ohlc_envelope_yellow_pivot_red_dashe" class="muted">Magenta = prior OHLC envelope. Yellow = pivot. Red dashed = R1.
                 Green dashed = S1. Cyan = today's spot. Distance from price to nearest
                 level frames the day's trade setup.</p>
         </div>
@@ -107,7 +108,7 @@ async function compute(tok) {
         showErr(`API error: ${e.message || e}`); return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!levels) { showErr('Backend returned null (invalid session)'); return; }
+    if (!levels) { showErr(t('view.demark_pivots.err.backend_returned_null_invalid_session')); return; }
     renderSummary(levels);
     renderXInfo();
     renderChart(levels);
@@ -119,14 +120,14 @@ function renderSummary(levels) {
     const range = state.session.high - state.session.low;
     const closeBias = state.session.close - state.session.open;
     document.getElementById('dp-summary').innerHTML = [
-        card('R1 (resistance)', fmtN(levels.r1), 'neg'),
-        card('Pivot',           fmtN(levels.pivot), 'pos'),
-        card('S1 (support)',    fmtN(levels.s1), 'pos'),
-        card('R1 − S1 band',    fmtN(levels.r1 - levels.s1)),
-        card('Prior range',     fmtN(range)),
-        card('Close − open',    fmtN(closeBias), closeBias >= 0 ? 'pos' : 'neg'),
-        card('X-base',          xinfo.label, xinfo.cls),
-        card('Trade bias now',  bias.label, bias.cls),
+        card(t('view.demark_pivots.card.r1_resistance'), fmtN(levels.r1), 'neg'),
+        card(t('view.demark_pivots.card.pivot'),           fmtN(levels.pivot), 'pos'),
+        card(t('view.demark_pivots.card.s1_support'),    fmtN(levels.s1), 'pos'),
+        card(t('view.demark_pivots.card.r1_s1_band'),    fmtN(levels.r1 - levels.s1)),
+        card(t('view.demark_pivots.card.prior_range'),     fmtN(range)),
+        card(t('view.demark_pivots.card.close_open'),    fmtN(closeBias), closeBias >= 0 ? 'pos' : 'neg'),
+        card(t('view.demark_pivots.card.x_base'),          xinfo.label, xinfo.cls),
+        card(t('view.demark_pivots.card.trade_bias_now'),  bias.label, bias.cls),
     ].join('');
 }
 

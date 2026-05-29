@@ -300,6 +300,34 @@
     if (btnNeon) btnNeon.addEventListener('click', function () {
       applyNeon(btnNeon.classList.contains('active') ? false : true);
     });
+
+    // Window-event bridges — let shortcuts.js and the command palette
+    // fire the same toggles without reaching into the DOM directly.
+    // Also fan-out a `tv:hud-toggled` event with the new state so other
+    // modules (e.g. toast) can react without reaching into the IIFE.
+    function emitToggled(kind, on) {
+      try {
+        window.dispatchEvent(new CustomEvent('tv:hud-toggled',
+          { detail: { kind: kind, on: !!on } }));
+      } catch (_) { /* ssr / no window */ }
+    }
+    window.addEventListener('tv:toggle-theme', function () {
+      var cur = document.documentElement.getAttribute('data-theme');
+      var next = cur === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+      emitToggled('theme', next === 'light');
+    });
+    window.addEventListener('tv:toggle-crt', function () {
+      var app = document.querySelector('.app');
+      var on  = app ? !app.classList.contains('no-crt') : false;
+      applyCrt(!on);
+      emitToggled('crt', !on);
+    });
+    window.addEventListener('tv:toggle-neon', function () {
+      var on = !document.body.classList.contains('no-neon-glow');
+      applyNeon(!on);
+      emitToggled('neon', !on);
+    });
   });
 
   // Expose a re-mount hook so the Settings view can repaint the

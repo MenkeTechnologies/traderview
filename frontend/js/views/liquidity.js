@@ -13,29 +13,30 @@ import {
     liquidityTier, makeDemoData, fmtN, fmtPct, fmtUSD,
 } from '../_liquidity_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { tradesText: '', advText: '' };
 
 export async function renderLiquidity(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// LIQUIDITY · POSITION vs ADV</h1>
+        <h1 data-i18n="view.liquidity.h1.liquidity_position_vs_adv" class="view-title">// LIQUIDITY · POSITION vs ADV</h1>
 
         <div class="chart-panel">
-            <h2>Trades</h2>
+            <h2 data-i18n="view.liquidity.h2.trades">Trades</h2>
             <p class="muted">One line per trade: <code>symbol qty net_pnl</code>.
                 Negative pnl = loss. Other Trade fields are auto-filled.</p>
             <textarea id="lq-trades" rows="8" placeholder="AAPL 100 75&#10;MSFT 2000 -150&#10;..."></textarea>
         </div>
 
         <div class="chart-panel">
-            <h2>ADV (avg daily volume per symbol)</h2>
+            <h2 data-i18n="view.liquidity.h2.adv_avg_daily_volume_per_symbol">ADV (avg daily volume per symbol)</h2>
             <textarea id="lq-adv" rows="4" placeholder="AAPL 50000000&#10;MSFT 1500000&#10;..."></textarea>
             <div class="inline-form">
-                <button id="lq-demo" class="secondary" type="button">Load demo (4 symbols, 53 trades)</button>
-                <button id="lq-clear" class="secondary" type="button">Clear</button>
-                <button id="lq-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.liquidity.btn.load_demo_4_symbols_53_trades" id="lq-demo" class="secondary" type="button">Load demo (4 symbols, 53 trades)</button>
+                <button data-i18n="view.liquidity.btn.clear" id="lq-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.liquidity.btn.analyze" id="lq-run" class="primary" type="button">Analyze</button>
             </div>
-            <p class="muted">Symbols not in the ADV table are silently dropped from
+            <p data-i18n="view.liquidity.hint.symbols_not_in_the_adv_table_are_silently_dropped_" class="muted">Symbols not in the ADV table are silently dropped from
                 bucket analysis. Per-symbol rows still show their qty / pnl regardless.</p>
         </div>
 
@@ -43,16 +44,16 @@ export async function renderLiquidity(mount, _appState) {
         <div id="lq-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Per-symbol breakdown</h2>
+            <h2 data-i18n="view.liquidity.h2.per_symbol_breakdown">Per-symbol breakdown</h2>
             <div id="lq-rows"></div>
-            <p class="muted">Each row: symbol · trade count · total qty · avg qty/trade ·
+            <p data-i18n="view.liquidity.hint.each_row_symbol_trade_count_total_qty_avg_qty_trad" class="muted">Each row: symbol · trade count · total qty · avg qty/trade ·
                 ADV · avg % of ADV · liquidity tier · net pnl. Tiers cut at 0.1% / 1% / 5% / 20%.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>P&amp;L &amp; win rate by ADV bucket</h2>
+            <h2 data-i18n="view.liquidity.h2.pandl_and_win_rate_by_adv_bucket">P&amp;L &amp; win rate by ADV bucket</h2>
             <div id="lq-buckets"></div>
-            <p class="muted">If your wins concentrate in small-pct buckets and losses
+            <p data-i18n="view.liquidity.hint.if_your_wins_concentrate_in_small_pct_buckets_and_" class="muted">If your wins concentrate in small-pct buckets and losses
                 concentrate in large-pct buckets, you have a sizing problem — not an edge problem.</p>
         </div>
 
@@ -118,11 +119,11 @@ function renderSummary(report, trades) {
     const totalPnl = report.rows.reduce((a, r) => a + Number(r.net_pnl || 0), 0);
     const matchedSym = report.rows.filter(r => r.avg_daily_volume != null).length;
     document.getElementById('lq-summary').innerHTML = [
-        card('Trades',          fmtN(trades.length)),
-        card('Symbols',         String(symCount)),
-        card('Matched ADV',     `${matchedSym} / ${symCount}`),
-        card('Total qty',       fmtN(totalQty)),
-        card('Total net P&L',   fmtUSD(totalPnl), totalPnl >= 0 ? 'pos' : 'neg'),
+        card(t('view.liquidity.card.trades'),          fmtN(trades.length)),
+        card(t('view.liquidity.card.symbols'),         String(symCount)),
+        card(t('view.liquidity.card.matched_adv'),     `${matchedSym} / ${symCount}`),
+        card(t('view.liquidity.card.total_qty'),       fmtN(totalQty)),
+        card(t('view.liquidity.card.total_net_p_l'),   fmtUSD(totalPnl), totalPnl >= 0 ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -142,8 +143,8 @@ function renderRows(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Symbol</th><th>Trades</th><th>Total qty</th><th>Avg qty</th>
-                <th>ADV</th><th>Avg %ADV</th><th>Tier</th><th>Net P&amp;L</th>
+                <th data-i18n="view.liquidity.th.symbol">Symbol</th><th data-i18n="view.liquidity.th.trades">Trades</th><th data-i18n="view.liquidity.th.total_qty">Total qty</th><th data-i18n="view.liquidity.th.avg_qty">Avg qty</th>
+                <th data-i18n="view.liquidity.th.adv">ADV</th><th data-i18n="view.liquidity.th.avg_adv">Avg %ADV</th><th data-i18n="view.liquidity.th.tier">Tier</th><th data-i18n="view.liquidity.th.net_pandl">Net P&amp;L</th>
             </tr></thead>
             <tbody>
                 ${report.rows.map(r => {

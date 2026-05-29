@@ -14,65 +14,68 @@ export async function renderSettings(mount, state) {
         `<option value="${a.id}" ${a.id === s.default_account_id ? 'selected' : ''}>${esc(a.broker)} · ${esc(a.name)}</option>`
     ).join('');
     mount.innerHTML = `
-        <h1 class="view-title">// SETTINGS</h1>
+        <h1 data-i18n="view.settings.h1.settings" class="view-title">// SETTINGS</h1>
 
         <div class="chart-panel">
-            <h2>Appearance</h2>
-            <p class="muted small">CRT scanlines, neon-border pulse, and dark/light theme are toggled from the buttons in the topbar. Color scheme switches the whole HUD palette — picks below.</p>
+            <h2 data-i18n="view.settings.h2.appearance">Appearance</h2>
+            <p data-i18n="view.settings.hint.crt_scanlines_neon_border_pulse_and_dark_light_the" class="muted small">CRT scanlines, neon-border pulse, and dark/light theme are toggled from the buttons in the topbar. Color scheme switches the whole HUD palette — picks below.</p>
             <div class="settings-scheme">
                 <div class="scheme-grid" id="hudSchemeGrid"></div>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Profile</h2>
+            <h2 data-i18n="view.settings.h2.profile">Profile</h2>
             <form id="settings-form" class="inline-form">
-                <label>Default account
+                <label><span data-i18n="view.settings.label.default_account">Default account</span>
                     <select name="default_account_id">
-                        <option value="">(none)</option>${accountOptions}
+                        <option data-i18n="view.settings.opt.none" value="">(none)</option>${accountOptions}
                     </select>
                 </label>
-                <label>Base currency <input name="base_currency" value="${esc(s.base_currency)}"></label>
-                <label>Timezone <input name="timezone" value="${esc(s.timezone)}"></label>
-                <label>Theme
+                <label><span data-i18n="view.settings.label.base_currency">Base currency</span>
+                    <input name="base_currency" value="${esc(s.base_currency)}"></label>
+                <label><span data-i18n="view.settings.label.timezone">Timezone</span>
+                    <input name="timezone" value="${esc(s.timezone)}"></label>
+                <label><span data-i18n="view.settings.label.theme">Theme</span>
                     <select name="theme">
-                        <option value="cyberpunk" ${s.theme === 'cyberpunk' ? 'selected' : ''}>Cyberpunk</option>
-                        <option value="dark" ${s.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                        <option data-i18n="view.settings.opt.cyberpunk" value="cyberpunk" ${s.theme === 'cyberpunk' ? 'selected' : ''}>Cyberpunk</option>
+                        <option data-i18n="view.settings.opt.dark" value="dark" ${s.theme === 'dark' ? 'selected' : ''}>Dark</option>
                     </select>
                 </label>
-                <label>Starting cash <input type="number" step="any" name="starting_cash" value="${s.starting_cash}"></label>
-                <label>Commission / share
+                <label><span data-i18n="view.settings.label.starting_cash">Starting cash</span>
+                    <input type="number" step="any" name="starting_cash" value="${s.starting_cash}"></label>
+                <label><span data-i18n="view.settings.label.commission_per_share">Commission / share</span>
                     <input type="number" step="any" name="commission_per_share" value="${s.commission_per_share}">
                 </label>
-                <label>Commission / contract
+                <label><span data-i18n="view.settings.label.commission_per_contract">Commission / contract</span>
                     <input type="number" step="any" name="commission_per_contract" value="${s.commission_per_contract}">
                 </label>
-                <label>Auto-flatten (new trade after going flat)
+                <label><span data-i18n="view.settings.label.auto_flatten">Auto-flatten (new trade after going flat)</span>
                     <input type="checkbox" name="auto_flatten" ${s.auto_flatten ? 'checked' : ''}>
                 </label>
-                <label>Always require account tag on import
+                <label><span data-i18n="view.settings.label.require_account_tag">Always require account tag on import</span>
                     <input type="checkbox" name="require_account_tag" ${s.require_account_tag ? 'checked' : ''}>
                 </label>
-                <button class="primary" type="submit">Save</button>
+                <button data-i18n="view.settings.btn.save" class="primary" type="submit">Save</button>
             </form>
-            <p class="muted small">
+            <p data-i18n="view.settings.hint.commission_rates_fill_in_only_when_the_broker_file" class="muted small">
                 Commission rates fill in only when the broker file omits fees (fee = 0).
                 Mirrors TraderVue's "manual rate" behavior — won't double-count.
             </p>
         </div>
 
         <div class="chart-panel">
-            <h2>Notes Templates</h2>
+            <h2 data-i18n="view.settings.h2.notes_templates">Notes Templates</h2>
             <table class="trades">
-                <thead><tr><th>Name</th><th>Scope</th><th>Default</th><th>Updated</th><th></th></tr></thead>
+                <thead><tr><th data-i18n="view.settings.th.name">Name</th><th data-i18n="view.settings.th.scope">Scope</th><th data-i18n="view.settings.th.default">Default</th><th data-i18n="view.settings.th.updated">Updated</th><th></th></tr></thead>
                 <tbody>${templates.map(t => `
                     <tr><td>${esc(t.name)}</td>
                     <td>${esc(t.scope)}</td>
                     <td>${t.is_default ? '✓' : ''}</td>
                     <td>${fmtDateTime(t.updated_at)}</td>
                     <td>
-                        <button class="link" data-edit-tpl='${esc(JSON.stringify(t))}'>edit</button>
-                        <button class="link" data-del-tpl="${t.id}">delete</button>
+                        <button data-i18n="view.settings.btn.edit" class="link" data-edit-tpl='${esc(JSON.stringify(t))}'>edit</button>
+                        <button data-i18n="view.settings.btn.delete" class="link" data-del-tpl="${t.id}">delete</button>
                     </td></tr>
                 `).join('') || '<tr><td colspan="5" class="muted">No templates yet.</td></tr>'}
                 </tbody>
@@ -80,31 +83,31 @@ export async function renderSettings(mount, state) {
             <form id="tpl-form" class="inline-form" style="margin-top:10px">
                 <input name="name" placeholder="template name" required>
                 <select name="scope">
-                    <option value="trade">trade</option>
-                    <option value="journal">journal</option>
+                    <option data-i18n="view.settings.opt.trade" value="trade">trade</option>
+                    <option data-i18n="view.settings.opt.journal" value="journal">journal</option>
                 </select>
                 <label style="flex-direction:row;align-items:center;gap:6px">
                     <input type="checkbox" name="is_default"> default
                 </label>
                 <textarea name="body_md" placeholder="markdown body — used as default when creating notes for the selected scope" rows="4" style="flex:1 1 100%"></textarea>
-                <button class="primary" type="submit">Save template</button>
+                <button data-i18n="view.settings.btn.save_template" class="primary" type="submit">Save template</button>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>Saved filter sets</h2>
+            <h2 data-i18n="view.settings.h2.saved_filter_sets">Saved filter sets</h2>
             ${filters.length ? `<table class="trades">
-                <thead><tr><th>Name</th><th>Default</th><th>Created</th><th></th></tr></thead>
+                <thead><tr><th data-i18n="view.settings.th.name_2">Name</th><th data-i18n="view.settings.th.default_2">Default</th><th data-i18n="view.settings.th.created">Created</th><th></th></tr></thead>
                 <tbody>${filters.map(f => `
                     <tr><td>${esc(f.name)}</td><td>${f.is_default ? '✓' : ''}</td>
                     <td>${fmtDateTime(f.created_at)}</td>
-                    <td><button class="link" data-del-f="${f.id}">delete</button></td></tr>
-                `).join('')}</tbody></table>` : '<p class="muted">No saved filters.</p>'}
+                    <td><button data-i18n="view.settings.btn.delete_2" class="link" data-del-f="${f.id}">delete</button></td></tr>
+                `).join('')}</tbody></table>` : '<p data-i18n="view.settings.hint.no_saved_filters" class="muted">No saved filters.</p>'}
         </div>
 
         <div class="chart-panel">
-            <h2>Your user ID</h2>
-            <p>Share this with someone if they want to mentor you.</p>
+            <h2 data-i18n="view.settings.h2.your_user_id">Your user ID</h2>
+            <p data-i18n="view.settings.hint.share_this_with_someone_if_they_want_to_mentor_you">Share this with someone if they want to mentor you.</p>
             <code>${esc(state.me?.id || '')}</code>
         </div>
     `;

@@ -9,21 +9,21 @@ const sign = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2);
 export async function renderVol(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// VIX TERM STRUCTURE · YIELDS · DXY</h1>
+        <h1 data-i18n="view.vol.h1.vix_term_structure_yields_dxy" class="view-title">// VIX TERM STRUCTURE · YIELDS · DXY</h1>
         <div id="vix" class="cards">loading…</div>
         <div class="chart-panel">
-            <h2>VIX term curve (tenor → vol)</h2>
+            <h2 data-i18n="view.vol.h2.vix_term_curve_tenor_vol">VIX term curve (tenor → vol)</h2>
             <div id="vix-curve"></div>
         </div>
 
         <div id="yields-cards" class="cards" style="margin-top:14px">loading yields…</div>
         <div class="chart-panel">
-            <h2>Treasury yield curve</h2>
+            <h2 data-i18n="view.vol.h2.treasury_yield_curve">Treasury yield curve</h2>
             <div id="yc-chart"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>U.S. Dollar / major FX</h2>
+            <h2 data-i18n="view.vol.h2.u_s_dollar_major_fx">U.S. Dollar / major FX</h2>
             <div id="dxy" class="cards">loading…</div>
         </div>
     `;

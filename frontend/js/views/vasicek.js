@@ -22,6 +22,7 @@ import {
     normalDensityCurve, fmtRatePct, fmtYears,
 } from '../_vasicek_inputs.js';
 
+import { t } from '../i18n.js';
 // Realistic defaults: start at 5%, mean-revert to 3% with ~1.4yr half-life,
 // 1% annualized vol, weekly steps over 10 years.
 const DEFAULT_PARAMS = {
@@ -41,10 +42,10 @@ export async function renderVasicek(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// VASICEK SHORT-RATE</h1>
+        <h1 data-i18n="view.vasicek.h1.vasicek_short_rate" class="view-title">// VASICEK SHORT-RATE</h1>
 
         <div class="chart-panel">
-            <h2>SDE parameters</h2>
+            <h2 data-i18n="view.vasicek.h2.sde_parameters">SDE parameters</h2>
             <div class="inline-form">
                 <label>r₀ (initial rate)
                     <input id="va-r0"    type="number" step="any" value="${state.params.r0}"></label>
@@ -58,7 +59,7 @@ export async function renderVasicek(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Simulation grid</h2>
+            <h2 data-i18n="view.vasicek.h2.simulation_grid">Simulation grid</h2>
             <div class="inline-form">
                 <label>dt (years)
                     <input id="va-dt"    type="number" step="any" min="0" value="${state.params.dt}"></label>
@@ -68,9 +69,9 @@ export async function renderVasicek(mount, _appState) {
                     <input id="va-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
                 <label>Seed (0 = auto)
                     <input id="va-seed"  type="number" step="1"   min="0" value="${state.params.seed}"></label>
-                <button id="va-run" class="primary" type="button">Simulate</button>
+                <button data-i18n="view.vasicek.btn.simulate" id="va-run" class="primary" type="button">Simulate</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.vasicek.hint.half_life_of_mean_reversion_ln_2_a_default_a_0_5_h" class="muted">
                 Half-life of mean reversion = ln(2)/a. Default a=0.5 → half-life ≈ 1.39
                 years. Vasicek allows negative rates — the report tells you what fraction
                 of paths visited a negative value, which is real risk for European-rate
@@ -81,9 +82,9 @@ export async function renderVasicek(mount, _appState) {
         <div id="va-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Terminal-rate distribution (normal approximation)</h2>
+            <h2 data-i18n="view.vasicek.h2.terminal_rate_distribution_normal_approximation">Terminal-rate distribution (normal approximation)</h2>
             <div id="va-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.vasicek.hint.density_centered_on_the_simulated_mean_stdev_vasic" class="muted">
                 Density centered on the simulated (mean, stdev). Vasicek's terminal rate
                 is asymptotically normal, so the curve is exact in the long-run limit and
                 a good approximation for any reasonably-long horizon.
@@ -140,16 +141,16 @@ function renderSummary(res) {
     const horizon = horizonYears(p.steps, p.dt);
     const negPct = res.negative_path_fraction * 100;
     document.getElementById('va-summary').innerHTML = [
-        card('Terminal mean', fmtRatePct(res.mean_terminal_rate), '',
+        card(t('view.vasicek.card.terminal_mean'), fmtRatePct(res.mean_terminal_rate), '',
             `<div class="vc-row"><span class="muted">long-run target b</span>
                 <strong>${fmtRatePct(p.b)}</strong></div>`),
-        card('Terminal stdev', fmtRatePct(res.stdev_terminal_rate, 4), '',
+        card(t('view.vasicek.card.terminal_stdev'), fmtRatePct(res.stdev_terminal_rate, 4), '',
             `<div class="vc-row"><span class="muted">long-run σ_∞ = σ/√(2a)</span>
                 <strong>${fmtRatePct(lrs, 4)}</strong></div>`),
-        card('Terminal range', `${fmtRatePct(res.min_terminal_rate)} – ${fmtRatePct(res.max_terminal_rate)}`),
-        card('Mean-reversion half-life', fmtYears(hl)),
-        card('Simulation horizon', fmtYears(horizon)),
-        card('Paths that went negative',
+        card(t('view.vasicek.card.terminal_range'), `${fmtRatePct(res.min_terminal_rate)} – ${fmtRatePct(res.max_terminal_rate)}`),
+        card(t('view.vasicek.card.mean_reversion_half_life'), fmtYears(hl)),
+        card(t('view.vasicek.card.simulation_horizon'), fmtYears(horizon)),
+        card(t('view.vasicek.card.paths_that_went_negative'),
             `${negPct.toFixed(1)}% (${Math.round(negPct / 100 * res.paths_run)} of ${res.paths_run})`,
             negPct > 0 ? 'neg' : 'pos'),
     ].join('');

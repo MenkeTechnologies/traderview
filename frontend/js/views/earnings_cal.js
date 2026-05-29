@@ -8,7 +8,7 @@ const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 export async function renderEarningsCal(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// EARNINGS CALENDAR</h1>
+        <h1 data-i18n="view.earnings_cal.h1.earnings_calendar" class="view-title">// EARNINGS CALENDAR</h1>
         <p class="muted small">Polls Yahoo's <code>quoteSummary</code> earnings module every 6h
             across your watchlist symbols. Surprise % = (actual − estimate) / |estimate| × 100.
             Reaction columns are next-session and 5-session price moves vs the close on / just
@@ -16,25 +16,25 @@ export async function renderEarningsCal(mount) {
 
         <div class="chart-panel">
             <form class="inline-form" id="e-form">
-                <label>Upcoming days
+                <label><span data-i18n="view.earnings_cal.label.upcoming_days">Upcoming days</span>
                     <input name="days" type="number" min="1" max="30" value="7" style="width:80px;">
                 </label>
-                <label>Surprise lookback (days)
+                <label><span data-i18n="view.earnings_cal.label.surprise_lookback">Surprise lookback (days)</span>
                     <input name="back" type="number" min="1" max="365" value="30" style="width:90px;">
                 </label>
-                <button class="primary" type="submit">Refresh view</button>
-                <button class="btn" type="button" id="e-poll">Poll now (Yahoo)</button>
+                <button data-i18n="view.earnings_cal.btn.refresh_view" class="primary" type="submit">Refresh view</button>
+                <button data-i18n="view.earnings_cal.btn.poll_now_yahoo" class="btn" type="button" id="e-poll">Poll now (Yahoo)</button>
                 <span id="e-status" class="muted small"></span>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>This week (calendar matrix)</h2>
+            <h2 data-i18n="view.earnings_cal.h2.this_week_calendar_matrix">This week (calendar matrix)</h2>
             <div id="e-cal"></div>
         </div>
 
         <div class="chart-panel">
-            <h2>Biggest surprises (recent)</h2>
+            <h2 data-i18n="view.earnings_cal.h2.biggest_surprises_recent">Biggest surprises (recent)</h2>
             <div id="e-surp"></div>
         </div>
     `;
@@ -117,7 +117,7 @@ function renderCalendarMatrix(events, days, mount) {
                     }).join('')}
             </div>`).join('')}
         </div>
-        <p class="muted small" style="margin-top:6px;">☀ before market open · 🌙 after market close · · timing unknown</p>
+        <p data-i18n="view.earnings_cal.hint.before_market_open_after_market_close_timing_unkno" class="muted small" style="margin-top:6px;">☀ before market open · 🌙 after market close · · timing unknown</p>
     `;
 }
 
@@ -125,13 +125,13 @@ function renderSurpriseTable(events, mount) {
     const el = mount.querySelector('#e-surp');
     if (!el) return;
     if (!events.length) {
-        el.innerHTML = '<p class="muted small">No surprise data yet.</p>';
+        el.innerHTML = '<p data-i18n="view.earnings_cal.hint.no_surprise_data_yet" class="muted small">No surprise data yet.</p>';
         return;
     }
     el.innerHTML = `<table class="trades">
         <thead><tr>
-            <th>Symbol</th><th>Date</th><th>Est EPS</th><th>Actual EPS</th>
-            <th>Surprise</th><th>Reaction 1d</th><th>Reaction 5d</th>
+            <th data-i18n="view.earnings_cal.th.symbol">Symbol</th><th data-i18n="view.earnings_cal.th.date">Date</th><th data-i18n="view.earnings_cal.th.est_eps">Est EPS</th><th data-i18n="view.earnings_cal.th.actual_eps">Actual EPS</th>
+            <th data-i18n="view.earnings_cal.th.surprise">Surprise</th><th data-i18n="view.earnings_cal.th.reaction_1d">Reaction 1d</th><th data-i18n="view.earnings_cal.th.reaction_5d">Reaction 5d</th>
         </tr></thead>
         <tbody>
         ${events.map(ev => {

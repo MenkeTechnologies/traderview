@@ -19,6 +19,7 @@ import {
     METRICS, fmtN, defaultSpotGrid, nearestAtmIndex,
 } from '../_second_order_greeks_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_PARAMS = {
     kind: 'call',
     strike: 100,
@@ -48,15 +49,15 @@ export async function renderSecondOrderGreeks(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// SECOND-ORDER GREEKS</h1>
+        <h1 data-i18n="view.second_order_greeks.h1.second_order_greeks" class="view-title">// SECOND-ORDER GREEKS</h1>
 
         <div class="chart-panel">
-            <h2>Contract</h2>
+            <h2 data-i18n="view.second_order_greeks.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label>Kind
                     <select id="sg-kind">
-                        <option value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
-                        <option value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
+                        <option data-i18n="view.second_order_greeks.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
+                        <option data-i18n="view.second_order_greeks.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label>Strike <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
                 <label>T (years) <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
@@ -67,15 +68,15 @@ export async function renderSecondOrderGreeks(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Spot grid</h2>
+            <h2 data-i18n="view.second_order_greeks.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
                 <label>Low <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
                 <label>High <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
                 <label>Points <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
-                <button id="sg-defaults" class="secondary" type="button">±50% from strike</button>
-                <button id="sg-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.second_order_greeks.btn.50_from_strike" id="sg-defaults" class="secondary" type="button">±50% from strike</button>
+                <button data-i18n="view.second_order_greeks.btn.compute" id="sg-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.second_order_greeks.hint.grid_values_computed_client_side_bs_closed_form_th" class="muted">
                 Grid values computed client-side (BS closed-form). The "backend ATM"
                 card calls /options/calc/second-order-greeks once at spot = strike for a
                 canonical reference — local + backend should agree to ~7 dp.
@@ -150,14 +151,14 @@ async function compute(_mount, tok) {
 function renderSummary(atmLocal, atmBackend) {
     const has = (atmLocal && Number.isFinite(atmLocal.spot));
     document.getElementById('sg-summary').innerHTML = [
-        card('ATM spot',         has ? fmtN(atmLocal.spot, 2) : '—'),
-        card('vanna (local)',    fmtN(atmLocal?.vanna)),
-        card('vanna (backend)',  fmtN(atmBackend?.vanna)),
-        card('charm (local)',    fmtN(atmLocal?.charm), atmLocal?.charm < 0 ? 'neg' : 'pos'),
-        card('charm (backend)',  fmtN(atmBackend?.charm)),
-        card('vomma (local)',    fmtN(atmLocal?.vomma)),
-        card('veta (local)',     fmtN(atmLocal?.veta)),
-        card('veta (backend)',   fmtN(atmBackend?.veta)),
+        card(t('view.second_order_greeks.card.atm_spot'),         has ? fmtN(atmLocal.spot, 2) : '—'),
+        card(t('view.second_order_greeks.card.vanna_local'),    fmtN(atmLocal?.vanna)),
+        card(t('view.second_order_greeks.card.vanna_backend'),  fmtN(atmBackend?.vanna)),
+        card(t('view.second_order_greeks.card.charm_local'),    fmtN(atmLocal?.charm), atmLocal?.charm < 0 ? 'neg' : 'pos'),
+        card(t('view.second_order_greeks.card.charm_backend'),  fmtN(atmBackend?.charm)),
+        card(t('view.second_order_greeks.card.vomma_local'),    fmtN(atmLocal?.vomma)),
+        card(t('view.second_order_greeks.card.veta_local'),     fmtN(atmLocal?.veta)),
+        card(t('view.second_order_greeks.card.veta_backend'),   fmtN(atmBackend?.veta)),
     ].join('');
 }
 

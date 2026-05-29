@@ -8,37 +8,37 @@ import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
 export async function renderNewTrade(mount, state) {
     const tok = currentViewToken();
     if (!state.accountId) {
-        mount.innerHTML = '<p class="boot">Create an account first (Accounts tab).</p>';
+        mount.innerHTML = '<p data-i18n="view.new_trade.hint.create_an_account_first_accounts_tab" class="boot">Create an account first (Accounts tab).</p>';
         return;
     }
     mount.innerHTML = `
-        <h1 class="view-title">// NEW TRADE</h1>
-        <p class="muted small">Add executions one at a time. The server FIFO-folds each one into the matching open trade (or starts a new one).</p>
+        <h1 data-i18n="view.new_trade.h1.new_trade" class="view-title">// NEW TRADE</h1>
+        <p data-i18n="view.new_trade.hint.add_executions_one_at_a_time_the_server_fifo_folds" class="muted small">Add executions one at a time. The server FIFO-folds each one into the matching open trade (or starts a new one).</p>
 
         <div class="chart-panel">
-            <h2>Add execution</h2>
+            <h2 data-i18n="view.new_trade.h2.add_execution">Add execution</h2>
             <form id="ex-form" class="inline-form">
                 <input name="symbol" placeholder="symbol" required>
                 <select name="side">
-                    <option value="buy">buy</option>
-                    <option value="sell">sell</option>
-                    <option value="short">short</option>
-                    <option value="cover">cover</option>
+                    <option data-i18n="view.new_trade.opt.buy" value="buy">buy</option>
+                    <option data-i18n="view.new_trade.opt.sell" value="sell">sell</option>
+                    <option data-i18n="view.new_trade.opt.short" value="short">short</option>
+                    <option data-i18n="view.new_trade.opt.cover" value="cover">cover</option>
                 </select>
                 <input name="qty" type="number" step="any" placeholder="qty" required>
                 <input name="price" type="number" step="any" placeholder="price" required>
                 <input name="fee" type="number" step="any" placeholder="fee" value="0">
                 <input name="executed_at" type="datetime-local" required>
                 <select name="asset_class">
-                    <option value="stock">stock</option>
-                    <option value="option">option</option>
-                    <option value="future">future</option>
-                    <option value="forex">forex</option>
+                    <option data-i18n="view.new_trade.opt.stock" value="stock">stock</option>
+                    <option data-i18n="view.new_trade.opt.option" value="option">option</option>
+                    <option data-i18n="view.new_trade.opt.future" value="future">future</option>
+                    <option data-i18n="view.new_trade.opt.forex" value="forex">forex</option>
                 </select>
                 <select name="option_type" style="display:none">
                     <option value="">—</option>
-                    <option value="call">call</option>
-                    <option value="put">put</option>
+                    <option data-i18n="view.new_trade.opt.call" value="call">call</option>
+                    <option data-i18n="view.new_trade.opt.put" value="put">put</option>
                 </select>
                 <input name="strike"     type="number" step="any" placeholder="strike" style="display:none">
                 <input name="expiration" type="date"   placeholder="exp" style="display:none">
@@ -47,13 +47,13 @@ export async function renderNewTrade(mount, state) {
                 <label style="display:flex;align-items:center;gap:4px;">
                     <input type="checkbox" name="has_attached_plan"> plan attached
                 </label>
-                <button class="primary" type="submit">Add</button>
+                <button data-i18n="view.new_trade.btn.add" class="primary" type="submit">Add</button>
             </form>
             <p class="muted small">Pre-trade <a href="#risk-gate">Risk Gate</a> rules evaluate <code>stop_loss</code> + <code>has_attached_plan</code> before submission. Configure rules in the Risk Gate view.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Recent executions on this account</h2>
+            <h2 data-i18n="view.new_trade.h2.recent_executions_on_this_account">Recent executions on this account</h2>
             <div id="recent-execs"></div>
         </div>
     `;
@@ -160,16 +160,16 @@ export async function renderNewTrade(mount, state) {
         if (!el) return;
         el.innerHTML = execs.length ? `
             <table class="trades">
-                <thead><tr><th>Time</th><th>Symbol</th><th>Side</th>
-                    <th>Qty</th><th>Price</th><th>Fee</th></tr></thead>
+                <thead><tr><th data-i18n="view.new_trade.th.time">Time</th><th data-i18n="view.new_trade.th.symbol">Symbol</th><th data-i18n="view.new_trade.th.side">Side</th>
+                    <th data-i18n="view.new_trade.th.qty">Qty</th><th data-i18n="view.new_trade.th.price">Price</th><th data-i18n="view.new_trade.th.fee">Fee</th></tr></thead>
                 <tbody>${execs.map(e => `
                     <tr><td>${new Date(e.executed_at).toLocaleString(undefined, { hour12: false })}</td>
                     <td>${e.symbol}</td><td>${e.side}</td>
                     <td>${fmt(e.qty, 0)}</td><td>${fmt(e.price)}</td><td>${fmt(e.fee)}</td></tr>
                 `).join('')}</tbody>
             </table>
-            <button class="primary" id="open-trades">View trades</button>
-        ` : '<p class="muted">No executions yet on this account.</p>';
+            <button data-i18n="view.new_trade.btn.view_trades" class="primary" id="open-trades">View trades</button>
+        ` : '<p data-i18n="view.new_trade.hint.no_executions_yet_on_this_account" class="muted">No executions yet on this account.</p>';
         const btn = mount.querySelector('#open-trades');
         if (btn) btn.addEventListener('click', () => go('trades'));
     }

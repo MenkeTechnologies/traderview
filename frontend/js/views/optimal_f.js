@@ -18,6 +18,7 @@ import {
     twrSweep, fmtPctF, fmtMoney, fmtMultiple,
 } from '../_optimal_f_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_TEXT = `# Paste trade P/Ls (one per token, signed: positive = win, negative = loss).
 # Demo: 20 simulated trades with ~55% win rate, win:loss ratio ~ 1.5:1.
 500   -300   450   -280   600   -310   520   -270   480   -290
@@ -30,16 +31,16 @@ export async function renderOptimalF(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// OPTIMAL-F SIZER</h1>
+        <h1 data-i18n="view.optimal_f.h1.optimal_f_sizer" class="view-title">// OPTIMAL-F SIZER</h1>
 
         <div class="chart-panel">
-            <h2>Trade P/L series</h2>
+            <h2 data-i18n="view.optimal_f.h2.trade_p_l_series">Trade P/L series</h2>
             <textarea id="of-text" rows="8"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
             <div class="inline-form" style="margin-top:8px">
-                <button id="of-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.optimal_f.btn.compute" id="of-run" class="primary" type="button">Compute</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.optimal_f.hint.optimal_f_the_fraction_of_capital_to_risk_per_trad" class="muted">
                 Optimal-f = the fraction of capital to risk per trade that maximizes
                 long-run geometric growth (Vince 1990). Practitioners almost always use
                 half- or quarter-Kelly because the TWR curve is asymmetric — overbetting
@@ -52,9 +53,9 @@ export async function renderOptimalF(mount, _appState) {
         <div id="of-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>TWR vs bet fraction</h2>
+            <h2 data-i18n="view.optimal_f.h2.twr_vs_bet_fraction">TWR vs bet fraction</h2>
             <div id="of-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.optimal_f.hint.geometric_growth_curve_from_f_0_to_1_cyan_twr_vert" class="muted">
                 Geometric growth curve from f = 0 to 1. Cyan: TWR. Vertical markers:
                 optimal-f (orange), half-Kelly (cyan), quarter-Kelly (green). Notice the
                 cliff to the right of optimal-f — overbetting wipes out wealth faster than
@@ -105,24 +106,24 @@ function renderSummary(returns, res) {
     const avgLoss = losers.length > 0
         ? losers.reduce((a, b) => a + b, 0) / losers.length : NaN;
     const cards = [];
-    cards.push(card('Optimal-f',  fmtPctF(res.optimal_f), 'pos',
+    cards.push(card(t('view.optimal_f.card.optimal_f'),  fmtPctF(res.optimal_f), 'pos',
         `<div class="vc-row"><span class="muted">TWR @ optimal</span>
             <strong>${fmtMultiple(res.twr_at_optimal)}</strong></div>`));
-    cards.push(card('Half-Kelly (recommended)', fmtPctF(res.half_kelly), '',
+    cards.push(card(t('view.optimal_f.card.half_kelly_recommended'), fmtPctF(res.half_kelly), '',
         `<div class="vc-row"><span class="muted">conservative default</span>
             <strong>optimal-f / 2</strong></div>`));
-    cards.push(card('Quarter-Kelly', fmtPctF(res.quarter_kelly), '',
+    cards.push(card(t('view.optimal_f.card.quarter_kelly'), fmtPctF(res.quarter_kelly), '',
         `<div class="vc-row"><span class="muted">ultra-conservative</span>
             <strong>optimal-f / 4</strong></div>`));
-    cards.push(card('Worst single trade loss', fmtMoney(-res.worst_loss), 'neg'));
-    cards.push(card('Trades', String(returns.length), '',
+    cards.push(card(t('view.optimal_f.card.worst_single_trade_loss'), fmtMoney(-res.worst_loss), 'neg'));
+    cards.push(card(t('view.optimal_f.card.trades'), String(returns.length), '',
         `<div class="vc-row"><span class="muted">wins / losses</span>
             <strong>${winners.length} / ${losers.length}</strong></div>`));
-    cards.push(card('Win rate', fmtPctF(winRate)));
-    cards.push(card('Avg win',  fmtMoney(avgWin),  winners.length > 0 ? 'pos' : ''));
-    cards.push(card('Avg loss', fmtMoney(avgLoss), losers.length > 0 ? 'neg' : ''));
+    cards.push(card(t('view.optimal_f.card.win_rate'), fmtPctF(winRate)));
+    cards.push(card(t('view.optimal_f.card.avg_win'),  fmtMoney(avgWin),  winners.length > 0 ? 'pos' : ''));
+    cards.push(card(t('view.optimal_f.card.avg_loss'), fmtMoney(avgLoss), losers.length > 0 ? 'neg' : ''));
     if (res.note) {
-        cards.push(card('Note', res.note));
+        cards.push(card(t('view.optimal_f.card.note'), res.note));
     }
     document.getElementById('of-summary').innerHTML = cards.join('');
 }

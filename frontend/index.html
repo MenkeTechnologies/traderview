@@ -26,56 +26,65 @@
             <span class="nav-toggle-bars"><span></span></span>
         </button>
         <nav class="tabs" id="primary-nav">
-            <button class="tab active" data-view="launcher" title="All views (⌘K)" data-i18n="nav.home">⌘ Home</button>
-            <button class="tab" data-view="dashboard" data-i18n="nav.dashboard">Dashboard</button>
-            <button class="tab" data-view="live-scanner" data-i18n="nav.scanner">Scanner</button>
-            <button class="tab" data-view="halts">Halts</button>
-            <button class="tab" data-view="catalysts">Catalysts</button>
-            <button class="tab" data-view="webull">Webull</button>
-            <button class="tab" data-view="trades">Trades</button>
-            <button class="tab" data-view="journal">Journal</button>
-            <button class="tab" data-view="reports">Reports</button>
-            <button class="tab" data-view="search">Search</button>
-            <button class="tab" data-view="settings">⚙️</button>
+            <button class="tab active" data-view="launcher" data-tip="topbar.tip.home" data-shortcut="go_home" data-i18n="nav.home">⌘ Home</button>
+            <button class="tab" data-view="dashboard"    data-tip="nav.tip.dashboard"  data-i18n="nav.dashboard">Dashboard</button>
+            <button class="tab" data-view="live-scanner" data-tip="nav.tip.scanner"    data-i18n="nav.scanner">Scanner</button>
+            <button data-i18n="view.index.btn.halts"     data-tip="nav.tip.halts"      class="tab" data-view="halts">Halts</button>
+            <button data-i18n="view.index.btn.catalysts" data-tip="nav.tip.catalysts"  class="tab" data-view="catalysts">Catalysts</button>
+            <button data-i18n="view.index.btn.webull"    data-tip="nav.tip.webull"     class="tab" data-view="webull">Webull</button>
+            <button data-i18n="view.index.btn.trades"    data-tip="nav.tip.trades"     class="tab" data-view="trades">Trades</button>
+            <button data-i18n="view.index.btn.journal"   data-tip="nav.tip.journal"    class="tab" data-view="journal">Journal</button>
+            <button data-i18n="view.index.btn.reports"   data-tip="nav.tip.reports"    class="tab" data-view="reports">Reports</button>
+            <button data-i18n="view.index.btn.search"    data-tip="nav.tip.search"     class="tab" data-view="search">Search</button>
+            <button class="tab" data-view="settings"     data-tip="nav.tip.settings"   data-i18n-aria-label="nav.aria.settings">⚙️</button>
         </nav>
         <div class="account-strip" id="account-strip"></div>
-        <select id="locale-picker" class="locale-picker" aria-label="Locale">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="de">Deutsch</option>
+        <button id="topPalette" class="btn btn-secondary" type="button"
+                data-tip="topbar.tip.palette"
+                data-shortcut="command_palette"
+                data-i18n-aria-label="topbar.aria.palette">⌘K</button>
+        <a id="topShortcuts" class="btn btn-secondary" href="#keyboard-shortcuts"
+           data-tip="topbar.tip.shortcuts"
+           data-shortcut="help"
+           data-i18n-aria-label="topbar.aria.shortcuts">?</a>
+        <select id="locale-picker" class="locale-picker" aria-label="Locale"
+                data-i18n-aria-label="topbar.aria.locale" data-tip="topbar.tip.locale">
+            <option data-i18n="view.index.opt.english" value="en">English</option>
+            <option data-i18n="view.index.opt.espa_ol" value="es">Español</option>
+            <option data-i18n="view.index.opt.deutsch" value="de">Deutsch</option>
             <option value="ja">日本語</option>
-            <option value="fr">Français</option>
+            <option data-i18n="view.index.opt.fran_ais" value="fr">Français</option>
             <option value="zh">中文</option>
             <option value="ko">한국어</option>
             <option value="ru">Русский</option>
-            <option value="pt">Português</option>
-            <option value="it">Italiano</option>
-            <option value="nl">Nederlands</option>
-            <option value="pl">Polski</option>
-            <option value="tr">Türkçe</option>
-            <option value="sv">Svenska</option>
-            <option value="da">Dansk</option>
-            <option value="fi">Suomi</option>
-            <option value="cs">Čeština</option>
+            <option data-i18n="view.index.opt.portugu_s" value="pt">Português</option>
+            <option data-i18n="view.index.opt.italiano" value="it">Italiano</option>
+            <option data-i18n="view.index.opt.nederlands" value="nl">Nederlands</option>
+            <option data-i18n="view.index.opt.polski" value="pl">Polski</option>
+            <option data-i18n="view.index.opt.t_rk_e" value="tr">Türkçe</option>
+            <option data-i18n="view.index.opt.svenska" value="sv">Svenska</option>
+            <option data-i18n="view.index.opt.dansk" value="da">Dansk</option>
+            <option data-i18n="view.index.opt.suomi" value="fi">Suomi</option>
+            <option data-i18n="view.index.opt.e_tina" value="cs">Čeština</option>
             <option value="el">Ελληνικά</option>
-            <option value="hu">Magyar</option>
-            <option value="id">Bahasa Indonesia</option>
-            <option value="vi">Tiếng Việt</option>
+            <option data-i18n="view.index.opt.magyar" value="hu">Magyar</option>
+            <option data-i18n="view.index.opt.bahasa_indonesia" value="id">Bahasa Indonesia</option>
+            <option data-i18n="view.index.opt.ti_ng_vi_t" value="vi">Tiếng Việt</option>
             <option value="hi">हिन्दी</option>
-            <option value="nb">Norsk</option>
-            <option value="ro">Română</option>
+            <option data-i18n="view.index.opt.norsk" value="nb">Norsk</option>
+            <option data-i18n="view.index.opt.rom_n" value="ro">Română</option>
             <option value="uk">Українська</option>
-            <option value="es_419">Español (LA)</option>
-            <option value="pt_br">Português (BR)</option>
+            <option data-i18n="view.index.opt.espa_ol_la" value="es_419">Español (LA)</option>
+            <option data-i18n="view.index.opt.portugu_s_br" value="pt_br">Português (BR)</option>
         </select>
         <div class="hud-toggles">
-            <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
-            <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
-            <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+            <button data-i18n="view.index.btn.theme" data-tip="topbar.tip.theme" data-shortcut="toggle_theme" type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+            <button data-i18n="view.index.btn.crt" data-tip="topbar.tip.crt" data-shortcut="toggle_crt" type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+            <button data-i18n="view.index.btn.neon" data-tip="topbar.tip.neon" data-shortcut="toggle_neon" type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
         </div>
-        <span class="ws-status off" id="wsStatus" title="real-time stream"></span>
-        <a href="#research" id="globalTicker" class="global-ticker" title="active ticker — type letters anywhere on the page to change" style="display:none">—</a>
-        <a href="#risk-gate" id="killSwitchTop" title="Risk Gate kill switch — click to manage" style="text-decoration:none;display:none;color:#ff2a6d;font-size:18px;margin:0 6px">🛑</a>
+        <span class="ws-status off" id="wsStatus" data-tip="topbar.tip.ws_status"></span>
+        <a href="#research" id="globalTicker" class="global-ticker" data-tip="topbar.tip.global_ticker" style="display:none">—</a>
+        <a href="#risk-gate" id="killSwitchTop" data-tip="topbar.tip.kill_switch" style="text-decoration:none;display:none;color:#ff2a6d;font-size:18px;margin:0 6px">🛑</a>
         <div class="user-strip" id="user-strip"></div>
     </header>
 
@@ -89,16 +98,19 @@
 
 <div id="auth-screen" class="auth-screen hidden">
     <div class="auth-card doc-card">
-        <h1>TRADERVIEW</h1>
+        <h1 data-i18n="view.index.h1.traderview">TRADERVIEW</h1>
         <div class="auth-tabs">
-            <button class="auth-tab active" data-auth="login">Log in</button>
-            <button class="auth-tab" data-auth="register">Register</button>
+            <button data-i18n="view.index.btn.log_in" class="auth-tab active" data-auth="login">Log in</button>
+            <button data-i18n="view.index.btn.register" class="auth-tab" data-auth="register">Register</button>
         </div>
         <form id="auth-form" autocomplete="off">
-            <input type="email" name="email" placeholder="email" required>
-            <input type="password" name="password" placeholder="password" required minlength="8">
-            <input type="text" name="display_name" placeholder="display name (register only)" class="register-only hidden">
-            <button type="submit">Continue</button>
+            <input type="email" name="email" placeholder="email"
+                   data-i18n-placeholder="auth.placeholder.email" required>
+            <input type="password" name="password" placeholder="password"
+                   data-i18n-placeholder="auth.placeholder.password" required minlength="8">
+            <input type="text" name="display_name" placeholder="display name (register only)"
+                   data-i18n-placeholder="auth.placeholder.display_name" class="register-only hidden">
+            <button data-i18n="view.index.btn.continue" type="submit">Continue</button>
             <div class="auth-error" id="auth-error"></div>
         </form>
     </div>

@@ -23,14 +23,14 @@ export async function renderHotkeys(mount) {
     const keys = await api.hotkeys();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// HOTKEYS</h1>
-        <p class="muted small">DAS-style key bindings. Click "capture" then press the desired combo.</p>
+        <h1 data-i18n="view.hotkeys.h1.hotkeys" class="view-title">// HOTKEYS</h1>
+        <p data-i18n="view.hotkeys.hint.das_style_key_bindings_click_capture_then_press_th" class="muted small">DAS-style key bindings. Click "capture" then press the desired combo.</p>
 
         <div class="chart-panel">
-            <h2>New binding</h2>
+            <h2 data-i18n="view.hotkeys.h2.new_binding">New binding</h2>
             <form id="hk-form" class="inline-form">
                 <input name="name" placeholder="binding name" required>
-                <button type="button" id="capture" class="primary"
+                <button data-i18n="view.hotkeys.btn.capture_combo" type="button" id="capture" class="primary"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">
                     Capture combo
                 </button>
@@ -38,20 +38,20 @@ export async function renderHotkeys(mount) {
                 <select name="action" required>
                     ${ACTIONS.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
                 </select>
-                <button class="primary" type="submit">Save</button>
+                <button data-i18n="view.hotkeys.btn.save" class="primary" type="submit">Save</button>
             </form>
         </div>
 
         <div class="chart-panel">
-            <h2>Current bindings</h2>
+            <h2 data-i18n="view.hotkeys.h2.current_bindings">Current bindings</h2>
             ${keys.length ? `<table class="trades">
-                <thead><tr><th>Name</th><th>Combo</th><th>Action</th><th></th></tr></thead>
+                <thead><tr><th data-i18n="view.hotkeys.th.name">Name</th><th data-i18n="view.hotkeys.th.combo">Combo</th><th data-i18n="view.hotkeys.th.action">Action</th><th></th></tr></thead>
                 <tbody>${keys.map(k => `
                     <tr><td>${esc(k.name)}</td>
                     <td><code>${esc(k.combo)}</code></td>
                     <td>${esc(actionLabel(k.action))}</td>
-                    <td><button class="link" data-del="${k.id}">delete</button></td></tr>
-                `).join('')}</tbody></table>` : '<p class="muted">No bindings yet.</p>'}
+                    <td><button data-i18n="view.hotkeys.btn.delete" class="link" data-del="${k.id}">delete</button></td></tr>
+                `).join('')}</tbody></table>` : '<p data-i18n="view.hotkeys.hint.no_bindings_yet" class="muted">No bindings yet.</p>'}
         </div>
     `;
     const comboInput = mount.querySelector('[name=combo]');

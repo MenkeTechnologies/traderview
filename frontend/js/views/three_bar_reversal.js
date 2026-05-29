@@ -12,24 +12,25 @@ import {
     kindBadge, eventMarkers, makeDemoBars, fmtN,
 } from '../_three_bar_reversal_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { barText: '' };
 
 export async function renderThreeBarReversal(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// THREE-BAR REVERSAL</h1>
+        <h1 data-i18n="view.three_bar_reversal.h1.three_bar_reversal" class="view-title">// THREE-BAR REVERSAL</h1>
 
         <div class="chart-panel">
-            <h2>OHLC bars</h2>
+            <h2 data-i18n="view.three_bar_reversal.h2.ohlc_bars">OHLC bars</h2>
             <p class="muted">Paste <code>open high low close</code> per line.
                 Detection rule (fixed): bar1 trend bar, small middle (body ≤ 50% of bar1's body),
                 bar3 closes past bar1's opposite extreme. Demo includes one classic bullish
                 pattern at bars 2-3-4 and one classic bearish pattern at bars 11-12-13.</p>
             <textarea id="tbr-bars" rows="6" placeholder="100 100.5 99.5 100.2&#10;100.2 100.5 99.8 100.0&#10;..."></textarea>
             <div class="inline-form">
-                <button id="tbr-demo" class="secondary" type="button">Load demo (14 bars, bull + bear pattern)</button>
-                <button id="tbr-clear" class="secondary" type="button">Clear</button>
-                <button id="tbr-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.three_bar_reversal.btn.load_demo_14_bars_bull_bear_pattern" id="tbr-demo" class="secondary" type="button">Load demo (14 bars, bull + bear pattern)</button>
+                <button data-i18n="view.three_bar_reversal.btn.clear" id="tbr-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.three_bar_reversal.btn.detect" id="tbr-run" class="primary" type="button">Detect</button>
             </div>
         </div>
 
@@ -37,14 +38,14 @@ export async function renderThreeBarReversal(mount, _appState) {
         <div id="tbr-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Close series + reversal markers</h2>
+            <h2 data-i18n="view.three_bar_reversal.h2.close_series_reversal_markers">Close series + reversal markers</h2>
             <div id="tbr-chart" style="height:280px"></div>
-            <p class="muted">Cyan = close. Green dot = bullish reversal (placed below the
+            <p data-i18n="view.three_bar_reversal.hint.cyan_close_green_dot_bullish_reversal_placed_below" class="muted">Cyan = close. Green dot = bullish reversal (placed below the
                 third bar's low). Red dot = bearish reversal (placed above the third bar's high).</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Event log</h2>
+            <h2 data-i18n="view.three_bar_reversal.h2.event_log">Event log</h2>
             <div id="tbr-events"></div>
         </div>
 
@@ -101,11 +102,11 @@ function renderSummary(report, bars) {
     const bearish = events.filter(e => e.kind === 'bearish').length;
     const last = events[events.length - 1];
     document.getElementById('tbr-summary').innerHTML = [
-        card('Bars',         String(bars.length)),
-        card('Events',       String(report.n_events || 0)),
-        card('Bullish',      String(bullish), bullish ? 'pos' : ''),
-        card('Bearish',      String(bearish), bearish ? 'neg' : ''),
-        card('Last event',   last
+        card(t('view.three_bar_reversal.card.bars'),         String(bars.length)),
+        card(t('view.three_bar_reversal.card.events'),       String(report.n_events || 0)),
+        card(t('view.three_bar_reversal.card.bullish'),      String(bullish), bullish ? 'pos' : ''),
+        card(t('view.three_bar_reversal.card.bearish'),      String(bearish), bearish ? 'neg' : ''),
+        card(t('view.three_bar_reversal.card.last_event'),   last
             ? `bar ${last.bar_index} ${kindBadge(last.kind).label}`
             : '—',
             last ? kindBadge(last.kind).cls : ''),
@@ -152,8 +153,8 @@ function renderEvents(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>#</th><th>Bar idx</th><th>Kind</th>
-                <th>Hint</th><th>Bar 1 open</th><th>Bar 3 close</th><th>Δ</th>
+                <th>#</th><th data-i18n="view.three_bar_reversal.th.bar_idx">Bar idx</th><th data-i18n="view.three_bar_reversal.th.kind">Kind</th>
+                <th data-i18n="view.three_bar_reversal.th.hint">Hint</th><th data-i18n="view.three_bar_reversal.th.bar_1_open">Bar 1 open</th><th data-i18n="view.three_bar_reversal.th.bar_3_close">Bar 3 close</th><th>Δ</th>
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => {

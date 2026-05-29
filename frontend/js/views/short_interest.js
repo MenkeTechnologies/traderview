@@ -21,25 +21,25 @@ export async function renderShortInterest(mount, _state, sym) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// SHORT INTEREST</h1>
-        <p class="muted small">Yahoo defaultKeyStatistics for shares short / float % / days-to-cover,
+        <h1 data-i18n="view.short_interest.h1.short_interest" class="view-title">// SHORT INTEREST</h1>
+        <p data-i18n="view.short_interest.hint.yahoo_defaultkeystatistics_for_shares_short_float_" class="muted small">Yahoo defaultKeyStatistics for shares short / float % / days-to-cover,
             FINRA Reg SHO daily short-volume aggregated across market centers.</p>
 
         <form id="sf" class="inline-form">
             <input name="sym" placeholder="symbol (GME)" style="text-transform:uppercase">
-            <button class="primary" type="submit">Lookup</button>
+            <button data-i18n="view.short_interest.btn.lookup" class="primary" type="submit">Lookup</button>
         </form>
 
         <div class="chart-panel">
-            <h2>Watchlist ranking (sorted by short % of float)</h2>
+            <h2 data-i18n="view.short_interest.h2.watchlist_ranking_sorted_by_short_of_float">Watchlist ranking (sorted by short % of float)</h2>
             <form id="rf" class="inline-form">
-                <label>Universe
+                <label><span data-i18n="view.short_interest.label.universe">Universe</span>
                     <select name="wl">
-                        <option value="">all my watchlists</option>
+                        <option data-i18n="view.short_interest.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
-                <button class="primary" type="submit">Rank</button>
+                <button data-i18n="view.short_interest.btn.rank" class="primary" type="submit">Rank</button>
             </form>
             <div id="ranked"></div>
         </div>
@@ -70,10 +70,10 @@ export async function renderShortInterest(mount, _state, sym) {
 }
 
 function renderRanked(el, rows) {
-    if (!rows.length) { el.innerHTML = '<p class="muted">No symbols in this universe.</p>'; return; }
+    if (!rows.length) { el.innerHTML = '<p data-i18n="view.short_interest.hint.no_symbols_in_this_universe" class="muted">No symbols in this universe.</p>'; return; }
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>#</th><th>Sym</th><th>Shares short</th><th>Prior month</th><th>Δ</th>
-            <th>% Float</th><th>% Outstanding</th><th>Days to cover</th><th>Float</th></tr></thead>
+        <thead><tr><th>#</th><th data-i18n="view.short_interest.th.sym">Sym</th><th data-i18n="view.short_interest.th.shares_short">Shares short</th><th data-i18n="view.short_interest.th.prior_month">Prior month</th><th>Δ</th>
+            <th data-i18n="view.short_interest.th.float">% Float</th><th data-i18n="view.short_interest.th.outstanding">% Outstanding</th><th data-i18n="view.short_interest.th.days_to_cover">Days to cover</th><th data-i18n="view.short_interest.th.float_2">Float</th></tr></thead>
         <tbody>${rows.map((r, i) => `
             <tr>
                 <td>${i+1}</td>
@@ -95,11 +95,11 @@ async function renderSymbol(mount, sym, tok) {
         </h1>
         <div id="ss-cards" class="cards">loading…</div>
         <div class="chart-panel">
-            <h2>FINRA Reg SHO daily short volume (last 30 sessions)</h2>
+            <h2 data-i18n="view.short_interest.h2.finra_reg_sho_daily_short_volume_last_30_sessions">FINRA Reg SHO daily short volume (last 30 sessions)</h2>
             <div id="finra-vol"></div>
         </div>
         <div class="chart-panel">
-            <h2>FINRA short % of total volume</h2>
+            <h2 data-i18n="view.short_interest.h2.finra_short_of_total_volume">FINRA short % of total volume</h2>
             <div id="finra-pct"></div>
         </div>
     `;
@@ -131,7 +131,7 @@ async function renderSymbol(mount, sym, tok) {
             if (volEl) barChart(volEl, labels, vols, { color: '#ff2a6d' });
             if (pctEl) barChart(pctEl, labels, pcts, { color: '#b86bff' });
         } else if (volEl) {
-            volEl.innerHTML = '<p class="muted">No FINRA data — file may be embargoed or pending.</p>';
+            volEl.innerHTML = '<p data-i18n="view.short_interest.hint.no_finra_data_file_may_be_embargoed_or_pending" class="muted">No FINRA data — file may be embargoed or pending.</p>';
         }
     } catch (e) {
         if (!viewIsCurrent(tok)) return;

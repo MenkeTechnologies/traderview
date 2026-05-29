@@ -45,7 +45,7 @@ export async function renderExpensesView(mount) {
 }
 
 function drawShell(mount) {
-    const accountOpts = ['<option value="">all accounts</option>']
+    const accountOpts = ['<option data-i18n="view.expenses.opt.all_accounts" value="">all accounts</option>']
         .concat(state.accounts.map(a => `<option value="${a.id}">${esc(a.name)} (${a.kind})</option>`))
         .join('');
 
@@ -63,17 +63,17 @@ function drawShell(mount) {
     mount.innerHTML = `
     <div class="expense-toolbar">
         <select id="exp-account">${accountOpts}</select>
-        <button class="primary" id="exp-new-account">+ Account</button>
+        <button data-i18n="view.expenses.btn.account" class="primary" id="exp-new-account">+ Account</button>
         <span class="sep"></span>
         <select id="exp-source">${sourceOpts}</select>
         <input type="file" id="exp-file" class="hidden"
                accept=".csv,.xlsx,.xls,.ods,.pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,application/pdf">
-        <button class="primary" id="exp-upload">Upload statement</button>
+        <button data-i18n="view.expenses.btn.upload_statement" class="primary" id="exp-upload">Upload statement</button>
         <span class="sep"></span>
-        <button id="exp-seed-rules">Seed default rules</button>
-        <button id="exp-rules-btn">Rules</button>
-        <button id="exp-receipts-btn">Receipts</button>
-        <button id="exp-report-btn">Schedule C</button>
+        <button data-i18n="view.expenses.btn.seed_default_rules" id="exp-seed-rules">Seed default rules</button>
+        <button data-i18n="view.expenses.btn.rules" id="exp-rules-btn">Rules</button>
+        <button data-i18n="view.expenses.btn.receipts" id="exp-receipts-btn">Receipts</button>
+        <button data-i18n="view.expenses.btn.schedule_c" id="exp-report-btn">Schedule C</button>
     </div>
 
     <div class="receipt-dropzone" id="receipt-dz">
@@ -87,20 +87,20 @@ function drawShell(mount) {
         <label>To <input type="date" id="exp-to"></label>
         <label>Category
             <select id="exp-category">
-                <option value="">all</option>
-                <option value="__none__">(uncategorized)</option>
+                <option data-i18n="view.expenses.opt.all" value="">all</option>
+                <option data-i18n="view.expenses.opt.uncategorized" value="__none__">(uncategorized)</option>
                 ${catOpts}
             </select>
         </label>
         <label>Business
             <select id="exp-business">
-                <option value="">all</option>
-                <option value="true">business only</option>
-                <option value="false">personal only</option>
+                <option data-i18n="view.expenses.opt.all_2" value="">all</option>
+                <option data-i18n="view.expenses.opt.business_only" value="true">business only</option>
+                <option data-i18n="view.expenses.opt.personal_only" value="false">personal only</option>
             </select>
         </label>
         <label>Search <input type="text" id="exp-search" placeholder="merchant / description"></label>
-        <button id="exp-apply">Apply</button>
+        <button data-i18n="view.expenses.btn.apply" id="exp-apply">Apply</button>
     </div>
 
     <div id="exp-status" class="expense-status"></div>
@@ -164,12 +164,12 @@ function drawTable() {
     const host = state.mount.querySelector('#exp-table');
     if (!host) return;
     if (!state.transactions.length) {
-        host.innerHTML = `<p class="boot">no transactions. upload a CSV.</p>`;
+        host.innerHTML = `<p data-i18n="view.expenses.hint.no_transactions_upload_a_csv" class="boot">no transactions. upload a CSV.</p>`;
         return;
     }
     const acctNames = Object.fromEntries(state.accounts.map(a => [a.id, a.name]));
 
-    const catOptsBase = '<option value="">(uncategorized)</option>' +
+    const catOptsBase = '<option data-i18n="view.expenses.opt.uncategorized_2" value="">(uncategorized)</option>' +
         state.categories
             .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
             .join('');
@@ -192,7 +192,7 @@ function drawTable() {
             <td class="${cls}">${amt.toFixed(2)}</td>
             <td>
                 <select class="exp-cat" data-tx="${t.id}">
-                    <option value=""${t.category_code ? '' : ' selected'}>(uncategorized)</option>
+                    <option data-i18n="view.expenses.opt.uncategorized_3" value=""${t.category_code ? '' : ' selected'}>(uncategorized)</option>
                     ${catSel}
                 </select>
             </td>
@@ -213,8 +213,8 @@ function drawTable() {
     host.innerHTML = `
         <table class="trades expense-table">
             <thead><tr>
-                <th>Date</th><th>Account</th><th>Merchant</th>
-                <th>Amount</th><th>Category (Schedule C)</th><th>Biz?</th><th>Transfer?</th>
+                <th data-i18n="view.expenses.th.date">Date</th><th data-i18n="view.expenses.th.account">Account</th><th data-i18n="view.expenses.th.merchant">Merchant</th>
+                <th data-i18n="view.expenses.th.amount">Amount</th><th data-i18n="view.expenses.th.category_schedule_c">Category (Schedule C)</th><th data-i18n="view.expenses.th.biz">Biz?</th><th data-i18n="view.expenses.th.transfer">Transfer?</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -345,7 +345,7 @@ async function openRulesModal() {
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
-            <button id="rules-close">Close</button></div>`;
+            <button data-i18n="view.expenses.btn.close" id="rules-close">Close</button></div>`;
         modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
         return;
     }
@@ -362,29 +362,29 @@ async function openRulesModal() {
             <td>${r.category_code}</td>
             <td>${r.is_business ? 'biz' : 'pers'}</td>
             <td>${r.hit_count}</td>
-            <td><button class="rule-del" data-id="${r.id}">delete</button></td>
+            <td><button data-i18n="view.expenses.btn.delete" class="rule-del" data-id="${r.id}">delete</button></td>
         </tr>`).join('');
 
     modal.innerHTML = `
     <div class="modal-inner wide">
-        <h2>Merchant rules</h2>
+        <h2 data-i18n="view.expenses.h2.merchant_rules">Merchant rules</h2>
         <form id="rule-form" class="rule-form">
             <input name="pattern" placeholder="pattern (e.g. uber)" required>
             <select name="pattern_kind">
-                <option value="substring">substring</option>
-                <option value="regex">regex</option>
+                <option data-i18n="view.expenses.opt.substring" value="substring">substring</option>
+                <option data-i18n="view.expenses.opt.regex" value="regex">regex</option>
             </select>
             <select name="category_code">${catOpts}</select>
             <label><input type="checkbox" name="is_business" checked> biz</label>
             <input name="priority" type="number" value="100" style="width:60px">
             <label><input type="checkbox" name="apply_retroactively" checked> apply now</label>
-            <button class="primary" type="submit">add</button>
+            <button data-i18n="view.expenses.btn.add" class="primary" type="submit">add</button>
         </form>
         <table class="trades">
-            <thead><tr><th>Pri</th><th>Pattern</th><th>Kind</th><th>Cat</th><th>Biz?</th><th>Hits</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="view.expenses.th.pri">Pri</th><th data-i18n="view.expenses.th.pattern">Pattern</th><th data-i18n="view.expenses.th.kind">Kind</th><th data-i18n="view.expenses.th.cat">Cat</th><th data-i18n="view.expenses.th.biz_2">Biz?</th><th data-i18n="view.expenses.th.hits">Hits</th><th></th></tr></thead>
             <tbody>${rows || '<tr><td colspan="7" class="boot">no rules yet</td></tr>'}</tbody>
         </table>
-        <button id="rules-close" style="margin-top:12px">Close</button>
+        <button data-i18n="view.expenses.btn.close_2" id="rules-close" style="margin-top:12px">Close</button>
     </div>`;
     modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.rule-del').forEach(btn => {
@@ -497,13 +497,13 @@ async function openReceiptMatchModal(meta) {
     const modal = state.mount.querySelector('#exp-rules-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
-    modal.innerHTML = '<div class="modal-inner"><p class="boot">scoring candidates…</p></div>';
+    modal.innerHTML = '<div class="modal-inner"><p data-i18n="view.expenses.hint.scoring_candidates" class="boot">scoring candidates…</p></div>';
     let matches = [];
     try { matches = await api.receiptMatches(meta.id); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">match load failed: ${esc(e.message)}</p>
-            <button id="m-close">Close</button></div>`;
+            <button data-i18n="view.expenses.btn.close_3" id="m-close">Close</button></div>`;
         modal.querySelector('#m-close').onclick = () => modal.classList.add('hidden');
         return;
     }
@@ -518,12 +518,12 @@ async function openReceiptMatchModal(meta) {
             <td>${esc(acctNames[m.transaction.account_id] || '?')}</td>
             <td>${esc(m.transaction.merchant_raw)}</td>
             <td>${Number(m.transaction.amount).toFixed(2)}</td>
-            <td><button class="m-pick primary" data-tx="${m.transaction.id}">attach</button></td>
+            <td><button data-i18n="view.expenses.btn.attach" class="m-pick primary" data-tx="${m.transaction.id}">attach</button></td>
         </tr>`).join('');
 
     modal.innerHTML = `
     <div class="modal-inner wide">
-        <h2>Receipt → transaction</h2>
+        <h2 data-i18n="view.expenses.h2.receipt_transaction">Receipt → transaction</h2>
         <div class="receipt-summary">
             <strong>Merchant:</strong> ${esc(meta.ocr_merchant || '?')} ·
             <strong>Total:</strong> ${meta.ocr_total ?? '?'} ·
@@ -531,12 +531,12 @@ async function openReceiptMatchModal(meta) {
             <strong>Conf:</strong> ${meta.ocr_confidence != null ? (meta.ocr_confidence * 100).toFixed(0) + '%' : '?'}
         </div>
         <table class="trades">
-            <thead><tr><th>Score</th><th>Date</th><th>Account</th><th>Merchant</th><th>Amount</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="view.expenses.th.score">Score</th><th data-i18n="view.expenses.th.date_2">Date</th><th data-i18n="view.expenses.th.account_2">Account</th><th data-i18n="view.expenses.th.merchant_2">Merchant</th><th data-i18n="view.expenses.th.amount_2">Amount</th><th></th></tr></thead>
             <tbody>${rows || '<tr><td colspan="6" class="boot">no candidates above threshold — attach manually from the receipts list</td></tr>'}</tbody>
         </table>
         <div style="margin-top:12px;display:flex;gap:8px">
             <a href="${api.receiptBlobUrl(meta.id)}" target="_blank">View receipt</a>
-            <button id="m-close" style="margin-left:auto">Close</button>
+            <button data-i18n="view.expenses.btn.close_4" id="m-close" style="margin-left:auto">Close</button>
         </div>
     </div>`;
     modal.querySelector('#m-close').onclick = () => modal.classList.add('hidden');
@@ -559,13 +559,13 @@ async function openScheduleCModal(year) {
     if (!modal) return;
     modal.classList.remove('hidden');
     const initialYear = year || new Date().getFullYear();
-    modal.innerHTML = '<div class="modal-inner"><p class="boot">building report…</p></div>';
+    modal.innerHTML = '<div class="modal-inner"><p data-i18n="view.expenses.hint.building_report" class="boot">building report…</p></div>';
     let report;
     try { report = await api.scheduleC(initialYear); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">report failed: ${esc(e.message)}</p>
-            <button id="sc-close">Close</button></div>`;
+            <button data-i18n="view.expenses.btn.close_5" id="sc-close">Close</button></div>`;
         modal.querySelector('#sc-close').onclick = () => modal.classList.add('hidden');
         return;
     }
@@ -607,9 +607,9 @@ async function openScheduleCModal(year) {
         </div>
         <table class="trades sc-table">
             <thead><tr>
-                <th>Line</th><th>Category</th>
-                <th class="num">Raw $</th><th>Ded %</th>
-                <th class="num">Deductible $</th><th class="num">#</th>
+                <th data-i18n="view.expenses.th.line">Line</th><th data-i18n="view.expenses.th.category">Category</th>
+                <th data-i18n="view.expenses.th.raw" class="num">Raw $</th><th data-i18n="view.expenses.th.ded">Ded %</th>
+                <th data-i18n="view.expenses.th.deductible" class="num">Deductible $</th><th class="num">#</th>
             </tr></thead>
             <tbody>${lines}</tbody>
             <tfoot>
@@ -634,7 +634,7 @@ async function openScheduleCModal(year) {
             Uncategorized business expenses do <strong>not</strong> roll into the grand total —
             tag them in the transaction list first.
         </p>
-        <button id="sc-close" style="margin-top:8px">Close</button>
+        <button data-i18n="view.expenses.btn.close_6" id="sc-close" style="margin-top:8px">Close</button>
     </div>`;
     modal.querySelector('#sc-close').onclick = () => modal.classList.add('hidden');
     modal.querySelector('#sc-year').addEventListener('change', e => {
@@ -652,7 +652,7 @@ async function openReceiptsModal() {
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
-            <button id="r-close">Close</button></div>`;
+            <button data-i18n="view.expenses.btn.close_7" id="r-close">Close</button></div>`;
         modal.querySelector('#r-close').onclick = () => modal.classList.add('hidden');
         return;
     }
@@ -669,21 +669,21 @@ async function openReceiptsModal() {
             <td>${r.transaction_id ? r.transaction_id.slice(0, 8) : ''}</td>
             <td>
                 <a href="${api.receiptBlobUrl(r.id)}" target="_blank">view</a>
-                ${!r.transaction_id && r.ocr_status === 'done' ? ` · <button class="r-match" data-id="${r.id}">match</button>` : ''}
+                ${!r.transaction_id && r.ocr_status === 'done' ? ` · <button data-i18n="view.expenses.btn.match" class="r-match" data-id="${r.id}">match</button>` : ''}
             </td>
         </tr>`).join('');
 
     modal.innerHTML = `
     <div class="modal-inner wide">
-        <h2>Receipts</h2>
+        <h2 data-i18n="view.expenses.h2.receipts">Receipts</h2>
         <table class="trades">
             <thead><tr>
-                <th>Uploaded</th><th>Filename</th><th>OCR</th>
-                <th>Merchant</th><th>Total</th><th>Date</th><th>Tx</th><th></th>
+                <th data-i18n="view.expenses.th.uploaded">Uploaded</th><th data-i18n="view.expenses.th.filename">Filename</th><th data-i18n="view.expenses.th.ocr">OCR</th>
+                <th data-i18n="view.expenses.th.merchant_3">Merchant</th><th data-i18n="view.expenses.th.total">Total</th><th data-i18n="view.expenses.th.date_3">Date</th><th data-i18n="view.expenses.th.tx">Tx</th><th></th>
             </tr></thead>
             <tbody>${rows || '<tr><td colspan="8" class="boot">no receipts uploaded</td></tr>'}</tbody>
         </table>
-        <button id="r-close" style="margin-top:12px">Close</button>
+        <button data-i18n="view.expenses.btn.close_8" id="r-close" style="margin-top:12px">Close</button>
     </div>`;
     modal.querySelector('#r-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.r-match').forEach(btn => {

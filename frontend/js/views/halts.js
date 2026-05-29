@@ -25,11 +25,11 @@ export async function renderHalts(mount, _state) {
             New halts speak the symbol + reason via Web Speech API.
         </p>
         <div class="chart-panel">
-            <h2>Active halts (live)</h2>
+            <h2 data-i18n="view.halts.h2.active_halts_live">Active halts (live)</h2>
             <table class="trades" id="halts-table">
                 <thead><tr>
-                    <th>Time</th><th>Symbol</th><th>Issue</th>
-                    <th>Reason</th><th>Resume Quote</th><th>Resume Trade</th>
+                    <th data-i18n="view.halts.th.time">Time</th><th data-i18n="view.halts.th.symbol">Symbol</th><th data-i18n="view.halts.th.issue">Issue</th>
+                    <th data-i18n="view.halts.th.reason">Reason</th><th data-i18n="view.halts.th.resume_quote">Resume Quote</th><th data-i18n="view.halts.th.resume_trade">Resume Trade</th>
                 </tr></thead>
                 <tbody><tr><td colspan="6" class="muted">connecting…</td></tr></tbody>
             </table>

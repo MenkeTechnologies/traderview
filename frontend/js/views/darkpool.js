@@ -19,26 +19,27 @@ export async function renderDarkpool(mount, _state, sym) {
     const lists = await api.watchlists();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// DARK POOL / OFF-EXCHANGE VOLUME</h1>
-        <p class="muted small">FINRA TRF off-exchange share volume / Yahoo consolidated total volume —
+        <h1 data-i18n="view.darkpool.h1.dark_pool_off_exchange_volume" class="view-title">// DARK POOL / OFF-EXCHANGE VOLUME</h1>
+        <p data-i18n="view.darkpool.hint.finra_trf_off_exchange_share_volume_yahoo_consolid" class="muted small">FINRA TRF off-exchange share volume / Yahoo consolidated total volume —
             a conservative proxy for ATS + internalizer / dark-pool printing.</p>
 
         <form id="df" class="inline-form">
             <input name="sym" placeholder="symbol (NVDA)" style="text-transform:uppercase">
-            <button class="primary" type="submit">Lookup</button>
+            <button data-i18n="view.darkpool.btn.lookup" class="primary" type="submit">Lookup</button>
         </form>
 
         <div class="chart-panel">
-            <h2>Watchlist ranking (avg off-exchange %)</h2>
+            <h2 data-i18n="view.darkpool.h2.watchlist_ranking_avg_off_exchange">Watchlist ranking (avg off-exchange %)</h2>
             <form id="rf" class="inline-form">
-                <label>Universe
+                <label><span data-i18n="view.darkpool.label.universe">Universe</span>
                     <select name="wl">
-                        <option value="">all my watchlists</option>
+                        <option data-i18n="view.darkpool.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Days <input name="days" type="number" value="30" style="width:80px"></label>
-                <button class="primary" type="submit">Rank</button>
+                <label><span data-i18n="view.darkpool.label.days">Days</span>
+                    <input name="days" type="number" value="30" style="width:80px"></label>
+                <button data-i18n="view.darkpool.btn.rank" class="primary" type="submit">Rank</button>
             </form>
             <div id="dp-ranked"></div>
         </div>
@@ -70,9 +71,9 @@ export async function renderDarkpool(mount, _state, sym) {
 }
 
 function renderRanked(el, rows) {
-    if (!rows.length) { el.innerHTML = '<p class="muted">No data in this universe yet.</p>'; return; }
+    if (!rows.length) { el.innerHTML = '<p data-i18n="view.darkpool.hint.no_data_in_this_universe_yet" class="muted">No data in this universe yet.</p>'; return; }
     el.innerHTML = `<table class="trades">
-        <thead><tr><th>#</th><th>Sym</th><th>Avg off-exch %</th><th>Latest</th><th>Sessions</th></tr></thead>
+        <thead><tr><th>#</th><th data-i18n="view.darkpool.th.sym">Sym</th><th data-i18n="view.darkpool.th.avg_off_exch">Avg off-exch %</th><th data-i18n="view.darkpool.th.latest">Latest</th><th data-i18n="view.darkpool.th.sessions">Sessions</th></tr></thead>
         <tbody>${rows.map((r, i) => `
             <tr>
                 <td>${i+1}</td>
@@ -90,9 +91,9 @@ async function renderSymbol(mount, sym) {
             <a class="link small" href="#darkpool">← back</a>
         </h1>
         <div id="dp-cards" class="cards">loading…</div>
-        <div class="chart-panel"><h2>Off-exchange share %</h2><div id="dp-pct"></div></div>
-        <div class="chart-panel"><h2>Off-exchange volume (shares)</h2><div id="dp-vol"></div></div>
-        <div class="chart-panel"><h2>Daily breakdown</h2><div id="dp-table"></div></div>
+        <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.off_exchange_share">Off-exchange share %</h2><div id="dp-pct"></div></div>
+        <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.off_exchange_volume_shares">Off-exchange volume (shares)</h2><div id="dp-vol"></div></div>
+        <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.daily_breakdown">Daily breakdown</h2><div id="dp-table"></div></div>
     `;
     try {
         const s = await api.darkpoolSymbol(sym, 60);
@@ -101,7 +102,7 @@ async function renderSymbol(mount, sym) {
         if (!cardsEl) return;
         if (!s.days.length) {
             cardsEl.innerHTML =
-                '<p class="muted">No overlap between FINRA TRF and Yahoo bars yet — fetch price bars first.</p>';
+                '<p data-i18n="view.darkpool.hint.no_overlap_between_finra_trf_and_yahoo_bars_yet_fe" class="muted">No overlap between FINRA TRF and Yahoo bars yet — fetch price bars first.</p>';
             return;
         }
         const latest = s.days[s.days.length - 1];
@@ -125,7 +126,7 @@ async function renderSymbol(mount, sym) {
         const tableEl = mount.querySelector('#dp-table');
         if (tableEl) tableEl.innerHTML = `
             <table class="trades">
-                <thead><tr><th>Date</th><th>Off-exchange vol</th><th>Total vol</th><th>Off %</th></tr></thead>
+                <thead><tr><th data-i18n="view.darkpool.th.date">Date</th><th data-i18n="view.darkpool.th.off_exchange_vol">Off-exchange vol</th><th data-i18n="view.darkpool.th.total_vol">Total vol</th><th data-i18n="view.darkpool.th.off">Off %</th></tr></thead>
                 <tbody>${s.days.slice().reverse().map(d => `
                     <tr>
                         <td>${esc(d.date)}</td>

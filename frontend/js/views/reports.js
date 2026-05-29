@@ -25,10 +25,10 @@ const TABS = [
 
 export async function renderReports(mount, state, sub) {
     const tok = currentViewToken();
-    if (!state.accountId) { mount.innerHTML = '<p class="boot">No account.</p>'; return; }
+    if (!state.accountId) { mount.innerHTML = '<p data-i18n="view.reports.hint.no_account" class="boot">No account.</p>'; return; }
     if (!TABS.find(t => t[0] === sub)) sub = 'overview';
     mount.innerHTML = `
-        <h1 class="view-title">// REPORTS</h1>
+        <h1 data-i18n="view.reports.h1.reports" class="view-title">// REPORTS</h1>
         <div class="report-tabs">
             ${TABS.map(([k, l]) => `<a class="report-tab ${k === sub ? 'active' : ''}" href="#reports/${k}">${l}</a>`).join('')}
         </div>
@@ -102,11 +102,11 @@ function overviewHtml(s) {
 }
 
 function bucketTable(rows, header) {
-    if (!rows.length) return '<p class="boot">No data.</p>';
+    if (!rows.length) return '<p data-i18n="view.reports.hint.no_data" class="boot">No data.</p>';
     return `
         <table class="trades">
-        <thead><tr><th>${esc(header)}</th><th>Trades</th><th>Wins</th><th>Losses</th>
-        <th>Win%</th><th>Net P&L</th><th>Avg P&L</th></tr></thead>
+        <thead><tr><th>${esc(header)}</th><th data-i18n="view.reports.th.trades">Trades</th><th data-i18n="view.reports.th.wins">Wins</th><th data-i18n="view.reports.th.losses">Losses</th>
+        <th data-i18n="view.reports.th.win">Win%</th><th data-i18n="view.reports.th.net_p_l">Net P&L</th><th data-i18n="view.reports.th.avg_p_l">Avg P&L</th></tr></thead>
         <tbody>${rows.map(b => `
             <tr><td>${esc(b.key)}</td><td>${b.trades}</td><td>${b.wins}</td><td>${b.losses}</td>
             <td>${fmtPct(b.win_rate)}</td>
@@ -123,7 +123,7 @@ function renderRDist(body, dist, mount) {
             ${statCard('Median R', fmt(dist.median_r))}
         </div>
         <div class="chart-panel">
-            <h2>R-Multiple Distribution</h2>
+            <h2 data-i18n="view.reports.h2.r_multiple_distribution">R-Multiple Distribution</h2>
             <div id="r-chart"></div>
         </div>`;
     const chart = mount.querySelector('#r-chart');
@@ -137,9 +137,9 @@ function renderRDist(body, dist, mount) {
 }
 
 function streaksHtml(streaks) {
-    if (!streaks.length) return '<p class="boot">No streaks yet.</p>';
+    if (!streaks.length) return '<p data-i18n="view.reports.hint.no_streaks_yet" class="boot">No streaks yet.</p>';
     return `<table class="trades">
-        <thead><tr><th>Kind</th><th>Length</th><th>Net P&L</th><th>Start</th><th>End</th></tr></thead>
+        <thead><tr><th data-i18n="view.reports.th.kind">Kind</th><th data-i18n="view.reports.th.length">Length</th><th data-i18n="view.reports.th.net_p_l_2">Net P&L</th><th data-i18n="view.reports.th.start">Start</th><th data-i18n="view.reports.th.end">End</th></tr></thead>
         <tbody>${streaks.map(s => `
             <tr><td class="${s.kind === 'win' ? 'pos' : 'neg'}">${s.kind}</td>
             <td>${s.length}</td>
@@ -192,8 +192,8 @@ function liquidityHtml(l) {
             pnlClass(b.net_pnl))).join('')}
     </div>
     <table class="trades">
-        <thead><tr><th>Symbol</th><th>Trades</th><th>Avg qty</th>
-        <th>Avg daily vol</th><th>Avg % of ADV</th><th>Net P&L</th></tr></thead>
+        <thead><tr><th data-i18n="view.reports.th.symbol">Symbol</th><th data-i18n="view.reports.th.trades_2">Trades</th><th data-i18n="view.reports.th.avg_qty">Avg qty</th>
+        <th data-i18n="view.reports.th.avg_daily_vol">Avg daily vol</th><th data-i18n="view.reports.th.avg_of_adv">Avg % of ADV</th><th data-i18n="view.reports.th.net_p_l_3">Net P&L</th></tr></thead>
         <tbody>${r.rows.map(row => `
             <tr><td>${esc(row.symbol)}</td><td>${row.trades}</td>
             <td>${fmt(row.avg_qty_per_trade, 0)}</td>
@@ -212,7 +212,7 @@ function riskHtml(r) {
         ${statCard('Min R', fmt(r.min_r))}
         ${statCard('Expectancy R', fmt(r.expectancy_r))}
     </div>
-    <p class="muted">R-multiple = net P&L / risk amount. Populate stop_loss + risk_amount on each trade to get these numbers.</p>`;
+    <p data-i18n="view.reports.hint.r_multiple_net_p_l_risk_amount_populate_stop_loss_" class="muted">R-multiple = net P&L / risk amount. Populate stop_loss + risk_amount on each trade to get these numbers.</p>`;
 }
 
 function drawdownHtml(dd) {
@@ -223,7 +223,7 @@ function drawdownHtml(dd) {
         ${statCard('Trough day', fmtDate(dd.trough_day))}
     </div>
     <div class="chart-panel">
-        <h2>Equity + Drawdown</h2>
+        <h2 data-i18n="view.reports.h2.equity_drawdown">Equity + Drawdown</h2>
         <div id="eq-mount"></div>
     </div>`;
 }
@@ -239,5 +239,5 @@ function riskAdjustedHtml(ra) {
         ${statCard('Stdev daily', fmtMoney(ra.stdev_daily))}
         ${statCard('Downside stdev', fmtMoney(ra.downside_stdev_daily))}
     </div>
-    <p class="muted">Annualized values assume 252 trading days/year and rf = 0.</p>`;
+    <p data-i18n="view.reports.hint.annualized_values_assume_252_trading_days_year_and" class="muted">Annualized values assume 252 trading days/year and rf = 0.</p>`;
 }

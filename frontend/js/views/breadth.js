@@ -8,8 +8,8 @@ let timer = null;
 export async function renderBreadth(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// MARKET BREADTH</h1>
-        <p class="muted small">Intraday tape regime: NYSE TICK (instantaneous up-tick count),
+        <h1 data-i18n="view.breadth.h1.market_breadth" class="view-title">// MARKET BREADTH</h1>
+        <p data-i18n="view.breadth.hint.intraday_tape_regime_nyse_tick_instantaneous_up_ti" class="muted small">Intraday tape regime: NYSE TICK (instantaneous up-tick count),
             TRIN (Arms Index — volume bias), Advance-Decline issues, Up-Down volume,
             CBOE Put-Call ratio. Composite score combines all five into a -100..+100
             regime gauge. Polls every 60s.</p>
@@ -17,9 +17,9 @@ export async function renderBreadth(mount) {
         <div id="bcomp" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="binds"></div>
         <div class="chart-panel">
-            <h2>Regime guide</h2>
+            <h2 data-i18n="view.breadth.h2.regime_guide">Regime guide</h2>
             <table class="trades">
-                <thead><tr><th>Indicator</th><th>Strong bull</th><th>Mild bull</th><th>Neutral</th><th>Mild bear</th><th>Strong bear</th></tr></thead>
+                <thead><tr><th data-i18n="view.breadth.th.indicator">Indicator</th><th data-i18n="view.breadth.th.strong_bull">Strong bull</th><th data-i18n="view.breadth.th.mild_bull">Mild bull</th><th data-i18n="view.breadth.th.neutral">Neutral</th><th data-i18n="view.breadth.th.mild_bear">Mild bear</th><th data-i18n="view.breadth.th.strong_bear">Strong bear</th></tr></thead>
                 <tbody>
                     <tr><td>NYSE TICK</td><td class="pos">≥ +800</td><td class="pos">+400..+800</td><td>±400</td><td class="neg">−400..−800</td><td class="neg">≤ −800</td></tr>
                     <tr><td>NYSE TRIN</td><td class="pos">≤ 0.5</td><td class="pos">0.5..0.9</td><td>0.9..1.1</td><td class="neg">1.1..2.0</td><td class="neg">≥ 2.0</td></tr>
@@ -27,7 +27,7 @@ export async function renderBreadth(mount) {
                     <tr><td>Put-Call ratio</td><td class="neg">≤ 0.6 *</td><td class="pos">0.6..0.8</td><td>0.8..1.0</td><td class="neg">1.0..1.2</td><td class="pos">≥ 1.2 *</td></tr>
                 </tbody>
             </table>
-            <p class="muted small">* Put-Call is a contrarian indicator at extremes — very low PCR = complacency (often near tops), very high PCR = fear (often near bottoms).</p>
+            <p data-i18n="view.breadth.hint.put_call_is_a_contrarian_indicator_at_extremes_ver" class="muted small">* Put-Call is a contrarian indicator at extremes — very low PCR = complacency (often near tops), very high PCR = fear (often near bottoms).</p>
         </div>
     `;
     if (timer) clearInterval(timer);
@@ -76,7 +76,7 @@ function renderIndicators(s, mount) {
     const el = mount.querySelector('#binds');
     if (!el) return;
     if (!inds.length) {
-        el.innerHTML = '<p class="boot">No breadth tickers returned data — try in market hours.</p>';
+        el.innerHTML = '<p data-i18n="view.breadth.hint.no_breadth_tickers_returned_data_try_in_market_hou" class="boot">No breadth tickers returned data — try in market hours.</p>';
         return;
     }
     el.innerHTML = `

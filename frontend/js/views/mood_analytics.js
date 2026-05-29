@@ -9,7 +9,7 @@ const MOOD_LABELS = { '-2': '😡 awful', '-1': '🙁 down', '0': '😐 flat', '
 export async function renderMoodAnalytics(mount, state) {
     const tok = currentViewToken();
     const acct = state.accounts.find(a => a.id === state.accountId);
-    if (!acct) { mount.innerHTML = `<p class="boot">No account selected.</p>`; return; }
+    if (!acct) { mount.innerHTML = `<p data-i18n="view.mood_analytics.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// MOOD ANALYTICS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small">Two ingestion paths:
@@ -52,28 +52,28 @@ function render(r, mount) {
     if (!outEl) return;
     if (!r.stats.length) {
         outEl.innerHTML =
-            '<div class="chart-panel"><p class="muted small">No mood-tagged journal entries yet — tag your journal entries with a mood -2..+2 to seed this view.</p></div>';
+            '<div class="chart-panel"><p data-i18n="view.mood_analytics.hint.no_mood_tagged_journal_entries_yet_tag_your_journa" class="muted small">No mood-tagged journal entries yet — tag your journal entries with a mood -2..+2 to seed this view.</p></div>';
         return;
     }
     outEl.innerHTML = `
         <div class="chart-panel">
-            <h2>Per-mood stats</h2>
+            <h2 data-i18n="view.mood_analytics.h2.per_mood_stats">Per-mood stats</h2>
             ${moodTable(r.stats)}
         </div>
         <div class="chart-panel">
-            <h2>Avg P/L by mood (bars)</h2>
+            <h2 data-i18n="view.mood_analytics.h2.avg_p_l_by_mood_bars">Avg P/L by mood (bars)</h2>
             ${avgPnlBars(r.stats)}
         </div>
         <div class="chart-panel">
-            <h2>Avg R by mood (bars)</h2>
+            <h2 data-i18n="view.mood_analytics.h2.avg_r_by_mood_bars">Avg R by mood (bars)</h2>
             ${avgRBars(r.stats)}
         </div>
         <div class="chart-panel">
-            <h2>Mood distribution</h2>
+            <h2 data-i18n="view.mood_analytics.h2.mood_distribution">Mood distribution</h2>
             ${distBars(r.mood_distribution)}
         </div>
         <div class="chart-panel">
-            <h2>Sample trades (latest 50)</h2>
+            <h2 data-i18n="view.mood_analytics.h2.sample_trades_latest_50">Sample trades (latest 50)</h2>
             ${sampleTable(r.pairs.slice(-50).reverse())}
         </div>
     `;
@@ -92,8 +92,8 @@ function interpretCorr(c) {
 function moodTable(stats) {
     return `<table class="trades">
         <thead><tr>
-            <th>Mood</th><th>Samples</th><th>Wins</th><th>Losses</th>
-            <th>Win rate</th><th>Avg P/L</th><th>Median P/L</th><th>Total P/L</th><th>Avg R</th>
+            <th data-i18n="view.mood_analytics.th.mood">Mood</th><th data-i18n="view.mood_analytics.th.samples">Samples</th><th data-i18n="view.mood_analytics.th.wins">Wins</th><th data-i18n="view.mood_analytics.th.losses">Losses</th>
+            <th data-i18n="view.mood_analytics.th.win_rate">Win rate</th><th data-i18n="view.mood_analytics.th.avg_p_l">Avg P/L</th><th data-i18n="view.mood_analytics.th.median_p_l">Median P/L</th><th data-i18n="view.mood_analytics.th.total_p_l">Total P/L</th><th data-i18n="view.mood_analytics.th.avg_r">Avg R</th>
         </tr></thead>
         <tbody>
         ${stats.map(s => `<tr>
@@ -127,7 +127,7 @@ function avgPnlBars(stats) {
 
 function avgRBars(stats) {
     const present = stats.filter(s => s.avg_r != null);
-    if (!present.length) return '<p class="muted small">No R-multiples available (need risk_amount set on trades).</p>';
+    if (!present.length) return '<p data-i18n="view.mood_analytics.hint.no_r_multiples_available_need_risk_amount_set_on_t" class="muted small">No R-multiples available (need risk_amount set on trades).</p>';
     const max = Math.max(...present.map(s => Math.abs(s.avg_r)), 0.5);
     return `<div style="display:grid;grid-template-columns:120px 1fr 100px;gap:6px;font-size:11px;">
         ${present.map(s => {
@@ -143,7 +143,7 @@ function avgRBars(stats) {
 }
 
 function distBars(dist) {
-    if (!dist.length) return '<p class="muted small">no data</p>';
+    if (!dist.length) return '<p data-i18n="view.mood_analytics.hint.no_data" class="muted small">no data</p>';
     const max = Math.max(...dist.map(d => d[1]), 1);
     return `<div style="display:grid;grid-template-columns:120px 1fr 60px;gap:6px;font-size:11px;">
         ${dist.map(([mood, n]) => {
@@ -160,7 +160,7 @@ function distBars(dist) {
 function sampleTable(pairs) {
     return `<table class="trades">
         <thead><tr>
-            <th>Date</th><th>Source</th><th>Mood</th><th>Symbol</th><th>Net P/L</th><th>R</th>
+            <th data-i18n="view.mood_analytics.th.date">Date</th><th data-i18n="view.mood_analytics.th.source">Source</th><th data-i18n="view.mood_analytics.th.mood_2">Mood</th><th data-i18n="view.mood_analytics.th.symbol">Symbol</th><th data-i18n="view.mood_analytics.th.net_p_l">Net P/L</th><th>R</th>
         </tr></thead>
         <tbody>
         ${pairs.map(p => `<tr>

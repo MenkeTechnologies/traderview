@@ -3,7 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    buildTileItems, buildFavoriteItems, buildBookmarkItems,
+    buildTileItems, buildFavoriteItems, buildBookmarkItems, buildActionItems,
     categoriesByViewId, tilesByViewId,
     fuzzyScore, filterAndRank, highlightLabel, moveSelection,
 } from '../js/_command_palette_inputs.js';
@@ -169,4 +169,58 @@ test('moveSelection: wraps at boundaries', () => {
 
 test('moveSelection: total=0 returns 0 safely', () => {
     expect(moveSelection(5, 1, 0)).toBe(0);
+});
+
+// ── buildActionItems ─────────────────────────────────────────────
+
+const SHORTCUTS = [
+    { id: 'command_palette', actionKey: 'tv:open-palette', descKey: 'shortcut.command_palette', scope: 'global' },
+    { id: 'toggle_favorite', actionKey: 'tv:toggle-favorite', descKey: 'shortcut.toggle_favorite', scope: 'global' },
+    { id: 'no_action',        descKey: 'no.action.key',                scope: 'global' },  // no actionKey → dropped
+];
+const TR = (k) => ({
+    'shortcut.command_palette': 'Open command palette',
+    'shortcut.toggle_favorite': 'Toggle favorite for this view',
+})[k] || k;
+const CHIP = (sc) => sc.id === 'command_palette' ? '⌘K' : '⌘D';
+
+test('buildActionItems: maps each shortcut with actionKey to kind=action', () => {
+    const items = buildActionItems(SHORTCUTS, TR, CHIP);
+    expect(items.length).toBe(2);   // no_action dropped
+    expect(items[0].kind).toBe('action');
+    expect(items[0].actionKey).toBe('tv:open-palette');
+    expect(items[0].label).toBe('Open command palette');
+    expect(items[0].hint).toBe('⌘K');
+    expect(items[0].category).toBe('Actions');
+    expect(items[0].id).toBe('action:command_palette');
+});
+
+test('buildActionItems: drops shortcuts without actionKey', () => {
+    const items = buildActionItems(SHORTCUTS, TR, CHIP);
+    expect(items.find(it => it.id === 'action:no_action')).toBeUndefined();
+});
+
+test('buildActionItems: translate/chip optional → safe defaults', () => {
+    const items = buildActionItems(SHORTCUTS);
+    expect(items.length).toBe(2);
+    expect(items[0].label).toBe('shortcut.command_palette');   // verbatim key
+    expect(items[0].hint).toBe('');
+});
+
+test('buildActionItems: non-array input safe', () => {
+    expect(buildActionItems(null)).toEqual([]);
+    expect(buildActionItems(undefined)).toEqual([]);
+});
+
+test('buildActionItems: fuzzy matches by translated label', () => {
+    const items = buildActionItems(SHORTCUTS, TR, CHIP);
+    expect(fuzzyScore('favorite', items[1])).toBeGreaterThan(0);
+    expect(fuzzyScore('palette',  items[0])).toBeGreaterThan(0);
+    expect(fuzzyScore('nonsense', items[0])).toBe(0);
+});
+
+test('buildActionItems: action items rank above raw views (kind tiebreaker)', () => {
+    const action = { kind: 'action', label: 'Reload data', icon: '⚡' };
+    const view   = { kind: 'view',   label: 'Reload data', icon: '🔄' };
+    expect(fuzzyScore('reload', action)).toBeGreaterThan(fuzzyScore('reload', view));
 });

@@ -9,19 +9,19 @@ let timer = null;
 export async function renderTape(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// LIVE TAPE</h1>
-        <p class="muted small">Auto-refreshing news + sector snapshot from your watchlist universe. Updates every 30 seconds.</p>
+        <h1 data-i18n="view.tape.h1.live_tape" class="view-title">// LIVE TAPE</h1>
+        <p data-i18n="view.tape.hint.auto_refreshing_news_sector_snapshot_from_your_wat" class="muted small">Auto-refreshing news + sector snapshot from your watchlist universe. Updates every 30 seconds.</p>
         <div class="panel-grid">
             <div class="chart-panel" style="grid-column: 1 / -1">
-                <h2>News feed</h2>
+                <h2 data-i18n="view.tape.h2.news_feed">News feed</h2>
                 <div id="tape-news">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Sectors right now</h2>
+                <h2 data-i18n="view.tape.h2.sectors_right_now">Sectors right now</h2>
                 <div id="tape-sectors">loading…</div>
             </div>
             <div class="chart-panel">
-                <h2>Watchlist quotes</h2>
+                <h2 data-i18n="view.tape.h2.watchlist_quotes">Watchlist quotes</h2>
                 <div id="tape-quotes">loading…</div>
             </div>
         </div>
@@ -71,7 +71,7 @@ async function refresh(mount, tok) {
                     ? '· ' + new Date(n.provider_publish_time * 1000).toLocaleString(undefined, { hour12: false })
                     : ''}</div>
             </div>`).join('')
-        : '<p class="muted">No news in this universe yet.</p>';
+        : '<p data-i18n="view.tape.hint.no_news_in_this_universe_yet" class="muted">No news in this universe yet.</p>';
 
     // Sectors
     try {
@@ -102,7 +102,7 @@ async function refresh(mount, tok) {
             <td>${Number(q.price).toFixed(2)}</td>
             <td class="${(q.change_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${q.change_pct != null ? (q.change_pct >= 0 ? '+' : '') + q.change_pct.toFixed(2) + '%' : '—'}</td>
         </tr>`).join('')}
-    </table>` : '<p class="muted">Add symbols to a watchlist first.</p>';
+    </table>` : '<p data-i18n="view.tape.hint.add_symbols_to_a_watchlist_first" class="muted">Add symbols to a watchlist first.</p>';
 
     void fmtDateTime;
 }

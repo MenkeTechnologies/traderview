@@ -13,7 +13,7 @@ const dtLocal = (iso) => {
 
 export async function renderTradeDetail(mount, state, tradeId) {
     const tok = currentViewToken();
-    if (!tradeId) { mount.innerHTML = '<p class="boot">No trade id</p>'; return; }
+    if (!tradeId) { mount.innerHTML = '<p data-i18n="view.trade_detail.hint.no_trade_id" class="boot">No trade id</p>'; return; }
     const [trade, executions, tags, journal, screenshots, share] = await Promise.all([
         api.trade(tradeId),
         api.executionsForTrade(tradeId),
@@ -45,15 +45,15 @@ export async function renderTradeDetail(mount, state, tradeId) {
         </div>
 
         <div class="chart-panel">
-            <h2>Chart</h2>
+            <h2 data-i18n="view.trade_detail.h2.chart">Chart</h2>
             <div id="chart-wrap"></div>
         </div>
 
         <div class="panel-grid">
           <div class="chart-panel">
-            <h2>Executions</h2>
+            <h2 data-i18n="view.trade_detail.h2.executions">Executions</h2>
             <table class="trades"><thead><tr>
-              <th>Time</th><th>Side</th><th>Qty</th><th>Price</th><th>Fee</th><th></th>
+              <th data-i18n="view.trade_detail.th.time">Time</th><th data-i18n="view.trade_detail.th.side">Side</th><th data-i18n="view.trade_detail.th.qty">Qty</th><th data-i18n="view.trade_detail.th.price">Price</th><th data-i18n="view.trade_detail.th.fee">Fee</th><th></th>
             </tr></thead><tbody>${executions.map(e => `
               <tr data-eid="${e.id}">
                 <td><input class="ex-time" type="datetime-local"
@@ -68,8 +68,8 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 <td><input class="ex-price" type="number" step="any" value="${e.price}"></td>
                 <td><input class="ex-fee" type="number" step="any" value="${e.fee}"></td>
                 <td>
-                  <button class="link" data-save-ex="${e.id}">save</button>
-                  <button class="link" data-del-ex="${e.id}">trash</button>
+                  <button data-i18n="view.trade_detail.btn.save" class="link" data-save-ex="${e.id}">save</button>
+                  <button data-i18n="view.trade_detail.btn.trash" class="link" data-del-ex="${e.id}">trash</button>
                 </td>
               </tr>
             `).join('')}</tbody></table>
@@ -77,74 +77,74 @@ export async function renderTradeDetail(mount, state, tradeId) {
               <summary>+ Add execution</summary>
               <form id="ex-add-form" class="inline-form" style="margin-top:8px">
                 <select name="side">
-                  <option value="buy">buy</option><option value="sell">sell</option>
-                  <option value="short">short</option><option value="cover">cover</option>
+                  <option data-i18n="view.trade_detail.opt.buy" value="buy">buy</option><option data-i18n="view.trade_detail.opt.sell" value="sell">sell</option>
+                  <option data-i18n="view.trade_detail.opt.short" value="short">short</option><option data-i18n="view.trade_detail.opt.cover" value="cover">cover</option>
                 </select>
                 <input name="qty" type="number" step="any" placeholder="qty" required>
                 <input name="price" type="number" step="any" placeholder="price" required>
                 <input name="fee" type="number" step="any" placeholder="fee" value="0">
                 <input name="executed_at" type="datetime-local" required>
-                <button class="primary" type="submit">Add</button>
+                <button data-i18n="view.trade_detail.btn.add" class="primary" type="submit">Add</button>
               </form>
             </details>
           </div>
 
           <div class="chart-panel">
-            <h2>Tags</h2>
+            <h2 data-i18n="view.trade_detail.h2.tags">Tags</h2>
             <div class="tag-wrap" id="tags-wrap">
               ${tags.map(t => `<span class="tag-chip" style="border-color:${esc(t.color)}">${esc(t.name)}</span>`).join('')}
             </div>
             <div class="tag-add">
               <select id="tag-add-select"></select>
-              <button class="primary" id="tag-add-btn">Add</button>
+              <button data-i18n="view.trade_detail.btn.add_2" class="primary" id="tag-add-btn">Add</button>
             </div>
           </div>
 
           <div class="chart-panel">
-            <h2>Risk Plan</h2>
+            <h2 data-i18n="view.trade_detail.h2.risk_plan">Risk Plan</h2>
             <form id="risk-form" class="risk-form">
               <label>Stop loss <input name="stop_loss" type="number" step="any" value="${trade.stop_loss ?? ''}"></label>
               <label>Risk $ <input name="risk_amount" type="number" step="any" value="${trade.risk_amount ?? ''}"></label>
               <label>Target <input name="initial_target" type="number" step="any" value="${trade.initial_target ?? ''}"></label>
-              <button class="primary" type="submit">Save</button>
+              <button data-i18n="view.trade_detail.btn.save_2" class="primary" type="submit">Save</button>
             </form>
           </div>
 
           <div class="chart-panel">
-            <h2>Screenshots</h2>
+            <h2 data-i18n="view.trade_detail.h2.screenshots">Screenshots</h2>
             <div class="screenshots" id="screenshots">
               ${screenshots.map(s => `
                 <figure class="shot">
                   <img src="${api.screenshotUrl(s.id)}" alt="${esc(s.filename)}">
                   <figcaption>${esc(s.caption || s.filename)}
-                    <button class="link" data-del="${s.id}">delete</button>
+                    <button data-i18n="view.trade_detail.btn.delete" class="link" data-del="${s.id}">delete</button>
                   </figcaption>
                 </figure>`).join('')}
             </div>
             <input type="file" id="shot-input" accept="image/*">
             <input type="text" id="shot-caption" placeholder="caption (optional)">
-            <button class="primary" id="shot-upload">Upload</button>
+            <button data-i18n="view.trade_detail.btn.upload" class="primary" id="shot-upload">Upload</button>
           </div>
 
           <div class="chart-panel" style="grid-column: 1 / -1;">
-            <h2>Journal — per-trade</h2>
+            <h2 data-i18n="view.trade_detail.h2.journal_per_trade">Journal — per-trade</h2>
             <div id="journal-list">${journal.map(j => `
               <div class="journal-entry">
                 <div class="meta">${fmtDateTime(j.created_at)}</div>
                 <div class="body">${md(j.body_md)}</div>
-                <button class="link" data-del-journal="${j.id}">delete</button>
+                <button data-i18n="view.trade_detail.btn.delete_2" class="link" data-del-journal="${j.id}">delete</button>
               </div>
             `).join('')}</div>
             <textarea id="journal-body" placeholder="What was the setup? What did you see? Mistakes? Lessons?"></textarea>
             <div class="inline-form">
-              <button class="primary" id="journal-save">Save note</button>
-              <button class="primary" id="journal-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+              <button data-i18n="view.trade_detail.btn.save_note" class="primary" id="journal-save">Save note</button>
+              <button data-i18n="view.trade_detail.btn.insert_template" class="primary" id="journal-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
             </div>
           </div>
 
           <div class="chart-panel">
-            <h2>Share publicly</h2>
-            <button class="primary" id="share-btn">Create share link</button>
+            <h2 data-i18n="view.trade_detail.h2.share_publicly">Share publicly</h2>
+            <button data-i18n="view.trade_detail.btn.create_share_link" class="primary" id="share-btn">Create share link</button>
             <div id="share-result"></div>
           </div>
         </div>

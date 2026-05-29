@@ -19,6 +19,7 @@ import {
 } from '../_iv_solver_inputs.js';
 import { blackScholesEuropean } from '../_american_option_inputs.js';
 
+import { t } from '../i18n.js';
 const DEFAULT_PARAMS = {
     kind: 'call',
     spot: 100,
@@ -35,15 +36,15 @@ export async function renderIvSolver(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// IV SOLVER</h1>
+        <h1 data-i18n="view.iv_solver.h1.iv_solver" class="view-title">// IV SOLVER</h1>
 
         <div class="chart-panel">
-            <h2>Contract</h2>
+            <h2 data-i18n="view.iv_solver.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label>Kind
                     <select id="iv-kind">
-                        <option value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
-                        <option value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
+                        <option data-i18n="view.iv_solver.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
+                        <option data-i18n="view.iv_solver.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label>Spot   <input id="iv-spot"   type="number" step="any" min="0" value="${state.params.spot}"></label>
                 <label>Strike <input id="iv-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
@@ -54,13 +55,13 @@ export async function renderIvSolver(mount, _appState) {
         </div>
 
         <div class="chart-panel">
-            <h2>Market price</h2>
+            <h2 data-i18n="view.iv_solver.h2.market_price">Market price</h2>
             <div class="inline-form">
                 <label>Observed market price
                     <input id="iv-mkt" type="number" step="any" min="0" value="${state.params.market_price}"></label>
-                <button id="iv-run" class="primary" type="button">Solve IV</button>
+                <button data-i18n="view.iv_solver.btn.solve_iv" id="iv-run" class="primary" type="button">Solve IV</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.iv_solver.hint.newton_raphson_on_black_scholes_finds_such_that_bs" class="muted">
                 Newton-Raphson on Black-Scholes: finds σ such that BS(σ) matches the
                 observed market price. Pre-flight rejects market prices outside the no-arb
                 band — no IV exists there, would be a free arb if real.
@@ -70,9 +71,9 @@ export async function renderIvSolver(mount, _appState) {
         <div id="iv-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>BS price vs σ</h2>
+            <h2 data-i18n="view.iv_solver.h2.bs_price_vs">BS price vs σ</h2>
             <div id="iv-chart" style="width:100%;height:340px"></div>
-            <p class="muted">
+            <p data-i18n="view.iv_solver.hint.cyan_bs_price_curve_as_sweeps_from_near_zero_orang" class="muted">
                 Cyan: BS price curve as σ sweeps from near-zero. Orange dashed line: your
                 observed market price. Green marker: the solved σ — should sit exactly at
                 the intersection. If the curve never crosses the line, no IV exists
@@ -130,16 +131,16 @@ function renderSummary(res) {
         p.risk_free, p.dividend_yield, res.implied_vol,
     );
     const cards = [];
-    cards.push(card('Implied volatility', fmtVolPct(res.implied_vol), 'pos',
+    cards.push(card(t('view.iv_solver.card.implied_volatility'), fmtVolPct(res.implied_vol), 'pos',
         `<div class="vc-row"><span class="muted">absolute σ</span>
             <strong>${res.implied_vol.toFixed(6)}</strong></div>`));
-    cards.push(card('Newton iterations', String(res.iterations), '',
+    cards.push(card(t('view.iv_solver.card.newton_iterations'), String(res.iterations), '',
         `<div class="vc-row"><span class="muted">residual</span>
             <strong>${res.residual.toExponential(3)}</strong></div>`));
-    cards.push(card('BS at solved σ', fmtPrice(bsAtSolved), '',
+    cards.push(card(t('view.iv_solver.card.bs_at_solved'), fmtPrice(bsAtSolved), '',
         `<div class="vc-row"><span class="muted">market price</span>
             <strong>${fmtPrice(p.market_price)}</strong></div>`));
-    cards.push(card('No-arb band',
+    cards.push(card(t('view.iv_solver.card.no_arb_band'),
         `${fmtPrice(bounds.lower)} – ${fmtPrice(bounds.upper)}`, '',
         `<div class="vc-row"><span class="muted">market is</span>
             <strong>${p.market_price >= bounds.lower && p.market_price <= bounds.upper ? 'inside ✓' : 'outside ✗'}</strong></div>`));

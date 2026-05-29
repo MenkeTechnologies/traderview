@@ -4,35 +4,35 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPlans(mount, state) {
     const tok = currentViewToken();
-    if (!state.accountId) { mount.innerHTML = '<p class="boot">No account.</p>'; return; }
+    if (!state.accountId) { mount.innerHTML = '<p data-i18n="view.plans.hint.no_account" class="boot">No account.</p>'; return; }
     const plans = await api.plans();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// PRE-TRADE PLANS</h1>
+        <h1 data-i18n="view.plans.h1.pre_trade_plans" class="view-title">// PRE-TRADE PLANS</h1>
         <div class="chart-panel">
-            <h2>New plan</h2>
+            <h2 data-i18n="view.plans.h2.new_plan">New plan</h2>
             <form id="plan-form" class="inline-form">
                 <input name="symbol" placeholder="symbol" required>
                 <select name="asset_class">
-                    <option value="stock">stock</option>
-                    <option value="option">option</option>
-                    <option value="future">future</option>
-                    <option value="forex">forex</option>
+                    <option data-i18n="view.plans.opt.stock" value="stock">stock</option>
+                    <option data-i18n="view.plans.opt.option" value="option">option</option>
+                    <option data-i18n="view.plans.opt.future" value="future">future</option>
+                    <option data-i18n="view.plans.opt.forex" value="forex">forex</option>
                 </select>
-                <select name="side"><option value="long">long</option><option value="short">short</option></select>
+                <select name="side"><option data-i18n="view.plans.opt.long" value="long">long</option><option data-i18n="view.plans.opt.short" value="short">short</option></select>
                 <input name="intended_qty" type="number" step="any" placeholder="qty" required>
                 <input name="intended_entry" type="number" step="any" placeholder="entry" required>
                 <input name="stop_loss" type="number" step="any" placeholder="stop">
                 <input name="initial_target" type="number" step="any" placeholder="target">
                 <input name="setup_notes" placeholder="setup notes">
-                <button class="primary" type="submit">Create</button>
+                <button data-i18n="view.plans.btn.create" class="primary" type="submit">Create</button>
             </form>
         </div>
 
         <table class="trades">
             <thead><tr>
-                <th>Created</th><th>Symbol</th><th>Side</th><th>Qty</th>
-                <th>Entry</th><th>Stop</th><th>Target</th><th>R:R</th><th>Setup</th><th></th>
+                <th data-i18n="view.plans.th.created">Created</th><th data-i18n="view.plans.th.symbol">Symbol</th><th data-i18n="view.plans.th.side">Side</th><th data-i18n="view.plans.th.qty">Qty</th>
+                <th data-i18n="view.plans.th.entry">Entry</th><th data-i18n="view.plans.th.stop">Stop</th><th data-i18n="view.plans.th.target">Target</th><th data-i18n="view.plans.th.r_r">R:R</th><th data-i18n="view.plans.th.setup">Setup</th><th></th>
             </tr></thead>
             <tbody>${plans.map(p => {
                 const risk = p.stop_loss ? Math.abs(Number(p.intended_entry) - Number(p.stop_loss)) : null;
@@ -48,7 +48,7 @@ export async function renderPlans(mount, state) {
                     <td>${p.initial_target !== null ? fmt(p.initial_target) : '—'}</td>
                     <td>${rr}</td>
                     <td>${esc(p.setup_notes)}</td>
-                    <td><button class="link" data-del="${p.id}">abandon</button></td>
+                    <td><button data-i18n="view.plans.btn.abandon" class="link" data-del="${p.id}">abandon</button></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="10" class="muted">No pending plans.</td></tr>'}
             </tbody>

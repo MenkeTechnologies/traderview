@@ -23,7 +23,7 @@ const SECTIONS = [
         title: '// KEYBINDINGS',
         body: `
             <table class="tut-kbd">
-                <thead><tr><th>Combo</th><th>Action</th></tr></thead>
+                <thead><tr><th data-i18n="view.tutorial.th.combo">Combo</th><th data-i18n="view.tutorial.th.action">Action</th></tr></thead>
                 <tbody>
                     <tr><td><kbd>Cmd</kbd>+<kbd>K</kbd></td><td>Open the launcher (tile grid + filter)</td></tr>
                     <tr><td><kbd>?</kbd></td><td>Open this tutorial</td></tr>
@@ -31,21 +31,21 @@ const SECTIONS = [
                     <tr><td><kbd>Enter</kbd> (in launcher filter)</td><td>Open the first matching tile</td></tr>
                 </tbody>
             </table>
-            <p class="muted small">More custom hotkeys can be bound on the <button class="link" data-go="hotkeys">Hotkeys</button> page. Bindings persist to the local database.</p>`,
+            <p class="muted small">More custom hotkeys can be bound on the <button data-i18n="view.tutorial.btn.hotkeys" class="link" data-go="hotkeys">Hotkeys</button> page. Bindings persist to the local database.</p>`,
     },
     {
         id: 'live',
         title: '// LIVE MARKETS',
         body: `
-            <p>Always-on streaming tiles. Each opens its own WebSocket; voice alerts use the browser SpeechSynthesis API.</p>
+            <p data-i18n="view.tutorial.hint.always_on_streaming_tiles_each_opens_its_own_webso">Always-on streaming tiles. Each opens its own WebSocket; voice alerts use the browser SpeechSynthesis API.</p>
             <dl class="tut-defs">
-                <dt><button class="link" data-go="live-scanner">⚡ Live Scanner</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.live_scanner" class="link" data-go="live-scanner">⚡ Live Scanner</button></dt>
                 <dd>6-panel real-time scanner (Gappers, Gainers, Losers, HOD, Volume, Ross 5-Pillar). Needs a free <a href="https://finnhub.io" target="_blank">Finnhub</a> API key + a comma-sep symbol universe (25 syms / WS connection, chunks automatically).</dd>
-                <dt><button class="link" data-go="halts">⏸ Halts</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.halts" class="link" data-go="halts">⏸ Halts</button></dt>
                 <dd>Polls Nasdaq trade-halt RSS every 3s. Voice alerts spell tickers letter-by-letter so TTS pronounces SPCE, not "space".</dd>
-                <dt><button class="link" data-go="catalysts">📰 Catalysts</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.catalysts" class="link" data-go="catalysts">📰 Catalysts</button></dt>
                 <dd>SEC EDGAR (6s) + Business Wire / PR Newswire / GlobeNewswire / AccessWire (30s). Ticker NER extracts <code>$SYM</code>, <code>(SYM)</code>, and <code>NYSE:</code>/<code>NASDAQ:</code> prefixes. Voice fires when a watchlist symbol appears.</dd>
-                <dt><button class="link" data-go="premarket">🌅 Pre-market</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.pre_market" class="link" data-go="premarket">🌅 Pre-market</button></dt>
                 <dd>Cross-asset opening drive — index futures, commodities, crypto, FX, plus today's high-importance economic events. ATR-multiple shows how outsized the overnight move is.</dd>
             </dl>`,
     },
@@ -54,17 +54,17 @@ const SECTIONS = [
         title: '// TRADING',
         body: `
             <dl class="tut-defs">
-                <dt><button class="link" data-go="webull">🪙 Webull</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.webull" class="link" data-go="webull">🪙 Webull</button></dt>
                 <dd><strong>Read-only.</strong> Order entry is intentionally not implemented. Open webull.com → DevTools → Network → copy <code>did</code>, <code>access_token</code>, <code>t_token</code> from any <code>tradeapi.webullbroker.com</code> request. Paste into the form. Tokens live in process memory only — never written to disk. Positions/orders/account poll every 5s.</dd>
-                <dt><button class="link" data-go="live">💰 Live Positions</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.live_positions" class="link" data-go="live">💰 Live Positions</button></dt>
                 <dd>Open positions from imported trades, re-priced with fresh quotes. Shows unrealized P/L, day P/L, and total cost basis.</dd>
-                <dt><button class="link" data-go="paper">📝 Paper Trade</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.paper_trade" class="link" data-go="paper">📝 Paper Trade</button></dt>
                 <dd>Simulated execution against the same quote pipeline as live. Order types: market, limit, stop, stop-limit. Reset starting cash anytime.</dd>
-                <dt><button class="link" data-go="plans">🎯 Pre-trade Plans</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.pre_trade_plans" class="link" data-go="plans">🎯 Pre-trade Plans</button></dt>
                 <dd>Write the setup before you take the trade. Link a plan to an execution post-fill — the plan vs. outcome lands in your discipline scorecard.</dd>
-                <dt><button class="link" data-go="risk-gate">🛡 Risk Gate</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.risk_gate" class="link" data-go="risk-gate">🛡 Risk Gate</button></dt>
                 <dd>Pre-trade rules that BLOCK bad trades before they reach the broker. Define max loss per trade / per day, max consecutive losses, cool-down after a loss, max open positions, blocked symbols, require-plan, require-stop. Every new trade form runs these rules first and refuses to submit if any Block-severity rule fires (warnings get a confirm-then-proceed prompt).</dd>
-                <dt><button class="link" data-go="sizing">🧮 Position Size</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.position_size" class="link" data-go="sizing">🧮 Position Size</button></dt>
                 <dd>Three modes: Kelly fraction (from your historical win-rate), fixed-fractional (% of equity per trade), R-based (max loss in dollars / stop distance). Correlation-aware: caps concentration when symbols co-move.</dd>
             </dl>`,
     },
@@ -73,15 +73,15 @@ const SECTIONS = [
         title: '// JOURNAL',
         body: `
             <dl class="tut-defs">
-                <dt><button class="link" data-go="journal">📓 Journal</button></dt>
-                <dd>Per-trade, daily, and general notes. Each scope has its own templates editable under <button class="link" data-go="settings">Settings</button> → Notes Templates.</dd>
-                <dt><button class="link" data-go="ai">🧠 AI Journal</button></dt>
-                <dd>GPT-assisted post-mortem on individual trades. Requires an OpenAI key in <button class="link" data-go="ai">AI settings</button>. Output is cached so re-opening a trade is instant.</dd>
-                <dt><button class="link" data-go="reviews">🔁 Trade Reviews</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.journal" class="link" data-go="journal">📓 Journal</button></dt>
+                <dd>Per-trade, daily, and general notes. Each scope has its own templates editable under <button data-i18n="view.tutorial.btn.settings" class="link" data-go="settings">Settings</button> → Notes Templates.</dd>
+                <dt><button data-i18n="view.tutorial.btn.ai_journal" class="link" data-go="ai">🧠 AI Journal</button></dt>
+                <dd>GPT-assisted post-mortem on individual trades. Requires an OpenAI key in <button data-i18n="view.tutorial.btn.ai_settings" class="link" data-go="ai">AI settings</button>. Output is cached so re-opening a trade is instant.</dd>
+                <dt><button data-i18n="view.tutorial.btn.trade_reviews" class="link" data-go="reviews">🔁 Trade Reviews</button></dt>
                 <dd>Forced reflection on |R| ≥ 2 trades. Tracks plan-quality, execution-quality, emotion. Surfaces "reviews needed" count on the dashboard.</dd>
-                <dt><button class="link" data-go="discipline">🛡 Discipline</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.discipline" class="link" data-go="discipline">🛡 Discipline</button></dt>
                 <dd>Rule-violation tracker. Defines hard limits (max R per trade, max losses per day, no FOMO entries) and counts breaches.</dd>
-                <dt><button class="link" data-go="mood">🌡 Mood Analytics</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.mood_analytics" class="link" data-go="mood">🌡 Mood Analytics</button></dt>
                 <dd>Self-rated mood entered with each daily journal correlates against same-day P/L. Surfaces "you trade worse when…" patterns.</dd>
             </dl>`,
     },
@@ -90,15 +90,15 @@ const SECTIONS = [
         title: '// CHARTS & RESEARCH',
         body: `
             <dl class="tut-defs">
-                <dt><button class="link" data-go="charts">📈 Charts</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.charts" class="link" data-go="charts">📈 Charts</button></dt>
                 <dd>OHLC + indicator overlays. Draw lines/arrows/rectangles; drawings persist per symbol per user.</dd>
-                <dt><button class="link" data-go="research">🔎 Research</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.research" class="link" data-go="research">🔎 Research</button></dt>
                 <dd>Per-symbol dossier: quote, fundamentals, news, earnings history, recommendations, insider trades, dividends, holders.</dd>
-                <dt><button class="link" data-go="screener">🧪 Screener / <button class="link" data-go="scanners">🛰 Scanners</button> / <button class="link" data-go="top-signals">📡 Top Signals</button></button></dt>
+                <dt><button class="link" data-go="screener">🧪 Screener / <button data-i18n="view.tutorial.btn.scanners" class="link" data-go="scanners">🛰 Scanners</button> / <button data-i18n="view.tutorial.btn.top_signals" class="link" data-go="top-signals">📡 Top Signals</button></button></dt>
                 <dd>Three layers of discovery. Screener = manual criteria. Scanners = 24 Warrior/Zendoo presets (gap-and-go, opening drive, low-float surge…). Top Signals = ranked live signal leaderboard.</dd>
-                <dt><button class="link" data-go="darkpool">🕳 Dark Pool</button> / <button class="link" data-go="short-interest">🩳 Short Interest</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.dark_pool" class="link" data-go="darkpool">🕳 Dark Pool</button> / <button data-i18n="view.tutorial.btn.short_interest" class="link" data-go="short-interest">🩳 Short Interest</button></dt>
                 <dd>Off-exchange % print rankings and FINRA Reg-SHO daily short volume. Use to flag squeezable setups.</dd>
-                <dt><button class="link" data-go="options">⛓ Options</button> / <button class="link" data-go="vol-surface">🌋 Vol Surface</button> / <button class="link" data-go="earnings-iv">💥 Earnings IV</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.options" class="link" data-go="options">⛓ Options</button> / <button data-i18n="view.tutorial.btn.vol_surface" class="link" data-go="vol-surface">🌋 Vol Surface</button> / <button data-i18n="view.tutorial.btn.earnings_iv" class="link" data-go="earnings-iv">💥 Earnings IV</button></dt>
                 <dd>Full options chain with Greeks. Vol surface plots the IV grid across strikes × expiries. Earnings IV scans pre-event IV crush and computes straddle EV.</dd>
             </dl>`,
     },
@@ -106,25 +106,25 @@ const SECTIONS = [
         id: 'reports',
         title: '// REPORTS',
         body: `
-            <p><button class="link" data-go="reports">📊 Reports</button> has 17 TraderVue-style cuts: by symbol, side, asset class, day-of-week, hour, hold duration, month, R-distribution, streaks, comparison, exit efficiency, commissions, liquidity, risk, drawdown, risk-adjusted, calendar.</p>
-            <p><button class="link" data-go="forecast">🔮 Equity Forecast</button> runs a Monte Carlo against your historical R-distribution to project the next N trades.</p>
-            <p><button class="link" data-go="fill-quality">🎯 Fill Quality</button> approximates slippage vs. the bar's NBBO — useful to compare brokers.</p>
-            <p><button class="link" data-go="tax-lots">💸 Tax Lots</button> reproduces lot-by-lot cost basis (FIFO/LIFO) with wash-sale detection. Exports a Schedule D friendly CSV from <button class="link" data-go="exports">Exports</button>.</p>`,
+            <p><button data-i18n="view.tutorial.btn.reports" class="link" data-go="reports">📊 Reports</button> has 17 TraderVue-style cuts: by symbol, side, asset class, day-of-week, hour, hold duration, month, R-distribution, streaks, comparison, exit efficiency, commissions, liquidity, risk, drawdown, risk-adjusted, calendar.</p>
+            <p><button data-i18n="view.tutorial.btn.equity_forecast" class="link" data-go="forecast">🔮 Equity Forecast</button> runs a Monte Carlo against your historical R-distribution to project the next N trades.</p>
+            <p><button data-i18n="view.tutorial.btn.fill_quality" class="link" data-go="fill-quality">🎯 Fill Quality</button> approximates slippage vs. the bar's NBBO — useful to compare brokers.</p>
+            <p><button data-i18n="view.tutorial.btn.tax_lots" class="link" data-go="tax-lots">💸 Tax Lots</button> reproduces lot-by-lot cost basis (FIFO/LIFO) with wash-sale detection. Exports a Schedule D friendly CSV from <button data-i18n="view.tutorial.btn.exports" class="link" data-go="exports">Exports</button>.</p>`,
     },
     {
         id: 'strategy',
         title: '// STRATEGY & AUTOMATION',
         body: `
             <dl class="tut-defs">
-                <dt><button class="link" data-go="backtest">🧷 Backtest</button> / <button class="link" data-go="backtest-presets">📦 Presets</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.backtest" class="link" data-go="backtest">🧷 Backtest</button> / <button data-i18n="view.tutorial.btn.presets" class="link" data-go="backtest-presets">📦 Presets</button></dt>
                 <dd>stryke-JIT backtester. Define entry/exit on any indicator combination. Save presets, fork community presets, share via slug.</dd>
-                <dt><button class="link" data-go="walk-forward">🧱 Walk-forward</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.walk_forward" class="link" data-go="walk-forward">🧱 Walk-forward</button></dt>
                 <dd>Rolling in-sample / out-of-sample sweep. Reveals overfit parameters that look great in-sample but fall apart OOS.</dd>
-                <dt><button class="link" data-go="custom-indicators">∇ Indicators</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.indicators" class="link" data-go="custom-indicators">∇ Indicators</button></dt>
                 <dd>Custom indicator editor. Define your own MA/RSI/ATR variants. Evaluable against any symbol from the Research view.</dd>
-                <dt><button class="link" data-go="alerts">🚨 Alerts</button> / <button class="link" data-go="strategy-alerts">🔔 Strategy Alerts</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.alerts" class="link" data-go="alerts">🚨 Alerts</button> / <button data-i18n="view.tutorial.btn.strategy_alerts" class="link" data-go="strategy-alerts">🔔 Strategy Alerts</button></dt>
                 <dd>Price/threshold alerts vs. compound AND/OR/NOT strategy rules. Both fire voice + Notification + optional webhook.</dd>
-                <dt><button class="link" data-go="webhooks">🪝 Webhooks</button></dt>
+                <dt><button data-i18n="view.tutorial.btn.webhooks" class="link" data-go="webhooks">🪝 Webhooks</button></dt>
                 <dd>Outbound to Discord / Slack / generic URL. Use as a kill-switch trigger, mobile push, journal mirror, etc.</dd>
             </dl>`,
     },
@@ -132,7 +132,7 @@ const SECTIONS = [
         id: 'data',
         title: '// DATA SOURCES',
         body: `
-            <p>Most feeds are free public endpoints — no auth required:</p>
+            <p data-i18n="view.tutorial.hint.most_feeds_are_free_public_endpoints_no_auth_requi">Most feeds are free public endpoints — no auth required:</p>
             <ul class="tut-list">
                 <li><strong>Quotes / fundamentals / charts:</strong> Yahoo Finance v8/v10. Cached 60s per symbol in Postgres.</li>
                 <li><strong>Live ticks:</strong> Finnhub WebSocket. Free tier = 25 syms / connection; chunked automatically.</li>
@@ -151,7 +151,7 @@ const SECTIONS = [
         body: `
             <p>Discipline that <em>enforces</em> instead of just reporting. The gate sits between the new-trade form and the broker — every submission runs the rules first.</p>
             <ol class="tut-steps">
-                <li><strong>Install a preset</strong> from the <button class="link" data-go="risk-gate">Risk Gate</button> view. Three packs:
+                <li><strong>Install a preset</strong> from the <button data-i18n="view.tutorial.btn.risk_gate_2" class="link" data-go="risk-gate">Risk Gate</button> view. Three packs:
                     <ul class="tut-list">
                         <li><strong>Beginner</strong> — 7 rules. 1% max per trade, 3% per day, 3 consec losses stop you, 15-min cool-down, 25% max position, plan + stop required. Strictest.</li>
                         <li><strong>Intermediate</strong> — 5 rules. Same per-trade cap, 5% daily, 4 streak, 5-min cool-down, stop required (plan optional).</li>
@@ -171,11 +171,11 @@ const SECTIONS = [
         title: '// TYPICAL DAY-TRADE WORKFLOW',
         body: `
             <ol class="tut-steps">
-                <li><strong>Pre-market (06:00–09:25 ET).</strong> Open <button class="link" data-go="premarket">Pre-market</button> to scan overnight movers. Open <button class="link" data-go="catalysts">Catalysts</button> for fresh 8-K / press releases on watchlist symbols. Check <button class="link" data-go="economy">Economy</button> for today's data drops.</li>
-                <li><strong>Open (09:30–09:45 ET).</strong> Open <button class="link" data-go="live-scanner">Live Scanner</button> with your gap watchlist. Open <button class="link" data-go="halts">Halts</button> in a side window — T1 / T12 halts on small-caps are squeeze/dump candidates.</li>
-                <li><strong>Intraday.</strong> Plan trades in <button class="link" data-go="plans">Plans</button> before entry. Use <button class="link" data-go="sizing">Position Size</button> to compute share count from your max-loss-R. Watch the entry on <button class="link" data-go="charts">Charts</button>. Track open P/L on <button class="link" data-go="live">Live Positions</button>.</li>
-                <li><strong>Post-market (16:00+).</strong> Run <button class="link" data-go="trades">Trades</button> rollup. Write per-trade notes in <button class="link" data-go="journal">Journal</button>. Any trade with |R| ≥ 2 gets a <button class="link" data-go="reviews">Trade Review</button>. Daily journal includes mood rating for <button class="link" data-go="mood">Mood Analytics</button>.</li>
-                <li><strong>Weekly.</strong> Run <button class="link" data-go="reports">Reports</button> → exit efficiency + R-distribution. Re-evaluate which setups are paying. Update <button class="link" data-go="goals">Goals</button>.</li>
+                <li><strong>Pre-market (06:00–09:25 ET).</strong> Open <button data-i18n="view.tutorial.btn.pre_market_2" class="link" data-go="premarket">Pre-market</button> to scan overnight movers. Open <button data-i18n="view.tutorial.btn.catalysts_2" class="link" data-go="catalysts">Catalysts</button> for fresh 8-K / press releases on watchlist symbols. Check <button data-i18n="view.tutorial.btn.economy" class="link" data-go="economy">Economy</button> for today's data drops.</li>
+                <li><strong>Open (09:30–09:45 ET).</strong> Open <button data-i18n="view.tutorial.btn.live_scanner_2" class="link" data-go="live-scanner">Live Scanner</button> with your gap watchlist. Open <button data-i18n="view.tutorial.btn.halts_2" class="link" data-go="halts">Halts</button> in a side window — T1 / T12 halts on small-caps are squeeze/dump candidates.</li>
+                <li><strong>Intraday.</strong> Plan trades in <button data-i18n="view.tutorial.btn.plans" class="link" data-go="plans">Plans</button> before entry. Use <button data-i18n="view.tutorial.btn.position_size_2" class="link" data-go="sizing">Position Size</button> to compute share count from your max-loss-R. Watch the entry on <button data-i18n="view.tutorial.btn.charts_2" class="link" data-go="charts">Charts</button>. Track open P/L on <button data-i18n="view.tutorial.btn.live_positions_2" class="link" data-go="live">Live Positions</button>.</li>
+                <li><strong>Post-market (16:00+).</strong> Run <button data-i18n="view.tutorial.btn.trades" class="link" data-go="trades">Trades</button> rollup. Write per-trade notes in <button data-i18n="view.tutorial.btn.journal_2" class="link" data-go="journal">Journal</button>. Any trade with |R| ≥ 2 gets a <button data-i18n="view.tutorial.btn.trade_review" class="link" data-go="reviews">Trade Review</button>. Daily journal includes mood rating for <button data-i18n="view.tutorial.btn.mood_analytics_2" class="link" data-go="mood">Mood Analytics</button>.</li>
+                <li><strong>Weekly.</strong> Run <button data-i18n="view.tutorial.btn.reports_2" class="link" data-go="reports">Reports</button> → exit efficiency + R-distribution. Re-evaluate which setups are paying. Update <button data-i18n="view.tutorial.btn.goals" class="link" data-go="goals">Goals</button>.</li>
             </ol>`,
     },
     {

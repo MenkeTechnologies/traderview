@@ -8,15 +8,15 @@ let timer = null;
 export async function renderFearGreed(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// FEAR &amp; GREED</h1>
-        <p class="muted small">CNN-methodology composite of seven risk-appetite signals.
+        <h1 data-i18n="view.fear_greed.h1.fear_and_greed" class="view-title">// FEAR &amp; GREED</h1>
+        <p data-i18n="view.fear_greed.hint.cnn_methodology_composite_of_seven_risk_appetite_s" class="muted small">CNN-methodology composite of seven risk-appetite signals.
             Score 0 = extreme fear, 100 = extreme greed. Each component is normalized
             to 0..100 and the average is taken. Refreshes every 90s.</p>
 
         <div class="chart-panel" id="fgGauge"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         <div id="fgComps"></div>
         <div class="chart-panel">
-            <h2>Score bands</h2>
+            <h2 data-i18n="view.fear_greed.h2.score_bands">Score bands</h2>
             <table class="trades">
                 <thead><tr><th>0–24</th><th>25–44</th><th>45–55</th><th>56–74</th><th>75–100</th></tr></thead>
                 <tbody><tr>
@@ -27,7 +27,7 @@ export async function renderFearGreed(mount) {
                     <td class="pos">Extreme Greed</td>
                 </tr></tbody>
             </table>
-            <p class="muted small">Like all sentiment composites this is contrarian at the extremes —
+            <p data-i18n="view.fear_greed.hint.like_all_sentiment_composites_this_is_contrarian_a" class="muted small">Like all sentiment composites this is contrarian at the extremes —
                 Extreme Fear historically aligns with intermediate-term lows, Extreme Greed with
                 local tops. Use as a regime filter, not a timing signal.</p>
         </div>

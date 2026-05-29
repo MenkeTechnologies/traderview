@@ -50,22 +50,22 @@ export async function renderExecutionScheduler(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 class="view-title">// EXECUTION SCHEDULER</h1>
+        <h1 data-i18n="view.execution_scheduler.h1.execution_scheduler" class="view-title">// EXECUTION SCHEDULER</h1>
 
         <div class="chart-panel">
-            <h2>Inputs</h2>
+            <h2 data-i18n="view.execution_scheduler.h2.inputs">Inputs</h2>
             <div class="inline-form">
-                <label>Total order size
+                <label><span data-i18n="view.execution_scheduler.label.total_order">Total order size</span>
                     <input id="es-total" type="number" step="any" min="1" value="${state.totalOrder}"></label>
-                <label>POV participation rate
+                <label><span data-i18n="view.execution_scheduler.label.pov_rate">POV participation rate</span>
                     <input id="es-rate" type="number" step="0.01" min="0.01" max="1" value="${state.participationRate}"></label>
-                <button id="es-run" class="primary" type="button">Schedule</button>
+                <button data-i18n="view.execution_scheduler.btn.schedule" id="es-run" class="primary" type="button">Schedule</button>
             </div>
-            <p class="muted">
+            <p data-i18n="view.execution_scheduler.hint.twap_slices_equally_across_all_bars_in_the_curve_v" class="muted">
                 TWAP slices equally across all bars in the curve. VWAP weights by expected
                 volume. POV takes the participation-rate fraction of each bar — may fall short.
             </p>
-            <h3>Volume curve (per bar)</h3>
+            <h3 data-i18n="view.execution_scheduler.h3.volume_curve_per_bar">Volume curve (per bar)</h3>
             <textarea id="es-vol" rows="8"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.volumeText)}</textarea>
         </div>
@@ -75,9 +75,9 @@ export async function renderExecutionScheduler(mount, _appState) {
         <div id="es-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Per-bar slice schedule</h2>
+            <h2 data-i18n="view.execution_scheduler.h2.per_bar_slice_schedule">Per-bar slice schedule</h2>
             <div id="es-chart" style="width:100%;height:340px"></div>
-            <p class="muted">Three series, one per algo. Vertical bars show shares per bar.</p>
+            <p data-i18n="view.execution_scheduler.hint.three_series_one_per_algo_vertical_bars_show_share" class="muted">Three series, one per algo. Vertical bars show shares per bar.</p>
         </div>
 
         <div id="es-err" class="boot" style="display:none;color:var(--red)"></div>

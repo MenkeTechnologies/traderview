@@ -7,38 +7,38 @@ export async function renderAccounts(mount, _state, onChange) {
     const accounts = await api.accounts();
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
-        <h1 class="view-title">// ACCOUNTS</h1>
+        <h1 data-i18n="view.accounts.h1.accounts" class="view-title">// ACCOUNTS</h1>
         <div class="chart-panel">
-            <h2>Add account</h2>
+            <h2 data-i18n="view.accounts.h2.add_account">Add account</h2>
             <form id="acct-form" class="inline-form">
                 <select name="broker">
-                    <option value="webull">Webull</option>
-                    <option value="ibkr">Interactive Brokers (Flex)</option>
-                    <option value="tdameritrade">TD Ameritrade</option>
-                    <option value="schwab">Schwab</option>
-                    <option value="tradestation">TradeStation</option>
-                    <option value="lightspeed">Lightspeed</option>
-                    <option value="das">DAS Trader</option>
-                    <option value="tos">ThinkOrSwim</option>
-                    <option value="etrade">E*TRADE</option>
-                    <option value="fidelity">Fidelity</option>
-                    <option value="tradezero">TradeZero</option>
-                    <option value="robinhood">Robinhood</option>
-                    <option value="manual">Manual / Other</option>
+                    <option data-i18n="view.accounts.opt.webull" value="webull">Webull</option>
+                    <option data-i18n="view.accounts.opt.interactive_brokers_flex" value="ibkr">Interactive Brokers (Flex)</option>
+                    <option data-i18n="view.accounts.opt.td_ameritrade" value="tdameritrade">TD Ameritrade</option>
+                    <option data-i18n="view.accounts.opt.schwab" value="schwab">Schwab</option>
+                    <option data-i18n="view.accounts.opt.tradestation" value="tradestation">TradeStation</option>
+                    <option data-i18n="view.accounts.opt.lightspeed" value="lightspeed">Lightspeed</option>
+                    <option data-i18n="view.accounts.opt.das_trader" value="das">DAS Trader</option>
+                    <option data-i18n="view.accounts.opt.thinkorswim" value="tos">ThinkOrSwim</option>
+                    <option data-i18n="view.accounts.opt.e_trade" value="etrade">E*TRADE</option>
+                    <option data-i18n="view.accounts.opt.fidelity" value="fidelity">Fidelity</option>
+                    <option data-i18n="view.accounts.opt.tradezero" value="tradezero">TradeZero</option>
+                    <option data-i18n="view.accounts.opt.robinhood" value="robinhood">Robinhood</option>
+                    <option data-i18n="view.accounts.opt.manual_other" value="manual">Manual / Other</option>
                 </select>
                 <input name="name" placeholder="account name (e.g. Margin)" required>
                 <input name="base_currency" placeholder="USD" value="USD">
-                <button class="primary" type="submit">Create</button>
+                <button data-i18n="view.accounts.btn.create" class="primary" type="submit">Create</button>
             </form>
         </div>
 
         <table class="trades">
-            <thead><tr><th>Broker</th><th>Name</th><th>Currency</th><th>Created</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="view.accounts.th.broker">Broker</th><th data-i18n="view.accounts.th.name">Name</th><th data-i18n="view.accounts.th.currency">Currency</th><th data-i18n="view.accounts.th.created">Created</th><th></th></tr></thead>
             <tbody>${accounts.map(a => `
                 <tr><td>${esc(a.broker)}</td><td>${esc(a.name)}</td>
                 <td>${esc(a.base_currency)}</td>
                 <td>${fmtDateTime(a.created_at)}</td>
-                <td><button class="link" data-del="${a.id}">delete</button></td></tr>
+                <td><button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button></td></tr>
             `).join('') || '<tr><td colspan="5" class="muted">No accounts.</td></tr>'}
             </tbody>
         </table>

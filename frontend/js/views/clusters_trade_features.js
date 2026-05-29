@@ -12,6 +12,7 @@ import {
     fmtMin, fmtR, fmtPct, fmtNum,
 } from '../_clusters_trade_features_inputs.js';
 
+import { t } from '../i18n.js';
 let state = {
     features: makeDemoFeatures('morning-vs-afternoon'),
     k: 2,
@@ -21,37 +22,37 @@ let state = {
 export async function renderClustersTradeFeatures(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// TRADE CLUSTERS (K-MEANS)</h1>
+        <h1 data-i18n="view.clusters_trade_features.h1.trade_clusters_k_means" class="view-title">// TRADE CLUSTERS (K-MEANS)</h1>
 
         <div class="chart-panel">
             <h2>Paste trade features (per-line: <code>entry_min hold_min r_multiple</code>)</h2>
             <textarea id="cl-blob" rows="8" placeholder="540 30 1.5  # 9:00 entry, 30min hold, +1.5R&#10;...">${esc(featuresToBlob(state.features))}</textarea>
             <div class="inline-form">
-                <label>k (clusters)
+                <label><span data-i18n="view.clusters_trade_features.label.k">k (clusters)</span>
                     <input id="cl-k" type="number" step="1" min="1" max="10" value="${state.k}"></label>
-                <label>Max iterations
+                <label><span data-i18n="view.clusters_trade_features.label.max_iters">Max iterations</span>
                     <input id="cl-iters" type="number" step="1" min="1" max="500" value="${state.maxIters}"></label>
-                <button id="cl-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.clusters_trade_features.btn.analyze" id="cl-run" class="primary" type="button">Analyze</button>
             </div>
             <div class="inline-form">
-                <button id="cl-demo-morn-aft" class="secondary" type="button">Demo: morning vs afternoon</button>
-                <button id="cl-demo-three"    class="secondary" type="button">Demo: 3 trader styles</button>
-                <button id="cl-demo-single"   class="secondary" type="button">Demo: single cluster</button>
-                <button id="cl-demo-scatter"  class="secondary" type="button">Demo: scattered (low-edge)</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_morning_vs_afternoon" id="cl-demo-morn-aft" class="secondary" type="button">Demo: morning vs afternoon</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_3_trader_styles" id="cl-demo-three"    class="secondary" type="button">Demo: 3 trader styles</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_single_cluster" id="cl-demo-single"   class="secondary" type="button">Demo: single cluster</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_scattered_low_edge" id="cl-demo-scatter"  class="secondary" type="button">Demo: scattered (low-edge)</button>
             </div>
-            <p class="muted">Entry minute is minutes from midnight (UTC) — e.g. 9:30am ET ≈ 870. Distance is normalized: entry/1440, hold/1440, R/5 so each dim contributes ~comparably.</p>
+            <p data-i18n="view.clusters_trade_features.hint.entry_minute_is_minutes_from_midnight_utc_e_g_9_30" class="muted">Entry minute is minutes from midnight (UTC) — e.g. 9:30am ET ≈ 870. Distance is normalized: entry/1440, hold/1440, R/5 so each dim contributes ~comparably.</p>
         </div>
 
         <div id="cl-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Cluster scatter — entry time × hold duration (color = cluster)</h2>
+            <h2 data-i18n="view.clusters_trade_features.h2.cluster_scatter_entry_time_hold_duration_color_clu">Cluster scatter — entry time × hold duration (color = cluster)</h2>
             <div id="cl-chart" style="height:360px"></div>
-            <p class="muted">Each dot is a trade. Color = cluster_id. X axis = entry minute of day (0–1440). Y = hold duration in minutes.</p>
+            <p data-i18n="view.clusters_trade_features.hint.each_dot_is_a_trade_color_cluster_id_x_axis_entry_" class="muted">Each dot is a trade. Color = cluster_id. X axis = entry minute of day (0–1440). Y = hold duration in minutes.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Per-cluster stats</h2>
+            <h2 data-i18n="view.clusters_trade_features.h2.per_cluster_stats">Per-cluster stats</h2>
             <div id="cl-clusters"></div>
         </div>
 
@@ -119,18 +120,18 @@ function renderSummary(report, pending) {
     const worst = pickBest(report.clusters, c => -c.mean_r);
     const inertia = totalInertia(state.features, report.assignments, report.clusters);
     document.getElementById('cl-summary').innerHTML = [
-        card('Trades',          String(state.features.length)),
-        card('k (clusters)',    String(report.clusters.length) + (pending ? ' (local)' : '')),
-        card('Total win rate',  fmtPct(totalSize > 0 ? wins / totalSize : 0),
+        card(t('view.clusters_trade_features.card.trades'),          String(state.features.length)),
+        card(t('view.clusters_trade_features.card.k_clusters'),    String(report.clusters.length) + (pending ? ' (local)' : '')),
+        card(t('view.clusters_trade_features.card.total_win_rate'),  fmtPct(totalSize > 0 ? wins / totalSize : 0),
             totalSize > 0 && wins / totalSize >= 0.5 ? 'pos' : 'neg'),
-        card('Total mean R',    fmtR(meanR),    meanR >= 0 ? 'pos' : 'neg'),
-        card('Best cluster',    best ? `#${best.cluster_id}: ${fmtR(best.mean_r)} (n=${best.size})` : '—',
+        card(t('view.clusters_trade_features.card.total_mean_r'),    fmtR(meanR),    meanR >= 0 ? 'pos' : 'neg'),
+        card(t('view.clusters_trade_features.card.best_cluster'),    best ? `#${best.cluster_id}: ${fmtR(best.mean_r)} (n=${best.size})` : '—',
             best && best.mean_r >= 0 ? 'pos' : 'neg'),
-        card('Worst cluster',   worst ? `#${worst.cluster_id}: ${fmtR(worst.mean_r)} (n=${worst.size})` : '—',
+        card(t('view.clusters_trade_features.card.worst_cluster'),   worst ? `#${worst.cluster_id}: ${fmtR(worst.mean_r)} (n=${worst.size})` : '—',
             worst && worst.mean_r <= 0 ? 'neg' : 'pos'),
-        card('Inertia (WSS)',   fmtNum(inertia, 4),
+        card(t('view.clusters_trade_features.card.inertia_wss'),   fmtNum(inertia, 4),
             inertia < 1 ? 'pos' : ''),
-        card('Local parity',    parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.clusters_trade_features.card.local_parity'),    parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -209,8 +210,8 @@ function renderClusters(report) {
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
-                <th>Cluster</th><th>Size</th><th>Centroid entry</th><th>Centroid hold</th>
-                <th>Centroid R</th><th>Mean R</th><th>Win rate</th>
+                <th data-i18n="view.clusters_trade_features.th.cluster">Cluster</th><th data-i18n="view.clusters_trade_features.th.size">Size</th><th data-i18n="view.clusters_trade_features.th.centroid_entry">Centroid entry</th><th data-i18n="view.clusters_trade_features.th.centroid_hold">Centroid hold</th>
+                <th data-i18n="view.clusters_trade_features.th.centroid_r">Centroid R</th><th data-i18n="view.clusters_trade_features.th.mean_r">Mean R</th><th data-i18n="view.clusters_trade_features.th.win_rate">Win rate</th>
             </tr></thead>
             <tbody>
                 ${report.clusters.map(c => `<tr>

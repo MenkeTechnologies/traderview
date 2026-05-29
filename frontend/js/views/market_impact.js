@@ -13,33 +13,34 @@ import {
     BUCKET_LABELS, fmtBps, fmtN,
 } from '../_market_impact_inputs.js';
 
+import { t } from '../i18n.js';
 let state = { trades: '', spikeBps: 30 };
 
 export async function renderMarketImpact(mount, _appState) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// MARKET IMPACT · PARTICIPATION CLIFF</h1>
+        <h1 data-i18n="view.market_impact.h1.market_impact_participation_cliff" class="view-title">// MARKET IMPACT · PARTICIPATION CLIFF</h1>
 
         <div class="chart-panel">
-            <h2>Trade ledger</h2>
+            <h2 data-i18n="view.market_impact.h2.trade_ledger">Trade ledger</h2>
             <p class="muted">Paste <code>qty adv slippage_bps</code> per line. Negative
                 slippage is a favorable fill. Demo loads 400 trades that visibly cliff
                 past 1% ADV.</p>
             <textarea id="mi-trades" rows="8" placeholder="2500 5000000 2.1&#10;120000 5000000 12.5&#10;..."></textarea>
             <div class="inline-form">
-                <button id="mi-demo" class="secondary" type="button">Load demo (400 trades)</button>
-                <button id="mi-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.market_impact.btn.load_demo_400_trades" id="mi-demo" class="secondary" type="button">Load demo (400 trades)</button>
+                <button data-i18n="view.market_impact.btn.clear" id="mi-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
         <div class="chart-panel">
-            <h2>Threshold</h2>
+            <h2 data-i18n="view.market_impact.h2.threshold">Threshold</h2>
             <div class="inline-form">
-                <label>Spike threshold (bps)
+                <label><span data-i18n="view.market_impact.label.spike_bps">Spike threshold (bps)</span>
                     <input id="mi-spike" type="number" step="any" min="0" value="${state.spikeBps}"></label>
-                <button id="mi-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.market_impact.btn.analyze" id="mi-run" class="primary" type="button">Analyze</button>
             </div>
-            <p class="muted">The first ADV bucket whose avg slippage clears the threshold
+            <p data-i18n="view.market_impact.hint.the_first_adv_bucket_whose_avg_slippage_clears_the" class="muted">The first ADV bucket whose avg slippage clears the threshold
                 is flagged as your "impact cliff" — size below it.</p>
         </div>
 
@@ -47,16 +48,16 @@ export async function renderMarketImpact(mount, _appState) {
         <div id="mi-summary" class="cards"></div>
 
         <div class="chart-panel">
-            <h2>Slippage by participation bucket</h2>
+            <h2 data-i18n="view.market_impact.h2.slippage_by_participation_bucket">Slippage by participation bucket</h2>
             <div id="mi-bars"></div>
-            <p class="muted">Per bucket: trade count · avg · median · max slippage.
+            <p data-i18n="view.market_impact.hint.per_bucket_trade_count_avg_median_max_slippage_thr" class="muted">Per bucket: trade count · avg · median · max slippage.
                 Threshold-busting buckets glow red.</p>
         </div>
 
         <div class="chart-panel">
-            <h2>Trade distribution</h2>
+            <h2 data-i18n="view.market_impact.h2.trade_distribution">Trade distribution</h2>
             <div id="mi-dist-chart" style="height:200px"></div>
-            <p class="muted">Where your trades actually land. If you have heavy mass past
+            <p data-i18n="view.market_impact.hint.where_your_trades_actually_land_if_you_have_heavy_" class="muted">Where your trades actually land. If you have heavy mass past
                 1% ADV you're paying the impact tax even if the average looks fine.</p>
         </div>
 
@@ -115,11 +116,11 @@ function renderSummary(report, trades) {
     const cliffLabel = report.impact_threshold_label || '—';
     const cliffCls = report.impact_threshold_label ? 'neg' : 'pos';
     document.getElementById('mi-summary').innerHTML = [
-        card('Trades',          fmtN(total)),
-        card('Avg slip (all)',  fmtBps(avgAll), avgAll > state.spikeBps ? 'neg' : 'pos'),
-        card('Impact cliff',    cliffLabel,     cliffCls),
-        card('Spike thresh',    fmtBps(state.spikeBps)),
-        card('Active buckets',  String(report.buckets.filter(b => b.trade_count > 0).length)),
+        card(t('view.market_impact.card.trades'),          fmtN(total)),
+        card(t('view.market_impact.card.avg_slip_all'),  fmtBps(avgAll), avgAll > state.spikeBps ? 'neg' : 'pos'),
+        card(t('view.market_impact.card.impact_cliff'),    cliffLabel,     cliffCls),
+        card(t('view.market_impact.card.spike_thresh'),    fmtBps(state.spikeBps)),
+        card(t('view.market_impact.card.active_buckets'),  String(report.buckets.filter(b => b.trade_count > 0).length)),
     ].join('');
 }
 

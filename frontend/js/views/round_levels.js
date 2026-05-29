@@ -1,0 +1,197 @@
+// Round-number levels view — emits round-price S/R levels in a price
+// window, weighted by "roundness," with nearest above/below + ATR distance.
+//
+// i18n throughout.
+
+import { api } from '../api.js';
+import { esc } from '../util.js';
+import { t } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import {
+    WEIGHTS, MAX_INTEGER_SCAN,
+    validateInputs, buildBody, localDetect,
+    weightBadge, weightLabelKey, pinningBadge,
+    makeDemoInput, fmtUSD, fmtUSDSigned, fmtAtrs,
+} from '../_round_levels_inputs.js';
+
+let state = makeDemoInput('aapl-near-180');
+
+export async function renderRoundLevels(mount, _appState) {
+    const tok = currentViewToken();
+    mount.innerHTML = `
+        <h1 data-i18n="view.round_levels.h1.title" class="view-title">// ROUND-NUMBER LEVELS</h1>
+
+        <div class="chart-panel" data-context-scope="round-levels">
+            <h2 data-i18n="view.round_levels.h2.inputs">Inputs</h2>
+            <div class="inline-form">
+                <label><span data-i18n="view.round_levels.label.price">Current price ($)</span>
+                    <input id="rl-price" type="number" step="any" min="0" value="${state.current_price}"></label>
+                <label><span data-i18n="view.round_levels.label.atr">ATR ($, optional)</span>
+                    <input id="rl-atr" type="number" step="any" min="0"
+                           placeholder="leave blank to skip ATR-distance"
+                           value="${state.atr == null ? '' : state.atr}"></label>
+                <label><span data-i18n="view.round_levels.label.window">Window ($ either side)</span>
+                    <input id="rl-window" type="number" step="any" min="0" value="${state.config.window}"></label>
+                <label><span data-i18n="view.round_levels.label.min_weight">Min weight</span>
+                    <select id="rl-min-weight">
+                        ${WEIGHTS.map(w => `<option value="${w}" ${w === state.config.min_weight ? 'selected' : ''}
+                            data-i18n="${weightLabelKey(w)}">${esc(t(weightLabelKey(w)))}</option>`).join('')}
+                    </select></label>
+                <button data-i18n="view.round_levels.btn.detect" id="rl-run" class="primary"
+                        data-tip="view.round_levels.tip.detect" type="button">Detect levels</button>
+            </div>
+            <div class="inline-form">
+                <button data-i18n="view.round_levels.btn.demo_aapl"   id="rl-demo-aapl"   class="secondary" type="button">Demo: AAPL ~180</button>
+                <button data-i18n="view.round_levels.btn.demo_spy"    id="rl-demo-spy"    class="secondary" type="button">Demo: SPY ~500</button>
+                <button data-i18n="view.round_levels.btn.demo_tsla"   id="rl-demo-tsla"   class="secondary" type="button">Demo: TSLA ~250 (medium+)</button>
+                <button data-i18n="view.round_levels.btn.demo_btc"    id="rl-demo-btc"    class="secondary" type="button">Demo: BTC ~100k (major-only)</button>
+                <button data-i18n="view.round_levels.btn.demo_penny"  id="rl-demo-penny"  class="secondary" type="button">Demo: penny ~3</button>
+                <button data-i18n="view.round_levels.btn.demo_pinned" id="rl-demo-pinned" class="secondary" type="button">Demo: pinned at $100</button>
+                <button data-i18n="view.round_levels.btn.demo_major"  id="rl-demo-major"  class="secondary" type="button">Demo: major-only ($175 ±100)</button>
+                <button data-i18n="view.round_levels.btn.demo_noatr"  id="rl-demo-noatr"  class="secondary" type="button">Demo: no ATR ($250)</button>
+            </div>
+            <p data-i18n="view.round_levels.hint.about" class="muted">Major = ÷1000, ÷500, ÷100. Medium = ÷50, ÷25. Minor = any other integer. Window > ${MAX_INTEGER_SCAN.toLocaleString()} integers short-circuits to empty (memory guard).</p>
+        </div>
+
+        <div id="rl-summary" class="cards"></div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.round_levels.h2.levels">Detected levels (sorted by distance from current price)</h2>
+            <div id="rl-table"></div>
+        </div>
+
+        <div id="rl-err" class="boot" style="display:none;color:var(--red)"></div>
+    `;
+    const loadDemo = (k) => {
+        state = makeDemoInput(k);
+        document.getElementById('rl-price').value      = state.current_price;
+        document.getElementById('rl-atr').value        = state.atr == null ? '' : state.atr;
+        document.getElementById('rl-window').value     = state.config.window;
+        document.getElementById('rl-min-weight').value = state.config.min_weight;
+    };
+    document.getElementById('rl-demo-aapl').addEventListener('click',   () => { loadDemo('aapl-near-180');  void compute(tok); });
+    document.getElementById('rl-demo-spy').addEventListener('click',    () => { loadDemo('spy-near-500');   void compute(tok); });
+    document.getElementById('rl-demo-tsla').addEventListener('click',   () => { loadDemo('tsla-near-250');  void compute(tok); });
+    document.getElementById('rl-demo-btc').addEventListener('click',    () => { loadDemo('btc-near-100k');  void compute(tok); });
+    document.getElementById('rl-demo-penny').addEventListener('click',  () => { loadDemo('penny-near-3');   void compute(tok); });
+    document.getElementById('rl-demo-pinned').addEventListener('click', () => { loadDemo('pinned-at-100'); void compute(tok); });
+    document.getElementById('rl-demo-major').addEventListener('click',  () => { loadDemo('major-only');    void compute(tok); });
+    document.getElementById('rl-demo-noatr').addEventListener('click',  () => { loadDemo('no-atr');        void compute(tok); });
+    document.getElementById('rl-run').addEventListener('click', () => { readInputs(); void compute(tok); });
+    void compute(tok);
+}
+
+function readInputs() {
+    const atrRaw = document.getElementById('rl-atr').value;
+    state.current_price    = Number(document.getElementById('rl-price').value);
+    state.atr              = atrRaw === '' ? null : Number(atrRaw);
+    state.config.window    = Number(document.getElementById('rl-window').value);
+    state.config.min_weight = document.getElementById('rl-min-weight').value;
+}
+
+async function compute(tok) {
+    hideErr();
+    const err = validateInputs(state);
+    if (err) { showErr(err); return; }
+    const local = localDetect(state.current_price, state.atr, state.config);
+    renderSummary(local, true);
+    renderTable(local);
+    let resp;
+    try {
+        resp = await api.chartsRoundLevels(buildBody(state));
+    } catch (e) {
+        showErr(`${t('view.round_levels.err.api')}: ${e.message || e}`);
+        return;
+    }
+    if (!viewIsCurrent(tok)) return;
+    renderSummary(resp, false);
+    renderTable(resp);
+}
+
+function renderSummary(report, pending) {
+    const local = localDetect(state.current_price, state.atr, state.config);
+    const badge = pinningBadge(report.nearest_above, report.nearest_below, state.current_price);
+    const parityOk = report.levels.length === local.levels.length
+                  && ((report.nearest_above && local.nearest_above && report.nearest_above.price === local.nearest_above.price)
+                      || (!report.nearest_above && !local.nearest_above))
+                  && ((report.nearest_below && local.nearest_below && report.nearest_below.price === local.nearest_below.price)
+                      || (!report.nearest_below && !local.nearest_below));
+    const localTag = pending ? ` (${t('view.round_levels.tag.local')})` : '';
+    const majorCount  = report.levels.filter(l => l.weight === 'major').length;
+    const mediumCount = report.levels.filter(l => l.weight === 'medium').length;
+    const minorCount  = report.levels.filter(l => l.weight === 'minor').length;
+    const above = report.nearest_above;
+    const below = report.nearest_below;
+    document.getElementById('rl-summary').innerHTML = [
+        card(t('view.round_levels.card.verdict'),     t(badge.key) + localTag, badge.cls),
+        card(t('view.round_levels.card.current'),     fmtUSD(state.current_price)),
+        card(t('view.round_levels.card.count'),       String(report.levels.length)),
+        card(t('view.round_levels.card.major'),       String(majorCount),  majorCount  > 0 ? 'neg' : ''),
+        card(t('view.round_levels.card.medium'),      String(mediumCount)),
+        card(t('view.round_levels.card.minor'),       String(minorCount)),
+        card(t('view.round_levels.card.above'),
+             above ? `${fmtUSD(above.price)}  ${fmtUSDSigned(above.distance)}` : t('view.round_levels.tag.none'),
+             above ? 'pos' : ''),
+        card(t('view.round_levels.card.above_atrs'),
+             above ? fmtAtrs(above.distance_atrs) : '—'),
+        card(t('view.round_levels.card.below'),
+             below ? `${fmtUSD(below.price)}  ${fmtUSDSigned(below.distance)}` : t('view.round_levels.tag.none'),
+             below ? 'neg' : ''),
+        card(t('view.round_levels.card.below_atrs'),
+             below ? fmtAtrs(below.distance_atrs) : '—'),
+        card(t('view.round_levels.card.parity'),
+             parityOk ? t('view.round_levels.tag.ok') : t('view.round_levels.tag.diverged'),
+             parityOk ? 'pos' : 'neg'),
+    ].join('');
+}
+
+function renderTable(report) {
+    const wrap = document.getElementById('rl-table');
+    if (!report.levels || report.levels.length === 0) {
+        wrap.innerHTML = `<div class="muted" data-i18n="view.round_levels.empty">${esc(t('view.round_levels.empty'))}</div>`;
+        return;
+    }
+    const sorted = [...report.levels].sort((a, b) => Math.abs(a.distance) - Math.abs(b.distance));
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr>
+                <th data-i18n="view.round_levels.col.price">Price</th>
+                <th data-i18n="view.round_levels.col.weight">Weight</th>
+                <th data-i18n="view.round_levels.col.side">Side</th>
+                <th data-i18n="view.round_levels.col.distance">Distance</th>
+                <th data-i18n="view.round_levels.col.distance_atrs">Distance (ATRs)</th>
+            </tr></thead>
+            <tbody>
+                ${sorted.map(l => {
+                    const badge = weightBadge(l.weight);
+                    const sideKey = l.distance > 0 ? 'view.round_levels.side.above'
+                                  : l.distance < 0 ? 'view.round_levels.side.below'
+                                  : 'view.round_levels.side.at';
+                    const sideCls = l.distance > 0 ? 'pos' : l.distance < 0 ? 'neg' : '';
+                    return `<tr>
+                        <td><strong>${esc(fmtUSD(l.price))}</strong></td>
+                        <td data-i18n="${esc(weightLabelKey(l.weight))}" class="${badge.cls}">${esc(t(badge.key))}</td>
+                        <td data-i18n="${esc(sideKey)}" class="${sideCls}">${esc(t(sideKey))}</td>
+                        <td class="${sideCls}">${esc(fmtUSDSigned(l.distance))}</td>
+                        <td class="${sideCls}">${esc(fmtAtrs(l.distance_atrs))}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function card(label, value, cls = '') {
+    return `<div class="card">
+        <div class="label">${esc(label)}</div>
+        <div class="value ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+function showErr(msg) {
+    const el = document.getElementById('rl-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideErr() { document.getElementById('rl-err').style.display = 'none'; }

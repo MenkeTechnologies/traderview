@@ -5,8 +5,8 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 export async function renderSectors(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// SECTOR STRENGTH</h1>
-        <p class="muted small">11 SPDR sector ETFs ranked by today's % change and relative strength vs SPY (ZenBot-style).</p>
+        <h1 data-i18n="view.sectors.h1.sector_strength" class="view-title">// SECTOR STRENGTH</h1>
+        <p data-i18n="view.sectors.hint.11_spdr_sector_etfs_ranked_by_today_s_change_and_r" class="muted small">11 SPDR sector ETFs ranked by today's % change and relative strength vs SPY (ZenBot-style).</p>
         <div id="sec"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
     try {
@@ -18,8 +18,8 @@ export async function renderSectors(mount) {
         secEl.innerHTML = `
             <div class="chart-panel">
                 <table class="trades">
-                    <thead><tr><th>#</th><th>Sector</th><th>ETF</th><th>Price</th>
-                        <th>Change %</th><th>RS vs SPY</th><th>Bar</th></tr></thead>
+                    <thead><tr><th>#</th><th data-i18n="view.sectors.th.sector">Sector</th><th data-i18n="view.sectors.th.etf">ETF</th><th data-i18n="view.sectors.th.price">Price</th>
+                        <th data-i18n="view.sectors.th.change">Change %</th><th data-i18n="view.sectors.th.rs_vs_spy">RS vs SPY</th><th data-i18n="view.sectors.th.bar">Bar</th></tr></thead>
                     <tbody>${rows.map((s, i) => {
                         const ch = Number(s.change_pct);
                         const rs = s.rs_vs_spy != null ? Number(s.rs_vs_spy) : null;

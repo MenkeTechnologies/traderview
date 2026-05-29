@@ -76,6 +76,32 @@ export function tilesByViewId(tiles) {
     return map;
 }
 
+// Build palette items from the shortcut registry. Each shortcut becomes
+// a searchable "action" command — selecting it dispatches its actionKey
+// CustomEvent (same path the shortcut press would take).
+//
+// `translate(key)` lets the caller pass i18n's t(). It's optional; if
+// omitted, the descKey is returned verbatim. `formatChip(shortcut)` is
+// also optional and returns the visible keyboard chip.
+export function buildActionItems(shortcuts, translate, formatChip) {
+    if (!Array.isArray(shortcuts)) return [];
+    const tr = typeof translate === 'function' ? translate : (k => k);
+    const fmt = typeof formatChip === 'function' ? formatChip : (() => '');
+    return shortcuts.map(sc => {
+        const chip = fmt(sc) || '';
+        return {
+            id: `action:${sc.id}`,
+            kind: 'action',
+            actionKey: sc.actionKey,
+            label: sc.descKey ? tr(sc.descKey) : sc.id,
+            icon: '⚡',
+            hint: chip,
+            category: 'Actions',
+            scope: sc.scope || 'global',
+        };
+    }).filter(it => !!it.actionKey);
+}
+
 // Subsequence-fuzzy + bonuses. Higher = better match.
 // 0 = no match (caller filters those out).
 export function fuzzyScore(query, item) {
@@ -109,6 +135,8 @@ export function fuzzyScore(query, item) {
     // Kind tiebreakers.
     if (item.kind === 'favorite') bonuses += 4;
     if (item.kind === 'bookmark') bonuses += 3;
+    if (item.kind === 'action')   bonuses += 2;
+    if (item.kind === 'recent')   bonuses += 1;
     return bonuses + 1;
 }
 

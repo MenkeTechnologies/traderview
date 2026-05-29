@@ -11,18 +11,18 @@ export async function renderBacktestPresets(mount, _state, slug = '') {
 async function renderBrowse(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
-        <h1 class="view-title">// BACKTEST PRESETS</h1>
+        <h1 data-i18n="view.backtest_presets.h1.backtest_presets" class="view-title">// BACKTEST PRESETS</h1>
         <p class="muted small">Save parameter combinations under a name; mark them public to
             get a shareable slug; fork others' public presets to your own library. Run a preset
             by feeding its <code>preset</code> JSON straight into the Backtest tab.</p>
 
         <div class="chart-panel">
-            <h2>Save a new preset</h2>
+            <h2 data-i18n="view.backtest_presets.h2.save_a_new_preset">Save a new preset</h2>
             <form id="bp-form" class="inline-form">
                 <input name="name" placeholder="name (unique per user)" required style="min-width:200px;">
                 <input name="description" placeholder="optional description" style="min-width:240px;">
                 <label><input name="is_public" type="checkbox"> public</label>
-                <button class="primary" type="submit">Save</button>
+                <button data-i18n="view.backtest_presets.btn.save" class="primary" type="submit">Save</button>
             </form>
             <textarea id="bp-json" rows="8" placeholder='Preset JSON, e.g.
 {
@@ -36,11 +36,11 @@ async function renderBrowse(mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>My presets</h2>
+            <h2 data-i18n="view.backtest_presets.h2.my_presets">My presets</h2>
             <div id="bp-mine"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
         <div class="chart-panel">
-            <h2>Public library (top by forks)</h2>
+            <h2 data-i18n="view.backtest_presets.h2.public_library_top_by_forks">Public library (top by forks)</h2>
             <div id="bp-public"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
         </div>
     `;
@@ -86,7 +86,7 @@ async function refresh(mount, tok) {
 function renderMine(rows, mount, tok) {
     const el = mount.querySelector('#bp-mine');
     if (!el) return;
-    if (!rows.length) { el.innerHTML = '<p class="muted small">No presets yet.</p>'; return; }
+    if (!rows.length) { el.innerHTML = '<p data-i18n="view.backtest_presets.hint.no_presets_yet" class="muted small">No presets yet.</p>'; return; }
     el.innerHTML = table(rows, true);
     wireRowButtons(el, true, mount, tok);
 }
@@ -94,7 +94,7 @@ function renderMine(rows, mount, tok) {
 function renderPublic(rows, mount, tok) {
     const el = mount.querySelector('#bp-public');
     if (!el) return;
-    if (!rows.length) { el.innerHTML = '<p class="muted small">No public presets yet — be the first.</p>'; return; }
+    if (!rows.length) { el.innerHTML = '<p data-i18n="view.backtest_presets.hint.no_public_presets_yet_be_the_first" class="muted small">No public presets yet — be the first.</p>'; return; }
     el.innerHTML = table(rows, false);
     wireRowButtons(el, false, mount, tok);
 }
@@ -102,8 +102,8 @@ function renderPublic(rows, mount, tok) {
 function table(rows, mine) {
     return `<table class="trades">
         <thead><tr>
-            <th>Name</th><th>Visibility</th><th>Slug</th>
-            <th>Forks</th><th>Runs</th><th>Updated</th><th></th>
+            <th data-i18n="view.backtest_presets.th.name">Name</th><th data-i18n="view.backtest_presets.th.visibility">Visibility</th><th data-i18n="view.backtest_presets.th.slug">Slug</th>
+            <th data-i18n="view.backtest_presets.th.forks">Forks</th><th data-i18n="view.backtest_presets.th.runs">Runs</th><th data-i18n="view.backtest_presets.th.updated">Updated</th><th></th>
         </tr></thead>
         <tbody>
         ${rows.map(r => `<tr>
@@ -117,8 +117,8 @@ function table(rows, mine) {
             <td class="small">${new Date(r.updated_at).toLocaleDateString()}</td>
             <td>
                 ${mine
-                    ? `<button class="btn bp-del" data-id="${r.id}">Delete</button>`
-                    : `<button class="btn bp-fork" data-slug="${esc(r.slug)}">Fork</button>`}
+                    ? `<button data-i18n="view.backtest_presets.btn.delete" class="btn bp-del" data-id="${r.id}">Delete</button>`
+                    : `<button data-i18n="view.backtest_presets.btn.fork" class="btn bp-fork" data-slug="${esc(r.slug)}">Fork</button>`}
             </td>
         </tr>`).join('')}
         </tbody></table>`;
@@ -167,9 +167,9 @@ async function renderPresetDetail(mount, slug) {
             </div>
             ${r.description ? `<div class="chart-panel"><p>${esc(r.description)}</p></div>` : ''}
             <div class="chart-panel">
-                <h2>Preset JSON</h2>
+                <h2 data-i18n="view.backtest_presets.h2.preset_json">Preset JSON</h2>
                 <pre style="background:#070714;padding:8px;font-size:11px;overflow:auto;">${esc(JSON.stringify(r.preset, null, 2))}</pre>
-                <button class="btn" id="bp-fork-btn">Fork to my library</button>
+                <button data-i18n="view.backtest_presets.btn.fork_to_my_library" class="btn" id="bp-fork-btn">Fork to my library</button>
                 <a class="btn" href="#backtest-presets" style="margin-left:6px;">Back to library</a>
             </div>
         `;
