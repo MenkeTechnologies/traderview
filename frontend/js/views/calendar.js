@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { fmtMoney } from '../util.js';
+import { esc, fmtMoney } from '../util.js';
 import { t } from '../i18n.js';
 
 export async function renderCalendar(mount, state) {
@@ -38,7 +38,7 @@ export async function renderCalendar(mount, state) {
                     ? `rgba(35, 209, 96, ${0.15 + intensity * 0.7})`
                     : `rgba(255, 56, 96, ${0.15 + intensity * 0.7})`;
                 cellsRow += `<div class="cal-cell large" style="background:${color}"
-                    title="${date} · ${fmtMoney(v)} · ${cell.trades} trades">${d}</div>`;
+                    title="${esc(t('view.dashboard.cal.tooltip', { day: date, pnl: fmtMoney(v), n: cell.trades }))}">${d}</div>`;
             } else {
                 cellsRow += `<div class="cal-cell large empty">${d}</div>`;
             }
