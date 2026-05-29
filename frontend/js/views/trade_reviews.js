@@ -6,8 +6,9 @@ import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_OPTS = [
-    [-2, '😡 awful'], [-1, '🙁 down'], [0, '😐 flat'], [1, '🙂 good'], [2, '😄 great'],
+    [-2, 'awful'], [-1, 'down'], [0, 'flat'], [1, 'good'], [2, 'great'],
 ];
+const moodLabel = (key) => t(`view.trade_reviews.mood.${key}`);
 
 export async function renderTradeReviews(mount, state) {
     const tok = currentViewToken();
@@ -130,8 +131,8 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
                         <span data-i18n="view.trade_reviews.q.mood_at_exit">4. Mood at exit</span>
                         <select name="mood_at_exit">
                             <option value="">—</option>
-                            ${MOOD_OPTS.map(([v, l]) =>
-                                `<option value="${v}" ${existing?.mood_at_exit === v ? 'selected' : ''}>${esc(l)}</option>`
+                            ${MOOD_OPTS.map(([v, k]) =>
+                                `<option value="${v}" ${existing?.mood_at_exit === v ? 'selected' : ''}>${esc(moodLabel(k))}</option>`
                             ).join('')}
                         </select>
                     </label>
@@ -186,7 +187,8 @@ function renderHistory(rows, mount) {
             </tr></thead>
             <tbody>
             ${rows.map(r => {
-                const mood = (MOOD_OPTS.find(([v]) => v === r.mood_at_exit) || ['', '—'])[1];
+                const found = MOOD_OPTS.find(([v]) => v === r.mood_at_exit);
+                const mood = found ? moodLabel(found[1]) : '—';
                 const tick = b => b === true ? '<span class="pos">✓</span>'
                                 : b === false ? '<span class="neg">✗</span>'
                                 : '<span class="muted">—</span>';
