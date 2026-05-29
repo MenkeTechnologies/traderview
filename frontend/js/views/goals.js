@@ -49,7 +49,7 @@ export async function renderGoals(mount, state) {
             </form>
         </div>
 
-        <div id="g-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="g-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     // Default date range based on selected period.
     const periodSel = mount.querySelector('#g-form [name=period]');

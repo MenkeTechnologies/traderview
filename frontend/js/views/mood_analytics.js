@@ -15,7 +15,7 @@ export async function renderMoodAnalytics(mount, state) {
         <h1 class="view-title">// MOOD ANALYTICS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small" data-i18n="view.mood_analytics.hint.intro">Two ingestion paths: per-trade (journal entry directly tied to a trade — cleanest signal) and per-day (daily mood × every trade opened that day). The Pearson correlation is across the union. Positive ρ means happier-mood days produce better outcomes; negative means good moods correlate with overconfidence and losses.</p>
 
-        <div id="ma-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="ma-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         <div id="ma-out"></div>
     `;
     try {

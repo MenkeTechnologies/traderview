@@ -56,12 +56,13 @@ export async function renderStrategyAlerts(mount) {
             </form>
             <textarea id="sa-ast" rows="10"
                 style="width:100%;font-family:'Share Tech Mono',monospace;font-size:11px;background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:8px;margin-top:8px;"
+                data-i18n-placeholder="view.strategy_alerts.placeholder.ast"
                 placeholder='AST JSON, e.g. {"kind":"leaf","symbol":"AAPL","metric":{"kind":"price"},"op":"gt","value":200}'></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.strategy_alerts.h2.active_rules">Active rules</h2>
-            <div id="sa-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+            <div id="sa-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
             <button data-i18n="view.strategy_alerts.btn.evaluate_now" id="sa-eval-now" class="btn">Evaluate now</button>
             <span id="sa-status" class="muted small" style="margin-left:8px;"></span>
         </div>

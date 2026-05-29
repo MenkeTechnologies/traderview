@@ -12,7 +12,7 @@ export async function renderSectorRotation(mount) {
         <h1 data-i18n="view.sector_rotation.h1.sector_rotation" class="view-title">// SECTOR ROTATION</h1>
         <p class="muted small" data-i18n="view.sector_rotation.hint.intro">For each SPDR sector ETF (XLK/XLF/XLE/XLV/XLY/XLP/XLI/XLB/XLU/XLRE/XLC), relative-strength versus SPY across 5/20/60-day windows. Ranks color the cells: rank 1-3 = green (leadership), 4-7 = grey (in line), 8-11 = red (laggards). The sparkline column shows daily sector_return − SPY_return for the last 60 sessions — a rising line means the sector is gaining ground on the index. Refreshes every 5 min.</p>
 
-        <div id="sr-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="sr-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     await refresh(mount, tok);
     const t = setInterval(() => {

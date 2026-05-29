@@ -15,7 +15,7 @@ export async function renderFillQuality(mount, state) {
         <h1 class="view-title">// FILL QUALITY — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
         <p class="muted small" data-i18n="view.fill_quality.hint.intro">Bar-level approximation — TraderView caches daily OHLC, not intraday bid/ask, so this is a directional metric not tick-perfect slippage. fill-in-range places the fill on the day's high-low line; the fill-efficiency column flips that for buys (lower = better) and sells (higher = better) so 100% always means "best possible fill within the day's range". Slippage bps = deviation from typical price (HLC/3), sign-flipped so positive = worse than typical for that side.</p>
 
-        <div id="fq-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="fq-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     try {
         const r = await api.fillQuality(acct.id);

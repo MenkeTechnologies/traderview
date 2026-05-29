@@ -36,11 +36,11 @@ async function renderBrowse(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.backtest_presets.h2.my_presets">My presets</h2>
-            <div id="bp-mine"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+            <div id="bp-mine"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.backtest_presets.h2.public_library_top_by_forks">Public library (top by forks)</h2>
-            <div id="bp-public"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+            <div id="bp-public"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
     `;
     mount.querySelector('#bp-form').addEventListener('submit', async (e) => {
@@ -148,7 +148,7 @@ function wireRowButtons(scope, mine, mount, tok) {
 async function renderPresetDetail(mount, slug) {
     const tok = currentViewToken();
     mount.innerHTML = `<h1 class="view-title">// PRESET — ${esc(slug)}</h1>
-        <div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div>`;
+        <div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div>`;
     try {
         const r = await api.getBacktestPresetBySlug(slug);
         if (!viewIsCurrent(tok)) return;

@@ -39,7 +39,7 @@ export async function renderDeveloper(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.api_tokens.h2.active_tokens">Active tokens</h2>
-            <div id="tok-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+            <div id="tok-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
 
         <div class="chart-panel">

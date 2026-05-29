@@ -48,7 +48,7 @@ export async function renderCustomIndicators(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.custom_indicators.h2.saved_presets">Saved presets</h2>
-            <div id="ci-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+            <div id="ci-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
     `;
     const kindSel = mount.querySelector('#ci-form [name=kind]');

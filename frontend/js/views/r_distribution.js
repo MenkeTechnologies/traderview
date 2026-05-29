@@ -16,7 +16,7 @@ export async function renderRDist(mount, state) {
             SQN = √N × mean(R) ÷ stdev(R) per Van Tharp: under 1.6 poor, 1.6-1.9 below average,
             2.0-2.4 average, 2.5-2.9 good, 3.0-5.0 excellent, &gt;5 suspect (likely curve-fit).</p>
 
-        <div id="r-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="r-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     try {
         const r = await api.rDistribution(acct.id);

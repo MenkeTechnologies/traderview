@@ -35,7 +35,7 @@ export async function renderNews(mount) {
             </form>
         </div>
 
-        <div id="n-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
+        <div id="n-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     mount.querySelector('#n-form').addEventListener('submit', async (e) => {
         e.preventDefault();
