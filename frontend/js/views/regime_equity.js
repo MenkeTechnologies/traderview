@@ -120,7 +120,7 @@ function renderSummary(r, pending) {
             state.equity[state.equity.length - 1] - state.equity[0] >= 0 ? 'pos' : 'neg'),
         card(t('view.regime_equity.card.rel_slope'),        fmtPct((r.mean_equity ?? local.mean_equity) > 0
             ? r.slope_per_period / (r.mean_equity ?? local.mean_equity) : 0, 4)),
-        card(t('view.regime_equity.card.local_parity'),     parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.regime_equity.card.local_parity'),     parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 

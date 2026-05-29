@@ -150,7 +150,7 @@ function renderSummary(r, pending) {
         card(t('view.goal_tracker.card.annualized_pace'),   fmtPct(r.annualized_pace, 2),
             r.annualized_pace >= 0 ? 'pos' : 'neg'),
         card(t('view.goal_tracker.card.action'),            badge.hint),
-        card(t('view.goal_tracker.card.local_parity'),      parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.goal_tracker.card.local_parity'),      parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 

@@ -125,7 +125,7 @@ function renderSummary(clusters, pending) {
         card(t('view.clusters_correlation.card.total_gross'),    fmtUSD(s.totalGross)),
         card(t('view.clusters_correlation.card.total_net'),      fmtUSDSigned(s.totalNet),
             s.totalNet >= 0 ? 'pos' : 'neg'),
-        card(t('view.clusters_correlation.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.clusters_correlation.card.local_parity'),   parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

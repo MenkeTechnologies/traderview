@@ -116,7 +116,7 @@ function renderSummary(report, pending) {
             cohortBias ? cohortBias.cls : ''),
         card(t('view.cohort_tilt.card.cohort_bias'),    cohortBias ? cohortBias.label : '—',
             cohortBias ? cohortBias.cls : ''),
-        card(t('view.cohort_tilt.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.cohort_tilt.card.local_parity'),   parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

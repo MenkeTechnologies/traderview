@@ -162,7 +162,7 @@ function renderSummary(verdict, pending) {
         card(t('view.time_in_force.card.remaining_qty'), String(state.order.original_qty - state.order.filled_qty),
             (state.order.original_qty - state.order.filled_qty) > 0 ? 'neg' : 'pos'),
         card(t('view.time_in_force.card.good_until'),   state.order.good_until || '—'),
-        card(t('view.time_in_force.card.local_parity'), parityOk ? 'OK' : `DIVERGED (${local.action}: ${local.reason})`,
+        card(t('view.time_in_force.card.local_parity'), parityOk ? t('common.ok') : t('view.time_in_force.parity.diverged', { action: local.action, reason: local.reason }),
             parityOk ? 'pos' : 'neg'),
     ].join('');
 }

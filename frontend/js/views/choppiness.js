@@ -119,9 +119,9 @@ function renderSummary(report, pending) {
             buckets.choppy > buckets.trending ? 'neg' : ''),
         card(t('view.choppiness.card.warmup_bars'),    String(buckets.warmup)),
         card(t('view.choppiness.card.last_switch'),    switchEvt
-            ? `bar ${switchEvt.switchedAt}: ${switchEvt.fromRegime} → ${switchEvt.toRegime}`
-            : 'no switch in window'),
-        card(t('view.choppiness.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+            ? t('view.choppiness.switch.bar', { bar: switchEvt.switchedAt, from: switchEvt.fromRegime, to: switchEvt.toRegime })
+            : t('view.choppiness.switch.none')),
+        card(t('view.choppiness.card.local_parity'),   parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

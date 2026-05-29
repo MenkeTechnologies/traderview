@@ -154,15 +154,15 @@ function renderSummary(r, pending) {
     const local = localEvaluate(state.plan, state.config);
     const parityOk = r.all_passed === local.all_passed;
     document.getElementById('tpc-summary').innerHTML = [
-        card(t('view.trade_plan_checklist.card.verdict'), r.all_passed ? 'PASS' : 'FAIL' + (pending ? ' (local)' : ''), allCls),
+        card(t('view.trade_plan_checklist.card.verdict'), r.all_passed ? t('common.pass') : t('common.fail') + (pending ? ' (local)' : ''), allCls),
         card(t('view.trade_plan_checklist.card.gates_passed'), `${r.gates.filter(g => g.passed).length} / ${r.gates.length}`, allCls),
         card(t('view.trade_plan_checklist.card.r_multiple'), fmtR(r.computed_r_multiple),
             r.computed_r_multiple != null && r.computed_r_multiple >= state.config.min_r_multiple ? 'pos' : 'neg'),
         card(t('view.trade_plan_checklist.card.risk'), fmtPct(r.risk_pct),
             r.risk_pct <= state.config.max_risk_pct_per_trade ? 'pos' : 'neg'),
-        card(t('view.trade_plan_checklist.card.side'),  state.plan.is_long ? 'LONG' : 'SHORT',
+        card(t('view.trade_plan_checklist.card.side'),  state.plan.is_long ? t('common.long') : t('common.short'),
             state.plan.is_long ? 'pos' : 'neg'),
-        card(t('view.trade_plan_checklist.card.local_parity'), parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.trade_plan_checklist.card.local_parity'), parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -186,7 +186,7 @@ function renderGates(report) {
                 ${gates.map((g, i) => `<tr>
                     <td>${i + 1}</td>
                     <td><strong>${esc(gateLabel(g.gate))}</strong></td>
-                    <td class="${gateCls(g.passed)}">${gateIcon(g.passed)} ${g.passed ? 'PASS' : 'FAIL'}</td>
+                    <td class="${gateCls(g.passed)}">${gateIcon(g.passed)} ${t(g.passed ? 'common.pass' : 'common.fail')}</td>
                     <td class="muted">${esc(g.reason)}</td>
                 </tr>`).join('')}
             </tbody>

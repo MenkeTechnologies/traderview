@@ -197,7 +197,7 @@ function renderStatic(report, pending) {
         card(t('view.kelly.card.note'),            report.note || '—'),
         card(t('view.kelly.card.p_b_vs_q'),      `${(state.winRate * state.payoffRatio).toFixed(3)} vs ${(1 - state.winRate).toFixed(3)}`,
             (state.winRate * state.payoffRatio) > (1 - state.winRate) ? 'pos' : 'neg'),
-        card(t('view.kelly.card.local_parity'),    parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.kelly.card.local_parity'),    parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 
@@ -230,7 +230,7 @@ function renderDynamic(points, pending) {
             latest && latest.half_kelly_fraction > 0 ? 'pos' : ''),
         card(t('view.kelly.card.latest_payoff'),    latest && latest.window_payoff_ratio != null
             ? fmtNum(latest.window_payoff_ratio, 3) : '—'),
-        card(t('view.kelly.card.local_parity_2'),     parityOk ? 'OK' : 'DIVERGED', parityOk ? 'pos' : 'neg'),
+        card(t('view.kelly.card.local_parity_2'),     parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
 }
 

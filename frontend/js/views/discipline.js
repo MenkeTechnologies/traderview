@@ -125,7 +125,7 @@ function ruleTable(rows) {
             <td>${tick(r.stop_honored)}</td>
             <td>${tick(r.qty_within)}</td>
             <td>${tick(r.direction_match)}</td>
-            <td class="${r.overall_pass ? 'pos' : 'neg'}">${r.overall_pass ? 'PASS' : 'FAIL'}</td>
+            <td class="${r.overall_pass ? 'pos' : 'neg'}">${t(r.overall_pass ? 'common.pass' : 'common.fail')}</td>
         </tr>`).join('')}
         </tbody></table>`;
 }

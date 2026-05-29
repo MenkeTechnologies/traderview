@@ -125,7 +125,7 @@ function renderSummary(stats, pending) {
             best && best.net_pnl >= 0 ? 'pos' : 'neg'),
         card(t('view.setups_by_setup.card.worst_setup'),    worst ? `${worst.setup}: ${fmtUSDSigned(worst.net_pnl)}` : '—',
             worst && worst.net_pnl >= 0 ? 'pos' : 'neg'),
-        card(t('view.setups_by_setup.card.local_parity'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.setups_by_setup.card.local_parity'),   parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

@@ -138,7 +138,7 @@ function renderSummary(closeStops, chandStops, pending) {
         card(t('view.vol_stop_close.card.side'),               state.side.toUpperCase(),
             state.side === 'long' ? 'pos' : 'neg'),
         card(t('view.vol_stop_close.card.sample_size'),        String(state.bars.length)),
-        card(t('view.vol_stop_close.card.parity_lengths'),   parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.vol_stop_close.card.parity_lengths'),   parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

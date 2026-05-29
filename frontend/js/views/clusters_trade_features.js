@@ -131,7 +131,7 @@ function renderSummary(report, pending) {
             worst && worst.mean_r <= 0 ? 'neg' : 'pos'),
         card(t('view.clusters_trade_features.card.inertia_wss'),   fmtNum(inertia, 4),
             inertia < 1 ? 'pos' : ''),
-        card(t('view.clusters_trade_features.card.local_parity'),    parity ? 'OK' : 'DIVERGED', parity ? 'pos' : 'neg'),
+        card(t('view.clusters_trade_features.card.local_parity'),    parity ? t('common.ok') : t('common.diverged'), parity ? 'pos' : 'neg'),
     ].join('');
 }
 

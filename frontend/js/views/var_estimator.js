@@ -145,7 +145,7 @@ function renderSummary(hist, gauss, pending) {
             stats.fattest_left_tail < -3 ? 'neg' : ''),
         card(t('view.var_estimator.card.fat_tail_vs_gaussian'), fatTailFlag ? 'FLAGGED' : 'within tolerance',
             fatTailFlag ? 'neg' : 'pos'),
-        card(t('view.var_estimator.card.local_parity'),       parityOk ? 'OK' : 'DIVERGED',
+        card(t('view.var_estimator.card.local_parity'),       parityOk ? t('common.ok') : t('common.diverged'),
             parityOk ? 'pos' : 'neg'),
     ].join('');
 }
