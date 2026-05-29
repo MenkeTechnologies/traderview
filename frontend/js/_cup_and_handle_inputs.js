@@ -49,17 +49,17 @@ export function parseBarBlob(text) {
 }
 
 export function validateInputs(bars, config) {
-    if (!Array.isArray(bars)) return 'bars must be an array';
-    if (config.cup_min_bars < 4) return 'cup_min_bars must be ≥ 4';
-    if (config.cup_max_bars <= config.cup_min_bars) return 'cup_max_bars must be > cup_min_bars';
-    if (config.handle_min_bars < 1) return 'handle_min_bars must be ≥ 1';
-    if (config.handle_max_bars < config.handle_min_bars) return 'handle_max_bars must be ≥ handle_min_bars';
-    if (config.min_depth_pct <= 0) return 'min_depth_pct must be > 0';
-    if (config.max_depth_pct <= config.min_depth_pct) return 'max_depth_pct must be > min_depth_pct';
-    if (config.rim_tolerance_pct < 0) return 'rim_tolerance_pct must be ≥ 0';
-    if (config.max_handle_depth_pct <= 0) return 'max_handle_depth_pct must be > 0';
+    if (!Array.isArray(bars)) return t('view.cup_and_handle.validate.bars_array');
+    if (config.cup_min_bars < 4) return t('view.cup_and_handle.validate.cup_min');
+    if (config.cup_max_bars <= config.cup_min_bars) return t('view.cup_and_handle.validate.cup_max');
+    if (config.handle_min_bars < 1) return t('view.cup_and_handle.validate.handle_min');
+    if (config.handle_max_bars < config.handle_min_bars) return t('view.cup_and_handle.validate.handle_max');
+    if (config.min_depth_pct <= 0) return t('view.cup_and_handle.validate.min_depth');
+    if (config.max_depth_pct <= config.min_depth_pct) return t('view.cup_and_handle.validate.max_depth');
+    if (config.rim_tolerance_pct < 0) return t('view.cup_and_handle.validate.rim_tol');
+    if (config.max_handle_depth_pct <= 0) return t('view.cup_and_handle.validate.handle_depth');
     const needed = config.cup_min_bars + config.handle_min_bars;
-    if (bars.length < needed) return `need at least ${needed} bars (cup_min + handle_min)`;
+    if (bars.length < needed) return t('view.cup_and_handle.validate.bars_min', { n: needed });
     return null;
 }
 

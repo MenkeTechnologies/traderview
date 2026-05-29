@@ -12,6 +12,7 @@
 // small radii speed up the algorithm and prevent pathological matches.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 export function parseSeries(text) {
     return parseFloatBlob(text);
@@ -28,12 +29,12 @@ export function buildBody(a, b, bandRadius) {
 
 /** Validate the two-series + band-radius input. */
 export function validateInputs(a, b, bandRadius) {
-    if (!Array.isArray(a) || a.length < 2) return 'series A needs ≥ 2 values';
-    if (!Array.isArray(b) || b.length < 2) return 'series B needs ≥ 2 values';
-    if (a.some(x => !Number.isFinite(x))) return 'series A contains non-finite values';
-    if (b.some(x => !Number.isFinite(x))) return 'series B contains non-finite values';
+    if (!Array.isArray(a) || a.length < 2) return t('view.dtw.validate.a_min');
+    if (!Array.isArray(b) || b.length < 2) return t('view.dtw.validate.b_min');
+    if (a.some(x => !Number.isFinite(x))) return t('view.dtw.validate.a_non_finite');
+    if (b.some(x => !Number.isFinite(x))) return t('view.dtw.validate.b_non_finite');
     if (!Number.isInteger(bandRadius) || bandRadius < 0) {
-        return 'band_radius must be a non-negative integer (0 = unconstrained)';
+        return t('view.dtw.validate.band_radius');
     }
     return null;
 }

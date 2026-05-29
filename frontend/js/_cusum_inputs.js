@@ -4,6 +4,7 @@
 // reference_stdev, threshold_stdevs, slack} }.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 // CUSUM operates on returns (signed) — no nonNegative gate.
 export function parseSeries(text) {
@@ -11,15 +12,15 @@ export function parseSeries(text) {
 }
 
 export function validateInputs(series, cfg) {
-    if (!Array.isArray(series) || series.length < 10) return 'series must have at least 10 observations';
-    if (!series.every(Number.isFinite)) return 'series must be finite';
-    if (!Number.isFinite(cfg.reference_mean)) return 'reference_mean must be finite';
+    if (!Array.isArray(series) || series.length < 10) return t('view.cusum.validate.series_min');
+    if (!series.every(Number.isFinite)) return t('view.cusum.validate.series_finite');
+    if (!Number.isFinite(cfg.reference_mean)) return t('view.cusum.validate.ref_mean');
     if (!Number.isFinite(cfg.reference_stdev) || cfg.reference_stdev <= 0)
-        return 'reference_stdev must be > 0';
+        return t('view.cusum.validate.ref_stdev');
     if (!Number.isFinite(cfg.threshold_stdevs) || cfg.threshold_stdevs <= 0)
-        return 'threshold_stdevs must be > 0';
+        return t('view.cusum.validate.threshold');
     if (!Number.isFinite(cfg.slack) || cfg.slack < 0)
-        return 'slack must be ≥ 0';
+        return t('view.cusum.validate.slack');
     return null;
 }
 
