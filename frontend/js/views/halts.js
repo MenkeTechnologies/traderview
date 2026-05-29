@@ -32,7 +32,7 @@ export async function renderHalts(mount, _state) {
                     <th data-i18n="view.halts.th.time">Time</th><th data-i18n="view.halts.th.symbol">Symbol</th><th data-i18n="view.halts.th.issue">Issue</th>
                     <th data-i18n="view.halts.th.reason">Reason</th><th data-i18n="view.halts.th.resume_quote">Resume Quote</th><th data-i18n="view.halts.th.resume_trade">Resume Trade</th>
                 </tr></thead>
-                <tbody><tr><td colspan="6" class="muted">connecting…</td></tr></tbody>
+                <tbody><tr><td colspan="6" class="muted" data-i18n="common.connecting">connecting…</td></tr></tbody>
             </table>
         </div>
     `;
@@ -101,7 +101,7 @@ function render() {
     const all = Array.from(halts.values())
         .sort((a, b) => new Date(b.fetched_at) - new Date(a.fetched_at));
     if (!all.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="muted">no halts in feed</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">${esc(t('view.halts.empty.no_feed'))}</td></tr>`;
         return;
     }
     tbody.innerHTML = all.map(h => `

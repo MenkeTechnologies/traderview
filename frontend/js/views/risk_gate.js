@@ -66,7 +66,7 @@ export async function renderRiskGate(mount, state) {
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.type">Type</th><th data-i18n="view.risk_gate.th.config">Config</th><th data-i18n="view.risk_gate.th.account">Account</th><th data-i18n="view.risk_gate.th.enabled">Enabled</th><th></th>
                 </tr></thead>
-                <tbody><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="5" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
             </table>
         </div>
 
@@ -98,7 +98,7 @@ export async function renderRiskGate(mount, state) {
             <p data-i18n="view.risk_gate.hint.which_rules_trigger_most_high_fire_rules_are_worki" class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
             <table class="trades" id="rg-by-rule">
                 <thead><tr><th data-i18n="view.risk_gate.th.rule">Rule</th><th data-i18n="view.risk_gate.th.total_fires">Total fires</th><th data-i18n="view.risk_gate.th.blocks">Blocks</th><th data-i18n="view.risk_gate.th.warnings">Warnings</th></tr></thead>
-                <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="4" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
             </table>
         </div>
 
@@ -108,7 +108,7 @@ export async function renderRiskGate(mount, state) {
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.time">Time</th><th data-i18n="view.risk_gate.th.symbol">Symbol</th><th data-i18n="view.risk_gate.th.outcome">Outcome</th><th data-i18n="view.risk_gate.th.rules_that_fired">Rules that fired</th>
                 </tr></thead>
-                <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="4" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
             </table>
         </div>
 
@@ -310,7 +310,7 @@ async function reloadRules(mount, tok) {
         const rules = await api.riskRules();
         if (!viewIsCurrent(tok)) return;
         if (!rules.length) {
-            tb.innerHTML = '<tr><td colspan="5" class="muted">No rules yet. Add one below — the gate is a no-op until you do.</td></tr>';
+            tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.risk_gate.empty.rules'))}</td></tr>`;
             return;
         }
         tb.innerHTML = rules.map(r => `
@@ -338,7 +338,7 @@ async function reloadRules(mount, tok) {
             });
         });
     } catch (err) {
-        tb.innerHTML = `<tr><td colspan="5" class="muted">Error: ${esc(err.message)}</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.risk_gate.error', { msg: err.message }))}</td></tr>`;
     }
 }
 
@@ -354,7 +354,7 @@ async function reloadFiresByRule(mount, tok) {
         const stats = await api.riskFiresByRule(30);
         if (!viewIsCurrent(tok)) return;
         if (!stats.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="muted">no fires in the last 30 days</td></tr>';
+            tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.risk_gate.empty.no_fires_30d'))}</td></tr>`;
             return;
         }
         tb.innerHTML = stats.map(s => `
@@ -366,7 +366,7 @@ async function reloadFiresByRule(mount, tok) {
             </tr>
         `).join('');
     } catch (err) {
-        tb.innerHTML = `<tr><td colspan="4" class="muted">Error: ${esc(err.message)}</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.risk_gate.error', { msg: err.message }))}</td></tr>`;
     }
 }
 
@@ -377,7 +377,7 @@ async function reloadFires(mount, tok) {
         const fires = await api.riskFires(50);
         if (!viewIsCurrent(tok)) return;
         if (!fires.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="muted">no fires yet — every gate check is recorded here</td></tr>';
+            tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.risk_gate.empty.no_fires_ever'))}</td></tr>`;
             return;
         }
         tb.innerHTML = fires.map(f => {
@@ -393,7 +393,7 @@ async function reloadFires(mount, tok) {
                 </tr>`;
         }).join('');
     } catch (err) {
-        tb.innerHTML = `<tr><td colspan="4" class="muted">Error: ${esc(err.message)}</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.risk_gate.error', { msg: err.message }))}</td></tr>`;
     }
 }
 

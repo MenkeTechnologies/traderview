@@ -47,7 +47,7 @@ export async function renderCatalysts(mount, _state) {
                     <th data-i18n="view.catalysts.th.time">Time</th><th data-i18n="view.catalysts.th.source">Source</th><th data-i18n="view.catalysts.th.form">Form</th>
                     <th data-i18n="view.catalysts.th.tickers">Tickers</th><th data-i18n="view.catalysts.th.headline">Headline</th>
                 </tr></thead>
-                <tbody><tr><td colspan="5" class="muted">connecting…</td></tr></tbody>
+                <tbody><tr><td colspan="5" class="muted" data-i18n="common.connecting">connecting…</td></tr></tbody>
             </table>
         </div>
     `;
@@ -126,7 +126,7 @@ function render() {
         .sort((a, b) => new Date(b.fetched_at) - new Date(a.fetched_at))
         .slice(0, 200);
     if (!all.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">no catalysts in feed</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.catalysts.empty.no_feed'))}</td></tr>`;
         return;
     }
     tbody.innerHTML = all.map(c => {
