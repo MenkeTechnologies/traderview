@@ -3,6 +3,8 @@
 // Backend body shape: { brackets: [{bracket_index, high, low}, ...],
 // tick_size: f64 }. Backend returns levels[] + POC + VAH/VAL + single_prints.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Three-token-per-line "bracket_index high low".
@@ -49,9 +51,9 @@ export function parseBracketBlob(text) {
 
 export function validateInputs(brackets, tickSize) {
     if (!Array.isArray(brackets) || brackets.length === 0)
-        return 'need at least 1 bracket';
+        return t('view.market_profile.validate.brackets_empty');
     if (!Number.isFinite(tickSize) || tickSize <= 0)
-        return 'tick_size must be > 0';
+        return t('view.market_profile.validate.tick_size');
     return null;
 }
 

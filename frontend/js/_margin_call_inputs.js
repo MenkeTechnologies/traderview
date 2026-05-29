@@ -9,6 +9,8 @@
 // Boundary: cushion == 0 → NOT in call (Rust uses strict <).
 // 100% maintenance: any debt → in_call.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     long_market_value: 100_000,
     margin_debt: 60_000,
@@ -16,13 +18,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(snap) {
-    if (!Number.isFinite(snap.long_market_value)) return 'long_market_value must be finite';
-    if (snap.long_market_value < 0)               return 'long_market_value must be ≥ 0';
-    if (!Number.isFinite(snap.margin_debt))       return 'margin_debt must be finite';
-    if (snap.margin_debt < 0)                     return 'margin_debt must be ≥ 0';
-    if (!Number.isFinite(snap.maintenance_pct))   return 'maintenance_pct must be finite';
+    if (!Number.isFinite(snap.long_market_value)) return t('view.margin_call.validate.lmv_finite');
+    if (snap.long_market_value < 0)               return t('view.margin_call.validate.lmv_negative');
+    if (!Number.isFinite(snap.margin_debt))       return t('view.margin_call.validate.debt_finite');
+    if (snap.margin_debt < 0)                     return t('view.margin_call.validate.debt_negative');
+    if (!Number.isFinite(snap.maintenance_pct))   return t('view.margin_call.validate.maint_finite');
     if (snap.maintenance_pct < 0 || snap.maintenance_pct > 1)
-        return 'maintenance_pct must be in [0, 1] (decimal — 0.25 = 25%)';
+        return t('view.margin_call.validate.maint_range');
     return null;
 }
 

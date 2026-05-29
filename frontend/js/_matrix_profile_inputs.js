@@ -11,6 +11,7 @@
 // painting.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse a 1-D series. Same conventions as the other views' parsers. */
 export function parseSeries(text) {
@@ -20,11 +21,11 @@ export function parseSeries(text) {
 /** Validate the (series, m) combo against the backend's constraints:
  *  m ≥ 4 and n ≥ 2m. */
 export function validateMatrixProfileInputs(series, m) {
-    if (!Array.isArray(series) || series.length === 0) return 'series is empty';
-    if (series.some(x => !Number.isFinite(x))) return 'series contains non-finite values';
-    if (!Number.isInteger(m) || m < 4) return 'window m must be an integer ≥ 4';
+    if (!Array.isArray(series) || series.length === 0) return t('view.matrix_profile.validate.series_empty');
+    if (series.some(x => !Number.isFinite(x))) return t('view.matrix_profile.validate.series_finite');
+    if (!Number.isInteger(m) || m < 4) return t('view.matrix_profile.validate.m');
     if (series.length < 2 * m) {
-        return `series too short: need at least ${2 * m} samples for m=${m} (got ${series.length})`;
+        return t('view.matrix_profile.validate.series_min', { n: 2 * m, m, got: series.length });
     }
     return null;
 }
