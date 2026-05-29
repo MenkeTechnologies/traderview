@@ -189,14 +189,14 @@ function subtitle(fromBackend) {
 
 function rrInterp(rr) {
     if (!Number.isFinite(rr)) return '—';
-    if (Math.abs(rr) < 0.0005) return 'flat skew';
-    return rr > 0 ? 'calls richer (right-tail bid)' : 'puts richer (left-tail bid)';
+    if (Math.abs(rr) < 0.0005) return t('view.rr_butterfly.rr.flat');
+    return t(rr > 0 ? 'view.rr_butterfly.rr.calls_richer' : 'view.rr_butterfly.rr.puts_richer');
 }
 
 function bfInterp(bf) {
     if (!Number.isFinite(bf)) return '—';
-    if (Math.abs(bf) < 0.0005) return 'flat smile';
-    return bf > 0 ? 'wings rich vs ATM (kurtosis bid)' : 'wings cheap vs ATM';
+    if (Math.abs(bf) < 0.0005) return t('view.rr_butterfly.bf.flat');
+    return t(bf > 0 ? 'view.rr_butterfly.bf.wings_rich' : 'view.rr_butterfly.bf.wings_cheap');
 }
 
 function showErr(msg) {
