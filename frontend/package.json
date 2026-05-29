@@ -14,7 +14,7 @@
     "i18n:diff":    "node scripts/i18n_extract.mjs --diff"
   },
   "devDependencies": {
-    "vitest": "^2.1.0",
-    "@vitest/coverage-v8": "^2.1.0"
+    "vitest": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.7"
   }
 }
