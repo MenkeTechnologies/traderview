@@ -6756,8 +6756,6 @@
   "view.tax_workshop.label.days_ytd":     "Days through YTD",
   "view.tax_workshop.label.eff_rate":     "Estimated effective tax rate (decimal, e.g. 0.28)",
   "view.tax_workshop.label.withholding":  "Withholding YTD",
-  "view.risk_reward.opt.long":            "Long",
-  "view.risk_reward.opt.short":           "Short",
   "view.accounts_overview.h2.breakdown":  "Per-account breakdown ({count})",
   "view.backtest.h2.trades":              "Trades · {count}",
   "view.boards.h2.your_boards":           "Your boards ({count})",
