@@ -10,14 +10,14 @@ import { t } from './i18n.js';
 const VALID_TRENDS = new Set(['up', 'down', 'neutral']);
 
 export function validateInputs(p) {
-    if (!VALID_TRENDS.has(p.weekly_trend)) return 'weekly_trend must be up/down/neutral';
-    if (!Number.isFinite(p.daily_oscillator_value)) return 'daily_oscillator_value must be finite';
-    if (!Number.isFinite(p.oversold_threshold)) return 'oversold_threshold must be finite';
-    if (!Number.isFinite(p.overbought_threshold)) return 'overbought_threshold must be finite';
+    if (!VALID_TRENDS.has(p.weekly_trend)) return t('view.triple_screen.validate.weekly_trend');
+    if (!Number.isFinite(p.daily_oscillator_value)) return t('view.triple_screen.validate.daily_osc');
+    if (!Number.isFinite(p.oversold_threshold)) return t('view.triple_screen.validate.oversold');
+    if (!Number.isFinite(p.overbought_threshold)) return t('view.triple_screen.validate.overbought');
     if (p.overbought_threshold <= p.oversold_threshold)
-        return 'overbought_threshold must be > oversold_threshold';
-    if (typeof p.intraday_breakout_up !== 'boolean')   return 'intraday_breakout_up must be boolean';
-    if (typeof p.intraday_breakout_down !== 'boolean') return 'intraday_breakout_down must be boolean';
+        return t('view.triple_screen.validate.threshold_order');
+    if (typeof p.intraday_breakout_up !== 'boolean')   return t('view.triple_screen.validate.breakout_up');
+    if (typeof p.intraday_breakout_down !== 'boolean') return t('view.triple_screen.validate.breakout_down');
     return null;
 }
 

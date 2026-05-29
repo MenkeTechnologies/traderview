@@ -12,18 +12,18 @@ import { t } from './i18n.js';
 export const TIF_KINDS = ['day', 'gtc', 'ioc', 'fok', 'gtd'];
 
 export function validateInputs(order, nowIso, sessionOpenIso) {
-    if (!TIF_KINDS.includes(order.tif)) return `tif must be one of ${TIF_KINDS.join(',')}`;
+    if (!TIF_KINDS.includes(order.tif)) return t('view.time_in_force.validate.tif', { list: TIF_KINDS.join(',') });
     if (!Number.isFinite(order.original_qty) || order.original_qty <= 0)
-        return 'original_qty must be > 0';
+        return t('view.time_in_force.validate.original_qty');
     if (!Number.isFinite(order.filled_qty) || order.filled_qty < 0)
-        return 'filled_qty must be ≥ 0';
+        return t('view.time_in_force.validate.filled_qty');
     if (order.filled_qty > order.original_qty)
-        return 'filled_qty cannot exceed original_qty';
-    if (!isValidUtcIso(order.placed_at)) return 'placed_at must be ISO-8601 UTC';
-    if (!isValidUtcIso(nowIso)) return 'now must be ISO-8601 UTC';
-    if (!isValidDate(sessionOpenIso)) return 'session_open must be YYYY-MM-DD';
+        return t('view.time_in_force.validate.filled_le_original');
+    if (!isValidUtcIso(order.placed_at)) return t('view.time_in_force.validate.placed_at');
+    if (!isValidUtcIso(nowIso)) return t('view.time_in_force.validate.now');
+    if (!isValidDate(sessionOpenIso)) return t('view.time_in_force.validate.session_open');
     if (order.tif === 'gtd' && order.good_until != null && !isValidDate(order.good_until))
-        return 'good_until must be YYYY-MM-DD or null';
+        return t('view.time_in_force.validate.good_until');
     return null;
 }
 
