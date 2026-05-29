@@ -47,7 +47,7 @@ export function parseBarBlob(text) {
 }
 
 export function validateInputs(bars) {
-    if (!Array.isArray(bars) || bars.length < 3) return 'need at least 3 bars (pattern requires bar i-2, i-1, i)';
+    if (!Array.isArray(bars) || bars.length < 3) return t('view.three_bar_reversal.validate.need_bars');
     return null;
 }
 

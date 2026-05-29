@@ -7,6 +7,8 @@
 // Computes the ATR locally (Wilder smoothing) so the user only pastes
 // raw HLC — same pattern as Range Expansion view.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Three-token-per-line "high low close" with full OHLC sanity.
@@ -79,13 +81,13 @@ export function computeAtr(bars, period = 14) {
 }
 
 export function validateInputs(bars, atr, side, cfg) {
-    if (!Array.isArray(bars) || bars.length === 0) return 'need at least 1 bar';
-    if (!Array.isArray(atr) || atr.length !== bars.length) return 'atr length must equal bars length';
-    if (side !== 'long' && side !== 'short') return 'side must be long or short';
-    if (!Number.isInteger(cfg.lookback) || cfg.lookback < 1) return 'lookback must be integer ≥ 1';
+    if (!Array.isArray(bars) || bars.length === 0) return t('view.chandelier_stop.validate.need_bar');
+    if (!Array.isArray(atr) || atr.length !== bars.length) return t('view.chandelier_stop.validate.atr_length');
+    if (side !== 'long' && side !== 'short') return t('view.chandelier_stop.validate.side');
+    if (!Number.isInteger(cfg.lookback) || cfg.lookback < 1) return t('view.chandelier_stop.validate.lookback');
     if (!Number.isFinite(cfg.atr_multiplier) || cfg.atr_multiplier <= 0)
-        return 'atr_multiplier must be > 0';
-    if (bars.length < cfg.lookback) return `need at least ${cfg.lookback} bars (≥ lookback)`;
+        return t('view.chandelier_stop.validate.atr_multiplier');
+    if (bars.length < cfg.lookback) return t('view.chandelier_stop.validate.bars_lt_lookback', { n: cfg.lookback });
     return null;
 }
 
