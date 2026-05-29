@@ -28,7 +28,7 @@ export async function renderWalkForward(mount) {
             <form id="wf-form" class="inline-form">
                 <input name="symbol" placeholder="symbol (SPY)" data-i18n-placeholder="view.walk_forward.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
                 <select name="kind">
-                    ${KINDS.map(k => `<option value="${k.id}">${esc(k.label)}</option>`).join('')}
+                    ${KINDS.map(k => `<option value="${k.id}" data-i18n="view.walk_forward.kind.${k.id}">${esc(k.label)}</option>`).join('')}
                 </select>
                 <label><span data-i18n="view.walk_forward.label.days">Days</span>
                     <input name="days" type="number" value="1825" style="width:90px"></label>
