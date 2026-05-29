@@ -6,6 +6,8 @@
 // Model: spread = 2·√(−cov(Δp_t, Δp_{t−1})) when cov < 0, else 0.
 // Rolling-window estimate; first window-1 bars are null (warmup).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_WINDOW = 50;
 
 export const DEFAULT_INPUTS = {
@@ -14,15 +16,15 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.prices))                  return 'prices must be an array';
+    if (!Array.isArray(input.prices))                  return t('view.roll_spread.validate.prices_array');
     // NaN values inside prices are tolerated — the Rust compute() skips them
     // via its is_finite() guard. Reject only non-numeric (object, string).
     for (let i = 0; i < input.prices.length; i++) {
         const v = input.prices[i];
-        if (typeof v !== 'number' && v != null)        return `prices[${i}] must be a number or null`;
+        if (typeof v !== 'number' && v != null)        return t('view.roll_spread.validate.price_type', { i });
     }
-    if (!Number.isInteger(input.window))               return 'window must be an integer';
-    if (input.window < 3)                              return 'window must be ≥ 3';
+    if (!Number.isInteger(input.window))               return t('view.roll_spread.validate.window_int');
+    if (input.window < 3)                              return t('view.roll_spread.validate.window_min');
     return null;
 }
 

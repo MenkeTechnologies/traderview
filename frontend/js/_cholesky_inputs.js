@@ -3,6 +3,8 @@
 // Backend body: { matrix: number[][] }  — symmetric positive-definite matrix.
 // Returns: { l: number[][], sqrt_determinant: number } | null
 
+import { t } from './i18n.js';
+
 export const MIN_N = 1;
 export const MAX_N = 50;
 
@@ -15,16 +17,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.matrix))                       return 'matrix must be a 2D array';
+    if (!Array.isArray(input.matrix))                       return t('view.cholesky.validate.matrix_array');
     const n = input.matrix.length;
-    if (n < MIN_N || n > MAX_N)                             return `matrix size must be in [${MIN_N}, ${MAX_N}]`;
+    if (n < MIN_N || n > MAX_N)                             return t('view.cholesky.validate.size_range', { min: MIN_N, max: MAX_N });
     for (let i = 0; i < n; i++) {
         const row = input.matrix[i];
-        if (!Array.isArray(row))                            return `matrix[${i}] must be an array`;
-        if (row.length !== n)                               return `matrix[${i}] has length ${row.length}, expected ${n}`;
+        if (!Array.isArray(row))                            return t('view.cholesky.validate.row_array', { i });
+        if (row.length !== n)                               return t('view.cholesky.validate.row_length', { i, got: row.length, n });
         for (let j = 0; j < n; j++) {
             if (typeof row[j] !== 'number' || !Number.isFinite(row[j]))
-                                                              return `matrix[${i}][${j}] not finite`;
+                                                              return t('view.cholesky.validate.cell_finite', { i, j });
         }
     }
     return null;
