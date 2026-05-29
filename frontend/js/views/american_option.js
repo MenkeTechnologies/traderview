@@ -216,9 +216,9 @@ function renderChart(res) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.spot') },
-            { label: 'European (BS)', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.european_bs'), stroke: '#00e5ff', width: 2,
               points: { show: false } },
-            { label: 'American (LSMC)', stroke: '#ff9f1a', width: 0,
+            { label: t('chart.series.american_lsmc'), stroke: '#ff9f1a', width: 0,
               points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

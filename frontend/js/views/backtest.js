@@ -6,13 +6,13 @@ import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = [
-    { id: 'sma_cross', label: 'SMA crossover',
+    { id: 'sma_cross', label: t('chart.series.sma_crossover'),
       defaults: { fast: 20, slow: 50 } },
-    { id: 'rsi_reversion', label: 'RSI mean reversion',
+    { id: 'rsi_reversion', label: t('chart.series.rsi_mean_reversion'),
       defaults: { period: 14, oversold: 30, overbought: 70 } },
-    { id: 'bollinger_breakout', label: 'Bollinger breakout',
+    { id: 'bollinger_breakout', label: t('chart.series.bollinger_breakout'),
       defaults: { period: 20, k: 2 } },
-    { id: 'macd_cross', label: 'MACD crossover', defaults: {} },
+    { id: 'macd_cross', label: t('chart.series.macd_crossover'), defaults: {} },
 ];
 
 export async function renderBacktest(mount) {

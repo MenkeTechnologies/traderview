@@ -5,16 +5,16 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 
 const PRESETS = [
-    { id: 'premarket_gappers', label: 'Premarket Gappers',  desc: '≥ 5% gap (open vs prior close)' },
-    { id: 'momentum_movers',   label: 'Momentum Movers',    desc: '≥ 5% move + 2× rel-volume' },
-    { id: 'low_float_runners', label: 'Low-Float Runners',  desc: '≥ 10% move + 5× rel-volume' },
-    { id: 'high_of_day',       label: 'High of Day',        desc: 'within 0.5% of session high' },
-    { id: 'volume_surge',      label: 'Volume Surge',       desc: '≥ 3× 20-day avg volume' },
+    { id: 'premarket_gappers', label: t('chart.series.premarket_gappers'),  desc: '≥ 5% gap (open vs prior close)' },
+    { id: 'momentum_movers',   label: t('chart.series.momentum_movers'),    desc: '≥ 5% move + 2× rel-volume' },
+    { id: 'low_float_runners', label: t('chart.series.lowfloat_runners'),  desc: '≥ 10% move + 5× rel-volume' },
+    { id: 'high_of_day',       label: t('chart.series.high_of_day'),        desc: 'within 0.5% of session high' },
+    { id: 'volume_surge',      label: t('chart.series.volume_surge'),       desc: '≥ 3× 20-day avg volume' },
     { id: 'breakout',          label: 'Breakout',           desc: 'at session high + green day' },
     { id: 'breakdown',         label: 'Breakdown',          desc: '≤ −5% on the day' },
     { id: 'pct52w_high',       label: '52w Highs',          desc: 'within 1% of 52-week high' },
     { id: 'pct52w_low',        label: '52w Lows',           desc: 'within 1% of 52-week low' },
-    { id: 'oversold_bounce',   label: 'Oversold Bounce',    desc: 'green day off oversold base' },
+    { id: 'oversold_bounce',   label: t('chart.series.oversold_bounce'),    desc: 'green day off oversold base' },
 ];
 
 export async function renderScanners(mount) {

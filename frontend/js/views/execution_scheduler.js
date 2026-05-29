@@ -182,11 +182,11 @@ function renderChart(volumeCurve, pov, twap, vwap) {
         // Reference: expected volume in muted grey.
         { label: t('chart.series.volume'), stroke: 'rgba(170,170,170,0.45)', width: 1,
           fill: 'rgba(170,170,170,0.05)' },
-        { label: 'POV slice', stroke: '#00e5ff', width: 2,
+        { label: t('chart.series.pov_slice'), stroke: '#00e5ff', width: 2,
           points: { show: true, size: 6, stroke: '#00e5ff', fill: '#00e5ff' } },
-        { label: 'TWAP slice', stroke: '#ff9f1a', width: 2,
+        { label: t('chart.series.twap_slice'), stroke: '#ff9f1a', width: 2,
           points: { show: true, size: 6, stroke: '#ff9f1a', fill: '#ff9f1a' } },
-        { label: 'VWAP slice', stroke: '#a06bff', width: 2,
+        { label: t('chart.series.vwap_slice'), stroke: '#a06bff', width: 2,
           points: { show: true, size: 6, stroke: '#a06bff', fill: '#a06bff' } },
     ];
     const data = [

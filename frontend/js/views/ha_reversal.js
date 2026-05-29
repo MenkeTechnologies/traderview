@@ -163,7 +163,7 @@ function renderChart(bars, report) {
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.raw_close'), stroke: '#a06bff', width: 1.0,
               fill: '#a06bff10', points: { show: false } },
-            { label: 'HA close',  stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.ha_close'),  stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'BEAR→BULL', stroke: '#39ff14', width: 0,
               points: { show: true, size: 12, stroke: '#39ff14', fill: '#39ff14' } },

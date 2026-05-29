@@ -6,10 +6,10 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyUiI18n } from '../i18n.js';
 
 const KINDS = [
-    { id: 'sma_cross',         label: 'SMA crossover (6×6 grid)' },
-    { id: 'rsi_reversion',     label: 'RSI mean reversion (5×4 grid)' },
-    { id: 'bollinger_breakout',label: 'Bollinger breakout (5×4 grid)' },
-    { id: 'macd_cross',        label: 'MACD crossover (1 combo)' },
+    { id: 'sma_cross',         label: t('chart.series.sma_crossover_66_grid') },
+    { id: 'rsi_reversion',     label: t('chart.series.rsi_mean_reversion_54_grid') },
+    { id: 'bollinger_breakout',label: t('chart.series.bollinger_breakout_54_grid') },
+    { id: 'macd_cross',        label: t('chart.series.macd_crossover_1_combo') },
 ];
 
 export async function renderWalkForward(mount) {

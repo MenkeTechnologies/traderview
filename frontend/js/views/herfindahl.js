@@ -161,7 +161,7 @@ function renderChart(report) {
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series.weight_'),     stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
-            { label: 'HHI contrib',  stroke: '#ff3860', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('chart.series.hhi_contrib'),  stroke: '#ff3860', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

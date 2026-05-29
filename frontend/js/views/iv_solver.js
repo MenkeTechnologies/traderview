@@ -181,7 +181,7 @@ function renderChart(res) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'σ' },
-            { label: 'BS price',     stroke: '#00e5ff', width: 2, points: { show: false } },
+            { label: t('chart.series.bs_price'),     stroke: '#00e5ff', width: 2, points: { show: false } },
             { label: t('chart.series.market_price'), stroke: '#ff9f1a', width: 1, dash: [4, 4],
               points: { show: false } },
             { label: t('chart.series.solved_'),     stroke: '#39ff14', width: 0,

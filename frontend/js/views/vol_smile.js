@@ -178,13 +178,13 @@ function renderChart(rows, res) {
         series: [
             { label: t('chart.series.strike') },
             {
-                label: 'IV (raw)',
+                label: t('chart.series.iv_raw'),
                 stroke: '#ff9f1a',
                 width: 0,
                 points: { show: true, size: 8, stroke: '#ff9f1a', fill: '#ff9f1a' },
             },
             {
-                label: 'IV (SVI fit)',
+                label: t('chart.series.iv_svi_fit'),
                 stroke: '#00e5ff',
                 width: 2,
             },
