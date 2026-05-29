@@ -152,7 +152,7 @@ function renderChart(res) {
     const xs = res.log_n;
     const ys = res.log_rs;
     if (!Array.isArray(xs) || xs.length < 2) {
-        el.innerHTML = '<div class="boot">Not enough regression points to plot.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.hurst.empty.not_enough_points'))}</div>`;
         return;
     }
 

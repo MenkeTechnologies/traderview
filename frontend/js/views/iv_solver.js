@@ -169,7 +169,7 @@ function renderChart(res) {
     // user always sees both the intersection AND some curve past it.
     const maxSigma = Math.max(2.0, res.implied_vol * 1.5);
     const { xs, ys } = priceVsSigmaSweep(p, maxSigma, 161);
-    if (xs.length === 0) { el.innerHTML = '<div class="boot">Bad σ range.</div>'; return; }
+    if (xs.length === 0) { el.innerHTML = `<div class="boot">${esc(t('view.iv_solver.empty.bad_sigma'))}</div>`; return; }
     const marketLine = xs.map(() => p.market_price);
     // Solved-σ marker: single point at (impliedVol, marketPrice).
     const halfWidth = (xs[1] - xs[0]) / 2;

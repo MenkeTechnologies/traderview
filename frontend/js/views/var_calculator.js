@@ -188,7 +188,7 @@ function renderChart(returns, hs, fhs, cf) {
 
     const hist = histogram(returns, 50);
     if (hist.centers.length < 2) {
-        el.innerHTML = '<div class="boot">Not enough variation to histogram.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.var_calculator.empty.no_variation'))}</div>`;
         return;
     }
 

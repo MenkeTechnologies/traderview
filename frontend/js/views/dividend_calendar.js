@@ -128,7 +128,7 @@ async function runFetch(mount, tok) {
         showErr(t('view.dividend_calendar.err.no_symbols_parsed_from_input'));
         return;
     }
-    document.getElementById('dc-table').innerHTML = '<div class="boot">Fetching dividend data…</div>';
+    document.getElementById('dc-table').innerHTML = `<div class="boot">${esc(t('view.dividend_calendar.hint.fetching'))}</div>`;
 
     // Parallel fetch, but cap concurrency to avoid hammering the backend.
     const rows = await fetchWithConcurrencyLimit(symbols, 8, async (sym) => {
@@ -197,7 +197,7 @@ function renderTable(rows) {
 
     if (visible.length === 0) {
         document.getElementById('dc-table').innerHTML =
-            '<div class="boot">No upcoming dividends in the selected horizon.</div>';
+            `<div class="boot">${esc(t('view.dividend_calendar.empty.no_upcoming'))}</div>`;
         return;
     }
 

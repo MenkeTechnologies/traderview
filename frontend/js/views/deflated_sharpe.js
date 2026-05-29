@@ -168,7 +168,7 @@ function renderSrBar(r) {
     const starPct = (r.deflated_threshold_sharpe / maxAbs * 100).toFixed(2);
     wrap.innerHTML = `
         <div class="is-bar-row">
-            <div class="is-bar-label">Observed</div>
+            <div class="is-bar-label" data-i18n="view.deflated_sharpe.bar.observed">Observed</div>
             <div class="is-bar-track">
                 <div class="is-bar-midline"></div>
                 <div class="is-bar-fill ds-fill-obs ${r.observed_sharpe >= 0 ? 'is-fill-pos' : 'is-fill-neg'}"
@@ -177,7 +177,7 @@ function renderSrBar(r) {
             <div class="is-bar-value">${esc(fmtSR(r.observed_sharpe))}</div>
         </div>
         <div class="is-bar-row">
-            <div class="is-bar-label">Deflated ★</div>
+            <div class="is-bar-label" data-i18n="view.deflated_sharpe.bar.deflated">Deflated ★</div>
             <div class="is-bar-track">
                 <div class="is-bar-midline"></div>
                 <div class="is-bar-fill ds-fill-star ${r.deflated_threshold_sharpe >= 0 ? 'is-fill-pos' : 'is-fill-neg'}"

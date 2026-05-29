@@ -142,7 +142,7 @@ function renderChart(returns, res) {
     el.innerHTML = '';
     const { xs, ys } = twrSweep(returns, 101);
     if (xs.length === 0) {
-        el.innerHTML = '<div class="boot">Need at least one losing trade to compute the TWR curve.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.optimal_f.empty.need_losing_trade'))}</div>`;
         return;
     }
     // Build single-point marker series for the 3 reference fractions

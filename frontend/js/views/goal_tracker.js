@@ -172,21 +172,21 @@ function renderProgress(r) {
                   r.current_dd_pct > state.params.max_dd_pct * 0.75 ? 'dl-fill-cut' : 'dl-fill-warn';
     wrap.innerHTML = `
         <div class="gt-bar-row">
-            <div class="gt-bar-label">Return vs target</div>
+            <div class="gt-bar-label" data-i18n="view.goal_tracker.bar.return_vs_target">Return vs target</div>
             <div class="dl-bar-track">
                 <div class="dl-bar-fill ${fillCls}" data-pct="${fillPct}"></div>
                 <div class="dl-bar-label">${esc(fmtPct(r.current_pct_return))} of ${esc(fmtPct(r.target_pct_return))} target · ${esc(fmtPct(r.pct_of_target, 0))} of target</div>
             </div>
         </div>
         <div class="gt-bar-row" style="margin-top:8px">
-            <div class="gt-bar-label">DD vs max-DD limit</div>
+            <div class="gt-bar-label" data-i18n="view.goal_tracker.bar.dd_vs_limit">DD vs max-DD limit</div>
             <div class="dl-bar-track">
                 <div class="dl-bar-fill ${ddCls}" data-pct="${ddFillPct}"></div>
                 <div class="dl-bar-label">${esc(fmtPct(r.current_dd_pct))} DD · cap ${esc(fmtPct(state.params.max_dd_pct))}${r.kill_switch_breached ? ' · BREACHED' : ''}</div>
             </div>
         </div>
         <div class="gt-bar-row" style="margin-top:8px">
-            <div class="gt-bar-label">Period elapsed</div>
+            <div class="gt-bar-label" data-i18n="view.goal_tracker.bar.period_elapsed">Period elapsed</div>
             <div class="dl-bar-track">
                 <div class="dl-bar-fill dl-fill-warn" data-pct="${r.days_total > 0 ? Math.max(0, Math.min(100, r.days_elapsed / r.days_total * 100)).toFixed(2) : 0}"></div>
                 <div class="dl-bar-label">${r.days_elapsed} of ${r.days_total} days</div>

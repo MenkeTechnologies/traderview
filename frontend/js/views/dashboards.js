@@ -71,7 +71,7 @@ function renderSidebar() {
     if (!wrap) return;
     const list = store.listDashboards(state);
     wrap.innerHTML = `
-        <div class="db-sidebar-head">DASHBOARDS</div>
+        <div class="db-sidebar-head" data-i18n="view.dashboards.sidebar.head">DASHBOARDS</div>
         <ul class="db-list">
             ${list.map(d => `
                 <li class="db-list-item ${d.id === state.active ? 'db-active' : ''}" data-id="${esc(d.id)}">

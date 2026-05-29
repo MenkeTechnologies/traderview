@@ -187,7 +187,7 @@ function renderSummary(betas) {
     const s = summarizeBetaTrace(betas);
     if (!s) {
         document.getElementById('kb-summary').innerHTML =
-            '<div class="boot">No finite β values produced — check inputs?</div>';
+            `<div class="boot">${esc(t('view.kalman_beta.empty.no_beta'))}</div>`;
         return;
     }
     const driftCls = s.drift > 0 ? 'pos' : (s.drift < 0 ? 'neg' : '');

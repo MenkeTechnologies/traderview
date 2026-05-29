@@ -156,7 +156,7 @@ function renderChart(bar) {
 
     const { xs, ys } = imbalanceSweep(state.quote.bid, state.quote.ask, 101);
     if (xs.length === 0) {
-        el.innerHTML = '<div class="boot">Need bid &lt; ask to plot.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.microprice.empty.need_bid_ask'))}</div>`;
         return;
     }
     // User's current point as a 1-element marker series (rendered as a

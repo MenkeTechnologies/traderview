@@ -12,6 +12,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt, fmtPct } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseMatrix, parseFloatList, parseLabelList,
@@ -131,9 +132,9 @@ function renderResults({ labels, mv, mxd, erc }) {
             ${kv('Tangency vol', mv.tangency_volatility?.toFixed(4))}
             ${kv('Tangency excess return', mv.tangency_expected_return?.toFixed(4))}
             ${kv('Tangency Sharpe', mv.tangency_sharpe?.toFixed(3))}
-            <h4>Min-variance weights</h4>
+            <h4 data-i18n="view.portfolio_allocator.h4.min_variance_weights">Min-variance weights</h4>
             <div id="pa-mv-weights"></div>
-            <h4>Tangency weights</h4>
+            <h4 data-i18n="view.portfolio_allocator.h4.tangency_weights">Tangency weights</h4>
             <div id="pa-mv-tan-weights"></div>
         ` : '<p data-i18n="view.portfolio_allocator.hint.mv_solver_returned_null_covariance_not_invertible" class="muted">MV solver returned null (covariance not invertible?).</p>')}
 
@@ -141,16 +142,16 @@ function renderResults({ labels, mv, mxd, erc }) {
             ${kv('Diversification ratio', mxd.diversification_ratio?.toFixed(3))}
             ${kv('Portfolio vol', mxd.portfolio_volatility?.toFixed(4))}
             ${kv('Wtd-avg single-asset vol', mxd.weighted_average_volatility?.toFixed(4))}
-            <h4>Weights</h4>
+            <h4 data-i18n="view.portfolio_allocator.h4.weights">Weights</h4>
             <div id="pa-mxd-weights"></div>
         ` : '<p data-i18n="view.portfolio_allocator.hint.maxdiv_solver_returned_null" class="muted">MaxDiv solver returned null.</p>')}
 
         ${cardSection('Equal Risk Contribution', erc ? `
             ${kv('Portfolio vol', erc.portfolio_stdev?.toFixed(4))}
             ${kv('Iterations', erc.iterations)} ${kv('Converged', erc.converged ? '✓' : '✗')}
-            <h4>Weights</h4>
+            <h4 data-i18n="view.portfolio_allocator.h4.weights">Weights</h4>
             <div id="pa-erc-weights"></div>
-            <h4>Risk contributions (should be ≈ ${(100 / labels.length).toFixed(1)}% each)</h4>
+            <h4>${esc(t('view.portfolio_allocator.h4.risk_contrib', { pct: (100 / labels.length).toFixed(1) }))}</h4>
             <div id="pa-erc-risk"></div>
         ` : '<p data-i18n="view.portfolio_allocator.hint.erc_solver_returned_null" class="muted">ERC solver returned null.</p>')}
     `;

@@ -159,7 +159,7 @@ function renderGauges(r) {
     const wrap = document.getElementById('iv-gauges');
     wrap.innerHTML = `
         <div class="is-bar-row">
-            <div class="is-bar-label">IV Rank</div>
+            <div class="is-bar-label" data-i18n="view.iv_rank.bar.iv_rank">IV Rank</div>
             <div class="is-bar-track">
                 <div class="is-bar-midline iv-q1"></div>
                 <div class="is-bar-midline iv-q3"></div>
@@ -169,7 +169,7 @@ function renderGauges(r) {
             <div class="is-bar-value">${esc(fmtRank(r.iv_rank))}</div>
         </div>
         <div class="is-bar-row">
-            <div class="is-bar-label">IV Percentile</div>
+            <div class="is-bar-label" data-i18n="view.iv_rank.bar.iv_percentile">IV Percentile</div>
             <div class="is-bar-track">
                 <div class="is-bar-midline iv-q1"></div>
                 <div class="is-bar-midline iv-q3"></div>

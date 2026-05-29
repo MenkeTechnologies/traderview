@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { fmt, fmtMoney, fmtPct, fmtSecs, pnlClass, statCard } from '../util.js';
 import { equityChart } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDashboard(mount, state) {
@@ -123,7 +124,7 @@ async function loadRiskGateBadge(el) {
 }
 
 function renderMiniCalendar(el, cells) {
-    if (!cells.length) { el.innerHTML = '<div class="boot">No data</div>'; return; }
+    if (!cells.length) { el.innerHTML = `<div class="boot">${t('view.dashboard.empty.no_data')}</div>`; return; }
     const recent = cells.slice(-90);
     const max = Math.max(...recent.map(c => Math.abs(Number(c.net_pnl))), 1);
     el.innerHTML = recent.map(c => {
