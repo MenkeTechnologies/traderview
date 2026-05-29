@@ -12,7 +12,7 @@ export function parseRecordBlob(text) {
     const records = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { records, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { records, errors: [{ line_no: 0, raw: '', message: t('view.per_symbol_slippage.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -21,17 +21,17 @@ export function parseRecordBlob(text) {
         if (!s || s.startsWith('#')) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 2) {
-            errors.push({ line_no: i + 1, raw, message: `expected 2 tokens (symbol slippage_bps), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.per_symbol_slippage.parse.token_count', { n: parts.length }) });
             continue;
         }
         const symbol = parts[0].toUpperCase();
         const bps = Number(parts[1]);
         if (!/^[A-Z0-9._-]+$/.test(symbol)) {
-            errors.push({ line_no: i + 1, raw, message: `bad symbol "${parts[0]}"` });
+            errors.push({ line_no: i + 1, raw, message: t('view.per_symbol_slippage.parse.bad_symbol', { sym: parts[0] }) });
             continue;
         }
         if (!Number.isFinite(bps)) {
-            errors.push({ line_no: i + 1, raw, message: `slippage_bps must be finite` });
+            errors.push({ line_no: i + 1, raw, message: t('view.per_symbol_slippage.parse.slippage_finite') });
             continue;
         }
         records.push({ symbol, slippage_bps: bps });
@@ -40,7 +40,7 @@ export function parseRecordBlob(text) {
 }
 
 export function validateInputs(records) {
-    if (!Array.isArray(records) || records.length === 0) return 'need at least 1 record';
+    if (!Array.isArray(records) || records.length === 0) return t('view.per_symbol_slippage.validate.records_min');
     return null;
 }
 
