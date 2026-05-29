@@ -28,6 +28,17 @@ const WIDGET_KINDS = [
     { kind: 'note',       label: 'Sticky note',  defaults: { text: '' },          w: 3, h: 2 },
 ];
 
+// Look up a widget's display label, preferring the i18n catalog and
+// falling back to the literal `label:` field in WIDGET_KINDS (or the
+// raw kind id if the widget is unknown to the palette).
+function widgetLabel(kind) {
+    const k = WIDGET_KINDS.find(w => w.kind === kind);
+    const key = `view.boards.widget.${kind}.label`;
+    const v = t(key);
+    if (v && v !== key) return v;
+    return (k && k.label) || kind;
+}
+
 const COLS = 12;
 const ROW_HEIGHT = 96;
 let refreshTimers = [];
@@ -234,7 +245,7 @@ function renderGrid(state) {
         });
         const head = document.createElement('div');
         head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--bg-secondary);font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;cursor:grab;';
-        head.innerHTML = `<span>${esc(WIDGET_KINDS.find(k => k.kind === w.kind)?.label || w.kind)}</span>
+        head.innerHTML = `<span>${esc(widgetLabel(w.kind))}</span>
             <span>
                 <button class="btn" data-act="cfg" data-i18n-aria-label="common.aria.settings" aria-label="Settings" style="font-size:9px;padding:1px 4px;">⚙</button>
                 <button class="btn" data-act="del" data-i18n-aria-label="common.aria.remove" aria-label="Remove" style="font-size:9px;padding:1px 4px;color:var(--red);border-color:var(--red);">×</button>
