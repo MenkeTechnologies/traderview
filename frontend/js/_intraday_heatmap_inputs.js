@@ -6,6 +6,8 @@
 //   * Bare time-of-day     ("14:30 125.50")  — fills the date with a
 //     stable epoch (2024-01-01) so all samples land on one day.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 const EPOCH_DATE = '2024-01-01';
 
@@ -68,7 +70,7 @@ export function normalizeTimestamp(tok) {
 function pad2(n) { return n.toString().padStart(2, '0'); }
 
 export function validateInputs(trades) {
-    if (!Array.isArray(trades) || trades.length === 0) return 'need at least 1 trade';
+    if (!Array.isArray(trades) || trades.length === 0) return t('view.intraday_heatmap.validate.trades_empty');
     return null;
 }
 

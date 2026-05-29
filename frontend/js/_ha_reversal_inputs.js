@@ -78,15 +78,15 @@ export function computeHeikinAshi(bars) {
 }
 
 export function validateInputs(bars, cfg) {
-    if (!Array.isArray(bars) || bars.length < 2) return 'need at least 2 bars';
+    if (!Array.isArray(bars) || bars.length < 2) return t('view.ha_reversal.validate.bars_min');
     if (!Number.isFinite(cfg.min_body_ratio) || cfg.min_body_ratio < 0 || cfg.min_body_ratio > 1)
-        return 'min_body_ratio must be in [0, 1]';
+        return t('view.ha_reversal.validate.min_body_ratio');
     if (!Number.isInteger(cfg.strong_streak) || cfg.strong_streak < 1)
-        return 'strong_streak must be integer ≥ 1';
+        return t('view.ha_reversal.validate.strong_streak');
     if (!Number.isInteger(cfg.weak_streak)   || cfg.weak_streak < 1)
-        return 'weak_streak must be integer ≥ 1';
+        return t('view.ha_reversal.validate.weak_streak');
     if (cfg.weak_streak > cfg.strong_streak)
-        return 'weak_streak must be ≤ strong_streak';
+        return t('view.ha_reversal.validate.weak_le_strong');
     return null;
 }
 

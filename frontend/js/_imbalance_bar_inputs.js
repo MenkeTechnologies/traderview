@@ -7,23 +7,25 @@
 // Bar closes when |Σ sign × size| ≥ imbalance_threshold.
 // Trailing partial bars are NOT emitted.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     prints: [],
     imbalance_threshold: 1000,
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.prints))                            return 'prints must be an array';
+    if (!Array.isArray(input.prints))                            return t('view.imbalance_bar.validate.prints_array');
     for (let i = 0; i < input.prints.length; i++) {
         const p = input.prints[i];
-        if (!p || typeof p !== 'object')                         return `prints[${i}] must be an object`;
-        if (!Number.isFinite(p.price))                           return `prints[${i}].price not finite`;
-        if (p.price <= 0)                                        return `prints[${i}].price must be > 0`;
-        if (!Number.isFinite(p.size))                            return `prints[${i}].size not finite`;
-        if (p.size < 0)                                          return `prints[${i}].size must be ≥ 0`;
+        if (!p || typeof p !== 'object')                         return t('view.imbalance_bar.validate.print_object', { i });
+        if (!Number.isFinite(p.price))                           return t('view.imbalance_bar.validate.price_finite', { i });
+        if (p.price <= 0)                                        return t('view.imbalance_bar.validate.price_positive', { i });
+        if (!Number.isFinite(p.size))                            return t('view.imbalance_bar.validate.size_finite', { i });
+        if (p.size < 0)                                          return t('view.imbalance_bar.validate.size_negative', { i });
     }
-    if (!Number.isFinite(input.imbalance_threshold))             return 'imbalance_threshold must be finite';
-    if (input.imbalance_threshold <= 0)                          return 'imbalance_threshold must be > 0';
+    if (!Number.isFinite(input.imbalance_threshold))             return t('view.imbalance_bar.validate.threshold_finite');
+    if (input.imbalance_threshold <= 0)                          return t('view.imbalance_bar.validate.threshold_positive');
     return null;
 }
 
