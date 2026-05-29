@@ -143,10 +143,8 @@ function card(label, value, valueCls, body) {
 function biasInterp(bps) {
     if (!Number.isFinite(bps)) return '—';
     const abs = Math.abs(bps);
-    if (abs < 0.5) return 'flat (balanced queue)';
-    return bps > 0
-        ? 'leans toward ask (bid-side liquidity heavier)'
-        : 'leans toward bid (ask-side liquidity heavier)';
+    if (abs < 0.5) return t('view.microprice.bias.flat');
+    return t(bps > 0 ? 'view.microprice.bias.toward_ask' : 'view.microprice.bias.toward_bid');
 }
 
 function renderChart(bar) {
