@@ -11,6 +11,8 @@
 //   Yields (positive correlation): +1 if Δbps > 1, -1 if < -1.
 // Regime: score ≥ +2 = on; ≤ -2 = off; else neutral.
 
+import { t } from './i18n.js';
+
 export const SPY_THRESHOLD  = 0.001;
 export const GOLD_THRESHOLD = 0.001;
 export const DXY_THRESHOLD  = 0.001;
@@ -26,7 +28,7 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(snap) {
     for (const k of ['spy_change_pct','gold_change_pct','dxy_change_pct','ten_year_yield_bps_change']) {
-        if (!Number.isFinite(snap[k])) return `${k} must be finite`;
+        if (!Number.isFinite(snap[k])) return t('view.risk_on_off.validate.field_finite', { k });
     }
     return null;
 }

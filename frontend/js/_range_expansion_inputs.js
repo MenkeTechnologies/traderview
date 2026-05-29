@@ -80,17 +80,17 @@ export function computeAtr(bars, period = 14) {
 
 export function validateInputs(bars, atr, cfg) {
     if (!Array.isArray(bars) || bars.length < cfg.lookback + 1)
-        return `need at least ${cfg.lookback + 1} bars (lookback + 1)`;
+        return t('view.range_expansion.validate.bars_min', { n: cfg.lookback + 1 });
     if (!Array.isArray(atr) || atr.length !== bars.length)
-        return 'atr series length must equal bars length';
+        return t('view.range_expansion.validate.atr_length');
     if (!Number.isInteger(cfg.lookback) || cfg.lookback < 1)
-        return 'lookback must be integer ≥ 1';
+        return t('view.range_expansion.validate.lookback');
     if (!Number.isFinite(cfg.min_expansion_atrs) || cfg.min_expansion_atrs <= 0)
-        return 'min_expansion_atrs must be > 0';
+        return t('view.range_expansion.validate.min_expansion');
     if (!Number.isFinite(cfg.prior_atr_max) || cfg.prior_atr_max <= 0)
-        return 'prior_atr_max must be > 0';
+        return t('view.range_expansion.validate.prior_atr_max');
     if (cfg.prior_atr_max >= cfg.min_expansion_atrs)
-        return 'prior_atr_max must be < min_expansion_atrs (compression < expansion)';
+        return t('view.range_expansion.validate.compression_lt_expansion');
     return null;
 }
 
