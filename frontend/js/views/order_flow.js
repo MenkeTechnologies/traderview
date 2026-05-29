@@ -24,7 +24,7 @@ export async function renderOrderFlow(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.order_flow.h2.tick_stream">Tick stream</h2>
-            <p class="muted">Paste <code>price volume bid ask</code> per line. Trades at
+            <p class="muted" data-i18n-html="view.order_flow.help">Paste <code>price volume bid ask</code> per line. Trades at
                 ask = BUY, at bid = SELL, mid-spread falls back to tick rule (vs prior price).
                 Demo loads 400 ticks with engineered net-buy pressure.</p>
             <textarea id="of-ticks" rows="8" placeholder="100.05 250 100.04 100.05&#10;100.04 1200 100.04 100.05&#10;..."></textarea>

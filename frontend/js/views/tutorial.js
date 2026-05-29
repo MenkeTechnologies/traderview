@@ -143,7 +143,7 @@ const SECTIONS = [
                 <li><strong>Crypto:</strong> CoinGecko + blockchain.com.</li>
                 <li><strong>Webull:</strong> session tokens you paste from your own browser. Read-only.</li>
             </ul>
-            <p class="muted small">All data lands in embedded Postgres at <code>~/Library/Application Support/com.menketechnologies.traderview/traderview/pg-data</code>. Logs at <code>~/Library/Application Support/traderview/traderview.log</code>.</p>`,
+            <p class="muted small" data-i18n-html="view.tutorial.data_sources.paths">All data lands in embedded Postgres at <code>~/Library/Application Support/com.menketechnologies.traderview/traderview/pg-data</code>. Logs at <code>~/Library/Application Support/traderview/traderview.log</code>.</p>`,
     },
     {
         id: 'risk-gate',
@@ -164,7 +164,7 @@ const SECTIONS = [
                 <li><strong>Paper trades also gate.</strong> Paper trading is where you build the habit; if rules only fired live, you'd practice rule-breaking.</li>
                 <li><strong>Webhook on Block.</strong> Every Block-severity veto fires to every enabled webhook (Discord / Slack / generic) so you get a public record of every rule save.</li>
             </ol>
-            <p class="muted small">Engine lives in <code>traderview_core::risk_gate</code> — pure compute, 21 unit tests pin the rule semantics + serde compat + preset rule sets.</p>`,
+            <p class="muted small" data-i18n-html="view.tutorial.risk_gate.engine">Engine lives in <code>traderview_core::risk_gate</code> — pure compute, 21 unit tests pin the rule semantics + serde compat + preset rule sets.</p>`,
     },
     {
         id: 'workflow',

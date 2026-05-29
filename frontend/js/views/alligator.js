@@ -25,7 +25,7 @@ export async function renderAlligator(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.alligator.h2.hl_bars">HL bars</h2>
-            <p class="muted">Paste <code>high low</code> per line. Median price
+            <p class="muted" data-i18n-html="view.alligator.help">Paste <code>high low</code> per line. Median price
                 ((H+L)/2) drives the three SMMAs. Demo loads 50 bars cycling through
                 sleep → uptrend → sleep → downtrend so all three biases are visible.</p>
             <textarea id="al-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>

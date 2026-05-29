@@ -24,7 +24,7 @@ export async function renderMurreyMath(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.murrey_math.h2.hlc_bars">HLC bars</h2>
-            <p class="muted">Paste <code>high low close</code> per line. Murrey
+            <p class="muted" data-i18n-html="view.murrey_math.help">Paste <code>high low close</code> per line. Murrey
                 auto-detects the octave by rounding the lookback range to a
                 power-of-2 base. Demo loads 80 bars in a ~10-point oscillating range.</p>
             <textarea id="mm-bars" rows="6" placeholder="100.6 99.4 100.0&#10;100.8 99.6 100.2&#10;..."></textarea>

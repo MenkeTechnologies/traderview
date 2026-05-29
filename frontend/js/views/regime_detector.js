@@ -152,9 +152,9 @@ function renderSummary(res) {
         <div class="label">Fit diagnostics</div>
         <div class="value rd-summary-value">
             <div class="vc-row"><span class="muted">Log-likelihood</span> <strong>${res.log_likelihood.toFixed(3)}</strong></div>
-            <div class="vc-row"><span class="muted">EM iterations</span> <strong>${res.iterations}</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.regime_detector.row.em_iterations">EM iterations</span> <strong>${res.iterations}</strong></div>
             <div class="vc-row"><span class="muted">Bars classified high-vol (P>0.5)</span> <strong>${pct(highFrac)}</strong></div>
-            <div class="vc-row"><span class="muted">Series length</span> <strong>${res.prob_state1.length}</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.regime_detector.row.series_length">Series length</span> <strong>${res.prob_state1.length}</strong></div>
         </div>
     </div>`);
     document.getElementById('rd-summary').innerHTML = cards.join('');

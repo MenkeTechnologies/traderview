@@ -27,7 +27,7 @@ export async function renderCypherPattern(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.cypher_pattern.h2.pivots">Pivots</h2>
-            <p class="muted">Paste <code>index price H|L</code> per line. Pivots must
+            <p class="muted" data-i18n-html="view.cypher_pattern.help">Paste <code>index price H|L</code> per line. Pivots must
                 alternate high/low. Demo loads a 5-pivot bullish Cypher with tolerance 0.10
                 (the more permissive setting most retail screeners use).</p>
             <textarea id="cy-pivots" rows="6" placeholder="0 100 L&#10;10 130 H&#10;20 115 L&#10;30 134.08 H&#10;40 106.42 L"></textarea>

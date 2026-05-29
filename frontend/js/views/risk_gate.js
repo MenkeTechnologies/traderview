@@ -94,12 +94,7 @@ export async function renderRiskGate(mount, state) {
         </div>
 
         <div class="chart-panel">
-<<<<<<< Updated upstream
             <h2><span data-i18n="view.risk_gate.h2.fires_by_rule">Fires by rule</span> <span class="muted small" data-i18n="view.risk_gate.h2.fires_by_rule_sub">— last 30 days</span></h2>
-=======
-            <h2><span data-i18n="view.risk_gate.h2.fires_by_rule">Fires by rule</span>
-                <span class="muted small" data-i18n="view.risk_gate.hint.last_30_days">— last 30 days</span></h2>
->>>>>>> Stashed changes
             <p data-i18n="view.risk_gate.hint.which_rules_trigger_most_high_fire_rules_are_worki" class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
             <table class="trades" id="rg-by-rule">
                 <thead><tr><th data-i18n="view.risk_gate.th.rule">Rule</th><th data-i18n="view.risk_gate.th.total_fires">Total fires</th><th data-i18n="view.risk_gate.th.blocks">Blocks</th><th data-i18n="view.risk_gate.th.warnings">Warnings</th></tr></thead>
@@ -108,12 +103,7 @@ export async function renderRiskGate(mount, state) {
         </div>
 
         <div class="chart-panel">
-<<<<<<< Updated upstream
             <h2><span data-i18n="view.risk_gate.h2.recent_fires">Recent fires</span> <span class="muted small" data-i18n="view.risk_gate.h2.recent_fires_sub">— rules that saved you</span></h2>
-=======
-            <h2><span data-i18n="view.risk_gate.h2.recent_fires">Recent fires</span>
-                <span class="muted small" data-i18n="view.risk_gate.hint.rules_saved">— rules that saved you</span></h2>
->>>>>>> Stashed changes
             <table class="trades" id="rg-fires">
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.time">Time</th><th data-i18n="view.risk_gate.th.symbol">Symbol</th><th data-i18n="view.risk_gate.th.outcome">Outcome</th><th data-i18n="view.risk_gate.th.rules_that_fired">Rules that fired</th>
@@ -124,25 +114,19 @@ export async function renderRiskGate(mount, state) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.risk_gate.h2.dry_run_a_proposed_trade">Dry-run a proposed trade</h2>
-            <p class="muted small">Same call <code>POST /api/risk-gate/evaluate</code> the New Trade form will make before submitting. Use this to verify your rules.</p>
+            <p class="muted small" data-i18n-html="view.risk_gate.dry_run.hint">Same call <code>POST /api/risk-gate/evaluate</code> the New Trade form will make before submitting. Use this to verify your rules.</p>
             <form id="rg-eval" class="inline-form">
-                <label><span data-i18n="view.risk_gate.label.symbol">Symbol</span>
-                    <input name="symbol" value="AAPL" required></label>
+                <label><span data-i18n="view.risk_gate.label.symbol">Symbol</span> <input name="symbol" value="AAPL" required></label>
                 <label><span data-i18n="view.risk_gate.label.side">Side</span>
                     <select name="side">
                         <option data-i18n="view.risk_gate.opt.long" value="long">Long</option>
                         <option data-i18n="view.risk_gate.opt.short" value="short">Short</option>
                     </select></label>
-                <label><span data-i18n="view.risk_gate.label.qty">Qty</span>
-                    <input name="qty" type="number" step="any" value="100" required></label>
-                <label><span data-i18n="view.risk_gate.label.entry">Entry</span>
-                    <input name="entry_price" type="number" step="any" value="150" required></label>
-                <label><span data-i18n="view.risk_gate.label.stop_loss">Stop loss</span>
-                    <input name="stop_loss" type="number" step="any" value="149"></label>
-                <label><span data-i18n="view.risk_gate.label.multiplier">Multiplier</span>
-                    <input name="multiplier" type="number" step="any" value="1"></label>
-                <label><input type="checkbox" name="has_attached_plan" checked>
-                    <span data-i18n="view.risk_gate.label.plan_attached">Plan attached</span></label>
+                <label><span data-i18n="view.risk_gate.label.qty">Qty</span> <input name="qty" type="number" step="any" value="100" required></label>
+                <label><span data-i18n="view.risk_gate.label.entry">Entry</span> <input name="entry_price" type="number" step="any" value="150" required></label>
+                <label><span data-i18n="view.risk_gate.label.stop_loss">Stop loss</span> <input name="stop_loss" type="number" step="any" value="149"></label>
+                <label><span data-i18n="view.risk_gate.label.multiplier">Multiplier</span> <input name="multiplier" type="number" step="any" value="1"></label>
+                <label><input type="checkbox" name="has_attached_plan" checked> <span data-i18n="view.risk_gate.label.plan_attached">Plan attached</span></label>
                 <button data-i18n="view.risk_gate.btn.evaluate" class="primary" type="submit">Evaluate</button>
             </form>
             <pre id="rg-eval-out" class="boot">—</pre>

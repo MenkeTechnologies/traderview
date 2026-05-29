@@ -23,7 +23,7 @@ export async function renderDemarker(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.demarker.h2.hl_bars">HL bars</h2>
-            <p class="muted">Paste <code>high low</code> per line. Demo loads 60 bars
+            <p class="muted" data-i18n-html="view.demarker.help">Paste <code>high low</code> per line. Demo loads 60 bars
                 cycling through uptrend → chop → downtrend so OB and OS readings both fire.</p>
             <textarea id="dm-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
             <div class="inline-form">

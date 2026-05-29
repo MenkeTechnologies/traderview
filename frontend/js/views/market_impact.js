@@ -23,7 +23,7 @@ export async function renderMarketImpact(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.market_impact.h2.trade_ledger">Trade ledger</h2>
-            <p class="muted">Paste <code>qty adv slippage_bps</code> per line. Negative
+            <p class="muted" data-i18n-html="view.market_impact.help">Paste <code>qty adv slippage_bps</code> per line. Negative
                 slippage is a favorable fill. Demo loads 400 trades that visibly cliff
                 past 1% ADV.</p>
             <textarea id="mi-trades" rows="8" placeholder="2500 5000000 2.1&#10;120000 5000000 12.5&#10;..."></textarea>

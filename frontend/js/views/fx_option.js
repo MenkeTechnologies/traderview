@@ -11,6 +11,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t, applyUiI18n } from '../i18n.js';
 import {
     buildGkBody, validateGkParams,
     garmanKohlhagenPrice, fmtRate, fmtGreek,
@@ -124,19 +125,20 @@ function renderSummary(res) {
         : Math.max(p.strike - p.spot, 0);
     const timeValue = res.price - intrinsic;
 
-    document.getElementById('fx-summary').innerHTML = [
+    const fxSummary = document.getElementById('fx-summary');
+    fxSummary.innerHTML = [
         bigCard('Price', fmtRate(res.price), `
-            <div class="vc-row"><span class="muted">Intrinsic</span> <strong>${fmtRate(intrinsic)}</strong></div>
-            <div class="vc-row"><span class="muted">Time value</span> <strong>${fmtRate(timeValue)}</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.intrinsic">Intrinsic</span> <strong>${fmtRate(intrinsic)}</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.time_value">Time value</span> <strong>${fmtRate(timeValue)}</strong></div>
         `),
         bigCard('Delta', fmtGreek(res.delta, 4), `
-            <div class="vc-row"><span class="muted">Hedge ratio</span> <strong>${fmtGreek(res.delta, 4)}</strong></div>
-            <div class="vc-row"><span class="muted">ATM target</span>
+            <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.hedge_ratio">Hedge ratio</span> <strong>${fmtGreek(res.delta, 4)}</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.atm_target">ATM target</span>
                 <strong>${p.kind === 'call' ? '~ +0.5' : '~ −0.5'}</strong></div>
         `),
         bigCard('Gamma', fmtGreek(res.gamma), `
             <div class="vc-row"><span class="muted">d²V/dS²</span> <strong>${fmtGreek(res.gamma)}</strong></div>
-            <div class="vc-row"><span class="muted">Peak</span> <strong>at ATM</strong></div>
+            <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.peak">Peak</span> <strong data-i18n="view.fx_option.row.at_atm">at ATM</strong></div>
         `),
         bigCard('Vega', fmtGreek(res.vega), `
             <div class="vc-row"><span class="muted">per 1.00 σ</span> <strong>${fmtGreek(res.vega)}</strong></div>
@@ -153,6 +155,7 @@ function renderSummary(res) {
             <div class="vc-row"><span class="muted">dV/dr_f</span> <strong>${fmtGreek(res.rho_foreign)}</strong></div>
         `),
     ].join('');
+    try { applyUiI18n(fxSummary); } catch (_) {}
 }
 
 function bigCard(label, value, body) {

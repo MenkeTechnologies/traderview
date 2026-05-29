@@ -59,42 +59,20 @@ export async function renderSecondOrderGreeks(mount, _appState) {
                         <option data-i18n="view.second_order_greeks.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.second_order_greeks.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-<<<<<<< Updated upstream
                 <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span> <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span> <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.r">Rate r</span> <input id="sg-r" type="number" step="any" value="${state.params.risk_free}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.q">Dividend q</span> <input id="sg-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span> <input id="sg-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
-=======
-                <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span>
-                    <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span>
-                    <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.rate">Rate r</span>
-                    <input id="sg-r" type="number" step="any" value="${state.params.risk_free}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.div">Dividend q</span>
-                    <input id="sg-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span>
-                    <input id="sg-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
->>>>>>> Stashed changes
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.second_order_greeks.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
-<<<<<<< Updated upstream
                 <label><span data-i18n="view.second_order_greeks.label.low">Low</span> <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.high">High</span> <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
                 <label><span data-i18n="view.second_order_greeks.label.points">Points</span> <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
-=======
-                <label><span data-i18n="view.second_order_greeks.label.low">Low</span>
-                    <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.high">High</span>
-                    <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.points">Points</span>
-                    <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
->>>>>>> Stashed changes
                 <button data-i18n="view.second_order_greeks.btn.50_from_strike" id="sg-defaults" class="secondary" type="button">±50% from strike</button>
                 <button data-i18n="view.second_order_greeks.btn.compute" id="sg-run" class="primary" type="button">Compute</button>
             </div>

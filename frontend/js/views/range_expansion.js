@@ -28,7 +28,7 @@ export async function renderRangeExpansion(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.range_expansion.h2.hlc_bars">HLC bars</h2>
-            <p class="muted">Paste <code>high low close</code> per line. ATR is computed
+            <p class="muted" data-i18n-html="view.range_expansion.help">Paste <code>high low close</code> per line. ATR is computed
                 locally (Wilder smoothing). Demo loads 30 bars with engineered compression
                 resolving UP and a second compression resolving DOWN.</p>
             <textarea id="re-bars" rows="6" placeholder="100.5 99.5 100.0&#10;100.8 99.8 100.3&#10;..."></textarea>

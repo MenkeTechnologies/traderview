@@ -64,6 +64,23 @@ test('applyUiI18n: placeholder + title + aria-label dispatched correctly', () =>
     expect(elAria._attrs['aria-label']).toBe('click me');
 });
 
+test('applyUiI18n: data-i18n-html sets innerHTML so child markup survives', () => {
+    const el = makeEl('P', { 'i18n-html': 'k_html' });
+    const root = fakeRoot({ '[data-i18n-html]': [el] });
+    setMap({ k_html: 'Engine lives in <code>traderview_core::risk_gate</code>.' });
+    applyUiI18n(root);
+    expect(el.innerHTML).toBe('Engine lives in <code>traderview_core::risk_gate</code>.');
+});
+
+test('applyUiI18n: data-i18n-html missing key leaves innerHTML intact', () => {
+    const el = makeEl('P', { 'i18n-html': 'no_such_key' });
+    el.innerHTML = '<em>stays as-is</em>';
+    const root = fakeRoot({ '[data-i18n-html]': [el] });
+    setMap({});
+    applyUiI18n(root);
+    expect(el.innerHTML).toBe('<em>stays as-is</em>');
+});
+
 test('applyUiI18n: missing key leaves textContent untouched', () => {
     const el = makeEl('SPAN', { 'i18n': 'missing' });
     el.textContent = 'stays';

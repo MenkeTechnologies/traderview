@@ -159,18 +159,18 @@ function renderSummary(res) {
     cards.push(card(t('view.american_option.card.american_lsmc'), fmtMoney(res.price), '', `
         <div class="vc-row"><span class="muted">95% CI</span> <strong>±${fmtMoney(halfWidth)}</strong></div>
         <div class="vc-row"><span class="muted">SE</span> <strong>${fmtMoney(res.standard_error, 5)}</strong></div>
-        <div class="vc-row"><span class="muted">Paths</span> <strong>${res.paths_run}</strong></div>
+        <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.paths">Paths</span> <strong>${res.paths_run}</strong></div>
     `));
     cards.push(card(t('view.american_option.card.european_bs_reference'), fmtMoney(european), '', `
-        <div class="vc-row"><span class="muted">Computed</span> <strong>closed-form</strong></div>
-        <div class="vc-row"><span class="muted">No MC error</span> <strong>—</strong></div>
+        <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.computed">Computed</span> <strong data-i18n="view.american_option.row.closed_form">closed-form</strong></div>
+        <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.no_mc_error">No MC error</span> <strong>—</strong></div>
     `));
     cards.push(card(t('view.american_option.card.early_exercise_premium'),
         eep == null ? '—' : fmtMoney(eep),
         eep != null && eep > 0 ? 'pos' : (eep != null && eep < 0 ? 'neg' : ''),
         `<div class="vc-row"><span class="muted">% of American price</span>
              <strong>${eepPct == null ? '—' : eepPct.toFixed(2) + '%'}</strong></div>
-         <div class="vc-row"><span class="muted">Sign</span>
+         <div class="vc-row"><span class="muted" data-i18n="view.american_option.row.sign">Sign</span>
              <strong>${eep == null ? '—' : (eep > 0 ? 'EE valuable' : 'within MC noise')}</strong></div>`));
     cards.push(card(t('view.american_option.card.intrinsic_value_parity_floor'), fmtMoney(intrinsic), '', `
         <div class="vc-row"><span class="muted">${p.kind === 'call' ? 'max(S - K, 0)' : 'max(K - S, 0)'}</span>

@@ -37,7 +37,7 @@ export async function renderCupAndHandle(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.cup_and_handle.h2.ohlc_bars">OHLC bars</h2>
-            <p class="muted">Paste <code>high low close</code> per line.
+            <p class="muted" data-i18n-html="view.cup_and_handle.help">Paste <code>high low close</code> per line.
                 Demo loads a synthetic 122-bar cup with an 8% handle that
                 triggers the canonical IBD pivot buy-point.</p>
             <textarea id="ch-bars" rows="8" placeholder="100.50 99.20 100.10&#10;101.30 100.00 100.85&#10;..."></textarea>

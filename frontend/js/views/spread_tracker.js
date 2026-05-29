@@ -24,7 +24,7 @@ export async function renderSpreadTracker(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.spread_tracker.h2.quote_samples">Quote samples</h2>
-            <p class="muted">Paste <code>bid ask</code> per line. Demo loads 300
+            <p class="muted" data-i18n-html="view.spread_tracker.help">Paste <code>bid ask</code> per line. Demo loads 300
                 samples that include a 20-sample pathological burst near the end
                 (a feed glitch / circuit breaker analog).</p>
             <textarea id="st-quotes" rows="8" placeholder="100.04 100.05&#10;100.05 100.06&#10;..."></textarea>

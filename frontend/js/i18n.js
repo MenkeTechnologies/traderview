@@ -21,9 +21,14 @@ export function t(key, params) {
 
 // Apply current map to all annotated DOM elements under `root`. Idempotent.
 // Mirrors audio-haxor `applyUiI18n` semantics:
-//   data-i18n         → textContent
+//   data-i18n             → textContent
+//   data-i18n-html        → innerHTML (use ONLY for translator-controlled
+//                            HTML fragments — never user input. Reserved
+//                            for static catalog values like tutorial copy
+//                            that needs to preserve <code>/<em>/<strong>
+//                            markup the textContent setter would strip.)
 //   data-i18n-placeholder → placeholder
-//   data-i18n-title   → title
+//   data-i18n-title       → title
 //   data-i18n-aria-label  → aria-label
 export function applyUiI18n(root) {
     const scope = root != null
@@ -36,6 +41,12 @@ export function applyUiI18n(root) {
         if (!k) return;
         const v = _map[k];
         if (v != null && v !== '') { el.textContent = v; n++; }
+    });
+    scope.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const k = el.dataset.i18nHtml;
+        if (!k) return;
+        const v = _map[k];
+        if (v != null && v !== '') { el.innerHTML = v; n++; }
     });
     scope.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const k = el.dataset.i18nPlaceholder;

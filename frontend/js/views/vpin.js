@@ -39,7 +39,7 @@ export async function renderVpin(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.vpin.h2.tick_stream">Tick stream</h2>
-            <p class="muted">Paste <code>price volume</code> per line (whitespace- or comma-separated).
+            <p class="muted" data-i18n-html="view.vpin.tick_stream.help">Paste <code>price volume</code> per line (whitespace- or comma-separated).
                 Lines starting with <code>#</code> are ignored. Demo data
                 injects a benign random-walk regime followed by a toxic burst
                 so the VPIN line clearly crosses the 0.5 threshold.</p>

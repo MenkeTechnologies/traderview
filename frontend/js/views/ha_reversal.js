@@ -25,7 +25,7 @@ export async function renderHaReversal(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.ha_reversal.h2.ohlc_bars">OHLC bars</h2>
-            <p class="muted">Paste <code>open high low close</code> per line. Bars
+            <p class="muted" data-i18n-html="view.ha_reversal.help">Paste <code>open high low close</code> per line. Bars
                 are converted to Heikin-Ashi candles client-side; the backend
                 detects color-flip reversal events on the HA series.
                 Demo loads 30 bars with bull-bear-bull regime structure.</p>

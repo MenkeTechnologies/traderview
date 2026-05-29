@@ -30,8 +30,7 @@ export async function renderTimeInForce(mount, _appState) {
                     <input id="tif-fq" type="number" step="any" min="0" value="${state.order.filled_qty}"></label>
             </div>
             <div class="inline-form">
-                <label><span data-i18n="view.time_in_force.label.placed_at">Placed at</span>
-                    <small class="muted" data-i18n="view.time_in_force.hint.placed_at">(your local time → UTC at the wire)</small>
+                <label><span data-i18n="view.time_in_force.label.placed_at">Placed at</span> <small class="muted" data-i18n="view.time_in_force.label.placed_at_hint">(your local time → UTC at the wire)</small>
                     <input id="tif-placed" type="datetime-local" value="${esc(isoUtcToLocalDt(state.order.placed_at))}"></label>
                 <label><span data-i18n="view.time_in_force.label.good_until">Good until (GTD only)</span>
                     <input id="tif-good" type="date" value="${esc(state.good_until_in_order || '')}"></label>

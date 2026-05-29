@@ -74,17 +74,10 @@ export async function renderAlmgrenChriss(mount, _appState) {
 
         <div id="ac-summary" class="cards"></div>
 
-<<<<<<< Updated upstream
         <div class="chart-panel"><h2><span data-i18n="view.almgren_chriss.h2.inventory_path">Inventory path</span> x<sub>k</sub></h2>
             <div id="ac-chart-inv" style="height:260px"></div></div>
 
         <div class="chart-panel"><h2><span data-i18n="view.almgren_chriss.h2.trade_schedule">Trade schedule</span> v<sub>k</sub></h2>
-=======
-        <div class="chart-panel"><h2><span data-i18n="view.almgren_chriss.h2.inventory">Inventory path x</span><sub>k</sub></h2>
-            <div id="ac-chart-inv" style="height:260px"></div></div>
-
-        <div class="chart-panel"><h2><span data-i18n="view.almgren_chriss.h2.schedule">Trade schedule v</span><sub>k</sub></h2>
->>>>>>> Stashed changes
             <div id="ac-chart-sched" style="height:240px"></div></div>
 
         <div class="chart-panel"><h2 data-i18n="view.almgren_chriss.h2.efficient_frontier_sweep">Efficient frontier (λ sweep)</h2>

@@ -14,7 +14,7 @@ export async function renderTradeReviews(mount, state) {
     if (!acct) { mount.innerHTML = `<p data-i18n="view.trade_reviews.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
         <h1 class="view-title">// REVIEWS — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
-        <p class="muted small">Every closed trade with <strong>|R| ≥ 2</strong> auto-queues
+        <p class="muted small" data-i18n-html="view.trade_reviews.intro">Every closed trade with <strong>|R| ≥ 2</strong> auto-queues
             here for forced reflection. Big wins teach as much as big losses — review them
             both. Five fixed questions per review keep the dataset comparable across hundreds
             of trades.</p>

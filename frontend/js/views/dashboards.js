@@ -98,7 +98,7 @@ function renderSidebar() {
         </div>
         <hr>
         <div id="db-favs-section"></div>
-        <p class="muted">All dashboards saved in browser <code>localStorage</code> —
+        <p class="muted" data-i18n-html="view.dashboards.storage_hint">All dashboards saved in browser <code>localStorage</code> —
             no backend round-trip. Drag tiles in EDIT mode to reorder.</p>
     `;
     wrap.querySelectorAll('button[data-pick]').forEach(btn => {

@@ -71,10 +71,8 @@ export async function renderTaxWorkshop(mount, _state) {
             <h2 data-i18n="view.tax_workshop.h2.mileage_standard_method">// Mileage — Standard Method</h2>
             <p data-i18n="view.tax_workshop.hint.add_trips_irs_standard_rate_is_applied_per_trip_da" class="muted small">Add trips. IRS standard rate is applied per trip date (handles 2022 mid-year split).</p>
             <form id="mi-form" class="inline-form">
-                <label><span data-i18n="view.tax_workshop.label.date">Date</span>
-                    <input name="date" type="date" required></label>
-                <label><span data-i18n="view.tax_workshop.label.miles">Miles</span>
-                    <input name="miles" type="number" step="any" required></label>
+                <label><span data-i18n="view.tax_workshop.label.date">Date</span> <input name="date" type="date" required></label>
+                <label><span data-i18n="view.tax_workshop.label.miles">Miles</span> <input name="miles" type="number" step="any" required></label>
                 <label><span data-i18n="view.tax_workshop.label.purpose">Purpose</span>
                     <select name="purpose">
                         <option data-i18n="view.tax_workshop.opt.business" value="business">Business</option>
@@ -82,9 +80,7 @@ export async function renderTaxWorkshop(mount, _state) {
                         <option data-i18n="view.tax_workshop.opt.moving" value="moving">Moving</option>
                         <option data-i18n="view.tax_workshop.opt.charitable" value="charitable">Charitable</option>
                     </select></label>
-                <label><span data-i18n="view.tax_workshop.label.note">Note</span>
-                    <input name="note" type="text" placeholder="e.g. Conference travel"
-                           data-i18n-placeholder="view.tax_workshop.placeholder.note"></label>
+                <label><span data-i18n="view.tax_workshop.label.note">Note</span> <input name="note" type="text" placeholder="e.g. Conference travel" data-i18n-placeholder="view.tax_workshop.placeholder.note_example"></label>
                 <button data-i18n="view.tax_workshop.btn.add_trip" class="primary" type="submit">Add Trip</button>
             </form>
             <table class="trades" id="mi-table">

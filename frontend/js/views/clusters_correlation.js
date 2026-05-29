@@ -26,17 +26,9 @@ export async function renderClustersCorrelation(mount, _appState) {
         <h1 data-i18n="view.clusters_correlation.h1.correlation_clusters" class="view-title">// CORRELATION CLUSTERS</h1>
 
         <div class="chart-panel">
-<<<<<<< Updated upstream
             <h2><span data-i18n="view.clusters_correlation.h2.positions">Positions</span> <small class="muted"><span data-i18n="view.clusters_correlation.h2.positions_hint">(per line: </span><code>SYMBOL notional</code><span data-i18n="view.clusters_correlation.h2.positions_hint2">, neg = short)</span></small></h2>
             <textarea id="cc-pos" rows="5" placeholder="AAPL 20000&#10;MSFT 15000">${esc(positionsToBlob(state.positions))}</textarea>
             <h2><span data-i18n="view.clusters_correlation.h2.correlations">Correlations</span> <small class="muted"><span data-i18n="view.clusters_correlation.h2.correlations_hint">(per line: </span><code>A B corr</code><span data-i18n="view.clusters_correlation.h2.correlations_hint2">, order doesn't matter)</span></small></h2>
-=======
-            <h2><span data-i18n="view.clusters_correlation.h2.positions">Positions</span>
-                <small class="muted"><span data-i18n="view.clusters_correlation.hint.positions">(per line:</span> <code>SYMBOL notional</code><span data-i18n="view.clusters_correlation.hint.positions_suffix">, neg = short)</span></small></h2>
-            <textarea id="cc-pos" rows="5" placeholder="AAPL 20000&#10;MSFT 15000">${esc(positionsToBlob(state.positions))}</textarea>
-            <h2><span data-i18n="view.clusters_correlation.h2.correlations">Correlations</span>
-                <small class="muted"><span data-i18n="view.clusters_correlation.hint.correlations">(per line:</span> <code>A B corr</code><span data-i18n="view.clusters_correlation.hint.correlations_suffix">, order doesn't matter)</span></small></h2>
->>>>>>> Stashed changes
             <textarea id="cc-corr" rows="6" placeholder="AAPL MSFT 0.85">${esc(correlationsToBlob(state.correlations))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.clusters_correlation.label.threshold">Threshold |ρ|</span>

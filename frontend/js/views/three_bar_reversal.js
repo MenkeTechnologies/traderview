@@ -22,7 +22,7 @@ export async function renderThreeBarReversal(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.three_bar_reversal.h2.ohlc_bars">OHLC bars</h2>
-            <p class="muted">Paste <code>open high low close</code> per line.
+            <p class="muted" data-i18n-html="view.three_bar_reversal.help">Paste <code>open high low close</code> per line.
                 Detection rule (fixed): bar1 trend bar, small middle (body ≤ 50% of bar1's body),
                 bar3 closes past bar1's opposite extreme. Demo includes one classic bullish
                 pattern at bars 2-3-4 and one classic bearish pattern at bars 11-12-13.</p>

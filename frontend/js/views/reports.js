@@ -201,7 +201,7 @@ function liquidityHtml(l) {
             <td>${row.avg_pct_of_adv !== null ? fmtPct(row.avg_pct_of_adv) : '—'}</td>
             <td class="${pnlClass(row.net_pnl)}">${fmtMoney(row.net_pnl)}</td></tr>
         `).join('')}</tbody></table>
-    <p class="muted">Pass <code>?adv=AAPL:50000000,TSLA:80000000</code> to populate ADV columns.</p>`;
+    <p class="muted" data-i18n-html="view.reports.adv_hint">Pass <code>?adv=AAPL:50000000,TSLA:80000000</code> to populate ADV columns.</p>`;
 }
 
 function riskHtml(r) {

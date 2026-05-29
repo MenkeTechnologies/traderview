@@ -26,7 +26,7 @@ export async function renderChandelierStop(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.chandelier_stop.h2.hlc_bars">HLC bars</h2>
-            <p class="muted">Paste <code>high low close</code> per line. ATR computed
+            <p class="muted" data-i18n-html="view.chandelier_stop.help">Paste <code>high low close</code> per line. ATR computed
                 locally (Wilder smoothing). Demo loads 60 bars: 40-bar uptrend → 20-bar
                 reversal — long stop should trigger on the way down.</p>
             <textarea id="cs-bars" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.5&#10;..."></textarea>

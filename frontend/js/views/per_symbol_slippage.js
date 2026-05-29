@@ -23,7 +23,7 @@ export async function renderPerSymbolSlippage(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.per_symbol_slippage.h2.slippage_records">Slippage records</h2>
-            <p class="muted">Paste <code>symbol slippage_bps</code> per line. Signed bps —
+            <p class="muted" data-i18n-html="view.per_symbol_slippage.help">Paste <code>symbol slippage_bps</code> per line. Signed bps —
                 positive = trader-favorable (beat benchmark). Demo loads 108 fills
                 across 6 symbols spanning the full execution-quality spectrum from
                 ETF to micro-cap.</p>

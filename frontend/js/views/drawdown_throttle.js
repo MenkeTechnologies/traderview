@@ -42,7 +42,7 @@ export async function renderDrawdownThrottle(mount, _appState) {
                 <button data-i18n="view.drawdown_throttle.btn.reset_to_defaults" id="dt-tier-reset" class="secondary" type="button">Reset to defaults</button>
                 <button data-i18n="view.drawdown_throttle.btn.evaluate" id="dt-run" class="primary" type="button">Evaluate</button>
             </div>
-            <p class="muted">Tiers must be ascending by <code>min_dd</code>. The active tier
+            <p class="muted" data-i18n-html="view.drawdown_throttle.tier_hint">Tiers must be ascending by <code>min_dd</code>. The active tier
                 is the LARGEST <code>min_dd</code> that current DD ≥ it.</p>
         </div>
 
