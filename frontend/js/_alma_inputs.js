@@ -6,6 +6,8 @@
 // Gaussian-weighted FIR filter with offset-controlled lag. Lower lag than
 // EMA, sharper response than centered SMA.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 9;
 export const DEFAULT_OFFSET = 0.85;
 export const DEFAULT_SIGMA  = 6.0;
@@ -20,16 +22,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                      return 'closes must be an array';
-    if (!Number.isInteger(input.period))                   return 'period must be an integer';
+    if (!Array.isArray(input.closes))                      return t('view.alma.validate.closes_array');
+    if (!Number.isInteger(input.period))                   return t('view.alma.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                            return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                            return t('view.alma.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isFinite(input.offset) || input.offset < 0 || input.offset > 1)
-                                                            return 'offset must be in [0, 1]';
-    if (!Number.isFinite(input.sigma) || input.sigma <= 0) return 'sigma must be positive';
-    if (input.closes.length < input.period)                return `need at least period (${input.period}) closes`;
+                                                            return t('view.alma.validate.offset');
+    if (!Number.isFinite(input.sigma) || input.sigma <= 0) return t('view.alma.validate.sigma');
+    if (input.closes.length < input.period)                return t('view.alma.validate.closes_min', { period: input.period });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))             return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))             return t('view.alma.validate.close_finite', { i });
     }
     return null;
 }
