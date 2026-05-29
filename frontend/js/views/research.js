@@ -133,7 +133,7 @@ export async function renderResearch(mount, _state, sym) {
 }
 
 function renderQuote(el, q) {
-    if (!q) { el.innerHTML = '<div class="boot">no quote</div>'; return; }
+    if (!q) { el.innerHTML = `<div class="boot">${esc(t('view.research.empty.no_quote'))}</div>`; return; }
     const ch = q.change_pct;
     const cls = ch >= 0 ? 'pos' : 'neg';
     el.innerHTML = `

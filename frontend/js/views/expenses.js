@@ -38,7 +38,7 @@ export async function renderExpensesView(mount) {
         state.categories = cats;
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
-        mount.innerHTML = `<p class="boot">expense load failed: ${e.message}</p>`;
+        mount.innerHTML = `<p class="boot">${esc(t('view.expenses.empty.load_failed', { err: e.message }))}</p>`;
         return;
     }
     drawShell(mount);
@@ -389,7 +389,7 @@ async function openRulesModal() {
         </form>
         <table class="trades">
             <thead><tr><th data-i18n="view.expenses.th.pri">Pri</th><th data-i18n="view.expenses.th.pattern">Pattern</th><th data-i18n="view.expenses.th.kind">Kind</th><th data-i18n="view.expenses.th.cat">Cat</th><th data-i18n="view.expenses.th.biz_2">Biz?</th><th data-i18n="view.expenses.th.hits">Hits</th><th></th></tr></thead>
-            <tbody>${rows || '<tr><td colspan="7" class="boot">no rules yet</td></tr>'}</tbody>
+            <tbody>${rows || `<tr><td colspan="7" class="boot">${esc(t('view.expenses.empty.no_rules'))}</td></tr>`}</tbody>
         </table>
         <button data-i18n="view.expenses.btn.close_2" id="rules-close" style="margin-top:12px">Close</button>
     </div>`;
@@ -539,7 +539,7 @@ async function openReceiptMatchModal(meta) {
         </div>
         <table class="trades">
             <thead><tr><th data-i18n="view.expenses.th.score">Score</th><th data-i18n="view.expenses.th.date_2">Date</th><th data-i18n="view.expenses.th.account_2">Account</th><th data-i18n="view.expenses.th.merchant_2">Merchant</th><th data-i18n="view.expenses.th.amount_2">Amount</th><th></th></tr></thead>
-            <tbody>${rows || '<tr><td colspan="6" class="boot">no candidates above threshold — attach manually from the receipts list</td></tr>'}</tbody>
+            <tbody>${rows || `<tr><td colspan="6" class="boot">${esc(t('view.expenses.empty.no_candidates'))}</td></tr>`}</tbody>
         </table>
         <div style="margin-top:12px;display:flex;gap:8px">
             <a href="${api.receiptBlobUrl(meta.id)}" target="_blank">View receipt</a>
@@ -690,7 +690,7 @@ async function openReceiptsModal() {
                 <th data-i18n="view.expenses.th.uploaded">Uploaded</th><th data-i18n="view.expenses.th.filename">Filename</th><th data-i18n="view.expenses.th.ocr">OCR</th>
                 <th data-i18n="view.expenses.th.merchant_3">Merchant</th><th data-i18n="view.expenses.th.total">Total</th><th data-i18n="view.expenses.th.date_3">Date</th><th data-i18n="view.expenses.th.tx">Tx</th><th></th>
             </tr></thead>
-            <tbody>${rows || '<tr><td colspan="8" class="boot">no receipts uploaded</td></tr>'}</tbody>
+            <tbody>${rows || `<tr><td colspan="8" class="boot">${esc(t('view.expenses.empty.no_receipts'))}</td></tr>`}</tbody>
         </table>
         <button data-i18n="view.expenses.btn.close_8" id="r-close" style="margin-top:12px">Close</button>
     </div>`;

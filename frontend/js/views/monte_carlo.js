@@ -190,7 +190,7 @@ function renderChart(stats) {
     caption.textContent = t('view.monte_carlo.terminal.caption');
     const { xs, ys } = normalDensityCurve(stats.mean, stats.stdev);
     if (xs.length === 0) {
-        el.innerHTML = '<div class="boot">stdev was zero — distribution is a point mass.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('view.monte_carlo.empty.stdev_zero'))}</div>`;
         return;
     }
     new window.uPlot({

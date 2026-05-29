@@ -68,7 +68,7 @@ export async function renderWalkForward(mount) {
         };
         const out = mount.querySelector('#wf-out');
         if (!out) return;
-        out.innerHTML = `<div class="boot">running ${body.symbol}, sweeping grid…</div>`;
+        out.innerHTML = `<div class="boot">${esc(t('view.walk_forward.status.running', { symbol: body.symbol }))}</div>`;
         try {
             const r = await api.walkForward(body);
             if (!viewIsCurrent(tok)) return;
