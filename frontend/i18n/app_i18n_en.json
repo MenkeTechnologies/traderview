@@ -6435,6 +6435,8 @@
   "view.screener.label.history_days":     "History days",
   "view.screener.label.limit":            "Limit",
   "view.squeeze_alerts.flash.saved":       "Saved.",
+  "view.squeeze_alerts.tts.test_phrase":   "TraderView squeeze alerts active. AAPL squeezing, up 5.2 percent on 4 times average volume.",
+  "view.alert_rules.tts.test_phrase":      "Custom alert rules active. AAPL squeezing, up 5 percent on triple volume.",
   "view.live_positions.status.updated":    "Updated {time} · {n} positions",
   "view.squeeze_alerts.label.price_threshold": "Price threshold (% as decimal, 0.05 = 5%)",
   "view.squeeze_alerts.label.volume_threshold": "Volume threshold (× ADV in window)",

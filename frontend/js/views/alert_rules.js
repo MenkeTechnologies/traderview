@@ -78,7 +78,7 @@ function bindTestButtons() {
     document.getElementById('ar-test-beep').addEventListener('click',   () => audio.playSound('single_beep',  { volume: 0.3 }));
     document.getElementById('ar-test-double').addEventListener('click', () => audio.playSound('double_beep',  { volume: 0.3 }));
     document.getElementById('ar-test-tts').addEventListener('click',    () =>
-        audio.speakAlert('Custom alert rules active. AAPL squeezing, up 5 percent on triple volume.', { volume: 0.6 }));
+        audio.speakAlert(tr('view.alert_rules.tts.test_phrase'), { volume: 0.6 }));
 }
 
 function bindRulesPanel() {

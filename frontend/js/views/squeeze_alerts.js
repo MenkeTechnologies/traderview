@@ -104,7 +104,7 @@ export async function renderSqueezeAlerts(mount, _appState) {
     document.getElementById('sq-test-bell').addEventListener('click',  () => audio.playBell(opts()));
     document.getElementById('sq-test-alarm').addEventListener('click', () => audio.playAlarm(opts()));
     document.getElementById('sq-test-tts').addEventListener('click',   () =>
-        audio.speakAlert('TraderView squeeze alerts active. AAPL squeezing, up 5.2 percent on 4 times average volume.',
+        audio.speakAlert(t('view.squeeze_alerts.tts.test_phrase'),
             { volume: settings.sound_volume }));
 
     // Wire settings.
