@@ -3,22 +3,24 @@
 // Backend body: { bars: Bar[] } where Bar = { high, low, close, volume }
 // Returns: (number|null)[]  — cumulative running ADL value per bar.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = { bars: [] };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                       return 'bars must be an array';
-    if (input.bars.length === 0)                          return 'bars cannot be empty';
+    if (!Array.isArray(input.bars))                       return t('view.adl.validate.bars_array');
+    if (input.bars.length === 0)                          return t('view.adl.validate.bars_empty');
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.adl.validate.bar_missing', { i });
         // Allow non-finite — the Rust impl carries forward ADL through NaN bars.
         // But disallow non-finite volume in client validation? Carry-forward is intentional.
         // Match Rust behavior: accept NaN bars silently.
         if (typeof b.high !== 'number' || typeof b.low !== 'number'
             || typeof b.close !== 'number' || typeof b.volume !== 'number')
-                                                           return `bars[${i}] HLCV must be numbers`;
+                                                           return t('view.adl.validate.hlcv_numbers', { i });
         if (Number.isFinite(b.high) && Number.isFinite(b.low) && b.high < b.low)
-                                                           return `bars[${i}] high < low`;
+                                                           return t('view.adl.validate.high_lt_low', { i });
     }
     return null;
 }

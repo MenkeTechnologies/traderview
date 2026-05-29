@@ -7,6 +7,8 @@
 // Horizon capped at 1000 days server-side (MAX_HORIZON_DAYS) — local mirror
 // applies the same cap so chart x-range matches.
 
+import { t } from './i18n.js';
+
 export const MAX_HORIZON_DAYS = 1000;
 
 export const DEFAULT_INPUTS = {
@@ -16,12 +18,12 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Number.isFinite(input.entry))     return 'entry must be finite';
-    if (input.entry <= 0)                  return 'entry must be > 0';
-    if (!Number.isFinite(input.daily_atr)) return 'daily_atr must be finite';
-    if (input.daily_atr < 0)               return 'daily_atr must be ≥ 0';
+    if (!Number.isFinite(input.entry))     return t('view.atr_cone.validate.entry_finite');
+    if (input.entry <= 0)                  return t('view.atr_cone.validate.entry_positive');
+    if (!Number.isFinite(input.daily_atr)) return t('view.atr_cone.validate.atr_finite');
+    if (input.daily_atr < 0)               return t('view.atr_cone.validate.atr_non_negative');
     if (!Number.isInteger(input.horizon_days) || input.horizon_days < 0)
-        return 'horizon_days must be non-negative integer';
+        return t('view.atr_cone.validate.horizon');
     return null;
 }
 
