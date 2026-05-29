@@ -109,7 +109,7 @@ async function renderBoard(mount, id) {
     mount.innerHTML = `
         <h1 class="view-title">// BOARD — <span id="b-name">${esc(board.name)}</span>
             <button data-i18n="view.boards.btn.rename" id="b-rename" class="btn" style="font-size:10px;">rename</button>
-            <span id="b-save" class="muted small" style="margin-left:8px;">saved</span>
+            <span id="b-save" class="muted small" style="margin-left:8px;" data-i18n="common.saved">saved</span>
         </h1>
 
         <div class="chart-panel">
@@ -317,7 +317,7 @@ function tickEvery(secs, fn, tok) {
 }
 
 function mountWidget(body, w, tok) {
-    body.innerHTML = '<div class="muted small">loading…</div>';
+    body.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
     switch (w.kind) {
         case 'quote':       return mountQuote(body, w, tok);
         case 'mini_chart':  return mountMiniChart(body, w, tok);

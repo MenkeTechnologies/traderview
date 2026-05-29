@@ -54,7 +54,7 @@ export async function renderDashboard(mount, state) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
-            <div id="dash-rg" class="muted small">loading…</div>
+            <div id="dash-rg" class="muted small" data-i18n="common.loading">loading…</div>
         </div>
 
         <div class="chart-panel">

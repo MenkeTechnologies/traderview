@@ -127,7 +127,7 @@ function render(r, mount) {
     if (!out) return;
     const sizing = (s, color) => {
         if (!s) return `<div class="card"><div class="label">${color}</div>
-            <div class="muted small">n/a</div></div>`;
+            <div class="muted small">${esc(t('common.na'))}</div></div>`;
         const cap = s.capped_by_position_pct ? ' (capped)' : '';
         return `<div class="card" style="border-left-color:${color};">
             <div class="label">${esc(s.method)}</div>

@@ -60,7 +60,7 @@ function renderGroups(contracts, mount) {
 function card(c) {
     if (!c.price) {
         return `<div class="card"><div class="label">${esc(c.symbol)}</div>
-            <div class="muted small">no data</div></div>`;
+            <div class="muted small">${esc(t('common.no_data'))}</div></div>`;
     }
     const ch = c.change_pct;
     const chCls = ch == null ? '' : (ch >= 0 ? 'pos' : 'neg');

@@ -95,7 +95,7 @@ export async function renderAiAnalyze(mount, tradeId) {
     mount.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.journal_ai.h2.ai_analysis">AI analysis</h2>
-            <div id="ai-status" class="muted small">checking cache…</div>
+            <div id="ai-status" class="muted small" data-i18n="view.journal_ai.status.checking_cache">checking cache…</div>
             <div id="ai-body"></div>
             <button data-i18n="view.journal_ai.btn.run_analysis" class="btn" id="ai-run">Run analysis</button>
         </div>

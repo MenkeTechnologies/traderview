@@ -147,7 +147,7 @@ function paceChip(pace) {
 }
 
 function progressBar(actual, target, isLowerBetter) {
-    if (target == null) return '<div class="muted small">no target</div>';
+    if (target == null) return `<div class="muted small">${esc(t('view.goals.empty.no_target'))}</div>`;
     const pct = Math.max(0, Math.min(100, (Math.abs(actual) / Math.abs(target)) * 100));
     const meets = isLowerBetter ? actual <= target : actual >= target;
     const color = meets ? '#7af0a8' : pct >= 80 ? '#ffd24a' : '#ff7a1f';

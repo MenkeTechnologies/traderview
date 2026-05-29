@@ -21,8 +21,8 @@ export async function renderWebhooks(mount) {
                     <option data-i18n="view.webhooks.opt.slack" value="slack">Slack</option>
                     <option data-i18n="view.webhooks.opt.generic_raw_json" value="generic">Generic (raw JSON)</option>
                 </select>
-                <input name="url" placeholder="webhook URL" required style="min-width:340px">
-                <input name="secret" placeholder="X-Webhook-Secret (optional, generic only)" style="min-width:240px">
+                <input name="url" placeholder="webhook URL" data-i18n-placeholder="view.webhooks.placeholder.url" required style="min-width:340px">
+                <input name="secret" placeholder="X-Webhook-Secret (optional, generic only)" data-i18n-placeholder="view.webhooks.placeholder.secret" style="min-width:240px">
                 <button data-i18n="view.webhooks.btn.create" class="primary" type="submit">Create</button>
             </form>
         </div>

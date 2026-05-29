@@ -40,7 +40,7 @@ export async function renderRiskGate(mount, state) {
             <h2 data-i18n="view.risk_gate.h2.kill_switch">🛑 Kill switch</h2>
             <p class="muted small" data-i18n="view.risk_gate.hint.kill_switch">Halt every trade entry across all rules with one click. Toggles a kill_switch rule that always blocks. Disable here when ready to resume.</p>
             <button data-i18n="view.risk_gate.btn.toggle_kill_switch" id="rg-kill" class="primary" type="button" style="background:#ff2a6d">Toggle kill switch</button>
-            <span id="rg-kill-state" class="muted small" style="margin-left:10px">checking…</span>
+            <span id="rg-kill-state" class="muted small" style="margin-left:10px" data-i18n="common.checking">checking…</span>
         </div>
 
         <div class="chart-panel">
@@ -137,9 +137,9 @@ export async function renderRiskGate(mount, state) {
     const fieldsEl = mount.querySelector('#rg-fields');
     const typeSel  = mount.querySelector('#rg-type');
     const renderFields = () => {
-        const t = RULE_TYPES.find(x => x.id === typeSel.value);
-        if (!t || !t.fields.length) { fieldsEl.innerHTML = '<span class="muted small">no config</span>'; return; }
-        fieldsEl.innerHTML = t.fields.map(([name, kind, ph]) =>
+        const rt = RULE_TYPES.find(x => x.id === typeSel.value);
+        if (!rt || !rt.fields.length) { fieldsEl.innerHTML = `<span class="muted small">${esc(t('view.risk_gate.empty.no_config'))}</span>`; return; }
+        fieldsEl.innerHTML = rt.fields.map(([name, kind, ph]) =>
             `<label>${esc(name)}
                 <input name="${esc(name)}" type="${kind === 'text' ? 'text' : 'number'}"
                        ${kind === 'integer' ? 'step="1"' : kind === 'number' ? 'step="any"' : ''}
