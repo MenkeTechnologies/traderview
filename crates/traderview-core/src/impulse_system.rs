@@ -183,4 +183,57 @@ mod tests {
         let c = vec![100.0_f64; 100];
         assert_eq!(compute(&c, 13, 12, 26, 9).len(), 100);
     }
+
+    // ─── classify exhaustive truth-table + symmetry pins ─────────────
+    //
+    // Elder's Impulse System: GREEN iff EMA+hist both rising,
+    // RED iff both falling, BLUE everywhere else. A bug in the
+    // boolean fall-through silently turns a GREEN-flagged bar BLUE
+    // and changes every consumer-side entry rule.
+
+    #[test]
+    fn classify_red_requires_both_ema_and_hist_down() {
+        // Only ema_dn alone → BLUE, not RED.
+        assert_eq!(classify(false, false, true, false), ImpulseColor::Blue);
+        // Only hist_dn alone → BLUE.
+        assert_eq!(classify(false, false, false, true), ImpulseColor::Blue);
+        // Both → RED.
+        assert_eq!(classify(false, false, true, true), ImpulseColor::Red);
+    }
+
+    #[test]
+    fn classify_green_dominates_red_when_both_directions_set() {
+        // Defensive: when caller passes contradictory signals (up AND
+        // down on both axes), GREEN wins because the `ema_up &&
+        // hist_up` branch is checked first. Pin this so a refactor
+        // doesn't flip priority and silently re-classify edge bars.
+        assert_eq!(classify(true, true, true, true), ImpulseColor::Green);
+    }
+
+    #[test]
+    fn classify_all_false_is_blue() {
+        // Neutral / sideways bar: nothing fired → BLUE.
+        assert_eq!(classify(false, false, false, false), ImpulseColor::Blue);
+    }
+
+    // ─── compute edge: zero / undersized input ───────────────────────
+
+    #[test]
+    fn compute_empty_input_returns_empty_output() {
+        let out = compute(&[], 13, 12, 26, 9);
+        assert!(out.is_empty(), "empty input must yield empty output");
+    }
+
+    #[test]
+    fn compute_input_shorter_than_period_still_returns_aligned_length() {
+        // Output length should always equal input length, even if
+        // the period is longer (early bars carry Blue or undefined).
+        let c = vec![100.0_f64; 5];
+        let out = compute(&c, 13, 12, 26, 9);
+        assert_eq!(
+            out.len(),
+            5,
+            "output length must always match input length, even when shorter than period"
+        );
+    }
 }
