@@ -152,7 +152,7 @@ function renderRules(rules, mount, tok) {
         <tbody>
         ${rules.map(r => `<tr>
             <td>${esc(r.name)}</td>
-            <td class="${r.enabled ? 'pos' : 'muted'}">${r.enabled ? 'on' : 'off'}</td>
+            <td class="${r.enabled ? 'pos' : 'muted'}">${t(r.enabled ? 'common.on_lc' : 'common.off_lc')}</td>
             <td>${r.last_truth == null ? '—' : (r.last_truth ? '✓' : '✗')}</td>
             <td>${r.fire_count}</td>
             <td class="small">${r.last_evaluated_at ? new Date(r.last_evaluated_at).toLocaleString() : '—'}</td>

@@ -485,7 +485,7 @@ async function mountAlerts(body, w, tok) {
                 ${rows.map(r => `<tr>
                     <td>${esc(r.name || '')}</td>
                     <td>${esc(r.symbol || '')}</td>
-                    <td class="small ${r.enabled === false ? 'muted' : 'pos'}">${r.enabled === false ? 'off' : 'on'}</td>
+                    <td class="small ${r.enabled === false ? 'muted' : 'pos'}">${t(r.enabled === false ? 'common.off_lc' : 'common.on_lc')}</td>
                     <td>${r.fire_count ?? 0}</td>
                 </tr>`).join('')}
                 </tbody></table>`;

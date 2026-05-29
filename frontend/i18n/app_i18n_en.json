@@ -6020,6 +6020,8 @@
   "view.dashboards.btn.edit_layout": "Edit layout",
   "common.yes_lc": "yes",
   "common.no_lc": "no",
+  "common.on_lc": "on",
+  "common.off_lc": "off",
   "view.trade_reviews.q.entry_per_plan": "1. Was the entry per plan?",
   "view.trade_reviews.q.exit_per_plan": "2. Was the exit per plan?",
   "view.trade_reviews.q.would_change": "3. What would you change next time?",
