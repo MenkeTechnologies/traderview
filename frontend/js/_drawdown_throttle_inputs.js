@@ -5,6 +5,7 @@
 // Returns ThrottleReport with current/peak/drawdown_pct/active_multiplier.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 // Equity values are positive — reuse the shared parser with nonNegative
 // gate. Returns `{value, errors}`.
@@ -21,19 +22,19 @@ export const DEFAULT_TIERS = [
 ];
 
 export function validateInputs(equity, tiers) {
-    if (!Array.isArray(equity) || equity.length === 0) return 'need at least 1 equity value';
+    if (!Array.isArray(equity) || equity.length === 0) return t('view.drawdown_throttle.validate.need_equity');
     if (!equity.every(v => Number.isFinite(v) && v > 0))
-        return 'all equity values must be > 0';
-    if (!Array.isArray(tiers) || tiers.length === 0) return 'need at least 1 tier';
-    for (const t of tiers) {
-        if (!Number.isFinite(t.min_dd) || t.min_dd < 0 || t.min_dd > 1)
-            return 'tier min_dd must be in [0, 1] (decimal — 0.05 = 5%)';
-        if (!Number.isFinite(t.multiplier) || t.multiplier < 0 || t.multiplier > 5)
-            return 'tier multiplier must be in [0, 5]';
+        return t('view.drawdown_throttle.validate.equity_positive');
+    if (!Array.isArray(tiers) || tiers.length === 0) return t('view.drawdown_throttle.validate.need_tier');
+    for (const tier of tiers) {
+        if (!Number.isFinite(tier.min_dd) || tier.min_dd < 0 || tier.min_dd > 1)
+            return t('view.drawdown_throttle.validate.tier_min_dd');
+        if (!Number.isFinite(tier.multiplier) || tier.multiplier < 0 || tier.multiplier > 5)
+            return t('view.drawdown_throttle.validate.tier_multiplier');
     }
     // Tiers must be sorted ascending by min_dd (backend assumption).
     for (let i = 1; i < tiers.length; i++) {
-        if (tiers[i].min_dd < tiers[i - 1].min_dd) return 'tiers must be sorted ascending by min_dd';
+        if (tiers[i].min_dd < tiers[i - 1].min_dd) return t('view.drawdown_throttle.validate.tiers_sorted');
     }
     return null;
 }

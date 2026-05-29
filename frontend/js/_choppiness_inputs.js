@@ -11,9 +11,9 @@ import { t } from './i18n.js';
 export { parseBarBlob } from './_chandelier_stop_inputs.js';
 
 export function validateInputs(bars, period) {
-    if (!Array.isArray(bars) || bars.length === 0) return 'need ≥ 1 bar';
-    if (!Number.isInteger(period) || period < 2) return 'period must be integer ≥ 2';
-    if (bars.length < period + 1) return `need ≥ ${period + 1} bars (period + 1)`;
+    if (!Array.isArray(bars) || bars.length === 0) return t('view.choppiness.validate.need_bar');
+    if (!Number.isInteger(period) || period < 2) return t('view.choppiness.validate.period_min');
+    if (bars.length < period + 1) return t('view.choppiness.validate.bars_lt_period', { n: period + 1 });
     return null;
 }
 

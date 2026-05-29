@@ -7,19 +7,19 @@
 // Returns LossLimitReport with state, pct_of_limit, note.
 
 export function validateInputs(p) {
-    if (!Number.isFinite(p.today_pnl)) return 'today_pnl must be finite';
+    if (!Number.isFinite(p.today_pnl)) return t('view.daily_loss_limit.validate.today_pnl');
     if (!Number.isFinite(p.max_daily_loss_dollars) || p.max_daily_loss_dollars < 0)
-        return 'max_daily_loss_dollars must be ≥ 0';
+        return t('view.daily_loss_limit.validate.max_dollars');
     if (!Number.isFinite(p.max_daily_loss_pct) || p.max_daily_loss_pct < 0 || p.max_daily_loss_pct > 1)
-        return 'max_daily_loss_pct must be in [0, 1] (decimal — 0.02 = 2%)';
+        return t('view.daily_loss_limit.validate.max_pct');
     if (!Number.isFinite(p.account_equity) || p.account_equity <= 0)
-        return 'account_equity must be > 0';
+        return t('view.daily_loss_limit.validate.equity');
     for (const k of ['warning_threshold', 'cut_size_threshold', 'kill_threshold']) {
         if (!Number.isFinite(p[k]) || p[k] < 0 || p[k] > 5)
-            return `${k} must be in [0, 5] (typical 0.5 / 0.75 / 1.0)`;
+            return t('view.daily_loss_limit.validate.threshold_range', { field: k });
     }
     if (!(p.warning_threshold < p.cut_size_threshold && p.cut_size_threshold <= p.kill_threshold))
-        return 'thresholds must satisfy warning < cut_size ≤ kill';
+        return t('view.daily_loss_limit.validate.threshold_order');
     return null;
 }
 
