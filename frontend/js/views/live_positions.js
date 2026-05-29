@@ -45,8 +45,10 @@ async function refresh(accountId, mount, tok) {
         renderCards(r, mount);
         renderTable(r, mount);
         const st = mount.querySelector('#lp-status');
-        if (st) st.textContent =
-            `Updated ${new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false })} · ${r.position_count} positions`;
+        if (st) st.textContent = t('view.live_positions.status.updated', {
+            time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
+            n: r.position_count,
+        });
     } catch (e) {
         if (e instanceof ApiError && e.status === 401) return;
         if (!viewIsCurrent(tok)) return;

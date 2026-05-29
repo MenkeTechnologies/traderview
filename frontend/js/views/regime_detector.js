@@ -130,23 +130,23 @@ function renderSummary(res) {
     const highFrac = highVolBarFraction(res.prob_state1, 0.5);
 
     const cards = [];
-    cards.push(stateCard('State 0 (low-vol)', '#39ff14', {
-        'μ per bar': fmtPctish(res.mu0),
-        'μ annualized': fmtPctish(annualizeMean(res.mu0, bpy)),
-        'σ per bar':  fmtPctish(res.sigma0),
-        'σ annualized': fmtPctish(annualizeStdev(res.sigma0, bpy)),
-        'P(stay) p₀₀': res.p00.toFixed(4),
-        'Expected dwell': formatDwell(dwell0),
-        'Long-run frac': pct(stationary.p_state0),
+    cards.push(stateCard(t('view.regime_detector.state.state0_low'), '#39ff14', {
+        [t('view.regime_detector.row.mu_per_bar')]:    fmtPctish(res.mu0),
+        [t('view.regime_detector.row.mu_annual')]:     fmtPctish(annualizeMean(res.mu0, bpy)),
+        [t('view.regime_detector.row.sigma_per_bar')]: fmtPctish(res.sigma0),
+        [t('view.regime_detector.row.sigma_annual')]:  fmtPctish(annualizeStdev(res.sigma0, bpy)),
+        [t('view.regime_detector.row.p_stay_p00')]:    res.p00.toFixed(4),
+        [t('view.regime_detector.row.expected_dwell')]:formatDwell(dwell0),
+        [t('view.regime_detector.row.long_run_frac')]: pct(stationary.p_state0),
     }));
-    cards.push(stateCard('State 1 (high-vol)', '#ff3860', {
-        'μ per bar': fmtPctish(res.mu1),
-        'μ annualized': fmtPctish(annualizeMean(res.mu1, bpy)),
-        'σ per bar':  fmtPctish(res.sigma1),
-        'σ annualized': fmtPctish(annualizeStdev(res.sigma1, bpy)),
-        'P(stay) p₁₁': res.p11.toFixed(4),
-        'Expected dwell': formatDwell(dwell1),
-        'Long-run frac': pct(stationary.p_state1),
+    cards.push(stateCard(t('view.regime_detector.state.state1_high'), '#ff3860', {
+        [t('view.regime_detector.row.mu_per_bar')]:    fmtPctish(res.mu1),
+        [t('view.regime_detector.row.mu_annual')]:     fmtPctish(annualizeMean(res.mu1, bpy)),
+        [t('view.regime_detector.row.sigma_per_bar')]: fmtPctish(res.sigma1),
+        [t('view.regime_detector.row.sigma_annual')]:  fmtPctish(annualizeStdev(res.sigma1, bpy)),
+        [t('view.regime_detector.row.p_stay_p11')]:    res.p11.toFixed(4),
+        [t('view.regime_detector.row.expected_dwell')]:formatDwell(dwell1),
+        [t('view.regime_detector.row.long_run_frac')]: pct(stationary.p_state1),
     }));
     cards.push(`<div class="card">
         <div class="label" data-i18n="view.regime_detector.card.fit_diagnostics">Fit diagnostics</div>

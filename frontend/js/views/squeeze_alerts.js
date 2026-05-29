@@ -111,7 +111,7 @@ export async function renderSqueezeAlerts(mount, _appState) {
     document.getElementById('sq-save').addEventListener('click', () => {
         captureSettings();
         engine.saveSettings(settings);
-        flash('Saved.');
+        flash(t('view.squeeze_alerts.flash.saved'));
     });
     document.getElementById('sq-default').addEventListener('click', () => {
         settings = { ...engine.DEFAULT_SETTINGS };
