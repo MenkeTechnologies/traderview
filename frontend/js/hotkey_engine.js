@@ -2,6 +2,7 @@
 import { api } from './api.js';
 import { localToday } from './local_date.js';
 import { buildCombo } from './_pure.js';
+import { t } from './i18n.js';
 
 let bindings = [];
 
@@ -39,7 +40,7 @@ function run(action) {
         case 'go_paper':      window.location.hash = 'paper'; break;
         case 'go_watchlists': window.location.hash = 'watchlists'; break;
         case 'go_research': {
-            const s = prompt('Research symbol:');
+            const s = prompt(t('hotkey.prompt.research_symbol'));
             if (s) window.location.hash = 'research/' + encodeURIComponent(s.toUpperCase());
             break;
         }
@@ -51,28 +52,28 @@ function run(action) {
 }
 
 async function paperOrderPrompt(side, qty) {
-    const sym = prompt('Symbol to ' + side + ' ' + qty + ':');
+    const sym = prompt(t('hotkey.prompt.paper_order', { side, qty }));
     if (!sym) return;
     const accts = await api.paperAccounts();
-    if (!accts.length) { alert('Open the Paper tab first to initialize an account.'); return; }
+    if (!accts.length) { alert(t('hotkey.alert.open_paper_tab')); return; }
     try {
         const o = await api.paperSubmit(accts[0].id, {
             symbol: sym.toUpperCase(), side, qty, order_type: 'market',
             limit_price: null, stop_price: null,
         });
-        alert(`${o.status}: ${o.symbol} ${o.side} ${o.qty} @ ${o.filled_price ?? '—'}`);
-    } catch (e) { alert('Order failed: ' + e.message); }
+        alert(t('hotkey.alert.order_fill', { status: o.status, symbol: o.symbol, side: o.side, qty: o.qty, price: o.filled_price ?? '—' }));
+    } catch (e) { alert(t('hotkey.alert.order_failed', { err: e.message })); }
 }
 
 async function paperSellAllCurrent() {
     // "current symbol" = last research view's symbol from hash.
     const m = (window.location.hash || '').match(/^#research\/([^/]+)/);
-    if (!m) { alert('Navigate to a Research page first.'); return; }
+    if (!m) { alert(t('hotkey.alert.nav_research_first')); return; }
     const sym = decodeURIComponent(m[1]);
     const accts = await api.paperAccounts();
     if (!accts.length) return;
     const pos = (await api.paperPositions(accts[0].id)).find(p => p.symbol === sym);
-    if (!pos) { alert('No paper position in ' + sym); return; }
+    if (!pos) { alert(t('hotkey.alert.no_paper_position', { sym })); return; }
     const qty = Math.abs(Number(pos.qty));
     const side = Number(pos.qty) > 0 ? 'sell' : 'cover';
     try {
@@ -84,7 +85,7 @@ async function paperSellAllCurrent() {
 }
 
 async function journalQuick() {
-    const body = prompt('Journal note for today:');
+    const body = prompt(t('hotkey.prompt.journal_quick'));
     if (!body) return;
     try {
         await api.createJournal({ day: localToday(), body_md: body });

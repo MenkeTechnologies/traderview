@@ -47,7 +47,7 @@ export async function renderScreener(mount) {
         for (const [k, v] of fd.entries()) if (v !== '') opts[k] = v;
         const el = mount.querySelector('#sc-result');
         if (!el) return;
-        el.innerHTML = '<div class="boot">scanning…</div>';
+        el.innerHTML = '<div class="boot" data-i18n="common.status.scanning">scanning…</div>';
         try {
             const r = await api.screenerRun(opts);
             if (!viewIsCurrent(tok)) return;

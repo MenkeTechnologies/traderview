@@ -56,7 +56,7 @@ export async function renderScanners(mount) {
             const wid = (wlEl && wlEl.value) || null;
             const el = mount.querySelector('#scan-result');
             if (!el) return;
-            el.innerHTML = '<div class="boot">scanning…</div>';
+            el.innerHTML = '<div class="boot" data-i18n="common.status.scanning">scanning…</div>';
             mount.querySelectorAll('.scanner-tile').forEach(t => t.classList.toggle('active', t === b));
             try {
                 const r = await api.scanRun(b.dataset.preset, wid, 100);

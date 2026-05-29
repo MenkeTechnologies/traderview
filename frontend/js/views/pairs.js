@@ -60,7 +60,7 @@ export async function renderPairs(mount) {
         }
         const days = Number(fd.get('days') || 90);
         const cm = mount.querySelector('#cmatrix');
-        if (cm) cm.innerHTML = '<div class="boot">computing matrix…</div>';
+        if (cm) cm.innerHTML = '<div class="boot" data-i18n="view.pairs.status.computing_matrix">computing matrix…</div>';
         try {
             const r = await api.correlationMatrix(syms, days);
             if (!viewIsCurrent(tok)) return;
@@ -78,7 +78,7 @@ export async function renderPairs(mount) {
         const b = fd.get('b').toUpperCase();
         const days = Number(fd.get('days') || 180);
         const el = mount.querySelector('#pair-out');
-        if (el) el.innerHTML = '<div class="boot">analyzing…</div>';
+        if (el) el.innerHTML = '<div class="boot" data-i18n="common.status.analyzing">analyzing…</div>';
         try {
             const r = await api.pairAnalysis(a, b, days);
             if (!viewIsCurrent(tok)) return;

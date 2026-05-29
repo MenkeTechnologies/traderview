@@ -42,7 +42,7 @@ export async function renderTaxLots(mount, state) {
         const fd = new FormData(e.target);
         const out = mount.querySelector('#tx-out');
         if (!out) return;
-        out.innerHTML = '<div class="boot">running…</div>';
+        out.innerHTML = '<div class="boot" data-i18n="common.status.running">running…</div>';
         try {
             const r = await api.taxLots(state.accountId, fd.get('year'), fd.get('method'));
             if (!viewIsCurrent(tok)) return;

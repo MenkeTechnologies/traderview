@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderCorrMatrix(mount) {
     const tok = currentViewToken();
@@ -55,7 +56,7 @@ export async function renderCorrMatrix(mount) {
         const status = mount.querySelector('#cm-status');
         const out = mount.querySelector('#cm-out');
         if (!out) return;
-        out.innerHTML = '<div class="boot">computing… (one bar fetch per symbol)</div>';
+        out.innerHTML = '<div class="boot" data-i18n="view.corr_matrix.status.computing">computing… (one bar fetch per symbol)</div>';
         if (status) status.textContent = '';
         try {
             const days = Number(fd.get('days')) || 90;
@@ -66,7 +67,7 @@ export async function renderCorrMatrix(mount) {
             const out2 = mount.querySelector('#cm-out');
             if (out2) render(r, out2);
             const status2 = mount.querySelector('#cm-status');
-            if (status2) status2.textContent = `${r.symbols.length} symbols · ${r.pairs.length} pairs`;
+            if (status2) status2.textContent = t('view.corr_matrix.status.result', { symbols: r.symbols.length, pairs: r.pairs.length });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const out2 = mount.querySelector('#cm-out');

@@ -73,7 +73,7 @@ export async function renderBacktest(mount) {
         };
         const el = mount.querySelector('#bt-result');
         if (!el) return;
-        el.innerHTML = '<div class="boot">running…</div>';
+        el.innerHTML = '<div class="boot" data-i18n="common.status.running">running…</div>';
         try {
             const r = await api.backtestRun(body);
             if (!viewIsCurrent(tok)) return;

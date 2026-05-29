@@ -108,26 +108,26 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
                 <h2>${esc(t('view.trade_reviews.h2.review', { symbol, rMult }))}</h2>
                 <form id="tr-form" class="inline-form" style="flex-direction:column;align-items:stretch;gap:10px;">
                     <label style="display:flex;justify-content:space-between;">
-                        <span>1. Was the entry per plan?</span>
+                        <span data-i18n="view.trade_reviews.q.entry_per_plan">1. Was the entry per plan?</span>
                         <span>
-                            <label><input type="radio" name="entry_per_plan" value="yes" ${existing?.entry_per_plan === true ? 'checked' : ''}> yes</label>
-                            <label><input type="radio" name="entry_per_plan" value="no"  ${existing?.entry_per_plan === false ? 'checked' : ''}> no</label>
+                            <label><input type="radio" name="entry_per_plan" value="yes" ${existing?.entry_per_plan === true ? 'checked' : ''}> <span data-i18n="common.yes_lc">yes</span></label>
+                            <label><input type="radio" name="entry_per_plan" value="no"  ${existing?.entry_per_plan === false ? 'checked' : ''}> <span data-i18n="common.no_lc">no</span></label>
                         </span>
                     </label>
                     <label style="display:flex;justify-content:space-between;">
-                        <span>2. Was the exit per plan?</span>
+                        <span data-i18n="view.trade_reviews.q.exit_per_plan">2. Was the exit per plan?</span>
                         <span>
-                            <label><input type="radio" name="exit_per_plan" value="yes" ${existing?.exit_per_plan === true ? 'checked' : ''}> yes</label>
-                            <label><input type="radio" name="exit_per_plan" value="no"  ${existing?.exit_per_plan === false ? 'checked' : ''}> no</label>
+                            <label><input type="radio" name="exit_per_plan" value="yes" ${existing?.exit_per_plan === true ? 'checked' : ''}> <span data-i18n="common.yes_lc">yes</span></label>
+                            <label><input type="radio" name="exit_per_plan" value="no"  ${existing?.exit_per_plan === false ? 'checked' : ''}> <span data-i18n="common.no_lc">no</span></label>
                         </span>
                     </label>
                     <label style="display:flex;flex-direction:column;">
-                        <span>3. What would you change next time?</span>
+                        <span data-i18n="view.trade_reviews.q.would_change">3. What would you change next time?</span>
                         <textarea name="would_change" rows="3"
                             style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;font-family:inherit;">${esc(existing?.would_change || '')}</textarea>
                     </label>
                     <label style="display:flex;justify-content:space-between;align-items:center;">
-                        <span>4. Mood at exit</span>
+                        <span data-i18n="view.trade_reviews.q.mood_at_exit">4. Mood at exit</span>
                         <select name="mood_at_exit">
                             <option value="">—</option>
                             ${MOOD_OPTS.map(([v, l]) =>
@@ -136,7 +136,7 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
                         </select>
                     </label>
                     <label style="display:flex;flex-direction:column;">
-                        <span>5. Setup classifier (one tag)</span>
+                        <span data-i18n="view.trade_reviews.q.setup_classifier">5. Setup classifier (one tag)</span>
                         <input name="setup_tag" placeholder="e.g. breakout / fade / news / squeeze" data-i18n-placeholder="view.trade_reviews.placeholder.setup_tag"
                             value="${esc(existing?.setup_tag || '')}"
                             style="background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:6px;">

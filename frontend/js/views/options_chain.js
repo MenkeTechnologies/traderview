@@ -50,7 +50,7 @@ export async function renderOptions(mount, _state, rest) {
         const s = form.sym.value.trim().toUpperCase() || 'SPY';
         r = Number(form.r.value || 0.045);
         const ocm = mount.querySelector('#oc-mount');
-        if (ocm) ocm.innerHTML = '<div class="boot">fetching chain…</div>';
+        if (ocm) ocm.innerHTML = '<div class="boot" data-i18n="view.options_chain.status.fetching_chain">fetching chain…</div>';
         try {
             const chain = await api.options(s, activeExp);
             if (!viewIsCurrent(tok)) return;

@@ -41,7 +41,7 @@ export async function renderEarningsIv(mount, _state, symbol) {
         const fd = new FormData(e.target);
         const el = mount.querySelector('#iv-result');
         if (!el) return;
-        el.innerHTML = '<div class="boot">scanning… options chains can take ~1s per symbol</div>';
+        el.innerHTML = '<div class="boot" data-i18n="view.earnings_iv.status.scanning_chains">scanning… options chains can take ~1s per symbol</div>';
         try {
             const hits = await api.ivScan(
                 fd.get('watchlist_id') || null,

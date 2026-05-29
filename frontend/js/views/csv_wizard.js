@@ -59,7 +59,7 @@ export async function renderCsvWizard(mount, state) {
             parsedCsv = await res.json();
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#cw-status');
-            if (status2) status2.textContent = `${parsedCsv.total_rows} rows · ${parsedCsv.headers.length} columns · sha256 ${parsedCsv.sha256.slice(0, 12)}…`;
+            if (status2) status2.textContent = t('view.csv_wizard.status.parsed', { rows: parsedCsv.total_rows, cols: parsedCsv.headers.length, sha: parsedCsv.sha256.slice(0, 12) });
             mapping = {};
             renderMap(mount);
             renderPreview(mount);

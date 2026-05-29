@@ -88,7 +88,7 @@ function renderPicker(trades, mount, tok) {
 async function runCompare(mount, tok) {
     const out = mount.querySelector('#tc-result');
     if (!out) return;
-    out.innerHTML = '<div class="boot">comparing…</div>';
+    out.innerHTML = '<div class="boot" data-i18n="common.status.comparing">comparing…</div>';
     try {
         const r = await api.tradeCompare(selectedIds);
         if (!viewIsCurrent(tok)) return;

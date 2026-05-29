@@ -43,7 +43,7 @@ export async function renderWebhooks(mount) {
                         <td class="muted small">${w.last_fired_at ? fmtDateTime(w.last_fired_at) : '—'}</td>
                         <td>
                             <button data-i18n="view.webhooks.btn.test" class="link" data-test="${w.id}">test</button>
-                            <button class="link" data-tog="${w.id}" data-en="${w.enabled}">${w.enabled ? 'disable' : 'enable'}</button>
+                            <button class="link" data-tog="${w.id}" data-en="${w.enabled}">${w.enabled ? t('common.btn.disable_lc') : t('common.btn.enable_lc')}</button>
                             <button data-i18n="view.webhooks.btn.delete" class="link" data-del="${w.id}">delete</button>
                         </td>
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.webhooks.hint.no_webhooks_yet" class="muted">No webhooks yet.</p>'}

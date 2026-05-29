@@ -120,7 +120,7 @@ async function run(accountId, asCsv, mount, tok) {
         if (!viewIsCurrent(tok)) return;
         render(r, mount);
         const s2 = mount.querySelector('#rb-status');
-        if (s2) s2.textContent = `${r.plan.trade_count} trades · $${fmt(r.plan.total_trade_value)} traded · $${fmt(r.plan.total_value)} portfolio`;
+        if (s2) s2.textContent = t('view.rebalance.status.result', { trades: r.plan.trade_count, traded: fmt(r.plan.total_trade_value), portfolio: fmt(r.plan.total_value) });
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const s2 = mount.querySelector('#rb-status');

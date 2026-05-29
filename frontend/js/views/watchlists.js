@@ -91,7 +91,7 @@ export async function renderWatchlists(mount) {
     async function refresh(wid) {
         const el = mount.querySelector('#wl-table');
         if (!el) return;
-        el.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading quotes…</div></div>';
+        el.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="view.watchlists.status.loading_quotes">loading quotes…</div></div>';
         const data = await api.watchlistQuotes(wid);
         if (!viewIsCurrent(tok)) return;
         const elNow = mount.querySelector('#wl-table');

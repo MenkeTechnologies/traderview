@@ -47,7 +47,7 @@ export async function renderEarningsCal(mount) {
             const s = await api.earningsPollNow();
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#e-status');
-            if (status2) status2.textContent = `${s.symbols_polled} symbols · ${s.events_upserted} events · ${s.reactions_computed} reactions`;
+            if (status2) status2.textContent = t('view.earnings_cal.status.result', { symbols: s.symbols_polled, events: s.events_upserted, reactions: s.reactions_computed });
             await refresh(mount, tok);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;

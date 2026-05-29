@@ -106,23 +106,23 @@ async function loadList(mount, tok) {
                     <th data-i18n="view.api_tokens.th.status">Status</th><th></th>
                 </tr></thead>
                 <tbody>
-                    ${rows.map(t => `<tr>
-                        <td>${esc(t.name)}</td>
-                        <td><code>${esc(t.prefix)}</code></td>
-                        <td class="small">${t.scopes.join(', ')}</td>
+                    ${rows.map(tk => `<tr>
+                        <td>${esc(tk.name)}</td>
+                        <td><code>${esc(tk.prefix)}</code></td>
+                        <td class="small">${tk.scopes.join(', ')}</td>
                         <td class="small">
-                            ${t.revoked_at ? t.rate_limit_per_min :
-                              `<input type="number" min="1" max="10000" value="${t.rate_limit_per_min}"
-                                      class="rate-input" data-id="${t.id}" style="width:70px;">`}
+                            ${tk.revoked_at ? tk.rate_limit_per_min :
+                              `<input type="number" min="1" max="10000" value="${tk.rate_limit_per_min}"
+                                      class="rate-input" data-id="${tk.id}" style="width:70px;">`}
                         </td>
-                        <td class="small">${new Date(t.created_at).toLocaleDateString()}</td>
-                        <td class="small">${t.last_used_at ? new Date(t.last_used_at).toLocaleString() : '—'}</td>
-                        <td>${t.use_count}</td>
-                        <td class="small">${t.expires_at ? new Date(t.expires_at).toLocaleDateString() : 'never'}</td>
-                        <td class="small ${t.revoked_at ? 'neg' : 'pos'}">${t.revoked_at ? 'revoked' : 'active'}</td>
-                        <td>${t.revoked_at
+                        <td class="small">${new Date(tk.created_at).toLocaleDateString()}</td>
+                        <td class="small">${tk.last_used_at ? new Date(tk.last_used_at).toLocaleString() : '—'}</td>
+                        <td>${tk.use_count}</td>
+                        <td class="small">${tk.expires_at ? new Date(tk.expires_at).toLocaleDateString() : t('common.status.never')}</td>
+                        <td class="small ${tk.revoked_at ? 'neg' : 'pos'}">${tk.revoked_at ? t('common.status.revoked') : t('common.status.active')}</td>
+                        <td>${tk.revoked_at
                             ? ''
-                            : `<button data-i18n="view.api_tokens.btn.revoke" class="btn revoke-btn" data-id="${t.id}">Revoke</button>`}</td>
+                            : `<button data-i18n="view.api_tokens.btn.revoke" class="btn revoke-btn" data-id="${tk.id}">Revoke</button>`}</td>
                     </tr>`).join('')}
                 </tbody>
             </table>

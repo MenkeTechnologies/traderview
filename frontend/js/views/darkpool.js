@@ -57,7 +57,7 @@ export async function renderDarkpool(mount, _state, sym) {
         const days = Number(fd.get('days') || 30);
         const el = mount.querySelector('#dp-ranked');
         if (!el) return;
-        el.innerHTML = '<div class="boot">scanning…</div>';
+        el.innerHTML = '<div class="boot" data-i18n="common.status.scanning">scanning…</div>';
         try {
             const rows = await api.darkpoolRanked(wid, days);
             if (!viewIsCurrent(tok)) return;

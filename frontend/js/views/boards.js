@@ -518,5 +518,5 @@ function relTime(iso) {
 }
 
 function mountNote(body, w) {
-    body.innerHTML = `<div style="white-space:pre-wrap;font-family:'Share Tech Mono',monospace;font-size:12px;">${esc(w.params.text || '(empty — click ⚙ to edit)')}</div>`;
+    body.innerHTML = `<div style="white-space:pre-wrap;font-family:'Share Tech Mono',monospace;font-size:12px;">${esc(w.params.text || t('view.boards.note.empty'))}</div>`;
 }

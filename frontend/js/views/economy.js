@@ -29,7 +29,7 @@ export async function renderEconomy(mount) {
         const days = Number(fd.get('days') || 60);
         const imp = fd.get('importance');
         const ecEl = mount.querySelector('#ec');
-        if (ecEl) ecEl.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div>';
+        if (ecEl) ecEl.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.status.loading">loading…</div></div>';
         try {
             const evs = await api.economyCalendar(days, imp);
             if (!viewIsCurrent(tok)) return;

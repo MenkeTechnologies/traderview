@@ -67,7 +67,7 @@ export async function renderSentiment(mount, _state, symbol) {
             const r = await api.sentimentPollNow();
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#poll-status');
-            if (status2) status2.textContent = `${r.wsb_inserted} WSB / ${r.stocktwits_inserted} StockTwits new`;
+            if (status2) status2.textContent = t('view.sentiment.status.result', { wsb: r.wsb_inserted, stocktwits: r.stocktwits_inserted });
             await refresh(mount, tok);
         } catch (e) {
             if (!viewIsCurrent(tok)) return;

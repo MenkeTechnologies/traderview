@@ -55,7 +55,7 @@ export async function renderNews(mount) {
             const s = await api.newsPollNow();
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#n-status');
-            if (s2) s2.textContent = `${s.symbols_polled} symbols / ${s.inserted} new`;
+            if (s2) s2.textContent = t('view.news.status.result', { symbols: s.symbols_polled, inserted: s.inserted });
             await refresh(mount, tok);
         } catch (e) {
             if (!viewIsCurrent(tok)) return;

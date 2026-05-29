@@ -83,7 +83,7 @@ export async function renderCompare(mount) {
         const syms = e.target.symbols.value.trim().toUpperCase();
         const out = mount.querySelector('#cmp-out');
         if (!out) return;
-        out.innerHTML = '<div class="boot">fetching…</div>';
+        out.innerHTML = '<div class="boot" data-i18n="common.status.fetching">fetching…</div>';
         try {
             const r = await api.compare(syms);
             if (!viewIsCurrent(tok)) return;

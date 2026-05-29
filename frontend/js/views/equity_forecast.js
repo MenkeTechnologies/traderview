@@ -59,7 +59,7 @@ export async function renderEquityForecast(mount, state) {
             if (!viewIsCurrent(tok)) return;
             render(r, mount);
             const status2 = mount.querySelector('#ef-status');
-            if (status2) status2.textContent = `${r.paths} paths × ${r.steps} trades · sampled ${r.samples_used} historical R`;
+            if (status2) status2.textContent = t('view.equity_forecast.status.result', { paths: r.paths, steps: r.steps, samples: r.samples_used });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#ef-status');

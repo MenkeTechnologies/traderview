@@ -89,7 +89,7 @@ function renderSidebar() {
             <button data-i18n="view.dashboards.btn.rename_active" id="db-rename"     class="secondary" type="button">Rename active</button>
             <button data-i18n="view.dashboards.btn.duplicate_active" id="db-duplicate"  class="secondary" type="button">Duplicate active</button>
             <button data-i18n="view.dashboards.btn.delete_active" id="db-delete"     class="secondary" type="button">Delete active</button>
-            <button id="db-edit"       class="${editMode ? 'primary' : 'secondary'}" type="button">${editMode ? 'Done editing' : 'Edit layout'}</button>
+            <button id="db-edit"       class="${editMode ? 'primary' : 'secondary'}" type="button">${editMode ? t('view.dashboards.btn.done_editing') : t('view.dashboards.btn.edit_layout')}</button>
         </div>
         <hr>
         <div class="db-sidebar-actions">

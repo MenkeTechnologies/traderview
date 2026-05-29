@@ -27,7 +27,7 @@ export async function renderExpensesView(mount) {
     const tok = currentViewToken();
     state.mount = mount;
     state.tok = tok;
-    mount.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div>';
+    mount.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.status.loading">loading…</div></div>';
     try {
         const [accts, cats] = await Promise.all([
             api.expenseAccounts(),
@@ -103,7 +103,7 @@ function drawShell(mount) {
             </select>
         </label>
         <label><span data-i18n="view.expenses.label.search">Search</span>
-            <input type="text" id="exp-search" placeholder="merchant / description" data-i18n-placeholder="view.expenses.placeholder.search"
+            <input type="text" id="exp-search" placeholder="merchant / description"
                    data-i18n-placeholder="view.expenses.placeholder.search"></label>
         <button data-i18n="view.expenses.btn.apply" id="exp-apply">Apply</button>
     </div>
@@ -346,7 +346,7 @@ async function openRulesModal() {
     const modal = state.mount.querySelector('#exp-rules-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
-    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>';
+    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.status.loading">loading…</div></div></div>';
     let rules = [];
     try { rules = await api.expenseRules(); }
     catch (e) {
@@ -453,15 +453,15 @@ async function receiptUploadAll(fileList) {
         if (s) s.textContent = txt;
     };
     for (const file of fileList) {
-        setStatus(`uploading ${file.name}…`);
+        setStatus(t('view.expenses.receipt.uploading', { name: file.name }));
         try {
             const r = await api.uploadReceipt(file);
             if (!viewIsCurrent(state.tok)) return;
-            setStatus(`uploaded ${file.name} — OCR running…`);
+            setStatus(t('view.expenses.receipt.uploaded_ocr', { name: file.name }));
             pollReceiptUntilReady(r.id);
         } catch (e) {
             if (!viewIsCurrent(state.tok)) return;
-            setStatus(`receipt upload failed: ${e.message}`);
+            setStatus(t('view.expenses.receipt.upload_err', { err: e.message }));
         }
     }
 }
@@ -479,25 +479,25 @@ async function pollReceiptUntilReady(receiptId) {
         try { meta = await api.receiptMeta(receiptId); }
         catch (e) {
             if (!viewIsCurrent(state.tok)) return;
-            setStatus(`receipt poll failed: ${e.message}`);
+            setStatus(t('view.expenses.receipt.poll_err', { err: e.message }));
             return;
         }
         if (!viewIsCurrent(state.tok)) return;
         if (meta.ocr_status === 'pending') continue;
         if (meta.ocr_status === 'failed') {
-            setStatus(`OCR failed: ${meta.error_message || 'unknown'}`);
+            setStatus(t('view.expenses.receipt.ocr_failed', { err: meta.error_message || t('common.status.unknown') }));
             return;
         }
         if (meta.ocr_status === 'needs_image') {
-            setStatus(`OCR needs image: ${meta.error_message}`);
+            setStatus(t('view.expenses.receipt.ocr_needs_image', { err: meta.error_message }));
             return;
         }
         // done — open match suggestion modal
-        setStatus(`OCR done: ${meta.ocr_merchant || '?'} · ${meta.ocr_total ?? '?'} · ${meta.ocr_date ?? '?'}`);
+        setStatus(t('view.expenses.receipt.ocr_done', { merchant: meta.ocr_merchant || '?', total: meta.ocr_total ?? '?', date: meta.ocr_date ?? '?' }));
         openReceiptMatchModal(meta);
         return;
     }
-    setStatus(`OCR timed out for receipt ${receiptId.slice(0, 8)}`);
+    setStatus(t('view.expenses.receipt.ocr_timeout', { id: receiptId.slice(0, 8) }));
 }
 
 async function openReceiptMatchModal(meta) {
@@ -655,7 +655,7 @@ async function openReceiptsModal() {
     const modal = state.mount.querySelector('#exp-rules-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
-    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>';
+    modal.innerHTML = '<div class="modal-inner"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.status.loading">loading…</div></div></div>';
     let rs = [];
     try { rs = await api.receipts(); }
     catch (e) {

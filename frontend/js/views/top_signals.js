@@ -44,8 +44,8 @@ export async function renderTopSignals(mount) {
         const limit = Number(fd.get('limit') || 25);
         const buysEl0 = mount.querySelector('#buys');
         const sellsEl0 = mount.querySelector('#sells');
-        if (buysEl0) buysEl0.innerHTML = '<div class="boot">scoring…</div>';
-        if (sellsEl0) sellsEl0.innerHTML = '<div class="boot">scoring…</div>';
+        if (buysEl0) buysEl0.innerHTML = '<div class="boot" data-i18n="common.status.scoring">scoring…</div>';
+        if (sellsEl0) sellsEl0.innerHTML = '<div class="boot" data-i18n="common.status.scoring">scoring…</div>';
         try {
             const [buys, sells] = await Promise.all([
                 api.topSignals('buy', wid, limit),

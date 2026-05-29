@@ -103,7 +103,7 @@ export async function renderStrategyAlerts(mount) {
             const r = await api.strategyAlertsEvaluateNow();
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#sa-status');
-            if (status2) status2.textContent = `${r.evaluated} evaluated · ${r.fired} fired · ${r.errors} errors`;
+            if (status2) status2.textContent = t('view.strategy_alerts.status.result', { evaluated: r.evaluated, fired: r.fired, errors: r.errors });
             await refresh(mount, tok);
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
@@ -158,7 +158,7 @@ function renderRules(rules, mount, tok) {
             <td class="small">${r.last_fired_at ? new Date(r.last_fired_at).toLocaleString() : '—'}</td>
             <td class="small neg">${esc(r.last_eval_error || '')}</td>
             <td>
-                <button class="btn sa-toggle" data-id="${r.id}">${r.enabled ? 'Disable' : 'Enable'}</button>
+                <button class="btn sa-toggle" data-id="${r.id}">${r.enabled ? t('common.btn.disable') : t('common.btn.enable')}</button>
                 <button data-i18n="view.strategy_alerts.btn.delete" class="btn sa-del" data-id="${r.id}">Delete</button>
             </td>
         </tr>

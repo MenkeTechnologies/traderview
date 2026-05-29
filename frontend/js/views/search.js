@@ -26,7 +26,7 @@ export async function renderSearch(mount) {
         const scope = fd.get('scope');
         const el = mount.querySelector('#search-results');
         if (!el) return;
-        el.innerHTML = '<div class="boot">searching…</div>';
+        el.innerHTML = '<div class="boot" data-i18n="common.status.searching">searching…</div>';
         try {
             const r = await api.search(q, scope);
             if (!viewIsCurrent(tok)) return;

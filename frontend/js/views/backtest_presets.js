@@ -109,7 +109,7 @@ function table(rows, mine) {
             <td><a href="#backtest-presets/${esc(r.slug)}">${esc(r.name)}</a>
                 ${r.description ? `<div class="muted small">${esc(r.description)}</div>` : ''}
             </td>
-            <td class="small ${r.is_public ? 'pos' : 'muted'}">${r.is_public ? 'public' : 'private'}</td>
+            <td class="small ${r.is_public ? 'pos' : 'muted'}">${r.is_public ? t('common.status.public') : t('common.status.private')}</td>
             <td><code class="small">${esc(r.slug)}</code></td>
             <td>${r.fork_count}</td>
             <td>${r.run_count}</td>
@@ -156,7 +156,7 @@ async function renderPresetDetail(mount, slug) {
             <h1 class="view-title">// PRESET — ${esc(r.name)}</h1>
             <div class="cards">
                 <div class="card"><div class="label" data-i18n="view.backtest_presets.card.visibility">Visibility</div>
-                    <div class="value ${r.is_public ? 'pos' : 'muted'}">${r.is_public ? 'public' : 'private'}</div></div>
+                    <div class="value ${r.is_public ? 'pos' : 'muted'}">${r.is_public ? t('common.status.public') : t('common.status.private')}</div></div>
                 <div class="card"><div class="label" data-i18n="view.backtest_presets.card.forks">Forks</div>
                     <div class="value">${r.fork_count}</div></div>
                 <div class="card"><div class="label" data-i18n="view.backtest_presets.card.runs">Runs</div>

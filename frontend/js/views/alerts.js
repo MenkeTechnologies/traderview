@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { playSound, speak } from '../alert_engine.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const TRIGGERS = [
     'price_above', 'price_below',
@@ -55,7 +56,7 @@ export async function renderAlerts(mount) {
                         <td>${r.trigger_count}</td>
                         <td>
                             <button class="link" data-tog="${r.id}" data-en="${r.enabled}">
-                                ${r.enabled ? 'disable' : 'enable'}
+                                ${r.enabled ? t('common.btn.disable_lc') : t('common.btn.enable_lc')}
                             </button>
                             <button data-i18n="view.alerts.btn.delete" class="link" data-del="${r.id}">delete</button>
                         </td>
