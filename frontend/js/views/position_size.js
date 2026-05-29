@@ -47,7 +47,7 @@ export async function renderPositionSize(mount, state) {
                 <label><span data-i18n="view.position_size.label.avg_loss">Avg loss</span> <input name="avg_loss" type="number" step="any" min="0" value="1.0" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.fractional">Fractional</span> <input name="frac_k" type="number" step="0.05" min="0" max="1" value="0.5" style="width:80px;"></label>
                 <button data-i18n="view.position_size.btn.pull_from_history" type="button" class="btn" id="ps-fill-history" ${acct ? '' : 'disabled'}
-                        title="${acct ? 'Pull win-rate + avg win/loss from this account history' : 'no account selected'}">
+                        title="${esc(t(acct ? 'view.position_size.tip.pull_history' : 'view.position_size.tip.no_account'))}">
                     Pull from history
                 </button>
                 <span class="muted small" id="ps-fill-status"></span>
