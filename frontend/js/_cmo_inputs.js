@@ -3,6 +3,8 @@
 // Backend body: { closes: number[], period: usize }
 // Returns: (number|null)[]  — 100 × (SoU − SoD) / (SoU + SoD) ∈ [−100, +100].
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 14;
 export const MIN_PERIOD = 2;
 export const MAX_PERIOD = 500;
@@ -13,13 +15,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
-    if (!Number.isInteger(input.period))                    return 'period must be an integer';
+    if (!Array.isArray(input.closes))                       return t('view.cmo.validate.closes_array');
+    if (!Number.isInteger(input.period))                    return t('view.cmo.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                             return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.closes.length < input.period + 1)             return `need at least period + 1 = ${input.period + 1} closes`;
+                                                             return t('view.cmo.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.closes.length < input.period + 1)             return t('view.cmo.validate.closes_min', { min: input.period + 1 });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.cmo.validate.close_not_finite', { i });
     }
     return null;
 }

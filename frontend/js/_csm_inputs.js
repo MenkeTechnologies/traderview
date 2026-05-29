@@ -3,6 +3,8 @@
 // Backend body: { closes: number[], momentum_period: usize, smooth_period: usize }
 // Returns: (number|null)[]  — SuperSmoother-filtered momentum series.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_MOMENTUM = 10;
 export const DEFAULT_SMOOTH = 8;
 export const MIN_MOMENTUM = 1;
@@ -17,16 +19,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.closes))                       return 'closes must be an array';
+    if (!Array.isArray(input.closes))                       return t('view.csm.validate.closes_array');
     if (!Number.isInteger(input.momentum_period)
         || input.momentum_period < MIN_MOMENTUM || input.momentum_period > MAX_MOMENTUM)
-                                                             return `momentum_period must be in [${MIN_MOMENTUM}, ${MAX_MOMENTUM}]`;
+                                                             return t('view.csm.validate.momentum_range', { min: MIN_MOMENTUM, max: MAX_MOMENTUM });
     if (!Number.isInteger(input.smooth_period)
         || input.smooth_period < MIN_SMOOTH || input.smooth_period > MAX_SMOOTH)
-                                                             return `smooth_period must be in [${MIN_SMOOTH}, ${MAX_SMOOTH}]`;
-    if (input.closes.length < input.momentum_period + 3)    return `need at least momentum_period + 3 = ${input.momentum_period + 3} closes`;
+                                                             return t('view.csm.validate.smooth_range', { min: MIN_SMOOTH, max: MAX_SMOOTH });
+    if (input.closes.length < input.momentum_period + 3)    return t('view.csm.validate.closes_min', { min: input.momentum_period + 3 });
     for (let i = 0; i < input.closes.length; i++) {
-        if (!Number.isFinite(input.closes[i]))              return `closes[${i}] not finite`;
+        if (!Number.isFinite(input.closes[i]))              return t('view.csm.validate.close_not_finite', { i });
     }
     return null;
 }

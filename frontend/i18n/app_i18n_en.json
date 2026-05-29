@@ -3260,6 +3260,11 @@
   "view.cti.err.server_rejected":     "Server rejected input.",
 
   "view.cmo.h1.title":                "// CHANDE MOMENTUM OSCILLATOR",
+  "view.cmo.validate.closes_array":   "closes must be an array",
+  "view.cmo.validate.period_int":     "period must be an integer",
+  "view.cmo.validate.period_range":   "period must be in [{min}, {max}]",
+  "view.cmo.validate.closes_min":     "need at least period + 1 = {min} closes",
+  "view.cmo.validate.close_not_finite": "closes[{i}] not finite",
   "view.cmo.h2.closes":               "Closes",
   "view.cmo.h2.closes_hint":          "(positive prices; ≥ period + 1)",
   "view.cmo.h2.chart":                "CMO series",
@@ -3523,6 +3528,11 @@
   "view.chosc.err.server_rejected":   "Server rejected input.",
 
   "view.csm.h1.title":                "// CENTERED SMOOTHED MOMENTUM",
+  "view.csm.validate.closes_array":   "closes must be an array",
+  "view.csm.validate.momentum_range": "momentum_period must be in [{min}, {max}]",
+  "view.csm.validate.smooth_range":   "smooth_period must be in [{min}, {max}]",
+  "view.csm.validate.closes_min":     "need at least momentum_period + 3 = {min} closes",
+  "view.csm.validate.close_not_finite": "closes[{i}] not finite",
   "view.csm.h2.closes":               "Closes",
   "view.csm.h2.closes_hint":          "(positive prices; ≥ momentum_period + 3)",
   "view.csm.h2.chart":                "CSM series",
