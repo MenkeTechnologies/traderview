@@ -6,6 +6,7 @@
 // overlay.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse a pasted series into a numeric array. */
 export function parseSeries(text) {
@@ -71,19 +72,19 @@ export function defaultOptions() {
  *  friendly errors before the round trip. */
 export function validateOptions(opts) {
     if (!Number.isFinite(opts.lowess_frac) || opts.lowess_frac <= 0 || opts.lowess_frac > 1) {
-        return 'LOWESS frac must be in (0, 1]';
+        return t('view.series_smoother.validate.lowess_frac');
     }
     if (!Number.isInteger(opts.lowess_robust) || opts.lowess_robust < 0) {
-        return 'LOWESS robustness iterations must be a non-negative integer';
+        return t('view.series_smoother.validate.lowess_robust');
     }
     if (!Number.isFinite(opts.kalman_q) || opts.kalman_q < 0) {
-        return 'Kalman process noise (q) must be ≥ 0';
+        return t('view.series_smoother.validate.kalman_q');
     }
     if (!Number.isFinite(opts.kalman_r) || opts.kalman_r <= 0) {
-        return 'Kalman observation noise (r) must be > 0';
+        return t('view.series_smoother.validate.kalman_r');
     }
     if (!Number.isInteger(opts.poly_degree) || opts.poly_degree < 1) {
-        return 'polynomial degree must be a positive integer';
+        return t('view.series_smoother.validate.poly_degree');
     }
     return null;
 }

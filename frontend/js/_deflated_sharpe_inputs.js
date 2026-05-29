@@ -7,16 +7,16 @@
 import { t } from './i18n.js';
 
 export function validateInputs(p) {
-    if (!Number.isFinite(p.observed_sharpe)) return 'observed_sharpe must be finite';
+    if (!Number.isFinite(p.observed_sharpe)) return t('view.deflated_sharpe.validate.observed_sharpe');
     if (!Number.isInteger(p.n_observations) || p.n_observations < 4)
-        return 'n_observations must be integer ≥ 4 (Mertens SE needs n-1 > 0)';
-    if (!Number.isFinite(p.skewness)) return 'skewness must be finite';
-    if (!Number.isFinite(p.kurtosis)) return 'kurtosis (excess + 3 convention) must be finite';
-    if (!Number.isInteger(p.n_trials) || p.n_trials < 1) return 'n_trials must be integer ≥ 1';
+        return t('view.deflated_sharpe.validate.n_observations');
+    if (!Number.isFinite(p.skewness)) return t('view.deflated_sharpe.validate.skewness');
+    if (!Number.isFinite(p.kurtosis)) return t('view.deflated_sharpe.validate.kurtosis');
+    if (!Number.isInteger(p.n_trials) || p.n_trials < 1) return t('view.deflated_sharpe.validate.n_trials');
     // Mertens denominator validity check — same gate the backend uses.
     const sr = p.observed_sharpe;
     const denom = 1.0 - p.skewness * sr + ((p.kurtosis - 1.0) / 4.0) * sr * sr;
-    if (!Number.isFinite(denom) || denom <= 0) return 'Mertens denominator non-positive (try fewer-fat-tailed inputs)';
+    if (!Number.isFinite(denom) || denom <= 0) return t('view.deflated_sharpe.validate.mertens_denom');
     return null;
 }
 

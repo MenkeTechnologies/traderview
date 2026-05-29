@@ -121,10 +121,10 @@ export function validateInputs(methodId, series, opts) {
     if (series.some(x => !Number.isFinite(x))) return 'series contains non-finite values';
     // SSA needs n >= 2·window. EMD needs >= 8. Wavelet needs >= 2^levels.
     if (methodId === 'ssa' && series.length < 2 * opts.window) {
-        return `SSA needs series length ≥ 2 · window (got ${series.length} vs window=${opts.window})`;
+        return t('view.signal_decomposition.validate.ssa', { len: series.length, window: opts.window });
     }
     if (methodId === 'wavelet' && series.length < (1 << opts.levels)) {
-        return `Wavelet needs series length ≥ 2^${opts.levels} (= ${1 << opts.levels}) — got ${series.length}`;
+        return t('view.signal_decomposition.validate.wavelet', { levels: opts.levels, need: 1 << opts.levels, got: series.length });
     }
     return method.validateOpts(opts);
 }
