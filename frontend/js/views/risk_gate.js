@@ -9,18 +9,18 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 
 const RULE_TYPES = [
-    { id: 'max_loss_per_trade_pct',     label: 'Max loss per trade (% of equity)',     fields: [['pct', 'number', '1.0']] },
-    { id: 'max_loss_per_day_pct',       label: 'Max loss per day (% of equity)',       fields: [['pct', 'number', '2.0']] },
-    { id: 'max_consecutive_losses_today', label: 'Max consecutive losses today',       fields: [['n', 'integer', '3']] },
-    { id: 'cool_down_after_loss_minutes', label: 'Cool-down after loss (minutes)',     fields: [['minutes', 'integer', '15']] },
-    { id: 'max_open_positions',         label: 'Max open positions',                   fields: [['n', 'integer', '5']] },
-    { id: 'max_position_size_pct',      label: 'Max position size (% of equity)',      fields: [['pct', 'number', '20']] },
-    { id: 'blocked_symbols',            label: 'Blocked symbols (comma-sep)',          fields: [['symbols', 'text', 'GME,AMC']] },
-    { id: 'require_plan_before_trade',  label: 'Require pre-trade plan',                fields: [] },
-    { id: 'require_stop_loss',          label: 'Require stop loss (warning only)',     fields: [] },
-    { id: 'regular_trading_hours_only', label: 'Block outside RTH (09:30-16:00 ET, Mon-Fri)', fields: [] },
-    { id: 'min_position_size_dollars',  label: 'Min notional $ (fat-finger guard)',    fields: [['min_dollars', 'number', '100']] },
-    { id: 'kill_switch',                label: 'Kill switch (always blocks)',          fields: [] },
+    { id: 'max_loss_per_trade_pct',       get label() { return t('view.risk_gate.rule.max_loss_per_trade_pct'); },     fields: [['pct', 'number', '1.0']] },
+    { id: 'max_loss_per_day_pct',         get label() { return t('view.risk_gate.rule.max_loss_per_day_pct'); },       fields: [['pct', 'number', '2.0']] },
+    { id: 'max_consecutive_losses_today', get label() { return t('view.risk_gate.rule.max_consecutive_losses_today'); }, fields: [['n', 'integer', '3']] },
+    { id: 'cool_down_after_loss_minutes', get label() { return t('view.risk_gate.rule.cool_down_after_loss_minutes'); }, fields: [['minutes', 'integer', '15']] },
+    { id: 'max_open_positions',           get label() { return t('view.risk_gate.rule.max_open_positions'); },         fields: [['n', 'integer', '5']] },
+    { id: 'max_position_size_pct',        get label() { return t('view.risk_gate.rule.max_position_size_pct'); },      fields: [['pct', 'number', '20']] },
+    { id: 'blocked_symbols',              get label() { return t('view.risk_gate.rule.blocked_symbols'); },            fields: [['symbols', 'text', 'GME,AMC']] },
+    { id: 'require_plan_before_trade',    get label() { return t('view.risk_gate.rule.require_plan_before_trade'); },  fields: [] },
+    { id: 'require_stop_loss',            get label() { return t('view.risk_gate.rule.require_stop_loss'); },          fields: [] },
+    { id: 'regular_trading_hours_only',   get label() { return t('view.risk_gate.rule.regular_trading_hours_only'); }, fields: [] },
+    { id: 'min_position_size_dollars',    get label() { return t('view.risk_gate.rule.min_position_size_dollars'); },  fields: [['min_dollars', 'number', '100']] },
+    { id: 'kill_switch',                  get label() { return t('view.risk_gate.rule.kill_switch'); },                fields: [] },
 ];
 
 export async function renderRiskGate(mount, state) {
