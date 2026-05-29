@@ -9,6 +9,8 @@
 //   μ_bl = A⁻¹ · [(τΣ)⁻¹ π + PᵀΩ⁻¹ Q]
 //   Σ_bl = Σ + A⁻¹
 
+import { t } from './i18n.js';
+
 export const DEFAULT_TAU = 0.05;
 
 export const DEFAULT_INPUTS = {
@@ -26,46 +28,46 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(input) {
     const inp = input.inputs;
-    if (!inp) return 'inputs.inputs missing';
+    if (!inp) return t('view.black_litterman.validate.inputs_missing');
     if (!Array.isArray(inp.equilibrium_returns) || inp.equilibrium_returns.length === 0)
-                                                                  return 'equilibrium_returns must be non-empty array';
+                                                                  return t('view.black_litterman.validate.eq_array');
     const n = inp.equilibrium_returns.length;
     for (let i = 0; i < n; i++) {
-        if (!Number.isFinite(inp.equilibrium_returns[i]))         return `equilibrium_returns[${i}] not finite`;
+        if (!Number.isFinite(inp.equilibrium_returns[i]))         return t('view.black_litterman.validate.eq_finite', { i });
     }
     if (!Array.isArray(inp.covariance) || inp.covariance.length !== n)
-                                                                  return `covariance must be ${n}×${n}`;
+                                                                  return t('view.black_litterman.validate.cov_dims', { n });
     for (let i = 0; i < n; i++) {
         if (!Array.isArray(inp.covariance[i]) || inp.covariance[i].length !== n)
-                                                                  return `covariance row ${i} must have ${n} cols`;
+                                                                  return t('view.black_litterman.validate.cov_row', { i, n });
         for (let j = 0; j < n; j++) {
-            if (!Number.isFinite(inp.covariance[i][j]))           return `covariance[${i}][${j}] not finite`;
+            if (!Number.isFinite(inp.covariance[i][j]))           return t('view.black_litterman.validate.cov_finite', { i, j });
         }
     }
-    if (!Number.isFinite(inp.tau) || inp.tau <= 0)                return 'tau must be > 0';
+    if (!Number.isFinite(inp.tau) || inp.tau <= 0)                return t('view.black_litterman.validate.tau');
     // Views are optional: k can be 0.
     const k = Array.isArray(inp.view_returns) ? inp.view_returns.length : 0;
     if (k > 0) {
         if (!Array.isArray(inp.view_loadings) || inp.view_loadings.length !== k)
-                                                                  return `view_loadings must be ${k}×${n}`;
+                                                                  return t('view.black_litterman.validate.loadings_dims', { k, n });
         for (let i = 0; i < k; i++) {
             if (!Array.isArray(inp.view_loadings[i]) || inp.view_loadings[i].length !== n)
-                                                                  return `view_loadings row ${i} must have ${n} cols`;
+                                                                  return t('view.black_litterman.validate.loadings_row', { i, n });
             for (let j = 0; j < n; j++) {
-                if (!Number.isFinite(inp.view_loadings[i][j]))    return `view_loadings[${i}][${j}] not finite`;
+                if (!Number.isFinite(inp.view_loadings[i][j]))    return t('view.black_litterman.validate.loadings_finite', { i, j });
             }
         }
         if (!Array.isArray(inp.view_confidence) || inp.view_confidence.length !== k)
-                                                                  return `view_confidence must be ${k}×${k}`;
+                                                                  return t('view.black_litterman.validate.conf_dims', { k });
         for (let i = 0; i < k; i++) {
             if (!Array.isArray(inp.view_confidence[i]) || inp.view_confidence[i].length !== k)
-                                                                  return `view_confidence row ${i} must have ${k} cols`;
+                                                                  return t('view.black_litterman.validate.conf_row', { i, k });
             for (let j = 0; j < k; j++) {
-                if (!Number.isFinite(inp.view_confidence[i][j])) return `view_confidence[${i}][${j}] not finite`;
+                if (!Number.isFinite(inp.view_confidence[i][j])) return t('view.black_litterman.validate.conf_finite', { i, j });
             }
         }
         for (let i = 0; i < k; i++) {
-            if (!Number.isFinite(inp.view_returns[i]))           return `view_returns[${i}] not finite`;
+            if (!Number.isFinite(inp.view_returns[i]))           return t('view.black_litterman.validate.view_finite', { i });
         }
     }
     return null;
