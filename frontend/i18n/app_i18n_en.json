@@ -87,6 +87,7 @@
   "confirm.clear_favorites":            "Clear all favorites? This cannot be undone.",
   "confirm.clear_bookmarks":            "Clear all bookmarks? This cannot be undone.",
   "view.launcher.section.recent":       "// RECENT",
+  "view.launcher.title":                "// HOME",
 
   "symbol_hud.prompt":                  "Symbol",
   "symbol_hud.hint":                    "enter to jump · esc to cancel",

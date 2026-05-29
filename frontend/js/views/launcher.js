@@ -312,9 +312,9 @@ export async function renderLauncher(mount, _state) {
         });
     }
     mount.innerHTML = `
-        <h1 class="view-title">// HOME
+        <h1 class="view-title"><span data-i18n="view.launcher.title">// HOME</span>
             <input id="launcher-q" type="search"
-                   placeholder="filter tiles…  (Esc to clear)" data-i18n-placeholder="view.launcher.placeholder.filter"
+                   placeholder="filter tiles…  (Esc to clear)"
                    data-i18n-placeholder="view.launcher.search_placeholder"
                    data-tip="view.launcher.search_tip"
                    autocomplete="off">
