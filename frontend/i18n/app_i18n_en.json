@@ -7385,6 +7385,8 @@
   "view.weighted_midprice.series.imbalance":          "imbalance",
   "chart.series.rank":                                "rank",
   "chart.series.spot":                                "spot",
+  "chart.series.pl_at_expiry":                        "P/L @ expiry",
+  "chart.series.mtm_now":                             "MTM now",
   "chart.series.equity":                              "equity",
   "chart.series.return":                              "return",
   "chart.series.count":                               "count",

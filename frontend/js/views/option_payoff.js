@@ -248,13 +248,13 @@ async function renderChart(payoff) {
         series: [
             { label: t('chart.series.spot') },
             {
-                label: 'P/L @ expiry',
+                label: t('chart.series.pl_at_expiry'),
                 stroke: '#00e5ff',
                 width: 2,
                 fill: 'rgba(0,229,255,0.05)',
             },
             {
-                label: 'MTM now',
+                label: t('chart.series.mtm_now'),
                 stroke: '#ff9f1a',
                 width: 1,
                 dash: [6, 4],
