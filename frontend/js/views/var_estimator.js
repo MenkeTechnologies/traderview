@@ -221,7 +221,7 @@ function renderHistogram(returns, positionValue, hist, gauss) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'loss $' },
-            { label: 'count',     stroke: '#888', width: 1.5,
+            { label: t('chart.series.count'),     stroke: '#888', width: 1.5,
               fill: '#88888833', points: { show: false } },
             { label: 'Hist VaR',  stroke: '#ffd84a', width: 0,
               points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },

@@ -215,7 +215,7 @@ function renderChart(returns, hs, fhs, cf) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'return' },
+            { label: t('chart.series.return') },
             { label: 'frequency', stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.10)' },
             { label: '−VaR (HS)',  stroke: '#ff9f1a', width: 2,

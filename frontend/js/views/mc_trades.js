@@ -182,7 +182,7 @@ function renderChart(ending, report) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'equity $' },
-            { label: 'count', stroke: '#888', width: 1.5,
+            { label: t('chart.series.count'), stroke: '#888', width: 1.5,
               fill: '#88888833', points: { show: false } },
             { label: 'start',  stroke: '#00e5ff', width: 0,
               points: { show: true, size: 11, fill: '#00e5ff', stroke: '#00e5ff' } },

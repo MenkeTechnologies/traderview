@@ -246,7 +246,7 @@ async function renderChart(payoff) {
         height: h,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'spot' },
+            { label: t('chart.series.spot') },
             {
                 label: 'P/L @ expiry',
                 stroke: '#00e5ff',

@@ -159,7 +159,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: { auto: true } },
         series: [
-            { label: 'rank' },
+            { label: t('chart.series.rank') },
             { label: 'weight %',     stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
             { label: 'HHI contrib',  stroke: '#ff3860', width: 1.5, points: { show: true, size: 5 } },
         ],

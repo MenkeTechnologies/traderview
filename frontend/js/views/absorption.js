@@ -169,7 +169,7 @@ function renderChart(report) {
         height: 320,
         scales: { x: { time: false } },
         series: [
-            { label: 'idx' },
+            { label: t('chart.series.idx') },
             { label: t('view.abs.series.close'), stroke: 'var(--fg)', width: 1 },
             { label: t('view.abs.series.bullish'), stroke: 'var(--green)', width: 0,
               points: { show: true, size: 9, fill: 'var(--green)' } },

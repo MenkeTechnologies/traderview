@@ -177,7 +177,7 @@ function renderChart(stats) {
             scales: { x: {}, y: {} },
             series: [
                 { label: 'sample' },
-                { label: 'value', stroke: '#00e5ff', width: 1.5,
+                { label: t('chart.series.value'), stroke: '#00e5ff', width: 1.5,
                   fill: 'rgba(0,229,255,0.06)' },
             ],
             axes: [{ stroke: '#aab' }, { stroke: '#aab' }],

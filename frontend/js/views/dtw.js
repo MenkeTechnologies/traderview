@@ -172,7 +172,7 @@ function renderOverlay(a, b) {
         title: '', width: el.clientWidth || 800, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'idx' },
+            { label: t('chart.series.idx') },
             { label: 'A', stroke: '#00e5ff', width: 2, points: { show: false } },
             { label: 'B', stroke: '#ff9f1a', width: 2, points: { show: false } },
         ],

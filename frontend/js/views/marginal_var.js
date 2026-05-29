@@ -178,7 +178,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'rank' },
+            { label: t('chart.series.rank') },
             { label: '% contrib', stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
         ],
         axes: [

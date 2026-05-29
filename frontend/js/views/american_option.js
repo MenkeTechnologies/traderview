@@ -215,7 +215,7 @@ function renderChart(res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'spot' },
+            { label: t('chart.series.spot') },
             { label: 'European (BS)', stroke: '#00e5ff', width: 2,
               points: { show: false } },
             { label: 'American (LSMC)', stroke: '#ff9f1a', width: 0,

@@ -168,7 +168,7 @@ function renderEigenChart(originalCov, res) {
         title: '', width: el.clientWidth || 800, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'rank' },
+            { label: t('chart.series.rank') },
             { label: 'cleaned (sorted desc)', stroke: '#ff9f1a', width: 2,
               points: { show: true, size: 8, stroke: '#ff9f1a', fill: '#ff9f1a' } },
             { label: 'λ_max bulk threshold', stroke: '#ff3860', width: 1,

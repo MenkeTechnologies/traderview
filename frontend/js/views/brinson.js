@@ -165,7 +165,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'rank' },
+            { label: t('chart.series.rank') },
             { label: 'Alloc (bps)',  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
             { label: 'Select (bps)', stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
             { label: 'Inter (bps)',  stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: true, size: 4 } },

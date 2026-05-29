@@ -194,8 +194,8 @@ function drawMini(elId, xs, ys, stroke, atmSpot) {
         title: '', width: el.clientWidth || 400, height: 140,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'spot' },
-            { label: 'value', stroke, width: 1.5,
+            { label: t('chart.series.spot') },
+            { label: t('chart.series.value'), stroke, width: 1.5,
               fill: `${stroke}1A`, points: { show: false } },
             { label: 'ATM', stroke: '#fff', width: 0,
               points: { show: true, size: 8, stroke: '#fff', fill: '#fff' } },

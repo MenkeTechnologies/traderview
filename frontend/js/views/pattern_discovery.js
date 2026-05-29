@@ -186,7 +186,7 @@ function renderCharts(series, m, profile, motif, discords) {
         title: '', width: seriesEl.clientWidth || 800, height: 240,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'idx' },
+            { label: t('chart.series.idx') },
             { label: 'series', stroke: 'rgba(170,170,170,0.55)', width: 1,
               points: { show: false } },
             { label: 'motif pair', stroke: '#00e5ff', width: 3,
@@ -208,7 +208,7 @@ function renderCharts(series, m, profile, motif, discords) {
         title: '', width: profEl.clientWidth || 800, height: 200,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'idx' },
+            { label: t('chart.series.idx') },
             { label: 'profile distance', stroke: '#ff9f1a', width: 1.5,
               fill: 'rgba(255,159,26,0.10)', points: { show: false } },
         ],

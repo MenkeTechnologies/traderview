@@ -152,7 +152,7 @@ function renderHistogram(realized, impliedPct) {
         scales: { x: {}, y: {} },
         series: [
             { label: '|realized| %' },
-            { label: 'count', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.count'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff33', points: { show: true, size: 4 } },
             { label: 'implied', stroke: '#ff9f1a', width: 1.0, dash: [4, 4],
               points: { show: false } },

@@ -216,8 +216,8 @@ function drawMini(elId, ys, stroke) {
         title: '', width: el.clientWidth || 800, height: 80,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'idx' },
-            { label: 'value', stroke, width: 1.5,
+            { label: t('chart.series.idx') },
+            { label: t('chart.series.value'), stroke, width: 1.5,
               fill: stroke === '#aab' ? undefined : `${stroke}1A`,
               points: { show: false } },
         ],
