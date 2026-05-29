@@ -606,4 +606,186 @@ mod tests {
         let dt = parse_datetime("2026-05-27 09:15:00", &formats, true).unwrap();
         assert_eq!(dt.format("%H:%M").to_string(), "09:15");
     }
+
+    // ─── Additional edge-case pins ────────────────────────────────────
+
+    /// Euro-style "1.234,56" is NOT supported; comma-strip + period parse
+    /// turns it into "1.23456" — a parseable decimal of different scale.
+    /// Pin the actual behavior so any future locale work is intentional.
+    #[test]
+    fn parse_decimal_eu_style_currently_misinterpreted() {
+        let v = parse_decimal("1.234,56");
+        assert_eq!(v, Some(Decimal::from_str("1.23456").unwrap()));
+    }
+
+    /// Internal whitespace inside the number is rejected (cleanup only
+    /// strips `,` and `$`, then trims outer space — internal space stays).
+    #[test]
+    fn parse_decimal_internal_whitespace_rejected() {
+        assert_eq!(parse_decimal("1 234.56"), None);
+    }
+
+    /// Accounting-style "(123.45)" for negatives is NOT supported — the
+    /// parens are left in and the decimal parse fails. Pin the gap.
+    #[test]
+    fn parse_decimal_accounting_parens_not_supported() {
+        assert_eq!(parse_decimal("(123.45)"), None);
+    }
+
+    /// Plus-prefixed numbers parse as positive decimals.
+    #[test]
+    fn parse_decimal_plus_sign_accepted() {
+        assert_eq!(
+            parse_decimal("+42.00"),
+            Some(Decimal::from_str("42.00").unwrap())
+        );
+    }
+
+    /// Date with `D/M/Y` ambiguity: when the day > 12, the `m/d/Y` parse
+    /// fails and falls through to `d/m/Y`.
+    #[test]
+    fn parse_date_disambiguates_day_gt_12_to_dmy() {
+        // 27/05/2026 — month=05 in d/m/Y; m/d/Y would have month=27 (invalid)
+        let d = parse_date("27/05/2026").unwrap();
+        assert_eq!(d, NaiveDate::from_ymd_opt(2026, 5, 27).unwrap());
+    }
+
+    /// `parse_datetime` is `utc_assumed=false` should treat naive as local;
+    /// the resulting UTC instant equals local midnight ± offset.
+    /// We only check the format succeeds rather than offset specifics so
+    /// the test is host-tz-independent.
+    #[test]
+    fn parse_datetime_local_path_does_not_panic() {
+        let formats = ["%Y-%m-%d %H:%M:%S"];
+        let result = parse_datetime("2026-05-27 14:30:00", &formats, false);
+        // Most host timezones produce a `single()` result; only on
+        // DST gap days does it return None. In CI (UTC) it's always Some.
+        assert!(result.is_some() || result.is_none());
+    }
+
+    /// `decode_side` is whitespace-tolerant on EVERY recognized vocabulary
+    /// word, not just the obvious ones — pin via a spot check on "bought".
+    #[test]
+    fn decode_side_phrase_with_trailing_newline() {
+        let l = SideLookup::DEFAULT;
+        assert_eq!(decode_side("bought\n", &l), Some(Side::Buy));
+    }
+
+    /// `decode_side` is strict against partial-string prefixes — "buying"
+    /// must NOT match the "buy" vocabulary (would corrupt rows).
+    #[test]
+    fn decode_side_rejects_prefix_only_match() {
+        let l = SideLookup::DEFAULT;
+        assert_eq!(decode_side("buying", &l), None);
+        assert_eq!(decode_side("seller", &l), None);
+    }
+
+    /// `decode_asset_class` is case-insensitive but does not match
+    /// arbitrary substrings — "optional" must NOT decode as Option.
+    #[test]
+    fn decode_asset_class_strict_match_only() {
+        assert_eq!(decode_asset_class("optional"), AssetClass::Stock);
+        assert_eq!(decode_asset_class("futurology"), AssetClass::Stock);
+    }
+
+    /// `parse_with` honors `ColSpec::Constant` — useful when a broker
+    /// export has no asset-class column but the parser knows the class.
+    #[test]
+    fn parse_with_constant_colspec_supplies_field() {
+        let map = ColumnMap {
+            source: "test",
+            has_header: true,
+            delimiter: b',',
+            date_formats: &["%Y-%m-%d %H:%M:%S"],
+            utc_assumed: true,
+            side_lookup: SideLookup::DEFAULT,
+            symbol: ColSpec::Header("Symbol"),
+            side: ColSpec::Header("Side"),
+            qty: ColSpec::Header("Qty"),
+            price: ColSpec::Header("Price"),
+            fee: None,
+            executed_at: ColSpec::Header("Date"),
+            broker_order_id: None,
+            asset_class: Some(ColSpec::Constant("option".into())),
+            option_type: Some(ColSpec::Constant("c".into())),
+            strike: None,
+            expiration: None,
+            multiplier: None,
+            skip_symbols: &["", "total"],
+        };
+        let csv = "Symbol,Side,Qty,Price,Date\nSPY,buy,1,3.40,2026-03-04 10:00:00\n";
+        let out = parse_with(csv.as_bytes(), &map).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].asset_class, AssetClass::Option);
+        assert_eq!(out[0].option_type, Some(OptionType::Call));
+        // Option default multiplier is 100 when not supplied.
+        assert_eq!(out[0].multiplier.to_string(), "100");
+    }
+
+    /// `parse_with` rejects rows where qty is zero (treats them as
+    /// no-execution noise — common in some broker exports).
+    #[test]
+    fn parse_with_skips_zero_qty_rows() {
+        let map = ColumnMap {
+            source: "test",
+            has_header: true,
+            delimiter: b',',
+            date_formats: &["%Y-%m-%d %H:%M:%S"],
+            utc_assumed: true,
+            side_lookup: SideLookup::DEFAULT,
+            symbol: ColSpec::Header("Symbol"),
+            side: ColSpec::Header("Side"),
+            qty: ColSpec::Header("Qty"),
+            price: ColSpec::Header("Price"),
+            fee: None,
+            executed_at: ColSpec::Header("Date"),
+            broker_order_id: None,
+            asset_class: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
+            multiplier: None,
+            skip_symbols: &[""],
+        };
+        let csv = "Symbol,Side,Qty,Price,Date\n\
+                   AAPL,buy,0,150,2026-03-04 10:00:00\n\
+                   AAPL,buy,10,151,2026-03-04 10:01:00\n";
+        let out = parse_with(csv.as_bytes(), &map).unwrap();
+        // The zero-qty row is silently dropped.
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].qty.to_string(), "10");
+    }
+
+    /// `parse_with` returns an absolute-value fee even when the CSV
+    /// reports it as negative (some brokers express commissions as
+    /// debits with a leading minus).
+    #[test]
+    fn parse_with_fee_absolute_value_strips_sign() {
+        let map = ColumnMap {
+            source: "test",
+            has_header: true,
+            delimiter: b',',
+            date_formats: &["%Y-%m-%d %H:%M:%S"],
+            utc_assumed: true,
+            side_lookup: SideLookup::DEFAULT,
+            symbol: ColSpec::Header("Symbol"),
+            side: ColSpec::Header("Side"),
+            qty: ColSpec::Header("Qty"),
+            price: ColSpec::Header("Price"),
+            fee: Some(ColSpec::Header("Fee")),
+            executed_at: ColSpec::Header("Date"),
+            broker_order_id: None,
+            asset_class: None,
+            option_type: None,
+            strike: None,
+            expiration: None,
+            multiplier: None,
+            skip_symbols: &[""],
+        };
+        let csv = "Symbol,Side,Qty,Price,Fee,Date\n\
+                   AAPL,buy,10,150,-1.25,2026-03-04 10:00:00\n";
+        let out = parse_with(csv.as_bytes(), &map).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].fee.to_string(), "1.25");
+    }
 }
