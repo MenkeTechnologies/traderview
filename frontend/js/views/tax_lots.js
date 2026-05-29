@@ -1,6 +1,7 @@
 // Tax-lot tracker — FIFO/LIFO matching, ST/LT classification, wash-sale flag.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderTaxLots(mount, state) {
@@ -86,7 +87,7 @@ function renderReport(r, out) {
             were skipped (short-side lot tracking is a v2 feature).</p>` : ''}
 
         <div class="chart-panel">
-            <h2>Realized events (${r.realized.length}) — method: ${r.method.toUpperCase()}</h2>
+            <h2>${esc(t('view.tax_lots.h2.realized', { count: r.realized.length, method: r.method.toUpperCase() }))}</h2>
             ${r.realized.length === 0
                 ? '<p data-i18n="view.tax_lots.hint.no_closed_lots_in_this_year" class="muted small">No closed lots in this year.</p>'
                 : `<table class="trades">
@@ -112,7 +113,7 @@ function renderReport(r, out) {
         </div>
 
         <div class="chart-panel">
-            <h2>Open lots (${r.open_lots.length})</h2>
+            <h2>${esc(t('view.tax_lots.h2.open_lots', { count: r.open_lots.length }))}</h2>
             ${r.open_lots.length === 0
                 ? '<p data-i18n="view.tax_lots.hint.no_open_lots" class="muted small">No open lots.</p>'
                 : `<table class="trades">

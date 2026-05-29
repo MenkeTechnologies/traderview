@@ -128,7 +128,7 @@ function renderGrid(report) {
     for (const b of bars) for (const c of (b.cells || [])) priceSet.add(c.price);
     const allPrices = [...priceSet].sort((a, b) => b - a);  // top-down (highest first)
 
-    const headerCells = bars.map(b => `<th>Bar ${b.bar_id}</th>`).join('');
+    const headerCells = bars.map(b => `<th>${esc(t('view.footprint.th.bar', { id: b.bar_id }))}</th>`).join('');
     const rowsHtml = allPrices.map(p => {
         const cells = bars.map(b => {
             const cell = (b.cells || []).find(c => c.price === p);

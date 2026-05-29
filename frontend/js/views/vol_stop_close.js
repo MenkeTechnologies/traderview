@@ -25,7 +25,7 @@ export async function renderVolStopClose(mount, _appState) {
         <h1 data-i18n="view.vol_stop_close.h1.vol_stop_close_based" class="view-title">// VOL-STOP (CLOSE-BASED)</h1>
 
         <div class="chart-panel">
-            <h2>Paste HLC bars (one per line: <code>high low close</code>)</h2>
+            <h2><span data-i18n="view.vol_stop_close.h2.paste">Paste HLC bars (one per line:</span> <code>high low close</code>)</h2>
             <textarea id="vsc-blob" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.6&#10;...">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.vol_stop_close.label.side">Side</span>

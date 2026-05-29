@@ -21,7 +21,7 @@ export async function renderSetupsBySetup(mount, _appState) {
         <h1 data-i18n="view.setups_by_setup.h1.setups_ranked_by_pandl" class="view-title">// SETUPS — RANKED BY P&amp;L</h1>
 
         <div class="chart-panel">
-            <h2>Trades (per line: <code>setup net_pnl [risk_amount]</code>; "-" = untagged)</h2>
+            <h2><span data-i18n="view.setups_by_setup.h2.trades">Trades (per line:</span> <code>setup net_pnl [risk_amount]</code><span data-i18n="view.setups_by_setup.h2.trades_suffix">; "-" = untagged)</span></h2>
             <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded">${esc(rowsToBlob(state.rows))}</textarea>
             <div class="inline-form">
                 <button data-i18n="view.setups_by_setup.btn.analyze" id="sbs-run" class="primary" type="button">Analyze</button>

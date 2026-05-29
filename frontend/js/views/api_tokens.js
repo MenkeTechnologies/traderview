@@ -3,17 +3,14 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDeveloper(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.api_tokens.h1.developer_public_api" class="view-title">// DEVELOPER — PUBLIC API</h1>
-        <p class="muted small">Personal Access Tokens authenticate third-party integrations
-            against the same endpoints the UI uses. Pass them as
-            <code>Authorization: Bearer pat_&lt;prefix&gt;_&lt;secret&gt;</code>. Tokens are
-            argon2-hashed at rest — the secret is shown <strong>once</strong> at creation
-            time and never recoverable afterwards. Revoke a token to cut access immediately.</p>
+        <p class="muted small" data-i18n="view.api_tokens.hint.intro">Personal Access Tokens authenticate third-party integrations against the same endpoints the UI uses. Pass them as Authorization: Bearer pat_&lt;prefix&gt;_&lt;secret&gt;. Tokens are argon2-hashed at rest — the secret is shown once at creation time and never recoverable afterwards. Revoke a token to cut access immediately.</p>
 
         <div class="chart-panel">
             <h2 data-i18n="view.api_tokens.h2.create_token">Create token</h2>
@@ -72,9 +69,9 @@ export async function renderDeveloper(mount) {
             const out2 = mount.querySelector('#tok-new');
             if (out2) out2.innerHTML = `
                 <div class="chart-panel" style="background:#0d0d22;border-left:3px solid #ff7a1f;">
-                    <p><strong>Save this token now — it will never be shown again:</strong></p>
+                    <p><strong data-i18n="view.api_tokens.warn.save_now">Save this token now — it will never be shown again:</strong></p>
                     <pre style="background:#070714;padding:8px;font-size:13px;overflow:auto;">${esc(r.token)}</pre>
-                    <p class="muted small">Stored as: ${esc(r.summary.prefix)} (prefix) · ${r.summary.scopes.join(', ')} · created ${new Date(r.summary.created_at).toLocaleString()}</p>
+                    <p class="muted small">${esc(t('view.api_tokens.stored_as', { prefix: r.summary.prefix, scopes: r.summary.scopes.join(', '), created: new Date(r.summary.created_at).toLocaleString() }))}</p>
                 </div>
             `;
             e.target.reset();

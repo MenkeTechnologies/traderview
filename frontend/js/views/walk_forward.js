@@ -1,6 +1,7 @@
 // Walk-forward optimization — rolling IS/OOS sweep; exposes curve-fit collapse.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const KINDS = [
@@ -120,7 +121,7 @@ function renderResult(r, body, out, mount) {
         </div>
 
         <div class="chart-panel">
-            <h2>Stitched OOS equity curve (${r.oos_equity.length} bars)</h2>
+            <h2>${esc(t('view.walk_forward.h2.stitched_oos', { bars: r.oos_equity.length }))}</h2>
             <div id="wf-eq-svg"></div>
         </div>
 

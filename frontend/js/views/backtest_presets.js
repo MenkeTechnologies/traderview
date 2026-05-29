@@ -12,9 +12,7 @@ async function renderBrowse(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.backtest_presets.h1.backtest_presets" class="view-title">// BACKTEST PRESETS</h1>
-        <p class="muted small">Save parameter combinations under a name; mark them public to
-            get a shareable slug; fork others' public presets to your own library. Run a preset
-            by feeding its <code>preset</code> JSON straight into the Backtest tab.</p>
+        <p class="muted small" data-i18n="view.backtest_presets.hint.intro">Save parameter combinations under a name; mark them public to get a shareable slug; fork others' public presets to your own library. Run a preset by feeding its preset JSON straight into the Backtest tab.</p>
 
         <div class="chart-panel">
             <h2 data-i18n="view.backtest_presets.h2.save_a_new_preset">Save a new preset</h2>

@@ -3,6 +3,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderSectorRotation(mount) {
@@ -108,7 +109,7 @@ function render(r, mount) {
             </p>
         </div>
         <div class="chart-panel">
-            <h2>Heatmap (${n} sectors × ${r.windows.length} windows)</h2>
+            <h2>${esc(t('view.sector_rotation.h2.heatmap', { sectors: n, windows: r.windows.length }))}</h2>
             <table class="corr-matrix">
                 <thead><tr><th data-i18n="view.sector_rotation.th.sector">Sector</th>${headers}<th data-i18n="view.sector_rotation.th.60_day_rs_line">60-day RS line</th></tr></thead>
                 <tbody>${rows}</tbody>

@@ -99,7 +99,7 @@ export async function renderCompare(mount) {
 
 function renderReport(r, out, mount) {
     if (r.rows.length < 2) {
-        out.innerHTML = `<p class="boot">Only ${r.rows.length} symbol(s) returned data — need at least 2.</p>`;
+        out.innerHTML = `<p class="boot">${esc(t('view.compare.hint.too_few', { count: r.rows.length }))}</p>`;
         return;
     }
     out.innerHTML = `
@@ -110,7 +110,7 @@ function renderReport(r, out, mount) {
         <div class="chart-panel">
             <h2>${esc(t('view.compare.h2.fundamental', { count: r.rows.length }))}</h2>
             ${renderTable(r.rows)}
-            <p class="muted small">Fetched ${new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</p>
+            <p class="muted small">${esc(t('view.compare.hint.fetched', { time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
         </div>
     `;
     renderRsSvg(r.rows, mount);

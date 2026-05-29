@@ -485,7 +485,7 @@ async function mountNews(body, w, tok) {
             const items = await api.newsBySymbol(w.params.symbol, w.params.limit || 6);
             if (!viewIsCurrent(tok)) return;
             if (!items.length) {
-                body.innerHTML = `<p class="muted small">No cached news for ${esc(w.params.symbol)} — hit Poll now on the News tab to seed.</p>`;
+                body.innerHTML = `<p class="muted small">${esc(t('view.boards.hint.no_news', { symbol: w.params.symbol }))}</p>`;
                 return;
             }
             body.innerHTML = items.map(n => {

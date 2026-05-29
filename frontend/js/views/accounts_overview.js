@@ -9,10 +9,7 @@ export async function renderAccountsOverview(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.accounts_overview.h1.accounts_overview" class="view-title">// ACCOUNTS OVERVIEW</h1>
-        <p class="muted small">Side-by-side snapshot of every account you own. P/L windows
-            (today / MTD / YTD) are computed from <code>trades.opened_at</code> UTC dates.
-            Open-position fields pull fresh quotes (60s server cache) and aggregate the same
-            way the Live P/L tab does per-account.</p>
+        <p class="muted small" data-i18n="view.accounts_overview.hint.intro">Side-by-side snapshot of every account you own. P/L windows (today / MTD / YTD) are computed from trades.opened_at UTC dates. Open-position fields pull fresh quotes (60s server cache) and aggregate the same way the Live P/L tab does per-account.</p>
 
         <div id="ao-out"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text">loading…</div></div></div>
     `;
@@ -58,7 +55,7 @@ function render(r, mount) {
         <div class="chart-panel">
             <h2>${esc(t('view.accounts_overview.h2.breakdown', { count: r.accounts.length }))}</h2>
             ${accountTable(r.accounts)}
-            <p class="muted small">Updated ${new Date(r.computed_at).toLocaleString()}.</p>
+            <p class="muted small">${esc(t('view.accounts_overview.hint.updated', { time: new Date(r.computed_at).toLocaleString() }))}</p>
         </div>
     `;
 }

@@ -2,6 +2,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_OPTS = [
@@ -72,7 +73,7 @@ function renderInbox(items, accountId, mount, tok) {
         return;
     }
     el.innerHTML = `<div class="chart-panel">
-        <h2>Needs review (${items.length})</h2>
+        <h2>${esc(t('view.trade_reviews.h2.needs_review', { count: items.length }))}</h2>
         <table class="trades">
             <thead><tr>
                 <th data-i18n="view.trade_reviews.th.closed">Closed</th><th data-i18n="view.trade_reviews.th.symbol">Symbol</th><th data-i18n="view.trade_reviews.th.side">Side</th>
@@ -103,7 +104,7 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
     m.innerHTML = `
         <div style="position:fixed;inset:0;background:rgba(7,7,20,0.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;">
             <div class="chart-panel" style="max-width:640px;width:100%;">
-                <h2>Review ${esc(symbol)} (${esc(rMult)}R)</h2>
+                <h2>${esc(t('view.trade_reviews.h2.review', { symbol, rMult }))}</h2>
                 <form id="tr-form" class="inline-form" style="flex-direction:column;align-items:stretch;gap:10px;">
                     <label style="display:flex;justify-content:space-between;">
                         <span>1. Was the entry per plan?</span>
@@ -176,7 +177,7 @@ function renderHistory(rows, mount) {
     if (!el) return;
     if (!rows.length) { el.innerHTML = ''; return; }
     el.innerHTML = `<div class="chart-panel">
-        <h2>Recent reviews (${rows.length})</h2>
+        <h2>${esc(t('view.trade_reviews.h2.recent_reviews', { count: rows.length }))}</h2>
         <table class="trades">
             <thead><tr>
                 <th data-i18n="view.trade_reviews.th.when">When</th><th data-i18n="view.trade_reviews.th.trade">Trade</th><th data-i18n="view.trade_reviews.th.entry_exit_per_plan">Entry / Exit per plan</th>
