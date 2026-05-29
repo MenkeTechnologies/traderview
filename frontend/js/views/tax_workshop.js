@@ -10,7 +10,6 @@ import { api } from '../api.js';
 import { esc, fmtMoney, fmtPct } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { t } from '../i18n.js';
 
 export async function renderTaxWorkshop(mount, _state) {
     if (!mount) return;
