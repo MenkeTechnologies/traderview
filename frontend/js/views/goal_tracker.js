@@ -203,7 +203,7 @@ function renderProgress(r) {
 function renderChart(equity) {
     if (!window.uPlot) return;
     const el = document.getElementById('gt-chart');
-    if (!equity.length) { el.innerHTML = '<div class="muted">No equity history.</div>'; return; }
+    if (!equity.length) { el.innerHTML = `<div class="muted" data-i18n="view.goal_tracker.empty.equity">No equity history.</div>`; return; }
     const xs = equity.map((_, i) => i);
     const targetLine = xs.map((_, i) => {
         const frac = equity.length > 1 ? i / (equity.length - 1) : 1;

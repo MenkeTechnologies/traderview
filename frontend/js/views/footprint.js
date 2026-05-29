@@ -117,7 +117,7 @@ function card(label, value, cls = '') {
 function renderGrid(report) {
     const wrap = document.getElementById('fp-grid');
     const bars = (report && report.bars) || [];
-    if (!bars.length) { wrap.innerHTML = '<div class="muted">No bars.</div>'; return; }
+    if (!bars.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.footprint.empty.bars">No bars.</div>`; return; }
     // Build a UNION price-axis spanning every level seen across all bars
     // so each bar column aligns on the same vertical row grid.
     const priceSet = new Set();
@@ -156,7 +156,7 @@ function renderGrid(report) {
 function renderHotspots(report) {
     const wrap = document.getElementById('fp-hotspots');
     const hots = imbalanceHotspots(report, 8);
-    if (!hots.length) { wrap.innerHTML = '<div class="muted">No cells.</div>'; return; }
+    if (!hots.length) { wrap.innerHTML = `<div class="muted" data-i18n="view.footprint.empty.cells">No cells.</div>`; return; }
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>

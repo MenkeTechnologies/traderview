@@ -179,7 +179,7 @@ function renderEvents(report) {
     const wrap = document.getElementById('ha-events');
     const events = report.events || [];
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No flip events at current config.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.ha_reversal.empty.events">No flip events at current config.</div>`;
         return;
     }
     wrap.innerHTML = `

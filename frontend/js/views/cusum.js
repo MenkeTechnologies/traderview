@@ -193,7 +193,7 @@ function renderEvents(report) {
     const wrap = document.getElementById('cu-events');
     const events = report.events || [];
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No change-point events at current threshold.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.cusum.empty.events">No change-point events at current threshold.</div>`;
         return;
     }
     wrap.innerHTML = `

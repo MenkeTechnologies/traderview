@@ -161,7 +161,7 @@ function renderEvents(values) {
     const wrap = document.getElementById('dm-events');
     const events = detectCrossings(values);
     if (!events.length) {
-        wrap.innerHTML = '<div class="muted">No OB/OS crossings detected.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.demarker.empty.crossings">No OB/OS crossings detected.</div>`;
         return;
     }
     wrap.innerHTML = `

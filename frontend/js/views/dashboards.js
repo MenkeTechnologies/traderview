@@ -260,7 +260,7 @@ async function renderActive() {
     if (!wrap) return;
     const d = store.getActiveDashboard(state);
     if (!d) {
-        wrap.innerHTML = '<div class="muted">No active dashboard.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.dashboards.empty.active">No active dashboard.</div>`;
         return;
     }
     const header = `
@@ -272,7 +272,7 @@ async function renderActive() {
     const picker = editMode ? renderPicker() : '';
     const grid = d.tiles.length
         ? `<div id="db-grid" class="db-grid"></div>`
-        : `<div class="muted">No tiles yet. Click <strong>Edit layout</strong> in the sidebar then add tiles from the picker.</div>`;
+        : `<div class="muted" data-i18n="view.dashboards.empty.tiles">No tiles yet. Click Edit layout in the sidebar then add tiles from the picker.</div>`;
     wrap.innerHTML = header + picker + grid;
     if (editMode) wirePicker(d);
     if (d.tiles.length) await renderTiles(d);
@@ -303,7 +303,7 @@ function wirePicker(activeDashboard) {
                 <span class="db-pick-glyph">${esc(glyph || '·')}</span>
                 <span class="db-pick-label">${esc(label)}</span>
             </button>
-        `).join('') || '<div class="muted">No views match the filter.</div>';
+        `).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
         grid.querySelectorAll('button[data-add]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 state = store.addTile(state, activeDashboard.id, btn.dataset.add);

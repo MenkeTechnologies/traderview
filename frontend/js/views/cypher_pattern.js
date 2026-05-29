@@ -133,7 +133,7 @@ function renderChart(pivots, matches) {
     if (!window.uPlot) return;
     const el = document.getElementById('cy-chart');
     if (!pivots.length) {
-        el.innerHTML = '<div class="muted">No pivots.</div>';
+        el.innerHTML = `<div class="muted" data-i18n="view.cypher_pattern.empty.pivots">No pivots.</div>`;
         return;
     }
     const sorted = [...pivots].sort((a, b) => a.index - b.index);
@@ -165,7 +165,7 @@ function renderChart(pivots, matches) {
 function renderMatches(matches) {
     const wrap = document.getElementById('cy-matches');
     if (!matches.length) {
-        wrap.innerHTML = '<div class="muted">No Cypher patterns matched at current tolerance.</div>';
+        wrap.innerHTML = `<div class="muted" data-i18n="view.cypher_pattern.empty.matches">No Cypher patterns matched at current tolerance.</div>`;
         return;
     }
     wrap.innerHTML = `
