@@ -10,6 +10,7 @@
 // Higher R → trust prior more (β changes reluctantly).
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse the textarea — same delegation pattern as the other views. */
 export function parseSeries(text) {
@@ -18,21 +19,21 @@ export function parseSeries(text) {
 
 /** Validate the two-series + hyperparameter inputs. */
 export function validateInputs(asset, bench, params) {
-    if (!Array.isArray(asset) || asset.length < 10) return 'asset returns: need ≥ 10 values';
-    if (!Array.isArray(bench) || bench.length < 10) return 'bench returns: need ≥ 10 values';
+    if (!Array.isArray(asset) || asset.length < 10) return t('view.kalman_beta.validate.asset_min');
+    if (!Array.isArray(bench) || bench.length < 10) return t('view.kalman_beta.validate.bench_min');
     if (asset.length !== bench.length) {
-        return `asset and bench must be the same length (got ${asset.length} vs ${bench.length})`;
+        return t('view.kalman_beta.validate.length_mismatch', { a: asset.length, b: bench.length });
     }
-    if (asset.some(x => !Number.isFinite(x))) return 'asset returns contain non-finite values';
-    if (bench.some(x => !Number.isFinite(x))) return 'bench returns contain non-finite values';
+    if (asset.some(x => !Number.isFinite(x))) return t('view.kalman_beta.validate.asset_finite');
+    if (bench.some(x => !Number.isFinite(x))) return t('view.kalman_beta.validate.bench_finite');
     if (!Number.isFinite(params.process_noise_q) || params.process_noise_q < 0) {
-        return 'process noise Q must be ≥ 0';
+        return t('view.kalman_beta.validate.q');
     }
     if (!Number.isFinite(params.obs_noise_r) || params.obs_noise_r <= 0) {
-        return 'observation noise R must be > 0';
+        return t('view.kalman_beta.validate.r');
     }
-    if (!Number.isFinite(params.beta0)) return 'β₀ must be finite';
-    if (!Number.isFinite(params.p0) || params.p0 <= 0) return 'P₀ must be > 0';
+    if (!Number.isFinite(params.beta0)) return t('view.kalman_beta.validate.beta0');
+    if (!Number.isFinite(params.p0) || params.p0 <= 0) return t('view.kalman_beta.validate.p0');
     return null;
 }
 

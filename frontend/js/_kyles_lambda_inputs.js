@@ -11,6 +11,8 @@
 // Interpretation: λ is price impact per unit of signed flow.
 // LOW λ = deep, liquid book. HIGH λ = thin book, large moves on small flow.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_WINDOW = 30;
 
 export const DEFAULT_INPUTS = {
@@ -20,13 +22,13 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.price_changes))   return 'price_changes must be an array';
-    if (!Array.isArray(input.signed_volumes))  return 'signed_volumes must be an array';
-    if (!Number.isFinite(input.window))        return 'window must be finite';
-    if (!Number.isInteger(input.window))       return 'window must be an integer';
-    if (input.window < 2)                      return 'window must be ≥ 2';
+    if (!Array.isArray(input.price_changes))   return t('view.kyles_lambda.validate.pc_array');
+    if (!Array.isArray(input.signed_volumes))  return t('view.kyles_lambda.validate.sv_array');
+    if (!Number.isFinite(input.window))        return t('view.kyles_lambda.validate.window_finite');
+    if (!Number.isInteger(input.window))       return t('view.kyles_lambda.validate.window_int');
+    if (input.window < 2)                      return t('view.kyles_lambda.validate.window_min');
     if (input.price_changes.length !== input.signed_volumes.length)
-        return 'price_changes and signed_volumes must have the same length';
+        return t('view.kyles_lambda.validate.length_mismatch');
     return null;
 }
 

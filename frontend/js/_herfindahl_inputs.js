@@ -7,6 +7,8 @@
 // is internally normalized: HHI = Σw² / (Σw)².
 // Scaled HHI uses the regulatory 0–10_000 scale (DOJ antitrust threshold = 1500).
 
+import { t as tr } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     weights: [0.25, 0.25, 0.25, 0.25],
 };
@@ -16,16 +18,16 @@ export const DOJ_CONCENTRATED = 2500;     // scaled HHI ≥ 2500 = "highly conce
 export const DOJ_MODERATE = 1500;         // scaled HHI ≥ 1500 = "moderately concentrated"
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.weights))                 return 'weights must be an array';
-    if (input.weights.length === 0)                     return 'weights must be non-empty';
+    if (!Array.isArray(input.weights))                 return tr('view.hhi.validate.weights_array');
+    if (input.weights.length === 0)                     return tr('view.hhi.validate.weights_empty');
     for (let i = 0; i < input.weights.length; i++) {
         const w = input.weights[i];
-        if (!Number.isFinite(w))                       return `weights[${i}] not finite`;
-        if (w < 0)                                     return `weights[${i}] must be ≥ 0`;
+        if (!Number.isFinite(w))                       return tr('view.hhi.validate.weight_finite', { i });
+        if (w < 0)                                     return tr('view.hhi.validate.weight_negative', { i });
     }
     let sum = 0;
     for (const w of input.weights) sum += w;
-    if (sum <= 0)                                       return 'sum of weights must be > 0';
+    if (sum <= 0)                                       return tr('view.hhi.validate.sum_positive');
     return null;
 }
 
