@@ -5,7 +5,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 export async function renderFillQuality(mount, state) {
     const tok = currentViewToken();
@@ -54,10 +54,10 @@ function render(r, mount) {
         </div>
 
         <div class="panel-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            ${bucketPanel('By symbol (worst slippage first)', r.by_symbol.slice(0, 15))}
-            ${bucketPanel('By size bucket', r.by_size)}
+            ${bucketPanel(t('view.fill_quality.panel.by_symbol'), r.by_symbol.slice(0, 15))}
+            ${bucketPanel(t('view.fill_quality.panel.by_size'), r.by_size)}
         </div>
-        ${bucketPanel('By hour of day (ET)', r.by_hour_et)}
+        ${bucketPanel(t('view.fill_quality.panel.by_hour'), r.by_hour_et)}
 
         <div class="chart-panel">
             <h2 data-i18n="view.fill_quality.h2.latest_50_fills">Latest 50 fills</h2>

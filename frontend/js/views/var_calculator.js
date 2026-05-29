@@ -149,22 +149,22 @@ async function compute(mount, tok) {
 
 function renderSummary(hs, fhs, cf) {
     const cards = [];
-    cards.push(group('Historical Simulation', [
+    cards.push(group(t('view.var_calculator.group.hs'), [
         ['VaR', formatLoss(hs?.var)],
-        ['Expected Shortfall', formatLoss(hs?.expected_shortfall)],
-        ['Sample size n', hs?.n != null ? String(hs.n) : '—'],
+        [t('view.var_calculator.row.es'), formatLoss(hs?.expected_shortfall)],
+        [t('view.var_calculator.row.sample_n'), hs?.n != null ? String(hs.n) : '—'],
     ]));
-    cards.push(group('Filtered Historical', [
+    cards.push(group(t('view.var_calculator.group.fhs'), [
         ['VaR', formatLoss(fhs?.var)],
-        ['Expected Shortfall', formatLoss(fhs?.expected_shortfall)],
-        ['Current σ', fhs?.current_sigma != null ? `${(fhs.current_sigma * 100).toFixed(3)}%` : '—'],
+        [t('view.var_calculator.row.es'), formatLoss(fhs?.expected_shortfall)],
+        [t('view.var_calculator.row.current_sigma'), fhs?.current_sigma != null ? `${(fhs.current_sigma * 100).toFixed(3)}%` : '—'],
     ]));
-    cards.push(group('Cornish-Fisher', [
-        ['VaR (CF)', formatLoss(cf?.var_cornish_fisher)],
-        ['VaR (Gaussian)', formatLoss(cf?.var_gaussian)],
-        ['Skew', cf?.skewness != null ? cf.skewness.toFixed(3) : '—'],
-        ['Excess kurt.', cf?.excess_kurtosis != null ? cf.excess_kurtosis.toFixed(3) : '—'],
-        ['Monotonic', cf?.is_monotonic === false ? '✗ fallback to HS' : '✓'],
+    cards.push(group(t('view.var_calculator.group.cf'), [
+        [t('view.var_calculator.row.var_cf'), formatLoss(cf?.var_cornish_fisher)],
+        [t('view.var_calculator.row.var_gauss'), formatLoss(cf?.var_gaussian)],
+        [t('view.var_calculator.row.skew'), cf?.skewness != null ? cf.skewness.toFixed(3) : '—'],
+        [t('view.var_calculator.row.excess_kurt'), cf?.excess_kurtosis != null ? cf.excess_kurtosis.toFixed(3) : '—'],
+        [t('view.var_calculator.row.monotonic'), cf?.is_monotonic === false ? t('view.var_calculator.mono.fallback') : '✓'],
     ]));
     document.getElementById('vc-summary').innerHTML = cards.join('');
 }
