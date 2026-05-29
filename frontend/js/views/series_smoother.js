@@ -70,14 +70,14 @@ export async function renderSeriesSmoother(mount, _appState) {
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="lowess" ${state.enabled.lowess ? 'checked' : ''}>
                         <span class="ss-swatch lowess">▮</span> LOWESS</label>
-                    <label>frac <input type="number" step="0.05" min="0.05" max="1" value="${state.opts.lowess_frac}" data-opt="lowess_frac"></label>
-                    <label>robust iter <input type="number" step="1" min="0" max="5" value="${state.opts.lowess_robust}" data-opt="lowess_robust"></label>
+                    <label>${esc(t('view.series_smoother.param.frac'))} <input type="number" step="0.05" min="0.05" max="1" value="${state.opts.lowess_frac}" data-opt="lowess_frac"></label>
+                    <label>${esc(t('view.series_smoother.param.robust_iter'))} <input type="number" step="1" min="0" max="5" value="${state.opts.lowess_robust}" data-opt="lowess_robust"></label>
                 </div>
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="kalman_rts" ${state.enabled.kalman_rts ? 'checked' : ''}>
                         <span class="ss-swatch kalman_rts">▮</span> Kalman (RTS)</label>
-                    <label>process q <input type="number" step="any" min="0" value="${state.opts.kalman_q}" data-opt="kalman_q"></label>
-                    <label>obs r <input type="number" step="any" min="1e-9" value="${state.opts.kalman_r}" data-opt="kalman_r"></label>
+                    <label>${esc(t('view.series_smoother.param.process_q'))} <input type="number" step="any" min="0" value="${state.opts.kalman_q}" data-opt="kalman_q"></label>
+                    <label>${esc(t('view.series_smoother.param.obs_r'))} <input type="number" step="any" min="1e-9" value="${state.opts.kalman_r}" data-opt="kalman_r"></label>
                 </div>
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="theil_sen" ${state.enabled.theil_sen ? 'checked' : ''}>
@@ -87,7 +87,7 @@ export async function renderSeriesSmoother(mount, _appState) {
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="polynomial" ${state.enabled.polynomial ? 'checked' : ''}>
                         <span class="ss-swatch polynomial">▮</span> Polynomial</label>
-                    <label>degree <input type="number" step="1" min="1" max="10" value="${state.opts.poly_degree}" data-opt="poly_degree"></label>
+                    <label>${esc(t('view.series_smoother.param.degree'))} <input type="number" step="1" min="1" max="10" value="${state.opts.poly_degree}" data-opt="poly_degree"></label>
                 </div>
             </div>
             <button data-i18n="view.series_smoother.btn.smooth" id="ss-run" class="primary" type="button" style="margin-top:10px">Smooth</button>

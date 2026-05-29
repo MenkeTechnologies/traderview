@@ -27,8 +27,8 @@ export async function renderWebull(mount, _state) {
             <form id="wb-form" class="inline-form">
                 <label>did <input name="did" type="text" required style="min-width:280px"></label>
                 <label>access_token <input name="access_token" type="password" required style="min-width:340px"></label>
-                <label>t_token (trade actions; optional for read-only) <input name="t_token" type="password" style="min-width:340px"></label>
-                <label>account_id (optional override) <input name="account_id" type="text" style="min-width:140px"></label>
+                <label>${esc(t('view.webull.label.t_token'))} <input name="t_token" type="password" style="min-width:340px"></label>
+                <label>${esc(t('view.webull.label.account_id'))} <input name="account_id" type="text" style="min-width:140px"></label>
                 <button data-i18n="view.webull.btn.connect" class="primary" type="submit">Connect</button>
             </form>
             <p data-i18n="view.webull.hint.all_endpoints_used_are_read_only_positions_today_s" class="muted small">All endpoints used are read-only: positions, today's orders, account summary. Order entry is intentionally not implemented.</p>
