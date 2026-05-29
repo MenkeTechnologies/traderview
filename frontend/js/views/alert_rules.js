@@ -197,7 +197,7 @@ function renderRuleCard(r) {
                     ${paramFields}
                 </div>
                 <div class="inline-form">
-                    <label style="flex:1">TTS template (placeholders: {symbol} {price} {change_pct} {volume_mult} {threshold})
+                    <label style="flex:1"><span data-i18n="view.alert_rules.label.tts_template">TTS template (placeholders: {symbol} {price} {change_pct} {volume_mult} {threshold})</span>
                         <input type="text" data-rule-id="${esc(r.id)}" data-field="tts_template" value="${esc(r.tts_template || '')}" placeholder="optional; leave blank for default" data-i18n-placeholder="view.alert_rules.placeholder.tts" style="width:100%"></label>
                 </div>
             </div>

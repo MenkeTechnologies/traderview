@@ -47,13 +47,13 @@ export async function renderVasicek(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.vasicek.h2.sde_parameters">SDE parameters</h2>
             <div class="inline-form">
-                <label>r₀ (initial rate)
+                <label><span data-i18n="view.vasicek.label.r0">r₀ (initial rate)</span>
                     <input id="va-r0"    type="number" step="any" value="${state.params.r0}"></label>
-                <label>a (mean-reversion speed)
+                <label><span data-i18n="view.vasicek.label.a">a (mean-reversion speed)</span>
                     <input id="va-a"     type="number" step="any" min="0" value="${state.params.a}"></label>
-                <label>b (long-run mean)
+                <label><span data-i18n="view.vasicek.label.b">b (long-run mean)</span>
                     <input id="va-b"     type="number" step="any" value="${state.params.b}"></label>
-                <label>σ (vol)
+                <label><span data-i18n="view.vasicek.label.sigma">σ (vol)</span>
                     <input id="va-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
             </div>
         </div>

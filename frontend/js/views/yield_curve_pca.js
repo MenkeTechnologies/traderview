@@ -74,7 +74,7 @@ export async function renderYieldCurvePca(mount, _appState) {
                 </div>
             </div>
             <div class="inline-form" style="margin-top:10px">
-                <label>top_k factors
+                <label><span data-i18n="view.yield_curve_pca.label.topk">top_k factors</span>
                     <input id="yp-topk" type="number" step="1" min="1" max="20" value="${state.topK}"></label>
                 <button data-i18n="view.yield_curve_pca.btn.decompose" id="yp-run" class="primary" type="button">Decompose</button>
             </div>
