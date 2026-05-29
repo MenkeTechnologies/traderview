@@ -10,6 +10,8 @@
 //
 // Decimals go on the wire as strings per rust_decimal contract.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Per line: "<setup> <net_pnl> [risk_amount]". setup="-" means untagged
@@ -199,9 +201,9 @@ export function dec(v) {
 // Light traffic-light badge by expectancy: above 0 = pos, 0 = neutral.
 export function setupBadge(stats) {
     if (!stats) return { label: '—', cls: '' };
-    if (stats.avg_pnl > 0) return { label: 'POSITIVE', cls: 'pos' };
-    if (stats.avg_pnl < 0) return { label: 'NEGATIVE', cls: 'neg' };
-    return { label: 'SCRATCH', cls: '' };
+    if (stats.avg_pnl > 0) return { label: t('view.setups_by_setup.badge.positive'), cls: 'pos' };
+    if (stats.avg_pnl < 0) return { label: t('view.setups_by_setup.badge.negative'), cls: 'neg' };
+    return { label: t('view.setups_by_setup.badge.scratch'), cls: '' };
 }
 
 // Demo presets that exercise each branch of stats_by_setup.

@@ -5,6 +5,8 @@
 // enum: 'trending_up' | 'trending_down' | 'volatile_up' |
 // 'volatile_down' | 'choppy'.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_CONFIG = {
     trend_slope_pct: 0.001,
     clean_trend_rel_stdev: 0.02,
@@ -89,15 +91,21 @@ export function localEvaluate(equity, cfg) {
 }
 
 const REGIME_BADGES = {
-    trending_up:    { label: 'TRENDING UP',   cls: 'pos',     hint: 'Steady gains — system is in its sweet spot. Stay the course.' },
-    trending_down:  { label: 'TRENDING DOWN', cls: 'neg',     hint: 'Steady losses — system in DD regime. Throttle size / pause.' },
-    volatile_up:    { label: 'VOLATILE UP',   cls: 'pos',     hint: 'Positive but lumpy — wins are noisy, watch drawdowns.' },
-    volatile_down:  { label: 'VOLATILE DOWN', cls: 'neg',     hint: 'Negative + noisy — high uncertainty about edge persistence.' },
-    choppy:         { label: 'CHOPPY',        cls: '',        hint: 'No clear direction — flat performance. Re-evaluate edge.' },
+    trending_up:   { key: 'trending_up',   cls: 'pos' },
+    trending_down: { key: 'trending_down', cls: 'neg' },
+    volatile_up:   { key: 'volatile_up',   cls: 'pos' },
+    volatile_down: { key: 'volatile_down', cls: 'neg' },
+    choppy:        { key: 'choppy',        cls: '' },
 };
 
 export function regimeBadge(r) {
-    return REGIME_BADGES[r] || { label: String(r || '—').toUpperCase(), cls: '', hint: '—' };
+    const x = REGIME_BADGES[r];
+    if (!x) return { label: String(r || '—').toUpperCase(), cls: '', hint: '—' };
+    return {
+        label: t(`view.regime_equity.regime.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.regime_equity.regime.${x.key}.hint`),
+    };
 }
 
 // Build the fitted regression line as parallel x[] and y[] arrays

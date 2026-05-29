@@ -4,6 +4,8 @@
 // Negative slippage = trader paid up (bad). Positive = trader captured
 // liquidity / beat benchmark (good).
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 export function parseRecordBlob(text) {
@@ -50,11 +52,11 @@ export function buildBody(records) {
 // and the summary's "best/worst symbol" cards.
 export function executionGrade(meanBps) {
     if (!Number.isFinite(meanBps)) return { label: '—', cls: '' };
-    if (meanBps > 5)   return { label: 'EXCELLENT', cls: 'pos' };
-    if (meanBps > 0)   return { label: 'GOOD',      cls: 'pos' };
-    if (meanBps > -5)  return { label: 'NEUTRAL',   cls: '' };
-    if (meanBps > -15) return { label: 'POOR',      cls: 'neg' };
-    return                  { label: 'TERRIBLE',  cls: 'neg' };
+    if (meanBps > 5)   return { label: t('view.per_symbol_slippage.grade.excellent'), cls: 'pos' };
+    if (meanBps > 0)   return { label: t('view.per_symbol_slippage.grade.good'),      cls: 'pos' };
+    if (meanBps > -5)  return { label: t('view.per_symbol_slippage.grade.neutral'),   cls: '' };
+    if (meanBps > -15) return { label: t('view.per_symbol_slippage.grade.poor'),      cls: 'neg' };
+    return                  { label: t('view.per_symbol_slippage.grade.terrible'),  cls: 'neg' };
 }
 
 // Picks the worst-mean entry from a backend response. Backend already

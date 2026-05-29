@@ -5,6 +5,8 @@
 // (no open); ATR must be parallel to bars. View computes ATR locally
 // (Wilder smoothing) so the user only pastes raw bars.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Three-token-per-line "high low close".
@@ -98,10 +100,14 @@ export function buildBody(bars, atr, config) {
 
 // Maps backend direction enum to label + color.
 const DIR_BADGES = {
-    up:   { label: 'UP',   cls: 'pos' },
-    down: { label: 'DOWN', cls: 'neg' },
+    up:   { key: 'up',   cls: 'pos' },
+    down: { key: 'down', cls: 'neg' },
 };
-export function dirBadge(d) { return DIR_BADGES[d] || { label: String(d || '—'), cls: '' }; }
+export function dirBadge(d) {
+    const x = DIR_BADGES[d];
+    if (!x) return { label: String(d || '—'), cls: '' };
+    return { label: t(`view.range_expansion.dir.${x.key}`), cls: x.cls };
+}
 
 // Spreads events into parallel up/down null-padded series for uPlot
 // markers. Up = above the bar's high, Down = below the bar's low.

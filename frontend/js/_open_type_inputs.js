@@ -3,6 +3,8 @@
 // Backend body shape: OpenInput {open_price, opening_range_high/low/close,
 // prior_day_high/low/vah/val} — flat, no wrapper.
 
+import { t } from './i18n.js';
+
 export function validateInputs(p) {
     for (const k of ['open_price', 'opening_range_high', 'opening_range_low', 'opening_range_close',
                      'prior_day_high', 'prior_day_low', 'prior_day_vah', 'prior_day_val']) {
@@ -32,18 +34,20 @@ export function buildBody(p) {
 }
 
 const TYPE_BADGES = {
-    open_drive:              { label: 'OPEN DRIVE',              cls: 'pos',
-        hint: 'opened at extreme and drove through it — strong trend day; follow direction' },
-    open_test_drive:         { label: 'OPEN TEST DRIVE',         cls: 'pos',
-        hint: 'tested prior range then broke out — moderate trend; pull-back entries OK' },
-    open_rejection_reverse:  { label: 'OPEN REJECTION REVERSE',  cls: 'neg',
-        hint: 'tested past extreme and was rejected — fade the failed breakout' },
-    open_auction:            { label: 'OPEN AUCTION',            cls: '',
-        hint: 'range-bound chop within prior value — no conviction; fade extremes' },
+    open_drive:             { key: 'open_drive',             cls: 'pos' },
+    open_test_drive:        { key: 'open_test_drive',        cls: 'pos' },
+    open_rejection_reverse: { key: 'open_rejection_reverse', cls: 'neg' },
+    open_auction:           { key: 'open_auction',           cls: '' },
 };
 
-export function typeBadge(t) {
-    return TYPE_BADGES[t] || { label: String(t || '—'), cls: '', hint: '' };
+export function typeBadge(tag) {
+    const x = TYPE_BADGES[tag];
+    if (!x) return { label: String(tag || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.open_type.type.${x.key}.label`),
+        cls: x.cls,
+        hint: t(`view.open_type.type.${x.key}.hint`),
+    };
 }
 
 // Four preset OpenInputs matching the four enum variants. Each is
