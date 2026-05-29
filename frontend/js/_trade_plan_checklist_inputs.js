@@ -5,6 +5,8 @@
 //   config: { min_thesis_words, min_r_multiple, max_risk_pct_per_trade } }.
 // Returns ChecklistReport with gates[] + all_passed + computed_r_multiple + risk_pct.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_CONFIG = {
     min_thesis_words: 10,
     min_r_multiple: 1.5,
@@ -90,18 +92,14 @@ export function localEvaluate(plan, cfg) {
     };
 }
 
-const GATE_LABELS = {
-    thesis_present:           'Thesis present (≥N words)',
-    stop_loss_set:            'Stop loss set',
-    target_set:               'Target set',
-    r_multiple_meets_minimum: 'R-multiple ≥ minimum',
-    target_in_direction:      'Target on profit side',
-    stop_in_direction:        'Stop on loss side',
-    risk_within_max:          'Risk within max %',
-};
+const GATE_KEYS = new Set([
+    'thesis_present', 'stop_loss_set', 'target_set',
+    'r_multiple_meets_minimum', 'target_in_direction',
+    'stop_in_direction', 'risk_within_max',
+]);
 
 export function gateLabel(g) {
-    return GATE_LABELS[g] || String(g || '—');
+    return GATE_KEYS.has(g) ? t(`view.trade_plan_checklist.gate.${g}`) : String(g || '—');
 }
 
 // 5 demo presets for the gate-pass-vs-fail outcomes.
