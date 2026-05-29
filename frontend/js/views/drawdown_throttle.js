@@ -184,7 +184,7 @@ function renderChart(equity, tiers, report) {
         title: '', width: el.clientWidth || 600, height: 300,
         scales: { x: {}, y: {}, y_dd: { range: [-0.5, 0] } },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'equity', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'rolling peak', stroke: '#ffd84a', width: 1.0,

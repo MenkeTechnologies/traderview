@@ -158,7 +158,7 @@ function renderChart(bars, r) {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'close', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             ...levelSeries,

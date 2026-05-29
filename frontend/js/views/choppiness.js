@@ -155,7 +155,7 @@ function renderChart(bars, report) {
         title: '', width: el.clientWidth || 600, height: 360,
         scales: { x: {}, y: {}, y_ci: { range: [0, 100] } },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'close',         stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: 'CI',            stroke: '#ffd84a', width: 1.5, scale: 'y_ci',
               points: { show: false } },

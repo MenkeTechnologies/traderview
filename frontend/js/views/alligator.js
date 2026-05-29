@@ -141,7 +141,7 @@ function renderChart(bars, points) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'median', stroke: '#00e5ff', width: 0.8,
               fill: '#00e5ff10', points: { show: false } },
             { label: 'jaw (13)',   stroke: '#3b82f6', width: 1.5, points: { show: false } },

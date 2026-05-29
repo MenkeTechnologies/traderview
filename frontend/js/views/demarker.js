@@ -142,7 +142,7 @@ function renderChart(values) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: { range: [0, 1] } },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'DeMarker', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'OB 0.70',  stroke: '#ff3860', width: 1.0,

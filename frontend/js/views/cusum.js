@@ -176,7 +176,7 @@ function renderChart(series, report) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'series', stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'UP event', stroke: '#39ff14', width: 0,

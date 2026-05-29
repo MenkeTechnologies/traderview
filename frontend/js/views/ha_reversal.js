@@ -160,7 +160,7 @@ function renderChart(bars, report) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'raw close', stroke: '#a06bff', width: 1.0,
               fill: '#a06bff10', points: { show: false } },
             { label: 'HA close',  stroke: '#00e5ff', width: 1.5,

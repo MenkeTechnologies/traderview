@@ -142,7 +142,7 @@ function renderChart(equity, report) {
         title: '', width: el.clientWidth || 600, height: 300,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'equity', stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'fit', stroke: '#ffd84a', width: 1.0,

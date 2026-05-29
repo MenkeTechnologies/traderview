@@ -187,7 +187,7 @@ function renderChart(bars, cand) {
     const marker = (idx, price) => xs.map((_, i) => i === idx ? price : null);
 
     const series = [
-        { label: 'bar #' },
+        { label: t('chart.series.bar_num') },
         { label: 'close', stroke: '#aab', width: 1.0,
           fill: '#aab1A', points: { show: false } },
     ];

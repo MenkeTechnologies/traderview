@@ -148,7 +148,7 @@ function renderChart(bars, vwap, fillPrice) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bar #' },
+            { label: t('chart.series.bar_num') },
             { label: 'typical', stroke: '#00e5ff', width: 1.0,
               fill: '#00e5ff14', points: { show: false } },
             { label: 'rolling VWAP', stroke: '#ffd84a', width: 1.2,
