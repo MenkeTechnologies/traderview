@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri v2 shell. Embedded Postgres bootstrap, axum router, vanilla JS + uPlot. 86-tile launcher across 84 view modules, 454 axum routes, 69 tables, 31 migrations. Webull + Lightspeed import, Finnhub WS scanner, Nasdaq halts + SEC EDGAR + PR-wire catalyst radar.">
+  <meta name="description" content="traderview — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri v2 shell. Embedded Postgres bootstrap, axum router, vanilla JS + uPlot. 261-tile launcher across 257 view modules, 1,028 axum routes, 69 tables, 31 migrations. Webull + Lightspeed import, Finnhub WS scanner, Nasdaq halts + SEC EDGAR + PR-wire catalyst radar.">
   <title>TraderView — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,8 +167,8 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/traderview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
-          <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 12 broker importers · 86-tile launcher · MIT</p>
-          <p class="docs-build-line"><span id="tvLoc">91,112 Rust LOC · 6 library crates + Tauri shell · 69 tables · 31 migrations · 454 axum routes · 84 view modules · 86 launcher tiles · 17,903 JS LOC · 1,990 CSS LOC</span></p>
+          <p class="docs-build-line">traderview v0.1.0 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 12 broker importers · 261-tile launcher · MIT</p>
+          <p class="docs-build-line"><span id="tvLoc">192,558 Rust LOC · 6 library crates + Tauri shell · 69 tables · 31 migrations · 1,028 axum routes · 257 view modules · 261 launcher tiles · 93,284 JS LOC · 2,512 CSS LOC</span></p>
           <!-- Rust LOC derived from: find . -name '*.rs' -not -path '*/target/*' | xargs wc -l | tail -1 -->
           <!-- axum routes derived from: grep -rE '\.route\(' crates/traderview-web/src/ | wc -l -->
           <!-- JS LOC derived from: find frontend -name '*.js' | xargs wc -l | tail -1 -->
@@ -193,7 +193,7 @@
 
     <main class="tutorial-main">
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — FULL DESKTOP TRADING SUITE</h2>
-      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share six library crates and the vanilla JS + uPlot frontend. 84 view modules across an 86-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
+      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share six library crates and the vanilla JS + uPlot frontend. 257 view modules across a 261-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
 
       <section class="tutorial-section">
         <h2>Quickstart</h2>
@@ -262,14 +262,14 @@ cargo run -p traderview-web --bin server
             <tr><th>Crate</th><th>Lines</th><th>Purpose</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>traderview-core</code></td><td>42,562</td><td>Domain types (User / Account / Execution / Trade / Plan / Goal / Strategy), FIFO roll-up, statistics (win-rate / expectancy / R-multiple / SQN / Sharpe / Sortino), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom indicator AST.</td></tr>
-            <tr><td><code>traderview-db</code></td><td>16,416</td><td>sqlx pool factory + 31 embedded migrations, embedded PostgreSQL lifecycle (stale-PID lock cleanup, persisted password file), 50+ repo modules covering everything from <code>trades</code> &amp; <code>journal</code> to live <code>halts</code> &amp; <code>catalysts</code> &amp; <code>live_ticks</code> stores. Background pollers for Yahoo / FINRA / EDGAR / nasdaqtrader / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. In-process LRU caches with eviction.</td></tr>
+            <tr><td><code>traderview-core</code></td><td>138,988</td><td>Domain types (User / Account / Execution / Trade / Plan / Goal / Strategy), FIFO roll-up, statistics (win-rate / expectancy / R-multiple / SQN / Sharpe / Sortino), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom indicator AST.</td></tr>
+            <tr><td><code>traderview-db</code></td><td>18,966</td><td>sqlx pool factory + 31 embedded migrations, embedded PostgreSQL lifecycle (stale-PID lock cleanup, persisted password file), 50+ repo modules covering everything from <code>trades</code> &amp; <code>journal</code> to live <code>halts</code> &amp; <code>catalysts</code> &amp; <code>live_ticks</code> stores. Background pollers for Yahoo / FINRA / EDGAR / nasdaqtrader / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. In-process LRU caches with eviction.</td></tr>
             <tr><td><code>traderview-import</code></td><td>1,678</td><td>12 broker CSV parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero — plus a Generic <code>ColumnMap</code> parser for unknown sources (column-mapping wizard). Asset classes: stocks, options, futures, forex.</td></tr>
-            <tr><td><code>traderview-web</code></td><td>14,459</td><td>axum 0.7 router — 454 routes split across 83 route files. argon2 + JWT auth, multipart upload, WebSocket endpoints for halts / catalysts / live ticks / Webull. Custom request/response logging middleware (snippets bodies on 4xx/5xx). <code>client-errors</code> sink for browser-side reports.</td></tr>
+            <tr><td><code>traderview-web</code></td><td>25,101</td><td>axum 0.7 router — 1,028 routes split across 83 route files. argon2 + JWT auth, multipart upload, WebSocket endpoints for halts / catalysts / live ticks / Webull. Custom request/response logging middleware (snippets bodies on 4xx/5xx). <code>client-errors</code> sink for browser-side reports.</td></tr>
             <tr><td><code>traderview-expense</code></td><td>6,527</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
             <tr><td><code>traderview-ocr</code></td><td>814</td><td>Receipt OCR via the system <code>tesseract</code> binary + image preprocessing (binarize, deskew). Extracts merchant / amount / date for the expense matcher.</td></tr>
-            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>370</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
-            <tr class="total"><td><strong>Total</strong></td><td><strong>82,826</strong></td><td>Plus 17,903 LOC vanilla JS (84 view modules) and 1,990 LOC CSS. No bundler, no npm.</td></tr>
+            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>484</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
+            <tr class="total"><td><strong>Total</strong></td><td><strong>192,558</strong></td><td>Plus 93,284 LOC vanilla JS (257 view modules) and 2,512 LOC CSS. No bundler, no npm.</td></tr>
           </tbody>
         </table>
       </section>
@@ -336,16 +336,16 @@ cargo run -p traderview-web --bin server
       </section>
 
       <section class="tutorial-section">
-        <h2>Frontend — Vanilla JS + uPlot, 82 Views, 86-Tile Launcher</h2>
-        <p>Zero npm. Zero bundler. Zero JS framework. <strong>17,903 LOC vanilla ES modules + 1,990 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
-        <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 86 tiles across 8 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
+        <h2>Frontend — Vanilla JS + uPlot, 257 Views, 261-Tile Launcher</h2>
+        <p>Zero npm. Zero bundler. Zero JS framework. <strong>93,284 LOC vanilla ES modules + 2,512 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
+        <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 261 tiles across 8 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
         <div class="tv-card-grid">
           <div class="tv-card">
             <h4>⚡ Live Markets (6 tiles)</h4>
             <p>Live Scanner (Finnhub WS, 6-panel), Halts (Nasdaq RSS + TTS), Catalysts (EDGAR + PR wires), Pre-market (futures + commodities + crypto + FX + econ events), Tape (time &amp; sales), Heatmap (sector / S&amp;P).</p>
           </div>
           <div class="tv-card accent">
-            <h4>📊 Trading (7 tiles)</h4>
+            <h4>📊 Trading (16 tiles)</h4>
             <p>Webull (read-only broker), Live Positions (open P/L), Paper Trade, New Trade, Pre-trade Plans, Position Size (Kelly + correlation-aware), Hotkeys editor.</p>
           </div>
           <div class="tv-card magenta">
@@ -353,11 +353,11 @@ cargo run -p traderview-web --bin server
             <p>Journal (per-trade + daily + general), AI Journal (GPT post-mortem with cache), Trade Reviews (forced reflection on |R| ≥ 2), Trade Compare, Replay, Tape Replay, Discipline, Mood Analytics, Goals.</p>
           </div>
           <div class="tv-card green">
-            <h4>🔎 Charts &amp; Research (25 tiles)</h4>
+            <h4>🔎 Charts &amp; Research (178 tiles)</h4>
             <p>Charts (OHLC + persisted drawings), Research, Watchlists, Screener, Scanners (24 presets), Top Signals, Compare, Pairs, Correlation, Sectors, Sector Rotation, Breadth, Fear/Greed, Sentiment, Dark Pool, Short Interest, Volatility, Vol Surface, Options Chain, Earnings Cal, Earnings IV, Disclosures, Economy, News, Crypto.</p>
           </div>
           <div class="tv-card">
-            <h4>📈 Reports (11 tiles)</h4>
+            <h4>📈 Reports (23 tiles)</h4>
             <p>Dashboard (overview + equity + world map), Reports (17 cuts), R-Multiple, Equity Forecast (Monte Carlo), Fill Quality (slippage vs NBBO), Risk, Rebalance, Tax Lots, Expenses (with OCR), Calendar, Accounts Overview.</p>
           </div>
           <div class="tv-card accent">
@@ -369,7 +369,7 @@ cargo run -p traderview-web --bin server
             <p>Shares (public trade links), Community (forum), Mentorship, Boards (public/private symbol boards).</p>
           </div>
           <div class="tv-card green">
-            <h4>⚙️ Admin &amp; Data (9 tiles)</h4>
+            <h4>⚙️ Admin &amp; Data (18 tiles)</h4>
             <p>Import (12 brokers), CSV Wizard, Exports (CSV/JSON/Schedule D), Accounts, Tags, Search (full-text), Settings, Developer (API tokens), Tutorial (<kbd>?</kbd> hotkey).</p>
           </div>
         </div>
@@ -467,7 +467,7 @@ cargo run -p traderview-web --bin server
             <tr><td>Research</td><td>Options chain + Greeks + IV surface + earnings-IV crush + short interest + dark pool</td><td><span class="tv-pill done">Done</span></td></tr>
             <tr><td>Community</td><td>Public trade shares + forum + mentorship + boards</td><td><span class="tv-pill done">Done</span></td></tr>
             <tr><td>Expenses</td><td>Multi-account expense tracker + receipt OCR + Schedule-C report</td><td><span class="tv-pill done">Done</span></td></tr>
-            <tr><td>UX</td><td>86-tile launcher (Cmd-K) + in-app tutorial (<kbd>?</kbd>) + 11-shortcut topbar</td><td><span class="tv-pill done">Done</span></td></tr>
+            <tr><td>UX</td><td>261-tile launcher (Cmd-K) + in-app tutorial (<kbd>?</kbd>) + 11-shortcut topbar</td><td><span class="tv-pill done">Done</span></td></tr>
             <tr><td>Hardening</td><td>Per-view race tokens + browser-side error sink + WebKit SecurityError guards + bounded in-memory caches</td><td><span class="tv-pill done">Done</span></td></tr>
             <tr><td>Roadmap</td><td>Lightspeed live broker (currently CSV-only)</td><td><span class="tv-pill wip">Planned</span></td></tr>
             <tr><td>Roadmap</td><td>Cloud sync — encrypted snapshot to S3/R2</td><td><span class="tv-pill todo">Future</span></td></tr>
