@@ -5,6 +5,7 @@
 // detector that finds the top-K change-points by probability.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse the return-series textarea. */
 export function parseReturns(text) {
@@ -18,11 +19,11 @@ export function parseReturns(text) {
  *  must be strictly in (0, 1). */
 export function validateInputs(returns, hazard) {
     if (!Array.isArray(returns) || returns.length < 30) {
-        return 'need at least 30 returns for a meaningful BOCPD posterior';
+        return t('view.bocpd.validate.need_30');
     }
-    if (returns.some(x => !Number.isFinite(x))) return 'returns contain non-finite values';
+    if (returns.some(x => !Number.isFinite(x))) return t('view.bocpd.validate.non_finite');
     if (!Number.isFinite(hazard) || hazard <= 0 || hazard >= 1) {
-        return 'hazard must be in (0, 1) — the per-bar prior probability of a regime shift';
+        return t('view.bocpd.validate.hazard');
     }
     return null;
 }

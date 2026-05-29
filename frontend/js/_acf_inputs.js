@@ -7,6 +7,8 @@
 // Bartlett 95% band = 1.96 / √n.
 // significant_lags = k > 0 where |ρ̂(k)| > band.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_MAX_LAG = 20;
 export const BARTLETT_Z = 1.96;
 
@@ -16,14 +18,14 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.series))                       return 'series must be an array';
+    if (!Array.isArray(input.series))                       return t('view.acf.validate.series_array');
     for (let i = 0; i < input.series.length; i++) {
-        if (!Number.isFinite(input.series[i]))              return `series[${i}] not finite`;
+        if (!Number.isFinite(input.series[i]))              return t('view.acf.validate.series_finite', { i });
     }
-    if (!Number.isInteger(input.max_lag))                   return 'max_lag must be an integer';
-    if (input.max_lag < 1)                                  return 'max_lag must be ≥ 1';
-    if (input.series.length < 5)                            return 'series must have ≥ 5 observations';
-    if (input.max_lag >= input.series.length)               return `max_lag (${input.max_lag}) must be < series.length (${input.series.length})`;
+    if (!Number.isInteger(input.max_lag))                   return t('view.acf.validate.max_lag_int');
+    if (input.max_lag < 1)                                  return t('view.acf.validate.max_lag_min');
+    if (input.series.length < 5)                            return t('view.acf.validate.series_min');
+    if (input.max_lag >= input.series.length)               return t('view.acf.validate.max_lag_lt_len', { maxLag: input.max_lag, len: input.series.length });
     return null;
 }
 

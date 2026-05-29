@@ -8,6 +8,7 @@
 // The interpretation strength scales with how far from 0.5 H sits.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 /** Parse the return-series textarea. */
 export function parseReturns(text) {
@@ -43,17 +44,17 @@ export function parseChunkSizes(text) {
 /** Validate the combined inputs. */
 export function validateInputs(returns, chunkSizes) {
     if (!Array.isArray(returns) || returns.length < 10) {
-        return 'need at least 10 returns for a Hurst estimate';
+        return t('view.hurst.validate.need_returns');
     }
-    if (returns.some(x => !Number.isFinite(x))) return 'returns contain non-finite values';
+    if (returns.some(x => !Number.isFinite(x))) return t('view.hurst.validate.non_finite');
     if (!Array.isArray(chunkSizes) || chunkSizes.length < 2) {
-        return 'need at least 2 chunk sizes for the regression';
+        return t('view.hurst.validate.need_chunks');
     }
     if (chunkSizes.some(c => !Number.isInteger(c) || c < 2)) {
-        return 'every chunk size must be an integer ≥ 2';
+        return t('view.hurst.validate.chunk_int');
     }
     if (chunkSizes.some(c => c > returns.length)) {
-        return `chunk sizes must be ≤ series length (${returns.length})`;
+        return t('view.hurst.validate.chunk_exceeds', { n: returns.length });
     }
     return null;
 }
