@@ -12,6 +12,8 @@
 //   HIFO → cost_per_share DESC (close highest-cost first → min gain)
 //   LOFO → cost_per_share ASC  (close lowest-cost first  → max gain)
 
+import { t as tr } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 export const METHODS = ['fifo', 'lifo', 'hifo', 'lofo'];
 
@@ -72,12 +74,12 @@ export function isValidDate(s) {
 }
 
 export function validateInputs(lots, qty_to_close, price_per_share, method) {
-    if (!Array.isArray(lots))                          return 'lots must be an array';
-    if (!Number.isFinite(qty_to_close))                return 'qty_to_close must be finite';
-    if (qty_to_close < 0)                              return 'qty_to_close must be ≥ 0';
-    if (!Number.isFinite(price_per_share))             return 'price_per_share must be finite';
-    if (price_per_share < 0)                           return 'price_per_share must be ≥ 0';
-    if (!METHODS.includes(method))                     return `method must be one of ${METHODS.join(', ')}`;
+    if (!Array.isArray(lots))                          return tr('view.cost_basis.validate.lots_array');
+    if (!Number.isFinite(qty_to_close))                return tr('view.cost_basis.validate.qty_finite');
+    if (qty_to_close < 0)                              return tr('view.cost_basis.validate.qty_negative');
+    if (!Number.isFinite(price_per_share))             return tr('view.cost_basis.validate.price_finite');
+    if (price_per_share < 0)                           return tr('view.cost_basis.validate.price_negative');
+    if (!METHODS.includes(method))                     return tr('view.cost_basis.validate.method', { list: METHODS.join(', ') });
     return null;
 }
 

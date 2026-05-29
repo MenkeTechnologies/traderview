@@ -7,6 +7,8 @@
 //   p, x, q
 // }
 
+import { t } from './i18n.js';
+
 export const DEFAULT_P = 10;
 export const DEFAULT_X = 1.0;
 export const DEFAULT_Q = 9;
@@ -21,22 +23,22 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                       return 'bars must be an array';
+    if (!Array.isArray(input.bars))                       return t('view.cks.validate.bars_array');
     if (!Number.isInteger(input.p) || input.p < MIN_PERIOD || input.p > MAX_PERIOD)
-                                                           return `p must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                           return t('view.cks.validate.p_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isInteger(input.q) || input.q < MIN_PERIOD || input.q > MAX_PERIOD)
-                                                           return `q must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (!Number.isFinite(input.x) || input.x <= 0)        return 'x must be positive finite';
-    if (input.bars.length < input.p + input.q)            return `need at least p + q = ${input.p + input.q} bars`;
+                                                           return t('view.cks.validate.q_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (!Number.isFinite(input.x) || input.x <= 0)        return t('view.cks.validate.x_positive');
+    if (input.bars.length < input.p + input.q)            return t('view.cks.validate.bars_min', { n: input.p + input.q });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.cks.validate.bar_missing', { i });
         if (typeof b.high !== 'number' || typeof b.low !== 'number' || typeof b.close !== 'number')
-                                                            return `bars[${i}] HLC must be numbers`;
+                                                            return t('view.cks.validate.hlc_numbers', { i });
         if (!Number.isFinite(b.high) || !Number.isFinite(b.low) || !Number.isFinite(b.close))
-                                                            return `bars[${i}] HLC must be finite`;
-        if (b.high < b.low)                                return `bars[${i}] high < low`;
-        if (b.close < b.low || b.close > b.high)           return `bars[${i}] close outside [low, high]`;
+                                                            return t('view.cks.validate.hlc_finite', { i });
+        if (b.high < b.low)                                return t('view.cks.validate.high_lt_low', { i });
+        if (b.close < b.low || b.close > b.high)           return t('view.cks.validate.close_outside', { i });
     }
     return null;
 }

@@ -4,6 +4,8 @@
 //   where Bar = { open, high, low, close }
 // Returns: (number|null)[]  — EMA of per-bar (close − open) / (high − low) ∈ [-1, +1].
 
+import { t } from './i18n.js';
+
 export const DEFAULT_PERIOD = 14;
 export const MIN_PERIOD = 2;
 export const MAX_PERIOD = 500;
@@ -14,23 +16,23 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                       return 'bars must be an array';
-    if (!Number.isInteger(input.period))                  return 'period must be an integer';
+    if (!Array.isArray(input.bars))                       return t('view.csi.validate.bars_array');
+    if (!Number.isInteger(input.period))                  return t('view.csi.validate.period_int');
     if (input.period < MIN_PERIOD || input.period > MAX_PERIOD)
-                                                           return `period must be in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.bars.length < input.period)                 return `need at least period (${input.period}) bars`;
+                                                           return t('view.csi.validate.period_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.bars.length < input.period)                 return t('view.csi.validate.bars_min', { period: input.period });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.csi.validate.bar_missing', { i });
         if (typeof b.open !== 'number' || typeof b.high !== 'number'
             || typeof b.low !== 'number' || typeof b.close !== 'number')
-                                                            return `bars[${i}] OHLC must be numbers`;
+                                                            return t('view.csi.validate.ohlc_numbers', { i });
         if (!Number.isFinite(b.open) || !Number.isFinite(b.high)
             || !Number.isFinite(b.low)  || !Number.isFinite(b.close))
-                                                            return `bars[${i}] OHLC must be finite`;
-        if (b.high < b.low)                                return `bars[${i}] high < low`;
-        if (b.close < b.low || b.close > b.high)           return `bars[${i}] close outside [low, high]`;
-        if (b.open  < b.low || b.open  > b.high)           return `bars[${i}] open outside [low, high]`;
+                                                            return t('view.csi.validate.ohlc_finite', { i });
+        if (b.high < b.low)                                return t('view.csi.validate.high_lt_low', { i });
+        if (b.close < b.low || b.close > b.high)           return t('view.csi.validate.close_outside', { i });
+        if (b.open  < b.low || b.open  > b.high)           return t('view.csi.validate.open_outside', { i });
     }
     return null;
 }
