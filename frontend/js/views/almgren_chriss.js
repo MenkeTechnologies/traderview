@@ -221,10 +221,10 @@ function renderFrontier(points, currentLambda) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'variance' },
+            { label: t('chart.series.variance') },
             { label: 'expected cost ($)', stroke: '#a06bff', width: 1.5,
               fill: '#a06bff1A', points: { show: true, size: 6 } },
-            { label: 'you are here', stroke: '#fff', width: 0,
+            { label: t('chart.series.you_are_here'), stroke: '#fff', width: 0,
               points: { show: true, size: 12, stroke: '#fff', fill: 'transparent' } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],

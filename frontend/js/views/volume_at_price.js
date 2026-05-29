@@ -167,8 +167,8 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 420,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'bin' },
-            { label: 'vol',     stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.bin') },
+            { label: t('chart.series.vol'),     stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: 'VA',      stroke: '#ffd84a', width: 2.0, points: { show: false } },
             { label: 'POC',     stroke: '#ff3860', width: 0,   points: { show: true, size: 8 } },
         ],

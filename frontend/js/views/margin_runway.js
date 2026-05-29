@@ -159,7 +159,7 @@ function renderChart(equity, position, maintPct, report) {
         series: [
             { label: '% decline' },
             { label: t('chart.series.equity'),      stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'maintenance', stroke: '#ffd84a', width: 1.5, points: { show: false } },
+            { label: t('chart.series.maintenance'), stroke: '#ffd84a', width: 1.5, points: { show: false } },
             { label: t('chart.series.call_point'),  stroke: '#ff3860', width: 0,
               points: { show: true, size: 11, fill: '#ff3860', stroke: '#ff3860' } },
         ],

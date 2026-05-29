@@ -166,9 +166,9 @@ function renderChart() {
         title: '', width: el.clientWidth || 600, height: 340,
         scales: { x: { range: [0, 1] }, y: { range: [0, 1] } },
         series: [
-            { label: 'predicted' },
-            { label: 'observed',    stroke: '#00e5ff', width: 1.5, points: { show: true, size: 6 } },
-            { label: 'perfect',     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.predicted') },
+            { label: t('chart.series.observed'),    stroke: '#00e5ff', width: 1.5, points: { show: true, size: 6 } },
+            { label: t('chart.series.perfect'),     stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

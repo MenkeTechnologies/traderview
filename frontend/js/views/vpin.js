@@ -199,9 +199,9 @@ function renderVolChart(report) {
         scales: { x: {}, y: {} },
         series: [
             { label: 'bucket #' },
-            { label: 'buy',  stroke: '#00e5ff', width: 1.0, fill: '#00e5ff66',
+            { label: t('chart.series.buy'),  stroke: '#00e5ff', width: 1.0, fill: '#00e5ff66',
               points: { show: false } },
-            { label: 'sell', stroke: '#ff3860', width: 1.0, fill: '#ff386066',
+            { label: t('chart.series.sell'), stroke: '#ff3860', width: 1.0, fill: '#ff386066',
               points: { show: false } },
         ],
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],

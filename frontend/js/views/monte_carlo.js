@@ -176,7 +176,7 @@ function renderChart(stats) {
             title: '', width: el.clientWidth || 800, height: 340,
             scales: { x: {}, y: {} },
             series: [
-                { label: 'sample' },
+                { label: t('chart.series.sample') },
                 { label: t('chart.series.value'), stroke: '#00e5ff', width: 1.5,
                   fill: 'rgba(0,229,255,0.06)' },
             ],
