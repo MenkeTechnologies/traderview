@@ -6,6 +6,8 @@
 // by gross_exposure DESC. Union-find single-link agglomerative — two
 // positions cluster if |corr| ≥ threshold (transitive via chain).
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // "<symbol> <notional>" per line. Notional may be negative (short).
@@ -174,10 +176,10 @@ export function summarize(clusters) {
 // ≥50% → amber, < 50% → green.
 export function concentrationBadge(topPct) {
     if (!Number.isFinite(topPct)) return { label: '—', cls: '', hint: '—' };
-    if (topPct >= 0.7) return { label: 'CONCENTRATED', cls: 'neg', hint: 'Top cluster ≥ 70% of gross — hidden concentration risk.' };
-    if (topPct >= 0.5) return { label: 'TILTED',       cls: 'neg', hint: 'Top cluster ≥ 50% of gross — book leaning hard one factor.' };
-    if (topPct >= 0.3) return { label: 'MODERATE',     cls: '',    hint: 'Top cluster 30–50% — meaningful but not dominant.' };
-    return { label: 'DIVERSE', cls: 'pos', hint: 'Top cluster < 30% — well-diversified across factors.' };
+    if (topPct >= 0.7) return { label: t('view.clusters_correlation.conc.concentrated.label'), cls: 'neg', hint: t('view.clusters_correlation.conc.concentrated.hint') };
+    if (topPct >= 0.5) return { label: t('view.clusters_correlation.conc.tilted.label'),       cls: 'neg', hint: t('view.clusters_correlation.conc.tilted.hint') };
+    if (topPct >= 0.3) return { label: t('view.clusters_correlation.conc.moderate.label'),     cls: '',    hint: t('view.clusters_correlation.conc.moderate.hint') };
+    return { label: t('view.clusters_correlation.conc.diverse.label'), cls: 'pos', hint: t('view.clusters_correlation.conc.diverse.hint') };
 }
 
 // Demo presets with realistic correlation structures.

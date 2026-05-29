@@ -6,6 +6,8 @@
 // AND lets us render both the raw price + the HA series with flip
 // markers in one chart.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Four-token-per-line "open high low close".
@@ -94,16 +96,24 @@ export function buildBody(bars, config) {
 
 // Maps backend flip enum + strength into UI badges.
 const DIR_LABEL = {
-    bullish_to_bearish: { label: 'BULL → BEAR', cls: 'neg' },
-    bearish_to_bullish: { label: 'BEAR → BULL', cls: 'pos' },
+    bullish_to_bearish: { key: 'bull_to_bear', cls: 'neg' },
+    bearish_to_bullish: { key: 'bear_to_bull', cls: 'pos' },
 };
 const STRENGTH_LABEL = {
-    strong: { label: 'STRONG', cls: 'pos' },
-    weak:   { label: 'WEAK',   cls: '' },
+    strong: { key: 'strong', cls: 'pos' },
+    weak:   { key: 'weak',   cls: '' },
 };
 
-export function dirBadge(d) { return DIR_LABEL[d] || { label: String(d || '—'), cls: '' }; }
-export function strengthBadge(s) { return STRENGTH_LABEL[s] || { label: String(s || '—'), cls: '' }; }
+export function dirBadge(d) {
+    const x = DIR_LABEL[d];
+    if (!x) return { label: String(d || '—'), cls: '' };
+    return { label: t(`view.ha_reversal.dir.${x.key}`), cls: x.cls };
+}
+export function strengthBadge(s) {
+    const x = STRENGTH_LABEL[s];
+    if (!x) return { label: String(s || '—'), cls: '' };
+    return { label: t(`view.ha_reversal.strength.${x.key}`), cls: x.cls };
+}
 
 // Splits backend events into parallel up/down arrays anchored at the
 // bar_index for uPlot marker plotting (null elsewhere).

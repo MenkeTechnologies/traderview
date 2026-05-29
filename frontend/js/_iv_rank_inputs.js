@@ -5,6 +5,7 @@
 // units to the user.
 
 import { parseFloatBlob } from './_paste_parser.js';
+import { t } from './i18n.js';
 
 export function parseHistory(text) {
     return parseFloatBlob(text, { nonNegative: true });
@@ -29,9 +30,9 @@ export function buildBody(currentIv, history) {
 // "low / normal / high" labels with action hints.
 export function rankEnvironment(rank) {
     if (!Number.isFinite(rank)) return { label: '—', cls: '', hint: '' };
-    if (rank < 25)  return { label: 'LOW',    cls: 'neg', hint: 'favor long premium / debit spreads' };
-    if (rank > 75)  return { label: 'HIGH',   cls: 'pos', hint: 'favor short premium / credit spreads' };
-    return            { label: 'NORMAL', cls: '',    hint: 'either side viable; let edge decide' };
+    if (rank < 25)  return { label: t('view.iv_rank.env.low.label'),    cls: 'neg', hint: t('view.iv_rank.env.low.hint') };
+    if (rank > 75)  return { label: t('view.iv_rank.env.high.label'),   cls: 'pos', hint: t('view.iv_rank.env.high.hint') };
+    return            { label: t('view.iv_rank.env.normal.label'), cls: '',    hint: t('view.iv_rank.env.normal.hint') };
 }
 
 // Two-tier check on whether IV rank and IV percentile agree. When they

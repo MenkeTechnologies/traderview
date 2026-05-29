@@ -8,6 +8,8 @@
 //     { window_win_rate, window_payoff_ratio?, kelly_fraction?, half_kelly_fraction? }.
 //   Pre-warmup indices return all-default points (fields are 0 / null).
 
+import { t } from './i18n.js';
+
 // ── Static Kelly ─────────────────────────────────────────────────
 
 export function validateStaticInputs(winRate, payoffRatio) {
@@ -194,19 +196,22 @@ export function makeDemoPnls(kind = 'positive-edge') {
 
 // ── Presentation ─────────────────────────────────────────────────
 
-const SIZE_BADGES = {
-    no_trade:   { label: 'NO TRADE',   cls: 'neg', hint: "No edge — Kelly says don't risk capital." },
-    tiny:       { label: 'TINY',       cls: '',    hint: 'Edge < 1% Kelly — sizes will be very small.' },
-    moderate:   { label: 'MODERATE',   cls: 'pos', hint: 'Healthy edge — half-Kelly recommended.' },
-    aggressive: { label: 'AGGRESSIVE', cls: 'pos', hint: 'Edge is very large — use half-Kelly to control drawdown.' },
-};
+const SIZE_KEYS = ['no_trade', 'tiny', 'moderate', 'aggressive'];
+const SIZE_CLS = { no_trade: 'neg', tiny: '', moderate: 'pos', aggressive: 'pos' };
+function _sizeBadge(key) {
+    return {
+        label: t(`view.kelly.size.${key}.label`),
+        cls: SIZE_CLS[key],
+        hint: t(`view.kelly.size.${key}.hint`),
+    };
+}
 
 export function sizeBadge(fullKelly) {
-    if (!Number.isFinite(fullKelly)) return SIZE_BADGES.no_trade;
-    if (fullKelly < 0)               return SIZE_BADGES.no_trade;
-    if (fullKelly < 0.01)            return SIZE_BADGES.tiny;
-    if (fullKelly > 0.50)            return SIZE_BADGES.aggressive;
-    return SIZE_BADGES.moderate;
+    if (!Number.isFinite(fullKelly)) return _sizeBadge('no_trade');
+    if (fullKelly < 0)               return _sizeBadge('no_trade');
+    if (fullKelly < 0.01)            return _sizeBadge('tiny');
+    if (fullKelly > 0.50)            return _sizeBadge('aggressive');
+    return _sizeBadge('moderate');
 }
 
 export function fmtPct(v, d = 2) {
