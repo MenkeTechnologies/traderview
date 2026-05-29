@@ -28,16 +28,16 @@ export async function renderVolStopClose(mount, _appState) {
             <h2>Paste HLC bars (one per line: <code>high low close</code>)</h2>
             <textarea id="vsc-blob" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.6&#10;...">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
-                <label>Side
+                <label><span data-i18n="view.vol_stop_close.label.side">Side</span>
                     <select id="vsc-side">
                         <option data-i18n="view.vol_stop_close.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.vol_stop_close.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
-                <label>Lookback (bars)
+                <label><span data-i18n="view.vol_stop_close.label.lookback">Lookback (bars)</span>
                     <input id="vsc-lb" type="number" step="1" min="1" value="${state.cfg.lookback}"></label>
-                <label>ATR multiplier
+                <label><span data-i18n="view.vol_stop_close.label.atr_multiplier">ATR multiplier</span>
                     <input id="vsc-mult" type="number" step="any" min="0" value="${state.cfg.atr_multiplier}"></label>
-                <label>ATR period
+                <label><span data-i18n="view.vol_stop_close.label.atr_period">ATR period</span>
                     <input id="vsc-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
                 <button data-i18n="view.vol_stop_close.btn.compute" id="vsc-run" class="primary" type="button">Compute</button>
             </div>

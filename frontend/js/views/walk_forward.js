@@ -28,12 +28,18 @@ export async function renderWalkForward(mount) {
                 <select name="kind">
                     ${KINDS.map(k => `<option value="${k.id}">${esc(k.label)}</option>`).join('')}
                 </select>
-                <label>Days <input name="days" type="number" value="1825" style="width:90px"></label>
-                <label>IS bars <input name="is_bars" type="number" value="252" style="width:80px"></label>
-                <label>OOS bars <input name="oos_bars" type="number" value="63" style="width:80px"></label>
-                <label>Step bars <input name="step_bars" type="number" value="63" style="width:80px"></label>
-                <label>Capital <input name="capital" type="number" value="10000" style="width:110px"></label>
-                <label>Fee/trade <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
+                <label><span data-i18n="view.walk_forward.label.days">Days</span>
+                    <input name="days" type="number" value="1825" style="width:90px"></label>
+                <label><span data-i18n="view.walk_forward.label.is_bars">IS bars</span>
+                    <input name="is_bars" type="number" value="252" style="width:80px"></label>
+                <label><span data-i18n="view.walk_forward.label.oos_bars">OOS bars</span>
+                    <input name="oos_bars" type="number" value="63" style="width:80px"></label>
+                <label><span data-i18n="view.walk_forward.label.step_bars">Step bars</span>
+                    <input name="step_bars" type="number" value="63" style="width:80px"></label>
+                <label><span data-i18n="view.walk_forward.label.capital">Capital</span>
+                    <input name="capital" type="number" value="10000" style="width:110px"></label>
+                <label><span data-i18n="view.walk_forward.label.fee_trade">Fee/trade</span>
+                    <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
                 <select name="metric">
                     <option data-i18n="view.walk_forward.opt.maximize_return" value="return" selected>Maximize return</option>
                     <option data-i18n="view.walk_forward.opt.maximize_sharpe" value="sharpe">Maximize Sharpe</option>

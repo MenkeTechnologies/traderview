@@ -30,19 +30,19 @@ export async function renderPyramid(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.pyramid.h2.strategy">Strategy</h2>
             <div class="inline-form">
-                <label>Kind
+                <label><span data-i18n="view.pyramid.label.kind">Kind</span>
                     <select id="py-kind">
                         <option data-i18n="view.pyramid.opt.pyramid_up_add_to_winners" value="pyramid_up" ${state.kind === 'pyramid_up' ? 'selected' : ''}>Pyramid Up (add to winners)</option>
                         <option data-i18n="view.pyramid.opt.scale_in_avg_down_up_against" value="scale_in"   ${state.kind === 'scale_in'   ? 'selected' : ''}>Scale In (avg down / up against)</option>
                     </select></label>
-                <label>Side
+                <label><span data-i18n="view.pyramid.label.side">Side</span>
                     <select id="py-side">
                         <option data-i18n="view.pyramid.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.pyramid.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
-                <label>Initial qty
+                <label><span data-i18n="view.pyramid.label.initial_qty">Initial qty</span>
                     <input id="py-iq" type="number" step="any" min="0" value="${state.initialQty}"></label>
-                <label>Initial entry $
+                <label><span data-i18n="view.pyramid.label.initial_entry">Initial entry $</span>
                     <input id="py-ie" type="number" step="any" min="0" value="${state.initialEntry}"></label>
             </div>
         </div>

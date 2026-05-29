@@ -19,7 +19,7 @@ export async function renderAiSettings(mount) {
             current key when saving other fields.</p>
 
         <form id="ai-form" class="inline-form">
-            <label>Provider
+            <label><span data-i18n="view.journal_ai.label.provider">Provider</span>
                 <select name="provider">
                     <option data-i18n="view.journal_ai.opt.none" value="">(none)</option>
                     <option data-i18n="view.journal_ai.opt.anthropic" value="anthropic" ${cfg.provider === 'anthropic' ? 'selected' : ''}>Anthropic</option>
@@ -27,23 +27,27 @@ export async function renderAiSettings(mount) {
                     <option data-i18n="view.journal_ai.opt.ollama_local" value="ollama"    ${cfg.provider === 'ollama'    ? 'selected' : ''}>Ollama (local)</option>
                 </select>
             </label>
-            <label>Model
+            <label><span data-i18n="view.journal_ai.label.model">Model</span>
                 <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3"
+                       data-i18n-placeholder="view.journal_ai.placeholder.model"
                        value="${esc(cfg.model || '')}" style="min-width:280px;">
             </label>
-            <label>Endpoint (override)
+            <label><span data-i18n="view.journal_ai.label.endpoint">Endpoint (override)</span>
                 <input name="endpoint" placeholder="default per provider"
+                       data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
                        value="${esc(cfg.endpoint || '')}" style="min-width:240px;">
             </label>
-            <label>API key
+            <label><span data-i18n="view.journal_ai.label.api_key">API key</span>
                 <input name="api_key" type="password"
                        placeholder="${cfg.api_key ? '*** (saved, leave blank to keep)' : 'paste key'}"
                        autocomplete="off">
             </label>
-            <label>Max tokens <input name="max_tokens" type="number" min="100" max="4000"
-                                    value="${cfg.max_tokens ?? 800}" style="width:90px;"></label>
-            <label>Temp <input name="temperature" type="number" min="0" max="2" step="0.05"
-                              value="${cfg.temperature ?? 0.2}" style="width:80px;"></label>
+            <label><span data-i18n="view.journal_ai.label.max_tokens">Max tokens</span>
+                <input name="max_tokens" type="number" min="100" max="4000"
+                       value="${cfg.max_tokens ?? 800}" style="width:90px;"></label>
+            <label><span data-i18n="view.journal_ai.label.temp">Temp</span>
+                <input name="temperature" type="number" min="0" max="2" step="0.05"
+                       value="${cfg.temperature ?? 0.2}" style="width:80px;"></label>
             <button data-i18n="view.journal_ai.btn.save" class="primary" type="submit">Save</button>
             <span id="ai-save-status" class="muted small"></span>
         </form>

@@ -53,11 +53,11 @@ export async function renderVpin(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.vpin.h2.config">Config</h2>
             <div class="inline-form">
-                <label>Volume per bucket
+                <label><span data-i18n="view.vpin.label.volume_per_bucket">Volume per bucket</span>
                     <input id="vp-vpb" type="number" step="any" min="1" value="${state.config.volume_per_bucket}"></label>
-                <label>Window buckets
+                <label><span data-i18n="view.vpin.label.window_buckets">Window buckets</span>
                     <input id="vp-wb"  type="number" step="1" min="1" max="2000" value="${state.config.window_buckets}"></label>
-                <label>Return window (ticks)
+                <label><span data-i18n="view.vpin.label.return_window">Return window (ticks)</span>
                     <input id="vp-rw"  type="number" step="1" min="2" max="10000" value="${state.config.return_window}"></label>
                 <button data-i18n="view.vpin.btn.compute_vpin" id="vp-run" class="primary" type="button">Compute VPIN</button>
             </div>

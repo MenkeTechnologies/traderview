@@ -12,8 +12,9 @@ export async function renderCharts(mount, _state, symbol = '') {
     mount.innerHTML = `
         <h1 data-i18n="view.charts.h1.charts" class="view-title">// CHARTS</h1>
         <div class="chart-toolbar">
-            <label>Symbol <input id="sym" value="${esc(symbol)}"></label>
-            <label>Interval
+            <label><span data-i18n="view.charts.label.symbol">Symbol</span>
+                <input id="sym" value="${esc(symbol)}"></label>
+            <label><span data-i18n="view.charts.label.interval">Interval</span>
                 <select id="iv">
                     <option data-i18n="view.charts.opt.1m" value="1m">1m</option>
                     <option data-i18n="view.charts.opt.5m" value="5m">5m</option>
@@ -23,8 +24,10 @@ export async function renderCharts(mount, _state, symbol = '') {
                     <option data-i18n="view.charts.opt.1w" value="1w">1w</option>
                 </select>
             </label>
-            <label>From <input type="date" id="from"></label>
-            <label>To <input type="date" id="to"></label>
+            <label><span data-i18n="view.charts.label.from">From</span>
+                <input type="date" id="from"></label>
+            <label><span data-i18n="view.charts.label.to">To</span>
+                <input type="date" id="to"></label>
             <button data-i18n="view.charts.btn.load" class="primary" id="load">Load</button>
         </div>
 

@@ -61,13 +61,13 @@ export async function renderVasicek(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.vasicek.h2.simulation_grid">Simulation grid</h2>
             <div class="inline-form">
-                <label>dt (years)
+                <label><span data-i18n="view.vasicek.label.dt">dt (years)</span>
                     <input id="va-dt"    type="number" step="any" min="0" value="${state.params.dt}"></label>
-                <label>Steps
+                <label><span data-i18n="view.vasicek.label.steps">Steps</span>
                     <input id="va-steps" type="number" step="1"   min="1" value="${state.params.steps}"></label>
-                <label>Paths
+                <label><span data-i18n="view.vasicek.label.paths">Paths</span>
                     <input id="va-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
-                <label>Seed (0 = auto)
+                <label><span data-i18n="view.vasicek.label.seed">Seed (0 = auto)</span>
                     <input id="va-seed"  type="number" step="1"   min="0" value="${state.params.seed}"></label>
                 <button data-i18n="view.vasicek.btn.simulate" id="va-run" class="primary" type="button">Simulate</button>
             </div>

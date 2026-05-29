@@ -43,15 +43,15 @@ export async function renderDeflatedSharpe(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.deflated_sharpe.h2.backtest_sample">Backtest sample</h2>
             <div class="inline-form">
-                <label>Observed SR
+                <label><span data-i18n="view.deflated_sharpe.label.observed_sr">Observed SR</span>
                     <input id="ds-sr" type="number" step="any" value="${state.params.observed_sharpe}"></label>
-                <label>n observations
+                <label><span data-i18n="view.deflated_sharpe.label.n_obs">n observations</span>
                     <input id="ds-n" type="number" step="1" min="4" value="${state.params.n_observations}"></label>
-                <label>Skewness
+                <label><span data-i18n="view.deflated_sharpe.label.skewness">Skewness</span>
                     <input id="ds-skew" type="number" step="any" value="${state.params.skewness}"></label>
-                <label>Kurtosis (normal = 3)
+                <label><span data-i18n="view.deflated_sharpe.label.kurtosis">Kurtosis (normal = 3)</span>
                     <input id="ds-kurt" type="number" step="any" value="${state.params.kurtosis}"></label>
-                <label>Trials run
+                <label><span data-i18n="view.deflated_sharpe.label.trials">Trials run</span>
                     <input id="ds-trials" type="number" step="1" min="1" value="${state.params.n_trials}"></label>
                 <button data-i18n="view.deflated_sharpe.btn.deflate" id="ds-run" class="primary" type="button">Deflate</button>
                 <button data-i18n="view.deflated_sharpe.btn.trials_sweep" id="ds-sweep" class="secondary" type="button">+ Trials sweep</button>

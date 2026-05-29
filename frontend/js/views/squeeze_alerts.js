@@ -43,24 +43,27 @@ export async function renderSqueezeAlerts(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.squeeze_alerts.h2.settings">Settings</h2>
             <div class="inline-form">
-                <label>Price threshold (% as decimal, 0.05 = 5%)
+                <label><span data-i18n="view.squeeze_alerts.label.price_threshold">Price threshold (% as decimal, 0.05 = 5%)</span>
                     <input id="sq-pt" type="number" step="any" min="0" value="${settings.price_threshold_pct}"></label>
-                <label>Volume threshold (× ADV in window)
+                <label><span data-i18n="view.squeeze_alerts.label.volume_threshold">Volume threshold (× ADV in window)</span>
                     <input id="sq-vt" type="number" step="any" min="0" value="${settings.volume_threshold}"></label>
-                <label>Window (seconds)
+                <label><span data-i18n="view.squeeze_alerts.label.window_seconds">Window (seconds)</span>
                     <input id="sq-ws" type="number" step="1" min="1" value="${settings.window_seconds}"></label>
-                <label>Cooldown (seconds)
+                <label><span data-i18n="view.squeeze_alerts.label.cooldown">Cooldown (seconds)</span>
                     <input id="sq-cs" type="number" step="1" min="0" value="${settings.cooldown_seconds}"></label>
             </div>
             <div class="inline-form">
-                <label><input id="sq-bell" type="checkbox" ${settings.bell_enabled ? 'checked' : ''}> Bell on alert</label>
-                <label><input id="sq-tts"  type="checkbox" ${settings.tts_enabled  ? 'checked' : ''}> TTS announcement</label>
-                <label><input id="sq-alarm" type="checkbox" ${settings.use_alarm_for_critical ? 'checked' : ''}> Alarm chime for critical</label>
-                <label>Sound volume (0-1)
+                <label><input id="sq-bell" type="checkbox" ${settings.bell_enabled ? 'checked' : ''}>
+                    <span data-i18n="view.squeeze_alerts.label.bell">Bell on alert</span></label>
+                <label><input id="sq-tts"  type="checkbox" ${settings.tts_enabled  ? 'checked' : ''}>
+                    <span data-i18n="view.squeeze_alerts.label.tts">TTS announcement</span></label>
+                <label><input id="sq-alarm" type="checkbox" ${settings.use_alarm_for_critical ? 'checked' : ''}>
+                    <span data-i18n="view.squeeze_alerts.label.alarm">Alarm chime for critical</span></label>
+                <label><span data-i18n="view.squeeze_alerts.label.volume">Sound volume (0-1)</span>
                     <input id="sq-vol" type="number" step="0.05" min="0" max="1" value="${settings.sound_volume}"></label>
             </div>
             <div class="inline-form">
-                <label>Watchlist (comma-separated, blank = all symbols)
+                <label><span data-i18n="view.squeeze_alerts.label.watchlist">Watchlist (comma-separated, blank = all symbols)</span>
                     <input id="sq-wl" type="text" value="${esc(settings.watchlist.join(','))}" style="min-width:300px"></label>
                 <button data-i18n="view.squeeze_alerts.btn.save_settings" id="sq-save"    class="primary"   type="button">Save settings</button>
                 <button data-i18n="view.squeeze_alerts.btn.reset_defaults" id="sq-default" class="secondary" type="button">Reset defaults</button>

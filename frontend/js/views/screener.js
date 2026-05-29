@@ -12,15 +12,17 @@ export async function renderScreener(mount) {
 
         <div class="chart-panel">
             <form id="sc-form" class="inline-form">
-                <label>Watchlist
+                <label><span data-i18n="view.screener.label.watchlist">Watchlist</span>
                     <select name="watchlist_id">
                         <option data-i18n="view.screener.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Min score <input name="min_score" type="number" value="3"></label>
-                <label>Max score <input name="max_score" type="number"></label>
-                <label>Summary
+                <label><span data-i18n="view.screener.label.min_score">Min score</span>
+                    <input name="min_score" type="number" value="3"></label>
+                <label><span data-i18n="view.screener.label.max_score">Max score</span>
+                    <input name="max_score" type="number"></label>
+                <label><span data-i18n="view.screener.label.summary">Summary</span>
                     <select name="summary">
                         <option data-i18n="view.screener.opt.any" value="">any</option>
                         <option data-i18n="view.screener.opt.buy" value="buy">buy</option>
@@ -28,8 +30,10 @@ export async function renderScreener(mount) {
                         <option data-i18n="view.screener.opt.sell" value="sell">sell</option>
                     </select>
                 </label>
-                <label>History days <input name="days" type="number" value="365"></label>
-                <label>Limit <input name="limit" type="number" value="50"></label>
+                <label><span data-i18n="view.screener.label.history_days">History days</span>
+                    <input name="days" type="number" value="365"></label>
+                <label><span data-i18n="view.screener.label.limit">Limit</span>
+                    <input name="limit" type="number" value="50"></label>
                 <button data-i18n="view.screener.btn.run" class="primary" type="submit">Run</button>
             </form>
         </div>

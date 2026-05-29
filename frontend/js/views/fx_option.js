@@ -37,17 +37,23 @@ export async function renderFxOption(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.fx_option.h2.contract">Contract</h2>
             <div class="inline-form">
-                <label>Kind
+                <label><span data-i18n="view.fx_option.label.kind">Kind</span>
                     <select id="fx-kind">
                         <option data-i18n="view.fx_option.opt.call_right_to_buy_foreign" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call (right to buy foreign)</option>
                         <option data-i18n="view.fx_option.opt.put_right_to_sell_foreign" value="put"  ${state.params.kind === 'put' ? 'selected' : ''}>Put (right to sell foreign)</option>
                     </select></label>
-                <label>Spot (dom/for) <input id="fx-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
-                <label>Strike <input id="fx-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label>T (years) <input id="fx-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
-                <label>Rate domestic <input id="fx-rd" type="number" step="any" value="${state.params.rate_dom}"></label>
-                <label>Rate foreign <input id="fx-rf" type="number" step="any" value="${state.params.rate_for}"></label>
-                <label>σ (FX vol) <input id="fx-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                <label><span data-i18n="view.fx_option.label.spot">Spot (dom/for)</span>
+                    <input id="fx-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
+                <label><span data-i18n="view.fx_option.label.strike">Strike</span>
+                    <input id="fx-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                <label><span data-i18n="view.fx_option.label.t_years">T (years)</span>
+                    <input id="fx-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
+                <label><span data-i18n="view.fx_option.label.rate_dom">Rate domestic</span>
+                    <input id="fx-rd" type="number" step="any" value="${state.params.rate_dom}"></label>
+                <label><span data-i18n="view.fx_option.label.rate_for">Rate foreign</span>
+                    <input id="fx-rf" type="number" step="any" value="${state.params.rate_for}"></label>
+                <label><span data-i18n="view.fx_option.label.sigma">σ (FX vol)</span>
+                    <input id="fx-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
                 <button data-i18n="view.fx_option.btn.price" id="fx-run" class="primary" type="button">Price</button>
             </div>
             <p class="muted">

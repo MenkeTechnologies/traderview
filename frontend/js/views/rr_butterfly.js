@@ -36,7 +36,7 @@ export async function renderRrButterfly(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.rr_butterfly.h2.mode">Mode</h2>
             <div class="inline-form">
-                <label>Direction
+                <label><span data-i18n="view.rr_butterfly.label.direction">Direction</span>
                     <select id="rr-mode">
                         <option data-i18n="view.rr_butterfly.opt.decompose_atm_rr_bf" value="decompose"   ${state.mode === 'decompose'   ? 'selected' : ''}>Decompose → ATM + RR + BF</option>
                         <option data-i18n="view.rr_butterfly.opt.reconstruct_wings" value="reconstruct" ${state.mode === 'reconstruct' ? 'selected' : ''}>Reconstruct → σ wings</option>
@@ -69,11 +69,11 @@ function renderInputsForm() {
     const wrap = document.getElementById('rr-inputs');
     if (state.mode === 'decompose') {
         wrap.innerHTML = `
-            <label>σ_25C (call wing)
+            <label><span data-i18n="view.rr_butterfly.label.sigma_25c">σ_25C (call wing)</span>
                 <input id="rr-sc"  type="number" step="any" min="0" value="${state.params.sigma_25_call}"></label>
-            <label>σ_25P (put wing)
+            <label><span data-i18n="view.rr_butterfly.label.sigma_25p">σ_25P (put wing)</span>
                 <input id="rr-sp"  type="number" step="any" min="0" value="${state.params.sigma_25_put}"></label>
-            <label>σ_ATM
+            <label><span data-i18n="view.rr_butterfly.label.sigma_atm">σ_ATM</span>
                 <input id="rr-atm" type="number" step="any" min="0" value="${state.params.sigma_atm}"></label>
         `;
         wrap.querySelector('#rr-sc').addEventListener('change',  e => state.params.sigma_25_call = Number(e.target.value));
@@ -81,11 +81,11 @@ function renderInputsForm() {
         wrap.querySelector('#rr-atm').addEventListener('change', e => state.params.sigma_atm     = Number(e.target.value));
     } else {
         wrap.innerHTML = `
-            <label>ATM IV
+            <label><span data-i18n="view.rr_butterfly.label.atm_iv">ATM IV</span>
                 <input id="rr-atm-in" type="number" step="any" min="0" value="${state.params.atm}"></label>
-            <label>Risk reversal (RR)
+            <label><span data-i18n="view.rr_butterfly.label.rr">Risk reversal (RR)</span>
                 <input id="rr-rr"     type="number" step="any" value="${state.params.rr}"></label>
-            <label>Butterfly (BF)
+            <label><span data-i18n="view.rr_butterfly.label.bf">Butterfly (BF)</span>
                 <input id="rr-bf"     type="number" step="any" value="${state.params.bf}"></label>
         `;
         wrap.querySelector('#rr-atm-in').addEventListener('change', e => state.params.atm = Number(e.target.value));

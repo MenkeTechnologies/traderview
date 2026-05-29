@@ -39,16 +39,16 @@ export async function renderChandelierStop(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.chandelier_stop.h2.config">Config</h2>
             <div class="inline-form">
-                <label>Side
+                <label><span data-i18n="view.chandelier_stop.label.side">Side</span>
                     <select id="cs-side">
                         <option data-i18n="view.chandelier_stop.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.chandelier_stop.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
-                <label>ATR period
+                <label><span data-i18n="view.chandelier_stop.label.atr_period">ATR period</span>
                     <input id="cs-atrp" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
-                <label>Lookback bars
+                <label><span data-i18n="view.chandelier_stop.label.lookback">Lookback bars</span>
                     <input id="cs-lb"  type="number" step="1" min="1" value="${state.config.lookback}"></label>
-                <label>ATR multiplier
+                <label><span data-i18n="view.chandelier_stop.label.multiplier">ATR multiplier</span>
                     <input id="cs-mul" type="number" step="0.1" min="0" value="${state.config.atr_multiplier}"></label>
                 <button data-i18n="view.chandelier_stop.btn.compute" id="cs-run" class="primary" type="button">Compute</button>
             </div>

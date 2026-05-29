@@ -24,7 +24,7 @@ export async function renderTripleScreen(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.triple_screen.h2.screen_1_long_tide_weekly_trend">Screen 1 — Long-tide (weekly trend)</h2>
             <div class="inline-form">
-                <label>Weekly trend
+                <label><span data-i18n="view.triple_screen.label.weekly_trend">Weekly trend</span>
                     <select id="ts-trend">
                         <option data-i18n="view.triple_screen.opt.up" value="up"      ${state.params.weekly_trend === 'up'      ? 'selected' : ''}>UP</option>
                         <option data-i18n="view.triple_screen.opt.down" value="down"    ${state.params.weekly_trend === 'down'    ? 'selected' : ''}>DOWN</option>
@@ -36,11 +36,11 @@ export async function renderTripleScreen(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.triple_screen.h2.screen_2_intermediate_wave_daily_oscillator">Screen 2 — Intermediate-wave (daily oscillator)</h2>
             <div class="inline-form">
-                <label>Oscillator value (RSI / stoch)
+                <label><span data-i18n="view.triple_screen.label.oscillator">Oscillator value (RSI / stoch)</span>
                     <input id="ts-osc" type="number" step="any" value="${state.params.daily_oscillator_value}"></label>
-                <label>Oversold threshold
+                <label><span data-i18n="view.triple_screen.label.oversold">Oversold threshold</span>
                     <input id="ts-os"  type="number" step="any" value="${state.params.oversold_threshold}"></label>
-                <label>Overbought threshold
+                <label><span data-i18n="view.triple_screen.label.overbought">Overbought threshold</span>
                     <input id="ts-ob"  type="number" step="any" value="${state.params.overbought_threshold}"></label>
             </div>
             <p data-i18n="view.triple_screen.hint.in_an_up_tide_pull_back_below_oversold_entry_zone_" class="muted">In an UP tide, pull-back below oversold = entry zone.

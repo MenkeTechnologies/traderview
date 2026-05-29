@@ -45,7 +45,7 @@ export async function renderOptionPayoff(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.option_payoff.h2.strategy">Strategy</h2>
             <div class="inline-form">
-                <label>Preset
+                <label><span data-i18n="view.option_payoff.label.preset">Preset</span>
                     <select id="op-preset">
                         <option data-i18n="view.option_payoff.opt.custom" value="">— custom —</option>
                         <option data-i18n="view.option_payoff.opt.long_call" value="long_call">Long call</option>
@@ -59,11 +59,16 @@ export async function renderOptionPayoff(mount, _appState) {
                         <option data-i18n="view.option_payoff.opt.covered_call" value="covered_call">Covered call</option>
                     </select>
                 </label>
-                <label>Spot <input id="op-spot" type="number" step="any" value="${state.spot}"></label>
-                <label>T (years) <input id="op-t" type="number" step="any" value="${state.t_to_expiry}"></label>
-                <label>Rate <input id="op-rate" type="number" step="any" value="${state.rate}"></label>
-                <label>Div yield <input id="op-q" type="number" step="any" value="${state.div_yield}"></label>
-                <label>IV <input id="op-sigma" type="number" step="any" value="${state.sigma}"></label>
+                <label><span data-i18n="view.option_payoff.label.spot">Spot</span>
+                    <input id="op-spot" type="number" step="any" value="${state.spot}"></label>
+                <label><span data-i18n="view.option_payoff.label.t">T (years)</span>
+                    <input id="op-t" type="number" step="any" value="${state.t_to_expiry}"></label>
+                <label><span data-i18n="view.option_payoff.label.rate">Rate</span>
+                    <input id="op-rate" type="number" step="any" value="${state.rate}"></label>
+                <label><span data-i18n="view.option_payoff.label.div_yield">Div yield</span>
+                    <input id="op-q" type="number" step="any" value="${state.div_yield}"></label>
+                <label><span data-i18n="view.option_payoff.label.iv">IV</span>
+                    <input id="op-sigma" type="number" step="any" value="${state.sigma}"></label>
                 <button data-i18n="view.option_payoff.btn.recalculate" id="op-recalc" class="primary" type="button">Recalculate</button>
             </div>
         </div>

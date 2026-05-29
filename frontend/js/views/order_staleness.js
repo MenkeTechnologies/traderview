@@ -42,14 +42,14 @@ export async function renderOrderStaleness(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.order_staleness.h2.reference_time_thresholds">Reference time + thresholds</h2>
             <div class="inline-form">
-                <label>Now (ISO 8601)
+                <label><span data-i18n="view.order_staleness.label.now">Now (ISO 8601)</span>
                     <input id="os-now" type="text" value="${state.now}"></label>
                 <button data-i18n="view.order_staleness.btn.now_current_time" id="os-nownow" class="secondary" type="button">now = current time</button>
-                <label>Warn (h)
+                <label><span data-i18n="view.order_staleness.label.warn_h">Warn (h)</span>
                     <input id="os-warn" type="number" step="any" min="0" value="${state.thresholds.warn_hours}"></label>
-                <label>Stale (h)
+                <label><span data-i18n="view.order_staleness.label.stale_h">Stale (h)</span>
                     <input id="os-stale" type="number" step="any" min="0" value="${state.thresholds.stale_hours}"></label>
-                <label>Forgotten (h)
+                <label><span data-i18n="view.order_staleness.label.forgotten_h">Forgotten (h)</span>
                     <input id="os-forgot" type="number" step="any" min="0" value="${state.thresholds.forgotten_hours}"></label>
                 <button data-i18n="view.order_staleness.btn.evaluate" id="os-run" class="primary" type="button">Evaluate</button>
             </div>

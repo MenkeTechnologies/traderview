@@ -42,16 +42,16 @@ export async function renderRebalance(mount, state) {
 
         <div class="chart-panel">
             <form id="rb-form" class="inline-form">
-                <label>Preset
+                <label><span data-i18n="view.rebalance.label.preset">Preset</span>
                     <select name="preset">
                         <option data-i18n="view.rebalance.opt.custom" value="">(custom)</option>
                         ${Object.keys(PRESETS).map(k => `<option>${esc(k)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Cash on hand
+                <label><span data-i18n="view.rebalance.label.cash">Cash on hand</span>
                     <input name="cash" type="number" min="0" step="any" value="0" style="width:120px;">
                 </label>
-                <label>Max trades
+                <label><span data-i18n="view.rebalance.label.max_trades">Max trades</span>
                     <input name="max_trades" type="number" min="1" max="200" value="20" style="width:80px;">
                 </label>
                 <button data-i18n="view.rebalance.btn.compute_plan" class="primary" id="rb-go" type="button">Compute plan</button>

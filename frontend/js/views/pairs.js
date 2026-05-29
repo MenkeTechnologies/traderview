@@ -15,16 +15,18 @@ export async function renderPairs(mount) {
 
         <div class="chart-panel">
             <form id="cf" class="inline-form">
-                <label>Symbols
-                    <input name="symbols" placeholder="AAPL,MSFT,GOOGL,NVDA,META,AMZN,TSLA" required style="min-width:340px;text-transform:uppercase">
+                <label><span data-i18n="view.pairs.label.symbols">Symbols</span>
+                    <input name="symbols" placeholder="AAPL,MSFT,GOOGL,NVDA,META,AMZN,TSLA"
+                           data-i18n-placeholder="view.pairs.placeholder.symbols" required style="min-width:340px;text-transform:uppercase">
                 </label>
-                <label>or watchlist
+                <label><span data-i18n="view.pairs.label.or_watchlist">or watchlist</span>
                     <select name="wl">
                         <option data-i18n="view.pairs.opt.ignore" value="">— ignore —</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Days <input name="days" type="number" value="90" style="width:80px"></label>
+                <label><span data-i18n="view.pairs.label.days">Days</span>
+                    <input name="days" type="number" value="90" style="width:80px"></label>
                 <button data-i18n="view.pairs.btn.run" class="primary" type="submit">Run</button>
             </form>
         </div>
@@ -34,9 +36,10 @@ export async function renderPairs(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.pairs.h2.pair_analyzer">Pair analyzer</h2>
             <form id="pf" class="inline-form">
-                <input name="a" placeholder="A (KO)" required style="width:90px;text-transform:uppercase">
-                <input name="b" placeholder="B (PEP)" required style="width:90px;text-transform:uppercase">
-                <label>Days <input name="days" type="number" value="180" style="width:80px"></label>
+                <input name="a" placeholder="A (KO)" data-i18n-placeholder="view.pairs.placeholder.a" required style="width:90px;text-transform:uppercase">
+                <input name="b" placeholder="B (PEP)" data-i18n-placeholder="view.pairs.placeholder.b" required style="width:90px;text-transform:uppercase">
+                <label><span data-i18n="view.pairs.label.days_180">Days</span>
+                    <input name="days" type="number" value="180" style="width:80px"></label>
                 <button data-i18n="view.pairs.btn.analyze" class="primary" type="submit">Analyze</button>
             </form>
             <div id="pair-out"></div>

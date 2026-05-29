@@ -48,13 +48,13 @@ export async function renderVolSmile(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.vol_smile.h2.inputs">Inputs</h2>
             <div class="inline-form">
-                <label>Spot
+                <label><span data-i18n="view.vol_smile.label.spot">Spot</span>
                     <input id="vs-spot" type="number" step="any" value="${state.spot}"></label>
-                <label>Expiry (years)
+                <label><span data-i18n="view.vol_smile.label.t_years">Expiry (years)</span>
                     <input id="vs-t" type="number" step="any" value="${state.t_years}"></label>
-                <label>Rate
+                <label><span data-i18n="view.vol_smile.label.rate">Rate</span>
                     <input id="vs-rate" type="number" step="any" value="${state.rate}"></label>
-                <label>Div yield
+                <label><span data-i18n="view.vol_smile.label.div_yield">Div yield</span>
                     <input id="vs-q" type="number" step="any" value="${state.div_yield}"></label>
                 <button data-i18n="view.vol_smile.btn.fit" id="vs-fit" class="primary" type="button">Fit</button>
             </div>

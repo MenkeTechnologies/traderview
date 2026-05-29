@@ -103,9 +103,12 @@ export async function renderTradeDetail(mount, state, tradeId) {
           <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.risk_plan">Risk Plan</h2>
             <form id="risk-form" class="risk-form">
-              <label>Stop loss <input name="stop_loss" type="number" step="any" value="${trade.stop_loss ?? ''}"></label>
-              <label>Risk $ <input name="risk_amount" type="number" step="any" value="${trade.risk_amount ?? ''}"></label>
-              <label>Target <input name="initial_target" type="number" step="any" value="${trade.initial_target ?? ''}"></label>
+              <label><span data-i18n="view.trade_detail.label.stop_loss">Stop loss</span>
+                  <input name="stop_loss" type="number" step="any" value="${trade.stop_loss ?? ''}"></label>
+              <label><span data-i18n="view.trade_detail.label.risk_amount">Risk $</span>
+                  <input name="risk_amount" type="number" step="any" value="${trade.risk_amount ?? ''}"></label>
+              <label><span data-i18n="view.trade_detail.label.target">Target</span>
+                  <input name="initial_target" type="number" step="any" value="${trade.initial_target ?? ''}"></label>
               <button data-i18n="view.trade_detail.btn.save_2" class="primary" type="submit">Save</button>
             </form>
           </div>

@@ -34,10 +34,14 @@ export async function renderMicroprice(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.microprice.h2.l1_quote">L1 quote</h2>
             <div class="inline-form">
-                <label>Bid    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}"></label>
-                <label>Ask    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}"></label>
-                <label>Bid size <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}"></label>
-                <label>Ask size <input id="mp-ask-sz" type="number" step="1"   min="0" value="${state.quote.ask_size}"></label>
+                <label><span data-i18n="view.microprice.label.bid">Bid</span>
+                    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}"></label>
+                <label><span data-i18n="view.microprice.label.ask">Ask</span>
+                    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}"></label>
+                <label><span data-i18n="view.microprice.label.bid_size">Bid size</span>
+                    <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}"></label>
+                <label><span data-i18n="view.microprice.label.ask_size">Ask size</span>
+                    <input id="mp-ask-sz" type="number" step="1"   min="0" value="${state.quote.ask_size}"></label>
                 <button data-i18n="view.microprice.btn.compute" id="mp-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.microprice.hint.microprice_bid_ask_size_total_ask_bid_size_total_w" class="muted">

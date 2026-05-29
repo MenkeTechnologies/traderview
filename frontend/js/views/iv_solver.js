@@ -41,23 +41,28 @@ export async function renderIvSolver(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.iv_solver.h2.contract">Contract</h2>
             <div class="inline-form">
-                <label>Kind
+                <label><span data-i18n="view.iv_solver.label.kind">Kind</span>
                     <select id="iv-kind">
                         <option data-i18n="view.iv_solver.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.iv_solver.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label>Spot   <input id="iv-spot"   type="number" step="any" min="0" value="${state.params.spot}"></label>
-                <label>Strike <input id="iv-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label>T (years) <input id="iv-t"   type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
-                <label>Rate r  <input id="iv-r"    type="number" step="any" value="${state.params.risk_free}"></label>
-                <label>Dividend q <input id="iv-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
+                <label><span data-i18n="view.iv_solver.label.spot">Spot</span>
+                    <input id="iv-spot"   type="number" step="any" min="0" value="${state.params.spot}"></label>
+                <label><span data-i18n="view.iv_solver.label.strike">Strike</span>
+                    <input id="iv-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                <label><span data-i18n="view.iv_solver.label.t">T (years)</span>
+                    <input id="iv-t"   type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
+                <label><span data-i18n="view.iv_solver.label.rate">Rate r</span>
+                    <input id="iv-r"    type="number" step="any" value="${state.params.risk_free}"></label>
+                <label><span data-i18n="view.iv_solver.label.div">Dividend q</span>
+                    <input id="iv-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.iv_solver.h2.market_price">Market price</h2>
             <div class="inline-form">
-                <label>Observed market price
+                <label><span data-i18n="view.iv_solver.label.market_price">Observed market price</span>
                     <input id="iv-mkt" type="number" step="any" min="0" value="${state.params.market_price}"></label>
                 <button data-i18n="view.iv_solver.btn.solve_iv" id="iv-run" class="primary" type="button">Solve IV</button>
             </div>

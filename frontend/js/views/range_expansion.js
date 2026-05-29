@@ -41,13 +41,13 @@ export async function renderRangeExpansion(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.range_expansion.h2.config">Config</h2>
             <div class="inline-form">
-                <label>ATR period
+                <label><span data-i18n="view.range_expansion.label.atr_period">ATR period</span>
                     <input id="re-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
-                <label>Lookback bars
+                <label><span data-i18n="view.range_expansion.label.lookback">Lookback bars</span>
                     <input id="re-lb"  type="number" step="1" min="1" value="${state.config.lookback}"></label>
-                <label>Min expansion (× ATR)
+                <label><span data-i18n="view.range_expansion.label.min_expansion">Min expansion (× ATR)</span>
                     <input id="re-min" type="number" step="0.1" min="0" value="${state.config.min_expansion_atrs}"></label>
-                <label>Prior ATR max (compression cap)
+                <label><span data-i18n="view.range_expansion.label.prior_atr_max">Prior ATR max (compression cap)</span>
                     <input id="re-prior" type="number" step="0.1" min="0" value="${state.config.prior_atr_max}"></label>
                 <button data-i18n="view.range_expansion.btn.detect" id="re-run" class="primary" type="button">Detect</button>
             </div>

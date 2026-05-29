@@ -46,17 +46,17 @@ export async function renderStressTest(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.stress_test.h2.shock_grid_market_params">Shock grid + market params</h2>
             <div class="inline-form">
-                <label>Price shocks % (comma-sep, fractions e.g. -0.10 = -10%)
+                <label><span data-i18n="view.stress_test.label.price_shocks">Price shocks % (comma-sep, fractions e.g. -0.10 = -10%)</span>
                     <input id="st-ps" type="text" value="${state.priceShocks.join(',')}" style="min-width:300px"></label>
-                <label>IV shocks % (relative to current IV)
+                <label><span data-i18n="view.stress_test.label.iv_shocks">IV shocks % (relative to current IV)</span>
                     <input id="st-iv" type="text" value="${state.ivShocks.join(',')}" style="min-width:240px"></label>
             </div>
             <div class="inline-form">
-                <label>Time-decay days
+                <label><span data-i18n="view.stress_test.label.time_decay">Time-decay days</span>
                     <input id="st-td" type="number" step="1" min="0" value="${state.timeDecay}"></label>
-                <label>Risk-free rate
+                <label><span data-i18n="view.stress_test.label.rate">Risk-free rate</span>
                     <input id="st-rate" type="number" step="any" value="${state.rate}"></label>
-                <label>Dividend yield
+                <label><span data-i18n="view.stress_test.label.div">Dividend yield</span>
                     <input id="st-div" type="number" step="any" min="0" value="${state.div}"></label>
                 <button data-i18n="view.stress_test.btn.run_stress_test" id="st-run" class="primary" type="button">Run stress test</button>
             </div>

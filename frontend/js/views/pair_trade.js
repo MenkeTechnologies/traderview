@@ -103,11 +103,11 @@ export async function renderPairTrade(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.pair_trade.h2.signal_thresholds_z_score_bands">Signal thresholds (z-score bands)</h2>
             <div class="inline-form">
-                <label>Entry z (enter when |z| &gt;)
+                <label><span data-i18n="view.pair_trade.label.entry_z">Entry z (enter when |z| &gt;)</span>
                     <input id="pt-entry" type="number" step="any" min="0" value="${state.config.entry_z}"></label>
-                <label>Exit z (exit when |z| &lt;)
+                <label><span data-i18n="view.pair_trade.label.exit_z">Exit z (exit when |z| &lt;)</span>
                     <input id="pt-exit"  type="number" step="any" min="0" value="${state.config.exit_z}"></label>
-                <label>Stop z (bail when |z| &gt;)
+                <label><span data-i18n="view.pair_trade.label.stop_z">Stop z (bail when |z| &gt;)</span>
                     <input id="pt-stop"  type="number" step="any" min="0" value="${state.config.stop_z}"></label>
                 <button data-i18n="view.pair_trade.btn.analyze" id="pt-run" class="primary" type="button">Analyze</button>
             </div>

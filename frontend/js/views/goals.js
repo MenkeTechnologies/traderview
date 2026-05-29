@@ -30,17 +30,22 @@ export async function renderGoals(mount, state) {
                     <option data-i18n="view.goals.opt.yearly" value="yearly">yearly</option>
                     <option data-i18n="view.goals.opt.custom" value="custom">custom</option>
                 </select>
-                <label>Account
+                <label><span data-i18n="view.goals.label.account">Account</span>
                     <select name="account_id">
                         <option data-i18n="view.goals.opt.all" value="">(all)</option>
                         ${state.accounts.map(a => `<option value="${a.id}">${esc(a.broker)} · ${esc(a.name)}</option>`).join('')}
                     </select>
                 </label>
-                <label>Start <input name="start_date" type="date" required style="width:140px;"></label>
-                <label>End   <input name="end_date"   type="date" required style="width:140px;"></label>
-                <label>Target P/L $ <input name="target_pnl" type="number" step="any" style="width:110px;"></label>
-                <label>Target win % <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60"></label>
-                <label>Max DD %     <input name="target_max_drawdown_pct" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="10"></label>
+                <label><span data-i18n="view.goals.label.start">Start</span>
+                    <input name="start_date" type="date" required style="width:140px;"></label>
+                <label><span data-i18n="view.goals.label.end">End</span>
+                    <input name="end_date"   type="date" required style="width:140px;"></label>
+                <label><span data-i18n="view.goals.label.target_pnl">Target P/L $</span>
+                    <input name="target_pnl" type="number" step="any" style="width:110px;"></label>
+                <label><span data-i18n="view.goals.label.target_win">Target win %</span>
+                    <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60"></label>
+                <label><span data-i18n="view.goals.label.max_dd">Max DD %</span>
+                    <input name="target_max_drawdown_pct" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="10"></label>
                 <button data-i18n="view.goals.btn.create" class="primary" type="submit">Create</button>
                 <span id="g-status" class="muted small"></span>
             </form>

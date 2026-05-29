@@ -83,23 +83,27 @@ function drawShell(mount) {
     </div>
 
     <div class="expense-filters">
-        <label>From <input type="date" id="exp-from"></label>
-        <label>To <input type="date" id="exp-to"></label>
-        <label>Category
+        <label><span data-i18n="view.expenses.label.from">From</span>
+            <input type="date" id="exp-from"></label>
+        <label><span data-i18n="view.expenses.label.to">To</span>
+            <input type="date" id="exp-to"></label>
+        <label><span data-i18n="view.expenses.label.category">Category</span>
             <select id="exp-category">
                 <option data-i18n="view.expenses.opt.all" value="">all</option>
                 <option data-i18n="view.expenses.opt.uncategorized" value="__none__">(uncategorized)</option>
                 ${catOpts}
             </select>
         </label>
-        <label>Business
+        <label><span data-i18n="view.expenses.label.business">Business</span>
             <select id="exp-business">
                 <option data-i18n="view.expenses.opt.all_2" value="">all</option>
                 <option data-i18n="view.expenses.opt.business_only" value="true">business only</option>
                 <option data-i18n="view.expenses.opt.personal_only" value="false">personal only</option>
             </select>
         </label>
-        <label>Search <input type="text" id="exp-search" placeholder="merchant / description"></label>
+        <label><span data-i18n="view.expenses.label.search">Search</span>
+            <input type="text" id="exp-search" placeholder="merchant / description"
+                   data-i18n-placeholder="view.expenses.placeholder.search"></label>
         <button data-i18n="view.expenses.btn.apply" id="exp-apply">Apply</button>
     </div>
 
@@ -599,7 +603,8 @@ async function openScheduleCModal(year) {
     <div class="modal-inner wide">
         <h2>Schedule C report — ${report.year}</h2>
         <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">
-            <label>Year <select id="sc-year">${yearOpts}</select></label>
+            <label><span data-i18n="view.expenses.label.year">Year</span>
+                <select id="sc-year">${yearOpts}</select></label>
             <span style="color:var(--fg-2);font-size:11px">
                 window: ${report.from_date} → ${report.to_date} ·
                 excluded: ${report.excluded_transfers} transfers, ${report.excluded_personal} personal

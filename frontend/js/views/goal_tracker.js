@@ -23,19 +23,19 @@ export async function renderGoalTracker(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.goal_tracker.h2.period_goals">Period goals</h2>
             <div class="inline-form">
-                <label>Period start ($)
+                <label><span data-i18n="view.goal_tracker.label.start_eq">Period start ($)</span>
                     <input id="gt-eq0" type="number" step="any" min="0" value="${state.params.period_start_equity}"></label>
-                <label>Target return (decimal — 0.30 = 30%)
+                <label><span data-i18n="view.goal_tracker.label.target_return">Target return (decimal — 0.30 = 30%)</span>
                     <input id="gt-tgt" type="number" step="any" value="${state.params.target_pct_return}"></label>
-                <label>Max DD (decimal — 0.10 = 10%)
+                <label><span data-i18n="view.goal_tracker.label.max_dd">Max DD (decimal — 0.10 = 10%)</span>
                     <input id="gt-dd" type="number" step="any" min="0" max="1" value="${state.params.max_dd_pct}"></label>
             </div>
             <div class="inline-form">
-                <label>Period start (YYYY-MM-DD)
+                <label><span data-i18n="view.goal_tracker.label.period_start">Period start (YYYY-MM-DD)</span>
                     <input id="gt-ps" type="text" value="${esc(state.params.period_start)}"></label>
-                <label>Period end (YYYY-MM-DD)
+                <label><span data-i18n="view.goal_tracker.label.period_end">Period end (YYYY-MM-DD)</span>
                     <input id="gt-pe" type="text" value="${esc(state.params.period_end)}"></label>
-                <label>Today (YYYY-MM-DD)
+                <label><span data-i18n="view.goal_tracker.label.today">Today (YYYY-MM-DD)</span>
                     <input id="gt-today" type="text" value="${esc(state.params.today)}"></label>
                 <button data-i18n="view.goal_tracker.btn.today_now" id="gt-today-now" class="secondary" type="button">today = now</button>
             </div>
