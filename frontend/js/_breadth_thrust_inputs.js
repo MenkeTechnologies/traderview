@@ -9,6 +9,8 @@
 // ratio_t = adv / (adv + dec). EMA of ratio over ema_period bars.
 // Thrust triggered when ema went from <low to >high within max_window_bars.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_EMA_PERIOD = 10;
 export const DEFAULT_MAX_WINDOW = 10;
 export const DEFAULT_LOW  = 0.40;
@@ -23,22 +25,22 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.breadth))                                  return 'breadth must be an array';
+    if (!Array.isArray(input.breadth))                                  return t('view.breadth_thrust.validate.breadth_array');
     for (let i = 0; i < input.breadth.length; i++) {
         const b = input.breadth[i];
-        if (!b || typeof b !== 'object')                                return `breadth[${i}] must be an object`;
-        if (!Number.isInteger(b.advancing) || b.advancing < 0)          return `breadth[${i}].advancing must be a non-negative integer`;
-        if (!Number.isInteger(b.declining) || b.declining < 0)          return `breadth[${i}].declining must be a non-negative integer`;
+        if (!b || typeof b !== 'object')                                return t('view.breadth_thrust.validate.row_object', { i });
+        if (!Number.isInteger(b.advancing) || b.advancing < 0)          return t('view.breadth_thrust.validate.advancing', { i });
+        if (!Number.isInteger(b.declining) || b.declining < 0)          return t('view.breadth_thrust.validate.declining', { i });
     }
-    if (!Number.isInteger(input.ema_period))                            return 'ema_period must be an integer';
-    if (input.ema_period < 2)                                           return 'ema_period must be ≥ 2';
-    if (!Number.isInteger(input.max_window_bars))                       return 'max_window_bars must be an integer';
-    if (input.max_window_bars < 2)                                      return 'max_window_bars must be ≥ 2';
+    if (!Number.isInteger(input.ema_period))                            return t('view.breadth_thrust.validate.ema_period_int');
+    if (input.ema_period < 2)                                           return t('view.breadth_thrust.validate.ema_period_min');
+    if (!Number.isInteger(input.max_window_bars))                       return t('view.breadth_thrust.validate.window_int');
+    if (input.max_window_bars < 2)                                      return t('view.breadth_thrust.validate.window_min');
     if (!Number.isFinite(input.low_threshold) || input.low_threshold < 0 || input.low_threshold > 1)
-                                                                          return 'low_threshold must be in [0, 1]';
+                                                                          return t('view.breadth_thrust.validate.low_threshold');
     if (!Number.isFinite(input.high_threshold) || input.high_threshold < 0 || input.high_threshold > 1)
-                                                                          return 'high_threshold must be in [0, 1]';
-    if (input.low_threshold >= input.high_threshold)                    return 'low_threshold must be < high_threshold';
+                                                                          return t('view.breadth_thrust.validate.high_threshold');
+    if (input.low_threshold >= input.high_threshold)                    return t('view.breadth_thrust.validate.low_lt_high');
     return null;
 }
 

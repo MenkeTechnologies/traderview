@@ -9,6 +9,8 @@
 //   5%:  −2.86
 //   10%: −2.57
 
+import { t } from './i18n.js';
+
 export const DEFAULT_LAGS = 1;
 export const CRIT_1PCT  = -3.43;
 export const CRIT_5PCT  = -2.86;
@@ -21,14 +23,14 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.series))                       return 'series must be an array';
+    if (!Array.isArray(input.series))                       return t('view.adf_test.validate.series_array');
     for (let i = 0; i < input.series.length; i++) {
-        if (!Number.isFinite(input.series[i]))              return `series[${i}] not finite`;
+        if (!Number.isFinite(input.series[i]))              return t('view.adf_test.validate.series_finite', { i });
     }
-    if (!Number.isInteger(input.lags))                      return 'lags must be an integer';
-    if (input.lags < 0)                                     return 'lags must be ≥ 0';
+    if (!Number.isInteger(input.lags))                      return t('view.adf_test.validate.lags_int');
+    if (input.lags < 0)                                     return t('view.adf_test.validate.lags_negative');
     const minN = 3 * input.lags + 4;
-    if (input.series.length < minN)                         return `series must have ≥ ${minN} observations (3·lags + 4)`;
+    if (input.series.length < minN)                         return t('view.adf_test.validate.series_min', { n: minN });
     return null;
 }
 
