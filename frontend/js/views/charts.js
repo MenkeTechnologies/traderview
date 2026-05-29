@@ -32,19 +32,19 @@ export async function renderCharts(mount, _state, symbol = '') {
         </div>
 
         <div class="chart-toolbar" id="drawToolbar">
-            <span class="muted small">Tool:</span>
+            <span class="muted small" data-i18n="view.charts.label.tool">Tool:</span>
             <button data-i18n="view.charts.btn.select" class="btn tool-btn active" data-tool="select">Select</button>
             <button data-i18n="view.charts.btn.trendline" class="btn tool-btn" data-tool="trendline">Trendline</button>
             <button data-i18n="view.charts.btn.h_line" class="btn tool-btn" data-tool="hline">H-line</button>
             <button data-i18n="view.charts.btn.fib" class="btn tool-btn" data-tool="fib">Fib</button>
             <button data-i18n="view.charts.btn.text" class="btn tool-btn" data-tool="text">Text</button>
-            <span class="muted small">Color:</span>
+            <span class="muted small" data-i18n="view.charts.label.color">Color:</span>
             <span id="colorPicker"></span>
             <button data-i18n="view.charts.btn.clear_all" class="btn" id="clearDrawings" style="margin-left:auto;">Clear all</button>
         </div>
 
         <div class="chart-toolbar">
-            <span class="muted small">Indicators:</span>
+            <span class="muted small" data-i18n="view.charts.label.indicators">Indicators:</span>
             <select id="indicatorSel" multiple size="3" style="min-width:240px;"></select>
             <button data-i18n="view.charts.btn.apply" class="btn" id="indicatorReload">Apply</button>
             <a href="#custom-indicators" class="small muted">manage…</a>

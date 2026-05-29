@@ -178,7 +178,8 @@ function renderRuleCard(r) {
                 <label><input type="checkbox" data-rule-id="${esc(r.id)}" data-field="enabled" ${r.enabled ? 'checked' : ''}> enabled</label>
                 <input type="text" data-rule-id="${esc(r.id)}" data-field="name" value="${esc(r.name)}" style="flex:1;min-width:160px">
                 <span class="ar-rule-type">${esc(r.type)}</span>
-                <button class="db-tile-btn db-tile-remove" data-rule-id="${esc(r.id)}" data-action="remove" title="Remove">×</button>
+                <button class="db-tile-btn db-tile-remove" data-rule-id="${esc(r.id)}" data-action="remove"
+                        data-i18n-title="view.alert_rules.btn.remove_title" title="Remove">×</button>
             </div>
             <div class="ar-rule-body">
                 <div class="inline-form">

@@ -209,6 +209,7 @@ function renderFavsSection() {
             ${favTiles.map(f => `
                 <li class="db-list-item">
                     <button class="db-pick" data-fav-add="${esc(f.viewId)}" type="button"
+                            data-i18n-title="view.dashboards.tip.fav_add"
                             title="Click to add this favorite as a tile in the active dashboard">
                         <span>${esc(f.glyph)} ${esc(f.label)}</span>
                         <span class="muted">+ tile</span>
@@ -222,6 +223,7 @@ function renderFavsSection() {
                 ${fState.bookmarks.map(b => `
                     <li class="db-list-item">
                         <button class="db-pick" data-bm-add="${esc(b.id)}" type="button"
+                                data-i18n-title="view.dashboards.tip.bm_add"
                                 title="Add bookmark as a configured tile">
                             <span>${esc(b.name)}</span>
                             <span class="muted">${esc(b.viewId)}</span>
@@ -338,10 +340,10 @@ async function renderTiles(dashboard) {
                     <span class="db-tile-label">${esc(meta.label)}</span>
                     ${editMode ? `
                         <span class="db-tile-controls">
-                            <span class="db-tile-drag" title="Drag to reorder">⋮⋮</span>
-                            <button class="db-tile-btn" data-move="up" data-tile="${esc(t.id)}"   ${idx === 0 ? 'disabled' : ''} title="Move up">▲</button>
-                            <button class="db-tile-btn" data-move="down" data-tile="${esc(t.id)}" ${idx === dashboard.tiles.length - 1 ? 'disabled' : ''} title="Move down">▼</button>
-                            <button class="db-tile-btn db-tile-remove" data-remove="${esc(t.id)}" title="Remove tile">×</button>
+                            <span class="db-tile-drag" data-i18n-title="view.dashboards.tip.drag" title="Drag to reorder">⋮⋮</span>
+                            <button class="db-tile-btn" data-move="up" data-tile="${esc(t.id)}"   ${idx === 0 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_up" title="Move up">▲</button>
+                            <button class="db-tile-btn" data-move="down" data-tile="${esc(t.id)}" ${idx === dashboard.tiles.length - 1 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_down" title="Move down">▼</button>
+                            <button class="db-tile-btn db-tile-remove" data-remove="${esc(t.id)}" data-i18n-title="view.dashboards.tip.remove_tile" title="Remove tile">×</button>
                         </span>
                     ` : ''}
                 </div>
