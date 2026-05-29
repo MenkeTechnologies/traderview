@@ -186,7 +186,7 @@ function renderBarChart(elId, labels, values, opts = {}) {
     const el = document.getElementById(elId);
     if (!el) return;
     if (!Array.isArray(values) || values.length === 0) {
-        el.innerHTML = '<div class="muted">no data</div>';
+        el.innerHTML = `<div class="muted">${esc(t('common.empty.no_data'))}</div>`;
         return;
     }
     const maxAbs = values.reduce((a, b) => Math.max(a, Math.abs(b)), 0) || 1;
