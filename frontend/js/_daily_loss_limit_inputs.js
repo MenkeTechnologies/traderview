@@ -61,14 +61,24 @@ export function localEvaluate(p) {
     return { loss, limit, pct, state };
 }
 
+import { t } from './i18n.js';
+
 const STATE_BADGES = {
-    ok:          { label: 'OK',          cls: 'pos', hint: 'within limits — trade normal size' },
-    warning:     { label: 'WARNING',     cls: '',    hint: '≥50% of daily loss budget used — review trades' },
-    cut_size:    { label: 'CUT SIZE',    cls: 'neg', hint: 'half-size positions only — preserve remaining budget' },
-    kill_switch: { label: 'KILL SWITCH', cls: 'neg', hint: 'stop trading — daily loss limit hit' },
+    ok:          { key: 'ok', cls: 'pos' },
+    warning:     { key: 'warning', cls: '' },
+    cut_size:    { key: 'cut_size', cls: 'neg' },
+    kill_switch: { key: 'kill_switch', cls: 'neg' },
 };
 
-export function stateBadge(s) { return STATE_BADGES[s] || { label: String(s || '—'), cls: '', hint: '' }; }
+export function stateBadge(s) {
+    const b = STATE_BADGES[s];
+    if (!b) return { label: String(s || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.daily_loss_limit.state.${b.key}.label`),
+        cls: b.cls,
+        hint: t(`view.daily_loss_limit.state.${b.key}.hint`),
+    };
+}
 
 // Coerces backend Decimal-string scalars to JS numbers for display math.
 export function decToNum(v) {

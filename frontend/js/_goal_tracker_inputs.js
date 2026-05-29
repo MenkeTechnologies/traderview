@@ -92,15 +92,23 @@ export function localEvaluate(p) {
     return out;
 }
 
+import { t } from './i18n.js';
+
 const PACE_BADGES = {
-    ahead_of_pace:  { label: 'AHEAD',  cls: 'pos', hint: '+10% buffer above proportional target — ease up or stay disciplined' },
-    on_pace:        { label: 'ON PACE', cls: 'pos', hint: 'within ±10% of proportional target — keep doing what works' },
-    behind_pace:    { label: 'BEHIND', cls: 'neg', hint: '−10% buffer below — review losing trades, not size adjustments yet' },
-    out_of_period:  { label: 'OUT',    cls: '',    hint: 'today is outside [period_start, period_end]' },
+    ahead_of_pace: { key: 'ahead', cls: 'pos' },
+    on_pace:       { key: 'on_pace', cls: 'pos' },
+    behind_pace:   { key: 'behind', cls: 'neg' },
+    out_of_period: { key: 'out', cls: '' },
 };
 
 export function paceBadge(p) {
-    return PACE_BADGES[p] || { label: String(p || '—'), cls: '', hint: '' };
+    const b = PACE_BADGES[p];
+    if (!b) return { label: String(p || '—'), cls: '', hint: '' };
+    return {
+        label: t(`view.goal_tracker.pace.${b.key}.label`),
+        cls: b.cls,
+        hint: t(`view.goal_tracker.pace.${b.key}.hint`),
+    };
 }
 
 // 5 demo presets matching each on_pace state + kill-switch breach.
