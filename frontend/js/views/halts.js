@@ -4,6 +4,7 @@
 import { api, wsUrl } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let ws = null;
 let voiceOn = true;
@@ -14,7 +15,7 @@ export async function renderHalts(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// HALT SCANNER · LIVE
-            <span class="status-dot" id="halt-status" title="connecting">●</span>
+            <span class="status-dot" id="halt-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
             <label class="halt-voice-toggle">
                 <input type="checkbox" id="halt-voice" ${voiceOn ? 'checked' : ''}>
                 voice alerts
@@ -50,11 +51,11 @@ function connectWs(mount, tok) {
     if (!dot) return;                    // DOM gone — don't open an orphan WS
     halts.clear();
     ws = new WebSocket(wsUrl('/api/ws/halts'));
-    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
-    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = t('common.status.connected'); } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = t('common.status.error'); } });
     ws.addEventListener('close', () => {
         if (!viewIsCurrent(tok)) return;
-        dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
+        dot.style.color = 'var(--text-muted)'; dot.title = t('common.status.disconnected');
         setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {

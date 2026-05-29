@@ -3,7 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 
 export async function renderEquityForecast(mount, state) {
     const tok = currentViewToken();
@@ -44,7 +44,7 @@ export async function renderEquityForecast(mount, state) {
         e.preventDefault();
         const fd = new FormData(e.target);
         const status = mount.querySelector('#ef-status');
-        if (status) status.textContent = 'running…';
+        if (status) status.textContent = t('common.status.running');
         const body = {
             account_id: acct.id,
             starting_equity: Number(fd.get('starting_equity')) || 10_000,
@@ -63,7 +63,7 @@ export async function renderEquityForecast(mount, state) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#ef-status');
-            if (status2) status2.textContent = 'error: ' + err.message;
+            if (status2) status2.textContent = t('common.error', { err: err.message });
         }
     });
 }

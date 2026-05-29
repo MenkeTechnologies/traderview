@@ -162,7 +162,7 @@ function renderChart(stats) {
     const title = document.getElementById('mc-chart-title');
     const caption = document.getElementById('mc-chart-caption');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh';
+        el.textContent = t('common.error.uplot_not_loaded_install');
         return;
     }
     el.innerHTML = '';

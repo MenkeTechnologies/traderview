@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderPositionSize(mount, state) {
     const tok = currentViewToken();
@@ -64,7 +65,7 @@ export async function renderPositionSize(mount, state) {
     mount.querySelector('#ps-fill-history').addEventListener('click', async () => {
         if (!acct) return;
         const status = mount.querySelector('#ps-fill-status');
-        if (status) status.textContent = 'fetching…';
+        if (status) status.textContent = t('common.status.fetching');
         try {
             const r = await api.positionSizeWinRate(acct.id);
             if (!viewIsCurrent(tok)) return;
@@ -79,7 +80,7 @@ export async function renderPositionSize(mount, state) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#ps-fill-status');
-            if (s2) s2.textContent = 'error: ' + e.message;
+            if (s2) s2.textContent = t('common.error', { err: e.message });
         }
     });
     await compute(mount, tok);
@@ -107,7 +108,7 @@ async function compute(mount, tok) {
         recommended_method: 'fixed_fractional',
     };
     const status = mount.querySelector('#ps-status');
-    if (status) status.textContent = 'computing…';
+    if (status) status.textContent = t('common.status.computing');
     try {
         const r = await api.positionSize(body);
         if (!viewIsCurrent(tok)) return;
@@ -117,7 +118,7 @@ async function compute(mount, tok) {
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const s2 = mount.querySelector('#ps-status');
-        if (s2) s2.textContent = 'error: ' + e.message;
+        if (s2) s2.textContent = t('common.error', { err: e.message });
     }
 }
 

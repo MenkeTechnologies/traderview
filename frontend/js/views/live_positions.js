@@ -51,7 +51,7 @@ async function refresh(accountId, mount, tok) {
         if (e instanceof ApiError && e.status === 401) return;
         if (!viewIsCurrent(tok)) return;
         const st = mount.querySelector('#lp-status');
-        if (st) st.textContent = 'error: ' + e.message;
+        if (st) st.textContent = t('common.error', { err: e.message });
     }
 }
 

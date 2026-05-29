@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 
 export async function renderResearch(mount, _state, sym) {
     const tok = currentViewToken();
@@ -154,7 +154,7 @@ function renderSignals(s, mount) {
     const indEl = mount.querySelector('#rs-indicators');
     const pivEl = mount.querySelector('#rs-pivots');
     if (!sigEl || !indEl || !pivEl) return;
-    if (!s) { sigEl.textContent = 'no data'; indEl.textContent = ''; pivEl.textContent = ''; return; }
+    if (!s) { sigEl.textContent = t('common.empty.no_data'); indEl.textContent = ''; pivEl.textContent = ''; return; }
     const cls = s.score >= 3 ? 'pos' : s.score <= -3 ? 'neg' : '';
     sigEl.innerHTML = `
         <div class="score-card ${cls}">

@@ -210,7 +210,7 @@ function renderSummary(summaries) {
 function renderChart(xs, raw, smoothed) {
     const el = document.getElementById('ss-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh';
+        el.textContent = t('common.error.uplot_not_loaded_install');
         return;
     }
     el.innerHTML = '';

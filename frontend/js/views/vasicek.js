@@ -123,7 +123,7 @@ async function simulate(mount, tok) {
     let res;
     try {
         res = await api.anlyVasicekShortRateSimulator(buildBody(state.params));
-        if (!res) throw new Error('Vasicek returned null (parameters out of domain)');
+        if (!res) throw new Error(t('view.vasicek.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -158,7 +158,7 @@ function renderSummary(res) {
 
 function renderChart(res) {
     const el = document.getElementById('va-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const { xs, ys } = normalDensityCurve(res.mean_terminal_rate, res.stdev_terminal_rate, 161);
     if (xs.length === 0) {

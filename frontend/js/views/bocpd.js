@@ -133,7 +133,7 @@ async function detect(mount, tok) {
     let res;
     try {
         res = await api.anlyBayesianChangePoint(buildBody(parsed.value, state.hazard));
-        if (!res) throw new Error('BOCPD returned null');
+        if (!res) throw new Error(t('view.bocpd.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -166,7 +166,7 @@ function card(label, value, cls = '') {
 
 function renderCpChart(returns, res) {
     const el = document.getElementById('bo-cp-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const n = returns.length;
     const xs = Array.from({ length: n }, (_, i) => i);
@@ -199,7 +199,7 @@ function renderCpChart(returns, res) {
 
 function renderRlChart(res) {
     const el = document.getElementById('bo-rl-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const rl = res.expected_run_length.map(v => Number.isFinite(v) ? v : null);
     const xs = Array.from({ length: rl.length }, (_, i) => i);

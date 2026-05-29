@@ -552,7 +552,7 @@ async function openReceiptMatchModal(meta) {
                 if (!viewIsCurrent(state.tok)) return;
                 modal.classList.add('hidden');
                 const s = state.mount.querySelector('#exp-status');
-                if (s) s.textContent = 'receipt attached';
+                if (s) s.textContent = t('view.expenses.status.receipt_attached');
                 await refresh();
             } catch (e) { alert(`attach failed: ${e.message}`); }
         };

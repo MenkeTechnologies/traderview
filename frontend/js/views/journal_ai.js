@@ -67,13 +67,13 @@ export async function renderAiSettings(mount) {
             temperature: Number(fd.get('temperature')) || null,
         };
         const status = mount.querySelector('#ai-save-status');
-        if (status) status.textContent = 'saving…';
+        if (status) status.textContent = t('common.status.saving');
         try {
             await api.setAiSettings(body);
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#ai-save-status');
             if (s2) {
-                s2.textContent = 'saved';
+                s2.textContent = t('common.status.saved');
                 setTimeout(() => {
                     if (!viewIsCurrent(tok)) return;
                     const s3 = mount.querySelector('#ai-save-status');
@@ -83,7 +83,7 @@ export async function renderAiSettings(mount) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#ai-save-status');
-            if (s2) s2.textContent = 'error: ' + err.message;
+            if (s2) s2.textContent = t('common.error', { err: err.message });
         }
     });
 }
@@ -114,11 +114,11 @@ export async function renderAiAnalyze(mount, tradeId) {
                 const runBtn = mount.querySelector('#ai-run');
                 if (runBtn) runBtn.textContent = t('view.journal_ai.btn.reanalyze');
             } else {
-                if (status) status.textContent = 'no cached analysis for this trade';
+                if (status) status.textContent = t('view.journal_ai.status.no_cache');
             }
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
-            if (status) status.textContent = 'cache lookup failed: ' + e.message;
+            if (status) status.textContent = t('view.journal_ai.status.cache_failed', { err: e.message });
         }
     }
     await loadCached();
@@ -130,7 +130,7 @@ export async function renderAiAnalyze(mount, tradeId) {
         const btn = mount.querySelector('#ai-run');
         if (!btn) return;
         btn.disabled = true;
-        if (status) status.textContent = 'analyzing… (LLM call may take 5-30s)';
+        if (status) status.textContent = t('view.journal_ai.status.analyzing');
         try {
             const r = await api.runAiAnalysis(tradeId);
             if (!viewIsCurrent(tok)) return;
@@ -140,7 +140,7 @@ export async function renderAiAnalyze(mount, tradeId) {
             btn.textContent = t('view.journal_ai.btn.reanalyze');
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
-            if (status) status.textContent = 'error: ' + e.message;
+            if (status) status.textContent = t('common.error', { err: e.message });
         } finally {
             if (viewIsCurrent(tok)) btn.disabled = false;
         }

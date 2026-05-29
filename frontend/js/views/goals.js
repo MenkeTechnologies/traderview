@@ -90,7 +90,7 @@ export async function renderGoals(mount, state) {
             target_max_drawdown_pct: fd.get('target_max_drawdown_pct') ? Number(fd.get('target_max_drawdown_pct')) : null,
         };
         const status = mount.querySelector('#g-status');
-        if (status) status.textContent = 'saving…';
+        if (status) status.textContent = t('common.status.saving');
         try {
             await api.createGoal(body);
             if (!viewIsCurrent(tok)) return;
@@ -103,7 +103,7 @@ export async function renderGoals(mount, state) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#g-status');
-            if (s2) s2.textContent = 'error: ' + err.message;
+            if (s2) s2.textContent = t('common.error', { err: err.message });
         }
     });
     await refresh(mount, tok);

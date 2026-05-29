@@ -169,7 +169,7 @@ function renderSummary(motif, discords) {
 
 function renderCharts(series, m, profile, motif, discords) {
     if (!window.uPlot) {
-        document.getElementById('pd-chart-series').textContent = 'uPlot not loaded';
+        document.getElementById('pd-chart-series').textContent = t('common.error.uplot_not_loaded');
         return;
     }
     const xs = indexAxis(series.length);

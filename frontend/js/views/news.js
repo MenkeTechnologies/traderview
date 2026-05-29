@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let timer = null;
 let wsUnsub = null;
@@ -49,7 +50,7 @@ export async function renderNews(mount) {
     });
     mount.querySelector('#n-poll-now').addEventListener('click', async () => {
         const status = mount.querySelector('#n-status');
-        if (status) status.textContent = 'polling watchlists…';
+        if (status) status.textContent = t('view.news.status.polling_watchlists');
         try {
             const s = await api.newsPollNow();
             if (!viewIsCurrent(tok)) return;
@@ -59,7 +60,7 @@ export async function renderNews(mount) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#n-status');
-            if (s2) s2.textContent = 'error: ' + e.message;
+            if (s2) s2.textContent = t('common.error', { err: e.message });
         }
     });
 

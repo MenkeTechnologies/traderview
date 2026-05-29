@@ -165,7 +165,7 @@ function kv(label, value) {
 function renderChart(volumeCurve, pov, twap, vwap) {
     const el = document.getElementById('es-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded';
+        el.textContent = t('common.error.uplot_not_loaded');
         return;
     }
     el.innerHTML = '';

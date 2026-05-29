@@ -42,7 +42,7 @@ export async function renderEarningsCal(mount) {
     });
     mount.querySelector('#e-poll').addEventListener('click', async () => {
         const status = mount.querySelector('#e-status');
-        if (status) status.textContent = 'polling…';
+        if (status) status.textContent = t('common.status.polling');
         try {
             const s = await api.earningsPollNow();
             if (!viewIsCurrent(tok)) return;
@@ -52,7 +52,7 @@ export async function renderEarningsCal(mount) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#e-status');
-            if (status2) status2.textContent = 'error: ' + err.message;
+            if (status2) status2.textContent = t('common.error', { err: err.message });
         }
     });
     await refresh(mount, tok);

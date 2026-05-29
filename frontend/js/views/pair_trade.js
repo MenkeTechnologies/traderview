@@ -216,7 +216,7 @@ function card(label, value, cls = '', body = '') {
 
 function renderPriceChart(y, x, beta) {
     const el = document.getElementById('pt-price-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const xs = Array.from({ length: y.length }, (_, i) => i);
     const betaX = x.map(v => beta * v);
@@ -234,7 +234,7 @@ function renderPriceChart(y, x, beta) {
 
 function renderZChart(zs) {
     const el = document.getElementById('pt-z-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const xs = Array.from({ length: zs.length }, (_, i) => i);
     const entryUp   = xs.map(() =>  state.config.entry_z);

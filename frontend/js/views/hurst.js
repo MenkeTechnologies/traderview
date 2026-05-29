@@ -109,7 +109,7 @@ async function estimate(mount, tok) {
     let res;
     try {
         res = await api.anlyHurstExponent(buildBody(retParsed.value, chunkParsed.value));
-        if (!res) throw new Error('Hurst returned null (input out of domain)');
+        if (!res) throw new Error(t('view.hurst.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -146,7 +146,7 @@ function card(label, value, cls = '', body = '') {
 
 function renderChart(res) {
     const el = document.getElementById('hu-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
 
     const xs = res.log_n;

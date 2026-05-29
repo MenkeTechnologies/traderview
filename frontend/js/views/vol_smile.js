@@ -14,7 +14,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtPct } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import {
     parseStrikeIvText, buildSviBody, validateSmileInputs,
     sortRowsByStrike, atmSkewSlope,
@@ -110,7 +110,7 @@ async function fit(mount, tok) {
     let res;
     try {
         res = await api.anlySviVolatilitySmile(body);
-        if (!res) throw new Error('SVI fit returned null (input violated constraints)');
+        if (!res) throw new Error(t('view.vol_smile.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -154,7 +154,7 @@ function renderSummary(res, tYears) {
 function renderChart(rows, res) {
     const el = document.getElementById('vs-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh';
+        el.textContent = t('common.error.uplot_not_loaded_install');
         return;
     }
     el.innerHTML = '';

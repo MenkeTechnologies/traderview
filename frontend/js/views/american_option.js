@@ -131,7 +131,7 @@ async function price(mount, tok) {
     let res;
     try {
         res = await api.anlyAmericanOptionLsmc(buildLsmcBody(state.params));
-        if (!res) throw new Error('LSMC returned null (parameters out of domain)');
+        if (!res) throw new Error(t('view.american_option.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -192,7 +192,7 @@ function card(label, value, valueCls, body) {
 function renderChart(res) {
     const el = document.getElementById('ao-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded';
+        el.textContent = t('common.error.uplot_not_loaded');
         return;
     }
     el.innerHTML = '';

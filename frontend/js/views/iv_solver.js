@@ -117,7 +117,7 @@ async function solve(mount, tok) {
     let res;
     try {
         res = await api.optsIvSolver(buildBody(state.params));
-        if (!res) throw new Error('IV solver returned null (root-finding failed)');
+        if (!res) throw new Error(t('view.iv_solver.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -162,7 +162,7 @@ function card(label, value, cls = '', body = '') {
 
 function renderChart(res) {
     const el = document.getElementById('iv-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const p = state.params;
     // Sweep σ from near-zero up to max(2.0, 1.5 × solved IV) so the

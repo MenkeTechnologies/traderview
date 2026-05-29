@@ -98,7 +98,7 @@ export async function renderStrategyAlerts(mount) {
     });
     mount.querySelector('#sa-eval-now').addEventListener('click', async () => {
         const status = mount.querySelector('#sa-status');
-        if (status) status.textContent = 'evaluating…';
+        if (status) status.textContent = t('common.status.evaluating');
         try {
             const r = await api.strategyAlertsEvaluateNow();
             if (!viewIsCurrent(tok)) return;
@@ -108,7 +108,7 @@ export async function renderStrategyAlerts(mount) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#sa-status');
-            if (status2) status2.textContent = 'error: ' + e.message;
+            if (status2) status2.textContent = t('common.error', { err: e.message });
         }
     });
 

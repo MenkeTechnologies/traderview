@@ -111,7 +111,7 @@ async function detect(mount, tok) {
     let res;
     try {
         res = await api.anlyMarkovSwitching2State({ returns: parsed.value });
-        if (!res) throw new Error('Markov fit returned null (flat series?)');
+        if (!res) throw new Error(t('view.regime_detector.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -192,7 +192,7 @@ function formatDwell(d) {
 function renderChart(returns, probState1) {
     const el = document.getElementById('rd-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded';
+        el.textContent = t('common.error.uplot_not_loaded');
         return;
     }
     el.innerHTML = '';

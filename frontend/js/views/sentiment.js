@@ -6,7 +6,7 @@ import { barChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 
 let timer = null;
 let wsUnsub = null;
@@ -62,7 +62,7 @@ export async function renderSentiment(mount, _state, symbol) {
     mount.querySelector('#hours').addEventListener('change', () => refresh(mount, tok));
     mount.querySelector('#poll-now').addEventListener('click', async () => {
         const status = mount.querySelector('#poll-status');
-        if (status) status.textContent = 'polling…';
+        if (status) status.textContent = t('common.status.polling');
         try {
             const r = await api.sentimentPollNow();
             if (!viewIsCurrent(tok)) return;
@@ -72,7 +72,7 @@ export async function renderSentiment(mount, _state, symbol) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#poll-status');
-            if (status2) status2.textContent = 'error: ' + e.message;
+            if (status2) status2.textContent = t('common.error', { err: e.message });
         }
     });
 

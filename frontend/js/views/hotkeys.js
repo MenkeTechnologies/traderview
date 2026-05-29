@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const ACTIONS = [
     { id: 'go_dashboard',   label: 'Jump to Dashboard' },
@@ -57,7 +58,7 @@ export async function renderHotkeys(mount) {
     const comboInput = mount.querySelector('[name=combo]');
     mount.querySelector('#capture').addEventListener('click', () => {
         comboInput.value = '';
-        comboInput.placeholder = 'press a key…';
+        comboInput.placeholder = t('view.hotkeys.placeholder.press_a_key');
         const handler = (e) => {
             const parts = [];
             if (e.ctrlKey)  parts.push('ctrl');

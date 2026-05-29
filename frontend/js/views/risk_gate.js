@@ -153,7 +153,7 @@ export async function renderRiskGate(mount, state) {
     // Today's compliance snapshot — fire a near-zero-cost probe trade.
     mount.querySelector('#rg-snap-refresh').addEventListener('click', async () => {
         const out = mount.querySelector('#rg-snap-out');
-        if (!accountId) { out.textContent = 'pick an account in the topbar'; return; }
+        if (!accountId) { out.textContent = t('view.risk_gate.hint.pick_account'); return; }
         try {
             const probe = {
                 symbol: '_PROBE_',
@@ -207,7 +207,7 @@ export async function renderRiskGate(mount, state) {
             if (!viewIsCurrent(tok)) return;
             const ks = rules.find(r => r.rule.type === 'kill_switch');
             if (!ks) {
-                killState.textContent = 'not installed — click to enable';
+                killState.textContent = t('view.risk_gate.kill_state.not_installed');
                 killBtn.dataset.id = '';
                 killBtn.dataset.enabled = '';
             } else {

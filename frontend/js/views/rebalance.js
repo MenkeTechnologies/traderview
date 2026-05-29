@@ -113,7 +113,7 @@ async function run(accountId, asCsv, mount, tok) {
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
             const s2 = mount.querySelector('#rb-status');
-            if (s2) s2.textContent = 'downloaded';
+            if (s2) s2.textContent = t('common.status.downloaded');
             return;
         }
         const r = await api.rebalanceRun(body);
@@ -124,7 +124,7 @@ async function run(accountId, asCsv, mount, tok) {
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const s2 = mount.querySelector('#rb-status');
-        if (s2) s2.textContent = 'error: ' + e.message;
+        if (s2) s2.textContent = t('common.error', { err: e.message });
     }
 }
 

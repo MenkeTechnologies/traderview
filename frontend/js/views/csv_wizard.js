@@ -67,7 +67,7 @@ export async function renderCsvWizard(mount, state) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#cw-status');
-            if (status2) status2.textContent = 'error: ' + err.message;
+            if (status2) status2.textContent = t('common.error', { err: err.message });
         }
     });
 }
@@ -163,7 +163,7 @@ function renderCommit(accountId, mount, tok) {
             return;
         }
         const status = mount.querySelector('#cw-go-status');
-        if (status) status.textContent = 'inserting…';
+        if (status) status.textContent = t('common.status.inserting');
         try {
             const body = {
                 symbol: mapping.symbol, side: mapping.side, qty: mapping.qty,
@@ -192,7 +192,7 @@ function renderCommit(accountId, mount, tok) {
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#cw-go-status');
-            if (status2) status2.textContent = 'error: ' + err.message;
+            if (status2) status2.textContent = t('common.error', { err: err.message });
         }
     });
 }

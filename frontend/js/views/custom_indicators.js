@@ -28,7 +28,12 @@ export async function renderCustomIndicators(mount) {
             <form id="ci-form" class="inline-form">
                 <input name="name" placeholder="name (e.g. 'EMA-21 trend')" required style="min-width:200px;">
                 <select name="kind">
-                    ${KINDS.map(k => `<option value="${k.id}">${esc(k.label)}</option>`).join('')}
+                    ${KINDS.map(k => {
+                        const lk = `view.custom_indicators.kind.${k.id}.label`;
+                        const lv = t(lk);
+                        const lbl = (lv && lv !== lk) ? lv : k.label;
+                        return `<option value="${k.id}">${esc(lbl)}</option>`;
+                    }).join('')}
                 </select>
                 <span id="ci-params"></span>
                 <label><span data-i18n="view.custom_indicators.label.color">Color</span>
@@ -73,7 +78,7 @@ export async function renderCustomIndicators(mount) {
             is_default: !!fd.get('is_default'),
         };
         const status = mount.querySelector('#ci-status');
-        if (status) status.textContent = 'saving…';
+        if (status) status.textContent = t('common.status.saving');
         try {
             await api.createCustomIndicator(body);
             if (!viewIsCurrent(tok)) return;
@@ -86,7 +91,7 @@ export async function renderCustomIndicators(mount) {
         catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#ci-status');
-            if (status2) status2.textContent = 'error: ' + err.message;
+            if (status2) status2.textContent = t('common.error', { err: err.message });
         }
     });
     await refresh(mount, tok);

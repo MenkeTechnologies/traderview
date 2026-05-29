@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const PRESETS = [
     { id: 'premarket_gappers', label: 'Premarket Gappers',  desc: '≥ 5% gap (open vs prior close)' },
@@ -35,11 +36,16 @@ export async function renderScanners(mount) {
         </div>
 
         <div class="scanner-grid">
-            ${PRESETS.map(p => `
-                <button class="scanner-tile" data-preset="${p.id}">
-                    <div class="scanner-title">${esc(p.label)}</div>
-                    <div class="scanner-desc">${esc(p.desc)}</div>
-                </button>`).join('')}
+            ${PRESETS.map(p => {
+                const labelKey = `view.scanners.preset.${p.id}.label`;
+                const descKey  = `view.scanners.preset.${p.id}.desc`;
+                const labelTr = (() => { const v = t(labelKey); return (v && v !== labelKey) ? v : p.label; })();
+                const descTr  = (() => { const v = t(descKey);  return (v && v !== descKey)  ? v : p.desc;  })();
+                return `<button class="scanner-tile" data-preset="${p.id}">
+                    <div class="scanner-title">${esc(labelTr)}</div>
+                    <div class="scanner-desc">${esc(descTr)}</div>
+                </button>`;
+            }).join('')}
         </div>
 
         <div id="scan-result"></div>

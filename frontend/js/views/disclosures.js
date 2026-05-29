@@ -4,6 +4,7 @@ import { playSound } from '../alert_engine.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let wsUnsub = null;
 
@@ -70,7 +71,7 @@ export async function renderDisclosures(mount) {
 
     mount.querySelector('#poll-now').addEventListener('click', async () => {
         const status = mount.querySelector('#poll-status');
-        if (status) status.textContent = 'polling…';
+        if (status) status.textContent = t('common.status.polling');
         try {
             const r = await api.disclosuresPollNow();
             if (!viewIsCurrent(tok)) return;
@@ -81,7 +82,7 @@ export async function renderDisclosures(mount) {
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#poll-status');
-            if (status2) status2.textContent = 'error: ' + e.message;
+            if (status2) status2.textContent = t('common.error', { err: e.message });
         }
     });
 
@@ -184,5 +185,8 @@ function renderFeed(items) {
 }
 
 function kindLabel(k) {
-    return KINDS.find(x => x.id === k)?.label || k;
+    const fallback = KINDS.find(x => x.id === k)?.label || k;
+    const key = `view.disclosures.kind.${k}.label`;
+    const v = t(key);
+    return (v && v !== key) ? v : fallback;
 }

@@ -4,6 +4,7 @@
 import { api, wsUrl } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, pnlClass } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let ws = null;
 let viewTok = 0;
@@ -12,7 +13,7 @@ export async function renderWebull(mount, _state) {
     viewTok = currentViewToken();
     mount.innerHTML = `
         <h1 class="view-title">// WEBULL · LIVE BROKER
-            <span class="status-dot" id="wb-status" title="connecting">●</span>
+            <span class="status-dot" id="wb-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
         </h1>
 
         <details class="chart-panel" id="wb-creds-panel">
@@ -95,11 +96,11 @@ function connectWs(mount, tok) {
     const dot = mount.querySelector('#wb-status');
     if (!dot) return;
     ws = new WebSocket(wsUrl('/api/ws/webull'));
-    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = 'connected'; } });
-    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = 'error'; } });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = t('common.status.connected'); } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = t('common.status.error'); } });
     ws.addEventListener('close', () => {
         if (!viewIsCurrent(tok)) return;
-        dot.style.color = 'var(--text-muted)'; dot.title = 'disconnected';
+        dot.style.color = 'var(--text-muted)'; dot.title = t('common.status.disconnected');
         setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
     });
     ws.addEventListener('message', (e) => {

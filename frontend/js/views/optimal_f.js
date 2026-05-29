@@ -86,7 +86,7 @@ async function compute(mount, tok) {
     let res;
     try {
         res = await api.calcOptimalF(buildBody(parsed.value));
-        if (!res) throw new Error('Optimal-f returned null');
+        if (!res) throw new Error(t('view.optimal_f.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -138,7 +138,7 @@ function card(label, value, cls = '', body = '') {
 
 function renderChart(returns, res) {
     const el = document.getElementById('of-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const { xs, ys } = twrSweep(returns, 101);
     if (xs.length === 0) {

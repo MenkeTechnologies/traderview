@@ -226,7 +226,7 @@ function renderSummary(payoff, mtm) {
 async function renderChart(payoff) {
     const el = document.getElementById('op-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh';
+        el.textContent = t('common.error.uplot_not_loaded_install');
         return;
     }
     el.innerHTML = '';

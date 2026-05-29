@@ -125,7 +125,10 @@ function renderTable(rows) {
         for (const m of grp.metrics) {
             const values = rows.map(r => r[m.key]);
             const { best, worst } = bestWorst(values, m.lower);
-            html += `<tr><td class="small">${esc(m.label)}</td>`;
+            const lk = `view.compare.metric.${m.key}.label`;
+            const lv = t(lk);
+            const labelTr = (lv && lv !== lk) ? lv : m.label;
+            html += `<tr><td class="small">${esc(labelTr)}</td>`;
             for (let i = 0; i < rows.length; i++) {
                 const v = values[i];
                 let cls = '';

@@ -171,7 +171,7 @@ async function run(mount, tok) {
         betas = await api.anlyKalmanDynamicBeta(
             buildBody(assetParsed.value, benchParsed.value, state.params),
         );
-        if (!Array.isArray(betas)) throw new Error('Kalman returned non-array');
+        if (!Array.isArray(betas)) throw new Error(t('view.kalman_beta.error.non_array'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -214,7 +214,7 @@ function card(label, value, cls = '', body = '') {
 
 function renderReturnsChart(asset, bench) {
     const el = document.getElementById('kb-returns-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const xs = Array.from({ length: asset.length }, (_, i) => i);
     new window.uPlot({
@@ -231,7 +231,7 @@ function renderReturnsChart(asset, bench) {
 
 function renderBetaChart(betas) {
     const el = document.getElementById('kb-beta-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const xs = Array.from({ length: betas.length }, (_, i) => i);
     const ys = betas.map(b => Number.isFinite(b) ? b : null);

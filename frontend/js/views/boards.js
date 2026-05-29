@@ -115,12 +115,15 @@ async function renderBoard(mount, id) {
         <div class="chart-panel">
             <h2 data-i18n="view.boards.h2.palette_drag_onto_grid">Palette — drag onto grid</h2>
             <div id="palette" style="display:flex;flex-wrap:wrap;gap:6px;">
-                ${WIDGET_KINDS.map(k => `
-                    <div class="palette-tile" draggable="true" data-kind="${k.kind}"
+                ${WIDGET_KINDS.map(k => {
+                    const labelKey = `view.boards.widget.${k.kind}.label`;
+                    const lv = t(labelKey);
+                    const labelTr = (lv && lv !== labelKey) ? lv : k.label;
+                    return `<div class="palette-tile" draggable="true" data-kind="${k.kind}"
                          style="border:1px solid var(--cyan);padding:6px 10px;cursor:grab;background:var(--bg-secondary);">
-                        ${esc(k.label)}
-                    </div>
-                `).join('')}
+                        ${esc(labelTr)}
+                    </div>`;
+                }).join('')}
             </div>
         </div>
 
@@ -274,7 +277,7 @@ function configureWidget(w) {
 async function persist(state) {
     state.dirty = true;
     const tag = state.mount.querySelector('#b-save');
-    if (tag) tag.textContent = 'saving…';
+    if (tag) tag.textContent = t('common.status.saving');
     try {
         await api.updateDashboard(state.board.id, {
             name: state.board.name, layout: state.board.layout || [],
@@ -286,7 +289,7 @@ async function persist(state) {
     } catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         const tag2 = state.mount.querySelector('#b-save');
-        if (tag2) tag2.textContent = 'save failed: ' + e.message;
+        if (tag2) tag2.textContent = t('common.error.save_failed', { err: e.message });
     }
 }
 

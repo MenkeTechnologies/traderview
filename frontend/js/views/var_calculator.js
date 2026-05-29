@@ -181,7 +181,7 @@ function group(title, kvs) {
 function renderChart(returns, hs, fhs, cf) {
     const el = document.getElementById('vc-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh';
+        el.textContent = t('common.error.uplot_not_loaded_install');
         return;
     }
     el.innerHTML = '';

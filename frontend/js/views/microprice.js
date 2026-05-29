@@ -151,7 +151,7 @@ function biasInterp(bps) {
 
 function renderChart(bar) {
     const el = document.getElementById('mp-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
 
     const { xs, ys } = imbalanceSweep(state.quote.bid, state.quote.ask, 101);

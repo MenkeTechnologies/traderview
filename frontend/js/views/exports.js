@@ -4,6 +4,7 @@
 import { apiFetchBlob } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderExports(mount, state) {
     const tok = currentViewToken();
@@ -84,7 +85,7 @@ export async function renderExports(mount, state) {
         btn.addEventListener('click', async () => {
             const action = btn.dataset.action;
             const orig = btn.textContent;
-            btn.textContent = 'fetching…';
+            btn.textContent = t('common.status.fetching');
             btn.disabled = true;
             try {
                 if (action === 'csv') {

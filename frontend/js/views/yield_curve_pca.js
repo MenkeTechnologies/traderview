@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 import {
     parseCurves, parseTenorLabels, validatePcaInputs,
     factorName, normalizeTenors, buildBody, factorColor,
@@ -124,7 +125,7 @@ async function run(mount, tok) {
     let res;
     try {
         res = await api.anlyPrincipalComponentYieldCurve(buildBody(parsed.value, state.topK));
-        if (!res) throw new Error('PCA returned null (degenerate input?)');
+        if (!res) throw new Error(t('view.yield_curve_pca.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -154,7 +155,7 @@ function renderSummary(res) {
 
 function renderLoadingsChart(tenors, res) {
     const el = document.getElementById('yp-loadings-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     // X axis = tenor index (0..N-1). Plot one line per factor.
     const xs = tenors.map((_, i) => i);
@@ -183,7 +184,7 @@ function renderLoadingsChart(tenors, res) {
 
 function renderVarianceChart(res) {
     const el = document.getElementById('yp-variance-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const xs = res.variance_explained.map((_, i) => i);
     // Render as line + points instead of bar chart (uPlot doesn't ship a

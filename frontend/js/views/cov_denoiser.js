@@ -142,7 +142,7 @@ function card(label, value, cls = '') {
 
 function renderEigenChart(originalCov, res) {
     const el = document.getElementById('cd-eigen-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     // Reconstruct the full original eigenvalue list: signal eigenvalues
     // (sorted desc) + bulk-count copies of the bulk average. That matches

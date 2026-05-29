@@ -124,7 +124,7 @@ async function warp(mount, tok) {
     let res;
     try {
         res = await api.anlyDynamicTimeWarping(buildBody(parsedA.value, parsedB.value, state.bandRadius));
-        if (!res) throw new Error('DTW returned null (input out of domain)');
+        if (!res) throw new Error(t('view.dtw.error.null_result'));
     } catch (e) {
         showErr(`API error: ${e.message || e}`);
         return;
@@ -159,7 +159,7 @@ function card(label, value, cls = '') {
 
 function renderOverlay(a, b) {
     const el = document.getElementById('dt-overlay-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const maxLen = Math.max(a.length, b.length);
     const xs = Array.from({ length: maxLen }, (_, i) => i);
@@ -182,7 +182,7 @@ function renderOverlay(a, b) {
 
 function renderPath(nA, nB, res) {
     const el = document.getElementById('dt-path-chart');
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
     el.innerHTML = '';
     const { xs, ys } = pathToSeries(res.path);
     // Diagonal reference: y = x · (nB-1)/(nA-1) so the line spans from

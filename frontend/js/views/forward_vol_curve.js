@@ -142,7 +142,7 @@ function pctStr(x) {
 function renderChart(rows, res) {
     const el = document.getElementById('fv-chart');
     if (!window.uPlot) {
-        el.textContent = 'uPlot not loaded';
+        el.textContent = t('common.error.uplot_not_loaded');
         return;
     }
     el.innerHTML = '';
