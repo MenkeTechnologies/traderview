@@ -1,6 +1,7 @@
 // Main entry. Wires tabs, runs auth bootstrap, dispatches to view modules.
 
 import { api, initApi, ApiError } from './api.js';
+import { esc } from './util.js';
 import { showAuthScreen, hideAuthScreen } from './auth.js';
 import { installSymbolHotkey } from './symbol_hotkey_install.js';
 import { getGlobalSymbol } from './_global_symbol.js';
@@ -323,7 +324,7 @@ function renderAccountStrip() {
     const strip = document.getElementById('account-strip');
     if (!strip) return;
     if (state.accounts.length === 0) {
-        strip.innerHTML = '<span class="muted">no account</span>';
+        strip.innerHTML = `<span class="muted">${esc(t('app.account_strip.no_account'))}</span>`;
         return;
     }
     const options = state.accounts.map(a => `

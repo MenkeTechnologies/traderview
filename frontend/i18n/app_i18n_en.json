@@ -104,6 +104,7 @@
   "view.csv_wizard.field.executed_at.hint": "RFC3339 / YYYY-MM-DD HH:MM:SS / M/D/Y",
   "view.csv_wizard.field.fee.hint":         "optional; defaults 0",
   "view.csv_wizard.field.broker_order_id.hint": "optional dedupe key",
+  "app.account_strip.no_account":         "no account",
 
   "symbol_hud.prompt":                  "Symbol",
   "symbol_hud.hint":                    "enter to jump · esc to cancel",
