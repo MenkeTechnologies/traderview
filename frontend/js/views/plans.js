@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderPlans(mount, state) {
@@ -50,7 +51,7 @@ export async function renderPlans(mount, state) {
                     <td>${esc(p.setup_notes)}</td>
                     <td><button data-i18n="view.plans.btn.abandon" class="link" data-del="${p.id}">abandon</button></td>
                 </tr>`;
-            }).join('') || '<tr><td colspan="10" class="muted">No pending plans.</td></tr>'}
+            }).join('') || `<tr><td colspan="10" class="muted">${esc(t('view.plans.empty'))}</td></tr>`}
             </tbody>
         </table>
     `;

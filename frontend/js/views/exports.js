@@ -61,18 +61,18 @@ export async function renderExports(mount, state) {
                 <thead><tr><th data-i18n="view.exports.th.output">Output</th><th data-i18n="view.exports.th.description_2">Description</th><th data-i18n="view.exports.th.action_2">Action</th></tr></thead>
                 <tbody>
                     <tr>
-                        <td>Realized events (CSV)</td>
-                        <td class="small muted">Form 8949-style rows: acquired/disposed, basis, proceeds, gain/loss, wash-sale.</td>
+                        <td data-i18n="view.exports.row.realized">Realized events (CSV)</td>
+                        <td class="small muted" data-i18n="view.exports.row.realized_desc">Form 8949-style rows: acquired/disposed, basis, proceeds, gain/loss, wash-sale.</td>
                         <td><button data-i18n="view.exports.btn.download_csv_3" class="btn" data-action="tax-csv" data-which="realized">Download CSV</button></td>
                     </tr>
                     <tr>
-                        <td>Open lots (CSV)</td>
-                        <td class="small muted">Year-end open inventory: per-lot qty, cost-per-share, basis, holding-period.</td>
+                        <td data-i18n="view.exports.row.open_lots">Open lots (CSV)</td>
+                        <td class="small muted" data-i18n="view.exports.row.open_lots_desc">Year-end open inventory: per-lot qty, cost-per-share, basis, holding-period.</td>
                         <td><button data-i18n="view.exports.btn.download_csv_4" class="btn" data-action="tax-csv" data-which="open">Download CSV</button></td>
                     </tr>
                     <tr>
-                        <td>Tax package (printable HTML → PDF)</td>
-                        <td class="small muted">One-page report: summary cards + realized table + open-lots table + §1091 notes.</td>
+                        <td data-i18n="view.exports.row.tax_package">Tax package (printable HTML → PDF)</td>
+                        <td class="small muted" data-i18n="view.exports.row.tax_package_desc">One-page report: summary cards + realized table + open-lots table + §1091 notes.</td>
                         <td><button data-i18n="view.exports.btn.open_report" class="btn" data-action="tax-pkg">Open report</button></td>
                     </tr>
                 </tbody>

@@ -169,7 +169,7 @@ function renderSignals(s, mount) {
                     <td class="${sig.side === 'buy' ? 'pos' : 'neg'}">${sig.side}</td>
                     <td>${sig.weight >= 0 ? '+' : ''}${sig.weight}</td>
                     <td class="muted">${esc(sig.detail)}</td>
-                </tr>`).join('') || '<tr><td colspan="4" class="muted">No signals fired.</td></tr>'}
+                </tr>`).join('') || `<tr><td colspan="4" class="muted">${esc(t('view.research.empty.signals'))}</td></tr>`}
             </tbody>
         </table>
     `;

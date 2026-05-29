@@ -40,7 +40,7 @@ export async function renderAccounts(mount, _state, onChange) {
                 <td>${esc(a.base_currency)}</td>
                 <td>${fmtDateTime(a.created_at)}</td>
                 <td><button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button></td></tr>
-            `).join('') || '<tr><td colspan="5" class="muted">No accounts.</td></tr>'}
+            `).join('') || `<tr><td colspan="5" class="muted">${esc(t('view.accounts.empty'))}</td></tr>`}
             </tbody>
         </table>
     `;

@@ -36,7 +36,7 @@ export async function renderCommunity(mount, _state, catSlug) {
                     <td>${t.post_count}</td>
                     <td>${t.view_count}</td>
                     <td>${fmtDateTime(t.last_post_at)}</td>
-                </tr>`).join('') || '<tr><td colspan="4" class="muted">No threads yet.</td></tr>'}
+                </tr>`).join('') || `<tr><td colspan="4" class="muted">${esc(t('view.community.empty.threads'))}</td></tr>`}
             </tbody>
         </table>
     `;
