@@ -44,7 +44,7 @@ function ensureMount() {
     root.id = 'tv-toast-root';
     root.setAttribute('role', 'region');
     root.setAttribute('aria-live', 'polite');
-    root.setAttribute('aria-label', 'Notifications');
+    root.setAttribute('aria-label', t('a11y.toast_region'));
     document.body.appendChild(root);
 }
 

@@ -1,9 +1,12 @@
 // Chart helpers — uPlot wrappers for equity curve, OHLC candles, bars.
 
+import { t } from './i18n.js';
+import { esc } from './util.js';
+
 export function equityChart(el, points, opts = {}) {
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded — run scripts/vendor-uplot.sh'; return; }
+    if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing'); return; }
     if (!points || !points.length) {
-        el.innerHTML = '<div class="boot">No equity data yet — import or add trades.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('chart.empty.equity'))}</div>`;
         return;
     }
     el.innerHTML = '';
@@ -19,9 +22,9 @@ export function equityChart(el, points, opts = {}) {
         height: h,
         scales: { x: { time: true } },
         series: [
-            { label: 'day' },
-            { label: 'cum P&L', stroke: '#00e5ff', width: 2, fill: 'rgba(0,229,255,0.08)' },
-            { label: 'drawdown', stroke: '#ff3860', width: 1 },
+            { label: t('chart.series.day') },
+            { label: t('chart.series.cum_pnl'), stroke: '#00e5ff', width: 2, fill: 'rgba(0,229,255,0.08)' },
+            { label: t('chart.series.drawdown'), stroke: '#ff3860', width: 1 },
         ],
         axes: [
             { stroke: '#aab' },
@@ -32,9 +35,9 @@ export function equityChart(el, points, opts = {}) {
 
 export function ohlcChart(el, bars, marks = [], opts = {}) {
     el.innerHTML = '';
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
     if (!bars || !bars.length) {
-        el.innerHTML = '<div class="boot">No bars yet — try a different range or symbol.</div>';
+        el.innerHTML = `<div class="boot">${esc(t('chart.empty.bars'))}</div>`;
         return;
     }
     const xs = bars.map(b => new Date(b.bar_time).getTime() / 1000);
@@ -92,8 +95,8 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
         height: h,
         scales: { x: { time: true } },
         series: [
-            { label: 'time' },
-            { label: 'price', stroke: 'transparent', paths: candlePath },
+            { label: t('chart.series.time') },
+            { label: t('chart.series.price'), stroke: 'transparent', paths: candlePath },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, c], el);
@@ -101,7 +104,7 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
 
 export function barChart(el, labels, values, opts = {}) {
     el.innerHTML = '';
-    if (!window.uPlot) { el.textContent = 'uPlot not loaded'; return; }
+    if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
     const xs = labels.map((_, i) => i);
     const vs = values.map(Number);
     const w = el.clientWidth || 800;
@@ -129,8 +132,8 @@ export function barChart(el, labels, values, opts = {}) {
         height: h,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'idx' },
-            { label: opts.seriesLabel || 'value', stroke: 'transparent', paths: barsPath },
+            { label: t('chart.series.idx') },
+            { label: opts.seriesLabel || t('chart.series.value'), stroke: 'transparent', paths: barsPath },
         ],
         axes: [{
             stroke: '#aab',
