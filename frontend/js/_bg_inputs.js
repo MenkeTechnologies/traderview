@@ -6,6 +6,8 @@
 //   n_observations, reject_at_5pct,
 // } | null
 
+import { t } from './i18n.js';
+
 export const DEFAULT_LAG = 4;
 export const MIN_LAG = 1;
 export const MAX_LAG = 50;
@@ -17,16 +19,16 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.x))                              return 'x must be an array';
-    if (!Array.isArray(input.y))                              return 'y must be an array';
+    if (!Array.isArray(input.x))                              return t('view.bg.validate.x_array');
+    if (!Array.isArray(input.y))                              return t('view.bg.validate.y_array');
     if (!Number.isInteger(input.lag_order)
         || input.lag_order < MIN_LAG || input.lag_order > MAX_LAG)
-                                                              return `lag_order must be integer in [${MIN_LAG}, ${MAX_LAG}]`;
-    if (input.x.length !== input.y.length)                    return 'x and y must have equal length';
-    if (input.x.length < input.lag_order + 8)                 return `need at least lag_order + 8 = ${input.lag_order + 8} pairs`;
+                                                              return t('view.bg.validate.lag_range', { min: MIN_LAG, max: MAX_LAG });
+    if (input.x.length !== input.y.length)                    return t('view.bg.validate.length_mismatch');
+    if (input.x.length < input.lag_order + 8)                 return t('view.bg.validate.min_pairs', { n: input.lag_order + 8 });
     for (let i = 0; i < input.x.length; i++) {
-        if (!Number.isFinite(input.x[i]))                     return `x[${i}] not finite`;
-        if (!Number.isFinite(input.y[i]))                     return `y[${i}] not finite`;
+        if (!Number.isFinite(input.x[i]))                     return t('view.bg.validate.x_finite', { i });
+        if (!Number.isFinite(input.y[i]))                     return t('view.bg.validate.y_finite', { i });
     }
     return null;
 }

@@ -9,6 +9,8 @@
 //   assets: [{ symbol, beta_ols, standard_error, shrinkage_weight, beta_shrunk }, ...]
 // } | null
 
+import { t } from './i18n.js';
+
 export const MIN_OBS = 5;
 
 export const DEFAULT_INPUTS = {
@@ -17,19 +19,19 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.assets))                       return 'assets must be an array';
-    if (input.assets.length === 0)                          return 'need at least one asset';
-    if (!Array.isArray(input.market_returns))               return 'market_returns must be an array';
-    if (input.market_returns.length < MIN_OBS)              return `market_returns needs ≥ ${MIN_OBS} obs`;
+    if (!Array.isArray(input.assets))                       return t('view.beta_shrink.validate.assets_array');
+    if (input.assets.length === 0)                          return t('view.beta_shrink.validate.assets_empty');
+    if (!Array.isArray(input.market_returns))               return t('view.beta_shrink.validate.market_array');
+    if (input.market_returns.length < MIN_OBS)              return t('view.beta_shrink.validate.market_min', { min: MIN_OBS });
     for (let i = 0; i < input.market_returns.length; i++) {
-        if (!Number.isFinite(input.market_returns[i]))      return `market_returns[${i}] not finite`;
+        if (!Number.isFinite(input.market_returns[i]))      return t('view.beta_shrink.validate.market_finite', { i });
     }
     for (let a = 0; a < input.assets.length; a++) {
         const x = input.assets[a];
-        if (!x)                                              return `assets[${a}] missing`;
+        if (!x)                                              return t('view.beta_shrink.validate.asset_missing', { a });
         if (typeof x.symbol !== 'string' || x.symbol.length === 0)
-                                                              return `assets[${a}] symbol missing`;
-        if (!Array.isArray(x.asset_returns))                 return `assets[${a}] asset_returns must be array`;
+                                                              return t('view.beta_shrink.validate.symbol_missing', { a });
+        if (!Array.isArray(x.asset_returns))                 return t('view.beta_shrink.validate.returns_array', { a });
         // Length mismatch & non-finite are skipped server-side (per Rust impl); allow here too.
     }
     return null;

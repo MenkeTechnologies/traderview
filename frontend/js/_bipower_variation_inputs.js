@@ -8,6 +8,8 @@
 // jump_variation = max(0, RV − BPV)
 // Huang-Tauchen z = √n·(RV−BPV)/BPV/√(θ·max(1, TQ/BPV²))
 
+import { t } from './i18n.js';
+
 export const MU1   = 0.7978845608028654;                       // √(2/π)
 export const THETA = Math.PI * Math.PI / 4 + Math.PI - 5;
 const GAMMA_7_6 = 0.9275537932833882;
@@ -18,10 +20,10 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.returns))                       return 'returns must be an array';
-    if (input.returns.length < 4)                            return 'need at least 4 returns';
+    if (!Array.isArray(input.returns))                       return t('view.bipower_variation.validate.returns_array');
+    if (input.returns.length < 4)                            return t('view.bipower_variation.validate.returns_min');
     for (let i = 0; i < input.returns.length; i++) {
-        if (!Number.isFinite(input.returns[i]))              return `returns[${i}] not finite`;
+        if (!Number.isFinite(input.returns[i]))              return t('view.bipower_variation.validate.returns_finite', { i });
     }
     return null;
 }
