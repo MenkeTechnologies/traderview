@@ -9,6 +9,8 @@
 // Local mirror uses Number throughout for the chart math, then we ship
 // Decimals as strings via buildBody.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Per line: "<qty> <notional> <actual_fee>". All > 0.
@@ -16,7 +18,7 @@ export function parseExecutionBlob(text) {
     const executions = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { executions, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { executions, errors: [{ line_no: 0, raw: '', message: t('view.commission_optimizer.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -26,26 +28,26 @@ export function parseExecutionBlob(text) {
         if (!s) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 3) {
-            errors.push({ line_no: i + 1, raw, message: `expected 3 tokens (qty notional actual_fee), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.commission_optimizer.parse.token_count', { n: parts.length }) });
             continue;
         }
         const qty = Number(parts[0]);
         const notional = Number(parts[1]);
         const fee = Number(parts[2]);
         if (![qty, notional, fee].every(Number.isFinite)) {
-            errors.push({ line_no: i + 1, raw, message: 'tokens must be finite numbers' });
+            errors.push({ line_no: i + 1, raw, message: t('view.commission_optimizer.parse.tokens_finite') });
             continue;
         }
         if (qty <= 0) {
-            errors.push({ line_no: i + 1, raw, message: 'qty must be > 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.commission_optimizer.parse.qty_pos') });
             continue;
         }
         if (notional <= 0) {
-            errors.push({ line_no: i + 1, raw, message: 'notional must be > 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.commission_optimizer.parse.notional_pos') });
             continue;
         }
         if (fee < 0) {
-            errors.push({ line_no: i + 1, raw, message: 'actual_fee must be ≥ 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.commission_optimizer.parse.fee_non_neg') });
             continue;
         }
         executions.push({ qty, notional, actual_fee: fee });
@@ -60,16 +62,16 @@ function stripComment(raw) {
 
 export function validateInputs(executions, tiers) {
     if (!Array.isArray(executions) || executions.length === 0)
-        return 'need ≥ 1 execution';
+        return t('view.commission_optimizer.validate.executions_min');
     if (!Array.isArray(tiers) || tiers.length === 0)
-        return 'need ≥ 1 tier to compare';
+        return t('view.commission_optimizer.validate.tiers_min');
     for (let i = 0; i < tiers.length; i++) {
-        const t = tiers[i];
-        if (!t || typeof t.name !== 'string' || !t.name.trim())
-            return `tier[${i}].name required`;
+        const tier = tiers[i];
+        if (!tier || typeof tier.name !== 'string' || !tier.name.trim())
+            return t('view.commission_optimizer.validate.tier_name', { i });
         for (const k of ['per_trade_flat', 'per_share', 'per_dollar', 'min_per_trade', 'max_per_trade']) {
-            if (!Number.isFinite(t[k]) || t[k] < 0)
-                return `tier[${i}].${k} must be ≥ 0 finite number`;
+            if (!Number.isFinite(tier[k]) || tier[k] < 0)
+                return t('view.commission_optimizer.validate.tier_field', { i, field: k });
         }
     }
     return null;
