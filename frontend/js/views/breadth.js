@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 let timer = null;
 
@@ -21,10 +22,10 @@ export async function renderBreadth(mount) {
             <table class="trades">
                 <thead><tr><th data-i18n="view.breadth.th.indicator">Indicator</th><th data-i18n="view.breadth.th.strong_bull">Strong bull</th><th data-i18n="view.breadth.th.mild_bull">Mild bull</th><th data-i18n="view.breadth.th.neutral">Neutral</th><th data-i18n="view.breadth.th.mild_bear">Mild bear</th><th data-i18n="view.breadth.th.strong_bear">Strong bear</th></tr></thead>
                 <tbody>
-                    <tr><td>NYSE TICK</td><td class="pos">≥ +800</td><td class="pos">+400..+800</td><td>±400</td><td class="neg">−400..−800</td><td class="neg">≤ −800</td></tr>
-                    <tr><td>NYSE TRIN</td><td class="pos">≤ 0.5</td><td class="pos">0.5..0.9</td><td>0.9..1.1</td><td class="neg">1.1..2.0</td><td class="neg">≥ 2.0</td></tr>
-                    <tr><td>Advance−Decline</td><td class="pos">≥ +1500</td><td class="pos">+500..+1500</td><td>±500</td><td class="neg">−500..−1500</td><td class="neg">≤ −1500</td></tr>
-                    <tr><td>Put-Call ratio</td><td class="neg">≤ 0.6 *</td><td class="pos">0.6..0.8</td><td>0.8..1.0</td><td class="neg">1.0..1.2</td><td class="pos">≥ 1.2 *</td></tr>
+                    <tr><td data-i18n="view.breadth.row.nyse_tick">NYSE TICK</td><td class="pos">≥ +800</td><td class="pos">+400..+800</td><td>±400</td><td class="neg">−400..−800</td><td class="neg">≤ −800</td></tr>
+                    <tr><td data-i18n="view.breadth.row.nyse_trin">NYSE TRIN</td><td class="pos">≤ 0.5</td><td class="pos">0.5..0.9</td><td>0.9..1.1</td><td class="neg">1.1..2.0</td><td class="neg">≥ 2.0</td></tr>
+                    <tr><td data-i18n="view.breadth.row.advance_decline">Advance−Decline</td><td class="pos">≥ +1500</td><td class="pos">+500..+1500</td><td>±500</td><td class="neg">−500..−1500</td><td class="neg">≤ −1500</td></tr>
+                    <tr><td data-i18n="view.breadth.row.put_call_ratio">Put-Call ratio</td><td class="neg">≤ 0.6 *</td><td class="pos">0.6..0.8</td><td>0.8..1.0</td><td class="neg">1.0..1.2</td><td class="pos">≥ 1.2 *</td></tr>
                 </tbody>
             </table>
             <p data-i18n="view.breadth.hint.put_call_is_a_contrarian_indicator_at_extremes_ver" class="muted small">* Put-Call is a contrarian indicator at extremes — very low PCR = complacency (often near tops), very high PCR = fear (often near bottoms).</p>
@@ -60,15 +61,16 @@ function renderComposite(s, mount) {
     const el = mount.querySelector('#bcomp');
     if (!el) return;
     el.innerHTML = `
-        <div class="card"><div class="label">Composite score</div>
+        <div class="card"><div class="label" data-i18n="view.breadth.card.composite_score">Composite score</div>
             <div class="value ${scoreCls}">${s.composite_score >= 0 ? '+' : ''}${s.composite_score}</div></div>
-        <div class="card"><div class="label">Regime</div>
+        <div class="card"><div class="label" data-i18n="view.breadth.card.regime">Regime</div>
             <div class="value ${regCls}">${s.regime.toUpperCase()}</div></div>
-        <div class="card"><div class="label">Indicators fired</div>
+        <div class="card"><div class="label" data-i18n="view.breadth.card.indicators_fired">Indicators fired</div>
             <div class="value">${[s.tick, s.trin, s.addn, s.vold, s.pcr].filter(Boolean).length} / 5</div></div>
-        <div class="card"><div class="label">Updated</div>
+        <div class="card"><div class="label" data-i18n="view.breadth.card.updated">Updated</div>
             <div class="value small">${new Date(s.fetched_at).toLocaleTimeString(undefined, { hour12: false })}</div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderIndicators(s, mount) {

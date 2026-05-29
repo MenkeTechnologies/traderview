@@ -137,15 +137,16 @@ function renderQuote(el, q) {
     const ch = q.change_pct;
     const cls = ch >= 0 ? 'pos' : 'neg';
     el.innerHTML = `
-        <div class="card"><div class="label">Price</div><div class="value">${fmt(q.price)}</div></div>
-        <div class="card"><div class="label">Change</div>
+        <div class="card"><div class="label" data-i18n="view.research.card.price">Price</div><div class="value">${fmt(q.price)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.research.card.change">Change</div>
             <div class="value ${cls}">${ch != null ? (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%' : '—'}</div></div>
-        <div class="card"><div class="label">Prev close</div><div class="value">${q.prev_close != null ? fmt(q.prev_close) : '—'}</div></div>
-        <div class="card"><div class="label">Day Hi/Lo</div>
+        <div class="card"><div class="label" data-i18n="view.research.card.prev_close">Prev close</div><div class="value">${q.prev_close != null ? fmt(q.prev_close) : '—'}</div></div>
+        <div class="card"><div class="label" data-i18n="view.research.card.day_hi_lo">Day Hi/Lo</div>
             <div class="value">${q.day_high != null ? fmt(q.day_high) : '—'} / ${q.day_low != null ? fmt(q.day_low) : '—'}</div></div>
-        <div class="card"><div class="label">Volume</div><div class="value">${q.volume != null ? q.volume.toLocaleString() : '—'}</div></div>
-        <div class="card"><div class="label">Market</div><div class="value">${q.market_state || '—'}</div></div>
+        <div class="card"><div class="label" data-i18n="view.research.card.volume">Volume</div><div class="value">${q.volume != null ? q.volume.toLocaleString() : '—'}</div></div>
+        <div class="card"><div class="label" data-i18n="view.research.card.market">Market</div><div class="value">${q.market_state || '—'}</div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderSignals(s, mount) {
@@ -278,9 +279,9 @@ function renderEarnings(el, e) {
     const hist = e.earningsHistory?.history || [];
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Next earnings</div><div class="value">${next || '—'}</div></div>
-            <div class="card"><div class="label">EPS est.</div><div class="value">${eps || '—'}</div></div>
-            <div class="card"><div class="label">Revenue est.</div><div class="value">${rev || '—'}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.next_earnings">Next earnings</div><div class="value">${next || '—'}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.eps_est">EPS est.</div><div class="value">${eps || '—'}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.revenue_est">Revenue est.</div><div class="value">${rev || '—'}</div></div>
         </div>
         ${hist.length ? `<table class="trades"><thead><tr>
             <th data-i18n="view.research.th.period_2">Period</th><th data-i18n="view.research.th.eps_est">EPS Est</th><th data-i18n="view.research.th.eps_actual">EPS Actual</th><th data-i18n="view.research.th.surprise">Surprise %</th>
@@ -291,6 +292,7 @@ function renderEarnings(el, e) {
                 <td class="${(h.surprisePercent?.raw ?? 0) >= 0 ? 'pos' : 'neg'}">${rawVal(h.surprisePercent)}</td></tr>
         `).join('')}</tbody></table>` : ''}
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderInsiders(el, i) {
@@ -315,9 +317,9 @@ function renderHolders(el, h) {
     const inst = h.institutionOwnership?.ownershipList || [];
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Insider %</div><div class="value">${rawVal(b.insidersPercentHeld)}</div></div>
-            <div class="card"><div class="label">Institutions %</div><div class="value">${rawVal(b.institutionsPercentHeld)}</div></div>
-            <div class="card"><div class="label">Inst. count</div><div class="value">${rawVal(b.institutionsCount)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.insider_pct">Insider %</div><div class="value">${rawVal(b.insidersPercentHeld)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.institutions_pct">Institutions %</div><div class="value">${rawVal(b.institutionsPercentHeld)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.research.card.inst_count">Inst. count</div><div class="value">${rawVal(b.institutionsCount)}</div></div>
         </div>
         ${inst.length ? `<table class="trades"><thead><tr><th data-i18n="view.research.th.holder">Holder</th><th data-i18n="view.research.th.out">% out</th><th data-i18n="view.research.th.shares_2">Shares</th><th data-i18n="view.research.th.reported">Reported</th></tr></thead>
         <tbody>${inst.slice(0, 15).map(h => `
@@ -327,6 +329,7 @@ function renderHolders(el, h) {
             <td>${rawVal(h.reportDate)}</td></tr>`).join('')}
         </tbody></table>` : ''}
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 // Cell for indicator table — referenced via util to keep dates fresh.

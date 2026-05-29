@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -50,15 +51,16 @@ function renderGlobal(g, mount) {
     const el = mount.querySelector('#c-glob');
     if (!el) return;
     el.innerHTML = `
-        <div class="card"><div class="label">Total mcap</div><div class="value">${compact(g.total_market_cap_usd)}</div></div>
-        <div class="card"><div class="label">24h volume</div><div class="value">${compact(g.total_volume_usd)}</div></div>
-        <div class="card"><div class="label">Mcap Δ 24h</div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.total_mcap">Total mcap</div><div class="value">${compact(g.total_market_cap_usd)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.volume_24h">24h volume</div><div class="value">${compact(g.total_volume_usd)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.mcap_delta_24h">Mcap Δ 24h</div>
             <div class="value ${g.market_cap_change_24h_pct >= 0 ? 'pos' : 'neg'}">${pct(g.market_cap_change_24h_pct)}</div></div>
-        <div class="card"><div class="label">BTC dominance</div><div class="value">${g.btc_dominance.toFixed(2)}%</div></div>
-        <div class="card"><div class="label">ETH dominance</div><div class="value">${g.eth_dominance.toFixed(2)}%</div></div>
-        <div class="card"><div class="label">Active coins</div><div class="value">${num(g.active_cryptocurrencies)}</div></div>
-        <div class="card"><div class="label">Markets</div><div class="value">${num(g.markets)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.btc_dominance">BTC dominance</div><div class="value">${g.btc_dominance.toFixed(2)}%</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.eth_dominance">ETH dominance</div><div class="value">${g.eth_dominance.toFixed(2)}%</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.active_coins">Active coins</div><div class="value">${num(g.active_cryptocurrencies)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.markets">Markets</div><div class="value">${num(g.markets)}</div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function renderTable(rows, mount) {
@@ -91,9 +93,10 @@ function renderChain(c, mount) {
     const el = mount.querySelector('#c-onchain');
     if (!el) return;
     el.innerHTML = `
-        <div class="card"><div class="label">Hash rate</div><div class="value">${c.hash_rate_thps != null ? (c.hash_rate_thps/1e6).toFixed(1)+' EH/s' : '—'}</div></div>
-        <div class="card"><div class="label">Difficulty</div><div class="value">${c.difficulty != null ? (c.difficulty/1e12).toFixed(2)+'T' : '—'}</div></div>
-        <div class="card"><div class="label">Block height</div><div class="value">${num(c.block_height)}</div></div>
-        <div class="card"><div class="label">Mempool tx</div><div class="value">${num(c.mempool_tx_count)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.hash_rate">Hash rate</div><div class="value">${c.hash_rate_thps != null ? (c.hash_rate_thps/1e6).toFixed(1)+' EH/s' : '—'}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.difficulty">Difficulty</div><div class="value">${c.difficulty != null ? (c.difficulty/1e12).toFixed(2)+'T' : '—'}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.block_height">Block height</div><div class="value">${num(c.block_height)}</div></div>
+        <div class="card"><div class="label" data-i18n="view.crypto.card.mempool_tx">Mempool tx</div><div class="value">${num(c.mempool_tx_count)}</div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }

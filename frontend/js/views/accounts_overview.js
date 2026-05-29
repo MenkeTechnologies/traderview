@@ -2,7 +2,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderAccountsOverview(mount) {
@@ -31,23 +31,23 @@ function render(r, mount) {
     if (!out) return;
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Accounts</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.accounts">Accounts</div>
                 <div class="value">${g.accounts}</div></div>
-            <div class="card"><div class="label">Closed trades (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.closed_trades">Closed trades (∑)</div>
                 <div class="value">${g.trade_count}</div>
                 <div class="small muted">${g.win_count}W / ${g.loss_count}L</div></div>
-            <div class="card"><div class="label">Today P/L (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.today_pnl">Today P/L (∑)</div>
                 <div class="value ${cls(g.today_pnl)}">$${fmt(g.today_pnl)}</div></div>
-            <div class="card"><div class="label">MTD P/L (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.mtd_pnl">MTD P/L (∑)</div>
                 <div class="value ${cls(g.mtd_pnl)}">$${fmt(g.mtd_pnl)}</div></div>
-            <div class="card"><div class="label">YTD P/L (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.ytd_pnl">YTD P/L (∑)</div>
                 <div class="value ${cls(g.ytd_pnl)}">$${fmt(g.ytd_pnl)}</div></div>
-            <div class="card"><div class="label">All-time P/L (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.alltime_pnl">All-time P/L (∑)</div>
                 <div class="value ${cls(g.total_closed_pnl)}">$${fmt(g.total_closed_pnl)}</div></div>
-            <div class="card"><div class="label">Open positions (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.open_positions">Open positions (∑)</div>
                 <div class="value">${g.open_positions_count}</div>
                 <div class="small muted">$${fmt(g.open_notional)} notional</div></div>
-            <div class="card"><div class="label">Unrealized (∑)</div>
+            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.unrealized">Unrealized (∑)</div>
                 <div class="value ${cls(g.open_unrealized_pnl)}">$${fmt(g.open_unrealized_pnl)}</div>
                 <div class="small muted">day Δ ${g.open_day_pnl >= 0 ? '+' : ''}$${fmt(g.open_day_pnl)}</div></div>
         </div>
@@ -58,6 +58,7 @@ function render(r, mount) {
             <p class="muted small">${esc(t('view.accounts_overview.hint.updated', { time: new Date(r.computed_at).toLocaleString() }))}</p>
         </div>
     `;
+    try { applyUiI18n(out); } catch (_) {}
 }
 
 function accountTable(accounts) {

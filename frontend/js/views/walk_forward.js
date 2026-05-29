@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 const KINDS = [
     { id: 'sma_cross',         label: 'SMA crossover (6×6 grid)' },
@@ -88,19 +89,19 @@ function renderResult(r, body, out, mount) {
 
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Walk-forward efficiency</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.wfe">Walk-forward efficiency</div>
                 <div class="value ${wfeCls}">${wfe.toFixed(2)}</div>
                 <div class="small muted">${wfeText} (avg OOS / avg IS)</div></div>
-            <div class="card"><div class="label">Total OOS return</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.total_oos">Total OOS return</div>
                 <div class="value ${r.total_oos_return_pct >= 0 ? 'pos' : 'neg'}">${r.total_oos_return_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label">Avg IS return / window</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.avg_is">Avg IS return / window</div>
                 <div class="value">${r.avg_is_return_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label">Avg OOS return / window</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.avg_oos">Avg OOS return / window</div>
                 <div class="value ${r.avg_oos_return_pct >= 0 ? 'pos' : 'neg'}">${r.avg_oos_return_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label">Windows × grid</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.windows_grid">Windows × grid</div>
                 <div class="value">${r.windows.length} × ${r.grid_size}</div>
                 <div class="small muted">= ${r.windows.length * r.grid_size} backtests</div></div>
-            <div class="card"><div class="label">Final equity</div>
+            <div class="card"><div class="label" data-i18n="view.walk_forward.card.final_equity">Final equity</div>
                 <div class="value">$${fmt(r.final_oos_equity)}</div>
                 <div class="small muted">from $${fmt(body.initial_capital)}</div></div>
         </div>
@@ -108,13 +109,13 @@ function renderResult(r, body, out, mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.walk_forward.h2.baseline_single_best_fit_entire_series_for_compari">Baseline (single best fit, entire series) — for comparison</h2>
             <div class="cards">
-                <div class="card"><div class="label">Baseline params</div>
+                <div class="card"><div class="label" data-i18n="view.walk_forward.card.baseline_params">Baseline params</div>
                     <div class="value small">${esc(JSON.stringify(r.baseline_params))}</div></div>
-                <div class="card"><div class="label">Baseline return</div>
+                <div class="card"><div class="label" data-i18n="view.walk_forward.card.baseline_return">Baseline return</div>
                     <div class="value ${r.baseline_summary.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.baseline_summary.total_return_pct.toFixed(2)}%</div></div>
-                <div class="card"><div class="label">Baseline Sharpe</div>
+                <div class="card"><div class="label" data-i18n="view.walk_forward.card.baseline_sharpe">Baseline Sharpe</div>
                     <div class="value">${r.baseline_summary.sharpe_daily.toFixed(3)}</div></div>
-                <div class="card"><div class="label">Baseline trades</div>
+                <div class="card"><div class="label" data-i18n="view.walk_forward.card.baseline_trades">Baseline trades</div>
                     <div class="value">${r.baseline_summary.trades}</div></div>
             </div>
             <p data-i18n="view.walk_forward.hint.if_baseline_total_oos_the_headline_strategy_is_ove" class="muted small">If baseline ≫ total_OOS, the headline strategy is over-fitted; the parameter set that won on the full history would not have survived rolling re-fits.</p>
@@ -150,6 +151,7 @@ function renderResult(r, body, out, mount) {
             </table>
         </div>
     `;
+    try { applyUiI18n(out); } catch (_) {}
     renderEqSvg(r.oos_equity, body.initial_capital, mount);
 }
 

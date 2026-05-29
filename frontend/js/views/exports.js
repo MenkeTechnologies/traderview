@@ -28,13 +28,13 @@ export async function renderExports(mount, state) {
                 <thead><tr><th data-i18n="view.exports.th.dataset">Dataset</th><th data-i18n="view.exports.th.description">Description</th><th data-i18n="view.exports.th.action">Action</th></tr></thead>
                 <tbody>
                     <tr>
-                        <td>Executions</td>
-                        <td class="small muted">Every raw fill: timestamp, side, qty, price, fee, broker order id.</td>
+                        <td data-i18n="view.exports.row.executions">Executions</td>
+                        <td class="small muted" data-i18n="view.exports.row.executions_desc">Every raw fill: timestamp, side, qty, price, fee, broker order id.</td>
                         <td><button data-i18n="view.exports.btn.download_csv" class="btn" data-action="csv" data-path="/export/executions/${acct.id}.csv" data-name="executions-${acct.id}.csv">Download CSV</button></td>
                     </tr>
                     <tr>
-                        <td>Trades</td>
-                        <td class="small muted">Aggregated open→close positions with entry/exit avg, P/L, MFE/MAE, risk.</td>
+                        <td data-i18n="view.exports.row.trades">Trades</td>
+                        <td class="small muted" data-i18n="view.exports.row.trades_desc">Aggregated open→close positions with entry/exit avg, P/L, MFE/MAE, risk.</td>
                         <td><button data-i18n="view.exports.btn.download_csv_2" class="btn" data-action="csv" data-path="/export/trades/${acct.id}.csv" data-name="trades-${acct.id}.csv">Download CSV</button></td>
                     </tr>
                 </tbody>

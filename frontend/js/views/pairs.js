@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderPairs(mount) {
     const tok = currentViewToken();
@@ -118,20 +119,21 @@ function renderPairOut(el, a, b, r, mount) {
               : 'NEUTRAL — wait for |z| ≥ 2';
     el.innerHTML = `
         <div class="cards" style="margin-top:10px">
-            <div class="card"><div class="label">Correlation</div><div class="value">${r.correlation.toFixed(3)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.pairs.card.correlation">Correlation</div><div class="value">${r.correlation.toFixed(3)}</div></div>
             <div class="card"><div class="label">β</div><div class="value">${r.beta.toFixed(3)}</div></div>
             <div class="card"><div class="label">α</div><div class="value">${r.alpha.toFixed(3)}</div></div>
-            <div class="card"><div class="label">Mean spread</div><div class="value">${fmt(r.mean_spread)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.pairs.card.mean_spread">Mean spread</div><div class="value">${fmt(r.mean_spread)}</div></div>
             <div class="card"><div class="label">σ spread</div><div class="value">${fmt(r.stdev_spread)}</div></div>
-            <div class="card"><div class="label">Latest spread</div><div class="value">${fmt(r.latest_spread)}</div></div>
-            <div class="card"><div class="label">Latest z-score</div>
+            <div class="card"><div class="label" data-i18n="view.pairs.card.latest_spread">Latest spread</div><div class="value">${fmt(r.latest_spread)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.pairs.card.latest_zscore">Latest z-score</div>
                 <div class="value ${zCls}">${r.latest_zscore.toFixed(2)}</div></div>
-            <div class="card"><div class="label">Samples</div><div class="value">${r.samples}</div></div>
+            <div class="card"><div class="label" data-i18n="view.pairs.card.samples">Samples</div><div class="value">${r.samples}</div></div>
         </div>
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.trade_signal">Trade signal</h2><p><strong>${reco}</strong></p></div>
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.spread_series">Spread series</h2><div id="sp-chart"></div></div>
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.z_score">Z-score</h2><div id="z-chart"></div></div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
     const labels = r.spread_series.map((_, i) => String(i));
     const spChart = mount.querySelector('#sp-chart');
     const zChart = mount.querySelector('#z-chart');

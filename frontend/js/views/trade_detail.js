@@ -27,20 +27,20 @@ export async function renderTradeDetail(mount, state, tradeId) {
     mount.innerHTML = `
         <h1 class="view-title">// ${esc(trade.symbol)} · ${trade.side} · ${trade.status}</h1>
         <div class="cards">
-            <div class="card"><div class="label">Net P&L</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.net_pnl">Net P&L</div>
                 <div class="value ${pnlClass(trade.net_pnl)}">${fmtMoney(trade.net_pnl)}</div></div>
-            <div class="card"><div class="label">Qty</div><div class="value">${fmt(trade.qty, 0)}</div></div>
-            <div class="card"><div class="label">Entry / Exit</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.qty">Qty</div><div class="value">${fmt(trade.qty, 0)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.entry_exit">Entry / Exit</div>
                 <div class="value">${fmt(trade.entry_avg)} → ${trade.exit_avg !== null ? fmt(trade.exit_avg) : '—'}</div></div>
-            <div class="card"><div class="label">Fees</div><div class="value">${fmtMoney(trade.fees)}</div></div>
-            <div class="card"><div class="label">MFE / MAE</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.fees">Fees</div><div class="value">${fmtMoney(trade.fees)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.mfe_mae">MFE / MAE</div>
                 <div class="value">${trade.mfe !== null ? fmtMoney(trade.mfe) : '—'} /
                 ${trade.mae !== null ? fmtMoney(trade.mae) : '—'}</div></div>
-            <div class="card"><div class="label">Best exit</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.best_exit">Best exit</div>
                 <div class="value">${trade.best_exit_pnl !== null ? fmtMoney(trade.best_exit_pnl) : '—'}</div></div>
-            <div class="card"><div class="label">Exit eff.</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.exit_eff">Exit eff.</div>
                 <div class="value">${trade.exit_efficiency !== null ? (Number(trade.exit_efficiency)*100).toFixed(1)+'%' : '—'}</div></div>
-            <div class="card"><div class="label">Risk amount</div>
+            <div class="card"><div class="label" data-i18n="view.trade_detail.card.risk_amount">Risk amount</div>
                 <div class="value">${trade.risk_amount !== null ? fmtMoney(trade.risk_amount) : '—'}</div></div>
         </div>
 

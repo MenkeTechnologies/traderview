@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { equityChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PRESETS = [
@@ -80,6 +80,7 @@ export async function renderBacktest(mount) {
             const el2 = mount.querySelector('#bt-result');
             if (!el2) return;
             el2.innerHTML = render(r);
+            try { applyUiI18n(el2); } catch (_) {}
             const eqMount = mount.querySelector('#bt-eq');
             if (!eqMount) return;
             // Adapt to equityChart's expected shape.
@@ -102,18 +103,18 @@ function render(r) {
     const ret = s.total_return_pct >= 0 ? 'pos' : 'neg';
     return `
         <div class="cards">
-            <div class="card"><div class="label">Total return</div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.total_return">Total return</div>
                 <div class="value ${ret}">${s.total_return_pct >= 0 ? '+' : ''}${s.total_return_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label">Final equity</div><div class="value">$${fmt(s.final_equity)}</div></div>
-            <div class="card"><div class="label">Trades</div><div class="value">${s.trades}</div></div>
-            <div class="card"><div class="label">Win rate</div><div class="value">${(s.win_rate*100).toFixed(1)}%</div></div>
-            <div class="card"><div class="label">Profit factor</div><div class="value">${s.profit_factor.toFixed(2)}</div></div>
-            <div class="card"><div class="label">Avg win</div><div class="value pos">$${fmt(s.avg_win)}</div></div>
-            <div class="card"><div class="label">Avg loss</div><div class="value neg">$${fmt(s.avg_loss)}</div></div>
-            <div class="card"><div class="label">Max DD</div><div class="value neg">${s.max_drawdown_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label">Sharpe (daily)</div><div class="value">${s.sharpe_daily.toFixed(3)}</div></div>
-            <div class="card"><div class="label">Sharpe (ann.)</div><div class="value">${(s.sharpe_daily * Math.sqrt(252)).toFixed(2)}</div></div>
-            <div class="card"><div class="label">% time in market</div><div class="value">${s.bars_in_market_pct.toFixed(0)}%</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.final_equity">Final equity</div><div class="value">$${fmt(s.final_equity)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.trades">Trades</div><div class="value">${s.trades}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.win_rate">Win rate</div><div class="value">${(s.win_rate*100).toFixed(1)}%</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.profit_factor">Profit factor</div><div class="value">${s.profit_factor.toFixed(2)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.avg_win">Avg win</div><div class="value pos">$${fmt(s.avg_win)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.avg_loss">Avg loss</div><div class="value neg">$${fmt(s.avg_loss)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.max_dd">Max DD</div><div class="value neg">${s.max_drawdown_pct.toFixed(2)}%</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.sharpe_daily">Sharpe (daily)</div><div class="value">${s.sharpe_daily.toFixed(3)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.sharpe_ann">Sharpe (ann.)</div><div class="value">${(s.sharpe_daily * Math.sqrt(252)).toFixed(2)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.backtest.card.pct_in_market">% time in market</div><div class="value">${s.bars_in_market_pct.toFixed(0)}%</div></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.backtest.h2.equity_curve">Equity curve</h2>

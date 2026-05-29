@@ -1,7 +1,7 @@
 // Earnings-week IV scanner + per-symbol straddle backtest detail.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderEarningsIv(mount, _state, symbol) {
@@ -110,21 +110,21 @@ async function renderDetail(mount, sym) {
         if (!detailEl) return;
         detailEl.innerHTML = `
             <div class="cards">
-                <div class="card"><div class="label">Earnings</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.earnings">Earnings</div>
                     <div class="value">${esc(r.earnings_date)}</div></div>
-                <div class="card"><div class="label">Days until</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.days_until">Days until</div>
                     <div class="value">${r.days_until}</div></div>
-                <div class="card"><div class="label">Spot</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.spot">Spot</div>
                     <div class="value">${fmt(r.spot)}</div></div>
-                <div class="card"><div class="label">ATM strike</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.atm_strike">ATM strike</div>
                     <div class="value">${fmt(r.atm_strike)}</div></div>
-                <div class="card"><div class="label">Implied move</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.implied_move">Implied move</div>
                     <div class="value">${fmt(r.implied_move_pct, 2)}%</div></div>
-                <div class="card"><div class="label">Median realized</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.median_realized">Median realized</div>
                     <div class="value">${fmt(r.backtest.median_realized_pct, 2)}%</div></div>
-                <div class="card"><div class="label">Edge</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.edge">Edge</div>
                     <div class="value ${r.backtest.edge_pct >= 0 ? 'neg' : 'pos'}">${r.backtest.edge_pct >= 0 ? '+' : ''}${fmt(r.backtest.edge_pct, 2)}%</div></div>
-                <div class="card"><div class="label">Recommendation</div>
+                <div class="card"><div class="label" data-i18n="view.earnings_iv.card.recommendation">Recommendation</div>
                     <div class="value ${recCls}">${r.backtest.recommendation.toUpperCase()}</div></div>
             </div>
 
@@ -162,16 +162,17 @@ async function renderDetail(mount, sym) {
                 <h2>${esc(t('view.earnings_iv.h2.straddle_pricing', { expiration: r.expiration }))}</h2>
                 <table class="trades">
                     <tbody>
-                        <tr><td>Call mid</td><td>${fmt(r.call_mid)}</td></tr>
-                        <tr><td>Put mid</td> <td>${fmt(r.put_mid)}</td></tr>
-                        <tr><td><strong>Total premium</strong></td>
+                        <tr><td data-i18n="view.earnings_iv.row.call_mid">Call mid</td><td>${fmt(r.call_mid)}</td></tr>
+                        <tr><td data-i18n="view.earnings_iv.row.put_mid">Put mid</td> <td>${fmt(r.put_mid)}</td></tr>
+                        <tr><td><strong data-i18n="view.earnings_iv.row.total_premium">Total premium</strong></td>
                             <td><strong>${fmt(r.call_mid + r.put_mid)}</strong></td></tr>
-                        <tr><td><strong>Implied move</strong></td>
+                        <tr><td><strong data-i18n="view.earnings_iv.row.implied_move">Implied move</strong></td>
                             <td><strong>${fmt(r.implied_move_pct, 2)}%</strong></td></tr>
                     </tbody>
                 </table>
             </div>
         `;
+        try { applyUiI18n(detailEl); } catch (_) {}
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const detailEl = mount.querySelector('#iv-detail');

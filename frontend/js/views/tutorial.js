@@ -12,10 +12,10 @@ const SECTIONS = [
         title: '// QUICKSTART',
         body: `
             <ol class="tut-steps">
-                <li>Open <code>Accounts</code> (or tile <strong>🏦 Accounts</strong>) and add at least one broker — the dashboard P/L stays empty until something is bound.</li>
-                <li>Open <code>Import</code> (or tile <strong>⤴ Import</strong>) and upload a broker CSV (12 importers supported). Trades roll up automatically.</li>
-                <li>Hit <kbd>Cmd</kbd>+<kbd>K</kbd> to open the launcher. Type to filter all 74 tiles. Press Enter on the first match to navigate.</li>
-                <li>Hit <kbd>?</kbd> anywhere outside a text field to re-open this tutorial.</li>
+                <li data-i18n-html="view.tutorial.quickstart.step1">Open <code>Accounts</code> (or tile <strong>🏦 Accounts</strong>) and add at least one broker — the dashboard P/L stays empty until something is bound.</li>
+                <li data-i18n-html="view.tutorial.quickstart.step2">Open <code>Import</code> (or tile <strong>⤴ Import</strong>) and upload a broker CSV (12 importers supported). Trades roll up automatically.</li>
+                <li data-i18n-html="view.tutorial.quickstart.step3">Hit <kbd>Cmd</kbd>+<kbd>K</kbd> to open the launcher. Type to filter all 74 tiles. Press Enter on the first match to navigate.</li>
+                <li data-i18n-html="view.tutorial.quickstart.step4">Hit <kbd>?</kbd> anywhere outside a text field to re-open this tutorial.</li>
             </ol>`,
     },
     {
@@ -25,10 +25,10 @@ const SECTIONS = [
             <table class="tut-kbd">
                 <thead><tr><th data-i18n="view.tutorial.th.combo">Combo</th><th data-i18n="view.tutorial.th.action">Action</th></tr></thead>
                 <tbody>
-                    <tr><td><kbd>Cmd</kbd>+<kbd>K</kbd></td><td>Open the launcher (tile grid + filter)</td></tr>
-                    <tr><td><kbd>?</kbd></td><td>Open this tutorial</td></tr>
-                    <tr><td><kbd>Esc</kbd> (in launcher filter)</td><td>Clear the filter</td></tr>
-                    <tr><td><kbd>Enter</kbd> (in launcher filter)</td><td>Open the first matching tile</td></tr>
+                    <tr><td><kbd>Cmd</kbd>+<kbd>K</kbd></td><td data-i18n="view.tutorial.keymap.cmd_k">Open the launcher (tile grid + filter)</td></tr>
+                    <tr><td><kbd>?</kbd></td><td data-i18n="view.tutorial.keymap.question_mark">Open this tutorial</td></tr>
+                    <tr><td data-i18n-html="view.tutorial.keymap.esc_combo"><kbd>Esc</kbd> (in launcher filter)</td><td data-i18n="view.tutorial.keymap.esc_action">Clear the filter</td></tr>
+                    <tr><td data-i18n-html="view.tutorial.keymap.enter_combo"><kbd>Enter</kbd> (in launcher filter)</td><td data-i18n="view.tutorial.keymap.enter_action">Open the first matching tile</td></tr>
                 </tbody>
             </table>
             <p class="muted small">More custom hotkeys can be bound on the <button data-i18n="view.tutorial.btn.hotkeys" class="link" data-go="hotkeys">Hotkeys</button> page. Bindings persist to the local database.</p>`,

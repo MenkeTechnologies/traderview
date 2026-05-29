@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderRDist(mount, state) {
     const tok = currentViewToken();
@@ -36,26 +37,26 @@ function render(r, mount) {
     if (!el) return;
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Samples</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.samples">Samples</div>
                 <div class="value">${s.samples}</div>
                 ${r.skipped_no_risk > 0 ? `<div class="small muted">${r.skipped_no_risk} skipped (no risk_amount)</div>` : ''}
             </div>
-            <div class="card"><div class="label">Expectancy (mean R)</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.expectancy">Expectancy (mean R)</div>
                 <div class="value ${exCls}">${(s.mean_r >= 0 ? '+' : '') + s.mean_r.toFixed(3)}R</div></div>
-            <div class="card"><div class="label">SQN</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.sqn">SQN</div>
                 <div class="value ${sqnCls}">${s.sqn.toFixed(2)}</div>
                 <div class="small muted">${esc(s.sqn_grade)}</div></div>
-            <div class="card"><div class="label">Win rate</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.win_rate">Win rate</div>
                 <div class="value">${(s.win_rate * 100).toFixed(1)}%</div>
                 <div class="small muted">${s.winners}W / ${s.losers}L / ${s.breakevens}BE</div></div>
-            <div class="card"><div class="label">Avg winner / loser</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.avg_winner_loser">Avg winner / loser</div>
                 <div class="value"><span class="pos">+${s.avg_winner_r.toFixed(2)}R</span> /
                     <span class="neg">${s.avg_loser_r.toFixed(2)}R</span></div>
                 <div class="small muted">payoff ${s.payoff_ratio.toFixed(2)}×</div></div>
-            <div class="card"><div class="label">Profit factor</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.profit_factor">Profit factor</div>
                 <div class="value ${s.profit_factor >= 1.5 ? 'pos' : s.profit_factor >= 1 ? '' : 'neg'}">${s.profit_factor.toFixed(2)}</div>
                 <div class="small muted">max win ${s.max_winner_r.toFixed(2)}R · max loss ${s.max_loser_r.toFixed(2)}R</div></div>
-            <div class="card"><div class="label">Stdev R</div>
+            <div class="card"><div class="label" data-i18n="view.r_distribution.card.stdev_r">Stdev R</div>
                 <div class="value">${s.stdev_r.toFixed(3)}</div></div>
         </div>
 
@@ -69,6 +70,7 @@ function render(r, mount) {
             ${tagTable(r.by_tag)}
         </div>
     `;
+    try { applyUiI18n(el); } catch (_) {}
 }
 
 function histogramSvg(bins, stats) {

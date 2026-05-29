@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyUiI18n } from '../i18n.js';
 
 export async function renderTaxLots(mount, state) {
     const tok = currentViewToken();
@@ -63,21 +64,21 @@ export async function renderTaxLots(mount, state) {
 function renderReport(r, out) {
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label">Net total (year ${r.year})</div>
+            <div class="card"><div class="label"><span data-i18n="view.tax_lots.card.net_total">Net total</span> (year ${r.year})</div>
                 <div class="value ${r.net_total >= 0 ? 'pos' : 'neg'}">$${fmt(r.net_total)}</div></div>
-            <div class="card"><div class="label">Short-term net</div>
+            <div class="card"><div class="label" data-i18n="view.tax_lots.card.short_term_net">Short-term net</div>
                 <div class="value ${r.net_short_term >= 0 ? 'pos' : 'neg'}">$${fmt(r.net_short_term)}</div>
                 <div class="small muted">${r.short_term_gain >= 0 ? '+' : ''}$${fmt(r.short_term_gain)} / -$${fmt(r.short_term_loss)}</div></div>
-            <div class="card"><div class="label">Long-term net</div>
+            <div class="card"><div class="label" data-i18n="view.tax_lots.card.long_term_net">Long-term net</div>
                 <div class="value ${r.net_long_term >= 0 ? 'pos' : 'neg'}">$${fmt(r.net_long_term)}</div>
                 <div class="small muted">${r.long_term_gain >= 0 ? '+' : ''}$${fmt(r.long_term_gain)} / -$${fmt(r.long_term_loss)}</div></div>
-            <div class="card"><div class="label">Wash-sale disallowed</div>
+            <div class="card"><div class="label" data-i18n="view.tax_lots.card.wash_sale_disallowed">Wash-sale disallowed</div>
                 <div class="value ${r.wash_sale_total > 0 ? 'warn' : ''}">$${fmt(r.wash_sale_total)}</div>
                 <div class="small muted">added back to net</div></div>
-            <div class="card"><div class="label">Realized events</div>
+            <div class="card"><div class="label" data-i18n="view.tax_lots.card.realized_events">Realized events</div>
                 <div class="value">${r.realized_count}</div>
                 <div class="small muted">proceeds $${fmt(r.total_proceeds)} / basis $${fmt(r.total_basis)}</div></div>
-            <div class="card"><div class="label">Open lots</div>
+            <div class="card"><div class="label" data-i18n="view.tax_lots.card.open_lots">Open lots</div>
                 <div class="value">${r.open_lot_count}</div>
                 <div class="small muted">basis $${fmt(r.open_basis)}</div></div>
         </div>
@@ -137,4 +138,5 @@ function renderReport(r, out) {
                 these positions today would realize at their displayed term.</p>
         </div>
     `;
+    try { applyUiI18n(out); } catch (_) {}
 }
