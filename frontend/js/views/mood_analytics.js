@@ -5,7 +5,11 @@ import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
 
-const MOOD_LABELS = { '-2': '😡 awful', '-1': '🙁 down', '0': '😐 flat', '1': '🙂 good', '2': '😄 great' };
+const MOOD_SLUGS = { '-2': 'awful', '-1': 'down', '0': 'flat', '1': 'good', '2': 'great' };
+const moodLabel = (mood) => {
+    const slug = MOOD_SLUGS[String(mood)];
+    return slug ? t(`view.trade_reviews.mood.${slug}`) : String(mood);
+};
 
 export async function renderMoodAnalytics(mount, state) {
     const tok = currentViewToken();
@@ -95,7 +99,7 @@ function moodTable(stats) {
         </tr></thead>
         <tbody>
         ${stats.map(s => `<tr>
-            <td>${MOOD_LABELS[String(s.mood)] || s.mood}</td>
+            <td>${moodLabel(s.mood)}</td>
             <td>${s.sample_count}</td>
             <td class="pos">${s.win_count}</td>
             <td class="neg">${s.loss_count}</td>
@@ -114,7 +118,7 @@ function avgPnlBars(stats) {
         ${stats.map(s => {
             const pct = Math.abs(s.avg_pnl) / max * 100;
             const color = s.avg_pnl >= 0 ? '#7af0a8' : '#ff1f7a';
-            return `<div>${MOOD_LABELS[String(s.mood)] || s.mood}</div>
+            return `<div>${moodLabel(s.mood)}</div>
                     <div style="height:18px;background:#1a1d2e;position:relative;">
                         <div style="width:${pct}%;height:100%;background:${color};"></div>
                     </div>
@@ -131,7 +135,7 @@ function avgRBars(stats) {
         ${present.map(s => {
             const pct = Math.abs(s.avg_r) / max * 100;
             const color = s.avg_r >= 0 ? '#7af0a8' : '#ff1f7a';
-            return `<div>${MOOD_LABELS[String(s.mood)] || s.mood}</div>
+            return `<div>${moodLabel(s.mood)}</div>
                     <div style="height:18px;background:#1a1d2e;position:relative;">
                         <div style="width:${pct}%;height:100%;background:${color};"></div>
                     </div>
@@ -146,7 +150,7 @@ function distBars(dist) {
     return `<div style="display:grid;grid-template-columns:120px 1fr 60px;gap:6px;font-size:11px;">
         ${dist.map(([mood, n]) => {
             const pct = n / max * 100;
-            return `<div>${MOOD_LABELS[String(mood)] || mood}</div>
+            return `<div>${moodLabel(mood)}</div>
                     <div style="height:18px;background:#1a1d2e;">
                         <div style="width:${pct}%;height:100%;background:#00e5ff;"></div>
                     </div>
@@ -164,7 +168,7 @@ function sampleTable(pairs) {
         ${pairs.map(p => `<tr>
             <td class="small">${new Date(p.opened_at).toLocaleDateString()}</td>
             <td class="small muted">${esc(p.source)}</td>
-            <td>${MOOD_LABELS[String(p.mood)] || p.mood}</td>
+            <td>${moodLabel(p.mood)}</td>
             <td>${esc(p.symbol)}</td>
             <td class="${p.net_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(p.net_pnl)}</td>
             <td>${p.r_multiple == null ? '—' : (p.r_multiple >= 0 ? '+' : '') + p.r_multiple.toFixed(2) + 'R'}</td>
