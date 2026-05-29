@@ -3,23 +3,25 @@
 // Backend body: { session: { high, low, close } }
 // Returns: { h4, h3, h2, h1, pivot, l1, l2, l3, l4 } | null
 
+import { t } from './i18n.js';
+
 export const DEFAULT_INPUTS = {
     session: { high: 110, low: 100, close: 105 },
     current_price: 105,
 };
 
 export function validateInputs(input) {
-    if (!input || !input.session)                          return 'session missing';
+    if (!input || !input.session)                          return t('view.camarilla.validate.session_missing');
     const { high, low, close } = input.session;
     if (typeof high !== 'number' || typeof low !== 'number' || typeof close !== 'number')
-                                                            return 'high / low / close must be numbers';
+                                                            return t('view.camarilla.validate.hlc_numbers');
     if (!Number.isFinite(high) || !Number.isFinite(low) || !Number.isFinite(close))
-                                                            return 'high / low / close must be finite';
-    if (high < low)                                         return 'high < low';
-    if (close < low || close > high)                        return 'close outside [low, high]';
-    if (high <= 0 || low <= 0 || close <= 0)                return 'OHLC must be positive';
+                                                            return t('view.camarilla.validate.hlc_finite');
+    if (high < low)                                         return t('view.camarilla.validate.high_lt_low');
+    if (close < low || close > high)                        return t('view.camarilla.validate.close_outside');
+    if (high <= 0 || low <= 0 || close <= 0)                return t('view.camarilla.validate.ohlc_positive');
     if (input.current_price != null
-        && !Number.isFinite(input.current_price))           return 'current_price must be finite';
+        && !Number.isFinite(input.current_price))           return t('view.camarilla.validate.current_finite');
     return null;
 }
 

@@ -4,6 +4,8 @@
 //   where Bar = { high, low, close, volume }
 // Returns: (number|null)[]  — EMA(ADL, fast) − EMA(ADL, slow).
 
+import { t } from './i18n.js';
+
 export const DEFAULT_FAST = 3;
 export const DEFAULT_SLOW = 10;
 export const MIN_PERIOD = 1;
@@ -16,23 +18,23 @@ export const DEFAULT_INPUTS = {
 };
 
 export function validateInputs(input) {
-    if (!Array.isArray(input.bars))                       return 'bars must be an array';
-    if (input.bars.length === 0)                          return 'bars cannot be empty';
+    if (!Array.isArray(input.bars))                       return t('view.chaikin_osc.validate.bars_array');
+    if (input.bars.length === 0)                          return t('view.chaikin_osc.validate.bars_empty');
     if (!Number.isInteger(input.fast) || input.fast < MIN_PERIOD || input.fast > MAX_PERIOD)
-                                                           return `fast must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
+                                                           return t('view.chaikin_osc.validate.fast_range', { min: MIN_PERIOD, max: MAX_PERIOD });
     if (!Number.isInteger(input.slow) || input.slow < MIN_PERIOD || input.slow > MAX_PERIOD)
-                                                           return `slow must be integer in [${MIN_PERIOD}, ${MAX_PERIOD}]`;
-    if (input.fast >= input.slow)                         return `fast (${input.fast}) must be < slow (${input.slow})`;
-    if (input.bars.length < input.slow)                   return `need at least slow (${input.slow}) bars`;
+                                                           return t('view.chaikin_osc.validate.slow_range', { min: MIN_PERIOD, max: MAX_PERIOD });
+    if (input.fast >= input.slow)                         return t('view.chaikin_osc.validate.fast_lt_slow', { fast: input.fast, slow: input.slow });
+    if (input.bars.length < input.slow)                   return t('view.chaikin_osc.validate.bars_min', { slow: input.slow });
     for (let i = 0; i < input.bars.length; i++) {
         const b = input.bars[i];
-        if (!b)                                            return `bars[${i}] missing`;
+        if (!b)                                            return t('view.chaikin_osc.validate.bar_missing', { i });
         if (typeof b.high !== 'number' || typeof b.low !== 'number'
             || typeof b.close !== 'number' || typeof b.volume !== 'number')
-                                                            return `bars[${i}] HLCV must be numbers`;
-        if (b.volume < 0)                                  return `bars[${i}] volume cannot be negative`;
+                                                            return t('view.chaikin_osc.validate.hlcv_numbers', { i });
+        if (b.volume < 0)                                  return t('view.chaikin_osc.validate.volume_negative', { i });
         if (Number.isFinite(b.high) && Number.isFinite(b.low) && b.high < b.low)
-                                                            return `bars[${i}] high < low`;
+                                                            return t('view.chaikin_osc.validate.high_lt_low', { i });
     }
     return null;
 }
