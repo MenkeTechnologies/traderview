@@ -95,7 +95,7 @@ async function compute(tok) {
     try {
         resp = await api.regimeEquity(buildBody(state.equity, state.config));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary({ ...resp, intercept: local.intercept, mean_equity: local.mean_equity }, false);

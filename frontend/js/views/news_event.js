@@ -98,7 +98,7 @@ async function compute(tok) {
     try {
         report = await api.regimeNewsEvent(buildBody(positions, events));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, positions, events);

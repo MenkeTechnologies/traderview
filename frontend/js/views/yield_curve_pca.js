@@ -127,7 +127,7 @@ async function run(mount, tok) {
         res = await api.anlyPrincipalComponentYieldCurve(buildBody(parsed.value, state.topK));
         if (!res) throw new Error(t('view.yield_curve_pca.error.null_result'));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

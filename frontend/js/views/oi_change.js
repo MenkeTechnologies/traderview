@@ -97,7 +97,7 @@ async function compute(tok) {
     try {
         report = await api.optCalcOiChange(buildBody(snapshots, state.pctThreshold, state.minOi));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, snapshots);

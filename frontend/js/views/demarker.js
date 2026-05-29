@@ -94,7 +94,7 @@ async function compute(tok) {
     try {
         values = await api.anlyDemarker(buildBody(bars, state.period));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     // Backend returns Option<f64> as null for warmup → keep that as null for chart.

@@ -99,7 +99,7 @@ async function bootstrap(mount, tok) {
         res = await api.anlyForwardVolatilityBootstrap(buildBody(sorted));
         if (!res) throw new Error('bootstrap returned null (input out of domain)');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

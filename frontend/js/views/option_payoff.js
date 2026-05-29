@@ -15,7 +15,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 import {
     PRESETS, validateLegs,
     buildPayoffBody, buildPricerBody, defaultSpotRange,
@@ -185,7 +185,7 @@ async function recalc(mount, tok) {
                             state.rate, state.div_yield, state.sigma),
         );
     } catch (e) {
-        showError(`API error: ${e.message || e}`);
+        showError(t('view.option_payoff.error.api', { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

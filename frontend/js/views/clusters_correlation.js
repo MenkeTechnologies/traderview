@@ -100,7 +100,7 @@ async function compute(tok) {
     try {
         resp = await api.clustersCorrelation(buildBody(state.positions, state.correlations, state.threshold));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);

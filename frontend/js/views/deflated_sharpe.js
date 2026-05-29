@@ -112,7 +112,7 @@ async function compute(tok) {
         res = await api.anlyDeflatedSharpe(buildBody(state.params));
         if (!res) throw new Error('deflated-sharpe returned null (check inputs)');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);

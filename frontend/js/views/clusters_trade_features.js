@@ -100,7 +100,7 @@ async function compute(tok) {
     try {
         resp = await api.clustersTradeFeatures(buildBody(state.features, state.k, state.maxIters));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);

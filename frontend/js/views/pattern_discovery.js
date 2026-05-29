@@ -132,7 +132,7 @@ async function discover(mount, tok) {
         });
         if (!res) throw new Error('matrix profile returned null (constraints?)');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

@@ -111,7 +111,7 @@ async function estimate(mount, tok) {
         res = await api.anlyHurstExponent(buildBody(retParsed.value, chunkParsed.value));
         if (!res) throw new Error(t('view.hurst.error.null_result'));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

@@ -87,7 +87,7 @@ async function compute(tok) {
     try {
         report = await api.microFootprint(buildBody(ticks, state.tickSize));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);

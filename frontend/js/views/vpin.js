@@ -125,7 +125,7 @@ async function compute(tok) {
     try {
         res = await api.microVpin(buildBody(ticks, state.config));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

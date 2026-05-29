@@ -117,7 +117,7 @@ async function runSim(mount, tok) {
         res = await api[model.endpoint](body);
         if (res == null) throw new Error('simulator returned null (invalid parameters)');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

@@ -95,7 +95,7 @@ async function compute(tok) {
     try {
         res = await api.anlyMurreyMath(buildBody(bars, state.lookback));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     if (!res) { showErr(t('view.murrey_math.err.backend_returned_null_likely_degenerate_price_rang')); return; }

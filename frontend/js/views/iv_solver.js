@@ -119,7 +119,7 @@ async function solve(mount, tok) {
         res = await api.optsIvSolver(buildBody(state.params));
         if (!res) throw new Error(t('view.iv_solver.error.null_result'));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

@@ -133,7 +133,7 @@ async function price(mount, tok) {
         res = await api.anlyAmericanOptionLsmc(buildLsmcBody(state.params));
         if (!res) throw new Error(t('view.american_option.error.null_result'));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

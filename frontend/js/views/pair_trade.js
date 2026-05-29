@@ -178,7 +178,7 @@ async function analyze(mount, tok) {
         res = await api.anlyPairTradeSignal(buildBody(parsedY.value, parsedX.value, state.config));
         if (!res) throw new Error('pair-trade returned null');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

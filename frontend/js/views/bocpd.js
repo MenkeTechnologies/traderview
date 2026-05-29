@@ -135,7 +135,7 @@ async function detect(mount, tok) {
         res = await api.anlyBayesianChangePoint(buildBody(parsed.value, state.hazard));
         if (!res) throw new Error(t('view.bocpd.error.null_result'));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

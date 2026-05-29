@@ -119,7 +119,7 @@ async function compute(tok) {
     try {
         stops = await api.discChandelierStop(buildBody(bars, safeAtr, state.side, state.config));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(stops || [], bars);

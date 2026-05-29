@@ -101,7 +101,7 @@ async function compute(tok) {
     try {
         res = await api.microMarketImpact(buildBody(trades, state.spikeBps));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, trades);

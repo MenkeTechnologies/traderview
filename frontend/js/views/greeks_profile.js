@@ -119,7 +119,7 @@ async function compute(mount, tok) {
         res = await api.optsGreeksProfile(buildBody(state.params));
         if (!res) throw new Error('greeks-profile returned null');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

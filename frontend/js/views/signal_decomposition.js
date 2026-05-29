@@ -139,7 +139,7 @@ async function decompose(mount, tok) {
         res = await api[method.endpoint](method.buildBody(parsed.value, state.opts));
         if (!res) throw new Error('decomposition returned null (input out of domain)');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

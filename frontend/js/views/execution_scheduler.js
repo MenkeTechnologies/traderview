@@ -16,6 +16,7 @@
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
+import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseVolumeCurve, validateExecInputs,
@@ -113,7 +114,7 @@ async function schedule(mount, tok) {
             api.anlyOptimalExecutionVwap(buildVwapBody(state.totalOrder, parsed.value)),
         ]);
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

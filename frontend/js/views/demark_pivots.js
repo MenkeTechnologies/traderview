@@ -109,7 +109,7 @@ async function compute(tok) {
     try {
         levels = await api.anlyDemarkPivots(buildBody(state.session));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     if (!levels) { showErr(t('view.demark_pivots.err.backend_returned_null_invalid_session')); return; }

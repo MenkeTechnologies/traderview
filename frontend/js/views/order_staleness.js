@@ -118,7 +118,7 @@ async function compute(tok) {
     try {
         report = await api.microOrderStaleness(buildBody(orders, state.now, state.thresholds));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);

@@ -154,7 +154,7 @@ async function computeStatic(tok) {
     try {
         resp = await api.calcKelly(buildStaticBody(state.winRate, state.payoffRatio));
     } catch (e) {
-        showErr(`API error (static): ${e.message || e}`); return;
+        showErr(t('view.kelly.error.api_static', { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderStatic(resp, false);
@@ -172,7 +172,7 @@ async function computeDynamic(tok) {
     try {
         resp = await api.calcDynamicKelly(buildDynamicBody(state.pnls, state.window));
     } catch (e) {
-        showErr(`API error (dynamic): ${e.message || e}`); return;
+        showErr(t('view.kelly.error.api_dynamic', { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderDynamic(resp, false);

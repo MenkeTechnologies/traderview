@@ -106,7 +106,7 @@ async function compute(mount, tok) {
             throw new Error('microprice returned null (input out of domain)');
         }
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

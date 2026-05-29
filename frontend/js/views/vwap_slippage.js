@@ -98,7 +98,7 @@ async function compute(tok) {
     try {
         resp = await api.microVwapSlippage(buildBody(state.side, state.fillPrice, bars));
     } catch (e) {
-        showErr(`API error: ${e.message || e}`); return;
+        showErr(t("common.error.api", { msg: e.message || e })); return;
     }
     if (!viewIsCurrent(tok)) return;
     const unwrapped = unwrapResponse(resp);

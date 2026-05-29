@@ -116,7 +116,7 @@ async function compute(tok) {
         res = await api.microImplementationShortfall(buildBody(state.params));
         if (!res) throw new Error('shortfall returned null');
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;

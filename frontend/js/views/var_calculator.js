@@ -138,7 +138,7 @@ async function compute(mount, tok) {
             api.anlyCornishFisherVar({ returns: parsed.value, alpha }),
         ]);
     } catch (e) {
-        showErr(`API error: ${e.message || e}`);
+        showErr(t("common.error.api", { msg: e.message || e }));
         return;
     }
     if (!viewIsCurrent(tok)) return;
