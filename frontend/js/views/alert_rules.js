@@ -5,7 +5,7 @@
 
 import { esc } from '../util.js';
 import * as engine from '../_alert_rules.js';
-import { t } from '../i18n.js';
+import { t as tr } from '../i18n.js';
 import * as squeeze from '../_squeeze_alerts_inputs.js';   // reuse tick + adv parsers
 import * as audio from '../_audio_alerts.js';
 
@@ -19,10 +19,10 @@ export async function renderAlertRules(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.alert_rules.h2.audio_capability">Audio capability</h2>
             <div class="cards">
-                ${card(t('view.alert_rules.card.web_audio'),   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
-                ${card(t('view.alert_rules.card.speech_tts'), caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
-                ${card(t('view.alert_rules.card.rules_saved'),  String(state.rules.length), state.rules.length ? 'pos' : '')}
-                ${card(t('view.alert_rules.card.enabled'),      String(state.rules.filter(r => r.enabled).length))}
+                ${card(tr('view.alert_rules.card.web_audio'),   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
+                ${card(tr('view.alert_rules.card.speech_tts'), caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
+                ${card(tr('view.alert_rules.card.rules_saved'),  String(state.rules.length), state.rules.length ? 'pos' : '')}
+                ${card(tr('view.alert_rules.card.enabled'),      String(state.rules.filter(r => r.enabled).length))}
             </div>
             <div class="inline-form" style="margin-top:8px">
                 <button data-i18n="view.alert_rules.btn.bell" id="ar-test-bell"   class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 bell</button>
@@ -88,7 +88,7 @@ function bindRulesPanel() {
         const id = t.dataset.ruleId;
         if (!id) return;
         if (t.dataset.action === 'remove') {
-            if (window.confirm('Remove this rule?')) {
+            if (window.confirm(tr('view.alert_rules.confirm.remove'))) {
                 state = engine.removeRule(state, id);
                 engine.saveState(state);
                 renderRulesList();
@@ -282,7 +282,7 @@ function renderEvents(events) {
     }
     wrap.innerHTML = `
         <div class="chart-panel">
-            <h2>${esc(t('view.alert_rules.h2.fired_events', { count: events.length }))}</h2>
+            <h2>${esc(tr('view.alert_rules.h2.fired_events', { count: events.length }))}</h2>
             <table class="lq-table">
                 <thead><tr>
                     <th>#</th><th data-i18n="view.alert_rules.th.time">Time</th><th data-i18n="view.alert_rules.th.rule">Rule</th><th data-i18n="view.alert_rules.th.type">Type</th>

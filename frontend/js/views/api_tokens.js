@@ -129,7 +129,7 @@ async function loadList(mount, tok) {
         `;
         el2.querySelectorAll('.revoke-btn').forEach(b => {
             b.addEventListener('click', async () => {
-                if (!confirm('Revoke this token? Integrations using it will lose access immediately.')) return;
+                if (!confirm(t('view.api_tokens.confirm.revoke'))) return;
                 try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
                 catch (e) { alert(e.message); }
             });

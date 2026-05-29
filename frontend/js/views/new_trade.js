@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { fmt } from '../util.js';
 import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
+import { t } from '../i18n.js';
 
 export async function renderNewTrade(mount, state) {
     const tok = currentViewToken();
@@ -132,9 +133,9 @@ export async function renderNewTrade(mount, state) {
                     return;
                 }
                 if (warnings.length) {
-                    const ok = confirm('Risk Gate WARNING:\n\n' +
-                        warnings.map(w => `[${w.rule}] ${w.message}`).join('\n\n') +
-                        '\n\nProceed anyway?');
+                    const ok = confirm(t('view.new_trade.confirm.risk_warning', {
+                        warnings: warnings.map(w => `[${w.rule}] ${w.message}`).join('\n\n'),
+                    }));
                     if (!ok) return;
                 }
             }

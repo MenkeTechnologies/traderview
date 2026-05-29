@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let wsUnsub = null;
 
@@ -166,7 +167,7 @@ function renderRules(rules, mount, tok) {
         </tbody></table>`;
     el.querySelectorAll('.sa-del').forEach(b =>
         b.addEventListener('click', async () => {
-            if (!confirm('Delete this rule?')) return;
+            if (!confirm(t('view.strategy_alerts.confirm.delete'))) return;
             try {
                 await api.deleteStrategyAlert(b.dataset.id);
                 if (!viewIsCurrent(tok)) return;

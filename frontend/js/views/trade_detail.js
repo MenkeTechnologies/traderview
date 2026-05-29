@@ -266,7 +266,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         }));
     mount.querySelectorAll('[data-del-ex]').forEach(b =>
         b.addEventListener('click', async () => {
-            if (!confirm('Delete this execution? The trade will re-FIFO.')) return;
+            if (!confirm(t('view.trade_detail.confirm.delete_execution'))) return;
             await api.deleteExecution(b.dataset.delEx);
             if (!viewIsCurrent(tok)) return;
             renderTradeDetail(mount, state, tradeId);

@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderPaper(mount) {
     const tok = currentViewToken();
@@ -143,7 +144,7 @@ export async function renderPaper(mount) {
         } catch (err) { alert('Error: ' + err.message); }
     });
     mount.querySelector('#reset').addEventListener('click', async () => {
-        if (!confirm('Wipe orders + positions and reset cash to $200,000?')) return;
+        if (!confirm(t('view.paper.confirm.reset'))) return;
         await api.paperReset(acct.id, 200000);
         if (!viewIsCurrent(tok)) return;
         renderPaper(mount);

@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderAccounts(mount, _state, onChange) {
     const tok = currentViewToken();
@@ -54,7 +55,7 @@ export async function renderAccounts(mount, _state, onChange) {
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            if (!confirm('Delete this account and all its trades?')) return;
+            if (!confirm(t('view.accounts.confirm.delete'))) return;
             await api.deleteAccount(b.dataset.del);
             if (!viewIsCurrent(tok)) return;
             if (onChange) onChange();

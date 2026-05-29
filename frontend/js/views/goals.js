@@ -3,7 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { t, applyUiI18n } from '../i18n.js';
 
 const PACE_COLOR = {
     on_track:      '#7af0a8',
@@ -127,7 +127,7 @@ async function refresh(mount, tok) {
         try { applyUiI18n(el2); } catch (_) {}
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
-                if (!confirm('Delete this goal?')) return;
+                if (!confirm(t('view.goals.confirm.delete'))) return;
                 try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { alert(e.message); }
             });

@@ -73,7 +73,7 @@ export async function renderPortfolioAllocator(mount, _appState) {
         <div id="pa-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
 
         <div id="pa-results">
-            <div class="boot">Click <em>Allocate</em> to run all three allocators.</div>
+            <div class="boot" data-i18n-html="view.portfolio_allocator.hint.click_allocate">Click <em>Allocate</em> to run all three allocators.</div>
         </div>
 
         <div id="pa-err" class="boot" style="display:none;color:var(--red)"></div>

@@ -16,7 +16,13 @@ export async function renderWalkForward(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.walk_forward.h1.walk_forward_optimization" class="view-title">// WALK-FORWARD OPTIMIZATION</h1>
-        <p class="muted small" data-i18n="view.walk_forward.hint.intro">Rolling in-sample / out-of-sample sweep. For each window we (1) sweep the full preset grid on the IS slice, (2) pick the best params, (3) run those params on the OOS slice with the running equity. OOS slices stitch into one continuous equity curve. Walk-forward efficiency = avg_oos / avg_is. Ratios < 0.5 indicate the strategy is curve-fit (looks great in-sample, dies forward). Compare against the baseline — a single best fit on the entire series — to see how much of the headline backtest return is hindsight bias.</p>
+        <p class="muted small" data-i18n-html="view.walk_forward.intro">Rolling in-sample / out-of-sample sweep. For each window we
+            (1) sweep the full preset grid on the IS slice, (2) pick the best params, (3) run
+            those params on the OOS slice with the running equity. OOS slices stitch into one
+            continuous equity curve. <em>Walk-forward efficiency</em> = avg_oos / avg_is.
+            Ratios &lt; 0.5 indicate the strategy is curve-fit (looks great in-sample, dies
+            forward). Compare against the baseline — a single best fit on the entire series
+            — to see how much of the headline backtest return is hindsight bias.</p>
 
         <div class="chart-panel">
             <form id="wf-form" class="inline-form">

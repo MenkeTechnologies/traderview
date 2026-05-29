@@ -86,7 +86,7 @@ async function renderList(mount) {
     });
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if (!confirm('Delete this board?')) return;
+            if (!confirm(t('view.boards.confirm.delete'))) return;
             try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
             catch (e) { alert(e.message); }
         });

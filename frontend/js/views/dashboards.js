@@ -162,7 +162,7 @@ function renderSidebar() {
             window.alert('Could not parse JSON. Make sure you copied the whole file.');
             return;
         }
-        if (!window.confirm('Import will REPLACE all current dashboards. Continue?')) return;
+        if (!window.confirm(t('view.dashboards.confirm.import_replace'))) return;
         state = next;
         persist();
         renderSidebar();

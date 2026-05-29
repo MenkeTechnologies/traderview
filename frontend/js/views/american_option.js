@@ -89,7 +89,7 @@ export async function renderAmericanOption(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.american_option.h2.sensitivity_to_spot">Sensitivity to spot</h2>
             <div id="ao-chart" style="width:100%;height:340px"></div>
-            <p class="muted" id="ao-chart-caption">
+            <p class="muted" id="ao-chart-caption" data-i18n-html="view.american_option.chart_caption">
                 Click <em>Price</em> first. The chart plots the European Black-Scholes price
                 across a spot range (instant, no MC) and overlays a single MC point at your
                 input spot to show where the LSMC estimate sits relative to the parametric

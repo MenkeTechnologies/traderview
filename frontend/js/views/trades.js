@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, fmtSecs, makeFilter, pnlClass } from '../util.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let currentFilter = {};
 
@@ -151,7 +152,7 @@ export async function renderTradesView(mount, state) {
         tableEl.querySelectorAll('[data-del]').forEach(b =>
             b.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                if (!confirm('Delete this trade?')) return;
+                if (!confirm(t('view.trades.confirm.delete'))) return;
                 await api.deleteTrade(b.dataset.del);
                 if (!viewIsCurrent(tok)) return;
                 await refresh();
