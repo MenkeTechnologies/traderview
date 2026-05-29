@@ -11,26 +11,26 @@ import { t } from '../i18n.js';
 
 let wsUnsub = null;
 
-const TEMPLATES = {
-    'RSI oversold + above 200d SMA': {
+const TEMPLATES = [
+    { id: 'rsi_oversold_200d', ast: {
         kind: 'and',
         left:  { kind: 'leaf', symbol: 'AAPL', metric: { kind: 'rsi', period: 14 }, op: 'lt', value: 30 },
         right: { kind: 'leaf', symbol: 'AAPL', metric: { kind: 'price' }, op: 'gt', value: 0 },
-    },
-    'Breakout above 50d high': {
+    }},
+    { id: 'breakout_50d', ast: {
         kind: 'leaf', symbol: 'SPY',
         metric: { kind: 'pct_of_high', period: 50 }, op: 'ge', value: 1.0,
-    },
-    'VIX spike + sell-off': {
+    }},
+    { id: 'vix_spike', ast: {
         kind: 'and',
         left:  { kind: 'leaf', symbol: '^VIX', metric: { kind: 'quote' }, op: 'gt', value: 25 },
         right: { kind: 'leaf', symbol: 'SPY', metric: { kind: 'change_pct', days: 1 }, op: 'lt', value: -2 },
-    },
-    '5% drop in last 5 days': {
+    }},
+    { id: 'drop_5pct_5d', ast: {
         kind: 'leaf', symbol: 'AAPL',
         metric: { kind: 'change_pct', days: 5 }, op: 'le', value: -5,
-    },
-};
+    }},
+];
 
 export async function renderStrategyAlerts(mount) {
     const tok = currentViewToken();
@@ -49,7 +49,7 @@ export async function renderStrategyAlerts(mount) {
                 <label><span data-i18n="view.strategy_alerts.label.template">Template</span>
                     <select name="template">
                         <option data-i18n="view.strategy_alerts.opt.custom" value="">(custom)</option>
-                        ${Object.keys(TEMPLATES).map(k => `<option>${esc(k)}</option>`).join('')}
+                        ${TEMPLATES.map(tpl => `<option value="${tpl.id}" data-i18n="view.strategy_alerts.template.${tpl.id}">${esc(t(`view.strategy_alerts.template.${tpl.id}`))}</option>`).join('')}
                     </select>
                 </label>
                 <button data-i18n="view.strategy_alerts.btn.create" class="primary" type="submit">Create</button>
@@ -73,10 +73,10 @@ export async function renderStrategyAlerts(mount) {
         </div>
     `;
     mount.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
-        const t = e.target.value;
-        if (t && TEMPLATES[t]) {
+        const tpl = TEMPLATES.find(x => x.id === e.target.value);
+        if (tpl) {
             const ast = mount.querySelector('#sa-ast');
-            if (ast) ast.value = JSON.stringify(TEMPLATES[t], null, 2);
+            if (ast) ast.value = JSON.stringify(tpl.ast, null, 2);
         }
     });
     mount.querySelector('#sa-form').addEventListener('submit', async (e) => {
