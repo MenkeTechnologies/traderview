@@ -48,7 +48,7 @@ export async function renderCharts(mount, _state, symbol = '') {
             <span class="muted small" data-i18n="view.charts.label.indicators">Indicators:</span>
             <select id="indicatorSel" multiple size="3" style="min-width:240px;"></select>
             <button data-i18n="view.charts.btn.apply" class="btn" id="indicatorReload">Apply</button>
-            <a href="#custom-indicators" class="small muted">manage…</a>
+            <a href="#custom-indicators" data-i18n="view.charts.link.manage" class="small muted">manage…</a>
         </div>
 
         <div class="chart-panel">

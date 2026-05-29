@@ -7734,6 +7734,7 @@
   "view.charts.btn.text": "Text",
   "view.charts.btn.clear_all": "Clear all",
   "view.charts.btn.apply": "Apply",
+  "view.charts.link.manage": "manage…",
   "view.charts.hint.trendline_fib_click_two_points_h_line_text_click_o": "Trendline/Fib: click two points. H-line/Text: click once. Drawings persist per symbol.",
   "view.charts.opt.1m": "1m",
   "view.charts.opt.5m": "5m",
