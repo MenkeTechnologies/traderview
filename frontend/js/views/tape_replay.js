@@ -289,7 +289,7 @@ function renderNotes(notes, mount) {
     el.innerHTML = `<ol style="padding-left:18px;">
         ${notes.map(n => `<li class="small">
             <span class="muted">${esc(new Date(n.time_iso || Date.now()).toLocaleString())}</span>
-            (bar #${n.cursor_idx + 1}) — ${esc(n.text)}
+            ${esc(t('view.tape_replay.note.bar_n', { n: n.cursor_idx + 1 }))} — ${esc(n.text)}
         </li>`).join('')}
     </ol>`;
 }
