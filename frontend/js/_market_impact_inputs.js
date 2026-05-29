@@ -3,6 +3,8 @@
 // Backend body shape: { trades: [{qty, adv, slippage_bps}, ...],
 // spike_bps: f64 }.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Parses three-token-per-line trades: "qty adv slippage_bps". Lines
@@ -47,9 +49,9 @@ export function parseTradeBlob(text) {
 
 export function validateInputs(trades, spikeBps) {
     if (!Array.isArray(trades) || trades.length < 5)
-        return 'need at least 5 trades';
+        return t('view.market_impact.validate.need_trades');
     if (!Number.isFinite(spikeBps) || spikeBps <= 0)
-        return 'spike_bps must be > 0';
+        return t('view.market_impact.validate.spike_bps');
     return null;
 }
 

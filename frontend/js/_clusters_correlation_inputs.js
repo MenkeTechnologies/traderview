@@ -82,10 +82,10 @@ function stripComment(raw) {
 
 export function validateInputs(positions, correlations, threshold) {
     if (!Array.isArray(positions) || positions.length === 0)
-        return 'need ≥ 1 position';
-    if (!Array.isArray(correlations)) return 'correlations must be an array';
+        return t('view.clusters_correlation.validate.need_position');
+    if (!Array.isArray(correlations)) return t('view.clusters_correlation.validate.corr_array');
     if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1)
-        return 'threshold must be in [0, 1]';
+        return t('view.clusters_correlation.validate.threshold');
     return null;
 }
 

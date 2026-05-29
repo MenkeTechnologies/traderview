@@ -34,10 +34,10 @@ export const METHODS = {
         }),
         validateOpts: (opts) => {
             if (!Number.isInteger(opts.max_imfs) || opts.max_imfs < 1) {
-                return 'max_imfs must be a positive integer';
+                return t('view.signal_decomposition.validate.max_imfs');
             }
             if (!Number.isInteger(opts.max_sift_iter) || opts.max_sift_iter < 1) {
-                return 'max_sift_iter must be a positive integer';
+                return t('view.signal_decomposition.validate.max_sift_iter');
             }
             return null;
         },
@@ -63,7 +63,7 @@ export const METHODS = {
         buildBody: (series, opts) => ({ series, levels: opts.levels }),
         validateOpts: (opts) => {
             if (!Number.isInteger(opts.levels) || opts.levels < 1) {
-                return 'levels must be a positive integer';
+                return t('view.signal_decomposition.validate.levels');
             }
             return null;
         },
@@ -92,7 +92,7 @@ export const METHODS = {
         buildBody: (series, opts) => ({ series, window: opts.window }),
         validateOpts: (opts) => {
             if (!Number.isInteger(opts.window) || opts.window < 2 || opts.window > 100) {
-                return 'window must be an integer in [2, 100]';
+                return t('view.signal_decomposition.validate.window');
             }
             return null;
         },
@@ -114,11 +114,11 @@ export function parseSeries(text) {
 /** Pre-flight validation against series length + method-specific opts. */
 export function validateInputs(methodId, series, opts) {
     const method = METHODS[methodId];
-    if (!method) return `unknown method "${methodId}"`;
+    if (!method) return t('view.signal_decomposition.validate.unknown_method', { method: methodId });
     if (!Array.isArray(series) || series.length < 8) {
-        return 'need at least 8 series values to decompose';
+        return t('view.signal_decomposition.validate.series_min');
     }
-    if (series.some(x => !Number.isFinite(x))) return 'series contains non-finite values';
+    if (series.some(x => !Number.isFinite(x))) return t('view.signal_decomposition.validate.non_finite');
     // SSA needs n >= 2·window. EMD needs >= 8. Wavelet needs >= 2^levels.
     if (methodId === 'ssa' && series.length < 2 * opts.window) {
         return t('view.signal_decomposition.validate.ssa', { len: series.length, window: opts.window });
