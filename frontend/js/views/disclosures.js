@@ -186,7 +186,7 @@ function renderFeed(items) {
 
 function kindLabel(k) {
     const fallback = KINDS.find(x => x.id === k)?.label || k;
-    const key = `view.disclosures.kind.${k}.label`;
+    const key = `view.disclosures.kind.${k}`;
     const v = t(key);
     return (v && v !== key) ? v : fallback;
 }
