@@ -222,9 +222,9 @@ export async function renderRiskGate(mount, state) {
             const wasEnabled = killBtn.dataset.enabled === '1';
             // Confirm in both directions so neither accidental hit
             // halts nor accidental re-enable goes unnoticed.
-            const verb = !killBtn.dataset.id ? 'INSTALL + ENABLE'
-                : wasEnabled                 ? 'DISABLE (resume trading)'
-                                             : 'ENABLE (halt all trades)';
+            const verb = !killBtn.dataset.id ? t('view.risk_gate.kill.install')
+                : wasEnabled                 ? t('view.risk_gate.kill.disable')
+                                             : t('view.risk_gate.kill.enable');
             if (!confirm(t('view.risk_gate.confirm.kill_switch', { verb }))) return;
             if (!killBtn.dataset.id) {
                 await api.createRiskRule({ rule: { type: 'kill_switch' }, account_id: null });

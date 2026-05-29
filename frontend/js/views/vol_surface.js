@@ -135,12 +135,15 @@ function renderTermSvg(s, mount) {
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>
             <path d="${path}" stroke="#00e5ff" stroke-width="2" fill="none"/>
             ${dots}
-            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">days to expiry</text>
-            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">ATM IV (%)</text>
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.vol_surface.axis.x'))}</text>
+            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">${esc(t('view.vol_surface.axis.y'))}</text>
         </svg>
         <p class="small ${inverted ? 'neg' : ''}">
-            Front-month ${front.toFixed(1)}% · Back-month ${back.toFixed(1)}% ·
-            ${inverted ? 'INVERTED (front &gt; back — event premium)' : 'normal contango'}
+            ${esc(t('view.vol_surface.term_summary', {
+                front:   front.toFixed(1),
+                back:    back.toFixed(1),
+                verdict: t(inverted ? 'view.vol_surface.inverted' : 'view.vol_surface.normal'),
+            }))}
         </p>
     `;
 }
