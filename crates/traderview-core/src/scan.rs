@@ -644,6 +644,8 @@ pub enum Preset {
     Year52LowWithRangeContraction,  // year_low_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w low + tight range + flat change (structural pause at the lows; coiling at bottom before next leg)
     GapAndIntradayHarmonic,         // gap_pct.abs() between 0.5 and 2 AND day_pct.abs() between 0.5 and 2 AND (gap_pct.abs() - day_pct.abs()).abs() < 0.3 AND rel_volume >= 1 — gap and intraday similar magnitude + decent vol (harmonic day; balanced overnight and intraday contributions)
     MicroDayEarlyShakeout,          // change_pct.abs() < 0.5 AND hod_dist + lod_dist > 2 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — small change + wide intraday + flat day + hot vol (early shakeout day; explored both extremes early but settled flat with hot vol)
+    GreenDaySubOptimalClose,        // change_pct > 1 AND hod_dist_pct.abs() > 2 AND rel_volume >= 1 — green day but closed significantly off HOD + decent vol (high-conviction green with sub-optimal close; pullback from peak before close)
+    RedDaySubOptimalClose,          // change_pct < -1 AND lod_dist_pct.abs() > 2 AND rel_volume >= 1 — red day but closed significantly off LOD + decent vol (high-conviction red with sub-optimal close; bounce from trough before close)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3502,6 +3504,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.3
                 && hit.rel_volume >= 1.5
         }
+        Preset::GreenDaySubOptimalClose => {
+            hit.change_pct > 1.0
+                && hit.hod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.0
+        }
+        Preset::RedDaySubOptimalClose => {
+            hit.change_pct < -1.0
+                && hit.lod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -4036,6 +4048,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowWithRangeContraction => "Near 52w Low + Tight Range + Flat Change (Coil at the Bottom)",
         Preset::GapAndIntradayHarmonic => "Gap and Intraday Similar Magnitudes + Decent Vol (Harmonic Day; Balanced Overnight + Intraday)",
         Preset::MicroDayEarlyShakeout => "Small Change + Wide Range + Flat Day + Hot Vol (Early Shakeout; Both Extremes Explored Then Settled)",
+        Preset::GreenDaySubOptimalClose => "Green Day + Significant Pullback from HOD (Sub-optimal Close on Up Day)",
+        Preset::RedDaySubOptimalClose => "Red Day + Significant Bounce from LOD (Sub-optimal Close on Down Day)",
     }
 }
 

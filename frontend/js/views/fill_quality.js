@@ -65,12 +65,18 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.fill_quality.h2.symbol_chart">Avg slippage (bps) by symbol — which names cost most</h2>
+            <div id="fq-symbol-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.fill_quality.h2.latest_50_fills">Latest 50 fills</h2>
             ${sampleTable(r.samples.slice(0, 50))}
         </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
     renderHourChart(r.by_hour_et);
+    renderSymbolChart(r.by_symbol);
 }
 
 function renderHourChart(byHour) {
@@ -97,6 +103,41 @@ function renderHourChart(byHour) {
             { label: t('view.fill_quality.chart.zero'),
               stroke: '#ffd84a', width: 1.0, dash: [4, 4],
               points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
+}
+
+function renderSymbolChart(bySymbol) {
+    const el = document.getElementById('fq-symbol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = (bySymbol || [])
+        .filter(b => Number.isFinite(Number(b.avg_slippage_bps)))
+        .slice(0, 15);
+    if (buckets.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.fill_quality.empty_symbol_chart">${esc(t('view.fill_quality.empty_symbol_chart'))}</div>`;
+        return;
+    }
+    const labels = buckets.map(b => b.key);
+    const ys = buckets.map(b => Number(b.avg_slippage_bps));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.fill_quality.chart.symbol') },
+            { label: t('view.fill_quality.chart.slip_bps'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.fill_quality.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,
