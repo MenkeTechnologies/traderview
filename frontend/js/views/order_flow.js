@@ -15,6 +15,7 @@ import {
 } from '../_order_flow_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { tickText: '' };
 
 export async function renderOrderFlow(mount, _appState) {
@@ -27,11 +28,11 @@ export async function renderOrderFlow(mount, _appState) {
             <p class="muted" data-i18n-html="view.order_flow.help">Paste <code>price volume bid ask</code> per line. Trades at
                 ask = BUY, at bid = SELL, mid-spread falls back to tick rule (vs prior price).
                 Demo loads 400 ticks with engineered net-buy pressure.</p>
-            <textarea id="of-ticks" rows="8" placeholder="100.05 250 100.04 100.05&#10;100.04 1200 100.04 100.05&#10;..."></textarea>
+            <textarea id="of-ticks" rows="8" placeholder="100.05 250 100.04 100.05&#10;100.04 1200 100.04 100.05&#10;..." data-tip="view.order_flow.tip.ticks"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.order_flow.btn.load_demo_400_ticks_buy_pressure" id="of-demo" class="secondary" type="button">Load demo (400 ticks, buy pressure)</button>
-                <button data-i18n="view.order_flow.btn.clear" id="of-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.order_flow.btn.classify" id="of-run" class="primary" type="button">Classify</button>
+                <button data-i18n="view.order_flow.btn.load_demo_400_ticks_buy_pressure" data-tip="view.order_flow.tip.demo" data-shortcut="order_flow_demo" id="of-demo" class="secondary" type="button">Load demo (400 ticks, buy pressure)</button>
+                <button data-i18n="view.order_flow.btn.clear" data-tip="view.order_flow.tip.clear" id="of-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_flow.btn.classify" data-tip="view.order_flow.tip.classify" data-shortcut="order_flow_classify" id="of-run" class="primary" type="button">Classify</button>
             </div>
         </div>
 
@@ -88,7 +89,7 @@ async function compute(tok) {
         if (ticks.length < 5) return;
     }
     const err = validateInputs(ticks);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let classified, aggregate;
     try {
@@ -98,12 +99,17 @@ async function compute(tok) {
             api.microOrderFlowAggregate(body),
         ]);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(aggregate, classified);
     renderGauge(aggregate);
     renderFlowChart(classified);
+    showToast(t('view.order_flow.toast.done', {
+        ticks: ticks.length,
+        imbalance: fmtImbalance(aggregate.imbalance_ratio),
+    }), { level: 'success' });
 }
 
 function renderSummary(report, classified) {

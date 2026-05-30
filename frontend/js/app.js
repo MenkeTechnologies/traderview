@@ -840,6 +840,16 @@ function bindTabs() {
         const el = document.getElementById('cu-autofit');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in order-flow scope → click Classify.
+    window.addEventListener('tv:order-flow-classify', () => {
+        const el = document.getElementById('of-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in order-flow scope → click Load demo.
+    window.addEventListener('tv:order-flow-demo', () => {
+        const el = document.getElementById('of-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
