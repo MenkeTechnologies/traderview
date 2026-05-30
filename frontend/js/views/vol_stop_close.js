@@ -59,6 +59,12 @@ export async function renderVolStopClose(mount, _appState) {
             <p data-i18n="view.vol_stop_close.hint.cyan_close_yellow_close_based_vol_stop_red_dashed_" class="muted">Cyan = close. Yellow = close-based vol-stop. Red dashed = chandelier (high-based). Red dots = triggers (filled = close-based, hollow = chandelier).</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol_stop_close.h2.spread_chart">Per-bar wick divergence (chand_stop − close_stop)</h2>
+            <div id="vsc-spread-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vol_stop_close.hint.spread_chart" class="muted small">Signed difference between the two stops per bar. Long side: positive = chandelier rides higher on a wick high; close-based ignores the wick. Short side: negative = chandelier sits lower on a wick low. Spikes mark exactly which bars introduced wick-driven divergence. Yellow dashed = zero (both stops agree).</p>
+        </div>
+
         <div id="vsc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -107,6 +113,7 @@ async function compute(tok) {
     const localChand = localChandelier(state.bars, atr, state.side, state.cfg);
     renderSummary(localClose, localChand, true);
     renderChart(state.bars, localClose, localChand);
+    renderSpreadChart(state.bars, localClose, localChand);
     let resp;
     try {
         resp = await api.discVolStopClose(buildBody(state.bars, atr, state.side, state.cfg));
@@ -118,6 +125,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, localChand, false);
     renderChart(state.bars, resp, localChand);
+    renderSpreadChart(state.bars, resp, localChand);
     const sumClose = summarize(resp, state.bars, state.side);
     const sumChand = summarize(localChand, state.bars, state.side);
     showToast(t('view.vol_stop_close.toast.computed', { close: sumClose.triggerCount, chand: sumChand.triggerCount }), { level: 'success' });
@@ -187,6 +195,45 @@ function renderChart(bars, closeStops, chandStops) {
         ],
         legend: { show: true },
     }, [xs, closes, closeStopLine, chandStopLine, closeTrigs, chandTrigs], el);
+}
+
+function renderSpreadChart(bars, closeStops, chandStops) {
+    const el = document.getElementById('vsc-spread-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const closeLine = splitStops(closeStops).stopPrice;
+    const chandLine = splitStops(chandStops).stopPrice;
+    const n = Math.min(bars.length, closeLine.length, chandLine.length);
+    if (n < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol_stop_close.empty_spread_chart">${esc(t('view.vol_stop_close.empty_spread_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ys = [];
+    for (let i = 0; i < n; i++) {
+        const c = Number(closeLine[i]);
+        const h = Number(chandLine[i]);
+        xs.push(i);
+        ys.push(Number.isFinite(c) && Number.isFinite(h) ? h - c : null);
+    }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vol_stop_close.chart.bar_idx') },
+            { label: t('view.vol_stop_close.chart.spread'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.vol_stop_close.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function showErr(msg) {
