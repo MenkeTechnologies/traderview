@@ -140,9 +140,9 @@ function renderGrid(report) {
         return `<tr><th>${esc(fmtPrice(p, state.tickSize))}</th>${cells}</tr>`;
     }).join('');
     const footerCells = bars.map(b => `<th>
-        <div class="fp-foot-vol">${esc(fmtN(b.total_volume))} vol</div>
-        <div class="fp-foot-delta ${deltaCls(b.total_delta)}">${esc(fmtSigned(b.total_delta))} Δ</div>
-        <div class="fp-foot-poc">POC ${esc(fmtPrice(b.poc_price, state.tickSize))}</div>
+        <div class="fp-foot-vol">${esc(t('view.footprint.foot.vol', { vol: fmtN(b.total_volume) }))}</div>
+        <div class="fp-foot-delta ${deltaCls(b.total_delta)}">${esc(t('view.footprint.foot.delta', { delta: fmtSigned(b.total_delta) }))}</div>
+        <div class="fp-foot-poc">${esc(t('view.footprint.foot.poc', { price: fmtPrice(b.poc_price, state.tickSize) }))}</div>
     </th>`).join('');
     wrap.innerHTML = `
         <table class="fp-table">

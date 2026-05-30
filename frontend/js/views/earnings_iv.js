@@ -133,10 +133,10 @@ async function renderDetail(mount, sym) {
                 <table class="trades">
                     <thead><tr><th data-i18n="view.earnings_iv.th.strategy">Strategy</th><th data-i18n="view.earnings_iv.th.avg_p_l_1_premium">Avg P&L / $1 premium</th><th data-i18n="view.earnings_iv.th.win_rate">Win rate</th></tr></thead>
                     <tbody>
-                        <tr><td>LONG straddle (buy call + put)</td>
+                        <tr><td>${esc(t('view.earnings_iv.row.long_straddle'))}</td>
                             <td class="${r.backtest.long_avg_pnl >= 0 ? 'pos' : 'neg'}">${(r.backtest.long_avg_pnl * 100).toFixed(1)}%</td>
                             <td>${(r.backtest.long_win_rate * 100).toFixed(0)}%</td></tr>
-                        <tr><td>SHORT straddle (sell call + put)</td>
+                        <tr><td>${esc(t('view.earnings_iv.row.short_straddle'))}</td>
                             <td class="${r.backtest.short_avg_pnl >= 0 ? 'pos' : 'neg'}">${(r.backtest.short_avg_pnl * 100).toFixed(1)}%</td>
                             <td>${(r.backtest.short_win_rate * 100).toFixed(0)}%</td></tr>
                     </tbody>
