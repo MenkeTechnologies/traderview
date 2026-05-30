@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_NUM_LINES,
@@ -31,19 +32,19 @@ export async function renderThreeLineBreak(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.tlb.label.num_lines">Break lines (N)</span>
-                    <input id="tlb-n" type="number" step="1" min="1" value="${state.num_lines}"></label>
+                    <input id="tlb-n" type="number" step="1" min="1" value="${state.num_lines}" data-tip="view.tlb.tip.num_lines"></label>
                 <button data-i18n="view.tlb.btn.compute" id="tlb-run" class="primary"
-                        data-tip="view.tlb.tip.compute" type="button">Build TLB</button>
+                        data-tip="view.tlb.tip.compute" data-shortcut="three_line_break_run" type="button">Build TLB</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.tlb.btn.demo_uptrend"   id="tlb-demo-up"      class="secondary" type="button">Demo: pure uptrend</button>
-                <button data-i18n="view.tlb.btn.demo_downtrend" id="tlb-demo-down"    class="secondary" type="button">Demo: pure downtrend</button>
-                <button data-i18n="view.tlb.btn.demo_small"     id="tlb-demo-small"   class="secondary" type="button">Demo: small pullback (no flip)</button>
-                <button data-i18n="view.tlb.btn.demo_deep"      id="tlb-demo-deep"    class="secondary" type="button">Demo: deep pullback (flips)</button>
-                <button data-i18n="view.tlb.btn.demo_choppy"    id="tlb-demo-choppy"  class="secondary" type="button">Demo: choppy</button>
-                <button data-i18n="view.tlb.btn.demo_flat"      id="tlb-demo-flat"    class="secondary" type="button">Demo: flat (no lines)</button>
-                <button data-i18n="view.tlb.btn.demo_two"       id="tlb-demo-two"     class="secondary" type="button">Demo: 2-line break</button>
-                <button data-i18n="view.tlb.btn.demo_five"      id="tlb-demo-five"    class="secondary" type="button">Demo: 5-line break</button>
+                <button data-i18n="view.tlb.btn.demo_uptrend"   id="tlb-demo-up"      class="secondary" type="button" data-tip="view.tlb.tip.demo_up">Demo: pure uptrend</button>
+                <button data-i18n="view.tlb.btn.demo_downtrend" id="tlb-demo-down"    class="secondary" type="button" data-tip="view.tlb.tip.demo_down">Demo: pure downtrend</button>
+                <button data-i18n="view.tlb.btn.demo_small"     id="tlb-demo-small"   class="secondary" type="button" data-tip="view.tlb.tip.demo_small">Demo: small pullback (no flip)</button>
+                <button data-i18n="view.tlb.btn.demo_deep"      id="tlb-demo-deep"    class="secondary" type="button" data-tip="view.tlb.tip.demo_deep">Demo: deep pullback (flips)</button>
+                <button data-i18n="view.tlb.btn.demo_choppy"    id="tlb-demo-choppy"  class="secondary" type="button" data-tip="view.tlb.tip.demo_choppy">Demo: choppy</button>
+                <button data-i18n="view.tlb.btn.demo_flat"      id="tlb-demo-flat"    class="secondary" type="button" data-tip="view.tlb.tip.demo_flat">Demo: flat (no lines)</button>
+                <button data-i18n="view.tlb.btn.demo_two"       id="tlb-demo-two"     class="secondary" type="button" data-tip="view.tlb.tip.demo_two">Demo: 2-line break</button>
+                <button data-i18n="view.tlb.btn.demo_five"      id="tlb-demo-five"    class="secondary" type="button" data-tip="view.tlb.tip.demo_five">Demo: 5-line break</button>
             </div>
             <p data-i18n="view.tlb.hint.about" class="muted">Continuation: close beyond prior line's close. Reversal requires breaking the OPEN of the last N lines (default 3). N=2 is sensitive, N=5 is slow.</p>
         </div>
@@ -84,6 +85,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.tlb.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.tlb.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -95,7 +97,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.tlb.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.num_lines);
     renderSummary(local, true);
     renderChart(local);
@@ -105,12 +107,19 @@ async function compute(tok) {
         resp = await api.chartsThreeLineBreak(buildBody(state));
     } catch (e) {
         showErr(`${t('view.tlb.err.api')}: ${e.message || e}`);
+        showToast(t('view.tlb.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const lines = Array.isArray(resp) ? resp.length : 0;
+    const last = lines > 0 ? resp[lines - 1] : null;
+    const dir = last ? String(last.direction) : '—';
+    const flips = flipCount(resp);
+    const level = dir === 'up' ? 'success' : dir === 'down' ? 'warning' : 'info';
+    showToast(t('view.tlb.toast.built', { lines, dir, flips }), { level });
 }
 
 function renderSummary(lines, pending) {
