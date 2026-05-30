@@ -29,6 +29,11 @@ export async function renderTape(mount) {
                 <h2 data-i18n="view.tape.h2.change_chart">Watchlist change % snapshot</h2>
                 <div id="tape-chart" style="width:100%;height:240px"></div>
             </div>
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2 data-i18n="view.tape.h2.news_chart">News count per symbol (this refresh)</h2>
+                <div id="tape-news-chart" style="width:100%;height:220px"></div>
+                <p data-i18n="view.tape.hint.news_chart" class="muted small">How many news items each symbol generated in this refresh. Orthogonal to price action: a flat-tape symbol can be the day's news leader; a big mover can have zero news (technical-only move).</p>
+            </div>
         </div>
     `;
     if (timer) clearInterval(timer);
@@ -110,7 +115,43 @@ async function refresh(mount, tok) {
     </table>` : '<p data-i18n="view.tape.hint.add_symbols_to_a_watchlist_first" class="muted">Add symbols to a watchlist first.</p>';
 
     renderChangeChart(quotes);
+    renderNewsCountChart(allNews);
     void fmtDateTime;
+}
+
+function renderNewsCountChart(news) {
+    const el = document.getElementById('tape-news-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = new Map();
+    for (const n of (news || [])) {
+        if (!n || !n.symbol) continue;
+        buckets.set(n.symbol, (buckets.get(n.symbol) || 0) + 1);
+    }
+    if (buckets.size < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tape.empty_news_chart">${esc(t('view.tape.empty_news_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...buckets.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25);
+    const labels = sorted.map(([s]) => s);
+    const ys = sorted.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tape.chart.symbol_idx') },
+            { label: t('view.tape.chart.news_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderChangeChart(quotes) {
