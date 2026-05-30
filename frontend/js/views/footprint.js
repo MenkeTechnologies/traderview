@@ -53,6 +53,11 @@ export async function renderFootprint(mount, _appState) {
             <div id="fp-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.footprint.h2.cum_delta_chart">Cumulative delta across bars — running order-flow imbalance</h2>
+            <div id="fp-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="fp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('fp-demo').addEventListener('click', () => {
@@ -105,6 +110,7 @@ async function compute(tok) {
     renderGrid(report);
     renderHotspots(report);
     renderDeltaChart(report);
+    renderCumDeltaChart(report);
     const bars = (report && report.bars) ? report.bars.length : 0;
     showToast(t('view.footprint.toast.built', { bars, ticks: ticks.length }), { level: 'success' });
 }
@@ -142,6 +148,42 @@ function renderDeltaChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderCumDeltaChart(report) {
+    const el = document.getElementById('fp-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bars = (report && report.bars) || [];
+    const valid = bars.filter(b => Number.isFinite(Number(b.total_delta)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.footprint.empty_cum_chart">${esc(t('view.footprint.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(b => String(b.bar_id));
+    let acc = 0;
+    const cum = valid.map(b => { acc += Number(b.total_delta); return acc; });
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.footprint.chart.bar_idx') },
+            { label: t('view.footprint.chart.cum_delta'),
+              stroke: '#7af0a8', width: 1.5,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: false } },
+            { label: t('view.footprint.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderSummary(r) {

@@ -646,6 +646,8 @@ pub enum Preset {
     MicroDayEarlyShakeout,          // change_pct.abs() < 0.5 AND hod_dist + lod_dist > 2 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — small change + wide intraday + flat day + hot vol (early shakeout day; explored both extremes early but settled flat with hot vol)
     GreenDaySubOptimalClose,        // change_pct > 1 AND hod_dist_pct.abs() > 2 AND rel_volume >= 1 — green day but closed significantly off HOD + decent vol (high-conviction green with sub-optimal close; pullback from peak before close)
     RedDaySubOptimalClose,          // change_pct < -1 AND lod_dist_pct.abs() > 2 AND rel_volume >= 1 — red day but closed significantly off LOD + decent vol (high-conviction red with sub-optimal close; bounce from trough before close)
+    WideRangeNoVolFlat,             // hod_dist + lod_dist > 3 AND rel_volume < 0.7 AND change_pct.abs() < 0.5 — wide intraday range + dry vol + flat change (fake-liquidity range exploration; few prints across wide spread; possible spoof / wash)
+    NarrowRangeMeaningfulChange,    // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — narrow intraday range + meaningful change (one-print day; price moved without exploring; mostly gap-driven without intraday discovery)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3514,6 +3516,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 2.0
                 && hit.rel_volume >= 1.0
         }
+        Preset::WideRangeNoVolFlat => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume < 0.7
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::NarrowRangeMeaningfulChange => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() > 1.0
+        }
     }
 }
 
@@ -4050,6 +4061,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MicroDayEarlyShakeout => "Small Change + Wide Range + Flat Day + Hot Vol (Early Shakeout; Both Extremes Explored Then Settled)",
         Preset::GreenDaySubOptimalClose => "Green Day + Significant Pullback from HOD (Sub-optimal Close on Up Day)",
         Preset::RedDaySubOptimalClose => "Red Day + Significant Bounce from LOD (Sub-optimal Close on Down Day)",
+        Preset::WideRangeNoVolFlat => "Wide Range + Dry Vol + Flat Change (Fake-liquidity Range Exploration)",
+        Preset::NarrowRangeMeaningfulChange => "Narrow Range + Meaningful Change (One-print Day; No Intraday Discovery)",
     }
 }
 

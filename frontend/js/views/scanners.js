@@ -528,6 +528,8 @@ const PRESETS = [
     { id: 'micro_day_early_shakeout', label: t('view.scanners.preset.micro_day_early_shakeout.label'), desc: t('view.scanners.preset.micro_day_early_shakeout.desc') },
     { id: 'green_day_sub_optimal_close', label: t('view.scanners.preset.green_day_sub_optimal_close.label'), desc: t('view.scanners.preset.green_day_sub_optimal_close.desc') },
     { id: 'red_day_sub_optimal_close', label: t('view.scanners.preset.red_day_sub_optimal_close.label'), desc: t('view.scanners.preset.red_day_sub_optimal_close.desc') },
+    { id: 'wide_range_no_vol_flat', label: t('view.scanners.preset.wide_range_no_vol_flat.label'), desc: t('view.scanners.preset.wide_range_no_vol_flat.desc') },
+    { id: 'narrow_range_meaningful_change', label: t('view.scanners.preset.narrow_range_meaningful_change.label'), desc: t('view.scanners.preset.narrow_range_meaningful_change.desc') },
 ];
 
 export async function renderScanners(mount) {
