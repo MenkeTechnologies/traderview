@@ -84,6 +84,11 @@ export async function renderStrategyAlerts(mount) {
             <h2 data-i18n="view.strategy_alerts.h2.truth_chart">Last-truth distribution (TRUE / FALSE / UNEVAL)</h2>
             <div id="sa-truth-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.strategy_alerts.h2.last_fired_chart">Days since last fired (per rule)</h2>
+            <div id="sa-lastfire-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     mount.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
         const tpl = TEMPLATES.find(x => x.id === e.target.value);
@@ -149,11 +154,54 @@ async function refresh(mount, tok) {
         renderFires(fires, rules, mount);
         renderFiresChart(rules);
         renderTruthChart(rules);
+        renderLastFiredChart(rules);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#sa-list');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderLastFiredChart(rules) {
+    const el = document.getElementById('sa-lastfire-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const now = Date.now();
+    const rows = (rules || [])
+        .filter(r => r.last_fired_at)
+        .map(r => ({
+            name: r.name || r.id,
+            days: Math.max(0, (now - new Date(r.last_fired_at).getTime()) / 86400000),
+        }))
+        .filter(r => Number.isFinite(r.days));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.strategy_alerts.empty_lastfire_chart">${esc(t('view.strategy_alerts.empty_lastfire_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => a.days - b.days);
+    const labels = rows.map(r => r.name);
+    const xs = labels.map((_, i) => i + 1);
+    const recent = rows.map(r => r.days < 1  ? r.days : null);
+    const old    = rows.map(r => r.days >= 1 ? r.days : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.strategy_alerts.chart.rule') },
+            { label: t('view.strategy_alerts.chart.fired_today'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.strategy_alerts.chart.fired_older'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, recent, old], el);
 }
 
 function renderTruthChart(rules) {
