@@ -768,6 +768,8 @@ pub enum Preset {
     SmoothBigRedNormalVol,               // change_pct < -3 AND rel_volume in [1, 1.5] AND lod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big red + normal vol + close at LOD + no gap (orderly down day; not panic, but conviction; sweet-spot entry for shorts)
     BigDayPctFlatChangeHotVol,           // day_pct.abs() > 2 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday move + flat close + decent vol (gap absorbed all intraday move on volume; full round-trip with participation; gap-and-fade pattern)
     BigDayPctBigChangeAlignedHotVol,     // day_pct.abs() > 2 AND change_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 1.5 — big intraday + big change + same sign + decent vol (max-aligned trend day; both gap and intraday push same way through big move on volume)
+    Year52HighBigDayDryVol,              // year_high_pct < 2 AND day_pct > 2 AND rel_volume < 0.7 — near 52w high + big green intraday + dry vol (no-volume push to new highs intraday; distribution suspicion / fake breakout / thin-tape rally)
+    Year52LowBigDayDryVol,               // year_low_pct < 2 AND day_pct < -2 AND rel_volume < 0.7 — near 52w low + big red intraday + dry vol (no-volume push to new lows intraday; capitulation without conviction / thin-tape breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4367,6 +4369,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct * hit.day_pct > 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighBigDayDryVol => {
+            hit.year_high_pct < 2.0
+                && hit.day_pct > 2.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::Year52LowBigDayDryVol => {
+            hit.year_low_pct < 2.0
+                && hit.day_pct < -2.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -5025,6 +5037,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmoothBigRedNormalVol => "Big Red + Normal Vol + Close at LOD + No Gap (Orderly Down Day; Not Panic But Conviction; Sweet-spot Short)",
         Preset::BigDayPctFlatChangeHotVol => "Big Intraday Move + Flat Close + Decent Vol (Gap Absorbed All Intraday Move on Volume; Full Round-trip Gap-and-fade)",
         Preset::BigDayPctBigChangeAlignedHotVol => "Big Intraday + Big Change + Same Sign + Decent Vol (Max-aligned Trend Day; Gap and Intraday Push Same Way Through Big Move)",
+        Preset::Year52HighBigDayDryVol => "Near 52w High + Big Green Intraday + Dry Vol (No-volume Push to New Highs; Distribution Suspicion / Fake Breakout)",
+        Preset::Year52LowBigDayDryVol => "Near 52w Low + Big Red Intraday + Dry Vol (No-volume Push to New Lows; Capitulation Without Conviction / Thin-tape Breakdown)",
     }
 }
 

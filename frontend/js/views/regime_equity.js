@@ -53,6 +53,12 @@ export async function renderRegimeEquity(mount, _appState) {
             <p data-i18n="view.regime_equity.hint.cyan_your_equity_yellow_ols_regression_fit_spread_" class="muted">Cyan = your equity. Yellow = OLS regression fit. Spread of equity around the fit ⇒ residual stdev ⇒ trending vs volatile classification.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.regime_equity.h2.residual_chart">Residuals (equity − fit)</h2>
+            <div id="re-resid-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.regime_equity.hint.residual" class="muted small">Per-bar residual from the trend line. Yellow dashed = zero. Tight band around zero = trending; wide swings = volatile. Visualizes the residual variance that drives the regime classification.</p>
+        </div>
+
         <div id="re-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -93,6 +99,7 @@ async function compute(tok) {
     const local = localEvaluate(state.equity, state.config);
     renderSummary(local, true);
     renderChart(state.equity, local);
+    renderResidualChart(state.equity, local);
     let resp;
     try {
         resp = await api.regimeEquity(buildBody(state.equity, state.config));
@@ -104,6 +111,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary({ ...resp, intercept: local.intercept, mean_equity: local.mean_equity }, false);
     renderChart(state.equity, { ...resp, intercept: local.intercept });
+    renderResidualChart(state.equity, { ...resp, intercept: local.intercept });
     const regime = String(resp.regime || '');
     const level = (regime === 'TrendingDown' || regime === 'VolatileDown') ? 'warning'
         : (regime === 'Choppy') ? 'info' : 'success';
@@ -162,6 +170,34 @@ function renderChart(equity, report) {
         ],
         legend: { show: true },
     }, [xs, equity, fit], el);
+}
+
+function renderResidualChart(equity, report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('re-resid-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!Array.isArray(equity) || equity.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.regime_equity.empty_residual_chart">${esc(t('view.regime_equity.empty_residual_chart'))}</div>`;
+        return;
+    }
+    const fit = fitLine(equity, report);
+    const xs = equity.map((_, i) => i);
+    const resid = equity.map((v, i) => Number(v) - Number(fit[i]));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.regime_equity.chart.residual'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.regime_equity.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, resid, zero], el);
 }
 
 function showErr(msg) {
