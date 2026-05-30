@@ -114,6 +114,12 @@ export async function renderPaper(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.notional_chart">Position notional per symbol</h2>
+            <div id="paper-notional-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.paper.hint.notional" class="muted small">Per-symbol capital allocation (qty × last). Reveals concentration risk independent of P/L — a 60% notional in one name is concentration even if it's green today.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.order_history">Order history</h2>
             ${orders.length ? `<table class="trades">
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
@@ -133,6 +139,7 @@ export async function renderPaper(mount) {
     `;
 
     renderUnrealizedChart(positions, quotes);
+    renderNotionalChart(positions, quotes);
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -210,4 +217,40 @@ function renderUnrealizedChart(positions, quotes) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderNotionalChart(positions, quotes) {
+    const el = document.getElementById('paper-notional-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (positions || []).map(p => {
+        const q = quotes[p.symbol];
+        if (!q) return null;
+        const n = Number(q.price) * Number(p.qty);
+        return Number.isFinite(n) ? { symbol: p.symbol, n } : null;
+    }).filter(Boolean);
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.paper.empty_notional_chart">${esc(t('view.paper.empty_notional_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => b.n - a.n);
+    const labels = pts.map(p => p.symbol);
+    const ys = pts.map(p => p.n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.paper.chart.symbol_idx') },
+            { label: t('view.paper.chart.notional'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
