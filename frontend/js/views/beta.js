@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePairsBlob, pairsToBlob, validateInputs, buildBody, localEstimate,
@@ -29,21 +30,23 @@ export async function renderBeta(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.beta.label.notional">Hedge notional ($)</span>
-                    <input id="bt-notional" type="number" step="any" min="0" value="${state.notional}"></label>
+                    <input id="bt-notional" type="number" step="any" min="0" value="${state.notional}"
+                           data-tip="view.beta.tip.notional"></label>
                 <label><span data-i18n="view.beta.label.periods">Periods / yr</span>
-                    <input id="bt-periods" type="number" step="any" min="1" value="${state.periods_per_year}"></label>
+                    <input id="bt-periods" type="number" step="any" min="1" value="${state.periods_per_year}"
+                           data-tip="view.beta.tip.periods"></label>
                 <button data-i18n="view.beta.btn.compute" id="bt-run" class="primary"
-                        data-tip="view.beta.tip.compute" type="button">Estimate β</button>
+                        data-tip="view.beta.tip.compute" data-shortcut="beta_run" type="button">Estimate β</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.beta.btn.demo_tech"     id="bt-demo-tech"     class="secondary" type="button">Demo: tech stock (β≈1.3)</button>
-                <button data-i18n="view.beta.btn.demo_utility"  id="bt-demo-util"     class="secondary" type="button">Demo: utility (β≈0.3)</button>
-                <button data-i18n="view.beta.btn.demo_inverse"  id="bt-demo-inv"      class="secondary" type="button">Demo: inverse ETF (β≈−1)</button>
-                <button data-i18n="view.beta.btn.demo_neutral"  id="bt-demo-neutral"  class="secondary" type="button">Demo: market-neutral (β≈0.05)</button>
-                <button data-i18n="view.beta.btn.demo_3x"       id="bt-demo-3x"       class="secondary" type="button">Demo: 3x leveraged (β≈3)</button>
-                <button data-i18n="view.beta.btn.demo_perfect"  id="bt-demo-perfect"  class="secondary" type="button">Demo: perfect match (R²=1)</button>
-                <button data-i18n="view.beta.btn.demo_nocorr"   id="bt-demo-noco"     class="secondary" type="button">Demo: no correlation</button>
-                <button data-i18n="view.beta.btn.demo_flat"     id="bt-demo-flat"     class="secondary" type="button">Demo: flat benchmark (degenerate)</button>
+                <button data-i18n="view.beta.btn.demo_tech"     id="bt-demo-tech"     class="secondary" data-tip="view.beta.tip.demo_tech"    type="button">Demo: tech stock (β≈1.3)</button>
+                <button data-i18n="view.beta.btn.demo_utility"  id="bt-demo-util"     class="secondary" data-tip="view.beta.tip.demo_utility" type="button">Demo: utility (β≈0.3)</button>
+                <button data-i18n="view.beta.btn.demo_inverse"  id="bt-demo-inv"      class="secondary" data-tip="view.beta.tip.demo_inverse" type="button">Demo: inverse ETF (β≈−1)</button>
+                <button data-i18n="view.beta.btn.demo_neutral"  id="bt-demo-neutral"  class="secondary" data-tip="view.beta.tip.demo_neutral" type="button">Demo: market-neutral (β≈0.05)</button>
+                <button data-i18n="view.beta.btn.demo_3x"       id="bt-demo-3x"       class="secondary" data-tip="view.beta.tip.demo_3x"      type="button">Demo: 3x leveraged (β≈3)</button>
+                <button data-i18n="view.beta.btn.demo_perfect"  id="bt-demo-perfect"  class="secondary" data-tip="view.beta.tip.demo_perfect" type="button">Demo: perfect match (R²=1)</button>
+                <button data-i18n="view.beta.btn.demo_nocorr"   id="bt-demo-noco"     class="secondary" data-tip="view.beta.tip.demo_nocorr"  type="button">Demo: no correlation</button>
+                <button data-i18n="view.beta.btn.demo_flat"     id="bt-demo-flat"     class="secondary" data-tip="view.beta.tip.demo_flat"    type="button">Demo: flat benchmark (degenerate)</button>
             </div>
             <p data-i18n="view.beta.hint.about" class="muted">β = cov(asset, bench) / var(bench). α = mean(asset) − β·mean(bench). R² = corr². Beta-neutral hedge: short $X·β of benchmark per $X long. α is per-period return after removing market exposure.</p>
         </div>
@@ -90,6 +93,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.beta.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.beta.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -104,9 +108,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.beta.toast.invalid'), { level: 'warning' }); return; }
     const local = localEstimate(state.asset, state.benchmark);
-    if (!local) { showErr(t('view.beta.err.degenerate')); return; }
+    if (!local) { showErr(t('view.beta.err.degenerate')); showToast(t('view.beta.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart(local);
     renderResidChart(local);
@@ -116,14 +120,16 @@ async function compute(tok) {
         resp = await api.anlyBeta(buildBody(state));
     } catch (e) {
         showErr(`${t('view.beta.err.api')}: ${e.message || e}`);
+        showToast(t('view.beta.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.beta.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.beta.err.server_rejected')); showToast(t('view.beta.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderResidChart(resp);
     renderTable();
+    showToast(t('view.beta.toast.estimated'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

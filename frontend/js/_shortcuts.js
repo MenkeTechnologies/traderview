@@ -263,6 +263,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bbd_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-band-distance', descKey: 'shortcut.bbd_run',                actionKey: 'tv:bbd-run' },
     { id: 'beta_shrink_run',              keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'beta-shrinkage',    descKey: 'shortcut.beta_shrink_run',              actionKey: 'tv:beta-shrink-run' },
     { id: 'bg_test_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breusch-godfrey',   descKey: 'shortcut.bg_test_run',                  actionKey: 'tv:bg-test-run' },
+    { id: 'beta_run',                     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'beta',              descKey: 'shortcut.beta_run',                     actionKey: 'tv:beta-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
