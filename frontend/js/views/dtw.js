@@ -210,7 +210,7 @@ function renderPath(nA, nB, res) {
         ],
         axes: [
             { stroke: '#aab' },
-            { stroke: '#aab', label: 'j (B)' },
+            { stroke: '#aab', label: t('chart.series.j_b') },
         ],
     }, [allXs, pathAligned, diagAligned], el);
 }

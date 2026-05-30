@@ -241,7 +241,7 @@ function renderBetaChart(betas) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'β (Kalman)', stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.kalman_beta'), stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.08)', points: { show: false } },
             { label: t('chart.series._1_reference'), stroke: '#ff9f1a', width: 1,
               dash: [4, 4], points: { show: false } },

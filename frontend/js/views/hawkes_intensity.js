@@ -180,7 +180,7 @@ function renderChart(report) {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: { auto: true } },
         series: [
-            { label: 't' },
+            { label: t('chart.series.t') },
             { label: 'λ(t)',  stroke: '#00e5ff', width: 1.5, points: { show: false } },
             { label: t('chart.series.event'), stroke: '#ff3860', width: 0,   points: { show: true, size: 6 } },
         ],

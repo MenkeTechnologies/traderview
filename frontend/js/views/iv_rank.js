@@ -141,7 +141,7 @@ function renderChart(history, r) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.day_') },
-            { label: 'IV',       stroke: '#00e5ff', width: 1.2,
+            { label: t('chart.series.iv'),       stroke: '#00e5ff', width: 1.2,
               fill: '#00e5ff14', points: { show: false } },
             { label: t('chart.series.current'),  stroke: '#ff9f1a', width: 1.0,
               dash: [4, 4], points: { show: false } },

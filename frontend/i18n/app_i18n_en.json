@@ -9314,6 +9314,8 @@
   "chart.series.hist_es": "Hist ES",
   "chart.series.hist_var": "Hist VaR",
   "chart.series.iv": "IV",
+  "chart.series.j_b":                "j (B)",
+  "chart.series.kalman_beta":        "β (Kalman)",
   "chart.series.iv_raw": "IV (raw)",
   "chart.series.iv_svi_fit": "IV (SVI fit)",
   "chart.series.kalman_rts": "Kalman (RTS)",
