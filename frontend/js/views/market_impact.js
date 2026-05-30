@@ -14,6 +14,7 @@ import {
 } from '../_market_impact_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { trades: '', spikeBps: 30 };
 
 export async function renderMarketImpact(mount, _appState) {
@@ -26,10 +27,10 @@ export async function renderMarketImpact(mount, _appState) {
             <p class="muted" data-i18n-html="view.market_impact.help">Paste <code>qty adv slippage_bps</code> per line. Negative
                 slippage is a favorable fill. Demo loads 400 trades that visibly cliff
                 past 1% ADV.</p>
-            <textarea id="mi-trades" rows="8" placeholder="2500 5000000 2.1&#10;120000 5000000 12.5&#10;..."></textarea>
+            <textarea id="mi-trades" rows="8" placeholder="2500 5000000 2.1&#10;120000 5000000 12.5&#10;..." data-tip="view.market_impact.tip.trades"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.market_impact.btn.load_demo_400_trades" id="mi-demo" class="secondary" type="button">Load demo (400 trades)</button>
-                <button data-i18n="view.market_impact.btn.clear" id="mi-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.market_impact.btn.load_demo_400_trades" data-tip="view.market_impact.tip.demo" data-shortcut="market_impact_demo" id="mi-demo" class="secondary" type="button">Load demo (400 trades)</button>
+                <button data-i18n="view.market_impact.btn.clear" data-tip="view.market_impact.tip.clear" id="mi-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -37,8 +38,8 @@ export async function renderMarketImpact(mount, _appState) {
             <h2 data-i18n="view.market_impact.h2.threshold">Threshold</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.market_impact.label.spike_bps">Spike threshold (bps)</span>
-                    <input id="mi-spike" type="number" step="any" min="0" value="${state.spikeBps}"></label>
-                <button data-i18n="view.market_impact.btn.analyze" id="mi-run" class="primary" type="button">Analyze</button>
+                    <input id="mi-spike" type="number" step="any" min="0" value="${state.spikeBps}" data-tip="view.market_impact.tip.spike"></label>
+                <button data-i18n="view.market_impact.btn.analyze" data-tip="view.market_impact.tip.analyze" data-shortcut="market_impact_analyze" id="mi-run" class="primary" type="button">Analyze</button>
             </div>
             <p data-i18n="view.market_impact.hint.the_first_adv_bucket_whose_avg_slippage_clears_the" class="muted">The first ADV bucket whose avg slippage clears the threshold
                 is flagged as your "impact cliff" — size below it.</p>
@@ -96,17 +97,22 @@ async function compute(tok) {
         if (trades.length < 5) return;
     }
     const err = validateInputs(trades, state.spikeBps);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microMarketImpact(buildBody(trades, state.spikeBps));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, trades);
     renderBars(res, state.spikeBps);
     renderDistribution(trades);
+    showToast(t('view.market_impact.toast.done', {
+        trades: trades.length,
+        cliff: res.impact_threshold_label || t('common.none'),
+    }), { level: res.impact_threshold_label ? 'warning' : 'success' });
 }
 
 function renderSummary(report, trades) {

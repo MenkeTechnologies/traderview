@@ -785,6 +785,16 @@ function bindTabs() {
         const el = document.getElementById('iv-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in market-impact scope → click Analyze.
+    window.addEventListener('tv:market-impact-analyze', () => {
+        const el = document.getElementById('mi-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in market-impact scope → click Load demo.
+    window.addEventListener('tv:market-impact-demo', () => {
+        const el = document.getElementById('mi-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
