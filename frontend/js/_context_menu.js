@@ -337,6 +337,9 @@ export const SYMBOL_AWARE_SCOPES = [
     'screener', 'scanners', 'live-scanner', 'catalysts', 'halts',
     'heatmap', 'vol', 'tape', 'iv-rank', 'sector-rotation',
     'correlation',
+    // symbol-keyed analysis / planning / event views
+    'crypto', 'earnings-cal', 'backtest', 'fill-quality',
+    'futures-roll', 'dividend-calendar', 'alerts',
 ];
 
 // Native edit actions surfaced when the right-click target is a text-
