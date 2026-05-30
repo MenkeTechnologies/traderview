@@ -506,6 +506,8 @@ pub enum Preset {
     InefficientChurnHotVol,         // rel_volume >= 2 AND change_pct.abs() < rel_volume * 0.3 — hot vol but tiny change relative to vol (inefficient churn; failed trend or absorption)
     GapUpAtMidRange,                // gap_pct > 1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap up while in middle of 52w range on vol (breakout from consolidation)
     GapDownAtMidRange,              // gap_pct < -1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap down while in middle of 52w range on vol (breakdown from consolidation)
+    BattleBarHotVol,                // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume >= 2.5 — wide intraday range + flat change + hot vol (battle bar with extreme participation)
+    IlliquidSwingDryVol,            // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — wide intraday range + flat change + dry vol (illiquid swing both directions)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2561,6 +2563,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 50.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BattleBarHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 2.5
+        }
+        Preset::IlliquidSwingDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -2957,6 +2969,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::InefficientChurnHotVol => "Inefficient Churn (|change| < 0.3×rel_vol, Absorption)",
         Preset::GapUpAtMidRange => "Gap Up at 52w Mid-Range (Consolidation Breakout)",
         Preset::GapDownAtMidRange => "Gap Down at 52w Mid-Range (Consolidation Breakdown)",
+        Preset::BattleBarHotVol => "Battle Bar (Wide Range, Flat Change, Hot Vol)",
+        Preset::IlliquidSwingDryVol => "Illiquid Swing (Wide Range, Flat Change, Dry Vol)",
     }
 }
 

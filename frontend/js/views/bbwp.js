@@ -17,6 +17,7 @@ import {
 
 let state = { ...makeDemoInput('rising-vol') };
 let chart = null;
+let regimeChart = null;
 
 export async function renderBbwp(mount, _appState) {
     const tok = currentViewToken();
@@ -58,6 +59,11 @@ export async function renderBbwp(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bbwp.h2.chart">BBWP series</h2>
             <div id="bp-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bbwp.h2.regime_chart">Close + squeeze (&lt;10) &amp; expansion (&gt;90) markers</h2>
+            <div id="bp-regime-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -110,6 +116,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.bb_period, state.n_stdev, state.lookback);
     renderSummary(local, true);
     renderChart(local);
+    renderRegimeChart(local);
     renderStats();
     let resp;
     try {
@@ -122,6 +129,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.bbwp.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderRegimeChart(resp);
     renderStats();
 }
 
@@ -176,6 +184,44 @@ function renderChart(bbwp) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderRegimeChart(bbwp) {
+    const el = document.getElementById('bp-regime-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(bbwp) || state.closes.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.closes.map((_, i) => i);
+    const closes = state.closes.map(v => Number.isFinite(v) ? v : null);
+    const squeeze = state.closes.map((c, i) => {
+        const v = bbwp[i];
+        if (v == null || !Number.isFinite(v) || !(v < 10)) return null;
+        return c;
+    });
+    const expansion = state.closes.map((c, i) => {
+        const v = bbwp[i];
+        if (v == null || !Number.isFinite(v) || !(v > 90)) return null;
+        return c;
+    });
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.bbwp.series.close'),
+              stroke: '#888', width: 1.0, points: { show: false } },
+            { label: t('view.bbwp.series.squeeze'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 9, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.bbwp.series.expansion'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 9, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (regimeChart) { try { regimeChart.destroy(); } catch {} regimeChart = null; }
+    regimeChart = new window.uPlot(opts, [xs, closes, squeeze, expansion], el);
 }
 
 function renderStats() {
