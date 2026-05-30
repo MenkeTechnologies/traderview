@@ -288,6 +288,8 @@ pub enum Preset {
     GapDownHeldRed,              // gap_pct < -2 AND change_pct < gap_pct AND rel_volume >= 1 — gap-down extended lower on participation (continuation squeeze)
     GapUpHalfFade,               // gap_pct > 2 AND change_pct between 0 and gap_pct*0.5 — gap-up faded to half its overnight move
     GapDownHalfReclaim,          // gap_pct < -2 AND change_pct between gap_pct*0.5 and 0 — gap-down reclaimed half its overnight move
+    GapAndGoXl,                  // gap_pct > 3 AND change_pct > 5 AND rel_volume >= 2 — extra-large gap-and-go (strong gap + strong day + heavy vol)
+    GapAndCrashXl,               // gap_pct < -3 AND change_pct < -5 AND rel_volume >= 2 — extra-large gap-and-crash (strong gap-down + strong red day + heavy vol)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1157,6 +1159,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.change_pct > hit.gap_pct * 0.5
         }
+        Preset::GapAndGoXl => {
+            hit.gap_pct > 3.0
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapAndCrashXl => {
+            hit.gap_pct < -3.0
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1335,6 +1347,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownHeldRed => "Gap-Down Held + Extended",
         Preset::GapUpHalfFade => "Gap-Up Half Fade",
         Preset::GapDownHalfReclaim => "Gap-Down Half Reclaim",
+        Preset::GapAndGoXl => "Gap And Go XL",
+        Preset::GapAndCrashXl => "Gap And Crash XL",
     }
 }
 

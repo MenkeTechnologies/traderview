@@ -46,6 +46,11 @@ export async function renderStopLossBestOf(mount, _appState) {
             <div id="sl-results"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.stop_loss_best_of.h2.total_chart">Total realized per candidate</h2>
+            <div id="sl-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="sl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('sl-demo').addEventListener('click', () => {
@@ -94,6 +99,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(results || [], trades, candidates);
     renderResults(results || [], candidates);
+    renderTotalChart(results || [], candidates);
 }
 
 function renderSummary(results, trades, candidates) {
@@ -120,6 +126,48 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderTotalChart(results, candidates) {
+    const el = document.getElementById('sl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (results || []).filter(r => Number.isFinite(Number(r.total_realized)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.stop_loss_best_of.empty_chart">${esc(t('view.stop_loss_best_of.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.total_realized) - Number(a.total_realized));
+    const labels = rows.map(r => {
+        const c = candidates.find(x => x.method === r.method && x.value === r.value);
+        return c ? describeCandidate(c) : r.method;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const posY = rows.map(r => Number(r.total_realized) >= 0 ? Number(r.total_realized) : null);
+    const negY = rows.map(r => Number(r.total_realized) <  0 ? Number(r.total_realized) : null);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.stop_loss_best_of.chart.candidate') },
+            { label: t('view.stop_loss_best_of.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.stop_loss_best_of.chart.lose'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.stop_loss_best_of.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, posY, negY, zero], el);
 }
 
 function renderResults(results, candidates) {
