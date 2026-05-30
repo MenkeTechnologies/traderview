@@ -678,6 +678,8 @@ const PRESETS = [
     { id: 'gravestone_doji_hot_vol', label: t('view.scanners.preset.gravestone_doji_hot_vol.label'), desc: t('view.scanners.preset.gravestone_doji_hot_vol.desc') },
     { id: 'hammer_reversal_hot_vol', label: t('view.scanners.preset.hammer_reversal_hot_vol.label'), desc: t('view.scanners.preset.hammer_reversal_hot_vol.desc') },
     { id: 'shooting_star_reversal_hot_vol', label: t('view.scanners.preset.shooting_star_reversal_hot_vol.label'), desc: t('view.scanners.preset.shooting_star_reversal_hot_vol.desc') },
+    { id: 'marubozu_green_hot_vol', label: t('view.scanners.preset.marubozu_green_hot_vol.label'), desc: t('view.scanners.preset.marubozu_green_hot_vol.desc') },
+    { id: 'marubozu_red_hot_vol', label: t('view.scanners.preset.marubozu_red_hot_vol.label'), desc: t('view.scanners.preset.marubozu_red_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

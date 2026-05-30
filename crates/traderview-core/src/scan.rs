@@ -796,6 +796,8 @@ pub enum Preset {
     GravestoneDojiHotVol,                // change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + HOD far above + close near LOD + hot vol (gravestone doji rejection; intraday rip fully sold by close with elevated participation)
     HammerReversalHotVol,                // change_pct > 1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — green close + LOD far below + close near HOD + hot vol (hammer reversal; intraday plunge reclaimed + green finish; reversal long signal with elevated participation)
     ShootingStarReversalHotVol,          // change_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — red close + HOD far above + close near LOD + hot vol (shooting star reversal; intraday rip sold + red finish; reversal short signal with elevated participation)
+    MarubozuGreenHotVol,                 // change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big green + closed at HOD + no overnight gap + hot vol (green marubozu; full intraday trend day with no gap aid; max-conviction long built entirely during regular hours)
+    MarubozuRedHotVol,                   // change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big red + closed at LOD + no overnight gap + hot vol (red marubozu; full intraday trend day with no gap aid; max-conviction short built entirely during regular hours)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4551,6 +4553,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::MarubozuGreenHotVol => {
+            hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MarubozuRedHotVol => {
+            hit.change_pct < -3.0
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5237,6 +5251,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GravestoneDojiHotVol => "Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji Rejection; Intraday Rip Fully Sold by Close with Elevated Participation)",
         Preset::HammerReversalHotVol => "Green Close + LOD Far Below + Close Near HOD + Hot Vol (Hammer Reversal; Intraday Plunge Reclaimed + Green Finish; Reversal Long Signal with Elevated Participation)",
         Preset::ShootingStarReversalHotVol => "Red Close + HOD Far Above + Close Near LOD + Hot Vol (Shooting Star Reversal; Intraday Rip Sold + Red Finish; Reversal Short Signal with Elevated Participation)",
+        Preset::MarubozuGreenHotVol => "Big Green + Close at HOD + No Overnight Gap + Hot Vol (Green Marubozu; Full Intraday Trend Day with No Gap Aid; Max-conviction Long Built Entirely during Regular Hours)",
+        Preset::MarubozuRedHotVol => "Big Red + Close at LOD + No Overnight Gap + Hot Vol (Red Marubozu; Full Intraday Trend Day with No Gap Aid; Max-conviction Short Built Entirely during Regular Hours)",
     }
 }
 

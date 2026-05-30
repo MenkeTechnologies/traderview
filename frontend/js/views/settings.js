@@ -43,6 +43,46 @@ function renderInventoryChart(templates, filters) {
     }, [xs, ys], el);
 }
 
+function renderTemplateAgeChart(templates) {
+    const el = document.getElementById('set-age-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const now = Date.now();
+    const rows = (templates || [])
+        .filter(tpl => tpl && tpl.updated_at)
+        .map(tpl => ({
+            name: tpl.name || '?',
+            age: (now - new Date(tpl.updated_at).getTime()) / (1000 * 60 * 60 * 24),
+        }))
+        .filter(r => Number.isFinite(r.age))
+        .sort((a, b) => b.age - a.age)
+        .slice(0, 30);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.settings.empty_age_chart">${esc(t('view.settings.empty_age_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.name);
+    const ys = rows.map(r => r.age);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.settings.chart.tpl_idx') },
+            { label: t('view.settings.chart.age_days'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + 'd') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
 export async function renderSettings(mount, state) {
     const tok = currentViewToken();
     const [s, filters, templates] = await Promise.all([
@@ -156,9 +196,16 @@ export async function renderSettings(mount, state) {
             <h2 data-i18n="view.settings.h2.inventory_chart">Inventory: templates &amp; filters</h2>
             <div id="set-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.settings.h2.tpl_age_chart">Template age (days since last update)</h2>
+            <div id="set-age-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.settings.hint.tpl_age" class="muted small">Days since each template's last <code>updated_at</code> timestamp. Reveals which templates are actively maintained vs stale. Orthogonal to the inventory-count chart above.</p>
+        </div>
     `;
 
     renderInventoryChart(templates, filters);
+    renderTemplateAgeChart(templates);
 
     // Repaint the color-scheme grid into the Appearance panel.
     if (window.tvHud && typeof window.tvHud.remountSchemeGrid === 'function') {
