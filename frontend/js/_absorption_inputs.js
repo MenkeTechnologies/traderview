@@ -132,17 +132,17 @@ export function parseBarsBlob(blob) {
         if (!s) continue;
         const parts = s.split(/[\s,]+/).filter(Boolean);
         if (parts.length !== 4) {
-            out.errors.push({ line_no: i + 1, message: 'expected 4 tokens: high low close volume' });
+            out.errors.push({ line_no: i + 1, message: t('view.absorption.parse.expected_4_tokens') });
             continue;
         }
         const [h, l, c, v] = parts.map(p => Number(p));
         if (![h, l, c, v].every(Number.isFinite)) {
-            out.errors.push({ line_no: i + 1, message: 'token not finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.absorption.parse.token_not_finite') });
             continue;
         }
         if (h < l)              { out.errors.push({ line_no: i + 1, message: t('common.parse.high_lt_low') });            continue; }
-        if (c > h || c < l)     { out.errors.push({ line_no: i + 1, message: 'close outside [low, high]' }); continue; }
-        if (v <= 0)             { out.errors.push({ line_no: i + 1, message: 'volume must be > 0' });    continue; }
+        if (c > h || c < l)     { out.errors.push({ line_no: i + 1, message: t('view.absorption.parse.close_outside_low_high') }); continue; }
+        if (v <= 0)             { out.errors.push({ line_no: i + 1, message: t('view.absorption.parse.volume_must_be_positive') });    continue; }
         out.bars.push({ high: h, low: l, close: c, volume: v });
     }
     return out;

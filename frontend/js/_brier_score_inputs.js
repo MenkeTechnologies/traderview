@@ -109,17 +109,17 @@ export function parsePairsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (probability outcome)' });
+            out.errors.push({ line_no: i + 1, message: t('view.brier_score.parse.expected_2_tokens') });
             continue;
         }
         const p = Number(toks[0]);
         const y = Number(toks[1]);
         if (!Number.isFinite(p) || p < 0 || p > 1) {
-            out.errors.push({ line_no: i + 1, message: 'probability must be in [0, 1]' });
+            out.errors.push({ line_no: i + 1, message: t('view.brier_score.parse.prob_in_range') });
             continue;
         }
         if (!Number.isInteger(y) || (y !== 0 && y !== 1)) {
-            out.errors.push({ line_no: i + 1, message: 'outcome must be 0 or 1' });
+            out.errors.push({ line_no: i + 1, message: t('view.brier_score.parse.outcome_0_or_1') });
             continue;
         }
         out.probabilities.push(p);

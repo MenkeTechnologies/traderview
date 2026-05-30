@@ -212,7 +212,7 @@ export function parseBlackLittermanBlob(blob) {
     }
     const sections = blob.split(/\n\s*\n/).map(s => s.trim()).filter(s => s.length > 0);
     if (sections.length < 4) {
-        out.errors.push({ line_no: 0, message: 'expected 4+ sections: labels, equilibrium, covariance, tau, [views]' });
+        out.errors.push({ line_no: 0, message: t('view.black_litterman.parse.expected_sections') });
         return out;
     }
     // Section 1: labels.
@@ -220,7 +220,7 @@ export function parseBlackLittermanBlob(blob) {
     // Section 2: equilibrium returns.
     out.equilibrium_returns = sections[1].split('\n')[0].split(/[\s,]+/).filter(t => t.length > 0).map(pctOrDec);
     if (out.equilibrium_returns.some(v => !Number.isFinite(v))) {
-        out.errors.push({ line_no: 0, message: 'equilibrium_returns must all be finite' });
+        out.errors.push({ line_no: 0, message: t('view.black_litterman.parse.equilibrium_finite') });
     }
     // Section 3: covariance matrix.
     for (const line of sections[2].split('\n')) {
@@ -228,7 +228,7 @@ export function parseBlackLittermanBlob(blob) {
         if (!row) continue;
         const cells = row.split(/[\s,]+/).filter(t => t.length > 0).map(Number);
         if (cells.some(v => !Number.isFinite(v))) {
-            out.errors.push({ line_no: 0, message: 'non-finite cell in covariance' });
+            out.errors.push({ line_no: 0, message: t('view.black_litterman.parse.covariance_finite') });
             continue;
         }
         out.covariance.push(cells);
@@ -239,7 +239,7 @@ export function parseBlackLittermanBlob(blob) {
     const tauTok = tauToks[tauToks.length - 1];
     out.tau = pctOrDec(tauTok);
     if (!Number.isFinite(out.tau)) {
-        out.errors.push({ line_no: 0, message: 'tau not finite' });
+        out.errors.push({ line_no: 0, message: t('view.black_litterman.parse.tau_not_finite') });
     }
     // Section 5+: views (optional).
     if (sections.length > 4) {

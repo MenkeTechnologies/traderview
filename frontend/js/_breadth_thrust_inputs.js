@@ -118,17 +118,17 @@ export function parseBreadthBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (advancing declining)' });
+            out.errors.push({ line_no: i + 1, message: t('view.breadth_thrust.parse.expected_2_tokens') });
             continue;
         }
         const adv = Number(toks[0]);
         const dec = Number(toks[1]);
         if (!Number.isInteger(adv) || adv < 0) {
-            out.errors.push({ line_no: i + 1, message: 'advancing must be non-negative integer' });
+            out.errors.push({ line_no: i + 1, message: t('view.breadth_thrust.parse.advancing_non_neg') });
             continue;
         }
         if (!Number.isInteger(dec) || dec < 0) {
-            out.errors.push({ line_no: i + 1, message: 'declining must be non-negative integer' });
+            out.errors.push({ line_no: i + 1, message: t('view.breadth_thrust.parse.declining_non_neg') });
             continue;
         }
         out.breadth.push({ advancing: adv, declining: dec });

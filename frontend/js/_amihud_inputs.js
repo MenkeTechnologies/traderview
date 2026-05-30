@@ -82,17 +82,17 @@ export function parsePairsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (return dollar_volume)' });
+            out.errors.push({ line_no: i + 1, message: t('view.amihud.parse.expected_2_tokens') });
             continue;
         }
         const r = pctOrDec(toks[0]);
         const dv = Number(toks[1]);
         if (!Number.isFinite(r) && raw.toLowerCase() !== 'nan nan') {
-            out.errors.push({ line_no: i + 1, message: 'return must be finite or pct' });
+            out.errors.push({ line_no: i + 1, message: t('view.amihud.parse.return_finite_or_pct') });
             continue;
         }
         if (!Number.isFinite(dv) && raw.toLowerCase() !== 'nan nan') {
-            out.errors.push({ line_no: i + 1, message: 'dollar_volume must be finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.amihud.parse.dollar_volume_finite') });
             continue;
         }
         out.returns.push(r);
