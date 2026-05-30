@@ -704,6 +704,8 @@ pub enum Preset {
     GapAndIntradayBothBigOpposingHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct < 0 AND rel_volume >= 1.5 — significant gap + significant intraday + opposite-direction + hot vol (gap rejected and reversed by significant intraday; full counter-move on volume)
     CountertrendBounceInDowntrend,   // change_pct > 2 AND year_high_pct > 20 AND year_low_pct < 10 AND rel_volume >= 2 — big green day + ≥20% below 52w high + within 10% of 52w low + hot vol (countertrend bounce in long-running downtrend; strong-hands buying near the floor)
     CountertrendFadeInUptrend,       // change_pct < -2 AND year_low_pct > 20 AND year_high_pct < 10 AND rel_volume >= 2 — big red day + ≥20% above 52w low + within 10% of 52w high + hot vol (countertrend fade in long-running uptrend; profit-taking near the ceiling)
+    BigGreenNarrowRangeHotVol,       // change_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big green + tight intraday range + hot vol (gap-and-hold up; no intraday giveback; max-strength continuation candidate; entire move from gap held all day)
+    BigRedNarrowRangeHotVol,         // change_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big red + tight intraday range + hot vol (gap-and-hold down; no intraday recovery; max-weakness continuation candidate; entire move from gap held all day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3897,6 +3899,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct < 10.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGreenNarrowRangeHotVol => {
+            hit.change_pct > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigRedNarrowRangeHotVol => {
+            hit.change_pct < -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4491,6 +4503,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAndIntradayBothBigOpposingHotVol => "Big Gap + Big Opposing Intraday + Hot Vol (Gap Rejected and Reversed by Significant Intraday; Full Counter-move on Volume)",
         Preset::CountertrendBounceInDowntrend => "Big Green + Deep Below 52w High + Near 52w Low + Hot Vol (Countertrend Bounce in Long-running Downtrend; Strong-hands Buying Near the Floor)",
         Preset::CountertrendFadeInUptrend => "Big Red + Deep Above 52w Low + Near 52w High + Hot Vol (Countertrend Fade in Long-running Uptrend; Profit-taking Near the Ceiling)",
+        Preset::BigGreenNarrowRangeHotVol => "Big Green + Tight Intraday Range + Hot Vol (Gap-and-hold Up; No Giveback; Max-strength Continuation Candidate)",
+        Preset::BigRedNarrowRangeHotVol => "Big Red + Tight Intraday Range + Hot Vol (Gap-and-hold Down; No Recovery; Max-weakness Continuation Candidate)",
     }
 }
 

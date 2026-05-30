@@ -586,6 +586,8 @@ const PRESETS = [
     { id: 'gap_and_intraday_both_big_opposing_hot_vol', label: t('view.scanners.preset.gap_and_intraday_both_big_opposing_hot_vol.label'), desc: t('view.scanners.preset.gap_and_intraday_both_big_opposing_hot_vol.desc') },
     { id: 'countertrend_bounce_in_downtrend', label: t('view.scanners.preset.countertrend_bounce_in_downtrend.label'), desc: t('view.scanners.preset.countertrend_bounce_in_downtrend.desc') },
     { id: 'countertrend_fade_in_uptrend', label: t('view.scanners.preset.countertrend_fade_in_uptrend.label'), desc: t('view.scanners.preset.countertrend_fade_in_uptrend.desc') },
+    { id: 'big_green_narrow_range_hot_vol', label: t('view.scanners.preset.big_green_narrow_range_hot_vol.label'), desc: t('view.scanners.preset.big_green_narrow_range_hot_vol.desc') },
+    { id: 'big_red_narrow_range_hot_vol', label: t('view.scanners.preset.big_red_narrow_range_hot_vol.label'), desc: t('view.scanners.preset.big_red_narrow_range_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
