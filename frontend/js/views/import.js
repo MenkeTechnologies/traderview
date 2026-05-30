@@ -46,7 +46,13 @@ export async function renderImportView(mount, state) {
                         <td class="muted">${esc(h.sha256.slice(0, 8))}…</td></tr>
                     `).join('')}</tbody></table>` : '<p data-i18n="view.import.hint.no_imports_yet" class="muted">No imports yet.</p>'}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.import.h2.rows_chart">Rows per import (chronological)</h2>
+            <div id="imp-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderRowsChart(history);
 
     const drop = mount.querySelector('#drop');
     const fileInput = mount.querySelector('#file');
@@ -81,4 +87,36 @@ export async function renderImportView(mount, state) {
         }
         void fmt;
     });
+}
+
+function renderRowsChart(history) {
+    const el = document.getElementById('imp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (history || [])
+        .filter(h => Number.isFinite(Number(h.row_count)))
+        .sort((a, b) => new Date(a.imported_at) - new Date(b.imported_at));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.import.empty_chart">${esc(t('view.import.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(h => new Date(h.imported_at).toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' }));
+    const ys = valid.map(h => Number(h.row_count));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.import.chart.import_idx') },
+            { label: t('view.import.chart.rows'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
