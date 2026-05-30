@@ -15,6 +15,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import {
     parseSymbolList, extractDividend, sortByExDate,
     filterByHorizon, daysBetween,
@@ -53,16 +54,17 @@ export async function renderDividendCalendar(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.dividend_calendar.h2.symbols">Symbols</h2>
             <textarea id="dc-text" rows="5"
-                style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
+                style="width:100%;font-family:monospace;font-size:13px"
+                data-tip="view.dividend_calendar.tip.text">${esc(state.text)}</textarea>
             <div class="inline-form" style="margin-top:10px">
                 <label><span data-i18n="view.dividend_calendar.label.horizon">Horizon</span>
-                    <select id="dc-horizon">
+                    <select id="dc-horizon" data-tip="view.dividend_calendar.tip.horizon">
                         ${HORIZON_OPTIONS.map(o =>
                             `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(horizonLabel(o))}</option>`
                         ).join('')}
                     </select></label>
-                <button data-i18n="view.dividend_calendar.btn.load_from_watchlist" id="dc-load-watchlist" class="secondary" type="button">Load from watchlist</button>
-                <button data-i18n="view.dividend_calendar.btn.fetch_dividends" id="dc-run" class="primary" type="button">Fetch dividends</button>
+                <button data-i18n="view.dividend_calendar.btn.load_from_watchlist" id="dc-load-watchlist" class="secondary" type="button" data-tip="view.dividend_calendar.tip.load_watchlist">Load from watchlist</button>
+                <button data-i18n="view.dividend_calendar.btn.fetch_dividends" id="dc-run" class="primary" type="button" data-tip="view.dividend_calendar.tip.run" data-shortcut="dividend_calendar_run">Fetch dividends</button>
             </div>
             <p data-i18n="view.dividend_calendar.hint.pulls_per_symbol_dividend_data_in_parallel_from_th" class="muted">
                 Pulls per-symbol dividend data in parallel from the research backend.
@@ -115,6 +117,7 @@ async function loadFromWatchlist(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         if (!Array.isArray(wls) || wls.length === 0) {
             showErr(t('view.dividend_calendar.err.no_watchlists_found_add_one_under_the_watchlists_v'));
+            showToast(t('view.dividend_calendar.toast.no_watchlists'), { level: 'warning' });
             return;
         }
         const first = wls[0];
@@ -124,8 +127,10 @@ async function loadFromWatchlist(mount, tok) {
         const text = `# Loaded from watchlist "${first.name}"\n${tokens.join('  ')}\n`;
         document.getElementById('dc-text').value = text;
         state.text = text;
+        showToast(t('view.dividend_calendar.toast.watchlist_loaded', { name: first.name, n: tokens.length }), { level: 'success' });
     } catch (e) {
         showErr(t('view.dividend_calendar.error.watchlist_load', { msg: e.message || e }));
+        showToast(t('view.dividend_calendar.toast.watchlist_error'), { level: 'error' });
     }
 }
 
@@ -134,6 +139,7 @@ async function runFetch(mount, tok) {
     const symbols = parseSymbolList(state.text);
     if (symbols.length === 0) {
         showErr(t('view.dividend_calendar.err.no_symbols_parsed_from_input'));
+        showToast(t('view.dividend_calendar.toast.no_symbols'), { level: 'warning' });
         return;
     }
     document.getElementById('dc-table').innerHTML = `<div class="boot">${esc(t('view.dividend_calendar.hint.fetching'))}</div>`;
@@ -154,6 +160,7 @@ async function runFetch(mount, tok) {
     renderSummary(symbols.length, valid);
     renderTable(valid);
     renderYieldChart(valid);
+    showToast(t('view.dividend_calendar.toast.fetched', { payers: valid.length, total: symbols.length }), { level: 'success' });
 }
 
 // Bounded-concurrency mapper. Returns results in original-input order.
