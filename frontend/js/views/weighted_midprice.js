@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseQuotesBlob, quotesToBlob, validateInputs, buildBody,
@@ -30,17 +31,17 @@ export async function renderWeightedMidprice(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.wmp.btn.compute" id="wmp-run" class="primary"
-                        data-tip="view.wmp.tip.compute" type="button">Compute microprice</button>
+                        data-tip="view.wmp.tip.compute" data-shortcut="weighted_midprice_run" type="button">Compute microprice</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.wmp.btn.demo_balanced"  id="wmp-demo-bal"   class="secondary" type="button">Demo: balanced book</button>
-                <button data-i18n="view.wmp.btn.demo_heavy_bid" id="wmp-demo-hb"    class="secondary" type="button">Demo: heavy bid (microp → ask)</button>
-                <button data-i18n="view.wmp.btn.demo_heavy_ask" id="wmp-demo-ha"    class="secondary" type="button">Demo: heavy ask (microp → bid)</button>
-                <button data-i18n="view.wmp.btn.demo_extreme_b" id="wmp-demo-eb"    class="secondary" type="button">Demo: extreme bid (1e6 vs 1)</button>
-                <button data-i18n="view.wmp.btn.demo_extreme_a" id="wmp-demo-ea"    class="secondary" type="button">Demo: extreme ask (1 vs 1e6)</button>
-                <button data-i18n="view.wmp.btn.demo_evolving"  id="wmp-demo-evo"   class="secondary" type="button">Demo: evolving imbalance</button>
-                <button data-i18n="view.wmp.btn.demo_tight"     id="wmp-demo-tight" class="secondary" type="button">Demo: tight 1¢ spread</button>
-                <button data-i18n="view.wmp.btn.demo_wide"      id="wmp-demo-wide"  class="secondary" type="button">Demo: wide 50¢ spread</button>
+                <button data-i18n="view.wmp.btn.demo_balanced"  id="wmp-demo-bal"   class="secondary" type="button" data-tip="view.wmp.tip.demo_bal">Demo: balanced book</button>
+                <button data-i18n="view.wmp.btn.demo_heavy_bid" id="wmp-demo-hb"    class="secondary" type="button" data-tip="view.wmp.tip.demo_hb">Demo: heavy bid (microp → ask)</button>
+                <button data-i18n="view.wmp.btn.demo_heavy_ask" id="wmp-demo-ha"    class="secondary" type="button" data-tip="view.wmp.tip.demo_ha">Demo: heavy ask (microp → bid)</button>
+                <button data-i18n="view.wmp.btn.demo_extreme_b" id="wmp-demo-eb"    class="secondary" type="button" data-tip="view.wmp.tip.demo_eb">Demo: extreme bid (1e6 vs 1)</button>
+                <button data-i18n="view.wmp.btn.demo_extreme_a" id="wmp-demo-ea"    class="secondary" type="button" data-tip="view.wmp.tip.demo_ea">Demo: extreme ask (1 vs 1e6)</button>
+                <button data-i18n="view.wmp.btn.demo_evolving"  id="wmp-demo-evo"   class="secondary" type="button" data-tip="view.wmp.tip.demo_evo">Demo: evolving imbalance</button>
+                <button data-i18n="view.wmp.btn.demo_tight"     id="wmp-demo-tight" class="secondary" type="button" data-tip="view.wmp.tip.demo_tight">Demo: tight 1¢ spread</button>
+                <button data-i18n="view.wmp.btn.demo_wide"      id="wmp-demo-wide"  class="secondary" type="button" data-tip="view.wmp.tip.demo_wide">Demo: wide 50¢ spread</button>
             </div>
             <p data-i18n="view.wmp.hint.about" class="muted">Stoikov (2017) microprice = (bid·ask_sz + ask·bid_sz) / (bid_sz + ask_sz). Biases toward the side with LESS size — the side likely to trade through soonest. Quote imbalance ∈ [−1, +1].</p>
         </div>
@@ -80,6 +81,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.wmp.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.wmp.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -89,7 +91,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.wmp.toast.invalid'), { level: 'warning' }); return; }
     const local = localSeries(state.quotes);
     renderSummary(local, true);
     renderChart(local);
@@ -99,14 +101,24 @@ async function compute(tok) {
         resp = await api.microWeightedMidprice(buildBody(state));
     } catch (e) {
         showErr(`${t('view.wmp.err.api')}: ${e.message || e}`);
+        showToast(t('view.wmp.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     const series = resp && resp.series ? resp.series : null;
-    if (!series) { showErr(t('view.wmp.err.server_rejected')); return; }
+    if (!series) {
+        showErr(t('view.wmp.err.server_rejected'));
+        showToast(t('view.wmp.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(series, false);
     renderChart(series);
     renderTable(series);
+    const last = series.length > 0 ? series[series.length - 1] : null;
+    const imb = last ? Number(last.quote_imbalance) : 0;
+    const imbStr = Number.isFinite(imb) ? imb.toFixed(2) : '—';
+    const bias = imb > 0 ? 'BID-HEAVY' : imb < 0 ? 'ASK-HEAVY' : 'BALANCED';
+    showToast(t('view.wmp.toast.computed', { n: series.length, imb: imbStr, bias }), { level: 'success' });
 }
 
 function renderSummary(series, pending) {

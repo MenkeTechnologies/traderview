@@ -232,6 +232,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'three_line_break_run',         keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'tlb',               descKey: 'shortcut.three_line_break_run',         actionKey: 'tv:three-line-break-run' },
     { id: 'momentum_crash_run',           keys: { key: 'm', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mcp',               descKey: 'shortcut.momentum_crash_run',           actionKey: 'tv:momentum-crash-run' },
     { id: 'effective_spread_run',         keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'eff-spread',        descKey: 'shortcut.effective_spread_run',         actionKey: 'tv:effective-spread-run' },
+    { id: 'weighted_midprice_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'wmp',               descKey: 'shortcut.weighted_midprice_run',        actionKey: 'tv:weighted-midprice-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
