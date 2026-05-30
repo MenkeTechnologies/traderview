@@ -634,6 +634,11 @@ function bindTabs() {
         const el = document.getElementById('vc-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in portfolio-allocator scope → click Allocate.
+    window.addEventListener('tv:portfolio-allocator-run', () => {
+        const el = document.getElementById('pa-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

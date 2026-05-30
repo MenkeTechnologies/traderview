@@ -18,6 +18,7 @@ import {
     parseMatrix, parseFloatList, parseLabelList,
     normalizeLabels, defaultExcessReturns, validateCovariance,
 } from '../_portfolio_allocator_inputs.js';
+import { showToast } from '../toast.js';
 
 const DEFAULT_COV = `# Symmetric covariance matrix (annualized).
 # Example: 4 assets, increasing variance, mild positive correlations.
@@ -57,18 +58,21 @@ export async function renderPortfolioAllocator(mount, _appState) {
             <div class="op-inputs-grid">
                 <div>
                     <h3 data-i18n="view.portfolio_allocator.h3.covariance_n_n">Covariance (N×N)</h3>
-                    <textarea id="pa-cov" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.covText)}</textarea>
+                    <textarea id="pa-cov" rows="8" style="width:100%;font-family:monospace;font-size:13px"
+                              data-tip="view.portfolio_allocator.tip.cov">${esc(state.covText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.portfolio_allocator.h3.asset_labels_optional">Asset labels (optional)</h3>
-                    <textarea id="pa-labels" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.labelsText)}</textarea>
+                    <textarea id="pa-labels" rows="8" style="width:100%;font-family:monospace;font-size:13px"
+                              data-tip="view.portfolio_allocator.tip.labels">${esc(state.labelsText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.portfolio_allocator.h3.excess_returns_optional">Excess returns (optional)</h3>
-                    <textarea id="pa-excess" rows="8" style="width:100%;font-family:monospace;font-size:13px">${esc(state.excessText)}</textarea>
+                    <textarea id="pa-excess" rows="8" style="width:100%;font-family:monospace;font-size:13px"
+                              data-tip="view.portfolio_allocator.tip.excess">${esc(state.excessText)}</textarea>
                 </div>
             </div>
-            <button data-i18n="view.portfolio_allocator.btn.allocate" id="pa-run" class="primary" type="button" style="margin-top:10px">Allocate</button>
+            <button data-i18n="view.portfolio_allocator.btn.allocate" data-tip="view.portfolio_allocator.tip.allocate" data-shortcut="portfolio_allocator_run" id="pa-run" class="primary" type="button" style="margin-top:10px">Allocate</button>
         </div>
 
         <div id="pa-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -95,7 +99,7 @@ async function allocate(mount, tok) {
     if (cov.errors.length) renderParseErrors(cov.errors);
 
     const validation = validateCovariance(cov.value);
-    if (validation) { showErr(validation); return; }
+    if (validation) { showErr(validation); showToast(validation, { level: 'warning' }); return; }
 
     const n = cov.value.length;
     const labels = normalizeLabels(parseLabelList(state.labelsText), n);
@@ -117,11 +121,13 @@ async function allocate(mount, tok) {
             api.equalRiskContributionPortfolio({ cov: cov.value }),
         ]);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderResults({ labels, mv, mxd, erc });
+    showToast(t('view.portfolio_allocator.toast.done', { n }), { level: 'success' });
 }
 
 function renderResults({ labels, mv, mxd, erc }) {
