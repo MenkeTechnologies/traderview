@@ -812,6 +812,8 @@ const PRESETS = [
     { id: 'gravestone_doji_at_year52_high', label: t('view.scanners.preset.gravestone_doji_at_year52_high.label'), desc: t('view.scanners.preset.gravestone_doji_at_year52_high.desc') },
     { id: 'hammer_at_mid_year_low_range', label: t('view.scanners.preset.hammer_at_mid_year_low_range.label'), desc: t('view.scanners.preset.hammer_at_mid_year_low_range.desc') },
     { id: 'shooting_star_at_mid_year_high_range', label: t('view.scanners.preset.shooting_star_at_mid_year_high_range.label'), desc: t('view.scanners.preset.shooting_star_at_mid_year_high_range.desc') },
+    { id: 'hammer_at_deep_pullback', label: t('view.scanners.preset.hammer_at_deep_pullback.label'), desc: t('view.scanners.preset.hammer_at_deep_pullback.desc') },
+    { id: 'shooting_star_at_deep_bounce', label: t('view.scanners.preset.shooting_star_at_deep_bounce.label'), desc: t('view.scanners.preset.shooting_star_at_deep_bounce.desc') },
 ];
 
 export async function renderScanners(mount) {
