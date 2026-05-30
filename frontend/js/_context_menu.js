@@ -157,6 +157,18 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Journal-entry context items. Right-click on a <div data-context-
+// scope="journal-entry" data-id="X" data-trade-id="Y"> shows:
+// View linked trade (if trade-id set) / Delete entry. The view-trade
+// handler toasts when no trade is linked; delete now goes through
+// tConfirm (replaces the silent inline `delete` button behavior).
+export const JOURNAL_ENTRY_ITEMS = [
+    { id: 'je_view_trade', labelKey: 'ctxmenu.je_view_trade',
+      actionKey: 'tv:je-view-trade', section: 'journal' },
+    { id: 'je_delete',     labelKey: 'ctxmenu.je_delete',
+      actionKey: 'tv:je-delete',     section: 'journal' },
+];
+
 // API-token-row context items. Right-click on a <tr data-context-
 // scope="api-token-row" data-id="X" data-prefix="..." data-revoked=
 // "bool"> shows: Copy prefix / Revoke. Revoke handler no-ops with a

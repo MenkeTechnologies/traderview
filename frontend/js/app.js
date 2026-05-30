@@ -217,7 +217,7 @@ import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installDialog } from './dialog.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
-import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS, TAG_CHIP_ITEMS, API_TOKEN_ROW_ITEMS } from './_context_menu.js';
+import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS, TAG_CHIP_ITEMS, API_TOKEN_ROW_ITEMS, JOURNAL_ENTRY_ITEMS } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
@@ -375,6 +375,7 @@ function bindTabs() {
     registerContextItems('webhook-row', WEBHOOK_ROW_ITEMS);
     registerContextItems('tag-chip', TAG_CHIP_ITEMS);
     registerContextItems('api-token-row', API_TOKEN_ROW_ITEMS);
+    registerContextItems('journal-entry', JOURNAL_ENTRY_ITEMS);
     installTooltips();
     installSymbolHotkey();
     void bootI18n('en').then(() => {

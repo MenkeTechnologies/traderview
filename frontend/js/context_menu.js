@@ -275,6 +275,31 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Journal-entry actions — read data-id (and data-trade-id for nav).
+    window.addEventListener('tv:je-view-trade', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const tradeId = tgt && tgt.dataset && tgt.dataset.tradeId;
+        if (!tradeId) {
+            showToast(t('toast.je_no_trade_linked'), { level: 'warning' });
+            return;
+        }
+        window.location.hash = `trade/${tradeId}`;
+    });
+    window.addEventListener('tv:je-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.je_delete_confirm', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteJournal(id);
+                showToast(t('toast.je_deleted'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // API-token-row actions — read data-id / data-prefix / data-revoked.
     window.addEventListener('tv:tok-row-copy-prefix', (e) => {
         const tgt = e.detail && e.detail.target;

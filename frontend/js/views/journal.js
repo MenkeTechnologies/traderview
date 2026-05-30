@@ -24,7 +24,10 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             </a>
         </h1>
         <div id="entries">${entries.map(e => `
-            <div class="journal-entry">
+            <div class="journal-entry"
+                 data-context-scope="journal-entry"
+                 data-id="${esc(e.id)}"
+                 data-trade-id="${esc(e.trade_id || '')}">
                 <div class="meta">
                     ${fmtDateTime(e.created_at)}
                     ${e.mood !== null ? `· mood ${e.mood}` : ''}
