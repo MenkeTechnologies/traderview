@@ -64,6 +64,11 @@ export async function renderArchLm(mount, _appState) {
             <div id="arl-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.arch_lm.h2.roll_chart">Rolling volatility (window σ)</h2>
+            <div id="arl-roll-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="arl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -106,6 +111,7 @@ async function compute(tok) {
     renderCrit(local);
     renderStats();
     renderSqChart();
+    renderRollChart();
     let resp;
     try {
         resp = await api.anlyArchLm(buildBody(state));
@@ -118,6 +124,8 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderCrit(resp);
     renderStats();
+    renderSqChart();
+    renderRollChart();
 }
 
 function renderSummary(report, pending) {
@@ -197,6 +205,49 @@ function renderStats() {
             </tbody>
         </table>
     `;
+}
+
+function renderRollChart() {
+    const el = document.getElementById('arl-roll-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const series = Array.isArray(state.returns) ? state.returns.filter(Number.isFinite) : [];
+    if (series.length < 4) {
+        el.innerHTML = `<div class="muted" data-i18n="view.arch_lm.empty_roll_chart">${esc(t('view.arch_lm.empty_roll_chart'))}</div>`;
+        return;
+    }
+    const win = Math.min(20, Math.max(3, Math.floor(series.length / 5)));
+    const xs = series.map((_, i) => i + 1);
+    const roll = series.map((_, i) => {
+        if (i + 1 < win) return null;
+        let sum = 0;
+        for (let j = i - win + 1; j <= i; j++) sum += series[j];
+        const m = sum / win;
+        let varSum = 0;
+        for (let j = i - win + 1; j <= i; j++) varSum += (series[j] - m) ** 2;
+        return Math.sqrt(varSum / Math.max(1, win - 1));
+    });
+    const mean = series.reduce((a, b) => a + b, 0) / series.length;
+    let totalVar = 0;
+    for (const v of series) totalVar += (v - mean) ** 2;
+    const globalSd = Math.sqrt(totalVar / Math.max(1, series.length - 1));
+    const globalLine = xs.map(() => globalSd);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.arch_lm.chart.bar_idx') },
+            { label: t('view.arch_lm.chart.roll_sd'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.arch_lm.chart.global_sd'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, roll, globalLine], el);
 }
 
 function renderSqChart() {

@@ -368,6 +368,8 @@ const PRESETS = [
     { id: 'gap_partial_fade', label: t('view.scanners.preset.gap_partial_fade.label'), desc: t('view.scanners.preset.gap_partial_fade.desc') },
     { id: 'year_high_intraday_weak', label: t('view.scanners.preset.year_high_intraday_weak.label'), desc: t('view.scanners.preset.year_high_intraday_weak.desc') },
     { id: 'year_low_intraday_strong', label: t('view.scanners.preset.year_low_intraday_strong.label'), desc: t('view.scanners.preset.year_low_intraday_strong.desc') },
+    { id: 'weak_hands_at_highs', label: t('view.scanners.preset.weak_hands_at_highs.label'), desc: t('view.scanners.preset.weak_hands_at_highs.desc') },
+    { id: 'strong_hands_at_lows', label: t('view.scanners.preset.strong_hands_at_lows.label'), desc: t('view.scanners.preset.strong_hands_at_lows.desc') },
 ];
 
 export async function renderScanners(mount) {
