@@ -982,6 +982,8 @@ pub enum Preset {
     CloseAtLodConfirmedBelowYearLowHotVol,     // year_low_pct >= -3 AND year_low_pct <= -1 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — already 1-3% past 52w low + close pinned to LOD + red close + hot vol (confirmed-breakdown closing weakness: price has cleared the prior trough and continues to close at the day's low; momentum-continuation with breakdown already validated)
     MidpointCloseNearYearHighHotVol,           // year_high_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the high of the year on elevated participation; potential indecision-reversal candidate after extended advance)
     MidpointCloseNearYearLowHotVol,            // year_low_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the low of the year on elevated participation; potential indecision-reversal candidate after extended decline)
+    MidpointCloseConfirmedAboveYearHighHotVol, // year_high_pct >= -3 AND year_high_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w high + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakout zone: price has cleared the prior peak but failed to push higher into the close on elevated participation; potential failed-breakout warning)
+    MidpointCloseConfirmedBelowYearLowHotVol,  // year_low_pct >= -3 AND year_low_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w low + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakdown zone: price has cleared the prior trough but failed to push lower into the close on elevated participation; potential failed-breakdown warning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5912,6 +5914,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::MidpointCloseConfirmedAboveYearHighHotVol => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::MidpointCloseConfirmedBelowYearLowHotVol => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6784,6 +6802,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseAtLodConfirmedBelowYearLowHotVol => "Confirmed-breakdown Zone (1-3 % past 52w Low) + Close Pinned to LOD + Red Close + Hot Vol (Confirmed-breakdown Closing Weakness: Price Has Cleared the Prior Trough and Continues to Close at the Day's Low; Momentum-continuation with Breakdown Already Validated)",
         Preset::MidpointCloseNearYearHighHotVol => "At/near 52w High (<2 %) + Midpoint Close between HOD and LOD + Hot Vol (Stall at the 52w Extreme: Neither Bulls nor Bears Closed in Control at the High of the Year on Elevated Participation; Potential Indecision-reversal Candidate after Extended Advance)",
         Preset::MidpointCloseNearYearLowHotVol => "At/near 52w Low (<2 %) + Midpoint Close between HOD and LOD + Hot Vol (Stall at the 52w Extreme: Neither Bulls nor Bears Closed in Control at the Low of the Year on Elevated Participation; Potential Indecision-reversal Candidate after Extended Decline)",
+        Preset::MidpointCloseConfirmedAboveYearHighHotVol => "Confirmed-breakout Zone (1-3 % past 52w High) + Midpoint Close between HOD and LOD + Hot Vol (Stall in the Confirmed-breakout Zone: Price Has Cleared the Prior Peak but Failed to Push Higher into the Close on Elevated Participation; Potential Failed-breakout Warning)",
+        Preset::MidpointCloseConfirmedBelowYearLowHotVol => "Confirmed-breakdown Zone (1-3 % past 52w Low) + Midpoint Close between HOD and LOD + Hot Vol (Stall in the Confirmed-breakdown Zone: Price Has Cleared the Prior Trough but Failed to Push Lower into the Close on Elevated Participation; Potential Failed-breakdown Warning)",
     }
 }
 
