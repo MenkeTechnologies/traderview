@@ -26,7 +26,7 @@ export async function renderWalkForward(mount) {
 
         <div class="chart-panel">
             <form id="wf-form" class="inline-form">
-                <input name="symbol" placeholder="symbol (SPY)" data-i18n-placeholder="view.walk_forward.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
+                <input name="symbol" data-shortcut="focus_search" placeholder="symbol (SPY)" data-i18n-placeholder="view.walk_forward.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
                 <select name="kind">
                     ${KINDS.map(k => `<option value="${k.id}" data-i18n="view.walk_forward.kind.${k.id}">${esc(k.label)}</option>`).join('')}
                 </select>

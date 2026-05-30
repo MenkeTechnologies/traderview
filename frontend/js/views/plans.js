@@ -13,7 +13,7 @@ export async function renderPlans(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.plans.h2.new_plan">New plan</h2>
             <form id="plan-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
+                <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
                 <select name="asset_class">
                     <option data-i18n="view.plans.opt.stock" value="stock">stock</option>
                     <option data-i18n="view.plans.opt.option" value="option">option</option>

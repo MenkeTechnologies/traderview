@@ -21,7 +21,7 @@ export async function renderNewTrade(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.new_trade.h2.add_execution">Add execution</h2>
             <form id="ex-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
+                <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
                 <select name="side">
                     <option data-i18n="view.new_trade.opt.buy" value="buy">buy</option>
                     <option data-i18n="view.new_trade.opt.sell" value="sell">sell</option>

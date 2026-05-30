@@ -25,7 +25,7 @@ export async function renderAlerts(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.alerts.h2.new_alert">New alert</h2>
             <form id="alert-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
+                <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
                 <select name="trigger">
                     ${TRIGGERS.map(trig => `<option value="${trig}" data-i18n="view.alerts.trigger.${trig}">${esc(trig)}</option>`).join('')}
                 </select>

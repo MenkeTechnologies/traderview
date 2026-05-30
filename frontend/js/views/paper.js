@@ -66,7 +66,7 @@ export async function renderPaper(mount) {
             <div class="chart-panel">
                 <h2 data-i18n="view.paper.h2.order_ticket">Order ticket</h2>
                 <form id="ord-form" class="inline-form">
-                    <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
+                    <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
                     <select name="side">
                         <option data-i18n="view.paper.opt.buy" value="buy">BUY</option>
                         <option data-i18n="view.paper.opt.sell" value="sell">SELL</option>

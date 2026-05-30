@@ -120,7 +120,7 @@ export async function renderRiskGate(mount, state) {
             <h2 data-i18n="view.risk_gate.h2.dry_run_a_proposed_trade">Dry-run a proposed trade</h2>
             <p class="muted small" data-i18n-html="view.risk_gate.dry_run.hint">Same call <code>POST /api/risk-gate/evaluate</code> the New Trade form will make before submitting. Use this to verify your rules.</p>
             <form id="rg-eval" class="inline-form">
-                <label><span data-i18n="view.risk_gate.label.symbol">Symbol</span> <input name="symbol" value="AAPL" required></label>
+                <label><span data-i18n="view.risk_gate.label.symbol">Symbol</span> <input name="symbol" data-shortcut="focus_search" value="AAPL" required></label>
                 <label><span data-i18n="view.risk_gate.label.side">Side</span>
                     <select name="side">
                         <option data-i18n="view.risk_gate.opt.long" value="long">Long</option>

@@ -44,7 +44,7 @@ export async function renderDisclosures(mount) {
                 <h2 data-i18n="view.disclosures.h2.new_watcher">New watcher</h2>
                 <form id="w-form" class="inline-form">
                     <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name" required>
-                    <input name="symbols" placeholder="symbols (CSV, blank = any)" data-i18n-placeholder="view.disclosures.placeholder.symbols">
+                    <input name="symbols" data-shortcut="focus_search" placeholder="symbols (CSV, blank = any)" data-i18n-placeholder="view.disclosures.placeholder.symbols">
                     <input name="filers" placeholder="filer names (CSV, blank = any)" data-i18n-placeholder="view.disclosures.placeholder.filers">
                     <input name="min_amount_usd" type="number" placeholder="min $ amount" data-i18n-placeholder="view.disclosures.placeholder.min_amount">
                     <button data-i18n="view.disclosures.btn.create" class="primary" type="submit">Create</button>
