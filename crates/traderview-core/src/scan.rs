@@ -242,6 +242,8 @@ pub enum Preset {
     AbsorptionDownSqueeze,       // change_pct -2 to -0.5 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy selling absorbed without breakdown
     StallAtMidSqueeze,           // year_high_pct -40 to -60 (mid of 52w range) AND |change_pct| < 0.5 AND rel_volume < 0.8 — deep mid-range stall
     NoCloseDecisionSqueeze,      // hod_dist & lod_dist 0.4-0.6 AND day_pct.abs() < 0.3 — close exactly equidistant from extremes
+    GapInsideRangeSqueeze,       // |gap_pct| < 0.5 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 AND rel_volume < 0.8 — small gap fully contained inside narrow range
+    SubpointMoveSqueeze,         // |change_pct| < 0.05 AND |day_pct| < 0.05 — essentially zero net move
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -879,6 +881,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() <= 0.6
                 && hit.day_pct.abs() < 0.3
         }
+        Preset::GapInsideRangeSqueeze => {
+            hit.gap_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::SubpointMoveSqueeze => {
+            hit.change_pct.abs() < 0.05 && hit.day_pct.abs() < 0.05
+        }
     }
 }
 
@@ -1011,6 +1022,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AbsorptionDownSqueeze => "Absorption-Down Squeeze",
         Preset::StallAtMidSqueeze => "Stall-At-Mid Squeeze",
         Preset::NoCloseDecisionSqueeze => "No-Close-Decision Squeeze",
+        Preset::GapInsideRangeSqueeze => "Gap-Inside-Range Squeeze",
+        Preset::SubpointMoveSqueeze => "Sub-Point Move Squeeze",
     }
 }
 

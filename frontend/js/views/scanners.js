@@ -124,6 +124,8 @@ const PRESETS = [
     { id: 'absorption_down_squeeze',    label: t('view.scanners.preset.absorption_down_squeeze.label'),    desc: t('view.scanners.preset.absorption_down_squeeze.desc') },
     { id: 'stall_at_mid_squeeze',       label: t('view.scanners.preset.stall_at_mid_squeeze.label'),       desc: t('view.scanners.preset.stall_at_mid_squeeze.desc') },
     { id: 'no_close_decision_squeeze',  label: t('view.scanners.preset.no_close_decision_squeeze.label'),  desc: t('view.scanners.preset.no_close_decision_squeeze.desc') },
+    { id: 'gap_inside_range_squeeze',   label: t('view.scanners.preset.gap_inside_range_squeeze.label'),   desc: t('view.scanners.preset.gap_inside_range_squeeze.desc') },
+    { id: 'subpoint_move_squeeze',      label: t('view.scanners.preset.subpoint_move_squeeze.label'),      desc: t('view.scanners.preset.subpoint_move_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
