@@ -218,6 +218,8 @@ pub enum Preset {
     MicroRangeSqueeze,           // hod_dist.abs() < 0.2 AND lod_dist.abs() < 0.2 — close pinned to BOTH HOD and LOD (zero range)
     LowVolGapHoldSqueeze,        // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume < 0.8 — gap holds with quiet volume
     HighVolGapHoldSqueeze,       // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume >= 1.5 — gap holds with high volume (institutional accumulation)
+    UpsideAttemptedSqueeze,      // hod_dist.abs() >= 1 AND lod_dist.abs() < 0.5 AND change_pct < 0 — tried up, settled at lows (bear control)
+    DownsideAttemptedSqueeze,    // lod_dist.abs() >= 1 AND hod_dist.abs() < 0.5 AND change_pct > 0 — tried down, settled at highs (bull control)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -715,6 +717,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < hit.gap_pct.abs() / 4.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::UpsideAttemptedSqueeze => {
+            hit.hod_dist_pct.abs() >= 1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+        }
+        Preset::DownsideAttemptedSqueeze => {
+            hit.lod_dist_pct.abs() >= 1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+        }
     }
 }
 
@@ -823,6 +835,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MicroRangeSqueeze => "Micro-Range Squeeze",
         Preset::LowVolGapHoldSqueeze => "Low-Vol Gap-Hold Squeeze",
         Preset::HighVolGapHoldSqueeze => "High-Vol Gap-Hold Squeeze",
+        Preset::UpsideAttemptedSqueeze => "Upside-Attempted Reject Squeeze",
+        Preset::DownsideAttemptedSqueeze => "Downside-Attempted Reject Squeeze",
     }
 }
 

@@ -100,6 +100,8 @@ const PRESETS = [
     { id: 'micro_range_squeeze',        label: t('view.scanners.preset.micro_range_squeeze.label'),        desc: t('view.scanners.preset.micro_range_squeeze.desc') },
     { id: 'low_vol_gap_hold_squeeze',   label: t('view.scanners.preset.low_vol_gap_hold_squeeze.label'),   desc: t('view.scanners.preset.low_vol_gap_hold_squeeze.desc') },
     { id: 'high_vol_gap_hold_squeeze',  label: t('view.scanners.preset.high_vol_gap_hold_squeeze.label'),  desc: t('view.scanners.preset.high_vol_gap_hold_squeeze.desc') },
+    { id: 'upside_attempted_reject_squeeze', label: t('view.scanners.preset.upside_attempted_reject_squeeze.label'), desc: t('view.scanners.preset.upside_attempted_reject_squeeze.desc') },
+    { id: 'downside_attempted_reject_squeeze', label: t('view.scanners.preset.downside_attempted_reject_squeeze.label'), desc: t('view.scanners.preset.downside_attempted_reject_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

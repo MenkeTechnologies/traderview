@@ -49,6 +49,11 @@ export async function renderHeatmapDowHour(mount, _appState) {
             <div id="hh-grid"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.heatmap_dow_hour.h2.hour_chart">Aggregate P&L per hour (across all days)</h2>
+            <div id="hh-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="hh-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -102,6 +107,46 @@ async function compute(tok) {
     };
     renderSummary(normalized, false);
     renderGrid(normalized);
+    renderHourChart(normalized);
+}
+
+function renderHourChart(report) {
+    const el = document.getElementById('hh-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !report.cells || report.total_trades === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.heatmap_dow_hour.empty_chart">${esc(t('view.heatmap_dow_hour.empty_chart'))}</div>`;
+        return;
+    }
+    const hourly = new Array(24).fill(0);
+    for (const row of report.cells) {
+        for (let h = 0; h < 24; h++) {
+            const c = row[h];
+            if (c && c.trades > 0) hourly[h] += dec(c.net_pnl);
+        }
+    }
+    const labels = Array.from({ length: 24 }, (_, h) => fmtHour(h));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.heatmap_dow_hour.chart.hour') },
+            { label: t('view.heatmap_dow_hour.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.heatmap_dow_hour.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, hourly, zero], el);
 }
 
 function renderSummary(report, pending) {
