@@ -52,6 +52,10 @@ export async function renderGoals(mount, state) {
         </div>
 
         <div id="g-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.goals.h2.progress_chart">P/L progress vs window elapsed per goal</h2>
+            <div id="g-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     // Default date range based on selected period.
     const periodSel = mount.querySelector('#g-form [name=period]');
@@ -127,6 +131,7 @@ async function refresh(mount, tok) {
         el2.innerHTML = progressList.map((p, i) => p ? card(p) : `<div class="chart-panel">
             <p class="boot">${esc(t('view.goals.boot.progress_failed', { name: goals[i].name }))}</p></div>`).join('');
         try { applyUiI18n(el2); } catch (_) {}
+        renderProgressChart(progressList.filter(Boolean));
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!await tConfirm('view.goals.confirm.delete', {}, { level: 'danger' })) return;
@@ -139,6 +144,40 @@ async function refresh(mount, tok) {
         const el2 = mount.querySelector('#g-list');
         if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderProgressChart(progresses) {
+    const el = document.getElementById('g-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const items = (progresses || []).filter(p => Number.isFinite(Number(p.elapsed_pct)));
+    if (items.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.goals.empty_chart">${esc(t('view.goals.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = items.map(p => p.goal.name);
+    const elapsed = items.map(p => Number(p.elapsed_pct));
+    const pnlDone = items.map(p => Number.isFinite(Number(p.pnl_pct_complete)) ? Number(p.pnl_pct_complete) : null);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: false, range: [0, 120] } },
+        series: [
+            { label: t('view.goals.chart.goal_idx') },
+            { label: t('view.goals.chart.elapsed'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.goals.chart.pnl_done'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, elapsed, pnlDone], el);
 }
 
 function paceChip(pace) {

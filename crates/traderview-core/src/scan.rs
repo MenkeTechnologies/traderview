@@ -216,6 +216,8 @@ pub enum Preset {
     BarelyMovingHighSqueeze,     // year_high_pct >= -8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near top quiet drift
     BarelyMovingLowSqueeze,      // year_low_pct <= 8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near bottom quiet drift
     MicroRangeSqueeze,           // hod_dist.abs() < 0.2 AND lod_dist.abs() < 0.2 — close pinned to BOTH HOD and LOD (zero range)
+    LowVolGapHoldSqueeze,        // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume < 0.8 — gap holds with quiet volume
+    HighVolGapHoldSqueeze,       // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume >= 1.5 — gap holds with high volume (institutional accumulation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -703,6 +705,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::MicroRangeSqueeze => {
             hit.hod_dist_pct.abs() < 0.2 && hit.lod_dist_pct.abs() < 0.2
         }
+        Preset::LowVolGapHoldSqueeze => {
+            hit.gap_pct.abs() >= 0.5
+                && hit.change_pct.abs() < hit.gap_pct.abs() / 4.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::HighVolGapHoldSqueeze => {
+            hit.gap_pct.abs() >= 0.5
+                && hit.change_pct.abs() < hit.gap_pct.abs() / 4.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -809,6 +821,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BarelyMovingHighSqueeze => "Barely-Moving High Squeeze",
         Preset::BarelyMovingLowSqueeze => "Barely-Moving Low Squeeze",
         Preset::MicroRangeSqueeze => "Micro-Range Squeeze",
+        Preset::LowVolGapHoldSqueeze => "Low-Vol Gap-Hold Squeeze",
+        Preset::HighVolGapHoldSqueeze => "High-Vol Gap-Hold Squeeze",
     }
 }
 
