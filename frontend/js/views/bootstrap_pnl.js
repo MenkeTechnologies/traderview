@@ -61,6 +61,11 @@ export async function renderBootstrapPnl(mount, _appState) {
             <div id="bp-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.boot_pnl.h2.equity_chart">Cumulative P&amp;L equity curve</h2>
+            <div id="bp-chart" style="width:100%;height:260px"></div>
+        </div>
+
         <div id="bp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -111,6 +116,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderCi(local);
     renderTable();
+    renderEquityChart();
     let resp;
     try {
         resp = await api.anlyBootstrapPnl(buildBody(state));
@@ -123,6 +129,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderCi(resp);
     renderTable();
+    renderEquityChart();
 }
 
 function renderSummary(report, pending) {
@@ -206,6 +213,42 @@ function renderTable() {
             </tbody>
         </table>
     `;
+}
+
+function renderEquityChart() {
+    const el = document.getElementById('bp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const trades = Array.isArray(state.trade_pnls) ? state.trade_pnls.filter(Number.isFinite) : [];
+    if (trades.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.boot_pnl.empty_chart">${esc(t('view.boot_pnl.empty_chart'))}</div>`;
+        return;
+    }
+    let acc = 0;
+    const equity = trades.map(p => { acc += p; return acc; });
+    const xs = equity.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    const final = equity[equity.length - 1];
+    const stroke = final >= 0 ? '#3ad96b' : '#ff3860';
+    const fill = final >= 0 ? 'rgba(58,217,107,0.12)' : 'rgba(255,56,96,0.12)';
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 240,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.boot_pnl.chart.trade_idx') },
+            { label: t('view.boot_pnl.chart.equity'),
+              stroke, width: 1.5, fill,
+              points: { show: false } },
+            { label: t('view.boot_pnl.chart.zero'),
+              stroke: '#aab', width: 0.8, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, equity, zero], el);
 }
 
 function card(label, value, cls = '') {
