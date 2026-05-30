@@ -834,6 +834,8 @@ pub enum Preset {
     MidRangeChurnHotVolFlatDayPct,       // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() < 0.5 AND rel_volume >= 2 — close near mid of intraday range + flat intraday move + hot vol (max-indecision day at scale; full range with no net direction and elevated participation; institutional indecision with rotation)
     Year52HighRetestPullbackDryVol,      // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -1 AND change_pct > -3 AND rel_volume < 0.8 — pulled back 3-10 % from 52w high + small red + dry vol (low-conviction pullback toward retest of recent highs; potential continuation setup with shallow consolidation)
     Year52LowRetestBounceDryVol,         // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 1 AND change_pct < 3 AND rel_volume < 0.8 — bounced 3-10 % off 52w low + small green + dry vol (low-conviction bounce toward retest of recent lows; potential continuation setup with shallow rebound)
+    Year52HighRetestPullbackHotVol,      // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -2 AND change_pct > -5 AND rel_volume >= 2 — pulled back 3-10 % from 52w high + meaningful red + hot vol (high-conviction pullback toward retest of recent highs; institutional profit-taking with elevated participation; potential continuation setup)
+    Year52LowRetestBounceHotVol,         // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 2 AND change_pct < 5 AND rel_volume >= 2 — bounced 3-10 % off 52w low + meaningful green + hot vol (high-conviction bounce toward retest of recent lows; institutional bottom-fishing with elevated participation; potential continuation setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4825,6 +4827,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 3.0
                 && hit.rel_volume < 0.8
         }
+        Preset::Year52HighRetestPullbackHotVol => {
+            hit.year_high_pct >= 3.0
+                && hit.year_high_pct < 10.0
+                && hit.change_pct < -2.0
+                && hit.change_pct > -5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowRetestBounceHotVol => {
+            hit.year_low_pct >= 3.0
+                && hit.year_low_pct < 10.0
+                && hit.change_pct > 2.0
+                && hit.change_pct < 5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5549,6 +5565,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidRangeChurnHotVolFlatDayPct => "Close Near Mid of Intraday Range + Flat Intraday Move + Hot Vol (Max-indecision Day at Scale; Full Range with No Net Direction and Elevated Participation; Institutional Indecision with Rotation)",
         Preset::Year52HighRetestPullbackDryVol => "Pulled Back 3-10 % from 52w High + Small Red + Dry Vol (Low-conviction Pullback toward Retest of Recent Highs; Potential Continuation Setup with Shallow Consolidation)",
         Preset::Year52LowRetestBounceDryVol => "Bounced 3-10 % off 52w Low + Small Green + Dry Vol (Low-conviction Bounce toward Retest of Recent Lows; Potential Continuation Setup with Shallow Rebound)",
+        Preset::Year52HighRetestPullbackHotVol => "Pulled Back 3-10 % from 52w High + Meaningful Red + Hot Vol (High-conviction Pullback toward Retest of Recent Highs; Institutional Profit-taking with Elevated Participation; Potential Continuation Setup)",
+        Preset::Year52LowRetestBounceHotVol => "Bounced 3-10 % off 52w Low + Meaningful Green + Hot Vol (High-conviction Bounce toward Retest of Recent Lows; Institutional Bottom-fishing with Elevated Participation; Potential Continuation Setup)",
     }
 }
 

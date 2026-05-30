@@ -80,6 +80,12 @@ export async function renderVolSmile(mount, _appState) {
             <p data-i18n="view.vol_smile.hint.solid_svi_fitted_curve_markers_raw_paste" class="muted">Solid = SVI fitted curve · Markers = raw paste</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol_smile.h2.residuals_chart">SVI fit residuals per strike (raw IV − fitted IV)</h2>
+            <div id="vs-residuals-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vol_smile.hint.residuals_chart" class="muted small">Per-strike signed residual against the SVI surface. Positive = market richer than fit; negative = cheaper. Orthogonal to the absolute smile chart above — highlights strikes that deviate enough to be worth a closer look. Yellow dashed = zero (perfect fit).</p>
+        </div>
+
         <div id="vs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -122,6 +128,7 @@ async function fit(mount, tok) {
 
     renderSummary(res, state.t_years);
     renderChart(sorted, res);
+    renderResidualsChart(sorted, res);
     showToast(t('view.vol_smile.toast.done', {
         n: sorted.length,
         arb: t(res.arbitrage_ok ? 'view.vol_smile.arb.ok' : 'view.vol_smile.arb.fail'),
@@ -201,6 +208,44 @@ function renderChart(rows, res) {
             values: (_, ticks) => ticks.map(t => `${(t * 100).toFixed(1)}%`),
         }],
     }, [xs, rawY, fitY], el);
+}
+
+function renderResidualsChart(rows, res) {
+    const el = document.getElementById('vs-residuals-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const fitY = Array.isArray(res?.fitted_iv) ? res.fitted_iv : [];
+    const pairs = (rows || []).map((r, i) => ({
+        strike: Number(r.strike),
+        residual: Number.isFinite(Number(r.iv)) && Number.isFinite(Number(fitY[i]))
+            ? Number(r.iv) - Number(fitY[i])
+            : null,
+    })).filter(p => Number.isFinite(p.strike) && p.residual != null);
+    if (pairs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol_smile.empty_residuals_chart">${esc(t('view.vol_smile.empty_residuals_chart'))}</div>`;
+        return;
+    }
+    const xs = pairs.map(p => p.strike);
+    const ys = pairs.map(p => p.residual);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vol_smile.chart.strike') },
+            { label: t('view.vol_smile.chart.residual'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.vol_smile.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60,
+              values: (_, ticks) => ticks.map(v => (v * 100).toFixed(2) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function showParseErrors(errors) {

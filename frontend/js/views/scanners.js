@@ -716,6 +716,8 @@ const PRESETS = [
     { id: 'mid_range_churn_hot_vol_flat_day_pct', label: t('view.scanners.preset.mid_range_churn_hot_vol_flat_day_pct.label'), desc: t('view.scanners.preset.mid_range_churn_hot_vol_flat_day_pct.desc') },
     { id: 'year52_high_retest_pullback_dry_vol', label: t('view.scanners.preset.year52_high_retest_pullback_dry_vol.label'), desc: t('view.scanners.preset.year52_high_retest_pullback_dry_vol.desc') },
     { id: 'year52_low_retest_bounce_dry_vol', label: t('view.scanners.preset.year52_low_retest_bounce_dry_vol.label'), desc: t('view.scanners.preset.year52_low_retest_bounce_dry_vol.desc') },
+    { id: 'year52_high_retest_pullback_hot_vol', label: t('view.scanners.preset.year52_high_retest_pullback_hot_vol.label'), desc: t('view.scanners.preset.year52_high_retest_pullback_hot_vol.desc') },
+    { id: 'year52_low_retest_bounce_hot_vol', label: t('view.scanners.preset.year52_low_retest_bounce_hot_vol.label'), desc: t('view.scanners.preset.year52_low_retest_bounce_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
