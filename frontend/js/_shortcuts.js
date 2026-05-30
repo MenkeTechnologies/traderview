@@ -150,6 +150,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'cohort_tilt_run',              keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'cohort-tilt',       descKey: 'shortcut.cohort_tilt_run',              actionKey: 'tv:cohort-tilt-run' },
     { id: 'setups_by_setup_run',          keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'setups-by-setup',   descKey: 'shortcut.setups_by_setup_run',          actionKey: 'tv:setups-by-setup-run' },
     { id: 'second_order_greeks_run',      keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'second-order-greeks', descKey: 'shortcut.second_order_greeks_run',    actionKey: 'tv:second-order-greeks-run' },
+    { id: 'forward_vol_run',              keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'forward-vol',       descKey: 'shortcut.forward_vol_run',              actionKey: 'tv:forward-vol-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

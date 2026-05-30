@@ -22,6 +22,7 @@ import {
 } from '../_forward_vol_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_TEXT = `# Term structure of implied volatility.
 #   tenor  iv     (whitespace or comma separated)
 #   tenor accepts "1D" "1W" "1M" "3M" "1Y" "2Y" or bare years (e.g. 0.25).
@@ -46,8 +47,9 @@ export async function renderForwardVolCurve(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.forward_vol_curve.h2.term_structure">Term structure</h2>
             <textarea id="fv-text" rows="10"
-                style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
-            <button data-i18n="view.forward_vol_curve.btn.bootstrap" id="fv-run" class="primary" type="button" style="margin-top:10px">Bootstrap</button>
+                style="width:100%;font-family:monospace;font-size:13px"
+                data-tip="view.forward_vol_curve.tip.text">${esc(state.text)}</textarea>
+            <button data-i18n="view.forward_vol_curve.btn.bootstrap" id="fv-run" class="primary" type="button" style="margin-top:10px" data-tip="view.forward_vol_curve.tip.run" data-shortcut="forward_vol_run">Bootstrap</button>
             <p data-i18n="view.forward_vol_curve.hint.variance_additivity_t_accumulates_linearly_across_" class="muted">
                 Variance additivity: σ²·t accumulates linearly across non-overlapping windows.
                 A negative back-end forward variance flags a calendar-arb violation.
@@ -86,13 +88,16 @@ export async function renderForwardVolCurve(mount, _appState) {
 async function bootstrap(mount, tok) {
     hideErrs();
     const parsed = parseTermStructure(state.text);
-    if (parsed.errors.length) renderParseErrors(parsed.errors);
+    if (parsed.errors.length) {
+        renderParseErrors(parsed.errors);
+        showToast(t('view.forward_vol_curve.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
+    }
 
     const sorted = sortRowsByTenor(parsed.value);
     const dupErr = checkUniqueTenors(sorted);
-    if (dupErr) { showErr(dupErr); return; }
+    if (dupErr) { showErr(dupErr); showToast(t('view.forward_vol_curve.toast.dup_tenor'), { level: 'warning' }); return; }
     const valErr = validateTermStructure(sorted);
-    if (valErr) { showErr(valErr); return; }
+    if (valErr) { showErr(valErr); showToast(t('view.forward_vol_curve.toast.invalid'), { level: 'warning' }); return; }
 
     let res;
     try {
@@ -100,6 +105,7 @@ async function bootstrap(mount, tok) {
         if (!res) throw new Error(t('view.forward_vol_curve.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.forward_vol_curve.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -107,6 +113,12 @@ async function bootstrap(mount, tok) {
     renderSummary(sorted, res);
     renderChart(sorted, res);
     renderViolations(sorted, res);
+    const arbN = res.arbitrage_violations?.length || 0;
+    if (arbN > 0) {
+        showToast(t('view.forward_vol_curve.toast.bootstrapped_arb', { n: res.forward_vols.length, arb: arbN }), { level: 'warning' });
+    } else {
+        showToast(t('view.forward_vol_curve.toast.bootstrapped', { n: res.forward_vols.length }), { level: 'success' });
+    }
 }
 
 function renderSummary(rows, res) {
