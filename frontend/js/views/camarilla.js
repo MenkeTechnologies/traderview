@@ -50,6 +50,11 @@ export async function renderCamarilla(mount, _appState) {
             <div id="cm-levels"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cam.h2.levels_chart">Levels ladder vs current price</h2>
+            <div id="cm-chart" style="width:100%;height:300px"></div>
+        </div>
+
         <div id="cm-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -88,6 +93,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.cam.err.degenerate')); return; }
     renderSummary(local, true);
     renderLevels(local);
+    renderLadderChart(local);
     let resp;
     try {
         resp = await api.anlyCamarillaPivots(buildBody(state));
@@ -99,6 +105,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.cam.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderLevels(resp);
+    renderLadderChart(resp);
 }
 
 function renderSummary(levels, pending) {
@@ -174,6 +181,53 @@ function renderLevels(levels) {
             <tbody>${rows}</tbody>
         </table>
     `;
+}
+
+function renderLadderChart(levels) {
+    const el = document.getElementById('cm-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const labels = [
+        t('view.cam.lvl.h4'), t('view.cam.lvl.h3'), t('view.cam.lvl.h2'), t('view.cam.lvl.h1'),
+        t('view.cam.lvl.pivot'),
+        t('view.cam.lvl.l1'), t('view.cam.lvl.l2'), t('view.cam.lvl.l3'), t('view.cam.lvl.l4'),
+    ];
+    const values = [
+        levels.h4, levels.h3, levels.h2, levels.h1,
+        levels.pivot,
+        levels.l1, levels.l2, levels.l3, levels.l4,
+    ].map(v => Number.isFinite(v) ? v : null);
+    if (values.every(v => v == null)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cam.empty_chart">${esc(t('view.cam.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    const cp = state.current_price != null ? state.current_price : state.session?.close;
+    const cpLine = Number.isFinite(cp) ? xs.map(() => cp) : null;
+    const series = [
+        { label: t('view.cam.chart.level_idx') },
+        { label: t('view.cam.chart.price'),
+          stroke: '#00e5ff', width: 0,
+          points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+    ];
+    const data = [xs, values];
+    if (cpLine) {
+        series.push({ label: t('view.cam.chart.current'),
+                      stroke: '#ffd84a', width: 1.5, dash: [4, 4],
+                      points: { show: false } });
+        data.push(cpLine);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 280,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function card(label, value, cls = '') {
