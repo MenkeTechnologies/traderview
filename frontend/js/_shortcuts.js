@@ -59,6 +59,14 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'journal_focus_body', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',   descKey: 'shortcut.journal_focus_body', actionKey: 'tv:journal-focus-body' },
     { id: 'watchlists_focus_add', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'watchlists', descKey: 'shortcut.watchlists_focus_add', actionKey: 'tv:watchlists-focus-add' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
+    // Quick-nav globals (Cmd/Ctrl + Option/Alt + letter): zero-conflict
+    // with browser defaults; jumps directly to high-traffic views.
+    { id: 'nav_trades',      keys: { key: 't', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_trades',      actionKey: 'tv:nav-trades' },
+    { id: 'nav_journal',     keys: { key: 'j', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_journal',     actionKey: 'tv:nav-journal' },
+    { id: 'nav_dashboard',   keys: { key: 'd', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_dashboard',   actionKey: 'tv:nav-dashboard' },
+    { id: 'nav_watchlists',  keys: { key: 'w', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_watchlists',  actionKey: 'tv:nav-watchlists' },
+    { id: 'nav_charts',      keys: { key: 'c', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_charts',      actionKey: 'tv:nav-charts' },
+    { id: 'nav_live',        keys: { key: 'l', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_live',        actionKey: 'tv:nav-live' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.

@@ -226,6 +226,12 @@
   "shortcut.journal_focus_body":        "Focus journal body (in Journal view)",
   "shortcut.watchlists_focus_add":      "Focus add-symbol (in Watchlists view)",
   "shortcut.live_refresh":              "Refresh live positions",
+  "shortcut.nav_trades":                "Jump to Trades",
+  "shortcut.nav_journal":               "Jump to Journal",
+  "shortcut.nav_dashboard":             "Jump to Dashboard",
+  "shortcut.nav_watchlists":            "Jump to Watchlists",
+  "shortcut.nav_charts":                "Jump to Charts",
+  "shortcut.nav_live":                  "Jump to Live Positions",
 
   "view.keyboard_shortcuts.title":      "Keyboard Shortcuts",
   "view.keyboard_shortcuts.placeholder": "Filter shortcuts…",

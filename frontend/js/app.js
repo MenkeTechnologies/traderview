@@ -444,6 +444,13 @@ function bindTabs() {
     window.addEventListener('tv:live-refresh', () => {
         window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
+    // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
+    window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
+    window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
+    window.addEventListener('tv:nav-dashboard',   () => { window.location.hash = 'dashboard'; });
+    window.addEventListener('tv:nav-watchlists',  () => { window.location.hash = 'watchlists'; });
+    window.addEventListener('tv:nav-charts',      () => { window.location.hash = 'charts'; });
+    window.addEventListener('tv:nav-live',        () => { window.location.hash = 'live'; });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {
