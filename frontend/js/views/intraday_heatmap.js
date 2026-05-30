@@ -14,6 +14,7 @@ import {
 } from '../_intraday_heatmap_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { tradesText: '', sessionOnly: true };
 
 export async function renderIntradayHeatmap(mount, _appState) {
@@ -24,12 +25,12 @@ export async function renderIntradayHeatmap(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.intraday_heatmap.h2.trade_ledger">Trade ledger</h2>
             <p class="muted" data-i18n="view.intraday_heatmap.hint.format">One line per trade: timestamp pnl. Timestamps accept ISO 8601 (2024-01-15T14:30:00Z) or bare HH:MM (anchored to a fixed epoch date).</p>
-            <textarea id="ih-trades" rows="8" placeholder="09:35 125.50&#10;09:45 -42.00&#10;..."></textarea>
+            <textarea id="ih-trades" rows="8" placeholder="09:35 125.50&#10;09:45 -42.00&#10;..." data-tip="view.intraday_heatmap.tip.trades"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.intraday_heatmap.btn.load_demo_200_trades" id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>
-                <button data-i18n="view.intraday_heatmap.btn.clear" id="ih-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.intraday_heatmap.btn.build_heatmap" id="ih-run" class="primary" type="button">Build heatmap</button>
-                <label><input id="ih-session" type="checkbox" checked> <span data-i18n="view.intraday_heatmap.label.session">Session hours only (09:00-16:00)</span></label>
+                <button data-i18n="view.intraday_heatmap.btn.load_demo_200_trades" data-tip="view.intraday_heatmap.tip.demo" data-shortcut="intraday_heatmap_demo" id="ih-demo" class="secondary" type="button">Load demo (200 trades)</button>
+                <button data-i18n="view.intraday_heatmap.btn.clear" data-tip="view.intraday_heatmap.tip.clear" id="ih-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.intraday_heatmap.btn.build_heatmap" data-tip="view.intraday_heatmap.tip.build" data-shortcut="intraday_heatmap_build" id="ih-run" class="primary" type="button">Build heatmap</button>
+                <label data-tip="view.intraday_heatmap.tip.session"><input id="ih-session" type="checkbox" checked> <span data-i18n="view.intraday_heatmap.label.session">Session hours only (09:00-16:00)</span></label>
             </div>
         </div>
 
@@ -84,17 +85,22 @@ async function compute(tok) {
         if (trades.length === 0) return;
     }
     const err = validateInputs(trades);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microIntradayHeatmap(buildBody(trades));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, trades);
     renderGrid(res);
     renderHourChart(res);
+    showToast(t('view.intraday_heatmap.toast.done', {
+        trades: trades.length,
+        buckets: (res.buckets || []).filter(b => Number(b.trade_count) > 0).length,
+    }), { level: 'success' });
 }
 
 function renderHourChart(report) {
