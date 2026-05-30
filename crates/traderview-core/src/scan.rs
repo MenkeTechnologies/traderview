@@ -1118,6 +1118,8 @@ pub enum Preset {
     BigDownDayDoubledVolConfirmedBelowYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — big intraday down (<-3%) + doubled vol (>=2) + confirmed-breakdown zone (1-3% past 52w low) (institutional intraday distribution in the validated-breakdown zone: regular session prints a sustained sell-driven move on doubled participation while price extends past the prior trough; gap-agnostic conviction filter for breakdown follow-through)
     BigUpDayDoubledVolDeepBelowYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 20 — big intraday up (>3%) + doubled vol (>=2) + far below 52w high (>=20%) (institutional intraday accumulation deep in pullback territory: regular session prints a sustained buy-driven move on doubled participation while price remains well below the prior peak; conviction-recovery-rally signal worth a turnaround-screen)
     BigDownDayDoubledVolDeepAboveYearLowHotVol,// day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 20 — big intraday down (<-3%) + doubled vol (>=2) + far above 52w low (>=20%) (institutional intraday distribution deep in advance territory: regular session prints a sustained sell-driven move on doubled participation while price remains well above the prior trough; conviction-rejection signal worth a top-fade-screen)
+    BigUpDayDoubledVolMidYearHighHotVol,       // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — big intraday up (>3%) + doubled vol (>=2) + mid-range from high (5-20%) (institutional intraday accumulation in mid-cycle pullback zone: regular session prints a sustained buy-driven move on doubled participation in the proper consolidation range below the prior peak; conviction-mid-cycle-rally signal worth a swing-screen)
+    BigDownDayDoubledVolMidYearLowHotVol,      // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — big intraday down (<-3%) + doubled vol (>=2) + mid-range from low (5-20%) (institutional intraday distribution in mid-cycle recovery zone: regular session prints a sustained sell-driven move on doubled participation in the proper consolidation range above the prior trough; conviction-mid-cycle-rejection signal worth a swing-screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6890,6 +6892,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::BigDownDayDoubledVolDeepAboveYearLowHotVol => {
             hit.day_pct < -3.0 && hit.rel_volume >= 2.0 && hit.year_low_pct >= 20.0
         }
+        Preset::BigUpDayDoubledVolMidYearHighHotVol => {
+            hit.day_pct > 3.0
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::BigDownDayDoubledVolMidYearLowHotVol => {
+            hit.day_pct < -3.0
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -7898,6 +7912,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigDownDayDoubledVolConfirmedBelowYearLowHotVol => "Big Intraday Down (<-3 %) + Doubled Vol (>=2) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional Intraday Distribution in the Validated-breakdown Zone: Regular Session Prints a Sustained Sell-driven Move on Doubled Participation While Price Extends past the Prior Trough; Gap-agnostic Conviction Filter for Breakdown Follow-through)",
         Preset::BigUpDayDoubledVolDeepBelowYearHighHotVol => "Big Intraday Up (>3 %) + Doubled Vol (>=2) + Far below 52w High (>=20 %) (Institutional Intraday Accumulation Deep in Pullback Territory: Regular Session Prints a Sustained Buy-driven Move on Doubled Participation While Price Remains Well below the Prior Peak; Conviction-recovery-rally Signal Worth a Turnaround-screen)",
         Preset::BigDownDayDoubledVolDeepAboveYearLowHotVol => "Big Intraday Down (<-3 %) + Doubled Vol (>=2) + Far above 52w Low (>=20 %) (Institutional Intraday Distribution Deep in Advance Territory: Regular Session Prints a Sustained Sell-driven Move on Doubled Participation While Price Remains Well above the Prior Trough; Conviction-rejection Signal Worth a Top-fade-screen)",
+        Preset::BigUpDayDoubledVolMidYearHighHotVol => "Big Intraday Up (>3 %) + Doubled Vol (>=2) + Mid-range from High (5-20 %) (Institutional Intraday Accumulation in Mid-cycle Pullback Zone: Regular Session Prints a Sustained Buy-driven Move on Doubled Participation in the Proper Consolidation Range below the Prior Peak; Conviction-mid-cycle-rally Signal Worth a Swing-screen)",
+        Preset::BigDownDayDoubledVolMidYearLowHotVol => "Big Intraday Down (<-3 %) + Doubled Vol (>=2) + Mid-range from Low (5-20 %) (Institutional Intraday Distribution in Mid-cycle Recovery Zone: Regular Session Prints a Sustained Sell-driven Move on Doubled Participation in the Proper Consolidation Range above the Prior Trough; Conviction-mid-cycle-rejection Signal Worth a Swing-screen)",
     }
 }
 
