@@ -516,6 +516,11 @@ function bindTabs() {
         const el = document.getElementById('dc-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in signal-decomposition scope → click Decompose.
+    window.addEventListener('tv:signal-decomposition-run', () => {
+        const el = document.getElementById('sd-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

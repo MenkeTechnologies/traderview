@@ -15,6 +15,7 @@ import {
 } from '../_signal_decomposition_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_TEXT = `# Demo: 128 points of trend + 2 cycles + noise. Pick a method below.
 ${synthDemoSeries(128).join('\n')}
 `;
@@ -52,12 +53,12 @@ export async function renderSignalDecomposition(mount, _appState) {
             <h2 data-i18n="view.signal_decomposition.h2.method">Method</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.signal_decomposition.label.method">Decomposition</span>
-                    <select id="sd-method">
+                    <select id="sd-method" data-tip="view.signal_decomposition.tip.method">
                         ${Object.entries(METHODS).map(([id, m]) =>
                             `<option value="${id}" ${id === state.methodId ? 'selected' : ''}>${esc(m.label)}</option>`
                         ).join('')}
                     </select></label>
-                <button data-i18n="view.signal_decomposition.btn.decompose" id="sd-run" class="primary" type="button">Decompose</button>
+                <button data-i18n="view.signal_decomposition.btn.decompose" id="sd-run" class="primary" type="button" data-tip="view.signal_decomposition.tip.run" data-shortcut="signal_decomposition_run">Decompose</button>
             </div>
             <div id="sd-opts" class="inline-form" style="margin-top:8px"></div>
         </div>
@@ -65,7 +66,8 @@ export async function renderSignalDecomposition(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.signal_decomposition.h2.series">Series</h2>
             <textarea id="sd-text" rows="8"
-                style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
+                style="width:100%;font-family:monospace;font-size:13px"
+                data-tip="view.signal_decomposition.tip.text">${esc(state.text)}</textarea>
         </div>
 
         <div id="sd-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -128,10 +130,13 @@ function wireForm(mount, tok) {
 async function decompose(mount, tok) {
     hideErrs();
     const parsed = parseSeries(state.text);
-    if (parsed.errors.length) renderParseErrors(parsed.errors);
+    if (parsed.errors.length) {
+        renderParseErrors(parsed.errors);
+        showToast(t('view.signal_decomposition.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
+    }
 
     const err = validateInputs(state.methodId, parsed.value, state.opts);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.signal_decomposition.toast.invalid'), { level: 'warning' }); return; }
 
     const method = METHODS[state.methodId];
     let res;
@@ -140,6 +145,7 @@ async function decompose(mount, tok) {
         if (!res) throw new Error(t('view.signal_decomposition.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.signal_decomposition.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -147,11 +153,13 @@ async function decompose(mount, tok) {
     const components = method.toComponents(res);
     if (!components || components.length === 0) {
         showErr(t('view.signal_decomposition.err.backend_returned_no_components'));
+        showToast(t('view.signal_decomposition.toast.no_components'), { level: 'warning' });
         return;
     }
 
     renderSummary(parsed.value, components, res);
     renderComponents(parsed.value, components);
+    showToast(t('view.signal_decomposition.toast.decomposed', { method: method.label, n: components.length }), { level: 'success' });
 }
 
 function renderSummary(series, components, res) {
