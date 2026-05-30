@@ -52,6 +52,11 @@ export async function renderMarginCall(mount, _appState) {
             <p data-i18n="view.margin_call.hint.bar" class="muted">Cyan = current equity (LMV − debt). Yellow = trigger LMV. Bar shows current LMV; mark is where the call hits.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.margin_call.h2.dropdown_chart">Equity %-of-LMV across a market drop sweep</h2>
+            <div id="mc-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="mc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -102,6 +107,48 @@ async function compute(tok) {
     };
     renderSummary(normalized, false);
     renderBar(normalized);
+    renderDropChart();
+}
+
+function renderDropChart() {
+    const el = document.getElementById('mc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const lmv = Number(state.long_market_value);
+    const debt = Number(state.margin_debt);
+    const maint = Number(state.maintenance_pct);
+    if (!Number.isFinite(lmv) || lmv <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.margin_call.empty_chart">${esc(t('view.margin_call.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const equityPct = [];
+    const maintLine = [];
+    const zero = [];
+    for (let drop = 0; drop >= -50; drop -= 1) {
+        const newLmv = lmv * (1 + drop / 100);
+        const newEquity = newLmv - debt;
+        const pct = newLmv > 0 ? newEquity / newLmv : 0;
+        xs.push(drop);
+        equityPct.push(pct * 100);
+        maintLine.push(maint * 100);
+        zero.push(0);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.margin_call.chart.drop_pct') },
+            { label: t('view.margin_call.chart.equity_pct'),
+              stroke: '#00e5ff', width: 1.6, points: { show: false } },
+            { label: t('view.margin_call.chart.maint_pct'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.margin_call.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, equityPct, maintLine, zero], el);
 }
 
 function renderSummary(report, pending) {
