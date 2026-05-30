@@ -29,7 +29,7 @@ export async function renderCorrMatrix(mount) {
                     </select>
                 </label>
                 <label id="cm-syms-label" style="display:none;"><span data-i18n="view.corr_matrix.label.symbols">Symbols</span>
-                    <input name="symbols" placeholder="SPY,QQQ,IWM,DIA,GLD,TLT,USO,XLE"
+                    <input name="symbols" data-shortcut="focus_search" placeholder="SPY,QQQ,IWM,DIA,GLD,TLT,USO,XLE"
                            data-i18n-placeholder="view.corr_matrix.placeholder.symbols" style="min-width:280px;">
                 </label>
                 <label><span data-i18n="view.corr_matrix.label.days">Days</span>

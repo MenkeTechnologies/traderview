@@ -80,7 +80,7 @@ export async function renderCompare(mount) {
             Best metric in each row is highlighted in green; worst in red.</p>
 
         <form id="cmp-form" class="inline-form">
-            <input name="symbols" placeholder="AAPL,MSFT,GOOGL,AMZN" value="AAPL,MSFT,GOOGL,AMZN"
+            <input name="symbols" data-shortcut="focus_search" placeholder="AAPL,MSFT,GOOGL,AMZN" value="AAPL,MSFT,GOOGL,AMZN"
                    required style="min-width:340px;text-transform:uppercase">
             <button data-i18n="view.compare.btn.compare" class="primary" type="submit">Compare</button>
         </form>

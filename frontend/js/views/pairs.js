@@ -17,7 +17,7 @@ export async function renderPairs(mount) {
         <div class="chart-panel">
             <form id="cf" class="inline-form">
                 <label><span data-i18n="view.pairs.label.symbols">Symbols</span>
-                    <input name="symbols" placeholder="AAPL,MSFT,GOOGL,NVDA,META,AMZN,TSLA"
+                    <input name="symbols" data-shortcut="focus_search" placeholder="AAPL,MSFT,GOOGL,NVDA,META,AMZN,TSLA"
                            data-i18n-placeholder="view.pairs.placeholder.symbols" required style="min-width:340px;text-transform:uppercase">
                 </label>
                 <label><span data-i18n="view.pairs.label.or_watchlist">or watchlist</span>

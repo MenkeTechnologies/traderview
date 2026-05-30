@@ -37,7 +37,7 @@ export async function renderLiveScanner(mount, _state) {
                            data-i18n-placeholder="view.live_scanner.placeholder.api_key" style="min-width:280px">
                 </label>
                 <label><span data-i18n="view.live_scanner.label.symbols">Universe (comma-sep symbols)</span>
-                    <input name="symbols" type="text" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..."
+                    <input name="symbols" type="text" data-shortcut="focus_search" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..."
                            data-i18n-placeholder="view.live_scanner.placeholder.symbols" style="min-width:320px">
                 </label>
                 <button data-i18n="view.live_scanner.btn.connect" class="primary" type="submit">Connect</button>

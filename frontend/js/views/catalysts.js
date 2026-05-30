@@ -34,7 +34,7 @@ export async function renderCatalysts(mount, _state) {
         <div class="chart-panel">
             <h2 data-i18n="view.catalysts.h2.voice_alert_filter_comma_sep_symbols">Voice alert filter (comma-sep symbols)</h2>
             <form id="cat-watch" class="inline-form">
-                <input name="symbols" type="text" placeholder="GME,AMC,SPCE,..." style="min-width:360px">
+                <input name="symbols" type="text" data-shortcut="focus_search" placeholder="GME,AMC,SPCE,..." style="min-width:360px">
                 <button data-i18n="view.catalysts.btn.set" class="primary" type="submit">Set</button>
                 <span class="muted small" id="cat-watch-state"></span>
             </form>
