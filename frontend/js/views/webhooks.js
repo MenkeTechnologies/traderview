@@ -56,6 +56,11 @@ export async function renderWebhooks(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.webhooks.h2.kind_chart">Webhook count by provider</h2>
+            <div id="wh-kind-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.provider_payloads">Provider payloads</h2>
             <details>
                 <summary data-i18n="view.webhooks.summary.discord">Discord embed</summary>
@@ -72,6 +77,7 @@ export async function renderWebhooks(mount) {
         </div>
     `;
     renderFiresChart(rows);
+    renderKindChart(rows);
     mount.querySelector('#wf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -103,6 +109,41 @@ export async function renderWebhooks(mount) {
             if (!viewIsCurrent(tok)) return;
             renderWebhooks(mount);
         }));
+}
+
+function renderKindChart(rows) {
+    const el = document.getElementById('wh-kind-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map();
+    for (const w of rows || []) {
+        const k = w.kind || 'unknown';
+        counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    if (entries.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.webhooks.empty_kind_chart">${esc(t('view.webhooks.empty_kind_chart'))}</div>`;
+        return;
+    }
+    const labels = entries.map(e => e[0]);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = entries.map(e => e[1]);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.webhooks.chart.kind') },
+            { label: t('view.webhooks.chart.kind_count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderFiresChart(rows) {

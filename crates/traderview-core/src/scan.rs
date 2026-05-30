@@ -370,6 +370,8 @@ pub enum Preset {
     FailedBreakdownLowReclaim,   // year_low_pct < 1 AND lod_dist.abs() > 1 AND change_pct > 1 AND rel_volume >= 1.5 — touched/exceeded 52w low then closed +1% higher on heavy vol (failed breakdown)
     HotVolHotGap,                // gap_pct.abs() > 2 AND rel_volume >= 2 — heavy-volume gap day (institutional positioning before open)
     DryVolDryGap,                // gap_pct.abs() < 0.5 AND rel_volume < 0.5 — flat gap on dry volume (no overnight positioning; no day participation)
+    OuterEdgePushUp,             // year_high_pct > -10 AND change_pct > 5 AND rel_volume >= 2 — strong push into the top decile on heavy vol (continuation buyers)
+    OuterEdgePushDown,           // year_low_pct < 10 AND change_pct < -5 AND rel_volume >= 2 — strong push into the bottom decile on heavy vol (continuation sellers)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1642,6 +1644,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::DryVolDryGap => {
             hit.gap_pct.abs() < 0.5 && hit.rel_volume < 0.5
         }
+        Preset::OuterEdgePushUp => {
+            hit.year_high_pct > -10.0
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::OuterEdgePushDown => {
+            hit.year_low_pct < 10.0
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1902,6 +1914,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FailedBreakdownLowReclaim => "Failed 52w-Low Breakdown",
         Preset::HotVolHotGap => "Hot Vol + Hot Gap",
         Preset::DryVolDryGap => "Dry Vol + Dry Gap",
+        Preset::OuterEdgePushUp => "Outer-Edge Push Up",
+        Preset::OuterEdgePushDown => "Outer-Edge Push Down",
     }
 }
 
