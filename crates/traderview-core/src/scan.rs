@@ -1052,6 +1052,8 @@ pub enum Preset {
     DryVolBigDownMidYearLowHotVol,             // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 — big down move (<-3%) + dry vol (<0.5) + mid-range from low (5-20%) (low-quality pullback in mid-cycle recovery: large losses in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to bounce)
     DryVolBigUpJustOffYearHighHotVol,          // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 — big up move (>3%) + dry vol (<0.5) + just off 52w high (2-5%) (thin-tape recovery from shallow pullback: large gains in the immediate post-extreme zone on below-average participation; quick post-tag bounce without institutional buy-in, fragile re-test candidate)
     DryVolBigDownJustOffYearLowHotVol,         // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 — big down move (<-3%) + dry vol (<0.5) + just off 52w low (2-5%) (thin-tape rejection from shallow bounce: large losses in the immediate post-extreme zone on below-average participation; quick post-tag dip without institutional sell-in, fragile re-test candidate)
+    UltraDeepBelowYearHighHotVol,              // year_high_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w high (>=50%) + hot vol (deep-value / distressed-equity territory: price has lost half or more of its 52w peak with elevated participation; either turnaround candidate or bankruptcy-watch depending on fundamentals)
+    UltraDeepAboveYearLowHotVol,               // year_low_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w low (>=50%) + hot vol (multibagger territory: price has doubled or more off its 52w trough with elevated participation; momentum-leader candidate riding a multi-month trend with sustained institutional interest)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6470,6 +6472,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::UltraDeepBelowYearHighHotVol => {
+            hit.year_high_pct >= 50.0 && hit.rel_volume >= 1.5
+        }
+        Preset::UltraDeepAboveYearLowHotVol => {
+            hit.year_low_pct >= 50.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7412,6 +7420,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigDownMidYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Mid-range from Low (5-20 %) (Low-quality Pullback in Mid-cycle Recovery: Large Losses in the Proper Consolidation Zone on Below-average Participation; Sympathy Move Lacking Institutional Follow-through, Prone to Bounce)",
         Preset::DryVolBigUpJustOffYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Just off 52w High (2-5 %) (Thin-tape Recovery from Shallow Pullback: Large Gains in the Immediate Post-extreme Zone on Below-average Participation; Quick Post-tag Bounce without Institutional Buy-in, Fragile Re-test Candidate)",
         Preset::DryVolBigDownJustOffYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Just off 52w Low (2-5 %) (Thin-tape Rejection from Shallow Bounce: Large Losses in the Immediate Post-extreme Zone on Below-average Participation; Quick Post-tag Dip without Institutional Sell-in, Fragile Re-test Candidate)",
+        Preset::UltraDeepBelowYearHighHotVol => "Ultra-deep Distance from 52w High (>=50 %) + Hot Vol (Deep-value / Distressed-equity Territory: Price Has Lost Half or More of Its 52w Peak with Elevated Participation; Either Turnaround Candidate or Bankruptcy-watch Depending on Fundamentals)",
+        Preset::UltraDeepAboveYearLowHotVol => "Ultra-deep Distance from 52w Low (>=50 %) + Hot Vol (Multibagger Territory: Price Has Doubled or More off Its 52w Trough with Elevated Participation; Momentum-leader Candidate Riding a Multi-month Trend with Sustained Institutional Interest)",
     }
 }
 
