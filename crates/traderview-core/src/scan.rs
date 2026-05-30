@@ -738,6 +738,8 @@ pub enum Preset {
     MaxRangeFakeOutDryVol,               // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 1 — big gap + big change + wide intraday range + DRY vol (max-range fake-out; wide intraday with thin tape suggests stop-runs without true conviction; algorithmic noise on illiquid name)
     BigGreenIntradayOnlyHotVol,          // change_pct > 3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big green close + flat open + wide intraday + hot vol (intraday-only rally; no overnight bias; pure intraday discovery to new highs; all of the day's gain from intraday participation)
     BigRedIntradayOnlyHotVol,            // change_pct < -3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big red close + flat open + wide intraday + hot vol (intraday-only decline; no overnight bias; pure intraday discovery to new lows; all of the day's loss from intraday participation)
+    BrokeAbove52wHighHotVol,             // year_high_pct > 0 AND change_pct > 1 AND rel_volume >= 2 — closed ABOVE prior 52w high + green + hot vol (true new-high breakout with volume confirmation; institutional initiation at a multi-year extreme)
+    BrokeBelow52wLowHotVol,              // year_low_pct < 0 AND change_pct < -1 AND rel_volume >= 2 — closed BELOW prior 52w low + red + hot vol (true new-low breakdown with volume confirmation; institutional capitulation at a multi-year extreme)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4157,6 +4159,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BrokeAbove52wHighHotVol => {
+            hit.year_high_pct > 0.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BrokeBelow52wLowHotVol => {
+            hit.year_low_pct < 0.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4785,6 +4797,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MaxRangeFakeOutDryVol => "Big Gap + Big Change + Wide Range + Dry Vol (Max-range Fake-out; Stop-runs Without True Conviction; Algorithmic Noise on Illiquid Name)",
         Preset::BigGreenIntradayOnlyHotVol => "Big Green + Flat Open + Wide Intraday + Hot Vol (Intraday-only Rally; All Gain from Intraday Discovery; No Overnight Bias)",
         Preset::BigRedIntradayOnlyHotVol => "Big Red + Flat Open + Wide Intraday + Hot Vol (Intraday-only Decline; All Loss from Intraday Discovery; No Overnight Bias)",
+        Preset::BrokeAbove52wHighHotVol => "Closed Above Prior 52w High + Green + Hot Vol (True New-high Breakout with Volume Confirmation)",
+        Preset::BrokeBelow52wLowHotVol => "Closed Below Prior 52w Low + Red + Hot Vol (True New-low Breakdown with Volume Confirmation)",
     }
 }
 

@@ -157,8 +157,50 @@ function renderChain(chain, r, mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.options_chain.h2.iv_smile">IV smile (calls vs puts by strike)</h2>
             <div id="oc-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.options_chain.h2.oi_chart">OI distribution by strike (calls vs puts)</h2>
+            <div id="oc-oi-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.options_chain.hint.oi_chart" class="muted small">Open interest per strike. Reveals magnet strikes for pin risk and institutional positioning independent of IV. Large peaks = where the smart money's already parked.</p>
         </div>`;
     renderIvSmile(strikes, callBy, putBy, chain.spot);
+    renderOiChart(strikes, callBy, putBy);
+}
+
+function renderOiChart(strikes, callBy, putBy) {
+    const el = document.getElementById('oc-oi-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const xs = strikes.filter(k => Number.isFinite(k));
+    if (xs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.options_chain.empty_oi_chart">${esc(tr('view.options_chain.empty_oi_chart'))}</div>`;
+        return;
+    }
+    const callOi = xs.map(k => {
+        const c = callBy.get(k);
+        const v = c && Number.isFinite(Number(c.open_interest)) ? Number(c.open_interest) : null;
+        return v;
+    });
+    const putOi = xs.map(k => {
+        const p = putBy.get(k);
+        const v = p && Number.isFinite(Number(p.open_interest)) ? Number(p.open_interest) : null;
+        return v;
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: tr('view.options_chain.chart.strike') },
+            { label: tr('view.options_chain.chart.call_oi'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: tr('view.options_chain.chart.put_oi'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, callOi, putOi], el);
 }
 
 function renderIvSmile(strikes, callBy, putBy, spot) {
