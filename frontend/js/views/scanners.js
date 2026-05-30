@@ -498,6 +498,8 @@ const PRESETS = [
     { id: 'congruent_gap_and_intraday_same_dir', label: t('view.scanners.preset.congruent_gap_and_intraday_same_dir.label'), desc: t('view.scanners.preset.congruent_gap_and_intraday_same_dir.desc') },
     { id: 'deep_mid_range_quiet_siesta', label: t('view.scanners.preset.deep_mid_range_quiet_siesta.label'), desc: t('view.scanners.preset.deep_mid_range_quiet_siesta.desc') },
     { id: 'deep_mid_range_active_outlier', label: t('view.scanners.preset.deep_mid_range_active_outlier.label'), desc: t('view.scanners.preset.deep_mid_range_active_outlier.desc') },
+    { id: 'intraday_direction_exceeds_change', label: t('view.scanners.preset.intraday_direction_exceeds_change.label'), desc: t('view.scanners.preset.intraday_direction_exceeds_change.desc') },
+    { id: 'change_exceeds_intraday_magnitude', label: t('view.scanners.preset.change_exceeds_intraday_magnitude.label'), desc: t('view.scanners.preset.change_exceeds_intraday_magnitude.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -616,6 +616,8 @@ pub enum Preset {
     CongruentGapAndIntradaySameDir, // gap_pct * day_pct > 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday same-direction, both meaningful (gap extended by intraday; same-direction follow-through)
     DeepMidRangeQuietSiesta,        // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — deeply mid-52w-range + very quiet vol + flat change (structurally calm asset siesta; total disinterest)
     DeepMidRangeActiveOutlier,      // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume >= 2 AND change_pct.abs() > 1 — deeply mid-52w-range + hot vol + meaningful change (mid-range action; out-of-character active day; potential trend genesis)
+    IntradayDirectionExceedsChange, // day_pct * change_pct > 0 AND day_pct.abs() > change_pct.abs() * 1.5 AND change_pct.abs() > 0.5 — same direction but intraday dominates by 1.5x (intraday late-session continuation outweighs gap)
+    ChangeExceedsIntradayMagnitude, // change_pct.abs() > day_pct.abs() * 2 AND change_pct.abs() > 1 — change dominated by overnight component (gap-dominant move; intraday small relative to total)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3309,6 +3311,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::IntradayDirectionExceedsChange => {
+            hit.day_pct * hit.change_pct > 0.0
+                && hit.day_pct.abs() > hit.change_pct.abs() * 1.5
+                && hit.change_pct.abs() > 0.5
+        }
+        Preset::ChangeExceedsIntradayMagnitude => {
+            hit.change_pct.abs() > hit.day_pct.abs() * 2.0
+                && hit.change_pct.abs() > 1.0
+        }
     }
 }
 
@@ -3815,6 +3826,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CongruentGapAndIntradaySameDir => "Gap and Intraday Same Direction (Gap Extended by Intraday)",
         Preset::DeepMidRangeQuietSiesta => "Deep Mid-52w-Range + Quiet Vol + Flat Change (Calm Asset Siesta)",
         Preset::DeepMidRangeActiveOutlier => "Deep Mid-52w-Range + Hot Vol + Meaningful Change (Trend Genesis Day)",
+        Preset::IntradayDirectionExceedsChange => "Intraday Dominates Same-direction Change by 1.5× (Late-session Continuation)",
+        Preset::ChangeExceedsIntradayMagnitude => "Change Dominates Intraday by 2× (Gap-dominant Move; Small Intraday)",
     }
 }
 
