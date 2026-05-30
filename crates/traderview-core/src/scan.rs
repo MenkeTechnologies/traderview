@@ -694,6 +694,8 @@ pub enum Preset {
     GapWiderThanIntradayRangeHotVol, // gap_pct.abs() > hod_dist_pct.abs() + lod_dist_pct.abs() AND gap_pct.abs() > 1.5 AND rel_volume >= 2 — gap > entire intraday range + significant gap + hot vol (gap dominates the day's move; intraday only consolidated in a narrow band near the new level on volume)
     BigGreenLowVolWeakClose,         // change_pct > 3 AND rel_volume < 1 AND hod_dist_pct.abs() > 1 — meaningful gain + dry vol + close not near HOD (fake-breakout warning; up-move on weak participation closing off the highs; reversion candidate)
     BigRedLowVolWeakClose,           // change_pct < -3 AND rel_volume < 1 AND lod_dist_pct.abs() > 1 — meaningful drop + dry vol + close not near LOD (fake-breakdown warning; down-move on weak participation closing off the lows; reversion candidate)
+    GappingNearYearLowExtremeVol,    // year_low_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w low + significant gap + extreme vol (4×+) (high-intensity event at the floor; earnings/news catalyst at multi-year lows; max-event-driven reversal or capitulation candidate)
+    GappingNearYearHighExtremeVol,   // year_high_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w high + significant gap + extreme vol (4×+) (high-intensity event at the highs; catalyst at the top; max-event-driven blow-off or distribution candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3827,6 +3829,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 1.0
                 && hit.lod_dist_pct.abs() > 1.0
         }
+        Preset::GappingNearYearLowExtremeVol => {
+            hit.year_low_pct < 5.0
+                && hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 4.0
+        }
+        Preset::GappingNearYearHighExtremeVol => {
+            hit.year_high_pct < 5.0
+                && hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 4.0
+        }
     }
 }
 
@@ -4411,6 +4423,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapWiderThanIntradayRangeHotVol => "Gap > Intraday Range + Hot Vol (Gap Dominates; Intraday Only Consolidated Near the New Level on Volume)",
         Preset::BigGreenLowVolWeakClose => "Big Green + Dry Vol + Close Off Highs (Fake-Breakout Warning; Up-Move on Weak Participation; Reversion Candidate)",
         Preset::BigRedLowVolWeakClose => "Big Red + Dry Vol + Close Off Lows (Fake-Breakdown Warning; Down-Move on Weak Participation; Reversion Candidate)",
+        Preset::GappingNearYearLowExtremeVol => "Near 52w Low + Significant Gap + Extreme Vol (4×+) (Event-driven Catalyst at the Floor; Reversal or Capitulation Candidate)",
+        Preset::GappingNearYearHighExtremeVol => "Near 52w High + Significant Gap + Extreme Vol (4×+) (Event-driven Catalyst at the Top; Blow-off or Distribution Candidate)",
     }
 }
 

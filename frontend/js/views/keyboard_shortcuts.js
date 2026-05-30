@@ -49,6 +49,12 @@ export async function renderKeyboardShortcuts(mount, _appState) {
             <h2 data-i18n="view.keyboard_shortcuts.section.scope_chart">Shortcuts per scope</h2>
             <div id="ks-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.keyboard_shortcuts.section.ctxmenu_scope_chart">Context-menu items per scope</h2>
+            <div id="ks-ctx-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.keyboard_shortcuts.hint.ctxmenu_scope" class="muted small">Count of right-click menu items per scope. Compare against shortcuts-per-scope above to see which scopes lean heavily on context menus vs. keyboard.</p>
+        </div>
     `;
     const input = document.getElementById('ks-filter');
     if (input) {
@@ -71,6 +77,43 @@ function paint(isMac) {
     paintCtxMenu();
     paintScopedCtx();
     paintScopeChart();
+    paintCtxScopeChart();
+}
+
+function paintCtxScopeChart() {
+    const el = document.getElementById('ks-ctx-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map();
+    counts.set('global', GLOBAL_ITEMS.filter(it => it && it.kind !== 'separator').length);
+    for (const [scope, items] of ALL_SCOPED_ITEMS) {
+        const n = items.filter(it => it && it.kind !== 'separator').length;
+        counts.set(scope, (counts.get(scope) || 0) + n);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    if (!pairs.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.keyboard_shortcuts.empty_ctxmenu_chart">${esc(t('view.keyboard_shortcuts.empty_ctxmenu_chart'))}</div>`;
+        return;
+    }
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.keyboard_shortcuts.chart.scope_idx') },
+            { label: t('view.keyboard_shortcuts.chart.ctxmenu_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function paintScopeChart() {
