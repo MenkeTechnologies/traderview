@@ -1108,6 +1108,8 @@ pub enum Preset {
     SmallGapBigDayDownMidYearLowHotVol,        // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + mid-range from low (5-20%) + hot vol (pure intraday rejection in mid-cycle recovery zone: open is essentially flat to prior close then regular session prints a sustained sell-driven move in the proper consolidation range; pure-intraday push back toward the prior trough without overnight catalyst contribution)
     SmallGapBigDayUpJustOffYearHighHotVol,     // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + just off 52w high (2-5%) + hot vol (pure intraday recovery from shallow pullback: open is essentially flat to prior close then regular session prints a sustained buy-driven move back toward the recent peak; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
     SmallGapBigDayDownJustOffYearLowHotVol,    // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + just off 52w low (2-5%) + hot vol (pure intraday rejection from shallow bounce: open is essentially flat to prior close then regular session prints a sustained sell-driven move back toward the recent trough; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
+    BigUpDayCloseAtHodHotVol,                  // day_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday up (>3%) + close pinned to HOD + hot vol (strongest possible intraday rally pattern: regular session prints a sustained buy-driven move from open to close with no end-of-day fade; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bull pressure)
+    BigDownDayCloseAtLodHotVol,                // day_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday down (<-3%) + close pinned to LOD + hot vol (strongest possible intraday selloff pattern: regular session prints a sustained sell-driven move from open to close with no end-of-day bounce; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bear pressure)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6844,6 +6846,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 5.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigUpDayCloseAtHodHotVol => {
+            hit.day_pct > 3.0 && hit.hod_dist_pct.abs() < 0.5 && hit.rel_volume >= 1.5
+        }
+        Preset::BigDownDayCloseAtLodHotVol => {
+            hit.day_pct < -3.0 && hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7842,6 +7850,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallGapBigDayDownMidYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Mid-range from Low (5-20 %) + Hot Vol (Pure Intraday Rejection in Mid-cycle Recovery Zone: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move in the Proper Consolidation Range; Pure-intraday Push back toward the Prior Trough without Overnight Catalyst Contribution)",
         Preset::SmallGapBigDayUpJustOffYearHighHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + Just off 52w High (2-5 %) + Hot Vol (Pure Intraday Recovery from Shallow Pullback: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Buy-driven Move back toward the Recent Peak; Pure-intraday Post-tag Re-test Attempt without Overnight Catalyst Contribution)",
         Preset::SmallGapBigDayDownJustOffYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Just off 52w Low (2-5 %) + Hot Vol (Pure Intraday Rejection from Shallow Bounce: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move back toward the Recent Trough; Pure-intraday Post-tag Re-test Attempt without Overnight Catalyst Contribution)",
+        Preset::BigUpDayCloseAtHodHotVol => "Big Intraday Up (>3 %) + Close Pinned to HOD + Hot Vol (Strongest Possible Intraday Rally Pattern: Regular Session Prints a Sustained Buy-driven Move from Open to Close with No End-of-day Fade; Isolates Intraday-only Conviction without Conflating Gap Contribution; Ideal for Measuring Real-session Bull Pressure)",
+        Preset::BigDownDayCloseAtLodHotVol => "Big Intraday Down (<-3 %) + Close Pinned to LOD + Hot Vol (Strongest Possible Intraday Selloff Pattern: Regular Session Prints a Sustained Sell-driven Move from Open to Close with No End-of-day Bounce; Isolates Intraday-only Conviction without Conflating Gap Contribution; Ideal for Measuring Real-session Bear Pressure)",
     }
 }
 
