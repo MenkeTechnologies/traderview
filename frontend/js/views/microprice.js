@@ -65,6 +65,12 @@ export async function renderMicroprice(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.microprice.h2.bias_chart">Bias bps vs imbalance</h2>
+            <div id="mp-bias-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.microprice.hint.bias" class="muted small">(microprice − midpoint) / midpoint × 10000 across the imbalance sweep. Positive = lean toward ask (next print likely upticks). Yellow dashed = zero. Orange marker = current snapshot.</p>
+        </div>
+
         <div id="mp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -99,6 +105,7 @@ async function compute(mount, tok) {
     const biasBps = midpoint > 0 ? ((mp - midpoint) / midpoint) * 10000 : 0;
     renderSummary({ microprice: mp, midpoint, imbalance, bias_bps: biasBps }, /*fromBackend=*/false);
     renderChart({ microprice: mp });
+    renderBiasChart({ microprice: mp, bias_bps: biasBps });
 
     let res;
     try {
@@ -114,6 +121,7 @@ async function compute(mount, tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res[0], /*fromBackend=*/true);
     renderChart(res[0]);
+    renderBiasChart(res[0]);
     showToast(t('view.microprice.toast.done', {
         mp: fmtPrice(res[0].microprice),
         bps: fmtBps(res[0].bias_bps),
@@ -185,6 +193,43 @@ function renderChart(bar) {
             { stroke: '#aab' },
         ],
     }, [xs, ys, markerYs], el);
+}
+
+function renderBiasChart(bar) {
+    const el = document.getElementById('mp-bias-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const { xs, ys } = imbalanceSweep(state.quote.bid, state.quote.ask, 101);
+    if (xs.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.microprice.empty_bias_chart">${esc(t('view.microprice.empty_bias_chart'))}</div>`;
+        return;
+    }
+    const midpoint = 0.5 * (state.quote.bid + state.quote.ask);
+    const bias = midpoint > 0 ? ys.map(p => (p - midpoint) / midpoint * 10000) : ys.map(() => 0);
+    const zero = xs.map(() => 0);
+    const total = state.quote.bid_size + state.quote.ask_size;
+    const currentImb = total > 0 ? state.quote.bid_size / total : 0.5;
+    const markerYs = xs.map(x => Math.abs(x - currentImb) < (1 / (xs.length - 1) / 2) ? Number(bar.bias_bps) || 0 : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.imbalance') },
+            { label: t('view.microprice.chart.bias'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.microprice.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.microprice.chart.current_marker'),
+              stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 12, fill: '#ff9f1a', stroke: '#ff9f1a' } },
+        ],
+        axes: [
+            { stroke: '#aab',
+              values: (_, ticks) => ticks.map(tv => `${(tv * 100).toFixed(0)}%`) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, bias, zero, markerYs], el);
 }
 
 function showErr(msg) {

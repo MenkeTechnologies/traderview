@@ -718,6 +718,8 @@ pub enum Preset {
     OpeningRangeHoldCloseAtLODRed,   // gap_pct.abs() < 0.3 AND lod_dist_pct.abs() < 0.2 AND day_pct < -1 AND rel_volume between 1 and 2 — flat open + close exactly at LOD + red intraday >1% + normal-elevated vol (clean intraday discovery to lows with no overnight bias; pure organic trend day down)
     WindowDressingMarkUp,            // change_pct.abs() < 0.3 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny green + close near HOD + hot vol (mark-the-close behavior; possible window-dressing at quarter/month end; deliberate end-of-day mark-up on volume)
     WindowDressingMarkDown,          // change_pct.abs() < 0.3 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny red + close near LOD + hot vol (mark-down behavior; possible reverse window-dressing; deliberate end-of-day mark-down on volume)
+    Year52HighSustainedStrengthHotVol, // year_high_pct < 5 AND day_pct > 1 AND change_pct > 1 AND rel_volume >= 2 — near 52w high + green intraday + green close + hot vol (sustained strength confirmation at the highs; intraday-and-daily both confirm; high-conviction breakout candidate)
+    Year52LowSustainedWeaknessHotVol,  // year_low_pct < 5 AND day_pct < -1 AND change_pct < -1 AND rel_volume >= 2 — near 52w low + red intraday + red close + hot vol (sustained weakness confirmation at the lows; intraday-and-daily both confirm; high-conviction breakdown candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3995,6 +3997,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.3
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighSustainedStrengthHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.day_pct > 1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowSustainedWeaknessHotVol => {
+            hit.year_low_pct < 5.0
+                && hit.day_pct < -1.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4603,6 +4617,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OpeningRangeHoldCloseAtLODRed => "Flat Open + Close at LOD + Red Intraday + Normal-elevated Vol (Clean Intraday Discovery to Lows; Pure Organic Trend Day Down)",
         Preset::WindowDressingMarkUp => "Tiny Green + Close Near HOD + Hot Vol (Mark-the-close Behavior; Possible Quarter/month-end Window-dressing)",
         Preset::WindowDressingMarkDown => "Tiny Red + Close Near LOD + Hot Vol (Mark-down Behavior; Possible Reverse Window-dressing)",
+        Preset::Year52HighSustainedStrengthHotVol => "Near 52w High + Green Intraday + Green Close + Hot Vol (Sustained Strength Confirmation; Intraday-and-Daily Both Up; Breakout Candidate)",
+        Preset::Year52LowSustainedWeaknessHotVol => "Near 52w Low + Red Intraday + Red Close + Hot Vol (Sustained Weakness Confirmation; Intraday-and-Daily Both Down; Breakdown Candidate)",
     }
 }
 

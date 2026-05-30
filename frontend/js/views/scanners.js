@@ -600,6 +600,8 @@ const PRESETS = [
     { id: 'opening_range_hold_close_at_lod_red', label: t('view.scanners.preset.opening_range_hold_close_at_lod_red.label'), desc: t('view.scanners.preset.opening_range_hold_close_at_lod_red.desc') },
     { id: 'window_dressing_mark_up', label: t('view.scanners.preset.window_dressing_mark_up.label'), desc: t('view.scanners.preset.window_dressing_mark_up.desc') },
     { id: 'window_dressing_mark_down', label: t('view.scanners.preset.window_dressing_mark_down.label'), desc: t('view.scanners.preset.window_dressing_mark_down.desc') },
+    { id: 'year52_high_sustained_strength_hot_vol', label: t('view.scanners.preset.year52_high_sustained_strength_hot_vol.label'), desc: t('view.scanners.preset.year52_high_sustained_strength_hot_vol.desc') },
+    { id: 'year52_low_sustained_weakness_hot_vol', label: t('view.scanners.preset.year52_low_sustained_weakness_hot_vol.label'), desc: t('view.scanners.preset.year52_low_sustained_weakness_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
