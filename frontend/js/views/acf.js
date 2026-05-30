@@ -55,6 +55,11 @@ export async function renderAcf(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.acf.h2.sig_chart">|ρ̂(k)| / band ratio (significance strength)</h2>
+            <div id="ac-sig-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.acf.h2.table">Per-lag ACF</h2>
             <div id="ac-table"></div>
         </div>
@@ -99,6 +104,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.acf.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart(local);
+    renderSigChart(local);
     renderTable(local);
     let resp;
     try {
@@ -111,6 +117,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.acf.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderSigChart(resp);
     renderTable(resp);
 }
 
@@ -172,6 +179,44 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, bandPos, bandNeg], el);
+}
+
+function renderSigChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ac-sig-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report.autocorrelations || report.autocorrelations.length === 0 || !(report.confidence_band > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.acf.empty_sig_chart">${esc(t('view.acf.empty_sig_chart'))}</div>`;
+        return;
+    }
+    const band = report.confidence_band;
+    const xs = report.lags.slice(1);
+    const ratios = report.autocorrelations.slice(1).map(v => Math.abs(v) / band);
+    const sigSet = new Set(report.significant_lags);
+    const sigMark = xs.map((k, i) => sigSet.has(k) ? ratios[i] : null);
+    const insigMark = xs.map((k, i) => sigSet.has(k) ? null : ratios[i]);
+    const one = xs.map(() => 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.lag') },
+            { label: t('view.acf.chart.ratio_sig'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 9, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.acf.chart.ratio_in'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 7, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.acf.chart.band_edge'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, sigMark, insigMark, one], el);
 }
 
 function renderTable(report) {

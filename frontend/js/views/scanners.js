@@ -340,6 +340,8 @@ const PRESETS = [
     { id: 'illiquid_big_gap_flat_day', label: t('view.scanners.preset.illiquid_big_gap_flat_day.label'), desc: t('view.scanners.preset.illiquid_big_gap_flat_day.desc') },
     { id: 'organic_up_day_close_at_hod', label: t('view.scanners.preset.organic_up_day_close_at_hod.label'), desc: t('view.scanners.preset.organic_up_day_close_at_hod.desc') },
     { id: 'organic_down_day_close_at_lod', label: t('view.scanners.preset.organic_down_day_close_at_lod.label'), desc: t('view.scanners.preset.organic_down_day_close_at_lod.desc') },
+    { id: 'strong_day_dry_vol_up', label: t('view.scanners.preset.strong_day_dry_vol_up.label'), desc: t('view.scanners.preset.strong_day_dry_vol_up.desc') },
+    { id: 'strong_day_dry_vol_down', label: t('view.scanners.preset.strong_day_dry_vol_down.label'), desc: t('view.scanners.preset.strong_day_dry_vol_down.desc') },
 ];
 
 export async function renderScanners(mount) {
