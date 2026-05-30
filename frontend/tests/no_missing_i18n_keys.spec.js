@@ -32,20 +32,20 @@ function walk(dir) {
 
 function collectKeys(text) {
     // Match data-i18n / data-i18n-html / data-i18n-title / data-i18n-placeholder
-    //       / data-i18n-aria-label
-    // when the value is a LITERAL string starting with a lowercase letter
-    // (catalog keys never start with uppercase or include ${...}).
-    // Skip lines that start with `//` (JS line comment) or `*` (JSDoc) to
-    // avoid false positives from docstrings that mention `data-i18n="key"`
-    // as documentation rather than as real markup.
-    const re = /data-i18n(?:-html|-title|-placeholder|-aria-label)?\s*=\s*["']([a-z][a-z0-9_.]+)["']/g;
+    //       / data-i18n-aria-label / data-tip (tooltip upgrader looks these
+    // up via t() at runtime, same contract).
+    // Skip JS comments (// or *).
+    const reI18n = /data-i18n(?:-html|-title|-placeholder|-aria-label)?\s*=\s*["']([a-z][a-z0-9_.]+)["']/g;
+    const reTip  = /data-tip\s*=\s*["']([a-z][a-z0-9_.]+)["']/g;
     const keys = new Set();
     for (const line of text.split('\n')) {
         const trimmed = line.trimStart();
         if (trimmed.startsWith('//') || trimmed.startsWith('*')) continue;
         let m;
-        while ((m = re.exec(line)) !== null) keys.add(m[1]);
-        re.lastIndex = 0;
+        while ((m = reI18n.exec(line)) !== null) keys.add(m[1]);
+        reI18n.lastIndex = 0;
+        while ((m = reTip.exec(line)) !== null) keys.add(m[1]);
+        reTip.lastIndex = 0;
     }
     return keys;
 }
