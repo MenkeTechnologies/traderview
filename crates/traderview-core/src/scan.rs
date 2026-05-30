@@ -606,6 +606,8 @@ pub enum Preset {
     CompressedRangeVolatileSession, // year_high_pct < 15 AND year_low_pct < 25 AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — small 52w range with volatile session (structurally compressed asset moving today; multi-month coil breaking out intraday)
     OrderlyNewHighContinuation,     // year_high_pct < 1 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1 — fresh 52w high with moderate (not parabolic) move + decent vol (orderly breakout; quality trend continuation)
     OrderlyNewLowContinuation,      // year_low_pct < 1 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1 — fresh 52w low with moderate (not crash) drop + decent vol (orderly breakdown; quality downtrend continuation)
+    DryVolGapUpFade,                // gap_pct > 1 AND change_pct < 0 AND rel_volume < 0.7 — gap up + faded to red + dry vol (gap-up fade without participation; orderly absorption of overnight optimism)
+    DryVolGapDownReclaim,           // gap_pct < -1 AND change_pct > 0 AND rel_volume < 0.7 — gap down + recovered to green + dry vol (gap-down reclaim without panic vol; orderly absorption of overnight pessimism)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3247,6 +3249,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct >= -1.5
                 && hit.rel_volume >= 1.0
         }
+        Preset::DryVolGapUpFade => {
+            hit.gap_pct > 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::DryVolGapDownReclaim => {
+            hit.gap_pct < -1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -3743,6 +3755,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CompressedRangeVolatileSession => "Small 52w Range + Wide Intraday + Hot Vol (Coiled Asset Breaking Out)",
         Preset::OrderlyNewHighContinuation => "Fresh 52w High + Moderate Up Move + Decent Vol (Orderly Breakout Continuation)",
         Preset::OrderlyNewLowContinuation => "Fresh 52w Low + Moderate Down Move + Decent Vol (Orderly Breakdown Continuation)",
+        Preset::DryVolGapUpFade => "Gap Up + Faded Negative + Dry Vol (Orderly Gap-up Absorption)",
+        Preset::DryVolGapDownReclaim => "Gap Down + Reclaimed Positive + Dry Vol (Orderly Gap-down Absorption)",
     }
 }
 

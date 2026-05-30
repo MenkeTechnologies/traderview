@@ -49,6 +49,10 @@ export async function renderDarkpool(mount, _state, sym) {
             <h2 data-i18n="view.darkpool.h2.ranked_chart">Avg off-exchange % by symbol</h2>
             <div id="dp-ranked-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.darkpool.h2.latest_vs_avg_chart">Latest % vs avg % per symbol — recent divergence from baseline</h2>
+            <div id="dp-divergence-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#df').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -91,6 +95,7 @@ function renderRanked(el, rows) {
                 <td>${r.samples}</td>
             </tr>`).join('')}</tbody></table>`;
     renderRankedChart(rows);
+    renderDivergenceChart(rows);
 }
 
 function renderRankedChart(rows) {
@@ -121,6 +126,43 @@ function renderRankedChart(rows) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderDivergenceChart(rows) {
+    const el = document.getElementById('dp-divergence-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (rows || [])
+        .slice(0, 30)
+        .filter(r => Number.isFinite(Number(r.avg_off_exchange_pct))
+                 && Number.isFinite(Number(r.latest_pct)));
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.darkpool.empty_divergence_chart">${esc(t('view.darkpool.empty_divergence_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.symbol);
+    const avgs = top.map(r => Number(r.avg_off_exchange_pct) * 100);
+    const lats = top.map(r => Number(r.latest_pct) * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.darkpool.chart.sym_idx') },
+            { label: t('view.darkpool.chart.avg_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.darkpool.chart.latest_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 6, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, avgs, lats], el);
 }
 
 async function renderSymbol(mount, sym) {

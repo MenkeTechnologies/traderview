@@ -488,6 +488,8 @@ const PRESETS = [
     { id: 'compressed_range_volatile_session', label: t('view.scanners.preset.compressed_range_volatile_session.label'), desc: t('view.scanners.preset.compressed_range_volatile_session.desc') },
     { id: 'orderly_new_high_continuation', label: t('view.scanners.preset.orderly_new_high_continuation.label'), desc: t('view.scanners.preset.orderly_new_high_continuation.desc') },
     { id: 'orderly_new_low_continuation', label: t('view.scanners.preset.orderly_new_low_continuation.label'), desc: t('view.scanners.preset.orderly_new_low_continuation.desc') },
+    { id: 'dry_vol_gap_up_fade', label: t('view.scanners.preset.dry_vol_gap_up_fade.label'), desc: t('view.scanners.preset.dry_vol_gap_up_fade.desc') },
+    { id: 'dry_vol_gap_down_reclaim', label: t('view.scanners.preset.dry_vol_gap_down_reclaim.label'), desc: t('view.scanners.preset.dry_vol_gap_down_reclaim.desc') },
 ];
 
 export async function renderScanners(mount) {
