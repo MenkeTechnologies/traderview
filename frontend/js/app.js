@@ -488,9 +488,14 @@ function bindTabs() {
     });
     window.addEventListener('tv:open-settings', () => { window.location.hash = 'settings'; });
     window.addEventListener('tv:focus-search', () => {
-        // Per-view priority: explicit search input → type=search → input with
+        // Per-view priority: explicit chip opt-in via data-shortcut →
+        // launcher / shortcuts / palette inputs → type=search →
         // placeholder hinting search/filter/find. Bails silently if none.
+        // The data-shortcut='focus_search' selector lets any view opt
+        // an input in by adding the chip — same attribute that surfaces
+        // the keybind in the tooltip via augmentShortcutTitles.
         const candidates = [
+            'input[data-shortcut="focus_search"]:not([disabled])',
             '#launcher-q', '#ks-filter', '#palette-input',
             'input[type=search]:not([disabled])',
             'input:not([disabled])[placeholder*="search" i]',
