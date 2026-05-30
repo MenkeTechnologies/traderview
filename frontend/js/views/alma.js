@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_OFFSET, DEFAULT_SIGMA, MIN_PERIOD, MAX_PERIOD,
@@ -32,23 +33,26 @@ export async function renderAlma(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.alma.label.period">Period</span>
-                    <input id="al-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="al-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.alma.tip.period"></label>
                 <label><span data-i18n="view.alma.label.offset">Offset (0–1)</span>
-                    <input id="al-offset" type="number" step="0.05" min="0" max="1" value="${state.offset}"></label>
+                    <input id="al-offset" type="number" step="0.05" min="0" max="1" value="${state.offset}"
+                           data-tip="view.alma.tip.offset"></label>
                 <label><span data-i18n="view.alma.label.sigma">Sigma (>0)</span>
-                    <input id="al-sigma" type="number" step="0.5" min="0.5" value="${state.sigma}"></label>
+                    <input id="al-sigma" type="number" step="0.5" min="0.5" value="${state.sigma}"
+                           data-tip="view.alma.tip.sigma"></label>
                 <button data-i18n="view.alma.btn.compute" id="al-run" class="primary"
-                        data-tip="view.alma.tip.compute" type="button">Compute</button>
+                        data-tip="view.alma.tip.compute" data-shortcut="alma_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.alma.btn.demo_up"      id="al-d1" class="secondary" type="button">Demo: uptrend</button>
-                <button data-i18n="view.alma.btn.demo_down"    id="al-d2" class="secondary" type="button">Demo: downtrend</button>
-                <button data-i18n="view.alma.btn.demo_side"    id="al-d3" class="secondary" type="button">Demo: sideways</button>
-                <button data-i18n="view.alma.btn.demo_step"    id="al-d4" class="secondary" type="button">Demo: step</button>
-                <button data-i18n="view.alma.btn.demo_hi_off"  id="al-d5" class="secondary" type="button">Demo: offset 0.95</button>
-                <button data-i18n="view.alma.btn.demo_lo_off"  id="al-d6" class="secondary" type="button">Demo: offset 0.10</button>
-                <button data-i18n="view.alma.btn.demo_sharp"   id="al-d7" class="secondary" type="button">Demo: sharp kernel</button>
-                <button data-i18n="view.alma.btn.demo_soft"    id="al-d8" class="secondary" type="button">Demo: soft kernel</button>
+                <button data-i18n="view.alma.btn.demo_up"      id="al-d1" class="secondary" data-tip="view.alma.tip.demo_up"     type="button">Demo: uptrend</button>
+                <button data-i18n="view.alma.btn.demo_down"    id="al-d2" class="secondary" data-tip="view.alma.tip.demo_down"   type="button">Demo: downtrend</button>
+                <button data-i18n="view.alma.btn.demo_side"    id="al-d3" class="secondary" data-tip="view.alma.tip.demo_side"   type="button">Demo: sideways</button>
+                <button data-i18n="view.alma.btn.demo_step"    id="al-d4" class="secondary" data-tip="view.alma.tip.demo_step"   type="button">Demo: step</button>
+                <button data-i18n="view.alma.btn.demo_hi_off"  id="al-d5" class="secondary" data-tip="view.alma.tip.demo_hi_off" type="button">Demo: offset 0.95</button>
+                <button data-i18n="view.alma.btn.demo_lo_off"  id="al-d6" class="secondary" data-tip="view.alma.tip.demo_lo_off" type="button">Demo: offset 0.10</button>
+                <button data-i18n="view.alma.btn.demo_sharp"   id="al-d7" class="secondary" data-tip="view.alma.tip.demo_sharp"  type="button">Demo: sharp kernel</button>
+                <button data-i18n="view.alma.btn.demo_soft"    id="al-d8" class="secondary" data-tip="view.alma.tip.demo_soft"   type="button">Demo: soft kernel</button>
             </div>
             <p data-i18n="view.alma.hint.about" class="muted">FIR filter with Gaussian-shaped weights. Offset=1.0 puts peak at the most recent bar (lowest lag, near-EMA limit); 0.0 puts it at the oldest (smoothing only); 0.5 is centered. Larger sigma sharpens the kernel — less noise rejection, faster response. Defaults: 9/0.85/6.</p>
         </div>
@@ -96,6 +100,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.alma.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.alma.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -111,7 +116,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.alma.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.period, state.offset, state.sigma);
     renderSummary(local, true);
     renderChart(local);
@@ -122,14 +127,16 @@ async function compute(tok) {
         resp = await api.anlyAlma(buildBody(state));
     } catch (e) {
         showErr(`${t('view.alma.err.api')}: ${e.message || e}`);
+        showToast(t('view.alma.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.alma.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.alma.err.server_rejected')); showToast(t('view.alma.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderSpreadChart(resp);
     renderStats();
+    showToast(t('view.alma.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(alma, pending) {
