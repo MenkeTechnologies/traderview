@@ -620,6 +620,8 @@ pub enum Preset {
     ChangeExceedsIntradayMagnitude, // change_pct.abs() > day_pct.abs() * 2 AND change_pct.abs() > 1 — change dominated by overnight component (gap-dominant move; intraday small relative to total)
     JustOffYearLowBouncingUp,       // year_low_pct between 5 and 15 AND change_pct > 1 AND rel_volume >= 1.5 — slightly off 52w lows + green move + hot vol (early bounce off lows; momentum picking up before fully reclaiming)
     JustOffYearHighFadingDown,      // year_high_pct between 5 and 15 AND change_pct < -1 AND rel_volume >= 1.5 — slightly off 52w highs + red move + hot vol (early fade from highs; distribution starting before fully breaking)
+    OverextendedHighPullbackHealthy,// year_high_pct < 3 AND hod_dist_pct.abs() > 1.5 AND day_pct < -0.5 AND change_pct >= 0 — at 52w high + pulled back from HOD + red intraday + still positive day (healthy pullback retrace while in trend)
+    OverextendedLowBounceHealthy,   // year_low_pct < 3 AND lod_dist_pct.abs() > 1.5 AND day_pct > 0.5 AND change_pct <= 0 — at 52w low + bounced from LOD + green intraday + still negative day (healthy bounce retrace while in downtrend)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3334,6 +3336,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::OverextendedHighPullbackHealthy => {
+            hit.year_high_pct < 3.0
+                && hit.hod_dist_pct.abs() > 1.5
+                && hit.day_pct < -0.5
+                && hit.change_pct >= 0.0
+        }
+        Preset::OverextendedLowBounceHealthy => {
+            hit.year_low_pct < 3.0
+                && hit.lod_dist_pct.abs() > 1.5
+                && hit.day_pct > 0.5
+                && hit.change_pct <= 0.0
+        }
     }
 }
 
@@ -3844,6 +3858,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ChangeExceedsIntradayMagnitude => "Change Dominates Intraday by 2× (Gap-dominant Move; Small Intraday)",
         Preset::JustOffYearLowBouncingUp => "Just Off 52w Low (5–15%) + Hot Vol + Green (Early Bounce off Lows)",
         Preset::JustOffYearHighFadingDown => "Just Off 52w High (5–15%) + Hot Vol + Red (Early Fade from Highs)",
+        Preset::OverextendedHighPullbackHealthy => "Near 52w High + HOD Pullback + Still Positive Day (Healthy Retrace in Trend)",
+        Preset::OverextendedLowBounceHealthy => "Near 52w Low + LOD Bounce + Still Negative Day (Healthy Retrace in Downtrend)",
     }
 }
 

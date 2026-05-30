@@ -502,6 +502,8 @@ const PRESETS = [
     { id: 'change_exceeds_intraday_magnitude', label: t('view.scanners.preset.change_exceeds_intraday_magnitude.label'), desc: t('view.scanners.preset.change_exceeds_intraday_magnitude.desc') },
     { id: 'just_off_year_low_bouncing_up', label: t('view.scanners.preset.just_off_year_low_bouncing_up.label'), desc: t('view.scanners.preset.just_off_year_low_bouncing_up.desc') },
     { id: 'just_off_year_high_fading_down', label: t('view.scanners.preset.just_off_year_high_fading_down.label'), desc: t('view.scanners.preset.just_off_year_high_fading_down.desc') },
+    { id: 'overextended_high_pullback_healthy', label: t('view.scanners.preset.overextended_high_pullback_healthy.label'), desc: t('view.scanners.preset.overextended_high_pullback_healthy.desc') },
+    { id: 'overextended_low_bounce_healthy', label: t('view.scanners.preset.overextended_low_bounce_healthy.label'), desc: t('view.scanners.preset.overextended_low_bounce_healthy.desc') },
 ];
 
 export async function renderScanners(mount) {

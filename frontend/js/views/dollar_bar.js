@@ -55,6 +55,11 @@ export async function renderDollarBar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.dollar_bar.h2.density_chart">Tick density per bar — how many prints aggregated into each bar</h2>
+            <div id="db-density-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.dollar_bar.h2.table">Bars (tail — last 30)</h2>
             <div id="db-table"></div>
         </div>
@@ -98,6 +103,7 @@ async function compute(tok) {
     const local = localCompute(state.prints, state.dollars_per_bar);
     renderSummary(local, true);
     renderChart(local);
+    renderDensityChart(local);
     renderTable(local);
     let resp;
     try {
@@ -109,6 +115,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderDensityChart(resp);
     renderTable(resp);
 }
 
@@ -177,6 +184,40 @@ function renderChart(bars) {
         ],
         legend: { show: true },
     }, [xs, closes, highs, lows], el);
+}
+
+function renderDensityChart(bars) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('db-density-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!bars || bars.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dollar_bar.empty_density_chart">${esc(t('view.dollar_bar.empty_density_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i);
+    const ticks = bars.map(b => Number.isFinite(b.tick_count) ? b.tick_count : null);
+    const meanTicks = ticks.reduce((s, v) => s + (v || 0), 0) / Math.max(1, ticks.length);
+    const mean = xs.map(() => meanTicks);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.dollar_bar.chart.tick_count'),
+              stroke: '#b86bff', width: 1.2,
+              fill: 'rgba(184,107,255,0.10)',
+              points: { show: false } },
+            { label: t('view.dollar_bar.chart.mean_ticks'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ticks, mean], el);
 }
 
 function renderTable(bars) {
