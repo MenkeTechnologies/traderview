@@ -948,6 +948,8 @@ pub enum Preset {
     MarubozuRedAtDeepPremium,            // year_low_pct >= 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep premium zone (>=30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday rejection trend day in a runaway name: regular-hours conviction fell from open to low with no gap aid; max-conviction exhaustion thrust after extended advance)
     HammerAtYear52High,                  // year_high_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w high + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed at the breakout ceiling: intraday plunge bought back to the highs; continuation-of-trend resilience signal at the top)
     ShootingStarAtYear52Low,             // year_low_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w low + long upper wick + close near LOD + red close + hot vol (selling pressure persists at the breakdown floor: intraday rip sold back to the lows; continuation-of-trend weakness signal at the bottom)
+    HammerAtMidYearHighRange,            // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed in the pullback zone: intraday plunge bought back toward the prior peak; bull-continuation hammer signaling pullback exhaustion)
+    ShootingStarAtMidYearLowRange,       // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long upper wick + close near LOD + red close + hot vol (selling pressure tested in the bounce zone: intraday rip sold back toward the prior trough; bear-continuation shooting star signaling bounce exhaustion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5643,6 +5645,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HammerAtMidYearHighRange => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtMidYearLowRange => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6481,6 +6499,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MarubozuRedAtDeepPremium => "Deep Premium Zone (>=30 % above 52w Low) + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Rejection Trend Day in a Runaway Name: Regular-hours Conviction Fell from Open to Low with No Gap Aid; Max-conviction Exhaustion Thrust after Extended Advance)",
         Preset::HammerAtYear52High => "At 52w High + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Buying Pressure Tested but Reclaimed at the Breakout Ceiling: Intraday Plunge Bought Back to the Highs; Continuation-of-trend Resilience Signal at the Top)",
         Preset::ShootingStarAtYear52Low => "At 52w Low + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Persists at the Breakdown Floor: Intraday Rip Sold Back to the Lows; Continuation-of-trend Weakness Signal at the Bottom)",
+        Preset::HammerAtMidYearHighRange => "Mid-range from High (5-20 % below 52w High) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Buying Pressure Tested but Reclaimed in the Pullback Zone: Intraday Plunge Bought Back toward the Prior Peak; Bull-continuation Hammer Signaling Pullback Exhaustion)",
+        Preset::ShootingStarAtMidYearLowRange => "Mid-range from Low (5-20 % above 52w Low) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Tested in the Bounce Zone: Intraday Rip Sold Back toward the Prior Trough; Bear-continuation Shooting Star Signaling Bounce Exhaustion)",
     }
 }
 
