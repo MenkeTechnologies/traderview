@@ -556,6 +556,11 @@ function bindTabs() {
         const el = document.getElementById('st-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in open-type scope → click Classify.
+    window.addEventListener('tv:open-type-run', () => {
+        const el = document.getElementById('ot-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

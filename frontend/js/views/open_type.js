@@ -13,6 +13,7 @@ import {
 } from '../_open_type_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { params: makeDemoData('auction') };
 
 export async function renderOpenType(mount, _appState) {
@@ -23,27 +24,27 @@ export async function renderOpenType(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.open_type.h2.today_s_opening_range_first_30_60_min">Today's opening range (first 30-60 min)</h2>
             <div class="inline-form">
-                <label><span data-i18n="view.open_type.label.open_price">Open price</span> <input id="ot-open" type="number" step="any" min="0" value="${state.params.open_price}"></label>
-                <label><span data-i18n="view.open_type.label.or_high">OR high</span>   <input id="ot-orh"  type="number" step="any" min="0" value="${state.params.opening_range_high}"></label>
-                <label><span data-i18n="view.open_type.label.or_low">OR low</span>    <input id="ot-orl"  type="number" step="any" min="0" value="${state.params.opening_range_low}"></label>
-                <label><span data-i18n="view.open_type.label.or_close">OR close</span>  <input id="ot-orc"  type="number" step="any" min="0" value="${state.params.opening_range_close}"></label>
+                <label><span data-i18n="view.open_type.label.open_price">Open price</span> <input id="ot-open" type="number" step="any" min="0" value="${state.params.open_price}" data-tip="view.open_type.tip.open"></label>
+                <label><span data-i18n="view.open_type.label.or_high">OR high</span>   <input id="ot-orh"  type="number" step="any" min="0" value="${state.params.opening_range_high}" data-tip="view.open_type.tip.orh"></label>
+                <label><span data-i18n="view.open_type.label.or_low">OR low</span>    <input id="ot-orl"  type="number" step="any" min="0" value="${state.params.opening_range_low}" data-tip="view.open_type.tip.orl"></label>
+                <label><span data-i18n="view.open_type.label.or_close">OR close</span>  <input id="ot-orc"  type="number" step="any" min="0" value="${state.params.opening_range_close}" data-tip="view.open_type.tip.orc"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.open_type.h2.prior_day_reference">Prior-day reference</h2>
             <div class="inline-form">
-                <label><span data-i18n="view.open_type.label.prior_high">Prior high</span>   <input id="ot-ph"  type="number" step="any" min="0" value="${state.params.prior_day_high}"></label>
-                <label><span data-i18n="view.open_type.label.prior_low">Prior low</span>    <input id="ot-pl"  type="number" step="any" min="0" value="${state.params.prior_day_low}"></label>
-                <label><span data-i18n="view.open_type.label.vah">VAH (Value Area High)</span> <input id="ot-vah" type="number" step="any" min="0" value="${state.params.prior_day_vah}"></label>
-                <label><span data-i18n="view.open_type.label.val">VAL (Value Area Low)</span>  <input id="ot-val" type="number" step="any" min="0" value="${state.params.prior_day_val}"></label>
+                <label><span data-i18n="view.open_type.label.prior_high">Prior high</span>   <input id="ot-ph"  type="number" step="any" min="0" value="${state.params.prior_day_high}" data-tip="view.open_type.tip.ph"></label>
+                <label><span data-i18n="view.open_type.label.prior_low">Prior low</span>    <input id="ot-pl"  type="number" step="any" min="0" value="${state.params.prior_day_low}" data-tip="view.open_type.tip.pl"></label>
+                <label><span data-i18n="view.open_type.label.vah">VAH (Value Area High)</span> <input id="ot-vah" type="number" step="any" min="0" value="${state.params.prior_day_vah}" data-tip="view.open_type.tip.vah"></label>
+                <label><span data-i18n="view.open_type.label.val">VAL (Value Area Low)</span>  <input id="ot-val" type="number" step="any" min="0" value="${state.params.prior_day_val}" data-tip="view.open_type.tip.val"></label>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.open_type.btn.demo_drive_up" id="ot-demo-drive"   class="secondary" type="button">Demo: Drive Up</button>
-                <button data-i18n="view.open_type.btn.demo_test_drive_up" id="ot-demo-test"    class="secondary" type="button">Demo: Test Drive Up</button>
-                <button data-i18n="view.open_type.btn.demo_rejection_reverse" id="ot-demo-reject"  class="secondary" type="button">Demo: Rejection Reverse</button>
-                <button data-i18n="view.open_type.btn.demo_auction" id="ot-demo-auction" class="secondary" type="button">Demo: Auction</button>
-                <button data-i18n="view.open_type.btn.classify" id="ot-run" class="primary" type="button">Classify</button>
+                <button data-i18n="view.open_type.btn.demo_drive_up" id="ot-demo-drive"   class="secondary" type="button" data-tip="view.open_type.tip.demo_drive">Demo: Drive Up</button>
+                <button data-i18n="view.open_type.btn.demo_test_drive_up" id="ot-demo-test"    class="secondary" type="button" data-tip="view.open_type.tip.demo_test">Demo: Test Drive Up</button>
+                <button data-i18n="view.open_type.btn.demo_rejection_reverse" id="ot-demo-reject"  class="secondary" type="button" data-tip="view.open_type.tip.demo_reject">Demo: Rejection Reverse</button>
+                <button data-i18n="view.open_type.btn.demo_auction" id="ot-demo-auction" class="secondary" type="button" data-tip="view.open_type.tip.demo_auction">Demo: Auction</button>
+                <button data-i18n="view.open_type.btn.classify" id="ot-run" class="primary" type="button" data-tip="view.open_type.tip.run" data-shortcut="open_type_run">Classify</button>
             </div>
             <p data-i18n="view.open_type.hint.vah_val_the_70_volume_weighted_value_area_from_the" class="muted">VAH/VAL = the 70% volume-weighted value area from the prior session.
                 Most market-profile platforms (Sierra, Bookmap) print these as horizontal lines
@@ -105,16 +106,20 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.open_type.toast.invalid'), { level: 'warning' }); return; }
     let res;
     try {
         res = await api.discOpenType(buildBody(state.params));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.open_type.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderChart(state.params);
+    const badge = typeBadge(res.open_type);
+    showToast(t('view.open_type.toast.classified', { label: badge.label }), { level: 'success' });
 }
 
 function renderSummary(r) {
