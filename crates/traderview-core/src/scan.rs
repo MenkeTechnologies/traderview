@@ -1146,6 +1146,8 @@ pub enum Preset {
     QuintupledVolGapDownMidpointHotVol,        // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — quintupled vol (>=5) + gap down (<-2%) + midpoint close (tier-1 catalyst gap-down with inconclusive intraday follow-through: vol is 5x average, overnight gap down holds but regular session neither extends nor absorbs decisively; high-stakes standoff after catalyst event with unresolved direction)
     BigIntradayRangeHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — wide intraday range (>8% high-low spread) + hot vol (volatility expansion day: regular session prints a much wider than normal trading range with elevated participation; high-volatility regime worth a directional-bias-screen at the close and an overnight-gap-screen the next morning)
     TightIntradayRangeHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range (<1% high-low spread) + hot vol (intraday compression with elevated participation: regular session prints a much narrower than normal trading range despite hot vol; institutional positioning event where heavy hands trade without moving the tape; breakout-candidate worth a watch-list-add)
+    BigIntradayRangeNearYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (volatility-expansion battle at the year peak: regular session prints a wide trading range right at the 52w high with elevated participation; bulls and bears fighting hard at the key resistance with no decisive winner from range alone)
+    BigIntradayRangeNearYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (volatility-expansion battle at the year trough: regular session prints a wide trading range right at the 52w low with elevated participation; bulls and bears fighting hard at the key support with no decisive winner from range alone)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7052,6 +7054,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::TightIntradayRangeHotVol => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0 && hit.rel_volume >= 1.5
         }
+        Preset::BigIntradayRangeNearYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct < 2.0
+        }
+        Preset::BigIntradayRangeNearYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -8088,6 +8100,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolGapDownMidpointHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) + Midpoint Close (Tier-1 Catalyst Gap-down with Inconclusive Intraday Follow-through: Vol Is 5x Average, Overnight Gap down Holds but Regular Session Neither Extends nor Absorbs Decisively; High-stakes Standoff after Catalyst Event with Unresolved Direction)",
         Preset::BigIntradayRangeHotVol => "Wide Intraday Range (>8 % High-low Spread) + Hot Vol (Volatility Expansion Day: Regular Session Prints a Much Wider than Normal Trading Range with Elevated Participation; High-volatility Regime Worth a Directional-bias-screen at the Close and an Overnight-gap-screen the Next Morning)",
         Preset::TightIntradayRangeHotVol => "Tight Intraday Range (<1 % High-low Spread) + Hot Vol (Intraday Compression with Elevated Participation: Regular Session Prints a Much Narrower than Normal Trading Range Despite Hot Vol; Institutional Positioning Event Where Heavy Hands Trade without Moving the Tape; Breakout-candidate Worth a Watch-list-add)",
+        Preset::BigIntradayRangeNearYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + At/near 52w High (<2 %) (Volatility-expansion Battle at the Year Peak: Regular Session Prints a Wide Trading Range Right at the 52w High with Elevated Participation; Bulls and Bears Fighting Hard at the Key Resistance with No Decisive Winner from Range Alone)",
+        Preset::BigIntradayRangeNearYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + At/near 52w Low (<2 %) (Volatility-expansion Battle at the Year Trough: Regular Session Prints a Wide Trading Range Right at the 52w Low with Elevated Participation; Bulls and Bears Fighting Hard at the Key Support with No Decisive Winner from Range Alone)",
     }
 }
 
