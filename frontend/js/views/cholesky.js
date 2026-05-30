@@ -61,6 +61,11 @@ export async function renderCholesky(mount, _appState) {
             <div id="ch-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.chol.h2.coupling_chart">Per-row max |L[i][j]| for j&lt;i (coupling strength to prior variables)</h2>
+            <div id="ch-coupling-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="ch-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -99,6 +104,7 @@ async function compute(tok) {
     renderFactor(local);
     renderStats();
     renderDiagChart(local);
+    renderCouplingChart(local);
     let resp;
     try {
         resp = await api.anlyCholesky(buildBody(state));
@@ -112,6 +118,7 @@ async function compute(tok) {
     renderFactor(resp);
     renderStats();
     renderDiagChart(resp);
+    renderCouplingChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -217,6 +224,42 @@ function renderDiagChart(report) {
         ],
         legend: { show: true },
     }, [xs, diag], el);
+}
+
+function renderCouplingChart(report) {
+    const el = document.getElementById('ch-coupling-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.l) || !report.l.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.chol.empty_coupling_chart">${esc(t('view.chol.empty_coupling_chart'))}</div>`;
+        return;
+    }
+    const coupling = report.l.map((row, i) => {
+        if (i === 0) return 0;
+        let m = 0;
+        for (let j = 0; j < i; j++) {
+            const v = row[j];
+            if (Number.isFinite(v) && Math.abs(v) > m) m = Math.abs(v);
+        }
+        return m;
+    });
+    const xs = coupling.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.chol.chart.row_idx') },
+            { label: t('view.chol.chart.coupling'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => String(Math.round(v))) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, coupling], el);
 }
 
 function card(label, value, cls = '') {
