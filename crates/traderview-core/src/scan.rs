@@ -970,6 +970,8 @@ pub enum Preset {
     DistantFromYearLowRangeContractionHotVol,  // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far above 52w low (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the advance territory: tight digestion with elevated participation deep above the prior trough; pre-reversal coil with institutional positioning)
     DistantFromYearHighRangeExpansionHotVol,   // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far below 52w high (>=20%) + wide intraday range + hot vol (volatility expansion deep in the pullback territory: institutional fight day occurring well below the prior peak with elevated participation; regime-shift candidate after extended decline)
     DistantFromYearLowRangeExpansionHotVol,    // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far above 52w low (>=20%) + wide intraday range + hot vol (volatility expansion deep in the advance territory: institutional fight day occurring well above the prior trough with elevated participation; regime-shift candidate after extended advance)
+    CloseAtHodMidYearLowHotVol,                // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — mid-range from low (5-20%) + close pinned to HOD + green close + hot vol (closing-strength signal in the recovery zone: bull conviction ramped into the close without requiring a long lower-wick reclaim; demand-led mid-cycle continuation)
+    CloseAtLodMidYearHighHotVol,               // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — mid-range from high (5-20%) + close pinned to LOD + red close + hot vol (closing-weakness signal in the pullback zone: bear conviction dumped into the close without requiring a long upper-wick rejection; supply-led mid-cycle continuation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5820,6 +5822,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::CloseAtHodMidYearLowHotVol => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseAtLodMidYearHighHotVol => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6680,6 +6696,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DistantFromYearLowRangeContractionHotVol => "Far above 52w Low (>=20 %) + Tight Intraday Range + Flat Close + Hot Vol (Stealth Absorption in the Advance Territory: Tight Digestion with Elevated Participation Deep above the Prior Trough; Pre-reversal Coil with Institutional Positioning)",
         Preset::DistantFromYearHighRangeExpansionHotVol => "Far below 52w High (>=20 %) + Wide Intraday Range + Hot Vol (Volatility Expansion Deep in the Pullback Territory: Institutional Fight Day Occurring Well below the Prior Peak with Elevated Participation; Regime-shift Candidate after Extended Decline)",
         Preset::DistantFromYearLowRangeExpansionHotVol => "Far above 52w Low (>=20 %) + Wide Intraday Range + Hot Vol (Volatility Expansion Deep in the Advance Territory: Institutional Fight Day Occurring Well above the Prior Trough with Elevated Participation; Regime-shift Candidate after Extended Advance)",
+        Preset::CloseAtHodMidYearLowHotVol => "Mid-range from Low (5-20 %) + Close Pinned to HOD + Green Close + Hot Vol (Closing-strength Signal in the Recovery Zone: Bull Conviction Ramped into the Close without Requiring a Long Lower-wick Reclaim; Demand-led Mid-cycle Continuation)",
+        Preset::CloseAtLodMidYearHighHotVol => "Mid-range from High (5-20 %) + Close Pinned to LOD + Red Close + Hot Vol (Closing-weakness Signal in the Pullback Zone: Bear Conviction Dumped into the Close without Requiring a Long Upper-wick Rejection; Supply-led Mid-cycle Continuation)",
     }
 }
 
