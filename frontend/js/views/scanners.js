@@ -826,6 +826,8 @@ const PRESETS = [
     { id: 'shooting_star_at_deep_premium', label: t('view.scanners.preset.shooting_star_at_deep_premium.label'), desc: t('view.scanners.preset.shooting_star_at_deep_premium.desc') },
     { id: 'dragonfly_doji_at_deep_discount', label: t('view.scanners.preset.dragonfly_doji_at_deep_discount.label'), desc: t('view.scanners.preset.dragonfly_doji_at_deep_discount.desc') },
     { id: 'gravestone_doji_at_deep_premium', label: t('view.scanners.preset.gravestone_doji_at_deep_premium.label'), desc: t('view.scanners.preset.gravestone_doji_at_deep_premium.desc') },
+    { id: 'marubozu_green_at_deep_discount', label: t('view.scanners.preset.marubozu_green_at_deep_discount.label'), desc: t('view.scanners.preset.marubozu_green_at_deep_discount.desc') },
+    { id: 'marubozu_red_at_deep_premium', label: t('view.scanners.preset.marubozu_red_at_deep_premium.label'), desc: t('view.scanners.preset.marubozu_red_at_deep_premium.desc') },
 ];
 
 export async function renderScanners(mount) {
