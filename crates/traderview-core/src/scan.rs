@@ -254,6 +254,8 @@ pub enum Preset {
     PerfectBalanceSqueeze,       // |hod_dist - lod_dist| < 0.1 AND |change_pct| < 0.3 — mathematically balanced bar
     LowVolHotZoneSqueeze,        // year_high_pct >= -5 AND rel_volume < 0.4 — at 52w high zone with very low vol (institutions absent)
     LowVolColdZoneSqueeze,       // year_low_pct <= 5 AND rel_volume < 0.4 — at 52w low zone with very low vol (no panic, no buying)
+    DriftHigherSqueeze,          // change_pct > 0 AND change_pct < 2 AND day_pct > 0 AND day_pct < 1 AND rel_volume < 0.9 — slow grinding-up day
+    DriftLowerSqueeze,           // change_pct < 0 AND change_pct > -2 AND day_pct < 0 AND day_pct > -1 AND rel_volume < 0.9 — slow grinding-down day
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -945,6 +947,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::LowVolColdZoneSqueeze => {
             hit.year_low_pct <= 5.0 && hit.rel_volume < 0.4
         }
+        Preset::DriftHigherSqueeze => {
+            hit.change_pct > 0.0
+                && hit.change_pct < 2.0
+                && hit.day_pct > 0.0
+                && hit.day_pct < 1.0
+                && hit.rel_volume < 0.9
+        }
+        Preset::DriftLowerSqueeze => {
+            hit.change_pct < 0.0
+                && hit.change_pct > -2.0
+                && hit.day_pct < 0.0
+                && hit.day_pct > -1.0
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -1089,6 +1105,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PerfectBalanceSqueeze => "Perfect-Balance Squeeze",
         Preset::LowVolHotZoneSqueeze => "Low-Vol Hot-Zone Squeeze",
         Preset::LowVolColdZoneSqueeze => "Low-Vol Cold-Zone Squeeze",
+        Preset::DriftHigherSqueeze => "Drift-Higher Squeeze",
+        Preset::DriftLowerSqueeze => "Drift-Lower Squeeze",
     }
 }
 

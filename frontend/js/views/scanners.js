@@ -136,6 +136,8 @@ const PRESETS = [
     { id: 'perfect_balance_squeeze',    label: t('view.scanners.preset.perfect_balance_squeeze.label'),    desc: t('view.scanners.preset.perfect_balance_squeeze.desc') },
     { id: 'low_vol_hot_zone_squeeze',   label: t('view.scanners.preset.low_vol_hot_zone_squeeze.label'),   desc: t('view.scanners.preset.low_vol_hot_zone_squeeze.desc') },
     { id: 'low_vol_cold_zone_squeeze',  label: t('view.scanners.preset.low_vol_cold_zone_squeeze.label'),  desc: t('view.scanners.preset.low_vol_cold_zone_squeeze.desc') },
+    { id: 'drift_higher_squeeze',       label: t('view.scanners.preset.drift_higher_squeeze.label'),       desc: t('view.scanners.preset.drift_higher_squeeze.desc') },
+    { id: 'drift_lower_squeeze',        label: t('view.scanners.preset.drift_lower_squeeze.label'),        desc: t('view.scanners.preset.drift_lower_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

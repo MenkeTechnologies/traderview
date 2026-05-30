@@ -163,5 +163,48 @@ function render(r, mount) {
             <h2 data-i18n="view.position_size.h2.recommended">Recommended</h2>
             <div class="cards">${sizing(r.recommended, '#ffd24a')}</div>
         </div>` : ''}
+        <div class="chart-panel">
+            <h2 data-i18n="view.position_size.h2.method_chart">Shares + risk $ per method</h2>
+            <div id="ps-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderMethodChart(r);
+}
+
+function renderMethodChart(r) {
+    const el = document.getElementById('ps-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const methods = [
+        { key: 'fixed_fractional', color: '#00e5ff', sizing: r.fixed_fractional },
+        { key: 'r_based',          color: '#7af0a8', sizing: r.r_based },
+        { key: 'kelly',            color: '#ff7a1f', sizing: r.kelly },
+    ].filter(m => m.sizing && Number.isFinite(Number(m.sizing.shares)));
+    if (methods.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.position_size.empty_chart">${esc(t('view.position_size.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = methods.map(m => t(`view.position_size.method.${m.key}`));
+    const shares = methods.map(m => Number(m.sizing.shares));
+    const risk = methods.map(m => Number(m.sizing.risk_dollars));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.position_size.chart.method_idx') },
+            { label: t('view.position_size.chart.shares'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.position_size.chart.risk_d'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 10, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, shares, risk], el);
 }
