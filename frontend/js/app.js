@@ -215,6 +215,7 @@ import { renderFavoritesManager } from './views/favorites_manager.js';
 import { installShortcuts } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
+import { installDialog } from './dialog.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
 import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
@@ -352,6 +353,7 @@ function bindTabs() {
     installShortcuts();
     installCommandPalette();
     installToasts();
+    installDialog();
     installContextMenu();
     // Register a per-scope item for the launcher recents block so users can
     // wipe their navigation history without leaving the page.

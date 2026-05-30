@@ -1854,3 +1854,61 @@ kbd {
 .tv-ctxmenu-sep {
     height: 1px; background: #1f2a36; margin: 4px 0;
 }
+
+/* ── Modal dialog (tConfirm / tPrompt) ─────────────────────────── */
+#tv-dialog-root { position: fixed; inset: 0; z-index: 10001; pointer-events: none; }
+.tv-dialog-overlay {
+    position: fixed; inset: 0; pointer-events: auto;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex; justify-content: center; align-items: center;
+}
+.tv-dialog-card {
+    width: min(480px, 92vw);
+    background: #0a0d12; border: 1px solid #1f2a36; border-radius: 8px;
+    padding: 18px 20px;
+    box-shadow: 0 14px 60px rgba(0, 0, 0, 0.7);
+    font-family: 'Share Tech Mono', ui-monospace, monospace;
+    color: #d7e3ee;
+}
+.tv-dialog-info    { box-shadow: 0 14px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px #00e5ff44; }
+.tv-dialog-warning { box-shadow: 0 14px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px #ffd84a55; }
+.tv-dialog-danger  { box-shadow: 0 14px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px #ff336655; }
+.tv-dialog-title {
+    font-size: 13px; color: #c8d7e3; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 8px;
+}
+.tv-dialog-message {
+    font-size: 14px; line-height: 1.5; color: #e6f1ff;
+    margin-bottom: 14px; white-space: pre-wrap; word-wrap: break-word;
+}
+.tv-dialog-input {
+    width: 100%; box-sizing: border-box;
+    padding: 8px 10px; margin-bottom: 14px;
+    background: #0f1822; border: 1px solid #2a3a48; border-radius: 4px;
+    color: #e6f1ff; font: 14px/1.4 'Share Tech Mono', ui-monospace, monospace;
+    outline: none;
+}
+.tv-dialog-input:focus { border-color: #00e5ff; }
+.tv-dialog-input-error { border-color: #ff3366; animation: tv-dialog-shake 0.25s; }
+@keyframes tv-dialog-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+.tv-dialog-actions {
+    display: flex; justify-content: flex-end; gap: 8px;
+}
+.tv-dialog-btn {
+    padding: 6px 14px; min-width: 80px;
+    background: #0f1822; border: 1px solid #2a3a48; border-radius: 4px;
+    color: #c8d7e3; cursor: pointer;
+    font: 13px 'Share Tech Mono', ui-monospace, monospace;
+}
+.tv-dialog-btn:hover  { background: #1f2a36; color: #e6f1ff; }
+.tv-dialog-btn:focus  { outline: 1px solid #00e5ff; outline-offset: 1px; }
+.tv-dialog-confirm    { background: #00e5ff22; border-color: #00e5ff; color: #00e5ff; }
+.tv-dialog-confirm:hover { background: #00e5ff33; }
+.tv-dialog-danger .tv-dialog-confirm    { background: #ff336622; border-color: #ff3366; color: #ff3366; }
+.tv-dialog-danger .tv-dialog-confirm:hover { background: #ff336633; }
+.tv-dialog-warning .tv-dialog-confirm   { background: #ffd84a22; border-color: #ffd84a; color: #ffd84a; }
+.tv-dialog-warning .tv-dialog-confirm:hover { background: #ffd84a33; }
