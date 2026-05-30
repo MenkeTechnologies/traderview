@@ -111,7 +111,9 @@ export async function renderWatchlists(mount) {
                     const q = byKey.get(sym);
                     const ch = q?.change_pct;
                     const cls = ch == null ? '' : (ch >= 0 ? 'pos' : 'neg');
-                    return `<tr>
+                    return `<tr data-context-scope="watchlist-symbol-row"
+                                 data-symbol="${esc(sym)}"
+                                 data-wid="${esc(wid)}">
                         <td><a href="#research/${encodeURIComponent(sym)}">${esc(sym)}</a></td>
                         <td>${q ? fmt(q.price) : '—'}</td>
                         <td class="${cls}">${ch != null ? (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%' : '—'}</td>

@@ -16,7 +16,7 @@ import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
 import { showToast } from './toast.js';
 import { loadState, saveState, toggleFavorite, isFavorite, addBookmark } from './_favorites_storage.js';
-import { getGlobalSymbol } from './_global_symbol.js';
+import { getGlobalSymbol, setGlobalSymbol } from './_global_symbol.js';
 import { api } from './api.js';
 import { tConfirm } from './dialog.js';
 
@@ -150,6 +150,57 @@ export function installContextMenu() {
                 () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
             );
         }
+    });
+    // Watchlist-row actions — read data-symbol (and data-wid for remove)
+    // from the right-clicked <tr>.
+    const wlSymbolFrom = (detail) => {
+        const t = detail && detail.target;
+        if (!t || !t.dataset) return null;
+        return (t.dataset.symbol || '').toUpperCase() || null;
+    };
+    const wlWidFrom = (detail) => {
+        const t = detail && detail.target;
+        if (!t || !t.dataset) return null;
+        return t.dataset.wid || null;
+    };
+    const wlNavTo = (viewId) => (e) => {
+        const sym = wlSymbolFrom(e.detail);
+        if (!sym) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        setGlobalSymbol(sym);
+        window.location.hash = `${viewId}/${sym}`;
+    };
+    window.addEventListener('tv:wl-row-set-active', (e) => {
+        const sym = wlSymbolFrom(e.detail);
+        if (!sym) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        setGlobalSymbol(sym);
+        showToast(t('toast.symbol_set_active', { sym }), { level: 'success' });
+    });
+    window.addEventListener('tv:wl-row-charts',   wlNavTo('charts'));
+    window.addEventListener('tv:wl-row-research', wlNavTo('research'));
+    window.addEventListener('tv:wl-row-options',  wlNavTo('options'));
+    window.addEventListener('tv:wl-row-remove', (e) => {
+        const sym = wlSymbolFrom(e.detail);
+        const wid = wlWidFrom(e.detail);
+        if (!sym || !wid) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        void (async () => {
+            if (!await tConfirm('ctxmenu.wl_row_remove_confirm', { sym }, { level: 'danger' })) return;
+            try {
+                await api.removeWatchlistSym(wid, sym);
+                showToast(t('toast.wl_symbol_removed', { sym }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
     });
     window.addEventListener('tv:trade-delete', (e) => {
         const id = tradeIdFrom(e.detail);
