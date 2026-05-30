@@ -478,6 +478,8 @@ const PRESETS = [
     { id: 'overnight_stronger_than_intraday', label: t('view.scanners.preset.overnight_stronger_than_intraday.label'), desc: t('view.scanners.preset.overnight_stronger_than_intraday.desc') },
     { id: 'efficient_move_low_effort', label: t('view.scanners.preset.efficient_move_low_effort.label'), desc: t('view.scanners.preset.efficient_move_low_effort.desc') },
     { id: 'signal_vs_noise_churn', label: t('view.scanners.preset.signal_vs_noise_churn.label'), desc: t('view.scanners.preset.signal_vs_noise_churn.desc') },
+    { id: 'green_close_red_intraday', label: t('view.scanners.preset.green_close_red_intraday.label'), desc: t('view.scanners.preset.green_close_red_intraday.desc') },
+    { id: 'red_close_green_intraday', label: t('view.scanners.preset.red_close_green_intraday.label'), desc: t('view.scanners.preset.red_close_green_intraday.desc') },
 ];
 
 export async function renderScanners(mount) {

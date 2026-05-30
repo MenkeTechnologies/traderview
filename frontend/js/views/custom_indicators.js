@@ -57,6 +57,11 @@ export async function renderCustomIndicators(mount) {
             <h2 data-i18n="view.custom_indicators.h2.kind_chart">Presets by indicator kind</h2>
             <div id="ci-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.custom_indicators.h2.period_chart">Period distribution across SMA/EMA/RSI/Bollinger presets</h2>
+            <div id="ci-period-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     const kindSel = mount.querySelector('#ci-form [name=kind]');
     const renderParams = () => {
@@ -134,11 +139,59 @@ async function refresh(mount, tok) {
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             }));
         renderKindChart(rows);
+        renderPeriodChart(rows);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el2 = mount.querySelector('#ci-list');
         if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderPeriodChart(rows) {
+    const el = document.getElementById('ci-period-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = [
+        { lo: 0,   hi: 10,  label: '[0,10)' },
+        { lo: 10,  hi: 20,  label: '[10,20)' },
+        { lo: 20,  hi: 30,  label: '[20,30)' },
+        { lo: 30,  hi: 50,  label: '[30,50)' },
+        { lo: 50,  hi: 100, label: '[50,100)' },
+        { lo: 100, hi: Infinity, label: '≥100' },
+    ];
+    const counts = new Array(buckets.length).fill(0);
+    let total = 0;
+    for (const r of rows) {
+        const def = r.definition || {};
+        if (!['sma', 'ema', 'rsi', 'bollinger'].includes(def.kind)) continue;
+        const p = Number(def.params && def.params.period);
+        if (!Number.isFinite(p) || p < 0) continue;
+        for (let i = 0; i < buckets.length; i++) {
+            if (p >= buckets[i].lo && p < buckets[i].hi) { counts[i] += 1; total += 1; break; }
+        }
+    }
+    if (total === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.custom_indicators.empty_period_chart">${esc(t('view.custom_indicators.empty_period_chart'))}</div>`;
+        return;
+    }
+    const labels = buckets.map(b => b.label);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.custom_indicators.chart.bucket_idx') },
+            { label: t('view.custom_indicators.chart.preset_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function renderKindChart(rows) {

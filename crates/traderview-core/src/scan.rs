@@ -596,6 +596,8 @@ pub enum Preset {
     OvernightStrongerThanIntraday,  // gap_pct.abs() > 1.5 AND day_pct.abs() < 0.5 AND change_pct.abs() > 1 — big gap + flat intraday + decent change (overnight dominated; market accepted gap without intraday expansion)
     EfficientMoveLowEffort,         // change_pct.abs() > 1 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 — meaningful change + dry vol + narrow range (efficient move; few prints needed; sleeper trade)
     SignalVsNoiseChurn,             // change_pct.abs() < 0.2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — tiny net change + hot vol + wide range visited (signal-vs-noise: lots of activity, no net move; pure noise day)
+    GreenCloseRedIntraday,          // change_pct > 0 AND day_pct < 0 AND rel_volume >= 1.5 — green close vs prior + red intraday + hot vol (gap held positive despite intraday erosion; close-of-day mark-up)
+    RedCloseGreenIntraday,          // change_pct < 0 AND day_pct > 0 AND rel_volume >= 1.5 — red close vs prior + green intraday + hot vol (gap held negative despite intraday recovery; close-of-day mark-down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3177,6 +3179,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
         }
+        Preset::GreenCloseRedIntraday => {
+            hit.change_pct > 0.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::RedCloseGreenIntraday => {
+            hit.change_pct < 0.0
+                && hit.day_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3663,6 +3675,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OvernightStrongerThanIntraday => "Overnight Gap > Intraday (Market Accepted Gap Without Expansion)",
         Preset::EfficientMoveLowEffort => "Meaningful Change + Dry Vol + Narrow Range (Efficient Sleeper Move)",
         Preset::SignalVsNoiseChurn => "Flat Close + Hot Vol + Wide Range (Pure Noise / Heavy Churn Day)",
+        Preset::GreenCloseRedIntraday => "Green Close + Red Intraday + Hot Vol (Gap Held Positive; Intraday Erosion)",
+        Preset::RedCloseGreenIntraday => "Red Close + Green Intraday + Hot Vol (Gap Held Negative; Intraday Recovery)",
     }
 }
 
