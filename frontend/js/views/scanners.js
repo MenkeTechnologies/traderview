@@ -246,6 +246,8 @@ const PRESETS = [
     { id: 'pct52w_range_pos_bottom', label: t('view.scanners.preset.pct52w_range_pos_bottom.label'), desc: t('view.scanners.preset.pct52w_range_pos_bottom.desc') },
     { id: 'high_range_high_vol_strong', label: t('view.scanners.preset.high_range_high_vol_strong.label'), desc: t('view.scanners.preset.high_range_high_vol_strong.desc') },
     { id: 'high_range_high_vol_weak', label: t('view.scanners.preset.high_range_high_vol_weak.label'), desc: t('view.scanners.preset.high_range_high_vol_weak.desc') },
+    { id: 'low_range_low_vol_neutral', label: t('view.scanners.preset.low_range_low_vol_neutral.label'), desc: t('view.scanners.preset.low_range_low_vol_neutral.desc') },
+    { id: 'avg_range_avg_vol_neutral', label: t('view.scanners.preset.avg_range_avg_vol_neutral.label'), desc: t('view.scanners.preset.avg_range_avg_vol_neutral.desc') },
 ];
 
 export async function renderScanners(mount) {
