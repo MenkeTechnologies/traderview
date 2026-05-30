@@ -438,6 +438,11 @@ function bindTabs() {
         const el = document.querySelector('#add-sym input[name="symbol"]');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `n` in alert-rules scope → focus new-rule name input.
+    window.addEventListener('tv:alert-rules-focus-new', () => {
+        const el = document.getElementById('ar-new-name');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // View-scoped: `r` in live/trades/journal/watchlists/webull/charts
     // scopes — each refreshes the active view via hashchange.
     const refreshNow = () => window.dispatchEvent(new HashChangeEvent('hashchange'));

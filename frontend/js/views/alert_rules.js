@@ -26,11 +26,11 @@ export async function renderAlertRules(mount, _appState) {
                 ${card(tr('view.alert_rules.card.enabled'),      String(state.rules.filter(r => r.enabled).length))}
             </div>
             <div class="inline-form" style="margin-top:8px">
-                <button data-i18n="view.alert_rules.btn.bell" id="ar-test-bell"   class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 bell</button>
-                <button data-i18n="view.alert_rules.btn.alarm" id="ar-test-alarm"  class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🚨 alarm</button>
-                <button data-i18n="view.alert_rules.btn.single_beep" id="ar-test-beep"   class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>· single beep</button>
-                <button data-i18n="view.alert_rules.btn.double_beep" id="ar-test-double" class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>·· double beep</button>
-                <button data-i18n="view.alert_rules.btn.tts" id="ar-test-tts"    class="secondary" type="button" ${!caps.tts   ? 'disabled' : ''}>🗣 TTS</button>
+                <button data-i18n="view.alert_rules.btn.bell" data-tip="view.alert_rules.tip.bell" id="ar-test-bell"   class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 bell</button>
+                <button data-i18n="view.alert_rules.btn.alarm" data-tip="view.alert_rules.tip.alarm" id="ar-test-alarm"  class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🚨 alarm</button>
+                <button data-i18n="view.alert_rules.btn.single_beep" data-tip="view.alert_rules.tip.single_beep" id="ar-test-beep"   class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>· single beep</button>
+                <button data-i18n="view.alert_rules.btn.double_beep" data-tip="view.alert_rules.tip.double_beep" id="ar-test-double" class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>·· double beep</button>
+                <button data-i18n="view.alert_rules.btn.tts" data-tip="view.alert_rules.tip.tts" id="ar-test-tts"    class="secondary" type="button" ${!caps.tts   ? 'disabled' : ''}>🗣 TTS</button>
             </div>
         </div>
 
@@ -46,8 +46,9 @@ export async function renderAlertRules(mount, _appState) {
                         <option data-i18n="view.alert_rules.opt.pct_change_in_window" value="pct_change">pct change in window</option>
                         <option data-i18n="view.alert_rules.opt.volume_spike_in_window" value="volume_spike">volume spike in window</option>
                     </select></label>
-                <input id="ar-new-name" type="text" placeholder="rule name" data-i18n-placeholder="view.alert_rules.placeholder.name">
-                <button data-i18n="view.alert_rules.btn.add" id="ar-add" class="primary" type="button">+ Add</button>
+                <input id="ar-new-name" type="text" placeholder="rule name" data-i18n-placeholder="view.alert_rules.placeholder.name"
+                       data-tip="view.alert_rules.tip.new_name" data-shortcut="alert_rules_focus_new">
+                <button data-i18n="view.alert_rules.btn.add" data-tip="view.alert_rules.tip.add_rule" id="ar-add" class="primary" type="button">+ Add</button>
             </div>
         </div>
 
@@ -56,10 +57,10 @@ export async function renderAlertRules(mount, _appState) {
             <textarea id="ar-ticks" rows="5" placeholder="AAPL 1700000000 150.00 5000"></textarea>
             <textarea id="ar-adv" rows="2" placeholder="AAPL 50000000&#10;SMID 250000" style="margin-top:6px"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.alert_rules.btn.load_demo_aapl_smid_30_min_span" id="ar-demo" class="secondary" type="button">Load demo (AAPL + SMID, 30-min span)</button>
-                <button data-i18n="view.alert_rules.btn.clear_feed" id="ar-clear-feed" class="secondary" type="button">Clear feed</button>
-                <button data-i18n="view.alert_rules.btn.run_all_rules" id="ar-replay" class="primary" type="button">▶ Run all rules</button>
-                <button data-i18n="view.alert_rules.btn.stop_tts" id="ar-stop-tts" class="secondary" type="button">⏹ Stop TTS</button>
+                <button data-i18n="view.alert_rules.btn.load_demo_aapl_smid_30_min_span" data-tip="view.alert_rules.tip.load_demo" id="ar-demo" class="secondary" type="button">Load demo (AAPL + SMID, 30-min span)</button>
+                <button data-i18n="view.alert_rules.btn.clear_feed" data-tip="view.alert_rules.tip.clear_feed" id="ar-clear-feed" class="secondary" type="button">Clear feed</button>
+                <button data-i18n="view.alert_rules.btn.run_all_rules" data-tip="view.alert_rules.tip.run_all" id="ar-replay" class="primary" type="button">▶ Run all rules</button>
+                <button data-i18n="view.alert_rules.btn.stop_tts" data-tip="view.alert_rules.tip.stop_tts" id="ar-stop-tts" class="secondary" type="button">⏹ Stop TTS</button>
             </div>
         </div>
 
