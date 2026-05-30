@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 const DOW_SLUGS = ['sun','mon','tue','wed','thu','fri','sat'];
 const dowLabel = (i) => t('common.dow.' + DOW_SLUGS[i]);
@@ -16,13 +17,13 @@ export async function renderEarningsCal(mount) {
         <div class="chart-panel">
             <form class="inline-form" id="e-form">
                 <label><span data-i18n="view.earnings_cal.label.upcoming_days">Upcoming days</span>
-                    <input name="days" type="number" min="1" max="30" value="7" style="width:80px;">
+                    <input name="days" type="number" min="1" max="30" value="7" style="width:80px;" data-tip="view.earnings_cal.tip.days">
                 </label>
                 <label><span data-i18n="view.earnings_cal.label.surprise_lookback">Surprise lookback (days)</span>
-                    <input name="back" type="number" min="1" max="365" value="30" style="width:90px;">
+                    <input name="back" type="number" min="1" max="365" value="30" style="width:90px;" data-tip="view.earnings_cal.tip.back">
                 </label>
-                <button data-i18n="view.earnings_cal.btn.refresh_view" class="primary" type="submit">Refresh view</button>
-                <button data-i18n="view.earnings_cal.btn.poll_now_yahoo" class="btn" type="button" id="e-poll">Poll now (Yahoo)</button>
+                <button data-i18n="view.earnings_cal.btn.refresh_view" data-tip="view.earnings_cal.tip.refresh" data-shortcut="earnings_cal_refresh" class="primary" type="submit">Refresh view</button>
+                <button data-i18n="view.earnings_cal.btn.poll_now_yahoo" data-tip="view.earnings_cal.tip.poll" data-shortcut="earnings_cal_poll" class="btn" type="button" id="e-poll">Poll now (Yahoo)</button>
                 <span id="e-status" class="muted small"></span>
             </form>
         </div>
@@ -54,11 +55,15 @@ export async function renderEarningsCal(mount) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#e-status');
             if (status2) status2.textContent = t('view.earnings_cal.status.result', { symbols: s.symbols_polled, events: s.events_upserted, reactions: s.reactions_computed });
+            showToast(t('view.earnings_cal.toast.polled', {
+                symbols: s.symbols_polled, events: s.events_upserted, reactions: s.reactions_computed,
+            }), { level: 'success' });
             await refresh(mount, tok);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#e-status');
             if (status2) status2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
     await refresh(mount, tok);
@@ -82,6 +87,7 @@ async function refresh(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#e-cal');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
     }
 }
 

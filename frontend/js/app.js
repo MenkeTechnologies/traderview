@@ -589,6 +589,16 @@ function bindTabs() {
         const form = document.getElementById('ec-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `r` in earnings-cal scope → submit refresh-view form.
+    window.addEventListener('tv:earnings-cal-refresh', () => {
+        const form = document.getElementById('e-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
+    // View-scoped: `p` in earnings-cal scope → click Poll-now Yahoo button.
+    window.addEventListener('tv:earnings-cal-poll', () => {
+        const el = document.getElementById('e-poll');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
