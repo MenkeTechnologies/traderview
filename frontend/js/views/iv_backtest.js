@@ -20,6 +20,7 @@ import {
 } from '../_iv_backtest_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { implied: 4.5, realizedText: '' };
 
 export async function renderIvBacktest(mount, _appState) {
@@ -31,8 +32,8 @@ export async function renderIvBacktest(mount, _appState) {
             <h2 data-i18n="view.iv_backtest.h2.event_setup">Event setup</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.iv_backtest.label.implied">Implied move (%) — what the ATM straddle is pricing for the event</span>
-                    <input id="ib-imp" type="number" step="any" min="0" max="100" value="${state.implied}"></label>
-                <button data-i18n="view.iv_backtest.btn.backtest" id="ib-run" class="primary" type="button">Backtest</button>
+                    <input id="ib-imp" type="number" step="any" min="0" max="100" value="${state.implied}" data-tip="view.iv_backtest.tip.implied"></label>
+                <button data-i18n="view.iv_backtest.btn.backtest" data-tip="view.iv_backtest.tip.backtest" data-shortcut="iv_backtest_run" id="ib-run" class="primary" type="button">Backtest</button>
             </div>
             <p data-i18n="view.iv_backtest.hint.implied_move_atm_straddle_debit_spot_100_if_you_re" class="muted">Implied move ≈ ATM straddle debit / spot × 100.
                 If you're not sure, options chains usually print it as "Expected Move."</p>
@@ -43,10 +44,10 @@ export async function renderIvBacktest(mount, _appState) {
             <p data-i18n="view.iv_backtest.hint.one_signed_value_per_line_the_move_from_the_close_" class="muted">One signed value per line — the % move from the close before
                 the event to the close after. Signs are kept for direction context but the
                 backend computes on |realized|, since long-straddle P&amp;L is symmetric.</p>
-            <textarea id="ib-real" rows="6" placeholder="7.2&#10;-8.5&#10;5.1&#10;..."></textarea>
+            <textarea id="ib-real" rows="6" placeholder="7.2&#10;-8.5&#10;5.1&#10;..." data-tip="view.iv_backtest.tip.realized"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.iv_backtest.btn.load_demo_16_quarters_realized_implied" id="ib-demo" class="secondary" type="button">Load demo (16 quarters, realized &gt; implied)</button>
-                <button data-i18n="view.iv_backtest.btn.clear" id="ib-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.iv_backtest.btn.load_demo_16_quarters_realized_implied" data-tip="view.iv_backtest.tip.demo" data-shortcut="iv_backtest_demo" id="ib-demo" class="secondary" type="button">Load demo (16 quarters, realized &gt; implied)</button>
+                <button data-i18n="view.iv_backtest.btn.clear" data-tip="view.iv_backtest.tip.clear" id="ib-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -102,17 +103,23 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(state.implied, realized);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.optCalcIvBacktest(buildBody(state.implied, realized));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderHistogram(realized, res.implied_move_pct);
     renderPnlSeries(realized, res.implied_move_pct);
+    const badge = recommendationBadge(res.recommendation, res.edge_pct);
+    showToast(t('view.iv_backtest.toast.done', {
+        verdict: badge.label,
+        edge: fmtPct(res.edge_pct),
+    }), { level: 'success' });
 }
 
 function renderSummary(r) {
