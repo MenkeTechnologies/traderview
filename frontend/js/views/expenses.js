@@ -608,10 +608,7 @@ async function openScheduleCModal(year) {
         <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">
             <label><span data-i18n="view.expenses.label.year">Year</span>
                 <select id="sc-year">${yearOpts}</select></label>
-            <span style="color:var(--fg-2);font-size:11px">
-                window: ${report.from_date} → ${report.to_date} ·
-                excluded: ${report.excluded_transfers} transfers, ${report.excluded_personal} personal
-            </span>
+            <span style="color:var(--fg-2);font-size:11px">${esc(t('view.expenses.report.meta', { from: report.from_date, to: report.to_date, transfers: report.excluded_transfers, personal: report.excluded_personal }))}</span>
         </div>
         <table class="trades sc-table">
             <thead><tr>

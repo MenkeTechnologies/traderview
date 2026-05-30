@@ -9562,6 +9562,7 @@
   "view.expenses.btn.close_5": "Close",
   "view.expenses.btn.close_6": "Close",
   "view.expenses.boot.transactions_failed": "transactions load failed: {err}",
+  "view.expenses.report.meta": "window: {from} → {to} · excluded: {transfers} transfers, {personal} personal",
   "view.expenses.boot.load_failed": "load failed: {err}",
   "view.expenses.boot.match_failed": "match load failed: {err}",
   "view.expenses.boot.report_failed": "report failed: {err}",
