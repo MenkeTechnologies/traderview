@@ -79,6 +79,11 @@ export async function renderStopLossBacktest(mount, _appState) {
             <div id="slb-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.stop_loss_backtest.h2.realized_chart">Realized P&L per trade (stop-hits in red)</h2>
+            <div id="slb-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="slb-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemoTrades = (k) => {
@@ -140,6 +145,7 @@ async function compute(tok) {
     const local = localSimulate(state.trades, state.params, state.side_long);
     renderSummary(local, true);
     renderTable(local);
+    renderRealizedChart();
     let resp;
     try {
         resp = await api.discStopLossBacktest(buildBody(state.trades, state.params, state.side_long));
@@ -150,6 +156,52 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
+    renderRealizedChart();
+}
+
+function renderRealizedChart() {
+    const el = document.getElementById('slb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (state.trades || []).map((tr, i) => {
+        const stop = stopPriceFor(tr, state.params, state.side_long);
+        const maePrice = state.side_long ? tr.entry - tr.mae : tr.entry + tr.mae;
+        const hit = state.side_long ? maePrice <= stop : maePrice >= stop;
+        const realized = hit
+            ? (state.side_long ? stop - tr.entry : tr.entry - stop)
+            : (state.side_long ? tr.actual_exit - tr.entry : tr.entry - tr.actual_exit);
+        return { idx: i + 1, realized, hit };
+    }).filter(r => Number.isFinite(r.realized));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.stop_loss_backtest.empty_chart">${esc(t('view.stop_loss_backtest.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(r => r.idx);
+    const winY  = rows.map(r => !r.hit && r.realized >= 0 ? r.realized : null);
+    const loseY = rows.map(r => !r.hit && r.realized <  0 ? r.realized : null);
+    const stopY = rows.map(r =>  r.hit ? r.realized : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.stop_loss_backtest.chart.trade') },
+            { label: t('view.stop_loss_backtest.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.stop_loss_backtest.chart.lose'),
+              stroke: '#ffb84a', width: 0,
+              points: { show: true, size: 10, fill: '#ffb84a', stroke: '#ffb84a' } },
+            { label: t('view.stop_loss_backtest.chart.stop'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.stop_loss_backtest.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 56 } ],
+        legend: { show: true },
+    }, [xs, winY, loseY, stopY, zero], el);
 }
 
 function renderSummary(report, pending) {

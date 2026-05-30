@@ -322,6 +322,8 @@ pub enum Preset {
     WeakDayBalancedRange,        // change_pct < -3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — weak day with both ends touched (impulsive breakdown)
     ChannelRideUp,               // change_pct > 1 AND day_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 3 — close at HOD with LOD far away (one-side day up)
     ChannelRideDown,             // change_pct < -1 AND day_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 3 — close at LOD with HOD far away (one-side day down)
+    PullbackInUptrend,           // year_high_pct > -15 AND change_pct between -3 and 0 AND rel_volume < 1 — minor pullback in uptrend on light vol (textbook continuation buy zone)
+    BounceInDowntrend,           // year_low_pct < 15 AND change_pct between 0 and 3 AND rel_volume < 1 — minor bounce in downtrend on light vol (textbook continuation short zone)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1333,6 +1335,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.hod_dist_pct.abs() > 3.0
         }
+        Preset::PullbackInUptrend => {
+            hit.year_high_pct > -15.0
+                && hit.change_pct < 0.0
+                && hit.change_pct > -3.0
+                && hit.rel_volume < 1.0
+        }
+        Preset::BounceInDowntrend => {
+            hit.year_low_pct < 15.0
+                && hit.change_pct > 0.0
+                && hit.change_pct < 3.0
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -1545,6 +1559,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WeakDayBalancedRange => "Weak Day, Balanced Range",
         Preset::ChannelRideUp => "Channel Ride Up",
         Preset::ChannelRideDown => "Channel Ride Down",
+        Preset::PullbackInUptrend => "Pullback In Uptrend",
+        Preset::BounceInDowntrend => "Bounce In Downtrend",
     }
 }
 
