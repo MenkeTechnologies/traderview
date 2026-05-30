@@ -13,6 +13,7 @@ import {
 } from '../_clusters_trade_features_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     features: makeDemoFeatures('morning-vs-afternoon'),
     k: 2,
@@ -26,19 +27,19 @@ export async function renderClustersTradeFeatures(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.clusters_trade_features.h2.paste">Paste trade features (per-line:</span> <code>entry_min hold_min r_multiple</code>)</h2>
-            <textarea id="cl-blob" rows="8" placeholder="540 30 1.5  # 9:00 entry, 30min hold, +1.5R&#10;...">${esc(featuresToBlob(state.features))}</textarea>
+            <textarea id="cl-blob" rows="8" placeholder="540 30 1.5  # 9:00 entry, 30min hold, +1.5R&#10;..." data-tip="view.clusters_trade_features.tip.blob">${esc(featuresToBlob(state.features))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.clusters_trade_features.label.k">k (clusters)</span>
-                    <input id="cl-k" type="number" step="1" min="1" max="10" value="${state.k}"></label>
+                    <input id="cl-k" type="number" step="1" min="1" max="10" value="${state.k}" data-tip="view.clusters_trade_features.tip.k"></label>
                 <label><span data-i18n="view.clusters_trade_features.label.max_iters">Max iterations</span>
-                    <input id="cl-iters" type="number" step="1" min="1" max="500" value="${state.maxIters}"></label>
-                <button data-i18n="view.clusters_trade_features.btn.analyze" id="cl-run" class="primary" type="button">Analyze</button>
+                    <input id="cl-iters" type="number" step="1" min="1" max="500" value="${state.maxIters}" data-tip="view.clusters_trade_features.tip.max_iters"></label>
+                <button data-i18n="view.clusters_trade_features.btn.analyze" id="cl-run" class="primary" type="button" data-tip="view.clusters_trade_features.tip.run" data-shortcut="clusters_trade_features_run">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.clusters_trade_features.btn.demo_morning_vs_afternoon" id="cl-demo-morn-aft" class="secondary" type="button">Demo: morning vs afternoon</button>
-                <button data-i18n="view.clusters_trade_features.btn.demo_3_trader_styles" id="cl-demo-three"    class="secondary" type="button">Demo: 3 trader styles</button>
-                <button data-i18n="view.clusters_trade_features.btn.demo_single_cluster" id="cl-demo-single"   class="secondary" type="button">Demo: single cluster</button>
-                <button data-i18n="view.clusters_trade_features.btn.demo_scattered_low_edge" id="cl-demo-scatter"  class="secondary" type="button">Demo: scattered (low-edge)</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_morning_vs_afternoon" id="cl-demo-morn-aft" class="secondary" type="button" data-tip="view.clusters_trade_features.tip.demo_morn_aft">Demo: morning vs afternoon</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_3_trader_styles" id="cl-demo-three"    class="secondary" type="button" data-tip="view.clusters_trade_features.tip.demo_three">Demo: 3 trader styles</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_single_cluster" id="cl-demo-single"   class="secondary" type="button" data-tip="view.clusters_trade_features.tip.demo_single">Demo: single cluster</button>
+                <button data-i18n="view.clusters_trade_features.btn.demo_scattered_low_edge" id="cl-demo-scatter"  class="secondary" type="button" data-tip="view.clusters_trade_features.tip.demo_scatter">Demo: scattered (low-edge)</button>
             </div>
             <p data-i18n="view.clusters_trade_features.hint.entry_minute_is_minutes_from_midnight_utc_e_g_9_30" class="muted">Entry minute is minutes from midnight (UTC) — e.g. 9:30am ET ≈ 870. Distance is normalized: entry/1440, hold/1440, R/5 so each dim contributes ~comparably.</p>
         </div>
@@ -80,6 +81,7 @@ function readInputs() {
     const parsed = parseFeatureBlob(document.getElementById('cl-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.clusters_trade_features.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -91,7 +93,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.features, state.k, state.maxIters);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.clusters_trade_features.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state.features, state.k, state.maxIters);
     renderSummary(local, true);
     renderChart(state.features, local);
@@ -100,12 +102,15 @@ async function compute(tok) {
     try {
         resp = await api.clustersTradeFeatures(buildBody(state.features, state.k, state.maxIters));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.clusters_trade_features.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.features, resp);
     renderClusters(resp);
+    showToast(t('view.clusters_trade_features.toast.analyzed', { k: resp.clusters.length, n: state.features.length }), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

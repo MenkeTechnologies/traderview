@@ -726,6 +726,11 @@ function bindTabs() {
         const el = document.getElementById('tif-now-snap');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in clusters-trade-features scope → click Analyze.
+    window.addEventListener('tv:clusters-trade-features-run', () => {
+        const el = document.getElementById('cl-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
