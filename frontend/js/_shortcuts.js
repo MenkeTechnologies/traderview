@@ -228,6 +228,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'risk_parity_solver_run',       keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-parity-solver', descKey: 'shortcut.risk_parity_solver_run',      actionKey: 'tv:risk-parity-solver-run' },
     { id: 'volume_at_price_run',          keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vap',               descKey: 'shortcut.volume_at_price_run',          actionKey: 'tv:volume-at-price-run' },
     { id: 'herfindahl_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hhi',               descKey: 'shortcut.herfindahl_run',               actionKey: 'tv:herfindahl-run' },
+    { id: 'roll_spread_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'roll-spread',       descKey: 'shortcut.roll_spread_run',              actionKey: 'tv:roll-spread-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

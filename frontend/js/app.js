@@ -891,6 +891,11 @@ function bindTabs() {
         const el = document.getElementById('hh-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in roll-spread scope → click Compute spread.
+    window.addEventListener('tv:roll-spread-run', () => {
+        const el = document.getElementById('rs-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

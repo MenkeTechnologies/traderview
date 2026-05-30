@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_WINDOW,
@@ -31,19 +32,19 @@ export async function renderRollSpread(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.roll.label.window">Window (bars)</span>
-                    <input id="rs-window" type="number" step="1" min="3" value="${state.window}"></label>
+                    <input id="rs-window" type="number" step="1" min="3" value="${state.window}" data-tip="view.roll.tip.window"></label>
                 <button data-i18n="view.roll.btn.compute" id="rs-run" class="primary"
-                        data-tip="view.roll.tip.compute" type="button">Compute spread</button>
+                        data-tip="view.roll.tip.compute" data-shortcut="roll_spread_run" type="button">Compute spread</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.roll.btn.demo_random"  id="rs-demo-random" class="secondary" type="button">Demo: random bid/ask bounce (10 bp)</button>
-                <button data-i18n="view.roll.btn.demo_tight"   id="rs-demo-tight"  class="secondary" type="button">Demo: tight bounce (1 bp)</button>
-                <button data-i18n="view.roll.btn.demo_wide"    id="rs-demo-wide"   class="secondary" type="button">Demo: wide bounce (50 bp)</button>
-                <button data-i18n="view.roll.btn.demo_trend"   id="rs-demo-trend"  class="secondary" type="button">Demo: trending (spread=0)</button>
-                <button data-i18n="view.roll.btn.demo_flat"    id="rs-demo-flat"   class="secondary" type="button">Demo: flat market</button>
-                <button data-i18n="view.roll.btn.demo_regime"  id="rs-demo-regime" class="secondary" type="button">Demo: regime shift (bounce → trend)</button>
-                <button data-i18n="view.roll.btn.demo_spotty"  id="rs-demo-spotty" class="secondary" type="button">Demo: spotty NaN gaps</button>
-                <button data-i18n="view.roll.btn.demo_huge"    id="rs-demo-huge"   class="secondary" type="button">Demo: window > n (all-null)</button>
+                <button data-i18n="view.roll.btn.demo_random"  id="rs-demo-random" class="secondary" type="button" data-tip="view.roll.tip.demo_random">Demo: random bid/ask bounce (10 bp)</button>
+                <button data-i18n="view.roll.btn.demo_tight"   id="rs-demo-tight"  class="secondary" type="button" data-tip="view.roll.tip.demo_tight">Demo: tight bounce (1 bp)</button>
+                <button data-i18n="view.roll.btn.demo_wide"    id="rs-demo-wide"   class="secondary" type="button" data-tip="view.roll.tip.demo_wide">Demo: wide bounce (50 bp)</button>
+                <button data-i18n="view.roll.btn.demo_trend"   id="rs-demo-trend"  class="secondary" type="button" data-tip="view.roll.tip.demo_trend">Demo: trending (spread=0)</button>
+                <button data-i18n="view.roll.btn.demo_flat"    id="rs-demo-flat"   class="secondary" type="button" data-tip="view.roll.tip.demo_flat">Demo: flat market</button>
+                <button data-i18n="view.roll.btn.demo_regime"  id="rs-demo-regime" class="secondary" type="button" data-tip="view.roll.tip.demo_regime">Demo: regime shift (bounce → trend)</button>
+                <button data-i18n="view.roll.btn.demo_spotty"  id="rs-demo-spotty" class="secondary" type="button" data-tip="view.roll.tip.demo_spotty">Demo: spotty NaN gaps</button>
+                <button data-i18n="view.roll.btn.demo_huge"    id="rs-demo-huge"   class="secondary" type="button" data-tip="view.roll.tip.demo_huge">Demo: window > n (all-null)</button>
             </div>
             <p data-i18n="view.roll.hint.about" class="muted">spread = 2·√(−cov(Δp_t, Δp_{t−1})). Negative serial covariance from bid/ask bouncing reveals the implicit spread; positive cov (trending) collapses estimate to 0. No quotes needed — works from trade prints alone.</p>
         </div>
@@ -84,6 +85,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.roll.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.roll.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -95,7 +97,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.roll.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.prices, state.window);
     renderSummary(local, true);
     renderChart(local);
@@ -105,12 +107,18 @@ async function compute(tok) {
         resp = await api.microRollSpread(buildBody(state));
     } catch (e) {
         showErr(`${t('view.roll.err.api')}: ${e.message || e}`);
+        showToast(t('view.roll.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const s = summarize(resp);
+    const lastPrice = state.prices.length > 0 ? state.prices[state.prices.length - 1] : NaN;
+    const lastBps = spreadToBps(s.last, lastPrice);
+    const bpsStr = Number.isFinite(lastBps) ? lastBps.toFixed(2) : '—';
+    showToast(t('view.roll.toast.computed', { bps: bpsStr }), { level: 'success' });
 }
 
 function renderSummary(series, pending) {
