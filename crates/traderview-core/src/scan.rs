@@ -672,6 +672,8 @@ pub enum Preset {
     Year52LowDryVolNarrowRange,      // year_low_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w low + dry vol + narrow range + flat (silent compression at multi-year lows; capitulation exhaustion or coiled bounce setup)
     CompressedYearRangeFlatDay,      // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — within 5% of BOTH 52w extremes simultaneously (compressed 52w range) + flat + dry vol (structurally narrow asset having yet another silent day; maximum coil at the regime level)
     CompressedYearRangeRegimeBreak,  // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — within 5% of BOTH 52w extremes (compressed regime) BUT big change + hot vol (sudden break of a long-compressed 52w sideways range; regime-level breakout/breakdown candidate)
+    IntradayClimaxTopFade,           // hod_dist_pct.abs() > 4 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — far from HOD + closed at LOD + finished red + hot vol (intraday climax-top fade: pumped early then sold all day to finish red at the lows on volume)
+    IntradayClimaxBottomReclaim,     // lod_dist_pct.abs() > 4 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — far from LOD + closed at HOD + finished green + hot vol (intraday climax-bottom reclaim: panicked early then bid up all day to finish green at the highs on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3682,6 +3684,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::IntradayClimaxTopFade => {
+            hit.hod_dist_pct.abs() > 4.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::IntradayClimaxBottomReclaim => {
+            hit.lod_dist_pct.abs() > 4.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4244,6 +4258,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowDryVolNarrowRange => "Near 52w Low + Dry Vol + Narrow Range + Flat (Silent Compression at Multi-year Lows; Coiled Bounce Setup)",
         Preset::CompressedYearRangeFlatDay => "Compressed 52w Range + Flat + Dry Vol (Structurally Narrow Asset on Another Silent Day; Regime-level Coil)",
         Preset::CompressedYearRangeRegimeBreak => "Compressed 52w Range + Big Change + Hot Vol (Sudden Break of Long-compressed Sideways Range; Regime-level Breakout/Breakdown)",
+        Preset::IntradayClimaxTopFade => "Intraday Climax-top Fade + Hot Vol (Pumped Early, Sold All Day; Closed Red at LOD on Volume)",
+        Preset::IntradayClimaxBottomReclaim => "Intraday Climax-bottom Reclaim + Hot Vol (Panicked Early, Bid Up All Day; Closed Green at HOD on Volume)",
     }
 }
 

@@ -554,6 +554,8 @@ const PRESETS = [
     { id: 'year52_low_dry_vol_narrow_range', label: t('view.scanners.preset.year52_low_dry_vol_narrow_range.label'), desc: t('view.scanners.preset.year52_low_dry_vol_narrow_range.desc') },
     { id: 'compressed_year_range_flat_day', label: t('view.scanners.preset.compressed_year_range_flat_day.label'), desc: t('view.scanners.preset.compressed_year_range_flat_day.desc') },
     { id: 'compressed_year_range_regime_break', label: t('view.scanners.preset.compressed_year_range_regime_break.label'), desc: t('view.scanners.preset.compressed_year_range_regime_break.desc') },
+    { id: 'intraday_climax_top_fade', label: t('view.scanners.preset.intraday_climax_top_fade.label'), desc: t('view.scanners.preset.intraday_climax_top_fade.desc') },
+    { id: 'intraday_climax_bottom_reclaim', label: t('view.scanners.preset.intraday_climax_bottom_reclaim.label'), desc: t('view.scanners.preset.intraday_climax_bottom_reclaim.desc') },
 ];
 
 export async function renderScanners(mount) {

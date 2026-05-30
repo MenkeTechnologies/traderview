@@ -88,6 +88,12 @@ export async function renderHurst(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.hurst.h2.cumulative_deviation_chart">Cumulative deviation from mean (R/S internal path)</h2>
+            <div id="hu-cumdev-chart" style="width:100%;height:260px"></div>
+            <p data-i18n="view.hurst.hint.cumulative_deviation" class="muted">Running sum of (return − mean). This is exactly the path whose range (max − min) becomes the R in R/S. Persistent series (H&gt;0.5) wander far from zero; mean-reverting series (H&lt;0.5) hug the yellow zero line.</p>
+        </div>
+
         <div id="hu-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -122,6 +128,7 @@ async function estimate(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    renderCumDevChart(retParsed.value);
     showToast(t('view.hurst.toast.done', {
         h: res.hurst.toFixed(4),
         regime: t(regimeLabelKey(res.hurst)),
@@ -187,6 +194,39 @@ function renderChart(res) {
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, ys, fitYs], el);
+}
+
+function renderCumDevChart(returns) {
+    const el = document.getElementById('hu-cumdev-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(returns) || returns.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hurst.empty_cumdev">${esc(t('view.hurst.empty_cumdev'))}</div>`;
+        return;
+    }
+    const mean = returns.reduce((a, v) => a + v, 0) / returns.length;
+    const xs = [];
+    const ys = [];
+    let acc = 0;
+    for (let i = 0; i < returns.length; i++) {
+        acc += returns[i] - mean;
+        xs.push(i + 1);
+        ys.push(acc);
+    }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 240,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.idx') },
+            { label: t('view.hurst.chart.cumdev'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.hurst.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderParseErrors(errors) {
