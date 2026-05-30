@@ -169,11 +169,18 @@ export const TRADE_ROW_ITEMS = [
       actionKey: 'tv:trade-delete',      section: 'trade' },
 ];
 
-// View IDs (URL slugs) where SYMBOL_ITEMS are auto-registered. Matches
-// the views that take `sym()` in the app.js dispatcher.
+// View IDs (URL slugs) where SYMBOL_ITEMS are auto-registered. First
+// group is views that take `sym()` directly in the app.js dispatcher.
+// Second group is symbol-centric views that read the global symbol
+// internally (news/dashboard/etc) — same UX value from the menu.
 export const SYMBOL_AWARE_SCOPES = [
+    // direct sym() consumers
     'research', 'replay', 'earnings-iv', 'sentiment', 'options',
     'short-interest', 'darkpool', 'tape-replay', 'charts',
+    // global-symbol consumers
+    'dashboard', 'news', 'top-signals', 'premarket', 'webull',
+    'vol-smile', 'vol-surface', 'option-payoff', 'compare',
+    'live', 'pair-trade-calc',
 ];
 
 // Native edit actions surfaced when the right-click target is a text-

@@ -56,6 +56,7 @@ export const DEFAULT_SHORTCUTS = [
     // text-entry context (handled by isTextEntryTarget + non-modifier).
     { id: 'trades_new',         keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',    descKey: 'shortcut.trades_new',         actionKey: 'tv:trades-new' },
     { id: 'dashboard_refresh',  keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'dashboard', descKey: 'shortcut.dashboard_refresh',  actionKey: 'tv:dashboard-refresh' },
+    { id: 'journal_focus_body', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',   descKey: 'shortcut.journal_focus_body', actionKey: 'tv:journal-focus-body' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.

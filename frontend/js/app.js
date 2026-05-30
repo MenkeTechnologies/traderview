@@ -425,6 +425,13 @@ function bindTabs() {
     window.addEventListener('tv:dashboard-refresh', () => {
         window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
+    // View-scoped: `n` in journal scope → focus the body textarea.
+    // Works on both /journal/<date> and trade-detail's journal block
+    // (they use #body and #journal-body respectively).
+    window.addEventListener('tv:journal-focus-body', () => {
+        const el = document.getElementById('body') || document.getElementById('journal-body');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {
