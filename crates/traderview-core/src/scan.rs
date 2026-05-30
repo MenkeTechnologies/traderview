@@ -438,6 +438,8 @@ pub enum Preset {
     DownDayOnDryVolNear52wLow,   // year_low_pct < 10 AND change_pct < -1 AND rel_volume < 0.7 — push near 52w low on dry vol (suspect breakdown candidate)
     UpDayOnHotVolNear52wHigh,    // year_high_pct > -10 AND change_pct > 1 AND rel_volume >= 2 — push near 52w high on heavy vol (high-quality breakout candidate)
     DownDayOnHotVolNear52wLow,   // year_low_pct < 10 AND change_pct < -1 AND rel_volume >= 2 — push near 52w low on heavy vol (high-quality breakdown candidate)
+    NarrowDayDryVolMid,          // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — silent narrow day in mid-zone (coiled rest day)
+    WideDayHotVolMid,            // hod_dist + lod_dist > 5 AND rel_volume >= 2 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — wide-range churn in mid-zone on heavy vol (rotation breakout candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2100,6 +2102,23 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::NarrowDayDryVolMid => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.5
+                && hit.year_high_pct >= -30.0
+                && hit.year_high_pct <= -15.0
+                && hit.year_low_pct >= 15.0
+                && hit.year_low_pct <= 30.0
+        }
+        Preset::WideDayHotVolMid => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 5.0
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= -30.0
+                && hit.year_high_pct <= -15.0
+                && hit.year_low_pct >= 15.0
+                && hit.year_low_pct <= 30.0
+        }
     }
 }
 
@@ -2428,6 +2447,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownDayOnDryVolNear52wLow => "Down Day on Dry Vol Near 52w Low",
         Preset::UpDayOnHotVolNear52wHigh => "Up Day on Hot Vol Near 52w High",
         Preset::DownDayOnHotVolNear52wLow => "Down Day on Hot Vol Near 52w Low",
+        Preset::NarrowDayDryVolMid => "Narrow Dry-Vol Mid-Zone Coil",
+        Preset::WideDayHotVolMid => "Wide Hot-Vol Mid-Zone Rotation",
     }
 }
 
