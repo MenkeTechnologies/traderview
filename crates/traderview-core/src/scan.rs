@@ -1152,6 +1152,8 @@ pub enum Preset {
     BigIntradayRangeConfirmedBelowYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (volatility-expansion battle in the validated-breakdown zone: regular session prints a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown consolidation fight where bears defend the breakdown and bulls test it)
     BigIntradayRangeDeepBelowYearHighHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 20 — wide intraday range (>8%) + hot vol + far below 52w high (>=20%) (volatility-expansion battle deep in pullback territory: regular session prints a wide trading range well below the prior peak with elevated participation; capitulation-or-recovery decision fight where extended decline meets institutional pushback)
     BigIntradayRangeDeepAboveYearLowHotVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (volatility-expansion battle deep in advance territory: regular session prints a wide trading range well above the prior trough with elevated participation; top-or-continuation decision fight where extended advance meets institutional pushback)
+    BigIntradayRangeMidYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (volatility-expansion battle in mid-cycle pullback zone: regular session prints a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
+    BigIntradayRangeMidYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (volatility-expansion battle in mid-cycle recovery zone: regular session prints a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7090,6 +7092,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.year_low_pct >= 20.0
         }
+        Preset::BigIntradayRangeMidYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::BigIntradayRangeMidYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -8132,6 +8146,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigIntradayRangeConfirmedBelowYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Volatility-expansion Battle in the Validated-breakdown Zone: Regular Session Prints a Wide Trading Range Right after Price Cleared the Prior Trough with Elevated Participation; Post-breakdown Consolidation Fight Where Bears Defend the Breakdown and Bulls Test It)",
         Preset::BigIntradayRangeDeepBelowYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Far below 52w High (>=20 %) (Volatility-expansion Battle Deep in Pullback Territory: Regular Session Prints a Wide Trading Range Well below the Prior Peak with Elevated Participation; Capitulation-or-recovery Decision Fight Where Extended Decline Meets Institutional Pushback)",
         Preset::BigIntradayRangeDeepAboveYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Far above 52w Low (>=20 %) (Volatility-expansion Battle Deep in Advance Territory: Regular Session Prints a Wide Trading Range Well above the Prior Trough with Elevated Participation; Top-or-continuation Decision Fight Where Extended Advance Meets Institutional Pushback)",
+        Preset::BigIntradayRangeMidYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Mid-range from High (5-20 %) (Volatility-expansion Battle in Mid-cycle Pullback Zone: Regular Session Prints a Wide Trading Range in the Proper Consolidation Range below the Prior Peak with Elevated Participation; Mid-cycle Indecision-resolution Fight Requiring Close-position Confirmation)",
+        Preset::BigIntradayRangeMidYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Mid-range from Low (5-20 %) (Volatility-expansion Battle in Mid-cycle Recovery Zone: Regular Session Prints a Wide Trading Range in the Proper Consolidation Range above the Prior Trough with Elevated Participation; Mid-cycle Indecision-resolution Fight Requiring Close-position Confirmation)",
     }
 }
 
