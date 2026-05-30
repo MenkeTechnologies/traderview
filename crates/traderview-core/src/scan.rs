@@ -408,6 +408,8 @@ pub enum Preset {
     RangeContractionSqueezeLow,  // year_low_pct < 5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w low (mega-squeeze coil)
     RangeExpansionAtTopOnVol,    // year_high_pct > -5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w high with no net move on heavy vol (distribution at top)
     RangeExpansionAtBottomOnVol, // year_low_pct < 5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w low with no net move on heavy vol (accumulation at bottom)
+    GapInsideRangeBalanced,      // gap_pct.abs() < 1 AND hod_dist + lod_dist < 2 AND change_pct.abs() < 0.5 — flat gap + tight range + flat day (multi-day balance candidate)
+    GapInsideRangeImpulse,       // gap_pct.abs() < 1 AND hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — flat gap but wide impulsive day on heavy vol (intraday breakout from balance)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1900,6 +1902,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::GapInsideRangeBalanced => {
+            hit.gap_pct.abs() < 1.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::GapInsideRangeImpulse => {
+            hit.gap_pct.abs() < 1.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2198,6 +2211,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RangeContractionSqueezeLow => "Range-Contraction Coil at 52w Low",
         Preset::RangeExpansionAtTopOnVol => "Range-Expansion Churn at 52w High",
         Preset::RangeExpansionAtBottomOnVol => "Range-Expansion Churn at 52w Low",
+        Preset::GapInsideRangeBalanced => "Flat-Gap Balance Day",
+        Preset::GapInsideRangeImpulse => "Flat-Gap Impulse Breakout",
     }
 }
 

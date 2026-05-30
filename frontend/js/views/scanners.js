@@ -290,6 +290,8 @@ const PRESETS = [
     { id: 'range_contraction_squeeze_low', label: t('view.scanners.preset.range_contraction_squeeze_low.label'), desc: t('view.scanners.preset.range_contraction_squeeze_low.desc') },
     { id: 'range_expansion_at_top_on_vol', label: t('view.scanners.preset.range_expansion_at_top_on_vol.label'), desc: t('view.scanners.preset.range_expansion_at_top_on_vol.desc') },
     { id: 'range_expansion_at_bottom_on_vol', label: t('view.scanners.preset.range_expansion_at_bottom_on_vol.label'), desc: t('view.scanners.preset.range_expansion_at_bottom_on_vol.desc') },
+    { id: 'gap_inside_range_balanced', label: t('view.scanners.preset.gap_inside_range_balanced.label'), desc: t('view.scanners.preset.gap_inside_range_balanced.desc') },
+    { id: 'gap_inside_range_impulse', label: t('view.scanners.preset.gap_inside_range_impulse.label'), desc: t('view.scanners.preset.gap_inside_range_impulse.desc') },
 ];
 
 export async function renderScanners(mount) {

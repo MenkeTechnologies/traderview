@@ -24,14 +24,53 @@ export async function renderShares(mount) {
             <h2 data-i18n="view.shares.h2.views_chart">Views per share</h2>
             <div id="sh-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.shares.h2.created_chart">Shares created over time (cumulative)</h2>
+            <div id="sh-created-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderViewsChart(mine, pub);
+    renderCreatedChart(mine, pub);
     mount.querySelectorAll('[data-del-share]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteShare(b.dataset.delShare);
             if (!viewIsCurrent(tok)) return;
             renderShares(mount);
         }));
+}
+
+function renderCreatedChart(mine, pub) {
+    const el = document.getElementById('sh-created-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const mineRows = (mine || []).filter(s => s.created_at);
+    const pubRows  = (pub  || []).filter(s => s.created_at);
+    if (mineRows.length + pubRows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.shares.empty_created_chart">${esc(t('view.shares.empty_created_chart'))}</div>`;
+        return;
+    }
+    mineRows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    pubRows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const mxs = mineRows.map((_, i) => i + 1);
+    const pxs = pubRows.map((_, i) => i + 1);
+    const xs  = Array.from({ length: Math.max(mxs.length, pxs.length) }, (_, i) => i + 1);
+    const mineCum = xs.map(i => i <= mineRows.length ? i : null);
+    const pubCum  = xs.map(i => i <= pubRows.length  ? i : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.shares.chart.share_idx') },
+            { label: t('view.shares.chart.mine'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.shares.chart.public'),
+              stroke: '#ffd84a', width: 1.5,
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, mineCum, pubCum], el);
 }
 
 function renderViewsChart(mine, pub) {
