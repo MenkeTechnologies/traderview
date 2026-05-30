@@ -75,7 +75,7 @@ function renderList(r, side) {
             <th data-i18n="view.top_signals.th.close">Close</th><th data-i18n="view.top_signals.th.rsi">RSI</th><th data-i18n="view.top_signals.th.signals">Signals</th></tr></thead>
         <tbody>${r.hits.map((h, i) => {
             const cls = h.score >= 3 ? 'pos' : h.score <= -3 ? 'neg' : '';
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(h.symbol)}">
                 <td>${i + 1}</td>
                 <td><a href="#research/${encodeURIComponent(h.symbol)}">${esc(h.symbol)}</a></td>
                 <td class="${cls}">${h.score >= 0 ? '+' : ''}${h.score}</td>

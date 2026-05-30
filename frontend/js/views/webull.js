@@ -138,7 +138,7 @@ function render(mount, snap) {
     if (!posBody) return;
     if (snap.positions && snap.positions.length) {
         posBody.innerHTML = snap.positions.map(p => `
-            <tr>
+            <tr data-context-scope="symbol-row" data-symbol="${esc(p.symbol)}">
                 <td><strong style="color:var(--accent)">${esc(p.symbol)}</strong></td>
                 <td>${esc(p.side)}</td>
                 <td>${esc(p.asset_type)}</td>

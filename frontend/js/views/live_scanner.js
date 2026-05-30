@@ -168,7 +168,7 @@ function panel(mount, id, rows, pctField) {
         <tbody>${rows.map(s => {
             const v = s[pctField] ?? 0;
             const cls = v >= 0 ? 'pos' : 'neg';
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(s.symbol)}">
                 <td><strong style="color:var(--accent)">${esc(s.symbol)}</strong></td>
                 <td>${fmt(s.last)}</td>
                 <td class="${cls}">${v.toFixed(2)}%</td>

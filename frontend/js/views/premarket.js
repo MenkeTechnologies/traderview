@@ -59,7 +59,8 @@ function renderGroups(contracts, mount) {
 
 function card(c) {
     if (!c.price) {
-        return `<div class="card"><div class="label">${esc(c.symbol)}</div>
+        return `<div class="card" data-context-scope="symbol-row" data-symbol="${esc(c.symbol)}">
+            <div class="label">${esc(c.symbol)}</div>
             <div class="muted small">${esc(t('common.no_data'))}</div></div>`;
     }
     const ch = c.change_pct;
@@ -76,7 +77,7 @@ function card(c) {
         ? `<div class="muted small">${esc(t('common.range_label', { low: fmt(c.day_low), high: fmt(c.day_high) }))}</div>`
         : '';
     const ms = c.market_state ? `<div class="muted small">${esc(c.market_state.toLowerCase())}</div>` : '';
-    return `<div class="card">
+    return `<div class="card" data-context-scope="symbol-row" data-symbol="${esc(c.symbol)}">
         <div class="label">${esc(c.label)} (${esc(c.symbol)})</div>
         <div class="value">${fmt(c.price, c.price < 10 ? 4 : 2)}</div>
         <div class="small ${chCls}">${chTxt}</div>

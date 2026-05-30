@@ -158,7 +158,8 @@ function row(n) {
     const link = n.link
         ? `<a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>`
         : esc(n.title);
-    return `<div class="chart-panel" style="padding:8px 10px;margin-bottom:6px;">
+    return `<div class="chart-panel" style="padding:8px 10px;margin-bottom:6px;"
+                 data-context-scope="symbol-row" data-symbol="${esc(n.symbol)}">
         <div style="display:flex;align-items:flex-start;">
             ${sentimentBar(n.sentiment)}
             <div style="flex:1 1 auto;min-width:0;">
