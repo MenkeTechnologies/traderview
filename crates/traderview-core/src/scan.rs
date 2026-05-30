@@ -576,6 +576,8 @@ pub enum Preset {
     DoubleTopRetest,                // year_high_pct < 3 AND rel_volume >= 1.2 AND change_pct <= 0 AND day_pct <= 0 — near 52w high + decent vol + non-positive day (potential double-top retest forming)
     LiquiditySweepBothSides,        // hod_dist + lod_dist > 3 AND hod_dist > 1 AND lod_dist > 1 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — both extremes visited + flat close + hot vol (raid-both-sides liquidity sweep before closing flat)
     SteadyGrinderNoVolPickup,       // change_pct between 0.5 and 2 AND rel_volume between 0.8 and 1.0 AND day_pct between 0.3 and 1.5 AND gap_pct.abs() < 0.2 — small steady gain + below-average vol + steady intraday + no gap (low-vol grinder; quiet uptrend continuation)
+    SteadyDeclinerNoVolPickup,      // change_pct between -2 and -0.5 AND rel_volume between 0.8 and 1.0 AND day_pct between -1.5 and -0.3 AND gap_pct.abs() < 0.2 — small steady decline + below-average vol + steady intraday + no gap (low-vol decliner; quiet downtrend continuation)
+    HighVolStallNearHighOfYear,     // year_high_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w high + hot vol + flat day (high-vol stall at the top; supply meeting demand at resistance)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3041,6 +3043,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct <= 1.5
                 && hit.gap_pct.abs() < 0.2
         }
+        Preset::SteadyDeclinerNoVolPickup => {
+            hit.change_pct <= -0.5
+                && hit.change_pct >= -2.0
+                && hit.rel_volume >= 0.8
+                && hit.rel_volume <= 1.0
+                && hit.day_pct <= -0.3
+                && hit.day_pct >= -1.5
+                && hit.gap_pct.abs() < 0.2
+        }
+        Preset::HighVolStallNearHighOfYear => {
+            hit.year_high_pct < 2.0
+                && hit.rel_volume >= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3507,6 +3523,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DoubleTopRetest => "Near 52w High + Failing Day + Decent Vol (Potential Double-Top Retest)",
         Preset::LiquiditySweepBothSides => "Both Extremes Visited + Flat Close + Hot Vol (Liquidity Sweep)",
         Preset::SteadyGrinderNoVolPickup => "Small Steady Gain + Sub-avg Vol + No Gap (Quiet Uptrend Grinder)",
+        Preset::SteadyDeclinerNoVolPickup => "Small Steady Decline + Sub-avg Vol + No Gap (Quiet Downtrend Decliner)",
+        Preset::HighVolStallNearHighOfYear => "Near 52w High + Hot Vol + Flat Day (High-Vol Stall at Top)",
     }
 }
 

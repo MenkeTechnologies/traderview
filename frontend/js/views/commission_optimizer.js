@@ -59,6 +59,11 @@ export async function renderCommissionOptimizer(mount, _appState) {
             <div id="co-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.commission_optimizer.h2.delta_chart">Δ vs actual per tier — negative = savings, positive = cost</h2>
+            <div id="co-delta-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="co-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('co-demo-active').addEventListener('click',  () => loadDemo('active-retail'));
@@ -123,6 +128,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderFeeChart(local);
+    renderDeltaChart(local);
     let resp;
     try {
         resp = await api.calcCommissionOptimizer(buildBody(state.executions, state.tiers));
@@ -149,6 +155,7 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized);
     renderFeeChart(normalized);
+    renderDeltaChart(normalized);
     const annual = Math.round(Number(normalized.projected_annual_savings) || 0);
     const best = normalized.best_alternative || '—';
     showToast(t('view.commission_optimizer.toast.evaluated', { best, save: annual.toLocaleString() }), { level: annual > 0 ? 'success' : 'info' });
@@ -249,6 +256,41 @@ function renderFeeChart(report) {
         ],
         legend: { show: true },
     }, [xs, fees], el);
+}
+
+function renderDeltaChart(report) {
+    const el = document.getElementById('co-delta-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.tiers) || report.tiers.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.commission_optimizer.empty_delta_chart">${esc(t('view.commission_optimizer.empty_delta_chart'))}</div>`;
+        return;
+    }
+    const labels = report.tiers.map(tr => tr.tier);
+    const deltas = report.tiers.map(tr => {
+        const v = Number(tr.delta_vs_actual);
+        return Number.isFinite(v) ? v : null;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.commission_optimizer.chart.tier_idx') },
+            { label: t('view.commission_optimizer.chart.delta'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.commission_optimizer.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, deltas, zero], el);
 }
 
 function card(label, value, cls = '') {
