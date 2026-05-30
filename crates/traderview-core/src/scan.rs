@@ -1050,6 +1050,8 @@ pub enum Preset {
     DryVolBigDownDeepAboveYearLowHotVol,       // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 20 — big down move (<-3%) + dry vol (<0.5) + far above 52w low (>=20%) (unconvincing pullback: large losses deep in the advance territory on below-average participation; sympathy/long-unwind dip lacking institutional sell-in, fragile if vol returns)
     DryVolBigUpMidYearHighHotVol,              // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 — big up move (>3%) + dry vol (<0.5) + mid-range from high (5-20%) (low-quality bounce in mid-cycle pullback: large gains in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to fade)
     DryVolBigDownMidYearLowHotVol,             // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 — big down move (<-3%) + dry vol (<0.5) + mid-range from low (5-20%) (low-quality pullback in mid-cycle recovery: large losses in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to bounce)
+    DryVolBigUpJustOffYearHighHotVol,          // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 — big up move (>3%) + dry vol (<0.5) + just off 52w high (2-5%) (thin-tape recovery from shallow pullback: large gains in the immediate post-extreme zone on below-average participation; quick post-tag bounce without institutional buy-in, fragile re-test candidate)
+    DryVolBigDownJustOffYearLowHotVol,         // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 — big down move (<-3%) + dry vol (<0.5) + just off 52w low (2-5%) (thin-tape rejection from shallow bounce: large losses in the immediate post-extreme zone on below-average participation; quick post-tag dip without institutional sell-in, fragile re-test candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6456,6 +6458,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::DryVolBigUpJustOffYearHighHotVol => {
+            hit.change_pct > 3.0
+                && hit.rel_volume < 0.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::DryVolBigDownJustOffYearLowHotVol => {
+            hit.change_pct < -3.0
+                && hit.rel_volume < 0.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -7396,6 +7410,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigDownDeepAboveYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Far above 52w Low (>=20 %) (Unconvincing Pullback: Large Losses Deep in the Advance Territory on Below-average Participation; Sympathy/long-unwind Dip Lacking Institutional Sell-in, Fragile if Vol Returns)",
         Preset::DryVolBigUpMidYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Mid-range from High (5-20 %) (Low-quality Bounce in Mid-cycle Pullback: Large Gains in the Proper Consolidation Zone on Below-average Participation; Sympathy Move Lacking Institutional Follow-through, Prone to Fade)",
         Preset::DryVolBigDownMidYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Mid-range from Low (5-20 %) (Low-quality Pullback in Mid-cycle Recovery: Large Losses in the Proper Consolidation Zone on Below-average Participation; Sympathy Move Lacking Institutional Follow-through, Prone to Bounce)",
+        Preset::DryVolBigUpJustOffYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Just off 52w High (2-5 %) (Thin-tape Recovery from Shallow Pullback: Large Gains in the Immediate Post-extreme Zone on Below-average Participation; Quick Post-tag Bounce without Institutional Buy-in, Fragile Re-test Candidate)",
+        Preset::DryVolBigDownJustOffYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Just off 52w Low (2-5 %) (Thin-tape Rejection from Shallow Bounce: Large Losses in the Immediate Post-extreme Zone on Below-average Participation; Quick Post-tag Dip without Institutional Sell-in, Fragile Re-test Candidate)",
     }
 }
 
