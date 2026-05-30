@@ -130,6 +130,10 @@ function renderRDist(body, dist, mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.reports.h2.r_chart">R-bin count (uPlot)</h2>
             <div id="r-uplot" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.h2.r_cumcount_chart">R-bin cumulative count</h2>
+            <div id="r-cum-chart" style="width:100%;height:200px"></div>
         </div>`;
     const chart = mount.querySelector('#r-chart');
     if (!chart) return;
@@ -140,6 +144,38 @@ function renderRDist(body, dist, mount) {
         { color: '#00e5ff' }
     );
     renderRBinsChart(dist.bins);
+    renderRCumChart(dist.bins);
+}
+
+function renderRCumChart(bins) {
+    const el = document.getElementById('r-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (bins || []).filter(b => Number.isFinite(Number(b.count)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.reports.empty_cum_chart">${esc(t('view.reports.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(b => b.label);
+    const xs = labels.map((_, i) => i + 1);
+    let running = 0;
+    const ys = rows.map(b => { running += Number(b.count); return running; });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.reports.chart.bin') },
+            { label: t('view.reports.chart.cum_count'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderRBinsChart(bins) {
