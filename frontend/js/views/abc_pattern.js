@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseSwingsBlob, swingsToBlob, validateInputs, buildBody, localDetect,
@@ -38,17 +39,17 @@ export async function renderAbcPattern(mount, _appState) {
                 <input id="abc-min-c" type="number" step="0.05" min="0.01" value="${state.min_c_extension}"
                        data-tip="view.abc.tip.min_c">
                 <button data-i18n="view.abc.btn.compute" id="abc-run" class="primary"
-                        data-tip="view.abc.tip.compute" type="button">Detect</button>
+                        data-tip="view.abc.tip.compute" data-shortcut="abc_pattern_run" type="button">Detect</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.abc.btn.demo_bear" id="abc-d1" class="secondary" type="button">Demo: bearish</button>
-                <button data-i18n="view.abc.btn.demo_bull" id="abc-d2" class="secondary" type="button">Demo: bullish</button>
-                <button data-i18n="view.abc.btn.demo_weak" id="abc-d3" class="secondary" type="button">Demo: weak C</button>
-                <button data-i18n="view.abc.btn.demo_nonalt" id="abc-d4" class="secondary" type="button">Demo: non-alt</button>
-                <button data-i18n="view.abc.btn.demo_multi" id="abc-d5" class="secondary" type="button">Demo: multi-event</button>
-                <button data-i18n="view.abc.btn.demo_strong" id="abc-d6" class="secondary" type="button">Demo: very strong</button>
-                <button data-i18n="view.abc.btn.demo_zero" id="abc-d7" class="secondary" type="button">Demo: zero leg</button>
-                <button data-i18n="view.abc.btn.demo_tight" id="abc-d8" class="secondary" type="button">Demo: tight config</button>
+                <button data-i18n="view.abc.btn.demo_bear"   id="abc-d1" class="secondary" data-tip="view.abc.tip.demo_bear"   type="button">Demo: bearish</button>
+                <button data-i18n="view.abc.btn.demo_bull"   id="abc-d2" class="secondary" data-tip="view.abc.tip.demo_bull"   type="button">Demo: bullish</button>
+                <button data-i18n="view.abc.btn.demo_weak"   id="abc-d3" class="secondary" data-tip="view.abc.tip.demo_weak"   type="button">Demo: weak C</button>
+                <button data-i18n="view.abc.btn.demo_nonalt" id="abc-d4" class="secondary" data-tip="view.abc.tip.demo_nonalt" type="button">Demo: non-alt</button>
+                <button data-i18n="view.abc.btn.demo_multi"  id="abc-d5" class="secondary" data-tip="view.abc.tip.demo_multi"  type="button">Demo: multi-event</button>
+                <button data-i18n="view.abc.btn.demo_strong" id="abc-d6" class="secondary" data-tip="view.abc.tip.demo_strong" type="button">Demo: very strong</button>
+                <button data-i18n="view.abc.btn.demo_zero"   id="abc-d7" class="secondary" data-tip="view.abc.tip.demo_zero"   type="button">Demo: zero leg</button>
+                <button data-i18n="view.abc.btn.demo_tight"  id="abc-d8" class="secondary" data-tip="view.abc.tip.demo_tight"  type="button">Demo: tight config</button>
             </div>
             <p data-i18n="view.abc.hint.about" class="muted">Detects 3-pivot ABC corrections (A high → B low → C high, or mirror). B's location must satisfy ab / (ab+bc) ∈ [min_b_retrace, max_b_retrace]; C must extend bc ≥ ab · min_c_extension.</p>
         </div>
@@ -101,6 +102,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.abc.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.abc.toast.parse_error'), { level: 'error' });
         return;
     }
     state.swings = p.swings;
@@ -112,7 +114,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.abc.toast.invalid'), { level: 'warning' }); return; }
     const local = localDetect(state.swings, state);
     renderSummary(local, true);
     renderEvents(local);
@@ -124,6 +126,7 @@ async function compute(tok) {
         resp = await api.anlyAbcPattern(buildBody(state));
     } catch (e) {
         showErr(`${t('view.abc.err.api')}: ${e.message || e}`);
+        showToast(t('view.abc.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -132,6 +135,11 @@ async function compute(tok) {
     renderStats();
     renderSwingChart();
     renderBcRetChart(resp);
+    if (resp && resp.events && resp.events.length > 0) {
+        showToast(t('view.abc.toast.detected'), { level: 'success' });
+    } else {
+        showToast(t('view.abc.toast.none'), { level: 'info' });
+    }
 }
 
 function renderSummary(report, pending) {

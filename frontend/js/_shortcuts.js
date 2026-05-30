@@ -237,6 +237,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'range_bar_run',                keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'range-bar',         descKey: 'shortcut.range_bar_run',                actionKey: 'tv:range-bar-run' },
     { id: 'tick_bar_run',                 keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'tick-bar',          descKey: 'shortcut.tick_bar_run',                 actionKey: 'tv:tick-bar-run' },
     { id: 'volume_bar_run',               keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vol-bar',           descKey: 'shortcut.volume_bar_run',               actionKey: 'tv:volume-bar-run' },
+    { id: 'abc_pattern_run',              keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'abc-pattern',       descKey: 'shortcut.abc_pattern_run',              actionKey: 'tv:abc-pattern-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
