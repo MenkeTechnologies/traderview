@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, MIN_PERIOD, MAX_PERIOD,
@@ -32,19 +33,20 @@ export async function renderAdOscillator(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.ado.label.period">Period (EMA)</span>
-                    <input id="ao-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="ao-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.ado.tip.period"></label>
                 <button data-i18n="view.ado.btn.compute" id="ao-run" class="primary"
-                        data-tip="view.ado.tip.compute" type="button">Compute</button>
+                        data-tip="view.ado.tip.compute" data-shortcut="ad_oscillator_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.ado.btn.demo_buy"     id="ao-d1" class="secondary" type="button">Demo: buying pressure</button>
-                <button data-i18n="view.ado.btn.demo_sell"    id="ao-d2" class="secondary" type="button">Demo: selling pressure</button>
-                <button data-i18n="view.ado.btn.demo_neut"    id="ao-d3" class="secondary" type="button">Demo: neutral</button>
-                <button data-i18n="view.ado.btn.demo_xup"     id="ao-d4" class="secondary" type="button">Demo: cross up</button>
-                <button data-i18n="view.ado.btn.demo_xdn"     id="ao-d5" class="secondary" type="button">Demo: cross down</button>
-                <button data-i18n="view.ado.btn.demo_climax"  id="ao-d6" class="secondary" type="button">Demo: climax buy</button>
-                <button data-i18n="view.ado.btn.demo_zero"    id="ao-d7" class="secondary" type="button">Demo: zero-range</button>
-                <button data-i18n="view.ado.btn.demo_short"   id="ao-d8" class="secondary" type="button">Demo: short period (5)</button>
+                <button data-i18n="view.ado.btn.demo_buy"     id="ao-d1" class="secondary" data-tip="view.ado.tip.demo_buy"    type="button">Demo: buying pressure</button>
+                <button data-i18n="view.ado.btn.demo_sell"    id="ao-d2" class="secondary" data-tip="view.ado.tip.demo_sell"   type="button">Demo: selling pressure</button>
+                <button data-i18n="view.ado.btn.demo_neut"    id="ao-d3" class="secondary" data-tip="view.ado.tip.demo_neut"   type="button">Demo: neutral</button>
+                <button data-i18n="view.ado.btn.demo_xup"     id="ao-d4" class="secondary" data-tip="view.ado.tip.demo_xup"    type="button">Demo: cross up</button>
+                <button data-i18n="view.ado.btn.demo_xdn"     id="ao-d5" class="secondary" data-tip="view.ado.tip.demo_xdn"    type="button">Demo: cross down</button>
+                <button data-i18n="view.ado.btn.demo_climax"  id="ao-d6" class="secondary" data-tip="view.ado.tip.demo_climax" type="button">Demo: climax buy</button>
+                <button data-i18n="view.ado.btn.demo_zero"    id="ao-d7" class="secondary" data-tip="view.ado.tip.demo_zero"   type="button">Demo: zero-range</button>
+                <button data-i18n="view.ado.btn.demo_short"   id="ao-d8" class="secondary" data-tip="view.ado.tip.demo_short"  type="button">Demo: short period (5)</button>
             </div>
             <p data-i18n="view.ado.hint.about" class="muted">Per-bar value = CLV × Volume, where CLV = ((C−L)−(H−C))/(H−L) ∈ [−1, +1]. EMA(period) smooths the per-bar series. Reads as "current buying pressure" — distinct from cumulative ADL. Default period=14.</p>
         </div>
@@ -90,6 +92,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.ado.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.ado.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -101,7 +104,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.ado.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
@@ -112,14 +115,16 @@ async function compute(tok) {
         resp = await api.anlyAdOscillator(buildBody(state));
     } catch (e) {
         showErr(`${t('view.ado.err.api')}: ${e.message || e}`);
+        showToast(t('view.ado.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.per_bar)) { showErr(t('view.ado.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.per_bar)) { showErr(t('view.ado.err.server_rejected')); showToast(t('view.ado.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderClvChart(resp);
     renderStats();
+    showToast(t('view.ado.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
