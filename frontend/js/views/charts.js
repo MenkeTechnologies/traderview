@@ -120,9 +120,9 @@ export async function renderCharts(mount, _state, symbol = '') {
         ds.symbol = sym;
         const iv = mount.querySelector('#iv').value;
         const f = Math.floor(new Date(mount.querySelector('#from').value).getTime() / 1000);
-        const t = Math.floor(new Date(mount.querySelector('#to').value).getTime() / 1000) + 86400;
+        const toTs = Math.floor(new Date(mount.querySelector('#to').value).getTime() / 1000) + 86400;
         try {
-            const resp = await api.bars(sym, iv, f, t);
+            const resp = await api.bars(sym, iv, f, toTs);
             if (!viewIsCurrent(tok)) return;
             const cm = mount.querySelector('#chart-mount');
             if (!cm) return;
