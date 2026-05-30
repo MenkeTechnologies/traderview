@@ -217,6 +217,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'yield_curve_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'yield-curve',       descKey: 'shortcut.yield_curve_run',              actionKey: 'tv:yield-curve-run' },
     { id: 'cost_basis_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'cost-basis',        descKey: 'shortcut.cost_basis_run',               actionKey: 'tv:cost-basis-run' },
     { id: 'cost_basis_opt',               keys: { key: 'o', meta: false, ctrl: false, shift: false, alt: false }, scope: 'cost-basis',        descKey: 'shortcut.cost_basis_opt',               actionKey: 'tv:cost-basis-opt' },
+    { id: 'stop_loss_backtest_run',       keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'stop-loss-backtest', descKey: 'shortcut.stop_loss_backtest_run',      actionKey: 'tv:stop-loss-backtest-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

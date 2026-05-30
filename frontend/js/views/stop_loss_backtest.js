@@ -8,6 +8,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     METHODS, DEFAULT_PARAMS, DEFAULT_SIDE_LONG,
@@ -37,20 +38,20 @@ export async function renderStopLossBacktest(mount, _appState) {
             <h2 data-i18n="view.stop_loss_backtest.h2.params">Stop method</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.stop_loss_backtest.label.method">Method</span>
-                    <select id="slb-method">
+                    <select id="slb-method" data-tip="view.stop_loss_backtest.tip.method">
                         ${METHODS.map(m => `<option value="${m}" ${state.params.method === m ? 'selected' : ''} data-i18n="${methodLabelKey(m)}">${m}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.value">Value</span>
-                    <input id="slb-value" type="number" step="any" value="${state.params.value}"></label>
+                    <input id="slb-value" type="number" step="any" value="${state.params.value}" data-tip="view.stop_loss_backtest.tip.value"></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.atr">ATR (only for atr_multiple)</span>
-                    <input id="slb-atr" type="number" step="any" min="0" value="${state.params.atr}"></label>
+                    <input id="slb-atr" type="number" step="any" min="0" value="${state.params.atr}" data-tip="view.stop_loss_backtest.tip.atr"></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.side">Side</span>
-                    <select id="slb-side">
+                    <select id="slb-side" data-tip="view.stop_loss_backtest.tip.side">
                         <option value="long"  ${state.side_long ? 'selected' : ''} data-i18n="view.stop_loss_backtest.side.long">long</option>
                         <option value="short" ${!state.side_long ? 'selected' : ''} data-i18n="view.stop_loss_backtest.side.short">short</option>
                     </select></label>
                 <button data-i18n="view.stop_loss_backtest.btn.simulate" id="slb-run" class="primary"
-                        data-tip="view.stop_loss_backtest.tip.simulate" type="button">Simulate</button>
+                        data-tip="view.stop_loss_backtest.tip.simulate" data-shortcut="stop_loss_backtest_run" type="button">Simulate</button>
             </div>
             <div class="inline-form">
                 <button data-i18n="view.stop_loss_backtest.btn.demo_mixed"  id="slb-demo-mixed"  class="secondary" type="button">Demo: 10 mixed long</button>
@@ -131,6 +132,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.stop_loss_backtest.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.stop_loss_backtest.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -146,7 +148,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.trades, state.params, state.side_long);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.stop_loss_backtest.toast.invalid'), { level: 'warning' }); return; }
     const local = localSimulate(state.trades, state.params, state.side_long);
     renderSummary(local, true);
     renderTable(local);
@@ -157,6 +159,7 @@ async function compute(tok) {
         resp = await api.discStopLossBacktest(buildBody(state.trades, state.params, state.side_long));
     } catch (e) {
         showErr(`${t('view.stop_loss_backtest.err.api')}: ${e.message || e}`);
+        showToast(t('view.stop_loss_backtest.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -164,6 +167,14 @@ async function compute(tok) {
     renderTable(resp);
     renderRealizedChart();
     renderExcursionChart();
+    const rows = (resp.per_trade || resp.trades || []);
+    const stops = rows.filter(r => r && r.stopped_out).length;
+    const realized = Number(resp.total_realized) || 0;
+    const level = realized >= 0 ? 'success' : 'warning';
+    showToast(t('view.stop_loss_backtest.toast.simulated', {
+        n: rows.length, stops,
+        pnl: Math.round(realized).toLocaleString(),
+    }), { level });
 }
 
 function renderExcursionChart() {

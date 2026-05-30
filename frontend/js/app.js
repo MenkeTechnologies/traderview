@@ -836,6 +836,11 @@ function bindTabs() {
         const el = document.getElementById('cb-opt');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in stop-loss-backtest scope → click Simulate.
+    window.addEventListener('tv:stop-loss-backtest-run', () => {
+        const el = document.getElementById('slb-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
