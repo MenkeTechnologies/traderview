@@ -82,6 +82,11 @@ export async function renderDeflatedSharpe(mount, _appState) {
                 generous benchmark.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.deflated_sharpe.h2.threshold_sweep_chart">Deflated threshold SR★ vs N_trials — noise floor scaling (run Trials sweep)</h2>
+            <div id="ds-threshold-chart" style="height:240px"></div>
+        </div>
+
         <div id="ds-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ds-run').addEventListener('click', () => {
@@ -143,6 +148,7 @@ async function computeSweep(tok) {
         .map((r, i) => r ? { n: trials[i], prob: r.probability_true_sr_above_threshold, sr_star: r.deflated_threshold_sharpe } : null)
         .filter(Boolean);
     renderSweep(points, state.params.n_trials);
+    renderThresholdSweep(points);
 }
 
 function renderSummary(r) {
@@ -219,6 +225,34 @@ function renderSweep(points, currentN) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 }],
         legend: { show: true },
     }, [xs, ys, youYs], el);
+}
+
+function renderThresholdSweep(points) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ds-threshold-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!points || points.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.deflated_sharpe.empty_threshold_chart">${esc(t('view.deflated_sharpe.empty_threshold_chart'))}</div>`;
+        return;
+    }
+    const xs = points.map(p => p.n);
+    const stars = points.map(p => Number.isFinite(p.sr_star) ? p.sr_star : null);
+    const obs = xs.map(() => state.params.observed_sharpe);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { distr: 3, log: 10 }, y: { auto: true } },
+        series: [
+            { label: t('view.deflated_sharpe.series.n_trials_log') },
+            { label: t('view.deflated_sharpe.chart.threshold_star'),
+              stroke: '#ff7a1f', width: 1.5,
+              points: { show: true, size: 5, fill: '#ff7a1f', stroke: '#ff7a1f' } },
+            { label: t('view.deflated_sharpe.chart.observed_ref'),
+              stroke: '#00e5ff', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, stars, obs], el);
 }
 
 function showErr(msg) {

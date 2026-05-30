@@ -490,6 +490,8 @@ const PRESETS = [
     { id: 'orderly_new_low_continuation', label: t('view.scanners.preset.orderly_new_low_continuation.label'), desc: t('view.scanners.preset.orderly_new_low_continuation.desc') },
     { id: 'dry_vol_gap_up_fade', label: t('view.scanners.preset.dry_vol_gap_up_fade.label'), desc: t('view.scanners.preset.dry_vol_gap_up_fade.desc') },
     { id: 'dry_vol_gap_down_reclaim', label: t('view.scanners.preset.dry_vol_gap_down_reclaim.label'), desc: t('view.scanners.preset.dry_vol_gap_down_reclaim.desc') },
+    { id: 'institutional_churn_day', label: t('view.scanners.preset.institutional_churn_day.label'), desc: t('view.scanners.preset.institutional_churn_day.desc') },
+    { id: 'extreme_tail_event', label: t('view.scanners.preset.extreme_tail_event.label'), desc: t('view.scanners.preset.extreme_tail_event.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -608,6 +608,8 @@ pub enum Preset {
     OrderlyNewLowContinuation,      // year_low_pct < 1 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1 — fresh 52w low with moderate (not crash) drop + decent vol (orderly breakdown; quality downtrend continuation)
     DryVolGapUpFade,                // gap_pct > 1 AND change_pct < 0 AND rel_volume < 0.7 — gap up + faded to red + dry vol (gap-up fade without participation; orderly absorption of overnight optimism)
     DryVolGapDownReclaim,           // gap_pct < -1 AND change_pct > 0 AND rel_volume < 0.7 — gap down + recovered to green + dry vol (gap-down reclaim without panic vol; orderly absorption of overnight pessimism)
+    InstitutionalChurnDay,          // rel_volume >= 3 AND change_pct.abs() < 0.3 — very hot vol + flat net change (3x avg vol with no directional outcome; institutional rebalance / churn day)
+    ExtremeTailEvent,               // rel_volume >= 3 AND change_pct.abs() > 5 — very hot vol + huge change (extreme tail event; major news / earnings / squeeze)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3259,6 +3261,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume < 0.7
         }
+        Preset::InstitutionalChurnDay => {
+            hit.rel_volume >= 3.0
+                && hit.change_pct.abs() < 0.3
+        }
+        Preset::ExtremeTailEvent => {
+            hit.rel_volume >= 3.0
+                && hit.change_pct.abs() > 5.0
+        }
     }
 }
 
@@ -3757,6 +3767,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OrderlyNewLowContinuation => "Fresh 52w Low + Moderate Down Move + Decent Vol (Orderly Breakdown Continuation)",
         Preset::DryVolGapUpFade => "Gap Up + Faded Negative + Dry Vol (Orderly Gap-up Absorption)",
         Preset::DryVolGapDownReclaim => "Gap Down + Reclaimed Positive + Dry Vol (Orderly Gap-down Absorption)",
+        Preset::InstitutionalChurnDay => "Very Hot Vol + Flat Change (Institutional Rebalance / Churn Day)",
+        Preset::ExtremeTailEvent => "Very Hot Vol + Huge Change (Extreme Tail Event / Major News)",
     }
 }
 
