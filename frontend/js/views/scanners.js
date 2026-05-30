@@ -466,6 +466,8 @@ const PRESETS = [
     { id: 'eod_parabolic_acceleration_down', label: t('view.scanners.preset.eod_parabolic_acceleration_down.label'), desc: t('view.scanners.preset.eod_parabolic_acceleration_down.desc') },
     { id: 'full_spectrum_day_up', label: t('view.scanners.preset.full_spectrum_day_up.label'), desc: t('view.scanners.preset.full_spectrum_day_up.desc') },
     { id: 'full_spectrum_day_down', label: t('view.scanners.preset.full_spectrum_day_down.label'), desc: t('view.scanners.preset.full_spectrum_day_down.desc') },
+    { id: 'green_streak_accumulator', label: t('view.scanners.preset.green_streak_accumulator.label'), desc: t('view.scanners.preset.green_streak_accumulator.desc') },
+    { id: 'red_streak_distributor', label: t('view.scanners.preset.red_streak_distributor.label'), desc: t('view.scanners.preset.red_streak_distributor.desc') },
 ];
 
 export async function renderScanners(mount) {

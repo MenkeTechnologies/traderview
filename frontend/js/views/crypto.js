@@ -30,6 +30,10 @@ export async function renderCrypto(mount) {
             <div id="c-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.crypto.h2.from_ath_chart">Top-10 % from ATH — drawdown from cycle peak</h2>
+            <div id="c-ath-chart" style="width:100%;height:220px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.bitcoin_on_chain">Bitcoin on-chain</h2>
             <div id="c-onchain" class="cards" data-i18n="common.loading">loading…</div>
         </div>
@@ -44,6 +48,7 @@ export async function renderCrypto(mount) {
         if (g) renderGlobal(g, mount);
         renderTable(top, mount);
         renderTopChart(top, mount);
+        renderAthChart(top, mount);
         if (chain) renderChain(chain, mount);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
@@ -126,6 +131,39 @@ function renderTopChart(rows, mount) {
         ],
         legend: { show: true },
     }, [xs, ch24, zero], el);
+}
+
+function renderAthChart(rows, mount) {
+    const el = mount.querySelector('#c-ath-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top10 = (rows || []).slice(0, 10).filter(r => Number.isFinite(r.ath_change_percentage));
+    if (top10.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.crypto.empty_ath_chart">${esc(t('view.crypto.empty_ath_chart'))}</div>`;
+        return;
+    }
+    const labels = top10.map(r => r.symbol.toUpperCase());
+    const fromAth = top10.map(r => r.ath_change_percentage);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.crypto.chart.coin_idx') },
+            { label: t('view.crypto.chart.from_ath'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.crypto.chart.ath_ref'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, fromAth, zero], el);
 }
 
 function renderChain(c, mount) {

@@ -584,6 +584,8 @@ pub enum Preset {
     EodParabolicAccelerationDown,   // change_pct < -2 AND day_pct < change_pct * 0.7 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at LOD + hot vol (EOD parabolic acceleration down; possible MOC long-liquidation finale)
     FullSpectrumDayUp,              // change_pct > 1 AND day_pct > 0 AND hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at HOD + visited LOD intraday + green + decent vol (volatile session that traded full range and went up)
     FullSpectrumDayDown,            // change_pct < -1 AND day_pct < 0 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at LOD + visited HOD intraday + red + decent vol (volatile session that traded full range and went down)
+    GreenStreakAccumulator,         // change_pct > 0.5 AND day_pct > 0 AND rel_volume >= 1.2 AND gap_pct >= 0 — modest gain + green intraday + decent vol + non-negative gap (steady accumulation day; multi-day green-streak candidate)
+    RedStreakDistributor,           // change_pct < -0.5 AND day_pct < 0 AND rel_volume >= 1.2 AND gap_pct <= 0 — modest loss + red intraday + decent vol + non-positive gap (steady distribution day; multi-day red-streak candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3099,6 +3101,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() > 1.0
                 && hit.rel_volume >= 1.2
         }
+        Preset::GreenStreakAccumulator => {
+            hit.change_pct > 0.5
+                && hit.day_pct > 0.0
+                && hit.rel_volume >= 1.2
+                && hit.gap_pct >= 0.0
+        }
+        Preset::RedStreakDistributor => {
+            hit.change_pct < -0.5
+                && hit.day_pct < 0.0
+                && hit.rel_volume >= 1.2
+                && hit.gap_pct <= 0.0
+        }
     }
 }
 
@@ -3573,6 +3587,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::EodParabolicAccelerationDown => "EOD Parabolic Acceleration Down (Intraday Drive + LOD Close + Hot Vol)",
         Preset::FullSpectrumDayUp => "Closed HOD + Visited LOD + Green (Volatile Full-Range Day Up)",
         Preset::FullSpectrumDayDown => "Closed LOD + Visited HOD + Red (Volatile Full-Range Day Down)",
+        Preset::GreenStreakAccumulator => "Modest Gain + Green Intraday + Non-neg Gap + Decent Vol (Streak Accumulator)",
+        Preset::RedStreakDistributor => "Modest Loss + Red Intraday + Non-pos Gap + Decent Vol (Streak Distributor)",
     }
 }
 
