@@ -66,7 +66,7 @@ export function parseInputBlob(blob) {
         .filter(t => t.length > 0)
         .map(t => Number(t.replace(/[\$,]/g, '')));
     if (tokens.length < 3) {
-        out.errors.push({ line_no: 1, message: 'expected at least HIGH LOW CLOSE (3 tokens)' });
+        out.errors.push({ line_no: 1, message: t('view.camarilla.parse.expected_hlc') });
         return out;
     }
     for (let i = 0; i < tokens.length; i++) {

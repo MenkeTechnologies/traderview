@@ -54,7 +54,7 @@ export function parseTermStructure(text) {
         if (!stripped || stripped.startsWith('#')) continue;
         const parts = stripped.split(/[\s,]+/).filter(Boolean);
         if (parts.length < 2) {
-            errors.push({ line_no: i + 1, raw, message: 'expected `tenor iv` (two fields)' });
+            errors.push({ line_no: i + 1, raw, message: t('view.forward_vol.parse.expected_tenor_iv') });
             continue;
         }
         const tenor_years = parseTenor(parts[0]);

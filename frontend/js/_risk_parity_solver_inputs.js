@@ -138,7 +138,7 @@ export function parseMatrix(blob) {
         if (!raw) continue;
         const cells = raw.split(/[\s,]+/).filter(x => x.length > 0).map(Number);
         if (cells.some(v => !Number.isFinite(v))) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite cell' });
+            out.errors.push({ line_no: i + 1, message: t('view.risk_parity_solver.parse.non_finite_cell') });
             continue;
         }
         out.matrix.push(cells);

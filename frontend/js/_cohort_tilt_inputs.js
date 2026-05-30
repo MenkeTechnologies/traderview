@@ -36,7 +36,7 @@ export function parsePositionBlob(text) {
         const symbol    = parts[1].toUpperCase();
         const contracts = Number(parts[2]);
         if (!Number.isInteger(contracts)) {
-            errors.push({ line_no: i + 1, raw, message: 'net_contracts must be integer (signed: + long, - short, 0 flat)' });
+            errors.push({ line_no: i + 1, raw, message: t('view.cohort_tilt.parse.net_contracts_int') });
             continue;
         }
         positions.push({ trader_id, symbol, net_contracts: contracts });

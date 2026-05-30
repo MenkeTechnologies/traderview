@@ -31,7 +31,7 @@ export function parseMatrix(text) {
         const parts = stripped.split(/[\s,]+/).filter(Boolean);
         const row = parts.map(Number);
         if (row.some(x => !Number.isFinite(x))) {
-            errors.push({ line_no: i + 1, raw, message: 'non-numeric token in row' });
+            errors.push({ line_no: i + 1, raw, message: t('view.portfolio_allocator.parse.non_numeric') });
             continue;
         }
         if (width == null) width = row.length;

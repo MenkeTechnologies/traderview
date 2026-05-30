@@ -83,7 +83,7 @@ export function parseWeightsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 3) {
-            out.errors.push({ line_no: i + 1, message: 'expected 3 tokens (symbol portfolio_w benchmark_w)' });
+            out.errors.push({ line_no: i + 1, message: t('view.active_share.parse.expected_3_tokens') });
             continue;
         }
         const symbol = toks[0];

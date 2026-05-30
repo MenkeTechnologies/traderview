@@ -37,14 +37,14 @@ export function parseSetupTradeBlob(text) {
         const setup = parts[0];
         const netPnl = Number(parts[1]);
         if (!Number.isFinite(netPnl)) {
-            errors.push({ line_no: i + 1, raw, message: 'net_pnl must be finite number' });
+            errors.push({ line_no: i + 1, raw, message: t('view.setups_by_setup.parse.net_pnl_finite') });
             continue;
         }
         let risk = null;
         if (parts.length === 3) {
             const r = Number(parts[2]);
             if (!Number.isFinite(r) || r <= 0) {
-                errors.push({ line_no: i + 1, raw, message: 'risk_amount must be > 0 when provided' });
+                errors.push({ line_no: i + 1, raw, message: t('view.setups_by_setup.parse.risk_amount_positive') });
                 continue;
             }
             risk = r;

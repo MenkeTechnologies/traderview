@@ -55,7 +55,7 @@ function parseBlob(text, schema, build) {
         }
         const numerics = parts.slice(2).map(Number);
         if (numerics.some(n => !Number.isFinite(n))) {
-            errors.push({ line_no: i + 1, raw, message: 'numeric tokens must be finite' });
+            errors.push({ line_no: i + 1, raw, message: t('view.wash_sale.parse.numeric_tokens_finite') });
             continue;
         }
         // For openings the last field is qty; for closings it's pnl + qty.

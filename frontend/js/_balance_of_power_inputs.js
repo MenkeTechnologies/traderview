@@ -86,7 +86,7 @@ export function parseBarsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 4) {
-            out.errors.push({ line_no: i + 1, message: 'expected 4 tokens (open high low close)' });
+            out.errors.push({ line_no: i + 1, message: t('view.balance_of_power.parse.expected_ohlc') });
             continue;
         }
         const [open, high, low, close] = toks.map(Number);

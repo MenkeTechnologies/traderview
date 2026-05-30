@@ -108,7 +108,7 @@ export function parseMatrixBlob(blob) {
         if (!bad && row.length > 0) out.matrix.push(row);
     }
     if (out.matrix.length > 0 && out.matrix.some(r => r.length !== out.matrix.length)) {
-        out.errors.push({ line_no: 0, message: 'matrix must be square' });
+        out.errors.push({ line_no: 0, message: t('view.cholesky.parse.matrix_square') });
     }
     return out;
 }

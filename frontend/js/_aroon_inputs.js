@@ -91,7 +91,7 @@ export function parseBarsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (high low)' });
+            out.errors.push({ line_no: i + 1, message: t('view.aroon.parse.expected_high_low') });
             continue;
         }
         const [high, low] = toks.map(Number);

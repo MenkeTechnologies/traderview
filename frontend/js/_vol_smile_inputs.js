@@ -22,7 +22,7 @@ import { t } from './i18n.js';
 export function parseStrikeIvText(text) {
     const rows = [];
     const errors = [];
-    if (typeof text !== 'string') return { rows, errors: [{ line_no: 0, raw: '', message: 'input is not a string' }] };
+    if (typeof text !== 'string') return { rows, errors: [{ line_no: 0, raw: '', message: t('view.vol_smile.parse.input_not_string') }] };
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
         const raw = lines[i];
@@ -31,7 +31,7 @@ export function parseStrikeIvText(text) {
         // Split on comma OR whitespace.
         const parts = stripped.split(/[\s,]+/).filter(Boolean);
         if (parts.length < 2) {
-            errors.push({ line_no: i + 1, raw, message: 'expected `strike  iv` (two fields)' });
+            errors.push({ line_no: i + 1, raw, message: t('view.vol_smile.parse.expected_strike_iv') });
             continue;
         }
         const strike = Number(parts[0]);

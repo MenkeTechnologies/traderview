@@ -100,7 +100,7 @@ export function parseTimesBlob(blob) {
         if (!raw || raw.startsWith('#')) continue;
         const v = Number(raw);
         if (!Number.isFinite(v)) {
-            out.errors.push({ line_no: i + 1, message: 'timestamp not finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.hawkes_intensity.parse.timestamp_finite') });
             continue;
         }
         out.times.push(v);

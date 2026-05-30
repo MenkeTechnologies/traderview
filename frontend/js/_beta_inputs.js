@@ -71,7 +71,7 @@ export function parsePairsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (asset benchmark)' });
+            out.errors.push({ line_no: i + 1, message: t('view.beta.parse.expected_asset_benchmark') });
             continue;
         }
         const a = pctOrDec(toks[0]);
