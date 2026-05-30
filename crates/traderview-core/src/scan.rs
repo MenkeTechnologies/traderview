@@ -1064,6 +1064,8 @@ pub enum Preset {
     UltraDeepAboveYearLowGapDownHeldHotVol,    // year_low_pct >= 50 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) held all session + close pinned to LOD + red close + hot vol (validated topping day: extended-trend leader gaps down on catalyst, holds the entire gap, and closes at the day's low on elevated participation; institutional de-rating event with no dip-buying = highest-conviction topping signal in stretched territory)
     UltraDeepBelowYearHighGapUpMidpointHotVol, // year_high_pct >= 50 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + midpoint close between HOD and LOD + hot vol (uncertain turnaround follow-through: beaten-down equity gaps up on catalyst but neither holds the gap to a HOD close nor fully fades to a LOD close on elevated participation; ambiguous re-rating event requiring confirmation)
     UltraDeepAboveYearLowGapDownMidpointHotVol,// year_low_pct >= 50 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + midpoint close between HOD and LOD + hot vol (uncertain topping follow-through: extended-trend leader gaps down on catalyst but neither holds the gap to a LOD close nor fully absorbs to a HOD close on elevated participation; ambiguous de-rating event requiring confirmation)
+    UltraDeepBelowYearHighHammerHotVol,        // year_high_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (capitulation-reversal hammer in distressed territory: beaten-down equity probed lower then reclaimed the entire move to close at the day's high on elevated participation; classic capitulation-day pattern at deep distress worth a bounce-trade screen)
+    UltraDeepAboveYearLowShootingStarHotVol,   // year_low_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (exhaustion-reversal shooting star in multibagger territory: extended-trend leader probed higher then gave back the entire move to close at the day's low on elevated participation; classic exhaustion-day pattern at extended advance worth a top-fade trade screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6554,6 +6556,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::UltraDeepBelowYearHighHammerHotVol => {
+            hit.year_high_pct >= 50.0
+                && hit.lod_dist_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::UltraDeepAboveYearLowShootingStarHotVol => {
+            hit.year_low_pct >= 50.0
+                && hit.hod_dist_pct.abs() > 3.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7508,6 +7524,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::UltraDeepAboveYearLowGapDownHeldHotVol => "Multibagger (>=50 % above 52w Low) + Gap Down (<-2 %) Held All Session + Close Pinned to LOD + Red Close + Hot Vol (Validated Topping Day: Extended-trend Leader Gaps down on Catalyst, Holds the Entire Gap, and Closes at the Day's Low on Elevated Participation; Institutional De-rating Event with No Dip-buying = Highest-conviction Topping Signal in Stretched Territory)",
         Preset::UltraDeepBelowYearHighGapUpMidpointHotVol => "Distressed Stock (>=50 % below 52w High) + Gap Up (>2 %) + Midpoint Close between HOD and LOD + Hot Vol (Uncertain Turnaround Follow-through: Beaten-down Equity Gaps up on Catalyst but Neither Holds the Gap to a HOD Close nor Fully Fades to a LOD Close on Elevated Participation; Ambiguous Re-rating Event Requiring Confirmation)",
         Preset::UltraDeepAboveYearLowGapDownMidpointHotVol => "Multibagger (>=50 % above 52w Low) + Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Hot Vol (Uncertain Topping Follow-through: Extended-trend Leader Gaps down on Catalyst but Neither Holds the Gap to a LOD Close nor Fully Absorbs to a HOD Close on Elevated Participation; Ambiguous De-rating Event Requiring Confirmation)",
+        Preset::UltraDeepBelowYearHighHammerHotVol => "Distressed Stock (>=50 % below 52w High) + Long Lower Wick (>3 %) + Close Pinned to HOD + Green Close + Hot Vol (Capitulation-reversal Hammer in Distressed Territory: Beaten-down Equity Probed Lower then Reclaimed the Entire Move to Close at the Day's High on Elevated Participation; Classic Capitulation-day Pattern at Deep Distress Worth a Bounce-trade Screen)",
+        Preset::UltraDeepAboveYearLowShootingStarHotVol => "Multibagger (>=50 % above 52w Low) + Long Upper Wick (>3 %) + Close Pinned to LOD + Red Close + Hot Vol (Exhaustion-reversal Shooting Star in Multibagger Territory: Extended-trend Leader Probed Higher then Gave Back the Entire Move to Close at the Day's Low on Elevated Participation; Classic Exhaustion-day Pattern at Extended Advance Worth a Top-fade Trade Screen)",
     }
 }
 
