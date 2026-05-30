@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 let timer = null;
 
@@ -10,13 +11,20 @@ export async function renderBreadth(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.breadth.h1.market_breadth" class="view-title">// MARKET BREADTH</h1>
+        <div data-context-scope="market-breadth">
         <p data-i18n="view.breadth.hint.intraday_tape_regime_nyse_tick_instantaneous_up_ti" class="muted small">Intraday tape regime: NYSE TICK (instantaneous up-tick count),
             TRIN (Arms Index — volume bias), Advance-Decline issues, Up-Down volume,
             CBOE Put-Call ratio. Composite score combines all five into a -100..+100
             regime gauge. Polls every 60s.</p>
 
+        <div class="inline-form">
+            <button data-i18n="view.breadth.btn.refresh" id="mb-refresh" class="primary"
+                    data-tip="view.breadth.tip.refresh" data-shortcut="breadth_refresh" type="button">Refresh now</button>
+        </div>
+
         <div id="bcomp" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         <div id="binds"></div>
+        </div>
         <div class="chart-panel">
             <h2 data-i18n="view.breadth.h2.indicator_chart">Indicator % change snapshot</h2>
             <div id="b-chart" style="width:100%;height:240px"></div>
@@ -43,24 +51,28 @@ export async function renderBreadth(mount) {
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
         if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }
-        refresh(mount, tok);
+        refresh(mount, tok, false);
     }, 60_000);
     window.addEventListener('hashchange', () => {
         if (!window.location.hash.startsWith('#breadth')) { clearInterval(timer); timer = null; }
     }, { once: true });
-    await refresh(mount, tok);
+    const refreshBtn = document.getElementById('mb-refresh');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => { void refresh(mount, tok, true); });
+    await refresh(mount, tok, false);
 }
 
-async function refresh(mount, tok) {
+async function refresh(mount, tok, userInitiated) {
     try {
         const s = await api.breadthSnapshot();
         if (!viewIsCurrent(tok)) return;
         renderComposite(s, mount);
         renderIndicators(s, mount);
+        if (userInitiated) showToast(t('view.breadth.toast.refreshed'), { level: 'success' });
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#bcomp');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        if (userInitiated) showToast(t('view.breadth.toast.api_error'), { level: 'error' });
     }
 }
 

@@ -1116,6 +1116,11 @@ function bindTabs() {
         const el = document.getElementById('bt-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `r` in market-breadth scope → click Refresh.
+    window.addEventListener('tv:market-breadth-refresh', () => {
+        const el = document.getElementById('mb-refresh');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
