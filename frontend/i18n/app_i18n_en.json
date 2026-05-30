@@ -12235,6 +12235,8 @@
   "tile.borrow-rate-indicator.desc": "Annualized securities-lending fee + N-bar Δ% — 5-tier hard-to-borrow stress classifier; squeeze-risk gauge",
   "tile.candle-strength-index.label": "CSI",
   "tile.candle-strength-index.desc": "Candle Strength Index — EMA of (close − open) / (high − low) body-to-range ratio; ±1 = marubozu",
+  "tile.carhart-4.label": "Carhart 4-Factor",
+  "tile.carhart-4.desc": "Carhart (1997) Mkt + SMB + HML + WML factor regression — α, β loadings, t-stats, R²; style tilt verdict",
   "tile.centered-smoothed-momentum.label": "CSM",
   "tile.centered-smoothed-momentum.desc": "Ehlers Centered Smoothed Momentum — SuperSmoother-filtered momentum; zero-cross signals trend turn",
   "tile.chaikin-oscillator.label": "Chaikin Osc",
