@@ -254,6 +254,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'atr_channel_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-channel',       descKey: 'shortcut.atr_channel_run',              actionKey: 'tv:atr-channel-run' },
     { id: 'balance_of_power_run',         keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bop',               descKey: 'shortcut.balance_of_power_run',         actionKey: 'tv:balance-of-power-run' },
     { id: 'asi_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'asi',               descKey: 'shortcut.asi_run',                      actionKey: 'tv:asi-run' },
+    { id: 'atr_trailing_stop_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-trailing-stop', descKey: 'shortcut.atr_trailing_stop_run',        actionKey: 'tv:atr-trailing-stop-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_MULTIPLIER, MIN_PERIOD, MAX_PERIOD,
@@ -32,21 +33,23 @@ export async function renderAtrTrailStop(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.atrts.label.period">Period</span>
-                    <input id="ts-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="ts-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.atrts.tip.period"></label>
                 <label><span data-i18n="view.atrts.label.mult">Multiplier</span>
-                    <input id="ts-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"></label>
+                    <input id="ts-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"
+                           data-tip="view.atrts.tip.mult"></label>
                 <button data-i18n="view.atrts.btn.compute" id="ts-run" class="primary"
-                        data-tip="view.atrts.tip.compute" type="button">Compute</button>
+                        data-tip="view.atrts.tip.compute" data-shortcut="atr_trailing_stop_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.atrts.btn.demo_up"     id="ts-d1" class="secondary" type="button">Demo: uptrend</button>
-                <button data-i18n="view.atrts.btn.demo_down"   id="ts-d2" class="secondary" type="button">Demo: downtrend</button>
-                <button data-i18n="view.atrts.btn.demo_side"   id="ts-d3" class="secondary" type="button">Demo: sideways</button>
-                <button data-i18n="view.atrts.btn.demo_ltrig"  id="ts-d4" class="secondary" type="button">Demo: long-stop triggered</button>
-                <button data-i18n="view.atrts.btn.demo_strig"  id="ts-d5" class="secondary" type="button">Demo: short-stop triggered</button>
-                <button data-i18n="view.atrts.btn.demo_tight"  id="ts-d6" class="secondary" type="button">Demo: mult 1.0</button>
-                <button data-i18n="view.atrts.btn.demo_wide"   id="ts-d7" class="secondary" type="button">Demo: mult 5.0</button>
-                <button data-i18n="view.atrts.btn.demo_flat"   id="ts-d8" class="secondary" type="button">Demo: flat market</button>
+                <button data-i18n="view.atrts.btn.demo_up"     id="ts-d1" class="secondary" data-tip="view.atrts.tip.demo_up"    type="button">Demo: uptrend</button>
+                <button data-i18n="view.atrts.btn.demo_down"   id="ts-d2" class="secondary" data-tip="view.atrts.tip.demo_down"  type="button">Demo: downtrend</button>
+                <button data-i18n="view.atrts.btn.demo_side"   id="ts-d3" class="secondary" data-tip="view.atrts.tip.demo_side"  type="button">Demo: sideways</button>
+                <button data-i18n="view.atrts.btn.demo_ltrig"  id="ts-d4" class="secondary" data-tip="view.atrts.tip.demo_ltrig" type="button">Demo: long-stop triggered</button>
+                <button data-i18n="view.atrts.btn.demo_strig"  id="ts-d5" class="secondary" data-tip="view.atrts.tip.demo_strig" type="button">Demo: short-stop triggered</button>
+                <button data-i18n="view.atrts.btn.demo_tight"  id="ts-d6" class="secondary" data-tip="view.atrts.tip.demo_tight" type="button">Demo: mult 1.0</button>
+                <button data-i18n="view.atrts.btn.demo_wide"   id="ts-d7" class="secondary" data-tip="view.atrts.tip.demo_wide"  type="button">Demo: mult 5.0</button>
+                <button data-i18n="view.atrts.btn.demo_flat"   id="ts-d8" class="secondary" data-tip="view.atrts.tip.demo_flat"  type="button">Demo: flat market</button>
             </div>
             <p data-i18n="view.atrts.hint.about" class="muted">Long stop = close − N×ATR, ratcheted up. Short stop = close + N×ATR, ratcheted down. Triggered when close crosses the stop. Defaults: period=14, mult=3.0. Companion to Chandelier Exit, Elder Safezone, Parabolic SAR.</p>
         </div>
@@ -93,6 +96,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.atrts.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.atrts.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -106,7 +110,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.atrts.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period, state.multiplier);
     renderSummary(local, true);
     renderChart(local);
@@ -117,14 +121,16 @@ async function compute(tok) {
         resp = await api.anlyAtrTrailingStop(buildBody(state));
     } catch (e) {
         showErr(`${t('view.atrts.err.api')}: ${e.message || e}`);
+        showToast(t('view.atrts.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.long_stop)) { showErr(t('view.atrts.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.long_stop)) { showErr(t('view.atrts.err.server_rejected')); showToast(t('view.atrts.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderGapChart(resp);
     renderStats();
+    showToast(t('view.atrts.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
