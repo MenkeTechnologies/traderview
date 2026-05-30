@@ -10,7 +10,7 @@
 
 import {
     GLOBAL_ITEMS, EDITING_ITEMS, positionMenu, compileMenu, mergeMenu,
-    mergeMenuWithEditing, nextVisibleIdx,
+    mergeMenuWithEditing, nextVisibleIdx, dataFromTarget,
 } from './_context_menu.js';
 import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
@@ -47,16 +47,6 @@ function clipboardWrite(text, whatLabel) {
 // app.js re-renders the current view from fresh storage/API state.
 function refreshView() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-}
-
-// `dataFromTarget(detail, key)` — read a single `data-<key>` attribute
-// from the right-clicked scope element passed via CustomEvent.detail.
-// Returns null when the chain is broken. Replaces the
-// `const tgt = e.detail && e.detail.target; const x = tgt && tgt.dataset && tgt.dataset.X`
-// idiom that recurs in every row-context handler.
-function dataFromTarget(detail, key) {
-    const target = detail && detail.target;
-    return (target && target.dataset && target.dataset[key]) || null;
 }
 
 // `toastErr(msg)` — show an error toast wrapped in the `toast.error.api`

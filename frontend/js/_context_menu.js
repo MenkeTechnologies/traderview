@@ -432,6 +432,16 @@ export function mergeMenuWithEditing(globalItems, customItems, editingItems) {
     return [...editingItems, { kind: 'separator' }, ...merged];
 }
 
+// Pull a `data-<key>` attribute off the right-clicked element passed
+// via `CustomEvent.detail`. Returns null when the chain is broken
+// (no detail, no target, no dataset, no key). Used by every row-scope
+// handler in context_menu.js to read row payload — keeps the
+// 2-line dataset-chain idiom out of every handler body.
+export function dataFromTarget(detail, key) {
+    const target = detail && detail.target;
+    return (target && target.dataset && target.dataset[key]) || null;
+}
+
 // For the up/down keyboard navigation through visible items.
 export function nextVisibleIdx(items, currentIdx, delta) {
     if (!Array.isArray(items) || items.length === 0) return 0;
