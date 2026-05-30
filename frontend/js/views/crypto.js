@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -26,6 +26,10 @@ export async function renderCrypto(mount) {
             <div id="c-table" data-i18n="common.loading">loading…</div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.crypto.h2.top10_chart">Top-10 24h % change</h2>
+            <div id="c-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.bitcoin_on_chain">Bitcoin on-chain</h2>
             <div id="c-onchain" class="cards" data-i18n="common.loading">loading…</div>
         </div>
@@ -39,6 +43,7 @@ export async function renderCrypto(mount) {
         if (!viewIsCurrent(tok)) return;
         if (g) renderGlobal(g, mount);
         renderTable(top, mount);
+        renderTopChart(top, mount);
         if (chain) renderChain(chain, mount);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
@@ -87,6 +92,40 @@ function renderTable(rows, mount) {
                 <td>${r.ath != null ? '$' + fmt(r.ath, r.ath < 1 ? 6 : 2) : '—'}</td>
                 <td class="${(r.ath_change_percentage ?? 0) >= 0 ? 'pos' : 'neg'}">${pct(r.ath_change_percentage)}</td>
             </tr>`).join('')}</tbody></table>`;
+}
+
+function renderTopChart(rows, mount) {
+    const el = mount.querySelector('#c-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top10 = (rows || []).slice(0, 10).filter(r => Number.isFinite(r.price_change_percentage_24h));
+    if (top10.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.crypto.empty_chart">${esc(t('view.crypto.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = top10.map(r => r.symbol.toUpperCase());
+    const ch24 = top10.map(r => r.price_change_percentage_24h);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.crypto.chart.coin_idx') },
+            { label: t('view.crypto.chart.change_24h'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.crypto.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ch24, zero], el);
 }
 
 function renderChain(c, mount) {
