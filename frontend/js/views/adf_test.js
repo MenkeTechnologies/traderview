@@ -154,9 +154,9 @@ function renderChart() {
         title: '', width: el.clientWidth || 600, height: 320,
         scales: { x: {}, y: {}, y2: { auto: true } },
         series: [
-            { label: 't' },
-            { label: 'y',  stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'Δy', stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
+            { label: t('chart.series.t') },
+            { label: t('chart.series.y'),  stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.delta_y'), stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false }, scale: 'y2' },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

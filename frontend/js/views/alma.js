@@ -172,7 +172,7 @@ function renderChart(alma) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.alma.series.close'), stroke: '#888', width: 1 },
             { label: t('view.alma.series.alma'),  stroke: '#1de9b6', width: 2 },
         ],

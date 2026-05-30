@@ -157,7 +157,7 @@ function renderChart(cti) {
         height: 340,
         scales: { x: { time: false }, y: { range: [-1.05, 1.05] } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.cti.series.cti'), stroke: '#1de9b6', width: 1.5 },
         ],
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],

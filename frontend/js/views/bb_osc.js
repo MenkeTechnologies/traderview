@@ -179,7 +179,7 @@ function renderChartBands(report) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.bbosc.series.close'),  stroke: '#888',     width: 1 },
             { label: t('view.bbosc.series.middle'), stroke: '#ffd54f', width: 1.5 },
             { label: t('view.bbosc.series.upper'),  stroke: '#1de9b6', width: 1.5 },
@@ -203,7 +203,7 @@ function renderChartOsc(report) {
         height: 280,
         scales: { x: { time: false }, y: {}, yBw: {} },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.bbosc.series.pb'), stroke: '#1de9b6', width: 1.5, scale: 'y' },
             { label: t('view.bbosc.series.bw'), stroke: '#ffd54f', width: 1.5, scale: 'yBw' },
         ],

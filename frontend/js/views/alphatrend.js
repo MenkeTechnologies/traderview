@@ -180,7 +180,7 @@ function renderChart(report) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.atrend.series.close'),  stroke: '#888',     width: 1 },
             { label: t('view.atrend.series.alpha'),  stroke: '#aaa',     width: 1.2 },
             { label: t('view.atrend.series.up'),     stroke: '#1de9b6', width: 2 },

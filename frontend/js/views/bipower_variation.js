@@ -157,8 +157,8 @@ function renderChart() {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'r_t²',          stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
-            { label: '|r_t|·|r_{t-1}|', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.r_t_sq'),          stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.r_t_abs_lag'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28 },

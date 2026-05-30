@@ -183,7 +183,7 @@ function renderChart(report) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.chx.series.close'),       stroke: '#888',     width: 1 },
             { label: t('view.chx.series.long_stop'),   stroke: '#1de9b6', width: 1.8 },
             { label: t('view.chx.series.short_stop'),  stroke: '#ff5252', width: 1.8 },

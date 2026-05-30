@@ -156,7 +156,7 @@ function renderChart(adl) {
         height: 340,
         scales: { x: { time: false }, y: {}, yAdl: {} },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.adl.series.close'), stroke: '#888',     width: 1, scale: 'y' },
             { label: t('view.adl.series.adl'),   stroke: '#1de9b6', width: 1.5, scale: 'yAdl' },
         ],

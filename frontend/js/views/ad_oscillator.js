@@ -168,7 +168,7 @@ function renderChart(report) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.ado.series.per_bar'), stroke: '#666', width: 1, points: { show: false } },
             { label: t('view.ado.series.ema'),     stroke: '#1de9b6', width: 2 },
         ],

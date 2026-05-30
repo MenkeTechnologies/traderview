@@ -225,8 +225,8 @@ function renderPriceChart(y, x, beta) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'y',   stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'β·x', stroke: '#ff9f1a', width: 1.5, points: { show: false } },
+            { label: t('chart.series.y'),   stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('chart.series.beta_x'), stroke: '#ff9f1a', width: 1.5, points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, y, betaX], el);
@@ -246,7 +246,7 @@ function renderZChart(zs) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.bar') },
-            { label: 'z',        stroke: '#00e5ff', width: 2,
+            { label: t('chart.series.z'),        stroke: '#00e5ff', width: 2,
               fill: 'rgba(0,229,255,0.06)', points: { show: false } },
             { label: t('chart.series.plus_entry'),   stroke: '#ff9f1a', width: 1, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.minus_entry'),   stroke: '#ff9f1a', width: 1, dash: [4, 4], points: { show: false } },

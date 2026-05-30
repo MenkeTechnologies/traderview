@@ -157,7 +157,7 @@ function renderChart(cmo) {
         height: 340,
         scales: { x: { time: false }, y: { range: [-100, 100] } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.cmo.series.cmo'), stroke: '#1de9b6', width: 1.5 },
         ],
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],

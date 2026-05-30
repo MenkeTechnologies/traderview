@@ -179,7 +179,7 @@ function renderChartBands(report) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.bbw.series.close'),  stroke: '#888',     width: 1 },
             { label: t('view.bbw.series.middle'), stroke: '#ffd54f', width: 1.5 },
             { label: t('view.bbw.series.upper'),  stroke: '#1de9b6', width: 1.5 },
@@ -204,7 +204,7 @@ function renderChartBbw(report) {
         height: 280,
         scales: { x: { time: false }, y: {}, yPb: {} },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.bbw.series.bbw'), stroke: '#1de9b6', width: 1.5, scale: 'y' },
             { label: t('view.bbw.series.pb'),  stroke: '#ffd54f', width: 1.5, scale: 'yPb' },
         ],

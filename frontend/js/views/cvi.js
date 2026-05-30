@@ -163,7 +163,7 @@ function renderChart(cvi) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.cvi.series.cvi'), stroke: '#1de9b6', width: 1.5 },
         ],
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],

@@ -161,7 +161,7 @@ function renderChart(report) {
         height: 340,
         scales: { x: { time: false }, y: {}, yCh: {} },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.borrow.series.rate'),       stroke: '#1de9b6', width: 1.5, scale: 'y' },
             { label: t('view.borrow.series.change_pct'), stroke: '#ff5252', width: 1.2, scale: 'yCh' },
         ],

@@ -156,7 +156,7 @@ function renderChart(p) {
         title: '', width: el.clientWidth || 600, height: 280,
         scales: { x: {}, y: { range: [min, max] } },
         series: [
-            { label: 't' },
+            { label: t('chart.series.t') },
             { label: t('view.open_type.series.prior_high'), stroke: '#ffd84a', width: 1.5, points: { show: false } },
             { label: t('view.open_type.series.prior_low'),  stroke: '#ffd84a', width: 1.5, dash: [4, 4], points: { show: false } },
             { label: t('chart.series.vah'),        stroke: '#00e5ff', width: 1.0, points: { show: false } },

@@ -164,7 +164,7 @@ function renderChart(co) {
         height: 340,
         scales: { x: { time: false } },
         series: [
-            { label: 'i' },
+            { label: t('chart.series.i') },
             { label: t('view.chosc.series.co'), stroke: '#1de9b6', width: 1.5 },
         ],
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],

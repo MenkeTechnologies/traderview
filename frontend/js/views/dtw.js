@@ -202,7 +202,7 @@ function renderPath(nA, nB, res) {
         title: '', width: el.clientWidth || 800, height: 340,
         scales: { x: {}, y: {} },
         series: [
-            { label: 'i (A)' },
+            { label: t('chart.series.i_a') },
             { label: t('chart.series.warping_path'), stroke: '#00e5ff', width: 2,
               points: { show: true, size: 3, stroke: '#00e5ff', fill: '#00e5ff' } },
             { label: t('chart.series.y_x_diagonal'), stroke: '#ff9f1a', width: 1,
