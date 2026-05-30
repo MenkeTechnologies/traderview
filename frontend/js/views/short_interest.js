@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 const compact = (n) => {
     if (n == null) return '—';
@@ -43,6 +43,7 @@ export async function renderShortInterest(mount, _state, sym) {
                 <button data-i18n="view.short_interest.btn.rank" class="primary" type="submit">Rank</button>
             </form>
             <div id="ranked"></div>
+            <div id="ranked-chart" style="width:100%;height:240px;margin-top:14px"></div>
         </div>
     `;
     mount.querySelector('#sf').addEventListener('submit', (e) => {
@@ -62,12 +63,44 @@ export async function renderShortInterest(mount, _state, sym) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#ranked');
             if (elNow) renderRanked(elNow, rows);
+            renderRankedChart(rows, mount);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#ranked');
             if (elNow) elNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
+}
+
+function renderRankedChart(rows, mount) {
+    const el = mount.querySelector('#ranked-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(r.short_pct_float));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.short_interest.empty_chart">${esc(t('view.short_interest.empty_chart'))}</div>`;
+        return;
+    }
+    const top20 = valid.slice(0, 20);
+    const labels = top20.map(r => r.symbol);
+    const sf = top20.map(r => r.short_pct_float * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.short_interest.chart.symbol_idx') },
+            { label: t('view.short_interest.chart.short_pct_float'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, sf], el);
 }
 
 function renderRanked(el, rows) {
