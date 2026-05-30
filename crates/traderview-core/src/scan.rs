@@ -1080,6 +1080,8 @@ pub enum Preset {
     WideYearRangeCloseAtLodHotVol,             // year_high_pct >= 20 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — wide annual range + close pinned to LOD + red close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's low on elevated participation; momentum-continuation signal where intraday weakness aligns with the wider price-action regime)
     WideYearRangeGapUpHotVol,                  // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — wide annual range + gap up (>2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps up on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
     WideYearRangeGapDownHotVol,                // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — wide annual range + gap down (<-2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps down on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
+    AsymmetricRangeNearLowFarHighHotVol,       // year_high_pct >= 20 AND year_low_pct < 5 AND rel_volume >= 1.5 — near 52w low (<5%) + far below 52w high (>=20%) + hot vol (persistent-downtrend stock testing the low again with elevated participation; either capitulation-bottom candidate or breakdown to fresh lows depending on price-action resolution at the support level)
+    AsymmetricRangeNearHighFarLowHotVol,       // year_high_pct < 5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — near 52w high (<5%) + far above 52w low (>=20%) + hot vol (persistent-uptrend stock testing the high again with elevated participation; either breakout-to-fresh-highs candidate or distribution-top depending on price-action resolution at the resistance level)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6668,6 +6670,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < -2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::AsymmetricRangeNearLowFarHighHotVol => {
+            hit.year_high_pct >= 20.0 && hit.year_low_pct < 5.0 && hit.rel_volume >= 1.5
+        }
+        Preset::AsymmetricRangeNearHighFarLowHotVol => {
+            hit.year_high_pct < 5.0 && hit.year_low_pct >= 20.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7638,6 +7646,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WideYearRangeCloseAtLodHotVol => "Wide Annual Range + Close Pinned to LOD + Red Close + Hot Vol (Strong-conviction Tape in High-beta Name: Volatile Stock with Large 52w Range Closes at the Day's Low on Elevated Participation; Momentum-continuation Signal Where Intraday Weakness Aligns with the Wider Price-action Regime)",
         Preset::WideYearRangeGapUpHotVol => "Wide Annual Range + Gap Up (>2 %) + Hot Vol (Catalyst-event in High-beta Name: Volatile Stock with Large 52w Range Gaps up on News/earnings with Elevated Participation; Mean-reversion-from-gap Candidate or Trend-continuation Depending on Intraday Follow-through)",
         Preset::WideYearRangeGapDownHotVol => "Wide Annual Range + Gap Down (<-2 %) + Hot Vol (Catalyst-event in High-beta Name: Volatile Stock with Large 52w Range Gaps down on News/earnings with Elevated Participation; Mean-reversion-from-gap Candidate or Trend-continuation Depending on Intraday Follow-through)",
+        Preset::AsymmetricRangeNearLowFarHighHotVol => "Near 52w Low (<5 %) + Far below 52w High (>=20 %) + Hot Vol (Persistent-downtrend Stock Testing the Low Again with Elevated Participation; Either Capitulation-bottom Candidate or Breakdown to Fresh Lows Depending on Price-action Resolution at the Support Level)",
+        Preset::AsymmetricRangeNearHighFarLowHotVol => "Near 52w High (<5 %) + Far above 52w Low (>=20 %) + Hot Vol (Persistent-uptrend Stock Testing the High Again with Elevated Participation; Either Breakout-to-fresh-highs Candidate or Distribution-top Depending on Price-action Resolution at the Resistance Level)",
     }
 }
 
