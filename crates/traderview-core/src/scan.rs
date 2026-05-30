@@ -214,6 +214,8 @@ pub enum Preset {
     EvenSwingSqueeze,            // hod_dist.abs() between 1 and 3 AND lod_dist.abs() between 1 and 3 AND day_pct.abs() < 1 — small balanced swing
     NoMoveAtMidSqueeze,          // |change_pct| < 0.2 AND hod_dist.abs() > 1 AND lod_dist.abs() > 1 — close pinned mid with both extremes far
     BarelyMovingHighSqueeze,     // year_high_pct >= -8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near top quiet drift
+    BarelyMovingLowSqueeze,      // year_low_pct <= 8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near bottom quiet drift
+    MicroRangeSqueeze,           // hod_dist.abs() < 0.2 AND lod_dist.abs() < 0.2 — close pinned to BOTH HOD and LOD (zero range)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -692,6 +694,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
+        Preset::BarelyMovingLowSqueeze => {
+            hit.year_low_pct <= 8.0
+                && hit.day_pct.abs() < 0.3
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.9
+        }
+        Preset::MicroRangeSqueeze => {
+            hit.hod_dist_pct.abs() < 0.2 && hit.lod_dist_pct.abs() < 0.2
+        }
     }
 }
 
@@ -796,6 +807,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::EvenSwingSqueeze => "Even-Swing Squeeze",
         Preset::NoMoveAtMidSqueeze => "No-Move-At-Mid Squeeze",
         Preset::BarelyMovingHighSqueeze => "Barely-Moving High Squeeze",
+        Preset::BarelyMovingLowSqueeze => "Barely-Moving Low Squeeze",
+        Preset::MicroRangeSqueeze => "Micro-Range Squeeze",
     }
 }
 
