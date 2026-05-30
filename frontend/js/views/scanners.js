@@ -66,6 +66,8 @@ const PRESETS = [
     { id: 'quarter_day_inside_squeeze', label: t('view.scanners.preset.quarter_day_inside_squeeze.label'), desc: t('view.scanners.preset.quarter_day_inside_squeeze.desc') },
     { id: 'even_volume_quiet_squeeze',  label: t('view.scanners.preset.even_volume_quiet_squeeze.label'),  desc: t('view.scanners.preset.even_volume_quiet_squeeze.desc') },
     { id: 'tight_coil_high_squeeze',    label: t('view.scanners.preset.tight_coil_high_squeeze.label'),    desc: t('view.scanners.preset.tight_coil_high_squeeze.desc') },
+    { id: 'tight_coil_low_squeeze',     label: t('view.scanners.preset.tight_coil_low_squeeze.label'),     desc: t('view.scanners.preset.tight_coil_low_squeeze.desc') },
+    { id: 'even_width_squeeze',         label: t('view.scanners.preset.even_width_squeeze.label'),         desc: t('view.scanners.preset.even_width_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

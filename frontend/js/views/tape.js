@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 let timer = null;
 
@@ -23,6 +24,10 @@ export async function renderTape(mount) {
             <div class="chart-panel">
                 <h2 data-i18n="view.tape.h2.watchlist_quotes">Watchlist quotes</h2>
                 <div id="tape-quotes" data-i18n="common.loading">loading…</div>
+            </div>
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2 data-i18n="view.tape.h2.change_chart">Watchlist change % snapshot</h2>
+                <div id="tape-chart" style="width:100%;height:240px"></div>
             </div>
         </div>
     `;
@@ -104,5 +109,41 @@ async function refresh(mount, tok) {
         </tr>`).join('')}
     </table>` : '<p data-i18n="view.tape.hint.add_symbols_to_a_watchlist_first" class="muted">Add symbols to a watchlist first.</p>';
 
+    renderChangeChart(quotes);
     void fmtDateTime;
+}
+
+function renderChangeChart(quotes) {
+    const el = document.getElementById('tape-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (quotes || []).filter(q => q && Number.isFinite(Number(q.change_pct)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tape.empty_chart">${esc(t('view.tape.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.change_pct) - Number(a.change_pct));
+    const labels = valid.map(q => q.symbol);
+    const ys = valid.map(q => Number(q.change_pct));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tape.chart.symbol_idx') },
+            { label: t('view.tape.chart.change_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.tape.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
