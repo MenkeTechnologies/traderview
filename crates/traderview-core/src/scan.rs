@@ -544,6 +544,8 @@ pub enum Preset {
     VolSpikeTinyGapBigChange,       // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — extreme vol + flat gap + big change (mid-session catalyst; intraday-only news)
     StrongCloseAtHodHotVol,         // hod_dist.abs() < 0.3 AND day_pct > 1 AND rel_volume >= 2 — close at HOD + green intraday + hot vol (strong close; buyers in control)
     WeakCloseAtLodHotVol,           // lod_dist.abs() < 0.3 AND day_pct < -1 AND rel_volume >= 2 — close at LOD + red intraday + hot vol (weak close; sellers in control)
+    Pct52wHighDryVolFlat,           // year_high_pct > -3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w high on dry vol with no move (forgotten leadership; consolidation at highs)
+    Pct52wLowDryVolFlat,            // year_low_pct < 3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w low on dry vol with no move (forgotten weakness; basing at lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2827,6 +2829,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Pct52wHighDryVolFlat => {
+            hit.year_high_pct > -3.0
+                && hit.rel_volume < 0.5
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::Pct52wLowDryVolFlat => {
+            hit.year_low_pct < 3.0
+                && hit.rel_volume < 0.5
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3261,6 +3273,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::VolSpikeTinyGapBigChange => "Vol Spike + Flat Gap + Big Change (Intraday Catalyst)",
         Preset::StrongCloseAtHodHotVol => "Strong Close at HOD + Green Intraday + Hot Vol",
         Preset::WeakCloseAtLodHotVol => "Weak Close at LOD + Red Intraday + Hot Vol",
+        Preset::Pct52wHighDryVolFlat => "Near 52w High, Dry Vol, Flat (Forgotten Leadership)",
+        Preset::Pct52wLowDryVolFlat => "Near 52w Low, Dry Vol, Flat (Forgotten Weakness)",
     }
 }
 

@@ -61,8 +61,14 @@ export async function renderCalendar(mount, state) {
             <h2 data-i18n="view.calendar.h2.daily_chart">Daily net P&L (sorted by date)</h2>
             <div id="cal-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.calendar.h2.cum_chart">Cumulative net P&L (running equity)</h2>
+            <div id="cal-cum-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     renderDailyChart(cells);
+    renderCumChart(cells);
 }
 
 function renderDailyChart(cells) {
@@ -99,6 +105,43 @@ function renderDailyChart(cells) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderCumChart(cells) {
+    const el = document.getElementById('cal-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const sorted = [...cells]
+        .filter(c => Number.isFinite(Number(c.net_pnl)))
+        .sort((a, b) => a.day.localeCompare(b.day));
+    if (sorted.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.calendar.empty_cum_chart">${esc(t('view.calendar.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const labels = sorted.map(c => c.day.slice(5));
+    let acc = 0;
+    const cum = sorted.map(c => { acc += Number(c.net_pnl); return acc; });
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.calendar.chart.day_idx') },
+            { label: t('view.calendar.chart.cum_pnl'),
+              stroke: '#7af0a8', width: 1.5,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: false } },
+            { label: t('view.calendar.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function monthName(m) {
