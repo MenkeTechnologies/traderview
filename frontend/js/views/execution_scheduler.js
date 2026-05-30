@@ -23,6 +23,7 @@ import {
     buildPovBody, buildTwapBody, buildVwapBody,
     summarizeSchedule,
 } from '../_execution_scheduler_inputs.js';
+import { showToast } from '../toast.js';
 
 const DEFAULT_VOLUME = `# Per-bar expected volume (shares). One value per token.
 # Demo: 26 half-hour bars with U-shaped intraday liquidity.
@@ -57,10 +58,10 @@ export async function renderExecutionScheduler(mount, _appState) {
             <h2 data-i18n="view.execution_scheduler.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.execution_scheduler.label.total_order">Total order size</span>
-                    <input id="es-total" type="number" step="any" min="1" value="${state.totalOrder}"></label>
+                    <input id="es-total" type="number" step="any" min="1" value="${state.totalOrder}" data-tip="view.execution_scheduler.tip.total"></label>
                 <label><span data-i18n="view.execution_scheduler.label.pov_rate">POV participation rate</span>
-                    <input id="es-rate" type="number" step="0.01" min="0.01" max="1" value="${state.participationRate}"></label>
-                <button data-i18n="view.execution_scheduler.btn.schedule" id="es-run" class="primary" type="button">Schedule</button>
+                    <input id="es-rate" type="number" step="0.01" min="0.01" max="1" value="${state.participationRate}" data-tip="view.execution_scheduler.tip.rate"></label>
+                <button data-i18n="view.execution_scheduler.btn.schedule" data-tip="view.execution_scheduler.tip.schedule" data-shortcut="execution_scheduler_run" id="es-run" class="primary" type="button">Schedule</button>
             </div>
             <p data-i18n="view.execution_scheduler.hint.twap_slices_equally_across_all_bars_in_the_curve_v" class="muted">
                 TWAP slices equally across all bars in the curve. VWAP weights by expected
@@ -68,6 +69,7 @@ export async function renderExecutionScheduler(mount, _appState) {
             </p>
             <h3 data-i18n="view.execution_scheduler.h3.volume_curve_per_bar">Volume curve (per bar)</h3>
             <textarea id="es-vol" rows="8"
+                data-tip="view.execution_scheduler.tip.volume"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.volumeText)}</textarea>
         </div>
 
@@ -103,7 +105,7 @@ async function schedule(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const err = validateExecInputs(state.totalOrder, parsed.value, state.participationRate);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     const numBars = parsed.value.length;
     let pov, twap, vwap;
@@ -114,13 +116,15 @@ async function schedule(mount, tok) {
             api.anlyOptimalExecutionVwap(buildVwapBody(state.totalOrder, parsed.value)),
         ]);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(pov, twap, vwap);
     renderChart(parsed.value, pov, twap, vwap);
+    showToast(t('view.execution_scheduler.toast.done', { bars: numBars }), { level: 'success' });
 }
 
 function renderSummary(pov, twap, vwap) {

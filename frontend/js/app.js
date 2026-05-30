@@ -680,6 +680,11 @@ function bindTabs() {
         const el = document.getElementById('pd-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in execution-scheduler scope → click Schedule.
+    window.addEventListener('tv:execution-scheduler-run', () => {
+        const el = document.getElementById('es-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
