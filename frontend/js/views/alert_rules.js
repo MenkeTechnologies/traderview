@@ -174,7 +174,7 @@ function renderRulesList() {
 function renderRuleCard(r) {
     const paramFields = paramsEditor(r);
     return `
-        <div class="ar-rule">
+        <div class="ar-rule" data-context-scope="alert-rule-row" data-rule-id="${esc(r.id)}">
             <div class="ar-rule-head">
                 <label><input type="checkbox" data-rule-id="${esc(r.id)}" data-field="enabled" ${r.enabled ? 'checked' : ''}> enabled</label>
                 <input type="text" data-rule-id="${esc(r.id)}" data-field="name" value="${esc(r.name)}" style="flex:1;min-width:160px">

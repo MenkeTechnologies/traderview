@@ -217,7 +217,7 @@ import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installDialog } from './dialog.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
-import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS } from './_context_menu.js';
+import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
@@ -370,6 +370,7 @@ function bindTabs() {
     registerContextItems('trade-row', TRADE_ROW_ITEMS);
     registerContextItems('watchlist-symbol-row', WATCHLIST_ROW_ITEMS);
     registerContextItems('position-row', POSITION_ROW_ITEMS);
+    registerContextItems('alert-rule-row', ALERT_RULE_ROW_ITEMS);
     installTooltips();
     installSymbolHotkey();
     void bootI18n('en').then(() => {

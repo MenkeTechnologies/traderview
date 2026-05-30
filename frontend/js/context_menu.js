@@ -19,6 +19,7 @@ import { loadState, saveState, toggleFavorite, isFavorite, addBookmark } from '.
 import { getGlobalSymbol, setGlobalSymbol } from './_global_symbol.js';
 import { api } from './api.js';
 import { tConfirm } from './dialog.js';
+import * as alertEngine from './_alert_rules.js';
 
 let _installed = false;
 let _open = false;
@@ -225,6 +226,55 @@ export function installContextMenu() {
     window.addEventListener('tv:pos-row-charts',   wlNavTo('charts'));
     window.addEventListener('tv:pos-row-research', wlNavTo('research'));
     window.addEventListener('tv:pos-row-options',  wlNavTo('options'));
+    // Alert-rule-row actions — read data-rule-id from the right-clicked
+    // <div>. Mutates engine state in localStorage, then re-dispatches
+    // hashchange so the view repaints.
+    const ruleIdFrom = (detail) => {
+        const t = detail && detail.target;
+        if (!t || !t.dataset) return null;
+        return t.dataset.ruleId || null;
+    };
+    window.addEventListener('tv:ar-row-toggle', (e) => {
+        const id = ruleIdFrom(e.detail);
+        if (!id) return;
+        let s = alertEngine.loadState();
+        const rule = (s.rules || []).find(r => r.id === id);
+        if (!rule) return;
+        s = alertEngine.setEnabled(s, id, !rule.enabled);
+        alertEngine.saveState(s);
+        showToast(
+            t(rule.enabled ? 'toast.ar_disabled' : 'toast.ar_enabled', { name: rule.name }),
+            { level: 'success' });
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:ar-row-duplicate', (e) => {
+        const id = ruleIdFrom(e.detail);
+        if (!id) return;
+        let s = alertEngine.loadState();
+        const rule = (s.rules || []).find(r => r.id === id);
+        if (!rule) return;
+        const clone = alertEngine.newRule(rule.type, `${rule.name} (copy)`);
+        // Preserve all the user's tuned fields, keep the new id + name.
+        const dup = { ...rule, id: clone.id, name: clone.name };
+        s = alertEngine.addRule(s, dup);
+        alertEngine.saveState(s);
+        showToast(t('toast.ar_duplicated', { name: dup.name }), { level: 'success' });
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:ar-row-delete', (e) => {
+        const id = ruleIdFrom(e.detail);
+        if (!id) return;
+        void (async () => {
+            const s0 = alertEngine.loadState();
+            const rule = (s0.rules || []).find(r => r.id === id);
+            const name = rule ? rule.name : id;
+            if (!await tConfirm('ctxmenu.ar_row_delete_confirm', { name }, { level: 'danger' })) return;
+            const s = alertEngine.removeRule(s0, id);
+            alertEngine.saveState(s);
+            showToast(t('toast.ar_deleted', { name }), { level: 'success' });
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+        })();
+    });
     window.addEventListener('tv:trade-delete', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {

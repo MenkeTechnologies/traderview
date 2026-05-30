@@ -144,6 +144,19 @@ export const POSITION_ROW_ITEMS = [
       actionKey: 'tv:pos-row-options',    section: 'position' },
 ];
 
+// Alert-rule-row context items. Right-click on a <div data-context-
+// scope="alert-rule-row" data-rule-id="X"> shows: Toggle enabled /
+// Duplicate / Delete. Handlers read data-rule-id from detail.target
+// and mutate the engine state in localStorage.
+export const ALERT_RULE_ROW_ITEMS = [
+    { id: 'ar_row_toggle',    labelKey: 'ctxmenu.ar_row_toggle',
+      actionKey: 'tv:ar-row-toggle',    section: 'alert' },
+    { id: 'ar_row_duplicate', labelKey: 'ctxmenu.ar_row_duplicate',
+      actionKey: 'tv:ar-row-duplicate', section: 'alert' },
+    { id: 'ar_row_delete',    labelKey: 'ctxmenu.ar_row_delete',
+      actionKey: 'tv:ar-row-delete',    section: 'alert' },
+];
+
 // Trade-row context items. Right-click on a <tr data-context-scope=
 // "trade-row" data-id="X"> shows: View detail / Copy ID / Delete.
 // Handlers read `data-id` from `CustomEvent.detail.target`.
