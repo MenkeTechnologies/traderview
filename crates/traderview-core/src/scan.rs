@@ -1164,6 +1164,8 @@ pub enum Preset {
     TightIntradayRangeDeepAboveYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution deep in advance territory: regular session prints a tight trading range well above the prior trough with elevated participation; topping-pattern signal where smart money exits position quietly in euphoric-tape conditions)
     TightIntradayRangeMidYearHighHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional pause in mid-cycle pullback zone: regular session prints a tight trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle accumulation/pause where smart money positions before the next directional move)
     TightIntradayRangeMidYearLowHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional pause in mid-cycle recovery zone: regular session prints a tight trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle distribution/pause where smart money positions before the next directional move)
+    TightIntradayRangeJustOffYearHighHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional positioning just off the year peak: regular session prints a tight trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag pause where heavy hands re-position quietly before attempting the high again)
+    TightIntradayRangeJustOffYearLowHotVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional positioning just off the year trough: regular session prints a tight trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag pause where heavy hands re-position quietly before testing the low again)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7170,6 +7172,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::TightIntradayRangeJustOffYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::TightIntradayRangeJustOffYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -8224,6 +8238,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightIntradayRangeDeepAboveYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Far above 52w Low (>=20 %) (Institutional Distribution Deep in Advance Territory: Regular Session Prints a Tight Trading Range Well above the Prior Trough with Elevated Participation; Topping-pattern Signal Where Smart Money Exits Position Quietly in Euphoric-tape Conditions)",
         Preset::TightIntradayRangeMidYearHighHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Mid-range from High (5-20 %) (Institutional Pause in Mid-cycle Pullback Zone: Regular Session Prints a Tight Trading Range in the Proper Consolidation Range below the Prior Peak with Elevated Participation; Mid-cycle Accumulation/pause Where Smart Money Positions before the Next Directional Move)",
         Preset::TightIntradayRangeMidYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Mid-range from Low (5-20 %) (Institutional Pause in Mid-cycle Recovery Zone: Regular Session Prints a Tight Trading Range in the Proper Consolidation Range above the Prior Trough with Elevated Participation; Mid-cycle Distribution/pause Where Smart Money Positions before the Next Directional Move)",
+        Preset::TightIntradayRangeJustOffYearHighHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Just off 52w High (2-5 %) (Institutional Positioning Just off the Year Peak: Regular Session Prints a Tight Trading Range Immediately after a Shallow Pullback from the 52w High with Elevated Participation; Post-tag Pause Where Heavy Hands Re-position Quietly before Attempting the High Again)",
+        Preset::TightIntradayRangeJustOffYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Just off 52w Low (2-5 %) (Institutional Positioning Just off the Year Trough: Regular Session Prints a Tight Trading Range Immediately after a Shallow Bounce from the 52w Low with Elevated Participation; Post-tag Pause Where Heavy Hands Re-position Quietly before Testing the Low Again)",
     }
 }
 
