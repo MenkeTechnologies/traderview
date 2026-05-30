@@ -55,6 +55,11 @@ export async function renderEquivolume(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.equivol.h2.kind_chart">Bar count by Arms kind (Narrow / Normal / Wide / Power)</h2>
+            <div id="ev-kind-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.equivol.h2.table">Per-bar classification</h2>
             <div id="ev-table"></div>
         </div>
@@ -98,6 +103,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.total_width);
     renderSummary(local, true);
     renderChart(local);
+    renderKindChart(local);
     renderTable(local);
     let resp;
     try {
@@ -109,6 +115,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderKindChart(resp);
     renderTable(resp);
 }
 
@@ -185,6 +192,45 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, mids, highs, lows], el);
+}
+
+function renderKindChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ev-kind-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.kinds) || report.kinds.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.equivol.empty_kind_chart">${esc(t('view.equivol.empty_kind_chart'))}</div>`;
+        return;
+    }
+    const counts = { narrow: 0, normal: 0, wide: 0, power: 0 };
+    for (const k of report.kinds) {
+        if (k in counts) counts[k] += 1;
+    }
+    const labels = [
+        t('view.equivol.kind.narrow'),
+        t('view.equivol.kind.normal'),
+        t('view.equivol.kind.wide'),
+        t('view.equivol.kind.power'),
+    ];
+    const ys = [counts.narrow, counts.normal, counts.wide, counts.power];
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.equivol.chart.kind_idx') },
+            { label: t('view.equivol.chart.bar_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable(report) {

@@ -516,6 +516,8 @@ const PRESETS = [
     { id: 'year52_low_reclaimed_to_hod', label: t('view.scanners.preset.year52_low_reclaimed_to_hod.label'), desc: t('view.scanners.preset.year52_low_reclaimed_to_hod.desc') },
     { id: 'high_vol_no_gap_moderate_change', label: t('view.scanners.preset.high_vol_no_gap_moderate_change.label'), desc: t('view.scanners.preset.high_vol_no_gap_moderate_change.desc') },
     { id: 'low_vol_with_large_gap', label: t('view.scanners.preset.low_vol_with_large_gap.label'), desc: t('view.scanners.preset.low_vol_with_large_gap.desc') },
+    { id: 'gap_erased_by_intraday_flat', label: t('view.scanners.preset.gap_erased_by_intraday_flat.label'), desc: t('view.scanners.preset.gap_erased_by_intraday_flat.desc') },
+    { id: 'both_sides_tagged_flat_balance', label: t('view.scanners.preset.both_sides_tagged_flat_balance.label'), desc: t('view.scanners.preset.both_sides_tagged_flat_balance.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -634,6 +634,8 @@ pub enum Preset {
     Year52LowReclaimedToHod,        // year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct > 0 — close at HOD even though near 52w low + hot vol + green day (sharp reclaim from the lows; bottoming signal)
     HighVolNoGapModerateChange,     // gap_pct.abs() < 0.3 AND rel_volume >= 2 AND change_pct.abs() < 1 — hot vol + no gap + modest change (institutional accumulation/distribution without overnight catalyst; quiet-price big-flow day)
     LowVolWithLargeGap,             // gap_pct.abs() > 2 AND rel_volume < 0.7 AND change_pct.abs() > 1 — big gap + dry vol + meaningful change (gap held quietly; minimal participation needed to absorb the overnight move)
+    GapErasedByIntradayFlat,        // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND gap_pct * day_pct < 0 — gap + opposite-direction intraday + flat close (intraday completely erased the gap; full counter-move absorption)
+    BothSidesTaggedFlatBalance,     // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume >= 1.2 — both extremes well-distant from close + flat change + decent vol (range-bound balance; close mid-range after exploring both sides)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3433,6 +3435,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::GapErasedByIntradayFlat => {
+            hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.gap_pct * hit.day_pct < 0.0
+        }
+        Preset::BothSidesTaggedFlatBalance => {
+            hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 1.2
+        }
     }
 }
 
@@ -3957,6 +3970,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowReclaimedToHod => "Near 52w Low + Closed at HOD + Hot Vol + Green (Sharp Reclaim from Lows)",
         Preset::HighVolNoGapModerateChange => "Hot Vol + No Gap + Modest Change (Quiet-Price Big-Flow Day)",
         Preset::LowVolWithLargeGap => "Big Gap + Dry Vol + Meaningful Change (Gap Absorbed Quietly)",
+        Preset::GapErasedByIntradayFlat => "Gap + Opposite Intraday + Flat Close (Gap Completely Erased)",
+        Preset::BothSidesTaggedFlatBalance => "Both Extremes Visited + Flat Change + Decent Vol (Range-bound Balance)",
     }
 }
 
