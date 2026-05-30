@@ -1110,6 +1110,8 @@ pub enum Preset {
     SmallGapBigDayDownJustOffYearLowHotVol,    // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + just off 52w low (2-5%) + hot vol (pure intraday rejection from shallow bounce: open is essentially flat to prior close then regular session prints a sustained sell-driven move back toward the recent trough; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
     BigUpDayCloseAtHodHotVol,                  // day_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday up (>3%) + close pinned to HOD + hot vol (strongest possible intraday rally pattern: regular session prints a sustained buy-driven move from open to close with no end-of-day fade; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bull pressure)
     BigDownDayCloseAtLodHotVol,                // day_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday down (<-3%) + close pinned to LOD + hot vol (strongest possible intraday selloff pattern: regular session prints a sustained sell-driven move from open to close with no end-of-day bounce; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bear pressure)
+    BigUpDayDoubledVolHotVol,                  // day_pct > 3 AND rel_volume >= 2 — big intraday up (>3%) + doubled vol (>=2) (institutional intraday accumulation signal: regular session prints a sustained buy-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
+    BigDownDayDoubledVolHotVol,                // day_pct < -3 AND rel_volume >= 2 — big intraday down (<-3%) + doubled vol (>=2) (institutional intraday distribution signal: regular session prints a sustained sell-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6852,6 +6854,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::BigDownDayCloseAtLodHotVol => {
             hit.day_pct < -3.0 && hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 1.5
         }
+        Preset::BigUpDayDoubledVolHotVol => {
+            hit.day_pct > 3.0 && hit.rel_volume >= 2.0
+        }
+        Preset::BigDownDayDoubledVolHotVol => {
+            hit.day_pct < -3.0 && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -7852,6 +7860,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallGapBigDayDownJustOffYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Just off 52w Low (2-5 %) + Hot Vol (Pure Intraday Rejection from Shallow Bounce: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move back toward the Recent Trough; Pure-intraday Post-tag Re-test Attempt without Overnight Catalyst Contribution)",
         Preset::BigUpDayCloseAtHodHotVol => "Big Intraday Up (>3 %) + Close Pinned to HOD + Hot Vol (Strongest Possible Intraday Rally Pattern: Regular Session Prints a Sustained Buy-driven Move from Open to Close with No End-of-day Fade; Isolates Intraday-only Conviction without Conflating Gap Contribution; Ideal for Measuring Real-session Bull Pressure)",
         Preset::BigDownDayCloseAtLodHotVol => "Big Intraday Down (<-3 %) + Close Pinned to LOD + Hot Vol (Strongest Possible Intraday Selloff Pattern: Regular Session Prints a Sustained Sell-driven Move from Open to Close with No End-of-day Bounce; Isolates Intraday-only Conviction without Conflating Gap Contribution; Ideal for Measuring Real-session Bear Pressure)",
+        Preset::BigUpDayDoubledVolHotVol => "Big Intraday Up (>3 %) + Doubled Vol (>=2) (Institutional Intraday Accumulation Signal: Regular Session Prints a Sustained Buy-driven Move on Doubled Participation Regardless of Gap and Close-position Context; Pure-intraday Volume-conviction Filter that Ignores Overnight Repricing Noise)",
+        Preset::BigDownDayDoubledVolHotVol => "Big Intraday Down (<-3 %) + Doubled Vol (>=2) (Institutional Intraday Distribution Signal: Regular Session Prints a Sustained Sell-driven Move on Doubled Participation Regardless of Gap and Close-position Context; Pure-intraday Volume-conviction Filter that Ignores Overnight Repricing Noise)",
     }
 }
 
