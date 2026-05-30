@@ -1140,6 +1140,8 @@ pub enum Preset {
     QuintupledVolGapDownHotVol,                // rel_volume >= 5 AND gap_pct < -2 — quintupled vol (>=5) + gap down (<-2%) (tier-1 catalyst gap-down: vol is 5x average and overnight repricing pushes the open more than 2% below prior close; rare news/earnings/sector-rotation event with full session participation confirming the bear-direction catalyst)
     QuintupledVolGapUpCloseAtHodHotVol,        // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + gap up (>2%) + close pinned to HOD + green close (highest-conviction catalyst gap-up that holds: vol is 5x average, overnight gap up holds without fade and price closes at the day's high; rarest possible validated bull-catalyst event across all sessions)
     QuintupledVolGapDownCloseAtLodHotVol,      // rel_volume >= 5 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + gap down (<-2%) + close pinned to LOD + red close (highest-conviction catalyst gap-down that holds: vol is 5x average, overnight gap down holds without bounce and price closes at the day's low; rarest possible validated bear-catalyst event across all sessions)
+    QuintupledVolGapUpCloseAtLodHotVol,        // rel_volume >= 5 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — quintupled vol (>=5) + gap up (>2%) faded completely to LOD + red close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap up fails completely and price closes at the day's low; rarest possible failed-bull-catalyst event, capital-S-shift regime-rejection signal)
+    QuintupledVolGapDownCloseAtHodHotVol,      // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — quintupled vol (>=5) + gap down (<-2%) absorbed completely to HOD + green close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap down absorbed completely and price closes at the day's high; rarest possible failed-bear-catalyst event, capital-S-shift regime-acceptance signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7014,6 +7016,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.change_pct < -1.0
         }
+        Preset::QuintupledVolGapUpCloseAtLodHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+        }
+        Preset::QuintupledVolGapDownCloseAtHodHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+        }
     }
 }
 
@@ -8044,6 +8058,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolGapDownHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) (Tier-1 Catalyst Gap-down: Vol Is 5x Average and Overnight Repricing Pushes the Open More than 2 % below Prior Close; Rare News/earnings/sector-rotation Event with Full Session Participation Confirming the Bear-direction Catalyst)",
         Preset::QuintupledVolGapUpCloseAtHodHotVol => "Quintupled Vol (>=5) + Gap Up (>2 %) + Close Pinned to HOD + Green Close (Highest-conviction Catalyst Gap-up that Holds: Vol Is 5x Average, Overnight Gap up Holds without Fade and Price Closes at the Day's High; Rarest Possible Validated Bull-catalyst Event across All Sessions)",
         Preset::QuintupledVolGapDownCloseAtLodHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) + Close Pinned to LOD + Red Close (Highest-conviction Catalyst Gap-down that Holds: Vol Is 5x Average, Overnight Gap down Holds without Bounce and Price Closes at the Day's Low; Rarest Possible Validated Bear-catalyst Event across All Sessions)",
+        Preset::QuintupledVolGapUpCloseAtLodHotVol => "Quintupled Vol (>=5) + Gap Up (>2 %) Faded Completely to LOD + Red Close (Highest-conviction Failed Catalyst at Tier-1: Vol Is 5x Average, Overnight Gap up Fails Completely and Price Closes at the Day's Low; Rarest Possible Failed-bull-catalyst Event, Capital-S-shift Regime-rejection Signal)",
+        Preset::QuintupledVolGapDownCloseAtHodHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) Absorbed Completely to HOD + Green Close (Highest-conviction Failed Catalyst at Tier-1: Vol Is 5x Average, Overnight Gap down Absorbed Completely and Price Closes at the Day's High; Rarest Possible Failed-bear-catalyst Event, Capital-S-shift Regime-acceptance Signal)",
     }
 }
 
