@@ -962,6 +962,8 @@ pub enum Preset {
     GravestoneDojiAtConfirmedBreakout,   // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% above prior 52w high + flat close + HOD far above + close near LOD + hot vol (gravestone doji at confirmed breakout: intraday rip fully sold by close with flat finish below prior resistance; failed-breakout supply-test signal)
     MarubozuGreenAtConfirmedBreakout,    // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + green marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakout: regular-hours conviction lifted from open to high with no gap aid; max-conviction follow-through above resistance)
     MarubozuRedAtConfirmedBreakdown,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + red marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakdown: regular-hours conviction fell from open to low with no gap aid; max-conviction follow-through below support)
+    MarubozuRedAtConfirmedBreakout,      // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + red marubozu + no overnight gap + hot vol (full intraday rejection trend day after confirmed breakout: regular-hours conviction fell from open to low with no gap aid; max-conviction failed-breakout fade returning below resistance)
+    MarubozuGreenAtConfirmedBreakdown,   // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + green marubozu + no overnight gap + hot vol (full intraday recovery trend day after confirmed breakdown: regular-hours conviction lifted from open to high with no gap aid; max-conviction failed-breakdown reclaim above support)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5762,6 +5764,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MarubozuRedAtConfirmedBreakout => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < -1.0
+                && hit.change_pct < -3.0
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MarubozuGreenAtConfirmedBreakdown => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < -1.0
+                && hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6614,6 +6632,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GravestoneDojiAtConfirmedBreakout => "1-3 % above Prior 52w High + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji at Confirmed Breakout: Intraday Rip Fully Sold by Close with Flat Finish below Prior Resistance; Failed-breakout Supply-test Signal)",
         Preset::MarubozuGreenAtConfirmedBreakout => "1-3 % above Prior 52w High + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Extension Trend Day after Confirmed Breakout: Regular-hours Conviction Lifted from Open to High with No Gap Aid; Max-conviction Follow-through above Resistance)",
         Preset::MarubozuRedAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Extension Trend Day after Confirmed Breakdown: Regular-hours Conviction Fell from Open to Low with No Gap Aid; Max-conviction Follow-through below Support)",
+        Preset::MarubozuRedAtConfirmedBreakout => "1-3 % above Prior 52w High + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Rejection Trend Day after Confirmed Breakout: Regular-hours Conviction Fell from Open to Low with No Gap Aid; Max-conviction Failed-breakout Fade Returning below Resistance)",
+        Preset::MarubozuGreenAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Recovery Trend Day after Confirmed Breakdown: Regular-hours Conviction Lifted from Open to High with No Gap Aid; Max-conviction Failed-breakdown Reclaim above Support)",
     }
 }
 
