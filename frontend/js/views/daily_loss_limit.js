@@ -72,6 +72,11 @@ export async function renderDailyLossLimit(mount, _appState) {
             <div id="dl-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.daily_loss_limit.h2.equity_sweep_chart">Binding limit vs account equity — where $ cap takes over from % cap</h2>
+            <div id="dl-eqsweep-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="dl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -136,6 +141,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderBar(decToNum(resp.pct_of_limit), resp.state);
     renderSweepChart();
+    renderEquitySweepChart();
     const st = (resp.state || 'ok').toUpperCase();
     const pct = (decToNum(resp.pct_of_limit) * 100).toFixed(1);
     const level = st === 'KILLSWITCH' ? 'error' : (st === 'CUTSIZE' || st === 'WARNING') ? 'warning' : 'success';
@@ -185,6 +191,49 @@ function renderSweepChart() {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
         legend: { show: true },
     }, [xs, ys, warn, cut, kill], el);
+}
+
+function renderEquitySweepChart() {
+    const el = document.getElementById('dl-eqsweep-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const eqNow = Number(state.params.account_equity);
+    const maxDol = Number(state.params.max_daily_loss_dollars);
+    const maxPct = Number(state.params.max_daily_loss_pct);
+    if (!(eqNow > 0) || !(maxPct > 0) || !Number.isFinite(maxDol) || maxDol < 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.daily_loss_limit.empty_eqsweep_chart">${esc(t('view.daily_loss_limit.empty_eqsweep_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const binding = [];
+    const pctCap = [];
+    const dolCap = [];
+    const lo = Math.max(eqNow * 0.1, 1);
+    const hi = eqNow * 2;
+    const step = (hi - lo) / 80;
+    for (let eq = lo; eq <= hi + 1e-9; eq += step) {
+        const cap = eq * maxPct;
+        const limit = (maxDol > 0) ? Math.min(cap, maxDol) : cap;
+        xs.push(eq);
+        binding.push(limit);
+        pctCap.push(cap);
+        dolCap.push(maxDol > 0 ? maxDol : null);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.daily_loss_limit.chart.equity') },
+            { label: t('view.daily_loss_limit.chart.binding_limit'),
+              stroke: '#00e5ff', width: 1.6, points: { show: false } },
+            { label: t('view.daily_loss_limit.chart.pct_cap'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.daily_loss_limit.chart.dol_cap'),
+              stroke: '#ff7a1f', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, [xs, binding, pctCap, dolCap], el);
 }
 
 function renderSummary(r, pending) {

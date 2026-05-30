@@ -486,6 +486,8 @@ const PRESETS = [
     { id: 'year_high_proximity_fail_attempt', label: t('view.scanners.preset.year_high_proximity_fail_attempt.label'), desc: t('view.scanners.preset.year_high_proximity_fail_attempt.desc') },
     { id: 'open_gap_filled_net_flat', label: t('view.scanners.preset.open_gap_filled_net_flat.label'), desc: t('view.scanners.preset.open_gap_filled_net_flat.desc') },
     { id: 'compressed_range_volatile_session', label: t('view.scanners.preset.compressed_range_volatile_session.label'), desc: t('view.scanners.preset.compressed_range_volatile_session.desc') },
+    { id: 'orderly_new_high_continuation', label: t('view.scanners.preset.orderly_new_high_continuation.label'), desc: t('view.scanners.preset.orderly_new_high_continuation.desc') },
+    { id: 'orderly_new_low_continuation', label: t('view.scanners.preset.orderly_new_low_continuation.label'), desc: t('view.scanners.preset.orderly_new_low_continuation.desc') },
 ];
 
 export async function renderScanners(mount) {

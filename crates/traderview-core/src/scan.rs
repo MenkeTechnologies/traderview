@@ -604,6 +604,8 @@ pub enum Preset {
     YearHighProximityFailAttempt,   // year_high_pct < 5 AND gap_pct <= 0 AND day_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1 — close near 52w high but faded intraday with red close + decent vol (failed move at high; potential top forming)
     OpenGapFilledNetFlat,           // gap_pct.abs() > 1.5 AND change_pct.abs() < 0.5 — significant gap opened the day but ended near flat (full gap absorption / round-trip; market rejected the overnight move)
     CompressedRangeVolatileSession, // year_high_pct < 15 AND year_low_pct < 25 AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — small 52w range with volatile session (structurally compressed asset moving today; multi-month coil breaking out intraday)
+    OrderlyNewHighContinuation,     // year_high_pct < 1 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1 — fresh 52w high with moderate (not parabolic) move + decent vol (orderly breakout; quality trend continuation)
+    OrderlyNewLowContinuation,      // year_low_pct < 1 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1 — fresh 52w low with moderate (not crash) drop + decent vol (orderly breakdown; quality downtrend continuation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3233,6 +3235,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::OrderlyNewHighContinuation => {
+            hit.year_high_pct < 1.0
+                && hit.change_pct >= 0.5
+                && hit.change_pct <= 1.5
+                && hit.rel_volume >= 1.0
+        }
+        Preset::OrderlyNewLowContinuation => {
+            hit.year_low_pct < 1.0
+                && hit.change_pct <= -0.5
+                && hit.change_pct >= -1.5
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -3727,6 +3741,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::YearHighProximityFailAttempt => "Near 52w High + Intraday Fail + Red Close (Failed Move at Highs)",
         Preset::OpenGapFilledNetFlat => "Big Gap Opened + Closed Near Flat (Full Gap Absorption / Round-Trip)",
         Preset::CompressedRangeVolatileSession => "Small 52w Range + Wide Intraday + Hot Vol (Coiled Asset Breaking Out)",
+        Preset::OrderlyNewHighContinuation => "Fresh 52w High + Moderate Up Move + Decent Vol (Orderly Breakout Continuation)",
+        Preset::OrderlyNewLowContinuation => "Fresh 52w Low + Moderate Down Move + Decent Vol (Orderly Breakdown Continuation)",
     }
 }
 
