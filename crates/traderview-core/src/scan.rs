@@ -1084,6 +1084,8 @@ pub enum Preset {
     AsymmetricRangeNearHighFarLowHotVol,       // year_high_pct < 5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — near 52w high (<5%) + far above 52w low (>=20%) + hot vol (persistent-uptrend stock testing the high again with elevated participation; either breakout-to-fresh-highs candidate or distribution-top depending on price-action resolution at the resistance level)
     AsymmetricRangeNearLowFarHighCloseAtLodHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + close pinned to LOD + red close + hot vol (breakdown-confirmation day: downtrend stock fails the support test at the 52w low and closes at the day's low on elevated participation; fresh-low extension confirmed by intraday weakness)
     AsymmetricRangeNearHighFarLowCloseAtHodHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + close pinned to HOD + green close + hot vol (breakout-confirmation day: uptrend stock clears the resistance test at the 52w high and closes at the day's high on elevated participation; fresh-high extension confirmed by intraday strength)
+    AsymmetricRangeNearLowFarHighCloseAtHodHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + close pinned to HOD + green close + hot vol (capitulation-reversal candidate: downtrend stock defends the support test at the 52w low and closes at the day's high on elevated participation; potential bottom-formation signal worth a bounce-trade screen)
+    AsymmetricRangeNearHighFarLowCloseAtLodHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + close pinned to LOD + red close + hot vol (distribution-top candidate: uptrend stock rejects the resistance test at the 52w high and closes at the day's low on elevated participation; potential top-formation signal worth a top-fade trade screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6692,6 +6694,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::AsymmetricRangeNearLowFarHighCloseAtHodHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.year_low_pct < 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::AsymmetricRangeNearHighFarLowCloseAtLodHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct >= 20.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7666,6 +7682,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AsymmetricRangeNearHighFarLowHotVol => "Near 52w High (<5 %) + Far above 52w Low (>=20 %) + Hot Vol (Persistent-uptrend Stock Testing the High Again with Elevated Participation; Either Breakout-to-fresh-highs Candidate or Distribution-top Depending on Price-action Resolution at the Resistance Level)",
         Preset::AsymmetricRangeNearLowFarHighCloseAtLodHotVol => "Persistent-downtrend Stock (Near Low + Far below High) + Close Pinned to LOD + Red Close + Hot Vol (Breakdown-confirmation Day: Downtrend Stock Fails the Support Test at the 52w Low and Closes at the Day's Low on Elevated Participation; Fresh-low Extension Confirmed by Intraday Weakness)",
         Preset::AsymmetricRangeNearHighFarLowCloseAtHodHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Close Pinned to HOD + Green Close + Hot Vol (Breakout-confirmation Day: Uptrend Stock Clears the Resistance Test at the 52w High and Closes at the Day's High on Elevated Participation; Fresh-high Extension Confirmed by Intraday Strength)",
+        Preset::AsymmetricRangeNearLowFarHighCloseAtHodHotVol => "Persistent-downtrend Stock (Near Low + Far below High) + Close Pinned to HOD + Green Close + Hot Vol (Capitulation-reversal Candidate: Downtrend Stock Defends the Support Test at the 52w Low and Closes at the Day's High on Elevated Participation; Potential Bottom-formation Signal Worth a Bounce-trade Screen)",
+        Preset::AsymmetricRangeNearHighFarLowCloseAtLodHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Close Pinned to LOD + Red Close + Hot Vol (Distribution-top Candidate: Uptrend Stock Rejects the Resistance Test at the 52w High and Closes at the Day's Low on Elevated Participation; Potential Top-formation Signal Worth a Top-fade Trade Screen)",
     }
 }
 
