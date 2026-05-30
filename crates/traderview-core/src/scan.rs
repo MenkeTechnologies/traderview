@@ -522,6 +522,8 @@ pub enum Preset {
     BalancedMidWickDryVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume < 0.6 — balanced wicks in middle on dry vol (sleepy mid-range)
     GapUpHodCloseControlled,        // gap_pct > 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 0 AND rel_volume between 0.7 and 1.5 — gap up + close at HOD + green close + normal vol (gap-and-hold; controlled trend)
     GapDownLodCloseControlled,      // gap_pct < -0.5 AND lod_dist.abs() < 0.5 AND change_pct < 0 AND rel_volume between 0.7 and 1.5 — gap down + close at LOD + red close + normal vol (gap-and-hold; controlled decline)
+    AllGreenTightDay,               // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist + lod_dist < 2 — all green directions + tight range (strong-hands tight up day)
+    AllRedTightDay,                 // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND hod_dist + lod_dist < 2 — all red directions + tight range (strong-sellers tight down day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2671,6 +2673,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.7
                 && hit.rel_volume <= 1.5
         }
+        Preset::AllGreenTightDay => {
+            hit.change_pct > 0.0
+                && hit.day_pct > 0.0
+                && hit.gap_pct > 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+        }
+        Preset::AllRedTightDay => {
+            hit.change_pct < 0.0
+                && hit.day_pct < 0.0
+                && hit.gap_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+        }
     }
 }
 
@@ -3083,6 +3097,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BalancedMidWickDryVol => "Balanced Mid-Wick, Dry Vol (Sleepy Mid-Range)",
         Preset::GapUpHodCloseControlled => "Gap Up + HOD Close + Normal Vol (Controlled Trend Up)",
         Preset::GapDownLodCloseControlled => "Gap Down + LOD Close + Normal Vol (Controlled Decline)",
+        Preset::AllGreenTightDay => "All Green Directions + Tight Range (Strong Hands)",
+        Preset::AllRedTightDay => "All Red Directions + Tight Range (Strong Sellers)",
     }
 }
 

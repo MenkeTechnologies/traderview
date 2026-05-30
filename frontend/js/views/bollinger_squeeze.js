@@ -61,6 +61,11 @@ export async function renderBollingerSqueeze(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.bbsq.h2.close_chart">Close + squeeze-on markers</h2>
+            <div id="bs-close-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.bbsq.h2.table">Per-bar squeeze status (tail — last 30)</h2>
             <div id="bs-table"></div>
         </div>
@@ -113,6 +118,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.bb_period, state.n_stdev, state.lookback, state.slack);
     renderSummary(local, true);
     renderChart(local);
+    renderCloseChart(local);
     renderTable(local);
     let resp;
     try {
@@ -124,6 +130,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCloseChart(resp);
     renderTable(resp);
 }
 
@@ -190,6 +197,37 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, report.width_pct, markers], el);
+}
+
+function renderCloseChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bs-close-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (state.closes.length === 0 || !Array.isArray(report.squeeze_on)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bbsq.empty_close">${esc(t('view.bbsq.empty_close'))}</div>`;
+        return;
+    }
+    const xs = state.closes.map((_, i) => i);
+    const closes = state.closes.map(v => Number.isFinite(v) ? v : null);
+    const squeezeMark = state.closes.map((c, i) => report.squeeze_on[i] === true ? c : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.bbsq.series.close'),
+              stroke: '#888', width: 1.0, points: { show: false } },
+            { label: t('view.bbsq.series.squeeze_mark'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 9, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, closes, squeezeMark], el);
 }
 
 function renderTable(report) {

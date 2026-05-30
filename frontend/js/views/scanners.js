@@ -404,6 +404,8 @@ const PRESETS = [
     { id: 'balanced_mid_wick_dry_vol', label: t('view.scanners.preset.balanced_mid_wick_dry_vol.label'), desc: t('view.scanners.preset.balanced_mid_wick_dry_vol.desc') },
     { id: 'gap_up_hod_close_controlled', label: t('view.scanners.preset.gap_up_hod_close_controlled.label'), desc: t('view.scanners.preset.gap_up_hod_close_controlled.desc') },
     { id: 'gap_down_lod_close_controlled', label: t('view.scanners.preset.gap_down_lod_close_controlled.label'), desc: t('view.scanners.preset.gap_down_lod_close_controlled.desc') },
+    { id: 'all_green_tight_day', label: t('view.scanners.preset.all_green_tight_day.label'), desc: t('view.scanners.preset.all_green_tight_day.desc') },
+    { id: 'all_red_tight_day', label: t('view.scanners.preset.all_red_tight_day.label'), desc: t('view.scanners.preset.all_red_tight_day.desc') },
 ];
 
 export async function renderScanners(mount) {
