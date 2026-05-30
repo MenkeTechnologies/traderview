@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_WINDOW,
@@ -31,19 +32,19 @@ export async function renderKylesLambda(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.kyles_lambda.label.window">Window (bars)</span>
-                    <input id="kl-window" type="number" step="1" min="2" value="${state.window}"></label>
+                    <input id="kl-window" type="number" step="1" min="2" value="${state.window}" data-tip="view.kyles_lambda.tip.window"></label>
                 <button data-i18n="view.kyles_lambda.btn.compute" id="kl-run" class="primary"
-                        data-tip="view.kyles_lambda.tip.compute" type="button">Compute λ</button>
+                        data-tip="view.kyles_lambda.tip.compute" data-shortcut="kyles_lambda_run" type="button">Compute λ</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.kyles_lambda.btn.demo_deep"     id="kl-demo-deep"     class="secondary" type="button">Demo: deep market-maker</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_normal"   id="kl-demo-normal"   class="secondary" type="button">Demo: normal mid-cap</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_thin"     id="kl-demo-thin"     class="secondary" type="button">Demo: thin small-cap</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_illiquid" id="kl-demo-illiquid" class="secondary" type="button">Demo: illiquid penny</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_reversion" id="kl-demo-rev"     class="secondary" type="button">Demo: mean-reversion (λ&lt;0)</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_regime"    id="kl-demo-regime"  class="secondary" type="button">Demo: regime shift mid-series</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_zero"      id="kl-demo-zero"    class="secondary" type="button">Demo: zero flow</button>
-                <button data-i18n="view.kyles_lambda.btn.demo_spotty"    id="kl-demo-spotty"  class="secondary" type="button">Demo: spotty NaN</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_deep"     id="kl-demo-deep"     class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_deep">Demo: deep market-maker</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_normal"   id="kl-demo-normal"   class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_normal">Demo: normal mid-cap</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_thin"     id="kl-demo-thin"     class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_thin">Demo: thin small-cap</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_illiquid" id="kl-demo-illiquid" class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_illiquid">Demo: illiquid penny</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_reversion" id="kl-demo-rev"     class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_rev">Demo: mean-reversion (λ&lt;0)</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_regime"    id="kl-demo-regime"  class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_regime">Demo: regime shift mid-series</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_zero"      id="kl-demo-zero"    class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_zero">Demo: zero flow</button>
+                <button data-i18n="view.kyles_lambda.btn.demo_spotty"    id="kl-demo-spotty"  class="secondary" type="button" data-tip="view.kyles_lambda.tip.demo_spotty">Demo: spotty NaN</button>
             </div>
             <p data-i18n="view.kyles_lambda.hint.about" class="muted">Kyle (1985): Δp = λ · signed_volume + ε. Rolling closed-form OLS, no intercept. LOW |λ| = deep liquid book. HIGH |λ| = thin book. Sign flip → flow-vs-price regime change.</p>
         </div>
@@ -88,6 +89,7 @@ function readInputs() {
     if (parsed.errors.length) {
         showErr(`${t('view.kyles_lambda.err.parse_prefix')}: `
             + parsed.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.kyles_lambda.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -100,7 +102,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.kyles_lambda.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.price_changes, state.signed_volumes, state.window);
     renderSummary(local, true);
     renderChart(local);
@@ -110,12 +112,18 @@ async function compute(tok) {
         resp = await api.microKylesLambda(buildBody(state));
     } catch (e) {
         showErr(`${t('view.kyles_lambda.err.api')}: ${e.message || e}`);
+        showToast(t('view.kyles_lambda.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const s = summarize(resp);
+    const lam = Number(s.last_lambda);
+    const lamStr = Number.isFinite(lam) ? lam.toExponential(2) : '—';
+    const bias = lam > 0 ? 'BUY-LED' : lam < 0 ? 'SELL-LED' : 'NEUTRAL';
+    showToast(t('view.kyles_lambda.toast.computed', { lambda: lamStr, bias }), { level: 'success' });
 }
 
 function renderSummary(series, pending) {
