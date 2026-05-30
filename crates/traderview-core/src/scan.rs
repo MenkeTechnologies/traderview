@@ -174,6 +174,8 @@ pub enum Preset {
     PostSpikeQuietSqueeze,  // |change_pct| > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.6 — quiet day after a spike
     HighSqueezeBracket,     // tight HOD distance (<1) AND tight LOD distance (<1) AND year_high_pct >= -3 — both ends near top
     LowSqueezeBracket,      // tight HOD distance (<1) AND tight LOD distance (<1) AND year_low_pct <= 3  — both ends near bottom
+    HighRelVolStallSqueeze, // rel_volume >= 1.5 AND |change_pct| < 0.3 AND |day_pct| < 0.5 — busy volume but no price move
+    SlightLeanLongSqueeze,  // change_pct between 0.2 and 1 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift higher
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -418,6 +420,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.year_low_pct <= 3.0
         }
+        Preset::HighRelVolStallSqueeze => {
+            hit.rel_volume >= 1.5
+                && hit.change_pct.abs() < 0.3
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::SlightLeanLongSqueeze => {
+            hit.change_pct >= 0.2
+                && hit.change_pct <= 1.0
+                && hit.rel_volume < 0.8
+                && hit.day_pct.abs() < 0.6
+        }
     }
 }
 
@@ -482,6 +495,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PostSpikeQuietSqueeze => "Post-Spike Quiet Squeeze",
         Preset::HighSqueezeBracket => "High-Squeeze Bracket",
         Preset::LowSqueezeBracket => "Low-Squeeze Bracket",
+        Preset::HighRelVolStallSqueeze => "High-Vol Stall Squeeze",
+        Preset::SlightLeanLongSqueeze => "Slight-Lean Long Squeeze",
     }
 }
 
