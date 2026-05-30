@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DOW_LABELS,
@@ -30,14 +31,14 @@ export async function renderHeatmapDowHour(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.heatmap_dow_hour.btn.build" id="hh-run" class="primary"
-                        data-tip="view.heatmap_dow_hour.tip.build" type="button">Build heatmap</button>
+                        data-tip="view.heatmap_dow_hour.tip.build" data-shortcut="heatmap_dow_hour_run" type="button">Build heatmap</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.heatmap_dow_hour.btn.demo_mixed"  id="hh-demo-mixed" class="secondary" type="button">Demo: mixed week</button>
-                <button data-i18n="view.heatmap_dow_hour.btn.demo_mon"    id="hh-demo-mon"   class="secondary" type="button">Demo: Monday 9am disaster</button>
-                <button data-i18n="view.heatmap_dow_hour.btn.demo_sweet"  id="hh-demo-sweet" class="secondary" type="button">Demo: Tue/Wed 10am sweet spot</button>
-                <button data-i18n="view.heatmap_dow_hour.btn.demo_weekend" id="hh-demo-wknd" class="secondary" type="button">Demo: weekend crypto</button>
-                <button data-i18n="view.heatmap_dow_hour.btn.demo_full"   id="hh-demo-full"  class="secondary" type="button">Demo: full Mon-Fri 9-16</button>
+                <button data-i18n="view.heatmap_dow_hour.btn.demo_mixed"  id="hh-demo-mixed" class="secondary" type="button" data-tip="view.heatmap_dow_hour.tip.demo_mixed">Demo: mixed week</button>
+                <button data-i18n="view.heatmap_dow_hour.btn.demo_mon"    id="hh-demo-mon"   class="secondary" type="button" data-tip="view.heatmap_dow_hour.tip.demo_mon">Demo: Monday 9am disaster</button>
+                <button data-i18n="view.heatmap_dow_hour.btn.demo_sweet"  id="hh-demo-sweet" class="secondary" type="button" data-tip="view.heatmap_dow_hour.tip.demo_sweet">Demo: Tue/Wed 10am sweet spot</button>
+                <button data-i18n="view.heatmap_dow_hour.btn.demo_weekend" id="hh-demo-wknd" class="secondary" type="button" data-tip="view.heatmap_dow_hour.tip.demo_wknd">Demo: weekend crypto</button>
+                <button data-i18n="view.heatmap_dow_hour.btn.demo_full"   id="hh-demo-full"  class="secondary" type="button" data-tip="view.heatmap_dow_hour.tip.demo_full">Demo: full Mon-Fri 9-16</button>
             </div>
             <p data-i18n="view.heatmap_dow_hour.hint.about" class="muted">7×24 grid. Rows = day of week (Sun → Sat). Cols = hour of day (0 → 23 UTC). Cell color = net P&L (green = winning, red = losing, blank = no trades).</p>
         </div>
@@ -78,6 +79,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.heatmap_dow_hour.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.heatmap_dow_hour.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -87,7 +89,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.rows);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.heatmap_dow_hour.toast.invalid'), { level: 'warning' }); return; }
     const local = localBuild(state.rows);
     renderSummary(local, true);
     renderGrid(local);
@@ -96,6 +98,7 @@ async function compute(tok) {
         resp = await api.heatmapDowHour(buildBody(state.rows));
     } catch (e) {
         showErr(`${t('view.heatmap_dow_hour.err.api')}: ${e.message || e}`);
+        showToast(t('view.heatmap_dow_hour.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -108,6 +111,10 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderGrid(normalized);
     renderHourChart(normalized);
+    const total = Number(normalized.total_pnl) || 0;
+    const trades = normalized.total_trades | 0;
+    const level = total >= 0 ? 'success' : 'warning';
+    showToast(t('view.heatmap_dow_hour.toast.built', { n: trades, pnl: Math.round(total).toLocaleString() }), { level });
 }
 
 function renderHourChart(report) {
