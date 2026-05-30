@@ -131,7 +131,7 @@ export function parseSwingsBlob(blob) {
         if (!s) continue;
         const parts = s.split(/[\s,]+/).filter(Boolean);
         if (parts.length !== 3) {
-            out.errors.push({ line_no: i + 1, message: 'expected 3 tokens: index price kind' });
+            out.errors.push({ line_no: i + 1, message: t('view.abc_pattern.parse.expected_3_tokens') });
             continue;
         }
         const idx = Number(parts[0]);
@@ -140,15 +140,15 @@ export function parseSwingsBlob(blob) {
         const kind = (kRaw === 'h' || kRaw === 'high') ? 'high'
                    : (kRaw === 'l' || kRaw === 'low')  ? 'low'  : null;
         if (!Number.isInteger(idx) || idx < 0) {
-            out.errors.push({ line_no: i + 1, message: 'index must be non-negative integer' });
+            out.errors.push({ line_no: i + 1, message: t('view.abc_pattern.parse.index_non_neg') });
             continue;
         }
         if (!Number.isFinite(price)) {
-            out.errors.push({ line_no: i + 1, message: 'price not finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.abc_pattern.parse.price_not_finite') });
             continue;
         }
         if (!kind) {
-            out.errors.push({ line_no: i + 1, message: 'kind must be high or low' });
+            out.errors.push({ line_no: i + 1, message: t('view.abc_pattern.parse.kind_high_or_low') });
             continue;
         }
         out.swings.push({ index: idx, price, kind });
