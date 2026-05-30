@@ -13,6 +13,7 @@ import {
 } from '../_daily_loss_limit_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { params: makeDemoData('cut-size') };
 
 export async function renderDailyLossLimit(mount, _appState) {
@@ -24,9 +25,9 @@ export async function renderDailyLossLimit(mount, _appState) {
             <h2 data-i18n="view.daily_loss_limit.h2.account">Account</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.equity">Account equity ($)</span>
-                    <input id="dl-eq" type="number" step="any" min="0" value="${state.params.account_equity}"></label>
+                    <input id="dl-eq" type="number" step="any" min="0" value="${state.params.account_equity}" data-tip="view.daily_loss_limit.tip.equity"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.today_pnl">Today's P&L ($) — negative = loss</span>
-                    <input id="dl-pnl" type="number" step="any" value="${state.params.today_pnl}"></label>
+                    <input id="dl-pnl" type="number" step="any" value="${state.params.today_pnl}" data-tip="view.daily_loss_limit.tip.pnl"></label>
             </div>
         </div>
 
@@ -34,25 +35,25 @@ export async function renderDailyLossLimit(mount, _appState) {
             <h2 data-i18n="view.daily_loss_limit.h2.limit_config">Limit config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.max_dollars">Max daily $ loss (0 = pct only)</span>
-                    <input id="dl-md" type="number" step="any" min="0" value="${state.params.max_daily_loss_dollars}"></label>
+                    <input id="dl-md" type="number" step="any" min="0" value="${state.params.max_daily_loss_dollars}" data-tip="view.daily_loss_limit.tip.max_dollars"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.max_pct">Max daily % loss (decimal; 0.02 = 2%)</span>
-                    <input id="dl-mp" type="number" step="any" min="0" max="1" value="${state.params.max_daily_loss_pct}"></label>
+                    <input id="dl-mp" type="number" step="any" min="0" max="1" value="${state.params.max_daily_loss_pct}" data-tip="view.daily_loss_limit.tip.max_pct"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.warn">Warning threshold (decimal of binding limit)</span>
-                    <input id="dl-wt" type="number" step="any" min="0" max="5" value="${state.params.warning_threshold}"></label>
+                    <input id="dl-wt" type="number" step="any" min="0" max="5" value="${state.params.warning_threshold}" data-tip="view.daily_loss_limit.tip.warn"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.cut">Cut-size threshold</span>
-                    <input id="dl-ct" type="number" step="any" min="0" max="5" value="${state.params.cut_size_threshold}"></label>
+                    <input id="dl-ct" type="number" step="any" min="0" max="5" value="${state.params.cut_size_threshold}" data-tip="view.daily_loss_limit.tip.cut"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.kill">Kill threshold</span>
-                    <input id="dl-kt" type="number" step="any" min="0" max="5" value="${state.params.kill_threshold}"></label>
-                <button data-i18n="view.daily_loss_limit.btn.evaluate" id="dl-run" class="primary" type="button">Evaluate</button>
+                    <input id="dl-kt" type="number" step="any" min="0" max="5" value="${state.params.kill_threshold}" data-tip="view.daily_loss_limit.tip.kill"></label>
+                <button data-i18n="view.daily_loss_limit.btn.evaluate" id="dl-run" class="primary" type="button" data-tip="view.daily_loss_limit.tip.run" data-shortcut="daily_loss_limit_run">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.daily_loss_limit.btn.demo_ok_profit_day" id="dl-demo-ok"      class="secondary" type="button">Demo: OK (profit day)</button>
-                <button data-i18n="view.daily_loss_limit.btn.demo_warning_60" id="dl-demo-warn"    class="secondary" type="button">Demo: WARNING (60%)</button>
-                <button data-i18n="view.daily_loss_limit.btn.demo_cut_size_80" id="dl-demo-cut"     class="secondary" type="button">Demo: CUT SIZE (80%)</button>
-                <button data-i18n="view.daily_loss_limit.btn.demo_kill_switch_over" id="dl-demo-kill"    class="secondary" type="button">Demo: KILL SWITCH (over)</button>
-                <button data-i18n="view.daily_loss_limit.btn.demo_tight_pct_binds" id="dl-demo-tight"   class="secondary" type="button">Demo: tight pct-binds</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_ok_profit_day" id="dl-demo-ok"      class="secondary" type="button" data-tip="view.daily_loss_limit.tip.demo_ok">Demo: OK (profit day)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_warning_60" id="dl-demo-warn"    class="secondary" type="button" data-tip="view.daily_loss_limit.tip.demo_warn">Demo: WARNING (60%)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_cut_size_80" id="dl-demo-cut"     class="secondary" type="button" data-tip="view.daily_loss_limit.tip.demo_cut">Demo: CUT SIZE (80%)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_kill_switch_over" id="dl-demo-kill"    class="secondary" type="button" data-tip="view.daily_loss_limit.tip.demo_kill">Demo: KILL SWITCH (over)</button>
+                <button data-i18n="view.daily_loss_limit.btn.demo_tight_pct_binds" id="dl-demo-tight"   class="secondary" type="button" data-tip="view.daily_loss_limit.tip.demo_tight">Demo: tight pct-binds</button>
             </div>
             <p data-i18n="view.daily_loss_limit.hint.binding_limit_the_smaller_of_account_equity_max_pc" class="muted">Binding limit = the SMALLER of (account_equity × max_pct) and (max_$ cap when set). Pct-only mode: set max_$ to 0.</p>
         </div>
@@ -115,7 +116,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.daily_loss_limit.toast.invalid'), { level: 'warning' }); return; }
     // Pre-flight render with local eval so the UI is responsive while
     // the network call settles.
     const local = localEvaluate(state.params);
@@ -127,12 +128,18 @@ async function compute(tok) {
     try {
         resp = await api.discDailyLossLimit(buildBody(state.params));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.daily_loss_limit.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderBar(decToNum(resp.pct_of_limit), resp.state);
     renderSweepChart();
+    const st = (resp.state || 'ok').toUpperCase();
+    const pct = (decToNum(resp.pct_of_limit) * 100).toFixed(1);
+    const level = st === 'KILLSWITCH' ? 'error' : (st === 'CUTSIZE' || st === 'WARNING') ? 'warning' : 'success';
+    showToast(t('view.daily_loss_limit.toast.evaluated', { state: st, pct }), { level });
 }
 
 function renderSweepChart() {
