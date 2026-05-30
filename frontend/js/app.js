@@ -438,10 +438,15 @@ function bindTabs() {
         const el = document.querySelector('#add-sym input[name="symbol"]');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
-    // View-scoped: `r` in live (positions) scope → refresh via hashchange.
-    window.addEventListener('tv:live-refresh', () => {
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
+    // View-scoped: `r` in live/trades/journal/watchlists/webull/charts
+    // scopes — each refreshes the active view via hashchange.
+    const refreshNow = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+    window.addEventListener('tv:live-refresh',       refreshNow);
+    window.addEventListener('tv:trades-refresh',     refreshNow);
+    window.addEventListener('tv:journal-refresh',    refreshNow);
+    window.addEventListener('tv:watchlists-refresh', refreshNow);
+    window.addEventListener('tv:webull-refresh',     refreshNow);
+    window.addEventListener('tv:charts-refresh',     refreshNow);
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

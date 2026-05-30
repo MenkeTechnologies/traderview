@@ -59,6 +59,11 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'journal_focus_body', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',   descKey: 'shortcut.journal_focus_body', actionKey: 'tv:journal-focus-body' },
     { id: 'watchlists_focus_add', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'watchlists', descKey: 'shortcut.watchlists_focus_add', actionKey: 'tv:watchlists-focus-add' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
+    { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
+    { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
+    { id: 'watchlists_refresh',   keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'watchlists', descKey: 'shortcut.watchlists_refresh',   actionKey: 'tv:watchlists-refresh' },
+    { id: 'webull_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'webull',     descKey: 'shortcut.webull_refresh',       actionKey: 'tv:webull-refresh' },
+    { id: 'charts_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'charts',     descKey: 'shortcut.charts_refresh',       actionKey: 'tv:charts-refresh' },
     // Quick-nav globals (Cmd/Ctrl + Option/Alt + letter): zero-conflict
     // with browser defaults; jumps directly to high-traffic views.
     { id: 'nav_trades',      keys: { key: 't', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_trades',      actionKey: 'tv:nav-trades' },
