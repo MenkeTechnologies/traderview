@@ -275,6 +275,38 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // API-token-row actions — read data-id / data-prefix / data-revoked.
+    window.addEventListener('tv:tok-row-copy-prefix', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const prefix = tgt && tgt.dataset && tgt.dataset.prefix;
+        if (!prefix) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(prefix).then(
+                () => showToast(t('toast.copied', { what: prefix }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:tok-row-revoke', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const alreadyRevoked = tgt && tgt.dataset && tgt.dataset.revoked === 'true';
+        if (!id) return;
+        if (alreadyRevoked) {
+            showToast(t('toast.tok_already_revoked'), { level: 'warning' });
+            return;
+        }
+        void (async () => {
+            if (!await tConfirm('view.api_tokens.confirm.revoke', {}, { level: 'danger' })) return;
+            try {
+                await api.revokeApiToken(id);
+                showToast(t('toast.tok_revoked'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Tag-chip actions — read data-id + data-name from the span.
     window.addEventListener('tv:tag-chip-copy', (e) => {
         const tgt = e.detail && e.detail.target;

@@ -107,7 +107,10 @@ async function loadList(mount, tok) {
                     <th data-i18n="view.api_tokens.th.status">Status</th><th></th>
                 </tr></thead>
                 <tbody>
-                    ${rows.map(tk => `<tr>
+                    ${rows.map(tk => `<tr data-context-scope="api-token-row"
+                                            data-id="${esc(tk.id)}"
+                                            data-prefix="${esc(tk.prefix)}"
+                                            data-revoked="${tk.revoked_at ? 'true' : 'false'}">
                         <td>${esc(tk.name)}</td>
                         <td><code>${esc(tk.prefix)}</code></td>
                         <td class="small">${tk.scopes.join(', ')}</td>

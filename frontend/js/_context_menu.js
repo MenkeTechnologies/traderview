@@ -157,6 +157,17 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// API-token-row context items. Right-click on a <tr data-context-
+// scope="api-token-row" data-id="X" data-prefix="..." data-revoked=
+// "bool"> shows: Copy prefix / Revoke. Revoke handler no-ops with a
+// toast when already revoked.
+export const API_TOKEN_ROW_ITEMS = [
+    { id: 'tok_row_copy_prefix', labelKey: 'ctxmenu.tok_row_copy_prefix',
+      actionKey: 'tv:tok-row-copy-prefix', section: 'token' },
+    { id: 'tok_row_revoke',      labelKey: 'ctxmenu.tok_row_revoke',
+      actionKey: 'tv:tok-row-revoke',      section: 'token' },
+];
+
 // Tag-chip context items. Right-click on a <span data-context-scope=
 // "tag-chip" data-id="X" data-name="..."> shows: Copy name / Delete.
 export const TAG_CHIP_ITEMS = [
