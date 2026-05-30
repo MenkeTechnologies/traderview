@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_MAX_LAG,
@@ -30,19 +31,20 @@ export async function renderAcf(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.acf.label.max_lag">Max lag</span>
-                    <input id="ac-lag" type="number" step="1" min="1" value="${state.max_lag}"></label>
+                    <input id="ac-lag" type="number" step="1" min="1" value="${state.max_lag}"
+                           data-tip="view.acf.tip.max_lag"></label>
                 <button data-i18n="view.acf.btn.compute" id="ac-run" class="primary"
-                        data-tip="view.acf.tip.compute" type="button">Compute ACF</button>
+                        data-tip="view.acf.tip.compute" data-shortcut="acf_run" type="button">Compute ACF</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.acf.btn.demo_white"  id="ac-demo-white" class="secondary" type="button">Demo: white noise</button>
-                <button data-i18n="view.acf.btn.demo_rw"     id="ac-demo-rw"    class="secondary" type="button">Demo: random walk (ρ→1)</button>
-                <button data-i18n="view.acf.btn.demo_ar08"   id="ac-demo-ar08"  class="secondary" type="button">Demo: AR(1) φ=0.8</button>
-                <button data-i18n="view.acf.btn.demo_arneg"  id="ac-demo-arneg" class="secondary" type="button">Demo: AR(1) φ=−0.6 (alternating)</button>
-                <button data-i18n="view.acf.btn.demo_sine"   id="ac-demo-sine"  class="secondary" type="button">Demo: sinusoid</button>
-                <button data-i18n="view.acf.btn.demo_trend"  id="ac-demo-trend" class="secondary" type="button">Demo: strong trend</button>
-                <button data-i18n="view.acf.btn.demo_wide"   id="ac-demo-wide"  class="secondary" type="button">Demo: wide lags (50)</button>
-                <button data-i18n="view.acf.btn.demo_short"  id="ac-demo-short" class="secondary" type="button">Demo: short series (20 bars)</button>
+                <button data-i18n="view.acf.btn.demo_white"  id="ac-demo-white" class="secondary" data-tip="view.acf.tip.demo_white" type="button">Demo: white noise</button>
+                <button data-i18n="view.acf.btn.demo_rw"     id="ac-demo-rw"    class="secondary" data-tip="view.acf.tip.demo_rw"    type="button">Demo: random walk (ρ→1)</button>
+                <button data-i18n="view.acf.btn.demo_ar08"   id="ac-demo-ar08"  class="secondary" data-tip="view.acf.tip.demo_ar08"  type="button">Demo: AR(1) φ=0.8</button>
+                <button data-i18n="view.acf.btn.demo_arneg"  id="ac-demo-arneg" class="secondary" data-tip="view.acf.tip.demo_arneg" type="button">Demo: AR(1) φ=−0.6 (alternating)</button>
+                <button data-i18n="view.acf.btn.demo_sine"   id="ac-demo-sine"  class="secondary" data-tip="view.acf.tip.demo_sine"  type="button">Demo: sinusoid</button>
+                <button data-i18n="view.acf.btn.demo_trend"  id="ac-demo-trend" class="secondary" data-tip="view.acf.tip.demo_trend" type="button">Demo: strong trend</button>
+                <button data-i18n="view.acf.btn.demo_wide"   id="ac-demo-wide"  class="secondary" data-tip="view.acf.tip.demo_wide"  type="button">Demo: wide lags (50)</button>
+                <button data-i18n="view.acf.btn.demo_short"  id="ac-demo-short" class="secondary" data-tip="view.acf.tip.demo_short" type="button">Demo: short series (20 bars)</button>
             </div>
             <p data-i18n="view.acf.hint.about" class="muted">ρ̂(k) = Σ(x_t−x̄)(x_{t−k}−x̄) / Σ(x_t−x̄)². ρ̂(0) = 1 by definition. Bartlett 95% bands = ±1.96/√n. Lags outside bands are statistically significant — evidence against white noise.</p>
         </div>
@@ -88,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.acf.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.acf.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -99,9 +102,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.acf.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.series, state.max_lag);
-    if (!local) { showErr(t('view.acf.err.degenerate')); return; }
+    if (!local) { showErr(t('view.acf.err.degenerate')); showToast(t('view.acf.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart(local);
     renderSigChart(local);
@@ -111,14 +114,16 @@ async function compute(tok) {
         resp = await api.anlyAutocorrelationFunction(buildBody(state));
     } catch (e) {
         showErr(`${t('view.acf.err.api')}: ${e.message || e}`);
+        showToast(t('view.acf.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.acf.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.acf.err.server_rejected')); showToast(t('view.acf.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderSigChart(resp);
     renderTable(resp);
+    showToast(t('view.acf.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
