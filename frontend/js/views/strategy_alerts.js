@@ -74,6 +74,11 @@ export async function renderStrategyAlerts(mount) {
             <h2 data-i18n="view.strategy_alerts.h2.recent_fires">Recent fires</h2>
             <div id="sa-fires"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.strategy_alerts.h2.fires_chart">Fires per rule</h2>
+            <div id="sa-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
         const tpl = TEMPLATES.find(x => x.id === e.target.value);
@@ -137,11 +142,47 @@ async function refresh(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         renderRules(rules, mount, tok);
         renderFires(fires, rules, mount);
+        renderFiresChart(rules);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#sa-list');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderFiresChart(rules) {
+    const el = document.getElementById('sa-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (rules || []).filter(r => Number.isFinite(Number(r.fire_count)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.strategy_alerts.empty_chart">${esc(t('view.strategy_alerts.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.fire_count) - Number(a.fire_count));
+    const labels = rows.map(r => r.name || r.id);
+    const xs = labels.map((_, i) => i + 1);
+    const enabled  = rows.map(r => r.enabled  ? Number(r.fire_count) : null);
+    const disabled = rows.map(r => !r.enabled ? Number(r.fire_count) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.strategy_alerts.chart.rule') },
+            { label: t('view.strategy_alerts.chart.enabled'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.strategy_alerts.chart.disabled'),
+              stroke: '#aab',    width: 0,
+              points: { show: true, size: 12, fill: '#aab',    stroke: '#aab'    } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, enabled, disabled], el);
 }
 
 function renderRules(rules, mount, tok) {

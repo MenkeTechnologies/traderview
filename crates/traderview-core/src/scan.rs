@@ -290,6 +290,8 @@ pub enum Preset {
     GapDownHalfReclaim,          // gap_pct < -2 AND change_pct between gap_pct*0.5 and 0 — gap-down reclaimed half its overnight move
     GapAndGoXl,                  // gap_pct > 3 AND change_pct > 5 AND rel_volume >= 2 — extra-large gap-and-go (strong gap + strong day + heavy vol)
     GapAndCrashXl,               // gap_pct < -3 AND change_pct < -5 AND rel_volume >= 2 — extra-large gap-and-crash (strong gap-down + strong red day + heavy vol)
+    GapUpButDayRed,              // gap_pct > 1 AND change_pct < -1 — gapped up overnight but day closed red (failed open)
+    GapDownButDayGreen,          // gap_pct < -1 AND change_pct > 1 — gapped down overnight but day closed green (reversal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1169,6 +1171,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::GapUpButDayRed => {
+            hit.gap_pct > 1.0 && hit.change_pct < -1.0
+        }
+        Preset::GapDownButDayGreen => {
+            hit.gap_pct < -1.0 && hit.change_pct > 1.0
+        }
     }
 }
 
@@ -1349,6 +1357,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownHalfReclaim => "Gap-Down Half Reclaim",
         Preset::GapAndGoXl => "Gap And Go XL",
         Preset::GapAndCrashXl => "Gap And Crash XL",
+        Preset::GapUpButDayRed => "Gap-Up But Day Red",
+        Preset::GapDownButDayGreen => "Gap-Down But Day Green",
     }
 }
 
