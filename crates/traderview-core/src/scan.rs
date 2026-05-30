@@ -394,6 +394,8 @@ pub enum Preset {
     DownThrustBarReject,         // lod_dist.abs() > 3 AND hod_dist.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 2 — wick low then closed near HOD on heavy vol (textbook spring bar)
     ExhaustionTopWideRange,      // year_high_pct > -5 AND hod_dist.abs() > 5 AND lod_dist.abs() < 0.5 AND change_pct > 5 AND rel_volume >= 3 — extreme range close-at-HOD into prior high (exhaustion top candidate)
     ExhaustionBottomWideRange,   // year_low_pct < 5 AND lod_dist.abs() > 5 AND hod_dist.abs() < 0.5 AND change_pct < -5 AND rel_volume >= 3 — extreme range close-at-LOD into prior low (exhaustion bottom candidate)
+    UpTrendDayWideRange,         // hod_dist.abs() < 0.3 AND lod_dist.abs() > 5 AND change_pct > 3 AND rel_volume >= 2 — strong trend up with wide range; close at HOD on heavy vol (continuation buyers)
+    DownTrendDayWideRange,       // lod_dist.abs() < 0.3 AND hod_dist.abs() > 5 AND change_pct < -3 AND rel_volume >= 2 — strong trend down with wide range; close at LOD on heavy vol (continuation sellers)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1800,6 +1802,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 3.0
         }
+        Preset::UpTrendDayWideRange => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct.abs() > 5.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DownTrendDayWideRange => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() > 5.0
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2084,6 +2098,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownThrustBarReject => "Spring Bar Reject",
         Preset::ExhaustionTopWideRange => "Exhaustion Top Wide-Range",
         Preset::ExhaustionBottomWideRange => "Exhaustion Bottom Wide-Range",
+        Preset::UpTrendDayWideRange => "Up-Trend Day Wide-Range",
+        Preset::DownTrendDayWideRange => "Down-Trend Day Wide-Range",
     }
 }
 

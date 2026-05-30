@@ -102,6 +102,11 @@ export async function renderSqueezeAlerts(mount, _appState) {
             <h2 data-i18n="view.squeeze_alerts.h2.events_chart">Events: price Δ × volume ×</h2>
             <div id="sq-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.squeeze_alerts.h2.symbol_chart">Events per symbol (severity-coded)</h2>
+            <div id="sq-sym-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
 
     // Wire test buttons.
@@ -181,6 +186,7 @@ async function runReplay() {
     renderSummary(ticks, events);
     renderEvents(events);
     renderEventsChart(events);
+    renderSymbolChart(events);
 
     // Fire audio in chronological order, paced by real-time intervals
     // BETWEEN events (capped to keep replay snappy). Each event triggers:
@@ -233,6 +239,47 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderSymbolChart(events) {
+    const el = document.getElementById('sq-sym-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const norm = new Map();
+    const crit = new Map();
+    for (const ev of events || []) {
+        const m = ev.severity === 'critical' ? crit : norm;
+        m.set(ev.symbol, (m.get(ev.symbol) || 0) + 1);
+    }
+    const allSyms = new Set([...norm.keys(), ...crit.keys()]);
+    if (allSyms.size < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.squeeze_alerts.empty_sym_chart">${esc(t('view.squeeze_alerts.empty_sym_chart'))}</div>`;
+        return;
+    }
+    const labels = [...allSyms].sort((a, b) =>
+        ((norm.get(b) || 0) + (crit.get(b) || 0)) - ((norm.get(a) || 0) + (crit.get(a) || 0)));
+    const xs = labels.map((_, i) => i + 1);
+    const normY = labels.map(s => norm.get(s) || null);
+    const critY = labels.map(s => crit.get(s) || null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.squeeze_alerts.chart.symbol') },
+            { label: t('view.squeeze_alerts.chart.normal'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.squeeze_alerts.chart.critical'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 16, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, normY, critY], el);
 }
 
 function renderEventsChart(events) {
