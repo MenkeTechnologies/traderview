@@ -17,6 +17,7 @@ import {
 } from '../_cup_and_handle_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CONFIG = {
     cup_min_bars: 30,
     cup_max_bars: 250,
@@ -40,10 +41,10 @@ export async function renderCupAndHandle(mount, _appState) {
             <p class="muted" data-i18n-html="view.cup_and_handle.help">Paste <code>high low close</code> per line.
                 Demo loads a synthetic 122-bar cup with an 8% handle that
                 triggers the canonical IBD pivot buy-point.</p>
-            <textarea id="ch-bars" rows="8" placeholder="100.50 99.20 100.10&#10;101.30 100.00 100.85&#10;..."></textarea>
+            <textarea id="ch-bars" rows="8" placeholder="100.50 99.20 100.10&#10;101.30 100.00 100.85&#10;..." data-tip="view.cup_and_handle.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.cup_and_handle.btn.load_demo_122_bars" id="ch-demo" class="secondary" type="button">Load demo (122 bars)</button>
-                <button data-i18n="view.cup_and_handle.btn.clear" id="ch-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.cup_and_handle.btn.load_demo_122_bars" data-tip="view.cup_and_handle.tip.demo" data-shortcut="cup_and_handle_demo" id="ch-demo" class="secondary" type="button">Load demo (122 bars)</button>
+                <button data-i18n="view.cup_and_handle.btn.clear" data-tip="view.cup_and_handle.tip.clear" id="ch-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -66,7 +67,7 @@ export async function renderCupAndHandle(mount, _appState) {
                     <input id="ch-hmax" type="number" step="1" min="1" value="${state.config.handle_max_bars}"></label>
                 <label><span data-i18n="view.cup_and_handle.label.handle_depth">Max handle depth %</span>
                     <input id="ch-hdep" type="number" step="0.01" min="0" max="1" value="${state.config.max_handle_depth_pct}"></label>
-                <button data-i18n="view.cup_and_handle.btn.detect" id="ch-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.cup_and_handle.btn.detect" data-tip="view.cup_and_handle.tip.detect" data-shortcut="cup_and_handle_detect" id="ch-run" class="primary" type="button">Detect</button>
             </div>
             <p data-i18n="view.cup_and_handle.hint.canonical_ibd_defaults_30_250_cup_bars_10_33_depth" class="muted">Canonical IBD defaults: 30-250 cup bars, 10-33% depth, ≤5% rim asymmetry,
                 5-25 handle bars, ≤15% handle dip. Loosen depth/handle to surface near-misses
@@ -128,17 +129,22 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(bars, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyCupAndHandle(buildBody(bars, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, bars);
     renderChart(bars, res);
+    showToast(t('view.cup_and_handle.toast.done', {
+        bars: bars.length,
+        verdict: res ? t('view.cup_and_handle.verdict.found') : t('view.cup_and_handle.verdict.none'),
+    }), { level: res ? 'success' : 'info' });
 }
 
 function renderSummary(cand, bars) {
