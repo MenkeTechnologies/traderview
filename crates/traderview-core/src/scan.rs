@@ -580,6 +580,8 @@ pub enum Preset {
     HighVolStallNearHighOfYear,     // year_high_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w high + hot vol + flat day (high-vol stall at the top; supply meeting demand at resistance)
     HighVolStallNearLowOfYear,      // year_low_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w low + hot vol + flat day (high-vol stall at the bottom; demand meeting supply at floor)
     OutlierSessionBigMoveBigVol,    // change_pct.abs() > 3 AND rel_volume >= 3 AND hod_dist + lod_dist > 2.5 — really big move + really hot vol + wide range (outlier session; momentum/news/squeeze event)
+    EodParabolicAccelerationUp,     // change_pct > 2 AND day_pct > change_pct * 0.7 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at HOD + hot vol (EOD parabolic acceleration up; possible MOC short-covering finale)
+    EodParabolicAccelerationDown,   // change_pct < -2 AND day_pct < change_pct * 0.7 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at LOD + hot vol (EOD parabolic acceleration down; possible MOC long-liquidation finale)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3069,6 +3071,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 3.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.5
         }
+        Preset::EodParabolicAccelerationUp => {
+            hit.change_pct > 2.0
+                && hit.day_pct > hit.change_pct * 0.7
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::EodParabolicAccelerationDown => {
+            hit.change_pct < -2.0
+                && hit.day_pct < hit.change_pct * 0.7
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3539,6 +3553,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HighVolStallNearHighOfYear => "Near 52w High + Hot Vol + Flat Day (High-Vol Stall at Top)",
         Preset::HighVolStallNearLowOfYear => "Near 52w Low + Hot Vol + Flat Day (High-Vol Stall at Bottom)",
         Preset::OutlierSessionBigMoveBigVol => "Big Move + Big Vol + Wide Range (Outlier / Momentum / News Event)",
+        Preset::EodParabolicAccelerationUp => "EOD Parabolic Acceleration Up (Intraday Drive + HOD Close + Hot Vol)",
+        Preset::EodParabolicAccelerationDown => "EOD Parabolic Acceleration Down (Intraday Drive + LOD Close + Hot Vol)",
     }
 }
 

@@ -462,6 +462,8 @@ const PRESETS = [
     { id: 'high_vol_stall_near_high_of_year', label: t('view.scanners.preset.high_vol_stall_near_high_of_year.label'), desc: t('view.scanners.preset.high_vol_stall_near_high_of_year.desc') },
     { id: 'high_vol_stall_near_low_of_year', label: t('view.scanners.preset.high_vol_stall_near_low_of_year.label'), desc: t('view.scanners.preset.high_vol_stall_near_low_of_year.desc') },
     { id: 'outlier_session_big_move_big_vol', label: t('view.scanners.preset.outlier_session_big_move_big_vol.label'), desc: t('view.scanners.preset.outlier_session_big_move_big_vol.desc') },
+    { id: 'eod_parabolic_acceleration_up', label: t('view.scanners.preset.eod_parabolic_acceleration_up.label'), desc: t('view.scanners.preset.eod_parabolic_acceleration_up.desc') },
+    { id: 'eod_parabolic_acceleration_down', label: t('view.scanners.preset.eod_parabolic_acceleration_down.label'), desc: t('view.scanners.preset.eod_parabolic_acceleration_down.desc') },
 ];
 
 export async function renderScanners(mount) {

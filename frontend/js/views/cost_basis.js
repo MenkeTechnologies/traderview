@@ -71,6 +71,11 @@ export async function renderCostBasis(mount, _appState) {
             <div id="cb-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cost_basis.h2.method_compare_chart">Realized total across all 4 methods — tax-optimization landscape</h2>
+            <div id="cb-method-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="cb-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -127,6 +132,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderRealizedChart(local);
+    renderMethodChart();
     let resp;
     try {
         resp = await api.calcCostBasis(buildBody(
@@ -151,6 +157,7 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized);
     renderRealizedChart(normalized);
+    renderMethodChart();
     const realized = Number(normalized.total_realized) || 0;
     const remaining = Number(normalized.qty_remaining_to_close) || 0;
     const level = remaining > 0 ? 'warning' : realized >= 0 ? 'success' : 'info';
@@ -245,6 +252,41 @@ function renderRealizedChart(report) {
             { label: t('view.cost_basis.chart.zero'),
               stroke: '#ffd84a', width: 1.0, dash: [4, 4],
               points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, realized, zero], el);
+}
+
+function renderMethodChart() {
+    const el = document.getElementById('cb-method-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!state.lots.length || !(state.qty_to_close > 0) || !(state.price_per_share > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cost_basis.empty_method_chart">${esc(t('view.cost_basis.empty_method_chart'))}</div>`;
+        return;
+    }
+    const labels = METHODS.map(m => m.toUpperCase());
+    const realized = METHODS.map(m => {
+        const r = localClose(state.lots, state.qty_to_close, state.price_per_share, m);
+        return Number.isFinite(r.total_realized) ? r.total_realized : null;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cost_basis.chart.method_idx') },
+            { label: t('view.cost_basis.chart.realized_total'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.cost_basis.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,
