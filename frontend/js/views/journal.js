@@ -22,6 +22,11 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             <a href="#journal/${isGeneral ? new Date().toISOString().slice(0,10) : 'general'}" class="link small">
                 ${esc(t(isGeneral ? 'view.journal.link.switch_to_daily' : 'view.journal.link.switch_to_general'))}
             </a>
+            <button type="button" class="btn btn-secondary" id="journal-refresh-btn"
+                    data-i18n="view.journal.btn.refresh"
+                    data-tip="view.journal.tip.refresh"
+                    data-shortcut="journal_refresh"
+                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
         </h1>
         <div id="entries">${entries.map(e => `
             <div class="journal-entry"
@@ -62,6 +67,9 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         </div>
     `;
     renderMoodChart(entries);
+    const refreshBtn = mount.querySelector('#journal-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () =>
+        window.dispatchEvent(new HashChangeEvent('hashchange')));
     const dayInput = mount.querySelector('#journal-day');
     if (dayInput) {
         dayInput.addEventListener('change', (e) => {

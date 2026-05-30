@@ -13,7 +13,13 @@ export async function renderCharts(mount, _state, symbol = '') {
     const tok = currentViewToken();
     if (!symbol) symbol = 'SPY';
     mount.innerHTML = `
-        <h1 data-i18n="view.charts.h1.charts" class="view-title">// CHARTS</h1>
+        <h1 class="view-title"><span data-i18n="view.charts.h1.charts">// CHARTS</span>
+            <button type="button" class="btn btn-secondary" id="charts-refresh-btn"
+                    data-i18n="view.charts.btn.refresh"
+                    data-tip="view.charts.tip.refresh"
+                    data-shortcut="charts_refresh"
+                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
+        </h1>
         <div class="chart-toolbar">
             <label><span data-i18n="view.charts.label.symbol">Symbol</span>
                 <input id="sym" value="${esc(symbol)}"></label>
@@ -143,6 +149,8 @@ export async function renderCharts(mount, _state, symbol = '') {
     };
 
     mount.querySelector('#load').addEventListener('click', load);
+    const refreshBtn = mount.querySelector('#charts-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => load());
     mount.querySelector('#indicatorReload').addEventListener('click', async () => {
         const sym = mount.querySelector('#sym').value.trim().toUpperCase();
         const iv = mount.querySelector('#iv').value;

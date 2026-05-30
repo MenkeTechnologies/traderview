@@ -40,6 +40,10 @@ export async function renderWatchlists(mount) {
                 <button data-i18n="view.watchlists.btn.rename" class="primary" type="button" id="rename-wl"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Rename</button>
                 <button data-i18n="view.watchlists.btn.delete_list" class="link" id="delete-wl">delete list</button>
+                <button type="button" class="btn btn-secondary" id="wl-refresh-btn"
+                        data-i18n="view.watchlists.btn.refresh"
+                        data-tip="view.watchlists.tip.refresh"
+                        data-shortcut="watchlists_refresh">⟳ Refresh</button>
             </form>
             <div id="wl-table"></div>
         </div>
@@ -86,6 +90,9 @@ export async function renderWatchlists(mount) {
         if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);
     });
+    const refreshBtn = mount.querySelector('#wl-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () =>
+        window.dispatchEvent(new HashChangeEvent('hashchange')));
 
     await refresh(active.id);
 
