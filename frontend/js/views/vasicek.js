@@ -23,6 +23,7 @@ import {
 } from '../_vasicek_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 // Realistic defaults: start at 5%, mean-revert to 3% with ~1.4yr half-life,
 // 1% annualized vol, weekly steps over 10 years.
 const DEFAULT_PARAMS = {
@@ -48,13 +49,13 @@ export async function renderVasicek(mount, _appState) {
             <h2 data-i18n="view.vasicek.h2.sde_parameters">SDE parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vasicek.label.r0">r₀ (initial rate)</span>
-                    <input id="va-r0"    type="number" step="any" value="${state.params.r0}"></label>
+                    <input id="va-r0"    type="number" step="any" value="${state.params.r0}" data-tip="view.vasicek.tip.r0"></label>
                 <label><span data-i18n="view.vasicek.label.a">a (mean-reversion speed)</span>
-                    <input id="va-a"     type="number" step="any" min="0" value="${state.params.a}"></label>
+                    <input id="va-a"     type="number" step="any" min="0" value="${state.params.a}" data-tip="view.vasicek.tip.a"></label>
                 <label><span data-i18n="view.vasicek.label.b">b (long-run mean)</span>
-                    <input id="va-b"     type="number" step="any" value="${state.params.b}"></label>
+                    <input id="va-b"     type="number" step="any" value="${state.params.b}" data-tip="view.vasicek.tip.b"></label>
                 <label><span data-i18n="view.vasicek.label.sigma">σ (vol)</span>
-                    <input id="va-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                    <input id="va-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.vasicek.tip.sigma"></label>
             </div>
         </div>
 
@@ -62,14 +63,14 @@ export async function renderVasicek(mount, _appState) {
             <h2 data-i18n="view.vasicek.h2.simulation_grid">Simulation grid</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vasicek.label.dt">dt (years)</span>
-                    <input id="va-dt"    type="number" step="any" min="0" value="${state.params.dt}"></label>
+                    <input id="va-dt"    type="number" step="any" min="0" value="${state.params.dt}" data-tip="view.vasicek.tip.dt"></label>
                 <label><span data-i18n="view.vasicek.label.steps">Steps</span>
-                    <input id="va-steps" type="number" step="1"   min="1" value="${state.params.steps}"></label>
+                    <input id="va-steps" type="number" step="1"   min="1" value="${state.params.steps}" data-tip="view.vasicek.tip.steps"></label>
                 <label><span data-i18n="view.vasicek.label.paths">Paths</span>
-                    <input id="va-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
+                    <input id="va-paths" type="number" step="100" min="10" value="${state.params.paths}" data-tip="view.vasicek.tip.paths"></label>
                 <label><span data-i18n="view.vasicek.label.seed">Seed (0 = auto)</span>
-                    <input id="va-seed"  type="number" step="1"   min="0" value="${state.params.seed}"></label>
-                <button data-i18n="view.vasicek.btn.simulate" id="va-run" class="primary" type="button">Simulate</button>
+                    <input id="va-seed"  type="number" step="1"   min="0" value="${state.params.seed}" data-tip="view.vasicek.tip.seed"></label>
+                <button data-i18n="view.vasicek.btn.simulate" data-tip="view.vasicek.tip.simulate" data-shortcut="vasicek_simulate" id="va-run" class="primary" type="button">Simulate</button>
             </div>
             <p data-i18n="view.vasicek.hint.half_life_of_mean_reversion_ln_2_a_default_a_0_5_h" class="muted">
                 Half-life of mean reversion = ln(2)/a. Default a=0.5 → half-life ≈ 1.39
@@ -118,20 +119,25 @@ function readInputs() {
 async function simulate(mount, tok) {
     hideErr();
     const err = validateParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyVasicekShortRateSimulator(buildBody(state.params));
         if (!res) throw new Error(t('view.vasicek.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(res);
     renderChart(res);
+    showToast(t('view.vasicek.toast.done', {
+        mean: fmtRatePct(res.terminal_mean),
+        neg_pct: (res.negative_path_fraction * 100).toFixed(1),
+    }), { level: 'success' });
 }
 
 function renderSummary(res) {

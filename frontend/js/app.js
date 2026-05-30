@@ -735,6 +735,11 @@ function bindTabs() {
         const el = document.getElementById('bo-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in vasicek scope → click Simulate.
+    window.addEventListener('tv:vasicek-simulate', () => {
+        const el = document.getElementById('va-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

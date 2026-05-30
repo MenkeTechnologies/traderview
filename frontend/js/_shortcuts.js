@@ -116,6 +116,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'dtw_warp',                     keys: { key: 'w', meta: false, ctrl: false, shift: false, alt: false }, scope: 'dtw',               descKey: 'shortcut.dtw_warp',                     actionKey: 'tv:dtw-warp' },
     { id: 'hurst_estimate',               keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hurst',             descKey: 'shortcut.hurst_estimate',               actionKey: 'tv:hurst-estimate' },
     { id: 'bocpd_detect',                 keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bocpd',             descKey: 'shortcut.bocpd_detect',                 actionKey: 'tv:bocpd-detect' },
+    { id: 'vasicek_simulate',             keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vasicek',           descKey: 'shortcut.vasicek_simulate',             actionKey: 'tv:vasicek-simulate' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
