@@ -588,6 +588,8 @@ pub enum Preset {
     RedStreakDistributor,           // change_pct < -0.5 AND day_pct < 0 AND rel_volume >= 1.2 AND gap_pct <= 0 — modest loss + red intraday + decent vol + non-positive gap (steady distribution day; multi-day red-streak candidate)
     GapDownReclaim,                 // gap_pct < -1 AND change_pct >= 0 AND day_pct > -gap_pct * 0.8 — gap down + reclaimed positive + intraday recovered most of gap (full intraday rotation; gap-down reclaim)
     GapUpFailReclaimed,             // gap_pct > 1 AND change_pct <= 0 AND day_pct < -gap_pct * 0.8 — gap up + faded negative + intraday gave up most of gap (full intraday rotation; gap-up fail)
+    MidYearRangeConsolidation,      // year_low_pct > 20 AND year_high_pct > 20 AND change_pct.abs() < 0.5 AND rel_volume < 1 — clearly mid-52w range + flat + sub-avg vol (consolidation; nowhere on the chart)
+    AtYearExtremeVolatilityExpansion, // (year_high_pct < 3 OR year_low_pct < 3) AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — at either 52w extreme + wide range + decent vol (at-extreme volatility expansion; testing structural level)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3125,6 +3127,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct <= 0.0
                 && hit.day_pct < -hit.gap_pct * 0.8
         }
+        Preset::MidYearRangeConsolidation => {
+            hit.year_low_pct > 20.0
+                && hit.year_high_pct > 20.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::AtYearExtremeVolatilityExpansion => {
+            (hit.year_high_pct < 3.0 || hit.year_low_pct < 3.0)
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3603,6 +3616,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RedStreakDistributor => "Modest Loss + Red Intraday + Non-pos Gap + Decent Vol (Streak Distributor)",
         Preset::GapDownReclaim => "Gap Down + Reclaimed Positive (Full Intraday Rotation Up)",
         Preset::GapUpFailReclaimed => "Gap Up + Failed Negative (Full Intraday Rotation Down)",
+        Preset::MidYearRangeConsolidation => "Mid 52w Range + Flat + Sub-avg Vol (Consolidation; Nowhere)",
+        Preset::AtYearExtremeVolatilityExpansion => "At 52w Extreme + Wide Range + Decent Vol (Structural Test)",
     }
 }
 

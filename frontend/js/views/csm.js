@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let rawChart = null;
 
 export async function renderCsm(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderCsm(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.csm.h2.chart">CSM series</h2>
             <div id="cm-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.csm.h2.raw_chart">Raw momentum (unsmoothed; close[t] − close[t−n]) — what SuperSmoother filters</h2>
+            <div id="cm-raw-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.momentum_period, state.smooth_period);
     renderSummary(local, true);
     renderChart(local);
+    renderRawChart();
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.csm.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderRawChart();
     renderStats();
 }
 
@@ -169,6 +177,41 @@ function renderChart(csm) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderRawChart() {
+    const el = document.getElementById('cm-raw-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.closes || state.closes.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.csm.empty_raw_chart">${esc(t('view.csm.empty_raw_chart'))}</div>`;
+        return;
+    }
+    const n = state.closes.length;
+    const p = state.momentum_period;
+    const xs = state.closes.map((_, i) => i);
+    const raw = state.closes.map((c, i) => {
+        if (i < p) return null;
+        const prev = state.closes[i - p];
+        if (!Number.isFinite(prev) || !Number.isFinite(c)) return null;
+        return c - prev;
+    });
+    const zero = xs.map(() => 0);
+    if (rawChart) { try { rawChart.destroy(); } catch {} rawChart = null; }
+    rawChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.csm.series.raw'),
+              stroke: '#b86bff', width: 1.2,
+              points: { show: false } },
+            { label: t('view.csm.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, raw, zero], el);
+    void n;
 }
 
 function renderStats() {

@@ -470,6 +470,8 @@ const PRESETS = [
     { id: 'red_streak_distributor', label: t('view.scanners.preset.red_streak_distributor.label'), desc: t('view.scanners.preset.red_streak_distributor.desc') },
     { id: 'gap_down_reclaim', label: t('view.scanners.preset.gap_down_reclaim.label'), desc: t('view.scanners.preset.gap_down_reclaim.desc') },
     { id: 'gap_up_fail_reclaimed', label: t('view.scanners.preset.gap_up_fail_reclaimed.label'), desc: t('view.scanners.preset.gap_up_fail_reclaimed.desc') },
+    { id: 'mid_year_range_consolidation', label: t('view.scanners.preset.mid_year_range_consolidation.label'), desc: t('view.scanners.preset.mid_year_range_consolidation.desc') },
+    { id: 'at_year_extreme_volatility_expansion', label: t('view.scanners.preset.at_year_extreme_volatility_expansion.label'), desc: t('view.scanners.preset.at_year_extreme_volatility_expansion.desc') },
 ];
 
 export async function renderScanners(mount) {
