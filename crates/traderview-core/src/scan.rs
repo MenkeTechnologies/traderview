@@ -882,6 +882,8 @@ pub enum Preset {
     StealthAtYear52Low,                  // year_low_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w low + flat close + extreme vol (stealth accumulation at the breakdown zone: extreme participation with no net price expansion; institutional bottom-fishing masked as quiet acceptance)
     ExtremeVolCloseAtHod,                // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 — extreme vol + close pinned to HOD (max-conviction bullish close at any price level: extreme participation finishing on the highs; institutional ramp into the close)
     ExtremeVolCloseAtLod,                // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 — extreme vol + close pinned to LOD (max-conviction bearish close at any price level: extreme participation finishing on the lows; institutional dump into the close)
+    ExtremeRangeExtremeVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 5 — extreme intraday range + extreme vol (extreme two-sided rotation: institutional fight day with wide whipsaw range and climax-level participation; max-volatility regime print)
+    ExtremeRangeDryVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume < 0.5 — extreme intraday range + dry vol (thin-liquidity whipsaw: extreme range expansion with no institutional sponsorship; gappy market-maker void or low-volume rip; fade with caution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5163,6 +5165,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume >= 5.0
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::ExtremeRangeExtremeVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 5.0
+        }
+        Preset::ExtremeRangeDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -5935,6 +5945,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StealthAtYear52Low => "At 52w Low + Flat Close + Extreme Vol (Stealth Accumulation at the Breakdown Zone: Extreme Participation with No Net Price Expansion; Institutional Bottom-fishing Masked as Quiet Acceptance)",
         Preset::ExtremeVolCloseAtHod => "Extreme Vol + Close Pinned to HOD (Max-conviction Bullish Close at Any Price Level: Extreme Participation Finishing on the Highs; Institutional Ramp into the Close)",
         Preset::ExtremeVolCloseAtLod => "Extreme Vol + Close Pinned to LOD (Max-conviction Bearish Close at Any Price Level: Extreme Participation Finishing on the Lows; Institutional Dump into the Close)",
+        Preset::ExtremeRangeExtremeVol => "Extreme Intraday Range + Extreme Vol (Extreme Two-sided Rotation: Institutional Fight Day with Wide Whipsaw Range and Climax-level Participation; Max-volatility Regime Print)",
+        Preset::ExtremeRangeDryVol => "Extreme Intraday Range + Dry Vol (Thin-liquidity Whipsaw: Extreme Range Expansion with No Institutional Sponsorship; Gappy Market-maker Void or Low-volume Rip; Fade with Caution)",
     }
 }
 
