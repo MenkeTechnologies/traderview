@@ -276,6 +276,8 @@ pub enum Preset {
     BarelyMovingMidSqueeze,      // year_high_pct -50 to -30 AND |day_pct| < 0.3 AND rel_volume < 0.8 — quiet stall in middle of 52w range
     Pct52wThirdFromHighSqueeze,  // year_high_pct -33 to -20 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w high
     Pct52wThirdFromLowSqueeze,   // year_low_pct 20 to 33 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w low
+    HighRangeNoChangeSqueeze,    // hod_dist + lod_dist > 5 AND |change_pct| < 0.5 AND rel_volume >= 1 — wide range, zero net change on average volume
+    LowRangeNoChangeSqueeze,     // hod_dist + lod_dist < 1 AND |change_pct| < 0.5 — very tight range with no net change
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1086,6 +1088,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
+        Preset::HighRangeNoChangeSqueeze => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 1.0
+        }
+        Preset::LowRangeNoChangeSqueeze => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1252,6 +1263,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BarelyMovingMidSqueeze => "Barely-Moving Mid-Range Squeeze",
         Preset::Pct52wThirdFromHighSqueeze => "Third-From-High Squeeze",
         Preset::Pct52wThirdFromLowSqueeze => "Third-From-Low Squeeze",
+        Preset::HighRangeNoChangeSqueeze => "High-Range No-Change Squeeze",
+        Preset::LowRangeNoChangeSqueeze => "Low-Range No-Change Squeeze",
     }
 }
 

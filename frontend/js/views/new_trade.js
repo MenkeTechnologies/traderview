@@ -2,7 +2,7 @@
 // Each insert triggers a server-side rollup so trades auto-form via FIFO.
 import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
-import { fmt } from '../util.js';
+import { fmt, esc } from '../util.js';
 import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
@@ -58,6 +58,11 @@ export async function renderNewTrade(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.new_trade.h2.recent_executions_on_this_account">Recent executions on this account</h2>
             <div id="recent-execs"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.new_trade.h2.exec_chart">Recent execution prices (chronological)</h2>
+            <div id="nt-chart" style="width:100%;height:240px"></div>
         </div>
     `;
 
@@ -175,6 +180,38 @@ export async function renderNewTrade(mount, state) {
         ` : '<p data-i18n="view.new_trade.hint.no_executions_yet_on_this_account" class="muted">No executions yet on this account.</p>';
         const btn = mount.querySelector('#open-trades');
         if (btn) btn.addEventListener('click', () => go('trades'));
+        renderExecChart(execs);
     }
     refresh();
+}
+
+function renderExecChart(execs) {
+    const el = document.getElementById('nt-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (execs || [])
+        .filter(e => Number.isFinite(Number(e.price)))
+        .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.new_trade.empty_chart">${esc(t('view.new_trade.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = valid.map((_, i) => i + 1);
+    const buys = valid.map(e => (e.side === 'buy' || e.side === 'cover') ? Number(e.price) : null);
+    const sells = valid.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.price) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.new_trade.chart.exec_idx') },
+            { label: t('view.new_trade.chart.buy'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.new_trade.chart.sell'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, buys, sells], el);
 }
