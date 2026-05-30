@@ -44,6 +44,11 @@ export async function renderIntradayHeatmap(mount, _appState) {
                 Hover any cell for trade count / avg / win-rate.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.intraday_heatmap.h2.hour_chart">P&L by hour (aggregated)</h2>
+            <div id="ih-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ih-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ih-demo').addEventListener('click', () => {
@@ -89,6 +94,58 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, trades);
     renderGrid(res);
+    renderHourChart(res);
+}
+
+function renderHourChart(report) {
+    const el = document.getElementById('ih-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = (report && report.buckets) || [];
+    if (!buckets.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.intraday_heatmap.empty_chart">${esc(t('view.intraday_heatmap.empty_chart'))}</div>`;
+        return;
+    }
+    const startH = state.sessionOnly ? 9  : 0;
+    const endH   = state.sessionOnly ? 16 : 24;
+    const { grid } = gridify(buckets);
+    const labels = [];
+    const ys = [];
+    for (let h = startH; h < endH; h++) {
+        let total = 0;
+        let any = false;
+        for (let q = 0; q < 4; q++) {
+            const b = grid[h][q];
+            if (b && Number.isFinite(Number(b.total_pnl))) { total += Number(b.total_pnl); any = true; }
+        }
+        labels.push(h.toString().padStart(2, '0') + ':00');
+        ys.push(any ? total : null);
+    }
+    if (!ys.some(v => v != null)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.intraday_heatmap.empty_chart">${esc(t('view.intraday_heatmap.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.intraday_heatmap.chart.hour') },
+            { label: t('view.intraday_heatmap.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.intraday_heatmap.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSummary(report, trades) {

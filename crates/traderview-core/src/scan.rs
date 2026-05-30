@@ -230,6 +230,8 @@ pub enum Preset {
     HiVolNoExtremeSqueeze,       // rel_volume >= 2 AND hod_dist > 1 AND lod_dist > 1 AND change_pct.abs() < 1 — heavy vol but no breakout (rotation)
     TinyMoveWithGapSqueeze,      // |gap_pct| between 0.5 and 1.5 AND |change_pct| < 0.5 AND day_pct.abs() < 0.5 — gap held but no further move
     LowVolatilityGreenSqueeze,   // change_pct > 0 AND change_pct < 1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet up day with dry volume
+    LowVolatilityRedSqueeze,     // change_pct < 0 AND change_pct > -1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet down day with dry volume
+    GapAlignsChangeSqueeze,      // gap_pct.signum() == change_pct.signum() AND (|gap| + |change|) < 1.5 AND day_pct.abs() < 0.5 — small aligned move
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -797,6 +799,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.5
         }
+        Preset::LowVolatilityRedSqueeze => {
+            hit.change_pct < 0.0
+                && hit.change_pct > -1.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.5
+        }
+        Preset::GapAlignsChangeSqueeze => {
+            hit.gap_pct.signum() == hit.change_pct.signum()
+                && (hit.gap_pct.abs() + hit.change_pct.abs()) < 1.5
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -917,6 +930,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HiVolNoExtremeSqueeze => "Hi-Vol No-Extreme Squeeze",
         Preset::TinyMoveWithGapSqueeze => "Tiny-Move With-Gap Squeeze",
         Preset::LowVolatilityGreenSqueeze => "Low-Vol Green Squeeze",
+        Preset::LowVolatilityRedSqueeze => "Low-Vol Red Squeeze",
+        Preset::GapAlignsChangeSqueeze => "Gap-Aligns-Change Squeeze",
     }
 }
 
