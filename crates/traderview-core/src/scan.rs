@@ -946,6 +946,8 @@ pub enum Preset {
     GravestoneDojiAtDeepPremium,         // year_low_pct >= 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the deep-premium ceiling: intraday rip fully sold by close in a runaway name with elevated participation; exhaustion supply-test signal)
     MarubozuGreenAtDeepDiscount,         // year_high_pct >= 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep discount zone (>=30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in a beaten-down name: regular-hours conviction lifted from open to high with no gap aid; max-conviction turnaround thrust after extended decline)
     MarubozuRedAtDeepPremium,            // year_low_pct >= 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep premium zone (>=30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday rejection trend day in a runaway name: regular-hours conviction fell from open to low with no gap aid; max-conviction exhaustion thrust after extended advance)
+    HammerAtYear52High,                  // year_high_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w high + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed at the breakout ceiling: intraday plunge bought back to the highs; continuation-of-trend resilience signal at the top)
+    ShootingStarAtYear52Low,             // year_low_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w low + long upper wick + close near LOD + red close + hot vol (selling pressure persists at the breakdown floor: intraday rip sold back to the lows; continuation-of-trend weakness signal at the bottom)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5627,6 +5629,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::HammerAtYear52High => {
+            hit.year_high_pct < 2.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtYear52Low => {
+            hit.year_low_pct < 2.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6463,6 +6479,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GravestoneDojiAtDeepPremium => "Deep Premium Zone (>=30 % above 52w Low) + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji Reversal in the Deep-premium Ceiling: Intraday Rip Fully Sold by Close in a Runaway Name with Elevated Participation; Exhaustion Supply-test Signal)",
         Preset::MarubozuGreenAtDeepDiscount => "Deep Discount Zone (>=30 % below 52w High) + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Recovery Trend Day in a Beaten-down Name: Regular-hours Conviction Lifted from Open to High with No Gap Aid; Max-conviction Turnaround Thrust after Extended Decline)",
         Preset::MarubozuRedAtDeepPremium => "Deep Premium Zone (>=30 % above 52w Low) + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Rejection Trend Day in a Runaway Name: Regular-hours Conviction Fell from Open to Low with No Gap Aid; Max-conviction Exhaustion Thrust after Extended Advance)",
+        Preset::HammerAtYear52High => "At 52w High + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Buying Pressure Tested but Reclaimed at the Breakout Ceiling: Intraday Plunge Bought Back to the Highs; Continuation-of-trend Resilience Signal at the Top)",
+        Preset::ShootingStarAtYear52Low => "At 52w Low + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Persists at the Breakdown Floor: Intraday Rip Sold Back to the Lows; Continuation-of-trend Weakness Signal at the Bottom)",
     }
 }
 
