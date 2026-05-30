@@ -872,6 +872,8 @@ pub enum Preset {
     Year52HighFullRangeDryVol,           // year_high_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w high + wide intraday range + dry vol (low-participation outside-day rotation at the highs; supply tested without conviction; failed exhaustion-vol setup)
     Year52LowFullRangeDryVol,            // year_low_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w low + wide intraday range + dry vol (low-participation outside-day rotation at the lows; demand tested without conviction; failed capitulation-vol setup)
     BigChangeBigRangeDryVol,             // change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume < 0.7 — big net move + wide intraday range + dry vol (no-participation thrust + wide range; illiquidity-driven volatility expansion without institutional commitment; fade candidate at scale)
+    ExtremeVolFlatDay,                   // rel_volume >= 5 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — extreme vol + flat net + tight range (stealth absorption at scale: extreme participation with no price expansion; institutional accumulation or distribution masked as a quiet day)
+    ExtremeVolBigChangeClimax,           // rel_volume >= 5 AND change_pct.abs() > 5 — extreme vol + big net move (climax-style print: extreme participation + extreme directional commitment; potential trend continuation or terminal exhaustion depending on follow-through)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5102,6 +5104,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
                 && hit.rel_volume < 0.7
         }
+        Preset::ExtremeVolFlatDay => {
+            hit.rel_volume >= 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+        }
+        Preset::ExtremeVolBigChangeClimax => {
+            hit.rel_volume >= 5.0
+                && hit.change_pct.abs() > 5.0
+        }
     }
 }
 
@@ -5864,6 +5875,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52HighFullRangeDryVol => "At 52w High + Wide Intraday Range + Dry Vol (Low-participation Outside-day Rotation at the Highs; Supply Tested without Conviction; Failed Exhaustion-vol Setup)",
         Preset::Year52LowFullRangeDryVol => "At 52w Low + Wide Intraday Range + Dry Vol (Low-participation Outside-day Rotation at the Lows; Demand Tested without Conviction; Failed Capitulation-vol Setup)",
         Preset::BigChangeBigRangeDryVol => "Big Net Move + Wide Intraday Range + Dry Vol (No-participation Thrust + Wide Range; Illiquidity-driven Volatility Expansion without Institutional Commitment; Fade Candidate at Scale)",
+        Preset::ExtremeVolFlatDay => "Extreme Vol + Flat Net + Tight Range (Stealth Absorption at Scale: Extreme Participation with No Price Expansion; Institutional Accumulation or Distribution Masked as a Quiet Day)",
+        Preset::ExtremeVolBigChangeClimax => "Extreme Vol + Big Net Move (Climax-style Print: Extreme Participation + Extreme Directional Commitment; Potential Trend Continuation or Terminal Exhaustion Depending on Follow-through)",
     }
 }
 
