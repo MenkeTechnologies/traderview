@@ -1038,6 +1038,8 @@ pub enum Preset {
     HotVolFlatCloseConfirmedBelowYearLowHotVol,  // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — flat close + hot vol + confirmed-breakdown zone (1-3% past 52w low) (stealth accumulation in the confirmed-breakdown zone: doubled participation with no net price impact below the prior trough; institutions handling demand at the validated breakdown level without giving back the move)
     HotVolFlatCloseDeepBelowYearHighHotVol,    // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — flat close + hot vol + far below 52w high (>=20%) (stealth accumulation deep in pullback territory: doubled participation with no net price impact well below the prior peak; potential base-building signal where smart money builds position during depressed-tape conditions)
     HotVolFlatCloseDeepAboveYearLowHotVol,     // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — flat close + hot vol + far above 52w low (>=20%) (stealth distribution deep in advance territory: doubled participation with no net price impact well above the prior trough; potential topping signal where smart money exits position during euphoric-tape conditions)
+    HotVolFlatCloseMidYearHighHotVol,          // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — flat close + hot vol + mid-range from high (5-20%) (Wyckoff-style stealth accumulation zone in mid-cycle pullback: doubled participation with no net price impact in the proper consolidation range; textbook accumulation phase where institutions absorb supply at fair value below the prior peak)
+    HotVolFlatCloseMidYearLowHotVol,           // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — flat close + hot vol + mid-range from low (5-20%) (Wyckoff-style stealth distribution zone in mid-cycle recovery: doubled participation with no net price impact in the proper consolidation range; textbook distribution phase where institutions release supply at fair value above the prior trough)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6376,6 +6378,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.year_low_pct >= 20.0
         }
+        Preset::HotVolFlatCloseMidYearHighHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::HotVolFlatCloseMidYearLowHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -7304,6 +7318,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolFlatCloseConfirmedBelowYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Stealth Accumulation in the Confirmed-breakdown Zone: Doubled Participation with No Net Price Impact below the Prior Trough; Institutions Handling Demand at the Validated Breakdown Level without Giving Back the Move)",
         Preset::HotVolFlatCloseDeepBelowYearHighHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Far below 52w High (>=20 %) (Stealth Accumulation Deep in Pullback Territory: Doubled Participation with No Net Price Impact Well below the Prior Peak; Potential Base-building Signal Where Smart Money Builds Position during Depressed-tape Conditions)",
         Preset::HotVolFlatCloseDeepAboveYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Far above 52w Low (>=20 %) (Stealth Distribution Deep in Advance Territory: Doubled Participation with No Net Price Impact Well above the Prior Trough; Potential Topping Signal Where Smart Money Exits Position during Euphoric-tape Conditions)",
+        Preset::HotVolFlatCloseMidYearHighHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Mid-range from High (5-20 %) (Wyckoff-style Stealth Accumulation Zone in Mid-cycle Pullback: Doubled Participation with No Net Price Impact in the Proper Consolidation Range; Textbook Accumulation Phase Where Institutions Absorb Supply at Fair Value below the Prior Peak)",
+        Preset::HotVolFlatCloseMidYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Mid-range from Low (5-20 %) (Wyckoff-style Stealth Distribution Zone in Mid-cycle Recovery: Doubled Participation with No Net Price Impact in the Proper Consolidation Range; Textbook Distribution Phase Where Institutions Release Supply at Fair Value above the Prior Trough)",
     }
 }
 
