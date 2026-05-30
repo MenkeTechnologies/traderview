@@ -46,6 +46,12 @@ export async function renderThreeBarReversal(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.three_bar_reversal.h2.delta_chart">Per-event signed delta (bar3_close − bar1_open)</h2>
+            <div id="tbr-delta-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.three_bar_reversal.hint.delta_chart" class="muted small">Signed pattern magnitude per detected event. Reveals which reversals had strong follow-through (large signed delta) vs marginal (close to zero) — orthogonal to the time-series chart above. Yellow dashed = zero (no net move).</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.three_bar_reversal.h2.event_log">Event log</h2>
             <div id="tbr-events"></div>
         </div>
@@ -99,6 +105,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars);
     renderChart(bars, report);
+    renderDeltaChart(report);
     renderEvents(report);
     const events = (report.events || []).length;
     showToast(t('view.three_bar_reversal.toast.detected', { events, bars: bars.length }), { level: 'success' });
@@ -149,6 +156,40 @@ function renderChart(bars, report) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, closes, up, dn], el);
+}
+
+function renderDeltaChart(report) {
+    const el = document.getElementById('tbr-delta-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const events = (report.events || []).filter(e =>
+        Number.isFinite(Number(e.bar3_close)) && Number.isFinite(Number(e.bar1_open)));
+    if (events.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.three_bar_reversal.empty_delta_chart">${esc(t('view.three_bar_reversal.empty_delta_chart'))}</div>`;
+        return;
+    }
+    const labels = events.map(e => '#' + e.bar_index);
+    const ys = events.map(e => Number(e.bar3_close) - Number(e.bar1_open));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.three_bar_reversal.chart.event_idx') },
+            { label: t('view.three_bar_reversal.chart.delta'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.three_bar_reversal.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderEvents(report) {

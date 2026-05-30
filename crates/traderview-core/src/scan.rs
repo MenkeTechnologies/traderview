@@ -810,6 +810,8 @@ pub enum Preset {
     HotVolBigRedWideRangeYearHigh,       // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w high + hot vol (distribution flush; rejection reversal off the ceiling with elevated participation; potential bull-trap reversal)
     HotVolBigGreenWideRangeYearHigh,     // change_pct > 5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big green + wide range + near 52w high + hot vol (breakout extension off the ceiling with elevated participation; trend acceleration into new highs with full range expansion)
     HotVolBigRedWideRangeYearLow,        // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_low_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w low + hot vol (breakdown extension off the floor with elevated participation; trend acceleration into new lows with full range expansion)
+    RangeContractionHotVolBigGap,        // hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 AND gap_pct.abs() > 3 — tight intraday range + flat close + hot vol + big overnight gap (gap absorbed into intraday coil; market accepted the gap with elevated participation but no further expansion; trapped gap traders compressing into a spring)
+    RangeExpansionHotVolBigIntraday,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND day_pct.abs() > 3 AND rel_volume >= 2 AND gap_pct.abs() < 1 — wide intraday range + big intraday move from open + hot vol + no overnight gap (full intraday range expansion off the open with no gap aid; pure intraday breakout day driven by regular-hours conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4647,6 +4649,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::RangeContractionHotVolBigGap => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.gap_pct.abs() > 3.0
+        }
+        Preset::RangeExpansionHotVolBigIntraday => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.day_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+                && hit.gap_pct.abs() < 1.0
+        }
     }
 }
 
@@ -5347,6 +5361,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolBigRedWideRangeYearHigh => "Big Red + Wide Range + Near 52w High + Hot Vol (Distribution Flush; Rejection Reversal off the Ceiling with Elevated Participation; Potential Bull-trap Reversal)",
         Preset::HotVolBigGreenWideRangeYearHigh => "Big Green + Wide Range + Near 52w High + Hot Vol (Breakout Extension off the Ceiling with Elevated Participation; Trend Acceleration into New Highs with Full Range Expansion)",
         Preset::HotVolBigRedWideRangeYearLow => "Big Red + Wide Range + Near 52w Low + Hot Vol (Breakdown Extension off the Floor with Elevated Participation; Trend Acceleration into New Lows with Full Range Expansion)",
+        Preset::RangeContractionHotVolBigGap => "Tight Intraday Range + Flat Close + Hot Vol + Big Overnight Gap (Gap Absorbed into Intraday Coil; Market Accepted the Gap with Elevated Participation but No Further Expansion; Trapped Gap Traders Compressing into a Spring)",
+        Preset::RangeExpansionHotVolBigIntraday => "Wide Intraday Range + Big Intraday Move from Open + Hot Vol + No Overnight Gap (Full Intraday Range Expansion off the Open with No Gap Aid; Pure Intraday Breakout Day Driven by Regular-hours Conviction)",
     }
 }
 
