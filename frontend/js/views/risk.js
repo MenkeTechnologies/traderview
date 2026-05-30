@@ -73,7 +73,13 @@ export async function renderRisk(mount, state) {
                 <button data-i18n="view.risk.btn.save" class="primary" type="submit">Save</button>
             </form>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk.h2.daily_pnl_chart">Recent daily P&L vs goal / max-loss</h2>
+            <div id="rk-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderDailyPnlChart(eq, goal, maxLoss);
     mount.querySelector('#risk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -86,4 +92,48 @@ export async function renderRisk(mount, state) {
         renderRisk(mount, state);
     });
     void fmt;
+}
+
+function renderDailyPnlChart(eq, goal, maxLoss) {
+    const el = document.getElementById('rk-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (eq || [])
+        .filter(p => p.day && Number.isFinite(Number(p.day_net_pnl)))
+        .slice(-30);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk.empty_chart">${esc(t('view.risk.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(p => p.day);
+    const xs = labels.map((_, i) => i + 1);
+    const winY  = rows.map(p => Number(p.day_net_pnl) >= 0 ? Number(p.day_net_pnl) : null);
+    const loseY = rows.map(p => Number(p.day_net_pnl) <  0 ? Number(p.day_net_pnl) : null);
+    const goalY = xs.map(() => goal > 0 ?  goal : null);
+    const lossY = xs.map(() => maxLoss > 0 ? -maxLoss : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk.chart.day') },
+            { label: t('view.risk.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.risk.chart.lose'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.risk.chart.goal'),
+              stroke: '#00e5ff', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.risk.chart.max_loss'),
+              stroke: '#ffd84a', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, winY, loseY, goalY, lossY], el);
 }

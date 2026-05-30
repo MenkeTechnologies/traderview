@@ -296,6 +296,8 @@ pub enum Preset {
     GapDownReversalOnVolume,     // gap_pct < -2 AND change_pct > 2 AND rel_volume >= 2 — gap-down reversal with heavy participation (accumulation)
     Pct52wTopDecileHotVol,       // year_high_pct > -10 AND rel_volume >= 2 — within 10% of 52w high on heavy volume (breakout candidate)
     Pct52wBottomDecileHotVol,    // year_low_pct < 10 AND rel_volume >= 2 — within 10% of 52w low on heavy volume (capitulation candidate)
+    Pct52wTopDecileDryVol,       // year_high_pct > -10 AND rel_volume < 0.5 — within 10% of 52w high but dry volume (no demand at the highs)
+    Pct52wBottomDecileDryVol,    // year_low_pct < 10 AND rel_volume < 0.5 — within 10% of 52w low but dry volume (no panic at the lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1197,6 +1199,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::Pct52wBottomDecileHotVol => {
             hit.year_low_pct < 10.0 && hit.rel_volume >= 2.0
         }
+        Preset::Pct52wTopDecileDryVol => {
+            hit.year_high_pct > -10.0 && hit.rel_volume < 0.5
+        }
+        Preset::Pct52wBottomDecileDryVol => {
+            hit.year_low_pct < 10.0 && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -1383,6 +1391,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownReversalOnVolume => "Gap-Down Reversal On Volume",
         Preset::Pct52wTopDecileHotVol => "52w Top-Decile on Hot Vol",
         Preset::Pct52wBottomDecileHotVol => "52w Bottom-Decile on Hot Vol",
+        Preset::Pct52wTopDecileDryVol => "52w Top-Decile on Dry Vol",
+        Preset::Pct52wBottomDecileDryVol => "52w Bottom-Decile on Dry Vol",
     }
 }
 
