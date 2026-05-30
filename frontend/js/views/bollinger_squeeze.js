@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_BB_PERIOD, DEFAULT_N_STDEV, DEFAULT_LOOKBACK, DEFAULT_SLACK,
@@ -30,25 +31,29 @@ export async function renderBollingerSqueeze(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bbsq.label.period">BB period</span>
-                    <input id="bs-period" type="number" step="1" min="2" value="${state.bb_period}"></label>
+                    <input id="bs-period" type="number" step="1" min="2" value="${state.bb_period}"
+                           data-tip="view.bbsq.tip.period"></label>
                 <label><span data-i18n="view.bbsq.label.stdev">σ multiplier</span>
-                    <input id="bs-stdev" type="number" step="any" min="0.1" value="${state.n_stdev}"></label>
+                    <input id="bs-stdev" type="number" step="any" min="0.1" value="${state.n_stdev}"
+                           data-tip="view.bbsq.tip.stdev"></label>
                 <label><span data-i18n="view.bbsq.label.lookback">Lookback</span>
-                    <input id="bs-lookback" type="number" step="1" min="2" value="${state.lookback}"></label>
+                    <input id="bs-lookback" type="number" step="1" min="2" value="${state.lookback}"
+                           data-tip="view.bbsq.tip.lookback"></label>
                 <label><span data-i18n="view.bbsq.label.slack">Slack</span>
-                    <input id="bs-slack" type="number" step="any" min="0" value="${state.slack}"></label>
+                    <input id="bs-slack" type="number" step="any" min="0" value="${state.slack}"
+                           data-tip="view.bbsq.tip.slack"></label>
                 <button data-i18n="view.bbsq.btn.compute" id="bs-run" class="primary"
-                        data-tip="view.bbsq.tip.compute" type="button">Detect squeeze</button>
+                        data-tip="view.bbsq.tip.compute" data-shortcut="bollinger_squeeze_run" type="button">Detect squeeze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bbsq.btn.demo_flat"      id="bs-demo-flat"     class="secondary" type="button">Demo: flat (perpetual squeeze)</button>
-                <button data-i18n="view.bbsq.btn.demo_coiling"   id="bs-demo-coiling"  class="secondary" type="button">Demo: coiling (volatile → quiet)</button>
-                <button data-i18n="view.bbsq.btn.demo_expansion" id="bs-demo-expand"   class="secondary" type="button">Demo: expansion after quiet</button>
-                <button data-i18n="view.bbsq.btn.demo_noisy"     id="bs-demo-noisy"    class="secondary" type="button">Demo: noisy walk</button>
-                <button data-i18n="view.bbsq.btn.demo_short"     id="bs-demo-short"    class="secondary" type="button">Demo: short lookback (40)</button>
-                <button data-i18n="view.bbsq.btn.demo_tight"     id="bs-demo-tight"    class="secondary" type="button">Demo: zero slack (strict)</button>
-                <button data-i18n="view.bbsq.btn.demo_loose"     id="bs-demo-loose"    class="secondary" type="button">Demo: loose slack (50%)</button>
-                <button data-i18n="view.bbsq.btn.demo_wide"      id="bs-demo-wide"     class="secondary" type="button">Demo: wide bands (3σ)</button>
+                <button data-i18n="view.bbsq.btn.demo_flat"      id="bs-demo-flat"     class="secondary" data-tip="view.bbsq.tip.demo_flat"      type="button">Demo: flat (perpetual squeeze)</button>
+                <button data-i18n="view.bbsq.btn.demo_coiling"   id="bs-demo-coiling"  class="secondary" data-tip="view.bbsq.tip.demo_coiling"   type="button">Demo: coiling (volatile → quiet)</button>
+                <button data-i18n="view.bbsq.btn.demo_expansion" id="bs-demo-expand"   class="secondary" data-tip="view.bbsq.tip.demo_expansion" type="button">Demo: expansion after quiet</button>
+                <button data-i18n="view.bbsq.btn.demo_noisy"     id="bs-demo-noisy"    class="secondary" data-tip="view.bbsq.tip.demo_noisy"     type="button">Demo: noisy walk</button>
+                <button data-i18n="view.bbsq.btn.demo_short"     id="bs-demo-short"    class="secondary" data-tip="view.bbsq.tip.demo_short"     type="button">Demo: short lookback (40)</button>
+                <button data-i18n="view.bbsq.btn.demo_tight"     id="bs-demo-tight"    class="secondary" data-tip="view.bbsq.tip.demo_tight"     type="button">Demo: zero slack (strict)</button>
+                <button data-i18n="view.bbsq.btn.demo_loose"     id="bs-demo-loose"    class="secondary" data-tip="view.bbsq.tip.demo_loose"     type="button">Demo: loose slack (50%)</button>
+                <button data-i18n="view.bbsq.btn.demo_wide"      id="bs-demo-wide"     class="secondary" data-tip="view.bbsq.tip.demo_wide"      type="button">Demo: wide bands (3σ)</button>
             </div>
             <p data-i18n="view.bbsq.hint.about" class="muted">width = 2·n_stdev·σ/mean·100. squeeze_on if width ≤ min(width over lookback)·(1+slack). Defaults: 20 / 2.0 / 125 / 0.05. Squeezes precede volatility expansion.</p>
         </div>
@@ -97,6 +102,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bbsq.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bbsq.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -114,7 +120,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bbsq.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.bb_period, state.n_stdev, state.lookback, state.slack);
     renderSummary(local, true);
     renderChart(local);
@@ -125,6 +131,7 @@ async function compute(tok) {
         resp = await api.anlyBollingerSqueeze(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bbsq.err.api')}: ${e.message || e}`);
+        showToast(t('view.bbsq.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -132,6 +139,13 @@ async function compute(tok) {
     renderChart(resp);
     renderCloseChart(resp);
     renderTable(resp);
+    const squeezing = resp.squeeze_on && resp.squeeze_on.length
+        && resp.squeeze_on[resp.squeeze_on.length - 1];
+    if (squeezing) {
+        showToast(t('view.bbsq.toast.squeeze_on'), { level: 'success' });
+    } else {
+        showToast(t('view.bbsq.toast.computed'), { level: 'info' });
+    }
 }
 
 function renderSummary(report, pending) {
