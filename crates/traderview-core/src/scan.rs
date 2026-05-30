@@ -848,6 +848,8 @@ pub enum Preset {
     Year52LowGapUpDryVolReject,          // year_low_pct < 3 AND year_low_pct >= -2 AND gap_pct > 1.5 AND change_pct < 0 AND rel_volume < 0.8 — near 52w low + opened with gap up + sold back into red close + dry vol (gap rejected back into the breakdown zone on light vol; weak-hands trapped without participation flush; bearish continuation setup at the lows)
     Year52HighInsideDayHotVol,           // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + tight intraday range + flat close + hot vol (inside-day coil at the breakout zone with absorption; institutional accumulation just below resistance; high-probability breakout setup)
     Year52LowInsideDayHotVol,            // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + tight intraday range + flat close + hot vol (inside-day coil at the breakdown zone with absorption; institutional distribution just above support; high-probability breakdown setup)
+    Year52HighOutsideDayHotVol,          // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w high + wide intraday range + hot vol (outside-day rotation at the breakout zone; both supply and demand active just below resistance; volatility expansion preceding directional resolution)
+    Year52LowOutsideDayHotVol,           // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w low + wide intraday range + hot vol (outside-day rotation at the breakdown zone; both supply and demand active just above support; volatility expansion preceding directional resolution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4929,6 +4931,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighOutsideDayHotVol => {
+            hit.year_high_pct < 3.0
+                && hit.year_high_pct >= -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowOutsideDayHotVol => {
+            hit.year_low_pct < 3.0
+                && hit.year_low_pct >= -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5667,6 +5681,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowGapUpDryVolReject => "Near 52w Low + Gap Up Opening + Sold Back into Red Close + Dry Vol (Gap Rejected Back into the Breakdown Zone on Light Vol; Weak-hands Trapped without Participation Flush; Bearish Continuation Setup at the Lows)",
         Preset::Year52HighInsideDayHotVol => "Near 52w High + Tight Intraday Range + Flat Close + Hot Vol (Inside-day Coil at the Breakout Zone with Absorption; Institutional Accumulation Just below Resistance; High-probability Breakout Setup)",
         Preset::Year52LowInsideDayHotVol => "Near 52w Low + Tight Intraday Range + Flat Close + Hot Vol (Inside-day Coil at the Breakdown Zone with Absorption; Institutional Distribution Just above Support; High-probability Breakdown Setup)",
+        Preset::Year52HighOutsideDayHotVol => "Near 52w High + Wide Intraday Range + Hot Vol (Outside-day Rotation at the Breakout Zone; Both Supply and Demand Active Just below Resistance; Volatility Expansion Preceding Directional Resolution)",
+        Preset::Year52LowOutsideDayHotVol => "Near 52w Low + Wide Intraday Range + Hot Vol (Outside-day Rotation at the Breakdown Zone; Both Supply and Demand Active Just above Support; Volatility Expansion Preceding Directional Resolution)",
     }
 }
 

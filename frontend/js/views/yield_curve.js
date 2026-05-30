@@ -58,6 +58,12 @@ export async function renderYieldCurve(mount, _appState) {
             <div id="yc-spreads"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.yield_curve.h2.short_spread_chart">Spread vs 3M front end (bps)</h2>
+            <div id="yc-short-spread-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.yield_curve.hint.short_spread_chart" class="muted small">Each tenor's yield minus the 3M short-end yield, in basis points. Positive = term-premium normal; negative across the belly = inversion. Yellow dashed = the 3M anchor (zero). Orthogonal to the absolute-yield curve above.</p>
+        </div>
+
         <div id="yc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -90,6 +96,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderChart();
     renderSpreads();
+    renderShortSpreadChart();
     let resp;
     try {
         resp = await api.calcYieldCurve(buildBody(state));
@@ -102,6 +109,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderChart();
     renderSpreads();
+    renderShortSpreadChart();
     const shape = String(resp.shape || '');
     const spread = Number(resp.spread_10y_2y_bps || 0).toFixed(0);
     const level = shape === 'inverted' ? 'warning' : shape === 'normal' ? 'success' : 'info';
@@ -161,6 +169,42 @@ function renderChart() {
         ],
         legend: { show: false },
     }, [xs, ys], el);
+}
+
+function renderShortSpreadChart() {
+    const el = document.getElementById('yc-short-spread-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const front = Number(state.y3m);
+    if (!Number.isFinite(front)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.yield_curve.empty_short_spread_chart">${esc(t('view.yield_curve.empty_short_spread_chart'))}</div>`;
+        return;
+    }
+    const xs = TENORS.map(k => TENOR_YEARS[k]);
+    const ys = TENORS.map(k => {
+        const v = Number(state[k]);
+        return Number.isFinite(v) ? (v - front) * 10000 : null;
+    });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.yield_curve.chart.tenor_years') },
+            { label: t('view.yield_curve.chart.spread_bps'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.yield_curve.chart.front_zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => v < 1 ? '3M' : v + 'y') },
+            { stroke: '#aab', size: 56,
+              values: (_u, splits) => splits.map(v => (v > 0 ? '+' : '') + v.toFixed(0) + 'bp') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSpreads() {
