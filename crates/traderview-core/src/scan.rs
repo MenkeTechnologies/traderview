@@ -928,6 +928,8 @@ pub enum Preset {
     MarubozuRedAtYear52Low,              // year_low_pct < 2 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w low + red marubozu + no overnight gap + hot vol (full intraday breakdown trend day at the breakdown zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction breakdown day)
     DragonflyDojiAtYear52Low,            // year_low_pct < 2 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w low + flat close + LOD far below + close near HOD + hot vol (classic dragonfly doji at the breakdown floor: intraday plunge fully reclaimed by the close with elevated participation; high-probability bottom-fishing signal at the year low)
     GravestoneDojiAtYear52High,          // year_high_pct < 2 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w high + flat close + HOD far above + close near LOD + hot vol (classic gravestone doji at the breakout ceiling: intraday rip fully sold by the close with elevated participation; high-probability topping signal at the year high)
+    HammerAtMidYearLowRange,             // year_low_pct >= 5 AND year_low_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long lower wick + close near HOD + green close + hot vol (hammer reversal in the recovery zone: intraday plunge reclaimed with green finish above the floor; mid-cycle bottom-fishing signal)
+    ShootingStarAtMidYearHighRange,      // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long upper wick + close near LOD + red close + hot vol (shooting star reversal in the topping zone: intraday rip sold with red finish below the ceiling; mid-cycle topping signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5471,6 +5473,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HammerAtMidYearLowRange => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtMidYearHighRange => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6289,6 +6307,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MarubozuRedAtYear52Low => "At 52w Low + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Breakdown Trend Day at the Breakdown Zone: Regular-hours Conviction Fell from the Open to the Low with No Gap Aid; Max-conviction Breakdown Day)",
         Preset::DragonflyDojiAtYear52Low => "At 52w Low + Flat Close + LOD Far Below + Close Near HOD + Hot Vol (Classic Dragonfly Doji at the Breakdown Floor: Intraday Plunge Fully Reclaimed by the Close with Elevated Participation; High-probability Bottom-fishing Signal at the Year Low)",
         Preset::GravestoneDojiAtYear52High => "At 52w High + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Classic Gravestone Doji at the Breakout Ceiling: Intraday Rip Fully Sold by the Close with Elevated Participation; High-probability Topping Signal at the Year High)",
+        Preset::HammerAtMidYearLowRange => "Mid-range from Low (5-20 % above 52w Low) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Hammer Reversal in the Recovery Zone: Intraday Plunge Reclaimed with Green Finish above the Floor; Mid-cycle Bottom-fishing Signal)",
+        Preset::ShootingStarAtMidYearHighRange => "Mid-range from High (5-20 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Shooting Star Reversal in the Topping Zone: Intraday Rip Sold with Red Finish below the Ceiling; Mid-cycle Topping Signal)",
     }
 }
 
