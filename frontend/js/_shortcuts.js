@@ -234,6 +234,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'effective_spread_run',         keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'eff-spread',        descKey: 'shortcut.effective_spread_run',         actionKey: 'tv:effective-spread-run' },
     { id: 'weighted_midprice_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'wmp',               descKey: 'shortcut.weighted_midprice_run',        actionKey: 'tv:weighted-midprice-run' },
     { id: 'marginal_var_run',             keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mvar',              descKey: 'shortcut.marginal_var_run',             actionKey: 'tv:marginal-var-run' },
+    { id: 'range_bar_run',                keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'range-bar',         descKey: 'shortcut.range_bar_run',                actionKey: 'tv:range-bar-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

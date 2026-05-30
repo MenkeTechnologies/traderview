@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePrintsBlob, printsToBlob, validateInputs, buildBody, localCompute,
@@ -30,19 +31,19 @@ export async function renderRangeBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.range_bar.label.target">Target range ($)</span>
-                    <input id="rb-target" type="number" step="any" min="0" value="${state.target_range}"></label>
+                    <input id="rb-target" type="number" step="any" min="0" value="${state.target_range}" data-tip="view.range_bar.tip.target"></label>
                 <button data-i18n="view.range_bar.btn.compute" id="rb-run" class="primary"
-                        data-tip="view.range_bar.tip.compute" type="button">Build bars</button>
+                        data-tip="view.range_bar.tip.compute" data-shortcut="range_bar_run" type="button">Build bars</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.range_bar.btn.demo_up"     id="rb-demo-up"      class="secondary" type="button">Demo: pure uptrend</button>
-                <button data-i18n="view.range_bar.btn.demo_down"   id="rb-demo-down"    class="secondary" type="button">Demo: pure downtrend</button>
-                <button data-i18n="view.range_bar.btn.demo_chop"   id="rb-demo-chop"    class="secondary" type="button">Demo: choppy oscillation</button>
-                <button data-i18n="view.range_bar.btn.demo_flat"   id="rb-demo-flat"    class="secondary" type="button">Demo: flat (no bars)</button>
-                <button data-i18n="view.range_bar.btn.demo_big"    id="rb-demo-big"     class="secondary" type="button">Demo: big-volume prints</button>
-                <button data-i18n="view.range_bar.btn.demo_small"  id="rb-demo-small"   class="secondary" type="button">Demo: range too small</button>
-                <button data-i18n="view.range_bar.btn.demo_wide"   id="rb-demo-wide"    class="secondary" type="button">Demo: wide range (10$)</button>
-                <button data-i18n="view.range_bar.btn.demo_noisy"  id="rb-demo-noisy"   class="secondary" type="button">Demo: noisy walk (200 prints)</button>
+                <button data-i18n="view.range_bar.btn.demo_up"     id="rb-demo-up"      class="secondary" type="button" data-tip="view.range_bar.tip.demo_up">Demo: pure uptrend</button>
+                <button data-i18n="view.range_bar.btn.demo_down"   id="rb-demo-down"    class="secondary" type="button" data-tip="view.range_bar.tip.demo_down">Demo: pure downtrend</button>
+                <button data-i18n="view.range_bar.btn.demo_chop"   id="rb-demo-chop"    class="secondary" type="button" data-tip="view.range_bar.tip.demo_chop">Demo: choppy oscillation</button>
+                <button data-i18n="view.range_bar.btn.demo_flat"   id="rb-demo-flat"    class="secondary" type="button" data-tip="view.range_bar.tip.demo_flat">Demo: flat (no bars)</button>
+                <button data-i18n="view.range_bar.btn.demo_big"    id="rb-demo-big"     class="secondary" type="button" data-tip="view.range_bar.tip.demo_big">Demo: big-volume prints</button>
+                <button data-i18n="view.range_bar.btn.demo_small"  id="rb-demo-small"   class="secondary" type="button" data-tip="view.range_bar.tip.demo_small">Demo: range too small</button>
+                <button data-i18n="view.range_bar.btn.demo_wide"   id="rb-demo-wide"    class="secondary" type="button" data-tip="view.range_bar.tip.demo_wide">Demo: wide range (10$)</button>
+                <button data-i18n="view.range_bar.btn.demo_noisy"  id="rb-demo-noisy"   class="secondary" type="button" data-tip="view.range_bar.tip.demo_noisy">Demo: noisy walk (200 prints)</button>
             </div>
             <p data-i18n="view.range_bar.hint.about" class="muted">Each bar accumulates prints until high − low ≥ target_range, then closes and starts a new bar. Time is ignored. Flat markets emit nothing; volatile markets emit many bars. Trailing partial bars are not emitted.</p>
         </div>
@@ -83,6 +84,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.range_bar.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.range_bar.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -94,7 +96,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.range_bar.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.prints, state.target_range);
     renderSummary(local, true);
     renderChart(local);
@@ -104,12 +106,18 @@ async function compute(tok) {
         resp = await api.chartsRangeBar(buildBody(state));
     } catch (e) {
         showErr(`${t('view.range_bar.err.api')}: ${e.message || e}`);
+        showToast(t('view.range_bar.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const bars = Array.isArray(resp) ? resp.length : 0;
+    const s = summarize(resp);
+    const dir = s.ups > s.downs ? 'up' : s.downs > s.ups ? 'down' : 'flat';
+    const level = dir === 'up' ? 'success' : dir === 'down' ? 'warning' : 'info';
+    showToast(t('view.range_bar.toast.built', { bars, prints: state.prints.length, dir }), { level });
 }
 
 function renderSummary(bars, pending) {
