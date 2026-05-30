@@ -12,6 +12,7 @@ import {
 } from '../_drawdown_throttle_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { equityText: '', tiers: DEFAULT_TIERS.map(t => ({ ...t })) };
 
 export async function renderDrawdownThrottle(mount, _appState) {
@@ -23,14 +24,14 @@ export async function renderDrawdownThrottle(mount, _appState) {
             <h2 data-i18n="view.drawdown_throttle.h2.equity_history">Equity history</h2>
             <p data-i18n="view.drawdown_throttle.hint.one_value_per_line_most_recent_last_demo_presets_l" class="muted">One value per line — most-recent last. Demo presets land in
                 each tier so the trader sees the full throttle ladder in action.</p>
-            <textarea id="dt-eq" rows="6" placeholder="10000&#10;10500&#10;11000&#10;..."></textarea>
+            <textarea id="dt-eq" rows="6" placeholder="10000&#10;10500&#10;11000&#10;..." data-tip="view.drawdown_throttle.tip.equity"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.drawdown_throttle.btn.demo_shallow_3_ok" id="dt-demo-shallow" class="secondary" type="button">Demo: shallow 3% (OK)</button>
-                <button data-i18n="view.drawdown_throttle.btn.demo_7_0_75" id="dt-demo-mild"    class="secondary" type="button">Demo: 7% (0.75×)</button>
-                <button data-i18n="view.drawdown_throttle.btn.demo_12_0_50" id="dt-demo-mid"     class="secondary" type="button">Demo: 12% (0.50×)</button>
-                <button data-i18n="view.drawdown_throttle.btn.demo_17_0_25" id="dt-demo-deep"    class="secondary" type="button">Demo: 17% (0.25×)</button>
-                <button data-i18n="view.drawdown_throttle.btn.demo_25_0_10" id="dt-demo-crisis"  class="secondary" type="button">Demo: 25% (0.10×)</button>
-                <button data-i18n="view.drawdown_throttle.btn.clear" id="dt-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_shallow_3_ok" id="dt-demo-shallow" class="secondary" type="button" data-tip="view.drawdown_throttle.tip.demo_shallow">Demo: shallow 3% (OK)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_7_0_75" id="dt-demo-mild"    class="secondary" type="button" data-tip="view.drawdown_throttle.tip.demo_mild">Demo: 7% (0.75×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_12_0_50" id="dt-demo-mid"     class="secondary" type="button" data-tip="view.drawdown_throttle.tip.demo_mid">Demo: 12% (0.50×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_17_0_25" id="dt-demo-deep"    class="secondary" type="button" data-tip="view.drawdown_throttle.tip.demo_deep">Demo: 17% (0.25×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.demo_25_0_10" id="dt-demo-crisis"  class="secondary" type="button" data-tip="view.drawdown_throttle.tip.demo_crisis">Demo: 25% (0.10×)</button>
+                <button data-i18n="view.drawdown_throttle.btn.clear" id="dt-clear" class="secondary" type="button" data-tip="view.drawdown_throttle.tip.clear">Clear</button>
             </div>
         </div>
 
@@ -38,9 +39,9 @@ export async function renderDrawdownThrottle(mount, _appState) {
             <h2 data-i18n="view.drawdown_throttle.h2.throttle_tiers_min_dd_ascending">Throttle tiers (min_dd ascending)</h2>
             <div id="dt-tiers"></div>
             <div class="inline-form">
-                <button data-i18n="view.drawdown_throttle.btn.add_tier" id="dt-tier-add" class="secondary" type="button">+ Add tier</button>
-                <button data-i18n="view.drawdown_throttle.btn.reset_to_defaults" id="dt-tier-reset" class="secondary" type="button">Reset to defaults</button>
-                <button data-i18n="view.drawdown_throttle.btn.evaluate" id="dt-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.drawdown_throttle.btn.add_tier" id="dt-tier-add" class="secondary" type="button" data-tip="view.drawdown_throttle.tip.add_tier">+ Add tier</button>
+                <button data-i18n="view.drawdown_throttle.btn.reset_to_defaults" id="dt-tier-reset" class="secondary" type="button" data-tip="view.drawdown_throttle.tip.reset">Reset to defaults</button>
+                <button data-i18n="view.drawdown_throttle.btn.evaluate" id="dt-run" class="primary" type="button" data-tip="view.drawdown_throttle.tip.run" data-shortcut="drawdown_throttle_run">Evaluate</button>
             </div>
             <p class="muted" data-i18n-html="view.drawdown_throttle.tier_hint">Tiers must be ascending by <code>min_dd</code>. The active tier
                 is the LARGEST <code>min_dd</code> that current DD ≥ it.</p>
@@ -130,10 +131,11 @@ async function compute(tok) {
     const { value: equity, errors } = parseEquity(state.equityText);
     if (errors.length && equity.length === 0) {
         showErr(t('view.drawdown_throttle.err.parse_errors', { n: errors.length }));
+        showToast(t('view.drawdown_throttle.toast.parse_error', { n: errors.length }), { level: 'warning' });
         return;
     }
     const err = validateInputs(equity, state.tiers);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.drawdown_throttle.toast.invalid'), { level: 'warning' }); return; }
 
     // Pre-flight render with local eval.
     const local = localEvaluate(equity, state.tiers);
@@ -144,11 +146,17 @@ async function compute(tok) {
     try {
         resp = await api.discDrawdownThrottle(buildBody(equity, state.tiers));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.drawdown_throttle.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(equity, state.tiers, resp);
+    const dd = (Number(resp.drawdown_pct) * 100).toFixed(1);
+    const mult = Number(resp.active_multiplier).toFixed(2);
+    const level = Number(resp.active_multiplier) < 0.5 ? 'warning' : 'success';
+    showToast(t('view.drawdown_throttle.toast.evaluated', { dd, mult }), { level });
 }
 
 function renderSummary(r, pending) {
