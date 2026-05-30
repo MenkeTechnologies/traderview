@@ -208,6 +208,8 @@ pub enum Preset {
     TripleZeroSqueeze,           // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 — gap, change, AND day all near zero
     Pct52wQuarterFromHighSqueeze, // year_high_pct between -25 and -15 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-high resting
     Pct52wQuarterFromLowSqueeze,  // year_low_pct between 15 and 25 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-low resting
+    NoExtremeAndQuietSqueeze,    // year_high_pct <= -5 AND year_low_pct >= 5 AND rel_volume < 0.7 AND |day_pct| < 0.8 — away from extremes + quiet
+    SmallChangeNarrowGapSqueeze, // change_pct between 0.5 and 1 AND |gap_pct| < 0.3 AND |day_pct| < 0.5 AND rel_volume < 0.9 — modest move + tight day + quiet
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -650,6 +652,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.7
                 && hit.rel_volume < 0.9
         }
+        Preset::NoExtremeAndQuietSqueeze => {
+            hit.year_high_pct <= -5.0
+                && hit.year_low_pct >= 5.0
+                && hit.rel_volume < 0.7
+                && hit.day_pct.abs() < 0.8
+        }
+        Preset::SmallChangeNarrowGapSqueeze => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 1.0
+                && hit.gap_pct.abs() < 0.3
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -748,6 +763,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TripleZeroSqueeze => "Triple-Zero Squeeze",
         Preset::Pct52wQuarterFromHighSqueeze => "Quarter-From-High Squeeze",
         Preset::Pct52wQuarterFromLowSqueeze => "Quarter-From-Low Squeeze",
+        Preset::NoExtremeAndQuietSqueeze => "Away-From-Extremes Quiet Squeeze",
+        Preset::SmallChangeNarrowGapSqueeze => "Small-Change Narrow-Gap Squeeze",
     }
 }
 

@@ -90,6 +90,8 @@ const PRESETS = [
     { id: 'triple_zero_squeeze',        label: t('view.scanners.preset.triple_zero_squeeze.label'),        desc: t('view.scanners.preset.triple_zero_squeeze.desc') },
     { id: 'quarter_from_high_squeeze',  label: t('view.scanners.preset.quarter_from_high_squeeze.label'),  desc: t('view.scanners.preset.quarter_from_high_squeeze.desc') },
     { id: 'quarter_from_low_squeeze',   label: t('view.scanners.preset.quarter_from_low_squeeze.label'),   desc: t('view.scanners.preset.quarter_from_low_squeeze.desc') },
+    { id: 'away_from_extremes_quiet_squeeze', label: t('view.scanners.preset.away_from_extremes_quiet_squeeze.label'), desc: t('view.scanners.preset.away_from_extremes_quiet_squeeze.desc') },
+    { id: 'small_change_narrow_gap_squeeze', label: t('view.scanners.preset.small_change_narrow_gap_squeeze.label'), desc: t('view.scanners.preset.small_change_narrow_gap_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

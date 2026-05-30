@@ -104,8 +104,53 @@ function render(r, mount) {
             <h2 data-i18n="view.equity_forecast.h2.sample_paths_first_50">Sample paths (first 50)</h2>
             ${spaghettiSvg(r)}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.equity_forecast.h2.percentile_chart">Percentile bands by trade #</h2>
+            <div id="ef-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
+    renderPercentileChart(r);
+}
+
+function renderPercentileChart(r) {
+    const el = document.getElementById('ef-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const stats = r.steps_stats || [];
+    if (stats.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.equity_forecast.empty_chart">${esc(t('view.equity_forecast.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = stats.map((_, i) => i);
+    const p5 = stats.map(s => Number(s.bands.p5));
+    const p25 = stats.map(s => Number(s.bands.p25));
+    const p50 = stats.map(s => Number(s.bands.p50));
+    const p75 = stats.map(s => Number(s.bands.p75));
+    const p95 = stats.map(s => Number(s.bands.p95));
+    const start = xs.map(() => Number(r.starting_equity));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.equity_forecast.chart.trade_idx') },
+            { label: t('view.equity_forecast.chart.p5'),
+              stroke: '#ff3860', width: 1.0, points: { show: false } },
+            { label: t('view.equity_forecast.chart.p25'),
+              stroke: '#ff7a1f', width: 1.0, points: { show: false } },
+            { label: t('view.equity_forecast.chart.p50'),
+              stroke: '#00ffaa', width: 1.8, points: { show: false } },
+            { label: t('view.equity_forecast.chart.p75'),
+              stroke: '#7af0a8', width: 1.0, points: { show: false } },
+            { label: t('view.equity_forecast.chart.p95'),
+              stroke: '#00e5ff', width: 1.0, points: { show: false } },
+            { label: t('view.equity_forecast.chart.starting_eq'),
+              stroke: '#ffd24a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, [xs, p5, p25, p50, p75, p95, start], el);
 }
 
 function fanSvg(r) {
