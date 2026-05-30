@@ -588,6 +588,8 @@ const PRESETS = [
     { id: 'countertrend_fade_in_uptrend', label: t('view.scanners.preset.countertrend_fade_in_uptrend.label'), desc: t('view.scanners.preset.countertrend_fade_in_uptrend.desc') },
     { id: 'big_green_narrow_range_hot_vol', label: t('view.scanners.preset.big_green_narrow_range_hot_vol.label'), desc: t('view.scanners.preset.big_green_narrow_range_hot_vol.desc') },
     { id: 'big_red_narrow_range_hot_vol', label: t('view.scanners.preset.big_red_narrow_range_hot_vol.label'), desc: t('view.scanners.preset.big_red_narrow_range_hot_vol.desc') },
+    { id: 'one_sided_range_close_at_hod_green', label: t('view.scanners.preset.one_sided_range_close_at_hod_green.label'), desc: t('view.scanners.preset.one_sided_range_close_at_hod_green.desc') },
+    { id: 'one_sided_range_close_at_lod_red', label: t('view.scanners.preset.one_sided_range_close_at_lod_red.label'), desc: t('view.scanners.preset.one_sided_range_close_at_lod_red.desc') },
 ];
 
 export async function renderScanners(mount) {

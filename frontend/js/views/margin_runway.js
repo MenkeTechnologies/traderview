@@ -53,6 +53,12 @@ export async function renderMarginRunway(mount, _appState) {
             <p data-i18n="view.margin_runway.hint.chart" class="muted">Cyan = equity after price drop. Yellow = maintenance requirement after drop. Margin call hits at the crossover (red dot). X axis: % price decline from current.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.margin_runway.h2.buffer_chart">Equity buffer ($) under price decline</h2>
+            <div id="mr-buffer-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.margin_runway.hint.buffer_chart" class="muted small">Direct gap (equity − maintenance requirement) at each drop %. Crosses zero exactly at the call point. Easier to read than the level chart for "how many dollars before the call?"</p>
+        </div>
+
         <div id="mr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -86,6 +92,7 @@ async function compute(tok) {
     const local = localCompute(state.account_equity, state.position_value, state.maintenance_req_pct);
     renderSummary(local, true);
     renderChart(state.account_equity, state.position_value, state.maintenance_req_pct, local);
+    renderBufferChart(state.account_equity, state.position_value, state.maintenance_req_pct, local);
     let resp;
     try {
         resp = await api.calcMarginRunway(buildBody(
@@ -98,6 +105,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.account_equity, state.position_value, state.maintenance_req_pct, resp);
+    renderBufferChart(state.account_equity, state.position_value, state.maintenance_req_pct, resp);
     if (resp.already_in_margin_call) {
         showToast(t('view.margin_runway.toast.in_call'), { level: 'error' });
     } else {
@@ -180,6 +188,39 @@ function renderChart(equity, position, maintPct, report) {
         ],
         legend: { show: true },
     }, [xs, equityCurve, maintCurve, callMarker], el);
+}
+
+function renderBufferChart(equity, position, maintPct, report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('mr-buffer-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const range = Math.max(0.5, Math.min(1, (report.runway_pct || 0.3) * 2 + 0.1));
+    const { xs, equityCurve, maintCurve } = projectionCurves(equity, position, maintPct, 60, range);
+    if (!xs.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.margin_runway.empty_buffer_chart">${esc(t('view.margin_runway.empty_buffer_chart'))}</div>`;
+        return;
+    }
+    const buffer = xs.map((_, i) => equityCurve[i] - maintCurve[i]);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series._decline') },
+            { label: t('view.margin_runway.chart.buffer'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.margin_runway.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 32,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(0) + '%') },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => fmtUSD(v, 0)) },
+        ],
+        legend: { show: true },
+    }, [xs, buffer, zero], el);
 }
 
 function card(label, value, cls = '') {
