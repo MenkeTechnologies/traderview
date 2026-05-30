@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let distChart = null;
 
 export async function renderCti(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderCti(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cti.h2.chart">CTI series</h2>
             <div id="ci-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.cti.h2.distribution_chart">CTI value distribution (0.2-buckets across [−1, +1])</h2>
+            <div id="ci-dist-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderDistChart(local);
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.cti.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderDistChart(resp);
     renderStats();
 }
 
@@ -163,6 +171,43 @@ function renderChart(cti) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderDistChart(cti) {
+    const el = document.getElementById('ci-dist-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(cti) || cti.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cti.empty_dist_chart">${esc(t('view.cti.empty_dist_chart'))}</div>`;
+        return;
+    }
+    const labels = ['[−1,−0.8)','[−0.8,−0.6)','[−0.6,−0.4)','[−0.4,−0.2)','[−0.2,0)','[0,0.2)','[0.2,0.4)','[0.4,0.6)','[0.6,0.8)','[0.8,1]'];
+    const counts = new Array(labels.length).fill(0);
+    for (const v of cti) {
+        if (v == null || !Number.isFinite(v)) continue;
+        const clamped = Math.max(-1, Math.min(1, v));
+        let idx = Math.floor((clamped + 1) / 0.2);
+        if (idx >= labels.length) idx = labels.length - 1;
+        if (idx < 0) idx = 0;
+        counts[idx] += 1;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    if (distChart) { try { distChart.destroy(); } catch {} distChart = null; }
+    distChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cti.chart.bucket_idx') },
+            { label: t('view.cti.chart.bar_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function renderStats() {

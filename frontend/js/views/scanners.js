@@ -472,6 +472,8 @@ const PRESETS = [
     { id: 'gap_up_fail_reclaimed', label: t('view.scanners.preset.gap_up_fail_reclaimed.label'), desc: t('view.scanners.preset.gap_up_fail_reclaimed.desc') },
     { id: 'mid_year_range_consolidation', label: t('view.scanners.preset.mid_year_range_consolidation.label'), desc: t('view.scanners.preset.mid_year_range_consolidation.desc') },
     { id: 'at_year_extreme_volatility_expansion', label: t('view.scanners.preset.at_year_extreme_volatility_expansion.label'), desc: t('view.scanners.preset.at_year_extreme_volatility_expansion.desc') },
+    { id: 'breakout_from_mid_levels', label: t('view.scanners.preset.breakout_from_mid_levels.label'), desc: t('view.scanners.preset.breakout_from_mid_levels.desc') },
+    { id: 'breakdown_from_mid_levels', label: t('view.scanners.preset.breakdown_from_mid_levels.label'), desc: t('view.scanners.preset.breakdown_from_mid_levels.desc') },
 ];
 
 export async function renderScanners(mount) {
