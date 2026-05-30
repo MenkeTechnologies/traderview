@@ -176,6 +176,8 @@ pub enum Preset {
     LowSqueezeBracket,      // tight HOD distance (<1) AND tight LOD distance (<1) AND year_low_pct <= 3  — both ends near bottom
     HighRelVolStallSqueeze, // rel_volume >= 1.5 AND |change_pct| < 0.3 AND |day_pct| < 0.5 — busy volume but no price move
     SlightLeanLongSqueeze,  // change_pct between 0.2 and 1 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift higher
+    SlightLeanShortSqueeze, // change_pct between -1 and -0.2 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift lower
+    GapWithChangeMatchSqueeze, // gap and change SAME sign small magnitude (<0.5) + tight day + quiet — small gap held flat
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -431,6 +433,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.8
                 && hit.day_pct.abs() < 0.6
         }
+        Preset::SlightLeanShortSqueeze => {
+            hit.change_pct <= -0.2
+                && hit.change_pct >= -1.0
+                && hit.rel_volume < 0.8
+                && hit.day_pct.abs() < 0.6
+        }
+        Preset::GapWithChangeMatchSqueeze => {
+            hit.gap_pct.signum() == hit.change_pct.signum()
+                && hit.gap_pct.abs() < 0.5
+                && hit.change_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -497,6 +512,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowSqueezeBracket => "Low-Squeeze Bracket",
         Preset::HighRelVolStallSqueeze => "High-Vol Stall Squeeze",
         Preset::SlightLeanLongSqueeze => "Slight-Lean Long Squeeze",
+        Preset::SlightLeanShortSqueeze => "Slight-Lean Short Squeeze",
+        Preset::GapWithChangeMatchSqueeze => "Gap+Change Match Squeeze",
     }
 }
 

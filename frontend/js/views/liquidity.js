@@ -56,6 +56,11 @@ export async function renderLiquidity(mount, _appState) {
                 concentrate in large-pct buckets, you have a sizing problem — not an edge problem.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.liquidity.h2.adv_pnl_chart">Avg %ADV vs net P&amp;L (per symbol)</h2>
+            <div id="lq-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="lq-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -110,6 +115,38 @@ async function compute(tok) {
     renderSummary(res, trades);
     renderRows(res);
     renderBuckets(res);
+    renderAdvPnlChart(res);
+}
+
+function renderAdvPnlChart(report) {
+    const el = document.getElementById('lq-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report && report.rows ? report.rows : [])
+        .filter(r => Number.isFinite(Number(r.avg_pct_of_adv)) && Number.isFinite(Number(r.net_pnl)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.liquidity.empty_chart">${esc(t('view.liquidity.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(a.avg_pct_of_adv) - Number(b.avg_pct_of_adv));
+    const xs = rows.map(r => Number(r.avg_pct_of_adv) * 100);
+    const ys = rows.map(r => Number(r.net_pnl));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.liquidity.chart.pct_adv') },
+            { label: t('view.liquidity.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.liquidity.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSummary(report, trades) {
