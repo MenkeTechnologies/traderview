@@ -682,6 +682,8 @@ pub enum Preset {
     AtYearLowRangeExpansionDryVol,   // year_low_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w low + wide intraday range + dry vol (no-volume capitulation at multi-year lows; thin-tape bounces without conviction; unlikely to stick)
     IntradayBigDayGapAgainstHotVol,  // day_pct.abs() > 3 AND gap_pct * day_pct < 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-against-day-direction + hot vol (institutional gap-against-trend reversal day; open faded, then reversed and ran hard against the gap on volume)
     IntradayBigDayGapWithHotVol,     // day_pct.abs() > 3 AND gap_pct * day_pct > 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-with-day-direction + hot vol (textbook gap-and-go continuation: open kept running same direction as the gap on heavy participation)
+    OvernightDriftDryVol,            // gap_pct.abs() > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.5 — significant gap + flat intraday + very dry vol (overnight news repriced and nobody traded during the day; max-silence post-news; news absorbed instantly)
+    HotVolHugeGapTinyDay,            // rel_volume >= 3 AND gap_pct.abs() > 2 AND day_pct.abs() < 0.3 — hot vol (3×+) + big gap + nearly flat intraday (heavy volume but no intraday movement; institutional repositioning at the new gap level; massive churn at one price)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3746,6 +3748,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::OvernightDriftDryVol => {
+            hit.gap_pct.abs() > 2.0
+                && hit.day_pct.abs() < 0.3
+                && hit.rel_volume < 0.5
+        }
+        Preset::HotVolHugeGapTinyDay => {
+            hit.rel_volume >= 3.0
+                && hit.gap_pct.abs() > 2.0
+                && hit.day_pct.abs() < 0.3
+        }
     }
 }
 
@@ -4318,6 +4330,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AtYearLowRangeExpansionDryVol => "At 52w Low + Wide Range + Dry Vol (Thin-tape Capitulation; Bounces Unlikely to Stick)",
         Preset::IntradayBigDayGapAgainstHotVol => "Big Intraday Day + Gap Against Day + Hot Vol (Institutional Gap-against-trend Reversal)",
         Preset::IntradayBigDayGapWithHotVol => "Big Intraday Day + Gap With Day + Hot Vol (Textbook Gap-and-go Continuation on Heavy Participation)",
+        Preset::OvernightDriftDryVol => "Significant Gap + Flat Intraday + Very Dry Vol (News Absorbed Instantly; Nobody Traded the Day)",
+        Preset::HotVolHugeGapTinyDay => "Hot Vol (3×+) + Big Gap + Nearly Flat Intraday (Institutional Repositioning at New Gap Level; Massive Churn at One Price)",
     }
 }
 

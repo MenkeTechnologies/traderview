@@ -61,6 +61,12 @@ export async function renderIvRank(mount, _appState) {
             <p class="muted" id="iv-gauge-note">—</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.iv_rank.h2.vol_of_vol_chart">Rolling 20-day IV stddev (vol-of-vol)</h2>
+            <div id="iv-vov-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.iv_rank.hint.vol_of_vol" class="muted">Rolling 20-day stddev of the IV series. High = IV itself is moving fast (regime shift; earnings approach; vol crush risk). Low = IV is steady and rangebound. Yellow dashed = median across the window.</p>
+        </div>
+
         <div id="iv-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('iv-demo').addEventListener('click', () => {
@@ -105,6 +111,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderChart(history, res);
+    renderVolOfVolChart(history);
     renderGauges(res);
     showToast(t('view.iv_rank.toast.done', {
         rank: fmtRank(res.iv_rank),
@@ -159,6 +166,45 @@ function renderChart(history, r) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, history, curYs, lowYs, highYs], el);
+}
+
+function renderVolOfVolChart(history) {
+    const el = document.getElementById('iv-vov-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const win = 20;
+    if (!Array.isArray(history) || history.length < win + 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.iv_rank.empty_vov_chart">${esc(t('view.iv_rank.empty_vov_chart'))}</div>`;
+        return;
+    }
+    const sds = [];
+    for (let i = win - 1; i < history.length; i++) {
+        let mean = 0;
+        for (let k = i - win + 1; k <= i; k++) mean += history[k];
+        mean /= win;
+        let v = 0;
+        for (let k = i - win + 1; k <= i; k++) v += (history[k] - mean) ** 2;
+        sds.push(Math.sqrt(v / win));
+    }
+    const sorted = sds.slice().sort((a, b) => a - b);
+    const median = sorted.length % 2 === 1
+        ? sorted[(sorted.length - 1) >> 1]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+    const xs = sds.map((_, i) => i + win);
+    const med = xs.map(() => median);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.day_') },
+            { label: t('view.iv_rank.chart.stddev'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.iv_rank.chart.median'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, sds, med], el);
 }
 
 function renderGauges(r) {
