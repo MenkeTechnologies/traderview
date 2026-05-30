@@ -187,3 +187,71 @@ test('applyUiI18n: count return value reflects only successful updates', () => {
     expect(applyUiI18n(root)).toBe(2);
 });
 
+// ── loadLocale: merge-over-en + fetch failure handling ────────────
+
+import { loadLocale } from '../js/i18n.js';
+
+test('loadLocale: non-en locale merges over en (en keys preserved, locale keys overlay)', async () => {
+    const enCatalog = { 'view.x': 'X-en', 'view.y': 'Y-en', 'common.ok': 'OK' };
+    const esCatalog = { 'view.x': 'X-es' /* y omitted */ };
+    globalThis.fetch = async (url) => {
+        if (url.includes('app_i18n_es.json')) return { ok: true, json: async () => esCatalog };
+        if (url.includes('app_i18n_en.json')) return { ok: true, json: async () => enCatalog };
+        return { ok: false };
+    };
+    globalThis.localStorage = { setItem: () => {} };
+    globalThis.document = { querySelectorAll: () => [] };
+    try {
+        const keyCount = await loadLocale('es');
+        expect(keyCount).toBe(3);            // 3 unique keys after merge
+        expect(t('view.x')).toBe('X-es');    // es overlay wins
+        expect(t('view.y')).toBe('Y-en');    // missing in es → falls through to en
+        expect(t('common.ok')).toBe('OK');   // en-only key still visible
+    } finally {
+        delete globalThis.fetch;
+        delete globalThis.localStorage;
+        delete globalThis.document;
+    }
+});
+
+test('loadLocale: returns 0 on network failure (existing map intact)', async () => {
+    setMap({ 'before': 'before-value' });
+    globalThis.fetch = async () => { throw new Error('network'); };
+    try {
+        const r = await loadLocale('de');
+        expect(r).toBe(0);
+        expect(t('before')).toBe('before-value');  // map unchanged
+    } finally {
+        delete globalThis.fetch;
+    }
+});
+
+test('loadLocale: returns 0 on HTTP error response', async () => {
+    setMap({ 'before': 'before-value' });
+    globalThis.fetch = async () => ({ ok: false, status: 404 });
+    try {
+        expect(await loadLocale('xx')).toBe(0);
+        expect(t('before')).toBe('before-value');
+    } finally {
+        delete globalThis.fetch;
+    }
+});
+
+test('loadLocale: en code skips the en-merge step (only ONE fetch)', async () => {
+    const calls = [];
+    globalThis.fetch = async (url) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ 'k': 'v' }) };
+    };
+    globalThis.localStorage = { setItem: () => {} };
+    globalThis.document = { querySelectorAll: () => [] };
+    try {
+        await loadLocale('en');
+        expect(calls.filter(u => u.includes('i18n')).length).toBe(1);
+    } finally {
+        delete globalThis.fetch;
+        delete globalThis.localStorage;
+        delete globalThis.document;
+    }
+});
+
