@@ -95,7 +95,7 @@ function renderSnapshot(snap, mount) {
     const strip = mount.querySelector('#commodities-strip');
     if (strip) {
         strip.innerHTML = snap.commodities.map(c => `
-            <div class="commodity">
+            <div class="commodity" data-context-scope="symbol-row" data-symbol="${esc(c.symbol)}">
                 <div class="commodity-label">
                     <span class="flag">${c.flag}</span>
                     <span>${esc(c.label)}</span>

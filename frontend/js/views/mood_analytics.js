@@ -165,7 +165,7 @@ function sampleTable(pairs) {
             <th data-i18n="view.mood_analytics.th.date">Date</th><th data-i18n="view.mood_analytics.th.source">Source</th><th data-i18n="view.mood_analytics.th.mood_2">Mood</th><th data-i18n="view.mood_analytics.th.symbol">Symbol</th><th data-i18n="view.mood_analytics.th.net_p_l">Net P/L</th><th>R</th>
         </tr></thead>
         <tbody>
-        ${pairs.map(p => `<tr>
+        ${pairs.map(p => `<tr data-context-scope="symbol-row" data-symbol="${esc(p.symbol)}">
             <td class="small">${new Date(p.opened_at).toLocaleDateString()}</td>
             <td class="small muted">${esc(p.source)}</td>
             <td>${moodLabel(p.mood)}</td>
