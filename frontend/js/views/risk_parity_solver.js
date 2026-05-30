@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_MAX_ITER, DEFAULT_TOLERANCE,
@@ -31,21 +32,21 @@ export async function renderRiskParitySolver(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.rp_solver.label.max_iter">Max iterations</span>
-                    <input id="rps-max" type="number" step="1" min="1" value="${state.max_iter}"></label>
+                    <input id="rps-max" type="number" step="1" min="1" value="${state.max_iter}" data-tip="view.rp_solver.tip.max_iter"></label>
                 <label><span data-i18n="view.rp_solver.label.tolerance">Tolerance</span>
-                    <input id="rps-tol" type="number" step="any" min="0" value="${state.tolerance}"></label>
+                    <input id="rps-tol" type="number" step="any" min="0" value="${state.tolerance}" data-tip="view.rp_solver.tip.tolerance"></label>
                 <button data-i18n="view.rp_solver.btn.solve" id="rps-run" class="primary"
-                        data-tip="view.rp_solver.tip.solve" type="button">Solve</button>
+                        data-tip="view.rp_solver.tip.solve" data-shortcut="risk_parity_solver_run" type="button">Solve</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.rp_solver.btn.demo_equal"     id="rps-demo-eq"    class="secondary" type="button">Demo: equal-vol uncorrelated</button>
-                <button data-i18n="view.rp_solver.btn.demo_pair"      id="rps-demo-pair"  class="secondary" type="button">Demo: 2-asset high-vol pair</button>
-                <button data-i18n="view.rp_solver.btn.demo_6040"      id="rps-demo-6040"  class="secondary" type="button">Demo: 60/40-style (3-asset)</button>
-                <button data-i18n="view.rp_solver.btn.demo_corr"      id="rps-demo-corr"  class="secondary" type="button">Demo: high-correlation</button>
-                <button data-i18n="view.rp_solver.btn.demo_diversifier" id="rps-demo-div" class="secondary" type="button">Demo: 4-asset w/ diversifier</button>
-                <button data-i18n="view.rp_solver.btn.demo_small"     id="rps-demo-small" class="secondary" type="button">Demo: small 2-asset</button>
-                <button data-i18n="view.rp_solver.btn.demo_tight"     id="rps-demo-tight" class="secondary" type="button">Demo: tight tolerance</button>
-                <button data-i18n="view.rp_solver.btn.demo_loose"     id="rps-demo-loose" class="secondary" type="button">Demo: loose tolerance (may not converge)</button>
+                <button data-i18n="view.rp_solver.btn.demo_equal"     id="rps-demo-eq"    class="secondary" type="button" data-tip="view.rp_solver.tip.demo_eq">Demo: equal-vol uncorrelated</button>
+                <button data-i18n="view.rp_solver.btn.demo_pair"      id="rps-demo-pair"  class="secondary" type="button" data-tip="view.rp_solver.tip.demo_pair">Demo: 2-asset high-vol pair</button>
+                <button data-i18n="view.rp_solver.btn.demo_6040"      id="rps-demo-6040"  class="secondary" type="button" data-tip="view.rp_solver.tip.demo_6040">Demo: 60/40-style (3-asset)</button>
+                <button data-i18n="view.rp_solver.btn.demo_corr"      id="rps-demo-corr"  class="secondary" type="button" data-tip="view.rp_solver.tip.demo_corr">Demo: high-correlation</button>
+                <button data-i18n="view.rp_solver.btn.demo_diversifier" id="rps-demo-div" class="secondary" type="button" data-tip="view.rp_solver.tip.demo_div">Demo: 4-asset w/ diversifier</button>
+                <button data-i18n="view.rp_solver.btn.demo_small"     id="rps-demo-small" class="secondary" type="button" data-tip="view.rp_solver.tip.demo_small">Demo: small 2-asset</button>
+                <button data-i18n="view.rp_solver.btn.demo_tight"     id="rps-demo-tight" class="secondary" type="button" data-tip="view.rp_solver.tip.demo_tight">Demo: tight tolerance</button>
+                <button data-i18n="view.rp_solver.btn.demo_loose"     id="rps-demo-loose" class="secondary" type="button" data-tip="view.rp_solver.tip.demo_loose">Demo: loose tolerance (may not converge)</button>
             </div>
             <p data-i18n="view.rp_solver.hint.about" class="muted">Spinu (2013) fixed-point ERC. Each asset's contribution to portfolio variance is equalized — concentration is risk-weighted, not dollar-weighted. Used by Bridgewater All Weather, AQR, others. Converges in O(n²) per iteration.</p>
         </div>
@@ -87,6 +88,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.rp_solver.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.rp_solver.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -100,9 +102,13 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.rp_solver.toast.invalid'), { level: 'warning' }); return; }
     const local = localSolve(state.covariance, state.max_iter, state.tolerance);
-    if (!local) { showErr(t('view.rp_solver.err.degenerate')); return; }
+    if (!local) {
+        showErr(t('view.rp_solver.err.degenerate'));
+        showToast(t('view.rp_solver.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(local, true);
     renderTable(local);
     let resp;
@@ -110,13 +116,26 @@ async function compute(tok) {
         resp = await api.portfolioRiskParityWeights(buildBody(state));
     } catch (e) {
         showErr(`${t('view.rp_solver.err.api')}: ${e.message || e}`);
+        showToast(t('view.rp_solver.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.rp_solver.err.server_rejected')); return; }
+    if (!resp) {
+        showErr(t('view.rp_solver.err.server_rejected'));
+        showToast(t('view.rp_solver.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(resp, false);
     renderTable(resp);
     renderWeightsChart(resp);
+    const n = (resp.weights || []).length;
+    const iter = resp.iterations | 0;
+    const conv = !!resp.converged;
+    const level = conv ? 'success' : 'warning';
+    showToast(t('view.rp_solver.toast.solved', {
+        n, iter,
+        status: conv ? 'CONVERGED' : 'no-convergence',
+    }), { level });
 }
 
 function renderWeightsChart(report) {

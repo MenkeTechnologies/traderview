@@ -225,6 +225,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'kyles_lambda_run',             keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'kyles-lambda',      descKey: 'shortcut.kyles_lambda_run',             actionKey: 'tv:kyles-lambda-run' },
     { id: 'hawkes_run',                   keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hawkes',            descKey: 'shortcut.hawkes_run',                   actionKey: 'tv:hawkes-run' },
     { id: 'kagi_run',                     keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'kagi',              descKey: 'shortcut.kagi_run',                     actionKey: 'tv:kagi-run' },
+    { id: 'risk_parity_solver_run',       keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-parity-solver', descKey: 'shortcut.risk_parity_solver_run',      actionKey: 'tv:risk-parity-solver-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
