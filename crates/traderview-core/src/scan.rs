@@ -804,6 +804,8 @@ pub enum Preset {
     DryVolBigMoveNoFollow,               // rel_volume < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 — dry vol + big move + tight close range (low-participation thrust; illiquidity-driven move without follow-through; fade candidate)
     BigGapBigContinuationBigRange,       // gap_pct.abs() > 4 AND change_pct.abs() > 2 * gap_pct.abs() AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + 2x-gap continuation + wide range + hot vol (gap-and-rip extension; momentum doubled the overnight thrust during regular hours; conviction trend day with full range expansion)
     BigGapFullReversalBigRange,          // gap_pct.abs() > 4 AND change_pct.abs() > 2 AND gap_pct * change_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + sign-flipped intraday move + wide range + hot vol (full gap reversal; opposite-side dominance after the gap; trapped gap traders flushed both ways during the session)
+    TinyGapBigMoveTightWicks,            // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — no gap + big intraday move + tight wicks + hot vol (clean trend day off the open with no gap aid and minimal noise; pure directional conviction built entirely intraday)
+    BigGapTinyMoveTightWicks,            // gap_pct.abs() > 4 AND change_pct.abs() < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — big gap + flat intraday + tight wicks + hot vol (overnight gap held with intraday consolidation; market accepted the gap with no participation rotation; pre-extension coil)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4605,6 +4607,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::TinyGapBigMoveTightWicks => {
+            hit.gap_pct.abs() < 0.5
+                && hit.change_pct.abs() > 4.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapTinyMoveTightWicks => {
+            hit.gap_pct.abs() > 4.0
+                && hit.change_pct.abs() < 1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5299,6 +5313,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigMoveNoFollow => "Dry Vol + Big Move + Tight Close Range (Low-participation Thrust; Illiquidity-driven Move without Follow-through; Fade Candidate)",
         Preset::BigGapBigContinuationBigRange => "Big Gap + 2x-Gap Continuation + Wide Range + Hot Vol (Gap-and-rip Extension; Momentum Doubled the Overnight Thrust during Regular Hours; Conviction Trend Day with Full Range Expansion)",
         Preset::BigGapFullReversalBigRange => "Big Gap + Sign-flipped Intraday Move + Wide Range + Hot Vol (Full Gap Reversal; Opposite-side Dominance after the Gap; Trapped Gap Traders Flushed Both Ways during the Session)",
+        Preset::TinyGapBigMoveTightWicks => "No Gap + Big Intraday Move + Tight Wicks + Hot Vol (Clean Trend Day off the Open with No Gap Aid and Minimal Noise; Pure Directional Conviction Built Entirely Intraday)",
+        Preset::BigGapTinyMoveTightWicks => "Big Gap + Flat Intraday + Tight Wicks + Hot Vol (Overnight Gap Held with Intraday Consolidation; Market Accepted the Gap with No Participation Rotation; Pre-extension Coil)",
     }
 }
 

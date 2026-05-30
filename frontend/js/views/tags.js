@@ -32,8 +32,15 @@ export async function renderTags(mount) {
             <h2 data-i18n="view.tags.h2.length_chart">Tag name length per tag</h2>
             <div id="tag-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tags.h2.color_chart">Tag count per color (palette frequency)</h2>
+            <div id="tag-color-chart" style="width:100%;height:200px"></div>
+            <p data-i18n="view.tags.hint.color_chart" class="muted small">How many tags share each color value. Reveals palette monotony — if most tags pile up on one or two colors, visual distinguishability in the trades table suffers. Orthogonal to per-tag name length.</p>
+        </div>
     `;
     renderTagsChart(tags);
+    renderTagsColorChart(tags);
     mount.querySelector('#tag-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -47,6 +54,42 @@ export async function renderTags(mount) {
             if (!viewIsCurrent(tok)) return;
             renderTags(mount);
         }));
+}
+
+function renderTagsColorChart(tags) {
+    const el = document.getElementById('tag-color-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (tags || []).filter(tag => tag && tag.color);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tags.empty_color_chart">${esc(t('view.tags.empty_color_chart'))}</div>`;
+        return;
+    }
+    const buckets = new Map();
+    for (const tag of rows) {
+        const c = String(tag.color).toLowerCase();
+        buckets.set(c, (buckets.get(c) || 0) + 1);
+    }
+    const sorted = [...buckets.entries()].sort((a, b) => b[1] - a[1]);
+    const labels = sorted.map(([c]) => c);
+    const ys = sorted.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tags.chart.color') },
+            { label: t('view.tags.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTagsChart(tags) {
