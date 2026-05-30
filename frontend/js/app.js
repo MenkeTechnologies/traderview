@@ -478,6 +478,16 @@ function bindTabs() {
     window.addEventListener('tv:webull-refresh',     refreshNow);
     window.addEventListener('tv:charts-refresh',     refreshNow);
     window.addEventListener('tv:accounts-overview-refresh', refreshNow);
+    // View-scoped: `n` in developer scope → focus token-name input.
+    window.addEventListener('tv:developer-focus-name', () => {
+        const el = document.querySelector('#tok-form input[name="name"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
+    // View-scoped: `g` in developer scope → submit token-form (Generate).
+    window.addEventListener('tv:developer-generate', () => {
+        const form = document.getElementById('tok-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

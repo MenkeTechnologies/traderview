@@ -18,22 +18,24 @@ export async function renderDeveloper(mount) {
             <h2 data-i18n="view.api_tokens.h2.create_token">Create token</h2>
             <form id="tok-form" class="inline-form">
                 <label><span data-i18n="view.api_tokens.label.name">Name</span>
-                    <input name="name" placeholder="n8n staging" data-i18n-placeholder="view.api_tokens.placeholder.name" required style="min-width:220px;"></label>
+                    <input name="name" placeholder="n8n staging" data-i18n-placeholder="view.api_tokens.placeholder.name"
+                           data-tip="view.api_tokens.tip.name" data-shortcut="developer_focus_name"
+                           required style="min-width:220px;"></label>
                 <label><span data-i18n="view.api_tokens.label.scopes">Scopes</span>
-                    <select name="scopes" multiple size="3" style="min-width:120px;">
+                    <select name="scopes" multiple size="3" style="min-width:120px;" data-tip="view.api_tokens.tip.scopes">
                         <option data-i18n="view.api_tokens.opt.read" value="read" selected>read</option>
                         <option data-i18n="view.api_tokens.opt.write" value="write">write</option>
                         <option data-i18n="view.api_tokens.opt.admin" value="admin">admin</option>
                     </select>
                 </label>
                 <label><span data-i18n="view.api_tokens.label.expires">Expires (optional)</span>
-                    <input name="expires_at" type="date" style="width:160px;">
+                    <input name="expires_at" type="date" style="width:160px;" data-tip="view.api_tokens.tip.expires">
                 </label>
                 <label><span data-i18n="view.api_tokens.label.rate_limit">Rate limit (req/min)</span>
                     <input name="rate_limit_per_min" type="number" min="1" max="10000"
-                           value="60" style="width:90px;">
+                           value="60" style="width:90px;" data-tip="view.api_tokens.tip.rate_limit">
                 </label>
-                <button data-i18n="view.api_tokens.btn.generate" class="primary" type="submit">Generate</button>
+                <button data-i18n="view.api_tokens.btn.generate" data-tip="view.api_tokens.tip.generate" data-shortcut="developer_generate" class="primary" type="submit">Generate</button>
             </form>
             <div id="tok-new"></div>
         </div>
@@ -131,7 +133,7 @@ async function loadList(mount, tok) {
                         <td class="small ${tk.revoked_at ? 'neg' : 'pos'}">${tk.revoked_at ? t('common.status.revoked') : t('common.status.active')}</td>
                         <td>${tk.revoked_at
                             ? ''
-                            : `<button data-i18n="view.api_tokens.btn.revoke" class="btn revoke-btn" data-id="${tk.id}">Revoke</button>`}</td>
+                            : `<button data-i18n="view.api_tokens.btn.revoke" data-tip="view.api_tokens.tip.revoke" class="btn revoke-btn" data-id="${tk.id}">Revoke</button>`}</td>
                     </tr>`).join('')}
                 </tbody>
             </table>
@@ -139,8 +141,13 @@ async function loadList(mount, tok) {
         el2.querySelectorAll('.revoke-btn').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!await tConfirm('view.api_tokens.confirm.revoke', {}, { level: 'danger' })) return;
-                try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
-                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
+                try {
+                    await api.revokeApiToken(b.dataset.id);
+                    showToast(t('view.api_tokens.toast.revoked'), { level: 'success' });
+                    if (viewIsCurrent(tok)) await loadList(mount, tok);
+                } catch (e) {
+                    showToast(t('common.error', { err: e.message }), { level: 'error' });
+                }
             });
         });
         el2.querySelectorAll('.rate-input').forEach(input => {
@@ -149,8 +156,13 @@ async function loadList(mount, tok) {
                 if (!Number.isFinite(v) || v < 1 || v > 10000) {
                     showToast(t('view.api_tokens.alert.rate_range'), { level: 'warning' }); return;
                 }
-                try { await api.setApiTokenRateLimit(input.dataset.id, v); }
-                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); if (viewIsCurrent(tok)) await loadList(mount, tok); }
+                try {
+                    await api.setApiTokenRateLimit(input.dataset.id, v);
+                    showToast(t('view.api_tokens.toast.rate_set', { rate: v }), { level: 'success' });
+                } catch (e) {
+                    showToast(t('common.error', { err: e.message }), { level: 'error' });
+                    if (viewIsCurrent(tok)) await loadList(mount, tok);
+                }
             });
         });
         renderUsageChart(rows);
