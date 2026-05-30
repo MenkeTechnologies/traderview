@@ -160,6 +160,8 @@ pub enum Preset {
     Pct52wMidSqueeze,       // year_high_pct between -15 and -5 AND year_low_pct between 5 and 15 AND tight day — true mid-range coiling
     DeepDiscountSqueeze,    // year_high_pct ≤ -30 AND |day_pct| < 1 AND quiet — basing far below highs
     FlatRangeQuietSqueeze,  // |day_pct| < 0.2 AND |gap| < 0.2 AND |change| < 0.5 AND rel_volume < 0.5 — total stall
+    NearAthQuietSqueeze,    // ≤ -1% from 52w high AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the top
+    NearAtlQuietSqueeze,    // ≤ 1% from 52w low  AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the bottom
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -334,6 +336,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.5
         }
+        Preset::NearAthQuietSqueeze => {
+            hit.year_high_pct >= -1.0
+                && hit.rel_volume < 0.6
+                && hit.day_pct.abs() < 1.0
+        }
+        Preset::NearAtlQuietSqueeze => {
+            hit.year_low_pct <= 1.0
+                && hit.rel_volume < 0.6
+                && hit.day_pct.abs() < 1.0
+        }
     }
 }
 
@@ -384,6 +396,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wMidSqueeze => "52w-Mid Squeeze",
         Preset::DeepDiscountSqueeze => "Deep-Discount Squeeze",
         Preset::FlatRangeQuietSqueeze => "Flat-Range Quiet Squeeze",
+        Preset::NearAthQuietSqueeze => "Near-ATH Quiet Squeeze",
+        Preset::NearAtlQuietSqueeze => "Near-ATL Quiet Squeeze",
     }
 }
 
