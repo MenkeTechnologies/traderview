@@ -6044,6 +6044,7 @@
   "view.alert_rules.msg.pct_dir_down": "down",
   "view.alert_rules.msg.volume_spike": "{symbol} volume spike, {mult} times average",
   "view.alert_rules.msg.default":      "{symbol} alert",
+  "view.alert_rules.default_name":     "{type} rule",
   "view.alert_rules.tts.pct_up":       "up {pct} percent",
   "view.alert_rules.tts.vol_mult":     "{mult} times average volume",
   "view.alert_rules.tts.squeezing":    "{symbol} squeezing",

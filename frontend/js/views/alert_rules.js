@@ -132,7 +132,7 @@ function patchFromInput(el, field, rule) {
 function bindAddRule() {
     document.getElementById('ar-add').addEventListener('click', () => {
         const type = document.getElementById('ar-new-type').value;
-        const name = document.getElementById('ar-new-name').value.trim() || `${type} rule`;
+        const name = document.getElementById('ar-new-name').value.trim() || tr('view.alert_rules.default_name', { type });
         const rule = engine.newRule(type, name);
         state = engine.addRule(state, rule);
         engine.saveState(state);
