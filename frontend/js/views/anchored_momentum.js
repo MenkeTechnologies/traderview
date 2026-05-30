@@ -57,6 +57,11 @@ export async function renderAnchoredMomentum(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.anch_mom.h2.close_chart">Close vs anchor price reference</h2>
+            <div id="am-close-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.anch_mom.h2.table">Per-bar momentum (tail — last 30)</h2>
             <div id="am-table"></div>
         </div>
@@ -103,6 +108,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.anchor, state.smooth_period);
     renderSummary(local, true);
     renderChart(local);
+    renderCloseChart();
     renderTable(local);
     let resp;
     try {
@@ -114,6 +120,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCloseChart();
     renderTable(resp);
 }
 
@@ -175,6 +182,42 @@ function renderChart(series) {
         ],
         legend: { show: true },
     }, [xs, pct, anchor_marker], el);
+}
+
+function renderCloseChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('am-close-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const closes = state.closes;
+    if (!Array.isArray(closes) || closes.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.anch_mom.empty_close">${esc(t('view.anch_mom.empty_close'))}</div>`;
+        return;
+    }
+    const xs = closes.map((_, i) => i);
+    const ys = closes.map(v => Number.isFinite(v) ? v : null);
+    const anchorPrice = closes[state.anchor];
+    const anchorLine = xs.map(() => Number.isFinite(anchorPrice) ? anchorPrice : null);
+    const anchorMark = closes.map((_, i) => i === state.anchor ? anchorPrice : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.anch_mom.chart.close'),
+              stroke: '#00e5ff', width: 1.2, points: { show: false } },
+            { label: t('view.anch_mom.chart.anchor_px'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('chart.series.anchor'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 10, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, anchorLine, anchorMark], el);
 }
 
 function renderTable(series) {
