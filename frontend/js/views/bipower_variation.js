@@ -52,6 +52,11 @@ export async function renderBipowerVariation(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.bpv.h2.jump_chart">Per-bar jump contribution (r_t² − (π/2)·|r_t|·|r_{t−1}|)</h2>
+            <div id="bv-jump-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.bpv.h2.table">Component breakdown</h2>
             <div id="bv-table"></div>
         </div>
@@ -93,6 +98,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.bpv.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderJumpChart();
     renderTable(local);
     let resp;
     try {
@@ -105,6 +111,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.bpv.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderJumpChart();
     renderTable(resp);
 }
 
@@ -167,6 +174,44 @@ function renderChart() {
         ],
         legend: { show: true },
     }, [xs, rv, summand], el);
+}
+
+function renderJumpChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bv-jump-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (state.returns.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bpv.empty_jump">${esc(t('view.bpv.empty_jump'))}</div>`;
+        return;
+    }
+    const mu = Math.PI / 2;
+    const xs = state.returns.map((_, i) => i);
+    const jump = state.returns.map((r, i) => {
+        if (i === 0) return null;
+        const prev = state.returns[i - 1];
+        if (!Number.isFinite(prev) || !Number.isFinite(r)) return null;
+        return r * r - mu * Math.abs(r) * Math.abs(prev);
+    });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.bpv.series.jump'),
+              stroke: '#ff3860', width: 1.5,
+              points: { show: true, size: 5, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.bpv.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 70,
+              values: (_u, splits) => splits.map(v => Math.abs(v) < 1e-4 ? v.toExponential(1) : v.toFixed(4)) },
+        ],
+        legend: { show: true },
+    }, [xs, jump, zero], el);
 }
 
 function renderTable(report) {
