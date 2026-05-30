@@ -102,7 +102,7 @@ export function parseObsBlob(blob) {
         const quoted_spread = Number(toks[3]);
         const direction = toks[4].toLowerCase();
         if (![trade_price, current_mid, delayed_mid, quoted_spread].every(Number.isFinite)) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite token' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.non_finite_token') });
             continue;
         }
         if (!DIRECTIONS.includes(direction)) {

@@ -77,7 +77,7 @@ export function parsePairsBlob(blob) {
         const a = pctOrDec(toks[0]);
         const b = pctOrDec(toks[1]);
         if (!Number.isFinite(a) || !Number.isFinite(b)) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite token' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.non_finite_token') });
             continue;
         }
         out.asset.push(a);

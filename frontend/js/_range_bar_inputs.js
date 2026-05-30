@@ -80,17 +80,17 @@ export function parsePrintsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (price size)' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.expected_price_size') });
             continue;
         }
         const price = Number(toks[0]);
         const size = Number(toks[1]);
         if (!Number.isFinite(price) || price <= 0) {
-            out.errors.push({ line_no: i + 1, message: 'price must be positive finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.price_must_be_positive') });
             continue;
         }
         if (!Number.isFinite(size) || size < 0) {
-            out.errors.push({ line_no: i + 1, message: 'size must be ≥ 0 finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.size_must_be_non_negative') });
             continue;
         }
         out.prints.push({ price, size });

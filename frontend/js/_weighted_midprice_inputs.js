@@ -86,7 +86,7 @@ export function parseQuotesBlob(blob) {
         }
         const [bid_price, bid_size, ask_price, ask_size] = toks.map(Number);
         if (![bid_price, bid_size, ask_price, ask_size].every(Number.isFinite)) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite token' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.non_finite_token') });
             continue;
         }
         out.quotes.push({ bid_price, bid_size, ask_price, ask_size });

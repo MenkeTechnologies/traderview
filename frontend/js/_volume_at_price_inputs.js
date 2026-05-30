@@ -125,11 +125,11 @@ export function parseBarsBlob(blob) {
         const low = Number(toks[1]);
         const volume = Number(toks[2]);
         if (![high, low, volume].every(Number.isFinite)) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite token' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.non_finite_token') });
             continue;
         }
         if (high < low) {
-            out.errors.push({ line_no: i + 1, message: 'high < low' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.high_lt_low') });
             continue;
         }
         if (volume < 0) {

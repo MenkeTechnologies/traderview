@@ -96,11 +96,11 @@ export function parseBarsBlob(blob) {
         }
         const [high, low] = toks.map(Number);
         if (!Number.isFinite(high) || !Number.isFinite(low)) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite token' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.non_finite_token') });
             continue;
         }
         if (high < low) {
-            out.errors.push({ line_no: i + 1, message: 'high < low' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.high_lt_low') });
             continue;
         }
         out.bars.push({ high, low });

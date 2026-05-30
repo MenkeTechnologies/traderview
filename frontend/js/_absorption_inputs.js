@@ -140,7 +140,7 @@ export function parseBarsBlob(blob) {
             out.errors.push({ line_no: i + 1, message: 'token not finite' });
             continue;
         }
-        if (h < l)              { out.errors.push({ line_no: i + 1, message: 'high < low' });            continue; }
+        if (h < l)              { out.errors.push({ line_no: i + 1, message: t('common.parse.high_lt_low') });            continue; }
         if (c > h || c < l)     { out.errors.push({ line_no: i + 1, message: 'close outside [low, high]' }); continue; }
         if (v <= 0)             { out.errors.push({ line_no: i + 1, message: 'volume must be > 0' });    continue; }
         out.bars.push({ high: h, low: l, close: c, volume: v });
