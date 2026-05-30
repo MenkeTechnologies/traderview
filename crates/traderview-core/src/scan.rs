@@ -150,6 +150,8 @@ pub enum Preset {
     NoGapNoChangeSqueeze, // gap≈0 + change≈0 + tight day + quiet vol — overnight + intraday total stall
     QuietTickSqueeze,    // rel_volume < 0.3 AND day_pct.abs() < 0.5 — extreme apathy bar
     NarrowGapPostMomentum, // |gap|<0.3 after |change|>=3 prior — post-trend rest day (proxy: gap & change opposite signs near zero)
+    DistantExtremesSqueeze, // far from BOTH 52w high AND 52w low (>=20% each side) AND quiet
+    BalancedDriftSqueeze,   // tiny gap + slow drift (|change|<0.5) + close mid-day + quiet
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -266,6 +268,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 1.0
                 && hit.rel_volume < 1.0
         }
+        Preset::DistantExtremesSqueeze => {
+            hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.rel_volume < 0.9
+                && hit.day_pct.abs() < 1.5
+        }
+        Preset::BalancedDriftSqueeze => {
+            hit.gap_pct.abs() < 0.3
+                && hit.change_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() < 1.5
+                && hit.lod_dist_pct.abs() < 1.5
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -306,6 +321,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NoGapNoChangeSqueeze => "No-Gap-No-Change Squeeze",
         Preset::QuietTickSqueeze => "Quiet-Tick Squeeze",
         Preset::NarrowGapPostMomentum => "Post-Momentum Squeeze",
+        Preset::DistantExtremesSqueeze => "Distant-Extremes Squeeze",
+        Preset::BalancedDriftSqueeze => "Balanced-Drift Squeeze",
     }
 }
 

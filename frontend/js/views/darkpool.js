@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 const pct = (n) => n == null ? '—' : (n * 100).toFixed(2) + '%';
 const compact = (n) => {
@@ -44,6 +44,10 @@ export async function renderDarkpool(mount, _state, sym) {
             </form>
             <div id="dp-ranked"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.darkpool.h2.ranked_chart">Avg off-exchange % by symbol</h2>
+            <div id="dp-ranked-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#df').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -83,6 +87,37 @@ function renderRanked(el, rows) {
                 <td>${pct(r.latest_pct)}</td>
                 <td>${r.samples}</td>
             </tr>`).join('')}</tbody></table>`;
+    renderRankedChart(rows);
+}
+
+function renderRankedChart(rows) {
+    const el = document.getElementById('dp-ranked-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (rows || []).slice(0, 30).filter(r => Number.isFinite(Number(r.avg_off_exchange_pct)));
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.darkpool.empty_chart">${esc(t('view.darkpool.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.symbol);
+    const ys = top.map(r => Number(r.avg_off_exchange_pct) * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.darkpool.chart.sym_idx') },
+            { label: t('view.darkpool.chart.avg_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 async function renderSymbol(mount, sym) {

@@ -32,6 +32,8 @@ const PRESETS = [
     { id: 'no_gap_no_change_squeeze', label: t('view.scanners.preset.no_gap_no_change_squeeze.label'), desc: t('view.scanners.preset.no_gap_no_change_squeeze.desc') },
     { id: 'quiet_tick_squeeze',   label: t('view.scanners.preset.quiet_tick_squeeze.label'),   desc: t('view.scanners.preset.quiet_tick_squeeze.desc') },
     { id: 'post_momentum_squeeze', label: t('view.scanners.preset.post_momentum_squeeze.label'), desc: t('view.scanners.preset.post_momentum_squeeze.desc') },
+    { id: 'distant_extremes_squeeze', label: t('view.scanners.preset.distant_extremes_squeeze.label'), desc: t('view.scanners.preset.distant_extremes_squeeze.desc') },
+    { id: 'balanced_drift_squeeze',   label: t('view.scanners.preset.balanced_drift_squeeze.label'),   desc: t('view.scanners.preset.balanced_drift_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
