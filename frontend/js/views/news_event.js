@@ -54,6 +54,12 @@ export async function renderNewsEvent(mount, _appState) {
             <div id="ne-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.news_event.h2.trim_qty_chart">Trim quantity (shares) per symbol</h2>
+            <div id="ne-qty-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.news_event.hint.trim_qty" class="muted small">Absolute share count to trim per symbol. Complements the % chart — a 100% trim of 10 shares is less risk-removal than 50% trim of 1000 shares.</p>
+        </div>
+
         <div id="ne-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ne-demo').addEventListener('click', () => {
@@ -109,6 +115,39 @@ async function compute(tok) {
     renderSummary(report, positions, events);
     renderActions(report);
     renderTrimChart(report);
+    renderTrimQtyChart(report);
+}
+
+function renderTrimQtyChart(report) {
+    const el = document.getElementById('ne-qty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const actions = ((report && report.actions) || [])
+        .filter(a => Number.isFinite(Number(a.trim_amount)) && Number(a.trim_amount) > 0);
+    if (actions.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.news_event.empty_qty_chart">${esc(t('view.news_event.empty_qty_chart'))}</div>`;
+        return;
+    }
+    const sorted = actions.slice().sort((a, b) => Number(b.trim_amount) - Number(a.trim_amount));
+    const labels = sorted.map(a => a.symbol);
+    const ys = sorted.map(a => Number(a.trim_amount));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.news_event.chart.symbol_idx') },
+            { label: t('view.news_event.chart.trim_qty'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTrimChart(report) {
