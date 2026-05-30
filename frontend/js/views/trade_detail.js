@@ -309,7 +309,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         if (!viewIsCurrent(tok)) return;
         const result = mount.querySelector('#share-result');
         if (result) result.innerHTML =
-            `Public link: <a href="#shared/${sh.slug}">/#shared/${sh.slug}</a> (slug: <code>${sh.slug}</code>)`;
+            t('view.trade_detail.share.public_link', { slug: sh.slug });
     });
     void share;
 

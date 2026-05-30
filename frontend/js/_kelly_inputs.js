@@ -44,13 +44,13 @@ export function localComputeStatic(winRate, payoffRatio) {
     out.quarter_kelly = full / 4;
     out.recommended_f = Math.max(0, out.half_kelly);
     if (full < 0) {
-        out.note = `No edge: p × b = ${(p * b).toFixed(3)} < q = ${q.toFixed(3)}. Don't trade.`;
+        out.note = t('view.kelly.note.no_edge', { pb: (p * b).toFixed(3), q: q.toFixed(3) });
     } else if (full < 0.01) {
-        out.note = 'Edge is tiny (< 1% Kelly). Position sizes will be tiny too.';
+        out.note = t('view.kelly.note.tiny_edge');
     } else if (full > 0.50) {
-        out.note = 'Edge is very large (full-Kelly > 50%). Half-Kelly recommended due to extreme drawdown risk.';
+        out.note = t('view.kelly.note.large_edge');
     } else {
-        out.note = `Half-Kelly = ${(out.recommended_f * 100).toFixed(2)}% of bankroll per trade.`;
+        out.note = t('view.kelly.note.half_kelly', { pct: (out.recommended_f * 100).toFixed(2) });
     }
     return out;
 }
