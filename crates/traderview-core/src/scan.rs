@@ -894,6 +894,8 @@ pub enum Preset {
     DeepBounceBigRedHotVol,              // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % above 52w low + big red + hot vol (retracement thrust back toward the floor with institutional distribution; bounce-failure confirmation candidate)
     BigGapDownReclaimedToHodHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped down + close pinned to HOD + hot vol (full intraday recovery from the gap-down open to the session high; trapped overnight shorts squeezed all the way to the highs with elevated participation)
     BigGapUpRejectedToLodHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped up + close pinned to LOD + hot vol (full intraday rejection from the gap-up open to the session low; trapped overnight longs flushed all the way to the lows with elevated participation)
+    TenXVolMicroChange,                  // rel_volume >= 10 AND change_pct.abs() < 0.3 — 10x average vol + microchange close (rare absorption-at-scale print: extreme participation with virtually no net price movement; large institutional position-build or unwind masked as a quiet day)
+    TenXVolNoGapBigIntradayMove,         // rel_volume >= 10 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — 10x average vol + no overnight gap + big intraday move (pure regular-hours extreme thrust: no overnight aid, climax-level participation, all directional commitment built during the session)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5237,6 +5239,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::TenXVolMicroChange => {
+            hit.rel_volume >= 10.0
+                && hit.change_pct.abs() < 0.3
+        }
+        Preset::TenXVolNoGapBigIntradayMove => {
+            hit.rel_volume >= 10.0
+                && hit.gap_pct.abs() < 0.3
+                && hit.change_pct.abs() > 3.0
+        }
     }
 }
 
@@ -6021,6 +6032,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DeepBounceBigRedHotVol => "10-30 % above 52w Low + Big Red + Hot Vol (Retracement Thrust Back toward the Floor with Institutional Distribution; Bounce-failure Confirmation Candidate)",
         Preset::BigGapDownReclaimedToHodHotVol => "Gap Down + Close Pinned to HOD + Hot Vol (Full Intraday Recovery from the Gap-down Open to the Session High; Trapped Overnight Shorts Squeezed All the Way to the Highs with Elevated Participation)",
         Preset::BigGapUpRejectedToLodHotVol => "Gap Up + Close Pinned to LOD + Hot Vol (Full Intraday Rejection from the Gap-up Open to the Session Low; Trapped Overnight Longs Flushed All the Way to the Lows with Elevated Participation)",
+        Preset::TenXVolMicroChange => "10x Average Vol + Microchange Close (Rare Absorption-at-scale Print: Extreme Participation with Virtually No Net Price Movement; Large Institutional Position-build or Unwind Masked as a Quiet Day)",
+        Preset::TenXVolNoGapBigIntradayMove => "10x Average Vol + No Overnight Gap + Big Intraday Move (Pure Regular-hours Extreme Thrust: No Overnight Aid, Climax-level Participation, All Directional Commitment Built during the Session)",
     }
 }
 
