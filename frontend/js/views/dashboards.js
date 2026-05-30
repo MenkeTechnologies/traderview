@@ -86,20 +86,21 @@ function renderSidebar() {
             `).join('')}
         </ul>
         <div class="db-sidebar-actions">
-            <input id="db-new-name" type="text" placeholder="new dashboard name" data-i18n-placeholder="view.dashboards.placeholder.new_name">
-            <button data-i18n="view.dashboards.btn.create" id="db-new" class="primary" type="button">+ Create</button>
+            <input id="db-new-name" type="text" placeholder="new dashboard name" data-i18n-placeholder="view.dashboards.placeholder.new_name"
+                   data-tip="view.dashboards.tip.new_name" data-shortcut="dashboards_focus_new">
+            <button data-i18n="view.dashboards.btn.create" data-tip="view.dashboards.tip.create" id="db-new" class="primary" type="button">+ Create</button>
         </div>
         <hr>
         <div class="db-sidebar-actions">
-            <button data-i18n="view.dashboards.btn.rename_active" id="db-rename"     class="secondary" type="button">Rename active</button>
-            <button data-i18n="view.dashboards.btn.duplicate_active" id="db-duplicate"  class="secondary" type="button">Duplicate active</button>
-            <button data-i18n="view.dashboards.btn.delete_active" id="db-delete"     class="secondary" type="button">Delete active</button>
-            <button id="db-edit"       class="${editMode ? 'primary' : 'secondary'}" type="button">${editMode ? t('view.dashboards.btn.done_editing') : t('view.dashboards.btn.edit_layout')}</button>
+            <button data-i18n="view.dashboards.btn.rename_active" data-tip="view.dashboards.tip.rename" id="db-rename"     class="secondary" type="button">Rename active</button>
+            <button data-i18n="view.dashboards.btn.duplicate_active" data-tip="view.dashboards.tip.duplicate" id="db-duplicate"  class="secondary" type="button">Duplicate active</button>
+            <button data-i18n="view.dashboards.btn.delete_active" data-tip="view.dashboards.tip.delete" id="db-delete"     class="secondary" type="button">Delete active</button>
+            <button id="db-edit" data-tip="view.dashboards.tip.edit" data-shortcut="dashboards_toggle_edit"  class="${editMode ? 'primary' : 'secondary'}" type="button">${editMode ? t('view.dashboards.btn.done_editing') : t('view.dashboards.btn.edit_layout')}</button>
         </div>
         <hr>
         <div class="db-sidebar-actions">
-            <button data-i18n="view.dashboards.btn.export_all_json" id="db-export"     class="secondary" type="button">Export all (JSON)</button>
-            <button data-i18n="view.dashboards.btn.import_json" id="db-import"     class="secondary" type="button">Import (JSON)</button>
+            <button data-i18n="view.dashboards.btn.export_all_json" data-tip="view.dashboards.tip.export" id="db-export"     class="secondary" type="button">Export all (JSON)</button>
+            <button data-i18n="view.dashboards.btn.import_json" data-tip="view.dashboards.tip.import" id="db-import"     class="secondary" type="button">Import (JSON)</button>
         </div>
         <hr>
         <div id="db-favs-section"></div>
@@ -116,10 +117,14 @@ function renderSidebar() {
     });
     document.getElementById('db-new').addEventListener('click', async () => {
         const n = document.getElementById('db-new-name').value.trim();
-        if (!n) return;
+        if (!n) {
+            showToast(t('view.dashboards.alert.empty_name'), { level: 'warning' });
+            return;
+        }
         state = store.createDashboard(state, n);
         persist();
         document.getElementById('db-new-name').value = '';
+        showToast(t('view.dashboards.toast.created', { name: n }), { level: 'success' });
         renderSidebar();
         await renderActive();
     });
@@ -139,6 +144,7 @@ function renderSidebar() {
         if (!await tConfirm('view.dashboards.confirm.delete_named', { name: d.name }, { level: 'danger' })) return;
         state = store.deleteDashboard(state, d.id);
         persist();
+        showToast(t('view.dashboards.toast.deleted', { name: d.name }), { level: 'success' });
         renderSidebar();
         await renderActive();
     });
@@ -152,6 +158,7 @@ function renderSidebar() {
         if (!d) return;
         state = store.duplicateDashboard(state, d.id);
         persist();
+        showToast(t('view.dashboards.toast.duplicated', { name: d.name }), { level: 'success' });
         renderSidebar();
         await renderActive();
     });

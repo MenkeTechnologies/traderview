@@ -559,6 +559,16 @@ function bindTabs() {
         const form = document.getElementById('sc-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `n` in dashboards scope → focus new-dashboard name input.
+    window.addEventListener('tv:dashboards-focus-new', () => {
+        const el = document.getElementById('db-new-name');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
+    // View-scoped: `e` in dashboards scope → toggle Edit-layout button.
+    window.addEventListener('tv:dashboards-toggle-edit', () => {
+        const el = document.getElementById('db-edit');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
