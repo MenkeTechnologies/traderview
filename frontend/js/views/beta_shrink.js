@@ -58,6 +58,11 @@ export async function renderBetaShrink(mount, _appState) {
             <div id="bs-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.beta_shrink.h2.beta_chart">β before vs after shrinkage</h2>
+            <div id="bs-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="bs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -99,6 +104,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.beta_shrink.err.degenerate')); return; }
     renderSummary(local, true);
     renderTable(local);
+    renderBetaChart(local);
     let resp;
     try {
         resp = await api.anlyBetaShrinkage(buildBody(state));
@@ -110,6 +116,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.beta_shrink.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderTable(resp);
+    renderBetaChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -181,6 +188,39 @@ function renderTable(report) {
             <tbody>${rows}</tbody>
         </table>
     `;
+}
+
+function renderBetaChart(report) {
+    const el = document.getElementById('bs-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.assets) || report.assets.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.beta_shrink.empty_chart">${esc(t('view.beta_shrink.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = report.assets.map(a => a.symbol);
+    const ols = report.assets.map(a => Number.isFinite(a.beta_ols) ? a.beta_ols : null);
+    const shrunk = report.assets.map(a => Number.isFinite(a.beta_shrunk) ? a.beta_shrunk : null);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.beta_shrink.chart.asset_idx') },
+            { label: t('view.beta_shrink.chart.beta_ols'),
+              stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 10, fill: '#ff9f1a', stroke: '#ff9f1a' } },
+            { label: t('view.beta_shrink.chart.beta_shrunk'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ols, shrunk], el);
 }
 
 function card(label, value, cls = '') {
