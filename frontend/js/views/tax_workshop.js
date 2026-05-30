@@ -130,6 +130,11 @@ export async function renderTaxWorkshop(mount, _state) {
                 <tbody><tr><td colspan="5" class="muted" data-i18n="view.tax_workshop.empty.scan">Click detect to scan.</td></tr></tbody>
             </table>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_workshop.h2.subs_chart">Projected annual cost per subscription (top 10)</h2>
+            <div id="sub-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
 
     // ---- Schedule SE ---------------------------------------------------
@@ -218,6 +223,7 @@ export async function renderTaxWorkshop(mount, _state) {
             const subs = await api.detectSubscriptions();
             if (!viewIsCurrent(tok)) return;
             renderSubs(mount, subs);
+            renderSubsChart(subs);
         } catch (err) {
             if (tb) tb.innerHTML = `<tr><td colspan="5" class="muted">${esc(t('view.tax_workshop.error', { msg: err.message }))}</td></tr>`;
         }
@@ -316,6 +322,39 @@ function renderQtChart(r) {
             { label: t('view.tax_workshop.chart.payment'),
               stroke: '#00e5ff', width: 0,
               points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
+function renderSubsChart(subs) {
+    const el = document.getElementById('sub-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (subs || [])
+        .filter(s => Number.isFinite(Number(s.projected_annual_cost)))
+        .sort((a, b) => Number(b.projected_annual_cost) - Number(a.projected_annual_cost))
+        .slice(0, 10);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_workshop.empty_subs_chart">${esc(t('view.tax_workshop.empty_subs_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(s => s.merchant);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(s => Number(s.projected_annual_cost));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_workshop.chart.merchant') },
+            { label: t('view.tax_workshop.chart.annual_cost'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

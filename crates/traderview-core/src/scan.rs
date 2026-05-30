@@ -418,6 +418,8 @@ pub enum Preset {
     OutsideBarVolumeBoth,        // hod_dist.abs() > 3 AND lod_dist.abs() > 3 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — outside-bar both extremes touched on heavy vol with no net move (battle for direction)
     LeadingUpDayLightVol,        // change_pct > 2 AND rel_volume < 0.7 AND hod_dist.abs() < 0.5 — strong up close on light volume (leadership without participation; suspect quality)
     LeadingDownDayLightVol,      // change_pct < -2 AND rel_volume < 0.7 AND lod_dist.abs() < 0.5 — strong down close on light volume (leadership without participation; suspect quality)
+    SmallChangeOnVolNearHigh,    // year_high_pct > -3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w high on above-avg vol (top consolidation / distribution prep)
+    SmallChangeOnVolNearLow,     // year_low_pct < 3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w low on above-avg vol (bottom consolidation / accumulation prep)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1962,6 +1964,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::SmallChangeOnVolNearHigh => {
+            hit.year_high_pct > -3.0
+                && hit.change_pct.abs() >= 0.5
+                && hit.change_pct.abs() <= 1.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::SmallChangeOnVolNearLow => {
+            hit.year_low_pct < 3.0
+                && hit.change_pct.abs() >= 0.5
+                && hit.change_pct.abs() <= 1.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2270,6 +2284,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OutsideBarVolumeBoth => "Outside Bar, Heavy Vol Battle",
         Preset::LeadingUpDayLightVol => "Strong Up, Light Vol (Suspect)",
         Preset::LeadingDownDayLightVol => "Strong Down, Light Vol (Suspect)",
+        Preset::SmallChangeOnVolNearHigh => "Small Move + Vol at 52w High",
+        Preset::SmallChangeOnVolNearLow => "Small Move + Vol at 52w Low",
     }
 }
 

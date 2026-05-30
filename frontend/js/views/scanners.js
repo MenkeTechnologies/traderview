@@ -300,6 +300,8 @@ const PRESETS = [
     { id: 'outside_bar_volume_both', label: t('view.scanners.preset.outside_bar_volume_both.label'), desc: t('view.scanners.preset.outside_bar_volume_both.desc') },
     { id: 'leading_up_day_light_vol', label: t('view.scanners.preset.leading_up_day_light_vol.label'), desc: t('view.scanners.preset.leading_up_day_light_vol.desc') },
     { id: 'leading_down_day_light_vol', label: t('view.scanners.preset.leading_down_day_light_vol.label'), desc: t('view.scanners.preset.leading_down_day_light_vol.desc') },
+    { id: 'small_change_on_vol_near_high', label: t('view.scanners.preset.small_change_on_vol_near_high.label'), desc: t('view.scanners.preset.small_change_on_vol_near_high.desc') },
+    { id: 'small_change_on_vol_near_low', label: t('view.scanners.preset.small_change_on_vol_near_low.label'), desc: t('view.scanners.preset.small_change_on_vol_near_low.desc') },
 ];
 
 export async function renderScanners(mount) {
