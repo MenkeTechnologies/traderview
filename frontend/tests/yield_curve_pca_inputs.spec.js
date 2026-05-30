@@ -4,7 +4,7 @@
 import { test, expect } from 'vitest';
 import {
     validatePcaInputs, factorName, normalizeTenors,
-    buildBody, factorColor,
+    buildBody, factorColor, parseCurves, parseTenorLabels,
 } from '../js/_yield_curve_pca_inputs.js';
 
 test('validate accepts a clean 5×3 input with topK=3', () => {
@@ -80,4 +80,50 @@ test('factorColor returns valid hex strings', () => {
     for (let i = 0; i < 10; i++) {
         expect(factorColor(i)).toMatch(/^#[0-9a-f]{6}$/i);
     }
+});
+
+// ── parseCurves: delegates to shared matrix parser ─────────────────
+
+test('parseCurves: parses 3 rows × 3 columns, returns { value, errors }', () => {
+    const r = parseCurves('1 2 3\n4 5 6\n7 8 9');
+    expect(r.value).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+    expect(r.errors).toEqual([]);
+});
+
+test('parseCurves: ragged rows flagged as line-anchored errors', () => {
+    const r = parseCurves('1 2 3\n4 5\n7 8 9');
+    // First row sets width=3; row 2 has 2 cols → error.
+    expect(r.errors.length).toBeGreaterThan(0);
+    expect(r.errors[0].line_no).toBe(2);
+});
+
+test('parseCurves: skips blank lines and # comments', () => {
+    const r = parseCurves('# header\n\n1 2\n# inline\n3 4');
+    expect(r.value).toEqual([[1, 2], [3, 4]]);
+});
+
+test('parseCurves: non-string input returns error array', () => {
+    const r = parseCurves(null);
+    expect(r.value).toEqual([]);
+    expect(r.errors.length).toBe(1);
+});
+
+// ── parseTenorLabels: delegates to shared label parser ─────────────
+
+test('parseTenorLabels: returns string array, one per line', () => {
+    expect(parseTenorLabels('3M\n2Y\n10Y')).toEqual(['3M', '2Y', '10Y']);
+});
+
+test('parseTenorLabels: trims whitespace + skips blanks', () => {
+    expect(parseTenorLabels('  3M  \n\n  2Y\n')).toEqual(['3M', '2Y']);
+});
+
+test('parseTenorLabels: skips # comments', () => {
+    expect(parseTenorLabels('# header\n3M\n# section break\n2Y'))
+        .toEqual(['3M', '2Y']);
+});
+
+test('parseTenorLabels: empty input → empty array', () => {
+    expect(parseTenorLabels('')).toEqual([]);
+    expect(parseTenorLabels(null)).toEqual([]);
 });
