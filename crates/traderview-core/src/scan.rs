@@ -996,6 +996,8 @@ pub enum Preset {
     GapDownCloseAtHodHotVol,                   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + green close + hot vol (bear-trap reversal: buyers absorbed the entire gap and pushed above the open on elevated participation; classic gap-and-reverse failed-breakdown pattern)
     GapUpMidpointCloseHotVol,                  // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-up follow-through: gap held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff inside the gap day with no directional resolution)
     GapDownMidpointCloseHotVol,                // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-down follow-through: gap held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff inside the gap day with no directional resolution)
+    BigGapUpCloseAtHodHotVol,                  // gap_pct > 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2 — large gap up (>5%) + close pinned to HOD + big green close + hot vol (institutional-conviction gap-up with no profit-taking: large gap held all session and closed at the day's high on doubled participation; earnings-reaction / news-driven sustained buying through the bell)
+    BigGapDownCloseAtLodHotVol,                // gap_pct < -5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2 — large gap down (<-5%) + close pinned to LOD + big red close + hot vol (institutional-conviction gap-down with no dip-buying: large gap held all session and closed at the day's low on doubled participation; earnings-disappointment / news-driven sustained selling through the bell)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6026,6 +6028,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigGapUpCloseAtHodHotVol => {
+            hit.gap_pct > 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapDownCloseAtLodHotVol => {
+            hit.gap_pct < -5.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6912,6 +6926,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownCloseAtHodHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Green Close + Hot Vol (Bear-trap Reversal: Buyers Absorbed the Entire Gap and Pushed above the Open on Elevated Participation; Classic Gap-and-reverse Failed-breakdown Pattern)",
         Preset::GapUpMidpointCloseHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Gap-up Follow-through: Gap Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff Inside the Gap Day with No Directional Resolution)",
         Preset::GapDownMidpointCloseHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Gap-down Follow-through: Gap Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff Inside the Gap Day with No Directional Resolution)",
+        Preset::BigGapUpCloseAtHodHotVol => "Large Gap Up (>5 %) + Close Pinned to HOD + Big Green Close + Hot Vol (Institutional-conviction Gap-up with No Profit-taking: Large Gap Held All Session and Closed at the Day's High on Doubled Participation; Earnings-reaction / News-driven Sustained Buying through the Bell)",
+        Preset::BigGapDownCloseAtLodHotVol => "Large Gap Down (<-5 %) + Close Pinned to LOD + Big Red Close + Hot Vol (Institutional-conviction Gap-down with No Dip-buying: Large Gap Held All Session and Closed at the Day's Low on Doubled Participation; Earnings-disappointment / News-driven Sustained Selling through the Bell)",
     }
 }
 
