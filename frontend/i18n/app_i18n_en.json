@@ -92,6 +92,8 @@
   "view.halts.title":                   "// HALT SCANNER · LIVE",
   "view.replay.title":                  "// REPLAY ·",
   "view.webull.title":                  "// WEBULL · LIVE BROKER",
+  "view.webull.btn.refresh":            "⟳ Refresh",
+  "view.webull.tip.refresh":            "Re-poll positions + orders from Webull",
   "common.label.voice_alerts":          "voice alerts",
   "view.rebalance.placeholder.targets":  "Targets JSON: [{\"symbol\":\"SPY\",\"weight\":0.6},{\"symbol\":\"BND\",\"weight\":0.4}]",
   "view.backtest_presets.placeholder.preset": "Preset JSON, e.g.\n{\n  \"symbol\": \"SPY\",\n  \"preset\": { \"sma_cross\": { \"fast\": 20, \"slow\": 50 } },\n  \"days\": 730,\n  \"initial_capital\": 10000,\n  \"fee_per_trade\": 1\n}",

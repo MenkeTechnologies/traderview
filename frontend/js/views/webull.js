@@ -15,6 +15,11 @@ export async function renderWebull(mount, _state) {
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.webull.title">// WEBULL · LIVE BROKER</span>
             <span class="status-dot" id="wb-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
+            <button type="button" class="btn btn-secondary" id="wb-refresh-btn"
+                    data-i18n="view.webull.btn.refresh"
+                    data-tip="view.webull.tip.refresh"
+                    data-shortcut="webull_refresh"
+                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
         </h1>
 
         <details class="chart-panel" id="wb-creds-panel">
@@ -67,6 +72,9 @@ export async function renderWebull(mount, _state) {
         </div>
     `;
 
+    const refreshBtn = mount.querySelector('#wb-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () =>
+        window.dispatchEvent(new HashChangeEvent('hashchange')));
     mount.querySelector('#wb-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
