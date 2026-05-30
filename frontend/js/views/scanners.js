@@ -264,6 +264,8 @@ const PRESETS = [
     { id: 'gap_down_medium_neutral', label: t('view.scanners.preset.gap_down_medium_neutral.label'), desc: t('view.scanners.preset.gap_down_medium_neutral.desc') },
     { id: 'hod_reclaim_after_flush', label: t('view.scanners.preset.hod_reclaim_after_flush.label'), desc: t('view.scanners.preset.hod_reclaim_after_flush.desc') },
     { id: 'lod_fail_after_push', label: t('view.scanners.preset.lod_fail_after_push.label'), desc: t('view.scanners.preset.lod_fail_after_push.desc') },
+    { id: 'hod_reclaim_from_flat_gap', label: t('view.scanners.preset.hod_reclaim_from_flat_gap.label'), desc: t('view.scanners.preset.hod_reclaim_from_flat_gap.desc') },
+    { id: 'lod_fail_from_flat_gap', label: t('view.scanners.preset.lod_fail_from_flat_gap.label'), desc: t('view.scanners.preset.lod_fail_from_flat_gap.desc') },
 ];
 
 export async function renderScanners(mount) {

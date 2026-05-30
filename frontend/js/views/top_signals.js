@@ -46,6 +46,11 @@ export async function renderTopSignals(mount) {
             <h2 data-i18n="view.top_signals.h2.rsi_chart">RSI(14) per ranked symbol</h2>
             <div id="ts-rsi-chart" style="width:100%;height:220px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.top_signals.h2.signals_chart">Signal count per ranked symbol</h2>
+            <div id="ts-signals-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     const refresh = async () => {
         const form = mount.querySelector('#top-form');
@@ -69,6 +74,7 @@ export async function renderTopSignals(mount) {
             if (sellsEl) sellsEl.innerHTML = renderList(sells, 'sell');
             renderScoreChart(buys, sells);
             renderRsiChart(buys, sells);
+            renderSignalsChart(buys, sells);
             const total = (buys.hits?.length || 0) + (sells.hits?.length || 0);
             showToast(t('view.top_signals.toast.done', {
                 buys: buys.hits?.length || 0, sells: sells.hits?.length || 0,
@@ -84,6 +90,44 @@ export async function renderTopSignals(mount) {
     };
     mount.querySelector('#top-form').addEventListener('submit', (e) => { e.preventDefault(); refresh(); });
     refresh();
+}
+
+function renderSignalsChart(buys, sells) {
+    const el = document.getElementById('ts-signals-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bRows = (buys?.hits  || []).filter(h => Number.isFinite(Number(h.signal_count)));
+    const sRows = (sells?.hits || []).filter(h => Number.isFinite(Number(h.signal_count)));
+    if (bRows.length + sRows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.top_signals.empty_signals_chart">${esc(t('view.top_signals.empty_signals_chart'))}</div>`;
+        return;
+    }
+    bRows.sort((a, b) => Number(b.signal_count) - Number(a.signal_count));
+    sRows.sort((a, b) => Number(b.signal_count) - Number(a.signal_count));
+    const rows = [...bRows, ...sRows];
+    const labels = rows.map(h => h.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const buyY  = rows.map((h, i) => i < bRows.length ?  Number(h.signal_count) : null);
+    const sellY = rows.map((h, i) => i < bRows.length ? null : Number(h.signal_count));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.top_signals.chart.symbol') },
+            { label: t('view.top_signals.chart.buy_signals'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.top_signals.chart.sell_signals'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, buyY, sellY], el);
 }
 
 function renderRsiChart(buys, sells) {
