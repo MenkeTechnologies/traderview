@@ -422,6 +422,8 @@ pub enum Preset {
     SmallChangeOnVolNearLow,     // year_low_pct < 3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w low on above-avg vol (bottom consolidation / accumulation prep)
     BigGapBigVolBigDay,          // gap_pct.abs() > 3 AND change_pct.abs() > 5 AND rel_volume >= 3 — extreme gap + extreme day + extreme vol (all-in conviction trade)
     BigGapNoFollowThrough,       // gap_pct.abs() > 3 AND change_pct.abs() < 1 AND rel_volume < 1 — extreme gap + flat day + dry vol (failed positioning; no follow-through)
+    ConfluenceLongSetup,         // gap_pct between -0.5 and 0.5 AND year_low_pct between 5 and 15 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1.2 — flat-open + above 52w low + minor green move + above-avg vol (confluence long setup)
+    ConfluenceShortSetup,        // gap_pct between -0.5 and 0.5 AND year_high_pct between -15 and -5 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1.2 — flat-open + below 52w high + minor red move + above-avg vol (confluence short setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1988,6 +1990,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 1.0
                 && hit.rel_volume < 1.0
         }
+        Preset::ConfluenceLongSetup => {
+            hit.gap_pct.abs() < 0.5
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 15.0
+                && hit.change_pct >= 0.5
+                && hit.change_pct <= 1.5
+                && hit.rel_volume >= 1.2
+        }
+        Preset::ConfluenceShortSetup => {
+            hit.gap_pct.abs() < 0.5
+                && hit.year_high_pct >= -15.0
+                && hit.year_high_pct <= -5.0
+                && hit.change_pct <= -0.5
+                && hit.change_pct >= -1.5
+                && hit.rel_volume >= 1.2
+        }
     }
 }
 
@@ -2300,6 +2318,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallChangeOnVolNearLow => "Small Move + Vol at 52w Low",
         Preset::BigGapBigVolBigDay => "Big Gap + Big Vol + Big Day",
         Preset::BigGapNoFollowThrough => "Big Gap, No Follow-Through",
+        Preset::ConfluenceLongSetup => "Confluence Long Setup",
+        Preset::ConfluenceShortSetup => "Confluence Short Setup",
     }
 }
 

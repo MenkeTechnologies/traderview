@@ -65,6 +65,11 @@ export async function renderRoundLevels(mount, _appState) {
             <div id="rl-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.round_levels.h2.dist_chart">Distance to current price ($) per level</h2>
+            <div id="rl-dist-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="rl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -102,6 +107,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderLevelsChart(local);
+    renderDistChart(local);
     let resp;
     try {
         resp = await api.chartsRoundLevels(buildBody(state));
@@ -113,6 +119,46 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable(resp);
     renderLevelsChart(resp);
+    renderDistChart(resp);
+}
+
+function renderDistChart(report) {
+    const el = document.getElementById('rl-dist-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report?.levels || []).filter(l => Number.isFinite(Number(l.distance)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.round_levels.empty_dist_chart">${esc(t('view.round_levels.empty_dist_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Math.abs(a.distance) - Math.abs(b.distance));
+    const labels = rows.map(l => `$${Number(l.price).toFixed(2)}`);
+    const xs = labels.map((_, i) => i + 1);
+    const aboveY = rows.map(l => Number(l.distance) > 0 ? Number(l.distance) : null);
+    const belowY = rows.map(l => Number(l.distance) < 0 ? Number(l.distance) : null);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.round_levels.chart.level_px') },
+            { label: t('view.round_levels.chart.above_cur'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.round_levels.chart.below_cur'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.round_levels.chart.current'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, aboveY, belowY, zero], el);
 }
 
 function renderSummary(report, pending) {

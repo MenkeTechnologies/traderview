@@ -304,6 +304,8 @@ const PRESETS = [
     { id: 'small_change_on_vol_near_low', label: t('view.scanners.preset.small_change_on_vol_near_low.label'), desc: t('view.scanners.preset.small_change_on_vol_near_low.desc') },
     { id: 'big_gap_big_vol_big_day', label: t('view.scanners.preset.big_gap_big_vol_big_day.label'), desc: t('view.scanners.preset.big_gap_big_vol_big_day.desc') },
     { id: 'big_gap_no_follow_through', label: t('view.scanners.preset.big_gap_no_follow_through.label'), desc: t('view.scanners.preset.big_gap_no_follow_through.desc') },
+    { id: 'confluence_long_setup', label: t('view.scanners.preset.confluence_long_setup.label'), desc: t('view.scanners.preset.confluence_long_setup.desc') },
+    { id: 'confluence_short_setup', label: t('view.scanners.preset.confluence_short_setup.label'), desc: t('view.scanners.preset.confluence_short_setup.desc') },
 ];
 
 export async function renderScanners(mount) {
