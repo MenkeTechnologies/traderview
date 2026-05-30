@@ -876,6 +876,8 @@ pub enum Preset {
     ExtremeVolBigChangeClimax,           // rel_volume >= 5 AND change_pct.abs() > 5 — extreme vol + big net move (climax-style print: extreme participation + extreme directional commitment; potential trend continuation or terminal exhaustion depending on follow-through)
     ExtremeGapBigContinuationExtremeVol, // gap_pct.abs() > 5 AND change_pct.abs() > 8 AND gap_pct * change_pct > 0 AND rel_volume >= 5 — extreme gap + same-direction extreme continuation + extreme vol (gap-and-go acceleration at extreme scale: overnight thrust extended further during regular hours with climax-level participation; max-conviction trend day)
     ExtremeGapFullReversalExtremeVol,    // gap_pct.abs() > 5 AND gap_pct * change_pct < 0 AND change_pct.abs() > 3 AND rel_volume >= 5 — extreme gap + sign-flipped net close + extreme vol (extreme-gap fade: overnight thrust fully reversed by the intraday session with climax-level participation; trapped gap traders flushed at scale)
+    ApathyAtYearHigh,                    // year_high_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w high + extreme dry vol + flat close + tight range (total apathy at the breakout zone; neither buyers nor sellers committed; coiled-spring pre-breakout setup with no participation flush yet)
+    ApathyAtYearLow,                     // year_low_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w low + extreme dry vol + flat close + tight range (total apathy at the breakdown zone; neither buyers nor sellers committed; coiled-spring pre-breakdown setup with no participation flush yet)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5127,6 +5129,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 3.0
                 && hit.rel_volume >= 5.0
         }
+        Preset::ApathyAtYearHigh => {
+            hit.year_high_pct < 2.0
+                && hit.rel_volume < 0.3
+                && hit.change_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+        }
+        Preset::ApathyAtYearLow => {
+            hit.year_low_pct < 2.0
+                && hit.rel_volume < 0.3
+                && hit.change_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+        }
     }
 }
 
@@ -5893,6 +5907,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeVolBigChangeClimax => "Extreme Vol + Big Net Move (Climax-style Print: Extreme Participation + Extreme Directional Commitment; Potential Trend Continuation or Terminal Exhaustion Depending on Follow-through)",
         Preset::ExtremeGapBigContinuationExtremeVol => "Extreme Gap + Same-direction Extreme Continuation + Extreme Vol (Gap-and-go Acceleration at Extreme Scale: Overnight Thrust Extended Further during Regular Hours with Climax-level Participation; Max-conviction Trend Day)",
         Preset::ExtremeGapFullReversalExtremeVol => "Extreme Gap + Sign-flipped Net Close + Extreme Vol (Extreme-gap Fade: Overnight Thrust Fully Reversed by the Intraday Session with Climax-level Participation; Trapped Gap Traders Flushed at Scale)",
+        Preset::ApathyAtYearHigh => "At 52w High + Extreme Dry Vol + Flat Close + Tight Range (Total Apathy at the Breakout Zone; Neither Buyers nor Sellers Committed; Coiled-spring Pre-breakout Setup with No Participation Flush Yet)",
+        Preset::ApathyAtYearLow => "At 52w Low + Extreme Dry Vol + Flat Close + Tight Range (Total Apathy at the Breakdown Zone; Neither Buyers nor Sellers Committed; Coiled-spring Pre-breakdown Setup with No Participation Flush Yet)",
     }
 }
 
