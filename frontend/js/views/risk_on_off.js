@@ -55,6 +55,11 @@ export async function renderRiskOnOff(mount, _appState) {
             <div id="ro-breakdown"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_on_off.h2.contribution_chart">Risk-on contribution per signal</h2>
+            <div id="ro-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ro-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -130,6 +135,7 @@ function renderSummary(report, pending) {
 function renderBreakdown() {
     const wrap = document.getElementById('ro-breakdown');
     const sigs = signalBreakdown(state);
+    renderContributionChart(sigs);
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
@@ -154,6 +160,40 @@ function dirGlyph(d) {
     if (d > 0) return '▲';
     if (d < 0) return '▼';
     return '·';
+}
+
+function renderContributionChart(sigs) {
+    const el = document.getElementById('ro-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (sigs || []).filter(s => Number.isFinite(Number(s.contribution)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_on_off.empty_chart">${esc(t('view.risk_on_off.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(s => s.name);
+    const ys = valid.map(s => Number(s.contribution));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_on_off.chart.signal_idx') },
+            { label: t('view.risk_on_off.chart.contribution'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.risk_on_off.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function card(label, value, cls = '') {

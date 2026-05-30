@@ -152,6 +152,8 @@ const PRESETS = [
     { id: 'pct52w_edge_dry_up_squeeze',  label: t('view.scanners.preset.pct52w_edge_dry_up_squeeze.label'),  desc: t('view.scanners.preset.pct52w_edge_dry_up_squeeze.desc') },
     { id: 'narrow_center_squeeze',      label: t('view.scanners.preset.narrow_center_squeeze.label'),      desc: t('view.scanners.preset.narrow_center_squeeze.desc') },
     { id: 'lopsided_quiet_squeeze',     label: t('view.scanners.preset.lopsided_quiet_squeeze.label'),     desc: t('view.scanners.preset.lopsided_quiet_squeeze.desc') },
+    { id: 'silent_leader_squeeze',      label: t('view.scanners.preset.silent_leader_squeeze.label'),      desc: t('view.scanners.preset.silent_leader_squeeze.desc') },
+    { id: 'silent_laggard_squeeze',     label: t('view.scanners.preset.silent_laggard_squeeze.label'),     desc: t('view.scanners.preset.silent_laggard_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

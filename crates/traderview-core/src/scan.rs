@@ -270,6 +270,8 @@ pub enum Preset {
     Pct52wEdgeDryUp,             // (year_high_pct >= -2 OR year_low_pct <= 2) AND rel_volume < 0.3 — at 52w extreme with extremely dried-up volume
     NarrowCenterSqueeze,         // hod_dist between 0.5 and 1 AND lod_dist between 0.5 and 1 AND day_pct.abs() < 0.5 — close centered in a slim range
     LopsidedQuietSqueeze,        // hod_dist.abs() < 0.5 OR lod_dist.abs() < 0.5 (close pinned to one side) AND rel_volume < 0.5 AND |day_pct| < 0.5 — extreme-pin with quiet vol
+    SilentLeaderSqueeze,         // year_high_pct >= -3 AND year_low_pct >= 50 AND |day_pct| < 0.5 — leader at top of 52w range, taking a quiet day
+    SilentLaggardSqueeze,        // year_low_pct <= 3 AND year_high_pct <= -50 AND |day_pct| < 0.5 — laggard at bottom of 52w range, taking a quiet day
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1047,6 +1049,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::SilentLeaderSqueeze => {
+            hit.year_high_pct >= -3.0
+                && hit.year_low_pct >= 50.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::SilentLaggardSqueeze => {
+            hit.year_low_pct <= 3.0
+                && hit.year_high_pct <= -50.0
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1207,6 +1219,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wEdgeDryUp => "52w-Edge Dry-Up Squeeze",
         Preset::NarrowCenterSqueeze => "Narrow-Center Squeeze",
         Preset::LopsidedQuietSqueeze => "Lopsided Quiet Squeeze",
+        Preset::SilentLeaderSqueeze => "Silent-Leader Squeeze",
+        Preset::SilentLaggardSqueeze => "Silent-Laggard Squeeze",
     }
 }
 
