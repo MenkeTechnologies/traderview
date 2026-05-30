@@ -54,6 +54,11 @@ export async function renderCommissionOptimizer(mount, _appState) {
             <div id="co-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.commission_optimizer.h2.fee_chart">Total fee per tier</h2>
+            <div id="co-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="co-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('co-demo-active').addEventListener('click',  () => loadDemo('active-retail'));
@@ -114,6 +119,7 @@ async function compute(tok) {
     const local = localEvaluate(state.executions, state.tiers);
     renderSummary(local, true);
     renderTable(local);
+    renderFeeChart(local);
     let resp;
     try {
         resp = await api.calcCommissionOptimizer(buildBody(state.executions, state.tiers));
@@ -138,6 +144,7 @@ async function compute(tok) {
     };
     renderSummary(normalized, false);
     renderTable(normalized);
+    renderFeeChart(normalized);
 }
 
 function renderSummary(report, pending) {
@@ -206,6 +213,35 @@ function renderTable(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderFeeChart(report) {
+    const el = document.getElementById('co-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.tiers) || report.tiers.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.commission_optimizer.empty_chart">${esc(t('view.commission_optimizer.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = report.tiers.map(tr => tr.tier);
+    const fees = report.tiers.map(tr => Number.isFinite(tr.total_fee) ? tr.total_fee : null);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.commission_optimizer.chart.tier_idx') },
+            { label: t('view.commission_optimizer.chart.total_fee'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, fees], el);
 }
 
 function card(label, value, cls = '') {
