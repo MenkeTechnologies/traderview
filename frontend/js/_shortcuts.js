@@ -70,6 +70,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'backtest_run',                 keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'backtest',          descKey: 'shortcut.backtest_run',                 actionKey: 'tv:backtest-run' },
     { id: 'backtest_presets_focus_name',  keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'backtest-presets',  descKey: 'shortcut.backtest_presets_focus_name',  actionKey: 'tv:backtest-presets-focus-name' },
     { id: 'csv_wizard_upload',            keys: { key: 'u', meta: false, ctrl: false, shift: false, alt: false }, scope: 'csv-wizard',        descKey: 'shortcut.csv_wizard_upload',            actionKey: 'tv:csv-wizard-upload' },
+    { id: 'boards_focus_name',            keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'boards',            descKey: 'shortcut.boards_focus_name',            actionKey: 'tv:boards-focus-name' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

@@ -503,6 +503,11 @@ function bindTabs() {
         const el = document.getElementById('cw-file');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `n` in boards scope (list view) → focus board-name input.
+    window.addEventListener('tv:boards-focus-name', () => {
+        const el = document.querySelector('#b-new input[name="name"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

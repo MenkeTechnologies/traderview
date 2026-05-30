@@ -67,8 +67,10 @@ async function renderList(mount) {
 
         <div class="chart-panel">
             <form id="b-new" class="inline-form">
-                <input name="name" placeholder="board name" data-i18n-placeholder="view.boards.placeholder.name" required style="min-width:240px;">
-                <button data-i18n="view.boards.btn.create_board" class="primary" type="submit">Create board</button>
+                <input name="name" placeholder="board name" data-i18n-placeholder="view.boards.placeholder.name"
+                       data-tip="view.boards.tip.board_name" data-shortcut="boards_focus_name"
+                       required style="min-width:240px;">
+                <button data-i18n="view.boards.btn.create_board" data-tip="view.boards.tip.create_board" class="primary" type="submit">Create board</button>
             </form>
         </div>
 
@@ -92,16 +94,21 @@ async function renderList(mount) {
     mount.querySelector('#b-new').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
+        const name = String(fd.get('name') || '').trim();
         try {
-            const b = await api.createDashboard({ name: fd.get('name').trim(), layout: [] });
+            const b = await api.createDashboard({ name, layout: [] });
+            showToast(t('view.boards.toast.created', { name }), { level: 'success' });
             window.location.hash = `boards/${b.id}`;
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!await tConfirm('view.boards.confirm.delete', {}, { level: 'danger' })) return;
-            try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
-            catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
+            try {
+                await api.deleteDashboard(btn.dataset.id);
+                showToast(t('view.boards.toast.deleted'), { level: 'success' });
+                if (viewIsCurrent(tok)) renderList(mount);
+            } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
     });
 }
@@ -261,8 +268,8 @@ function renderGrid(state) {
             state.board.layout = state.board.layout.filter(x => x.id !== w.id);
             persist(state); renderGrid(state);
         });
-        head.querySelector('[data-act=cfg]').addEventListener('click', () => {
-            const cfg = configureWidget(w);
+        head.querySelector('[data-act=cfg]').addEventListener('click', async () => {
+            const cfg = await configureWidget(w);
             if (cfg) { Object.assign(w.params, cfg); persist(state); renderGrid(state); }
         });
 
@@ -271,7 +278,7 @@ function renderGrid(state) {
     }
 }
 
-function configureWidget(w) {
+async function configureWidget(w) {
     if (w.kind === 'quote' || w.kind === 'mini_chart') {
         const s = await tPrompt('view.boards.prompt.symbol', {}, { defaultValue: w.params.symbol || 'SPY' });
         return s ? { symbol: s.toUpperCase() } : null;
