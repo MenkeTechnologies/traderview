@@ -144,7 +144,7 @@ function render(r, mount) {
             <div class="muted small">
                 ${r.inputs.side} · entry $${fmt(r.inputs.entry)} · stop $${fmt(r.inputs.stop)} ·
                 equity $${fmt(r.inputs.equity)} ·
-                <strong>risk/share $${fmt(r.risk_per_share)}</strong>
+                <strong>${esc(t('view.position_size.row.risk_per_share', { amount: fmt(r.risk_per_share) }))}</strong>
             </div>
             ${r.warnings.length === 0 ? '' :
                 `<ul class="muted small" style="margin-top:6px;">

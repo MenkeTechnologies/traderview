@@ -38,7 +38,7 @@ function render(r, mount) {
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.sampled_fills">Sampled fills</div>
                 <div class="value">${o.samples}</div>
-                ${r.skipped_no_bar > 0 ? `<div class="small muted">${r.skipped_no_bar} skipped (no bar)</div>` : ''}
+                ${r.skipped_no_bar > 0 ? `<div class="small muted">${esc(t('view.fill_quality.card.skipped_no_bar', { count: r.skipped_no_bar }))}</div>` : ''}
             </div>
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.avg_efficiency">Avg fill efficiency</div>
                 <div class="value ${effCls}">${(o.avg_fill_efficiency * 100).toFixed(1)}%</div>

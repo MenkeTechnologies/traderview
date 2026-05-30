@@ -172,7 +172,7 @@ function card(p) {
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.goals.card.window_progress">Window progress</div>
                 <div class="value">${p.elapsed_pct.toFixed(0)}%</div>
-                <div class="small muted">${p.days_elapsed} / ${p.days_total} days</div></div>
+                <div class="small muted">${esc(t('view.goals.card.days_progress', { elapsed: p.days_elapsed, total: p.days_total }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.goals.card.closed_trades">Closed trades</div>
                 <div class="value">${p.trades_in_window}</div>
                 <div class="small muted">${p.wins}W / ${p.losses}L</div></div>
