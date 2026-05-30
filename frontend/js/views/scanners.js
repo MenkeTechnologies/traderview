@@ -880,6 +880,8 @@ const PRESETS = [
     { id: 'gap_down_midpoint_close_hot_vol', label: t('view.scanners.preset.gap_down_midpoint_close_hot_vol.label'), desc: t('view.scanners.preset.gap_down_midpoint_close_hot_vol.desc') },
     { id: 'big_gap_up_close_at_hod_hot_vol', label: t('view.scanners.preset.big_gap_up_close_at_hod_hot_vol.label'), desc: t('view.scanners.preset.big_gap_up_close_at_hod_hot_vol.desc') },
     { id: 'big_gap_down_close_at_lod_hot_vol', label: t('view.scanners.preset.big_gap_down_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.big_gap_down_close_at_lod_hot_vol.desc') },
+    { id: 'big_gap_up_close_at_lod_hot_vol', label: t('view.scanners.preset.big_gap_up_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.big_gap_up_close_at_lod_hot_vol.desc') },
+    { id: 'big_gap_down_close_at_hod_hot_vol', label: t('view.scanners.preset.big_gap_down_close_at_hod_hot_vol.label'), desc: t('view.scanners.preset.big_gap_down_close_at_hod_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
