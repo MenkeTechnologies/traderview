@@ -612,6 +612,8 @@ pub enum Preset {
     ExtremeTailEvent,               // rel_volume >= 3 AND change_pct.abs() > 5 — very hot vol + huge change (extreme tail event; major news / earnings / squeeze)
     Year52HighRetestStrongClose,    // year_high_pct < 5 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w high + green close at HOD + hot vol (retest of 52w high with strong close confirming the level)
     Year52LowRetestWeakClose,       // year_low_pct < 5 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w low + red close at LOD + hot vol (retest of 52w low with weak close confirming the level)
+    DivergentGapVsIntraday,         // gap_pct * day_pct < 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday point opposite directions, both meaningful (clear overnight-vs-intraday divergence; market disagreed with the gap)
+    CongruentGapAndIntradaySameDir, // gap_pct * day_pct > 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday same-direction, both meaningful (gap extended by intraday; same-direction follow-through)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3283,6 +3285,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.3
                 && hit.rel_volume >= 1.5
         }
+        Preset::DivergentGapVsIntraday => {
+            hit.gap_pct * hit.day_pct < 0.0
+                && hit.gap_pct.abs() > 0.5
+                && hit.day_pct.abs() > 0.5
+        }
+        Preset::CongruentGapAndIntradaySameDir => {
+            hit.gap_pct * hit.day_pct > 0.0
+                && hit.gap_pct.abs() > 0.5
+                && hit.day_pct.abs() > 0.5
+        }
     }
 }
 
@@ -3785,6 +3797,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeTailEvent => "Very Hot Vol + Huge Change (Extreme Tail Event / Major News)",
         Preset::Year52HighRetestStrongClose => "Near 52w High + HOD Close + Hot Vol (52w-High Retest Confirmed)",
         Preset::Year52LowRetestWeakClose => "Near 52w Low + LOD Close + Hot Vol (52w-Low Retest Confirmed)",
+        Preset::DivergentGapVsIntraday => "Gap vs Intraday Opposite Directions (Market Disagreed with Gap)",
+        Preset::CongruentGapAndIntradaySameDir => "Gap and Intraday Same Direction (Gap Extended by Intraday)",
     }
 }
 

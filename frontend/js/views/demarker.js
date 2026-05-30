@@ -50,6 +50,11 @@ export async function renderDemarker(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.demarker.h2.regime_chart">Regime time-share (OB / neutral / OS bar counts)</h2>
+            <div id="dm-regime-chart" style="height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.demarker.h2.crossing_events">Crossing events</h2>
             <div id="dm-events"></div>
         </div>
@@ -107,6 +112,7 @@ async function compute(tok) {
     const numeric = (values || []).map(v => v == null ? null : Number(v));
     renderSummary(numeric, bars);
     renderChart(numeric);
+    renderRegimeChart(numeric);
     renderEvents(numeric);
     const latest = latestValue(numeric);
     const regime = regimeOf(latest.value);
@@ -164,6 +170,41 @@ function renderChart(values) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 }],
         legend: { show: true },
     }, [xs, values, obYs, midYs, osYs], el);
+}
+
+function renderRegimeChart(values) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('dm-regime-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!Array.isArray(values) || !values.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.demarker.empty_regime_chart">${esc(t('view.demarker.empty_regime_chart'))}</div>`;
+        return;
+    }
+    const counts = regimeCounts(values);
+    const labels = [
+        t('view.demarker.chart.overbought'),
+        t('view.demarker.chart.neutral'),
+        t('view.demarker.chart.oversold'),
+    ];
+    const ys = [counts.overbought, counts.neutral, counts.oversold];
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.demarker.chart.regime_idx') },
+            { label: t('view.demarker.chart.bar_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderEvents(values) {

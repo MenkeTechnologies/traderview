@@ -494,6 +494,8 @@ const PRESETS = [
     { id: 'extreme_tail_event', label: t('view.scanners.preset.extreme_tail_event.label'), desc: t('view.scanners.preset.extreme_tail_event.desc') },
     { id: 'year52_high_retest_strong_close', label: t('view.scanners.preset.year52_high_retest_strong_close.label'), desc: t('view.scanners.preset.year52_high_retest_strong_close.desc') },
     { id: 'year52_low_retest_weak_close', label: t('view.scanners.preset.year52_low_retest_weak_close.label'), desc: t('view.scanners.preset.year52_low_retest_weak_close.desc') },
+    { id: 'divergent_gap_vs_intraday', label: t('view.scanners.preset.divergent_gap_vs_intraday.label'), desc: t('view.scanners.preset.divergent_gap_vs_intraday.desc') },
+    { id: 'congruent_gap_and_intraday_same_dir', label: t('view.scanners.preset.congruent_gap_and_intraday_same_dir.label'), desc: t('view.scanners.preset.congruent_gap_and_intraday_same_dir.desc') },
 ];
 
 export async function renderScanners(mount) {
