@@ -111,6 +111,11 @@ export async function renderAiAnalyze(mount, tradeId) {
             <h2 data-i18n="view.journal_ai.h2.findings_chart">Findings by category</h2>
             <div id="ai-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.journal_ai.h2.depth_chart">Total characters written per category (depth)</h2>
+            <div id="ai-depth-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.journal_ai.hint.depth" class="muted small">Sum of characters across each category's items. Reveals depth vs. breadth: a category with 2 long detailed items may matter more than 4 one-word items. Compare against the count chart above.</p>
+        </div>
     `;
     const status = mount.querySelector('#ai-status');
     const body = mount.querySelector('#ai-body');
@@ -124,11 +129,13 @@ export async function renderAiAnalyze(mount, tradeId) {
                     (cached.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: cached.prompt_tokens, r: cached.response_tokens || 0 }) : '');
                 if (body) body.innerHTML = renderFindings(cached.findings);
                 renderFindingsChart(cached.findings);
+                renderFindingsDepthChart(cached.findings);
                 const runBtn = mount.querySelector('#ai-run');
                 if (runBtn) runBtn.textContent = t('view.journal_ai.btn.reanalyze');
             } else {
                 if (status) status.textContent = t('view.journal_ai.status.no_cache');
                 renderFindingsChart(null);
+                renderFindingsDepthChart(null);
             }
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
@@ -152,6 +159,7 @@ export async function renderAiAnalyze(mount, tradeId) {
                 (r.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: r.prompt_tokens, r: r.response_tokens || 0 }) : '');
             if (body) body.innerHTML = renderFindings(r.findings);
             renderFindingsChart(r.findings);
+            renderFindingsDepthChart(r.findings);
             btn.textContent = t('view.journal_ai.btn.reanalyze');
             showToast(t('view.journal_ai.toast.done', { provider: r.provider, model: r.model }), { level: 'success' });
         } catch (e) {
@@ -200,6 +208,50 @@ function renderFindingsChart(f) {
             { stroke: '#aab', size: 28,
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, data, el);
+}
+
+function renderFindingsDepthChart(f) {
+    const el = document.getElementById('ai-depth-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const cats = [
+        { key: 'mistakes',     color: '#ff3860' },
+        { key: 'risk_gaps',    color: '#ff7a1f' },
+        { key: 'suggestions',  color: '#00e5ff' },
+        { key: 'rule_changes', color: '#7af0a8' },
+    ];
+    const chars = cats.map(c => {
+        if (!f || !Array.isArray(f[c.key])) return 0;
+        return f[c.key].reduce((a, s) => a + String(s || '').length, 0);
+    });
+    if (!chars.some(n => n > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.journal_ai.empty_depth_chart">${esc(t('view.journal_ai.empty_depth_chart'))}</div>`;
+        return;
+    }
+    const labels = cats.map(c => t(`view.journal_ai.chart.${c.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.journal_ai.chart.category_idx') }];
+    const data = [xs];
+    cats.forEach((c, i) => {
+        const ys = xs.map((_, j) => j === i ? chars[i] : null);
+        series.push({
+            label: labels[i],
+            stroke: c.color, width: 0,
+            points: { show: true, size: 16, fill: c.color, stroke: c.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
         ],
         legend: { show: true },
     }, data, el);

@@ -688,6 +688,8 @@ pub enum Preset {
     Year52HighGapDownHeldHotVol,     // year_high_pct < 5 AND gap_pct < -1 AND change_pct < -2 AND rel_volume >= 2 — at 52w high + gap down + finished down <-2 + hot vol (rejection gap HELD and extended; distribution at the highs; opposite of Year52HighGapDownReclaimed)
     HotVolSmallChangeSmallGapWideRange, // rel_volume >= 2 AND change_pct.abs() < 0.5 AND gap_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 1.5 — hot vol + tiny change + tiny gap + moderate range (heavy participation that visited both sides + flat finish + no overnight bias; pure intraday redistribution without directional resolution)
     HotVolFlatCloseBigGap,           // change_pct.abs() < 0.5 AND gap_pct.abs() > 2 AND rel_volume >= 2 — flat finish + big gap + hot vol (intraday fully absorbed the gap on heavy participation; full round-trip on volume; market rejected the overnight move with confirmation)
+    OrganicMicroGainNormalVol,       // change_pct between 0.3 and 1 AND day_pct > 0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest gain (0.3-1%) + green intraday + normal vol + no gap (silent drift up; pure organic accumulation under the radar; ideal for long-term adds without alerting)
+    OrganicMicroDropNormalVol,       // change_pct between -1 and -0.3 AND day_pct < -0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest drop (-1 to -0.3%) + red intraday + normal vol + no gap (silent drift down; pure organic distribution under the radar)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3785,6 +3787,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::OrganicMicroGainNormalVol => {
+            hit.change_pct >= 0.3
+                && hit.change_pct <= 1.0
+                && hit.day_pct > 0.2
+                && hit.rel_volume >= 0.9
+                && hit.rel_volume <= 1.2
+                && hit.gap_pct.abs() < 0.2
+        }
+        Preset::OrganicMicroDropNormalVol => {
+            hit.change_pct <= -0.3
+                && hit.change_pct >= -1.0
+                && hit.day_pct < -0.2
+                && hit.rel_volume >= 0.9
+                && hit.rel_volume <= 1.2
+                && hit.gap_pct.abs() < 0.2
+        }
     }
 }
 
@@ -4363,6 +4381,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52HighGapDownHeldHotVol => "Near 52w High + Gap Down + Held & Extended + Hot Vol (Distribution at the Highs; Rejection Gap Confirmed)",
         Preset::HotVolSmallChangeSmallGapWideRange => "Hot Vol + Tiny Change + Tiny Gap + Moderate Range (Pure Intraday Redistribution; Heavy Participation, No Resolution)",
         Preset::HotVolFlatCloseBigGap => "Hot Vol + Flat Close + Big Gap (Intraday Round-trip Absorbed Overnight Move with Volume Confirmation)",
+        Preset::OrganicMicroGainNormalVol => "Modest Gain (0.3-1%) + Green Intraday + Normal Vol + No Gap (Silent Organic Accumulation Under the Radar)",
+        Preset::OrganicMicroDropNormalVol => "Modest Drop (-1 to -0.3%) + Red Intraday + Normal Vol + No Gap (Silent Organic Distribution Under the Radar)",
     }
 }
 

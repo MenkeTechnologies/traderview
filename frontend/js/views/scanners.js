@@ -570,6 +570,8 @@ const PRESETS = [
     { id: 'year52_high_gap_down_held_hot_vol', label: t('view.scanners.preset.year52_high_gap_down_held_hot_vol.label'), desc: t('view.scanners.preset.year52_high_gap_down_held_hot_vol.desc') },
     { id: 'hot_vol_small_change_small_gap_wide_range', label: t('view.scanners.preset.hot_vol_small_change_small_gap_wide_range.label'), desc: t('view.scanners.preset.hot_vol_small_change_small_gap_wide_range.desc') },
     { id: 'hot_vol_flat_close_big_gap', label: t('view.scanners.preset.hot_vol_flat_close_big_gap.label'), desc: t('view.scanners.preset.hot_vol_flat_close_big_gap.desc') },
+    { id: 'organic_micro_gain_normal_vol', label: t('view.scanners.preset.organic_micro_gain_normal_vol.label'), desc: t('view.scanners.preset.organic_micro_gain_normal_vol.desc') },
+    { id: 'organic_micro_drop_normal_vol', label: t('view.scanners.preset.organic_micro_drop_normal_vol.label'), desc: t('view.scanners.preset.organic_micro_drop_normal_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
