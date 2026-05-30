@@ -25,6 +25,7 @@ import {
 } from '../_deflated_sharpe_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULTS = {
     observed_sharpe: 1.5,
     n_observations: 252,
@@ -44,17 +45,17 @@ export async function renderDeflatedSharpe(mount, _appState) {
             <h2 data-i18n="view.deflated_sharpe.h2.backtest_sample">Backtest sample</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.deflated_sharpe.label.observed_sr">Observed SR</span>
-                    <input id="ds-sr" type="number" step="any" value="${state.params.observed_sharpe}"></label>
+                    <input id="ds-sr" type="number" step="any" value="${state.params.observed_sharpe}" data-tip="view.deflated_sharpe.tip.sr"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.n_obs">n observations</span>
-                    <input id="ds-n" type="number" step="1" min="4" value="${state.params.n_observations}"></label>
+                    <input id="ds-n" type="number" step="1" min="4" value="${state.params.n_observations}" data-tip="view.deflated_sharpe.tip.n"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.skewness">Skewness</span>
-                    <input id="ds-skew" type="number" step="any" value="${state.params.skewness}"></label>
+                    <input id="ds-skew" type="number" step="any" value="${state.params.skewness}" data-tip="view.deflated_sharpe.tip.skew"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.kurtosis">Kurtosis (normal = 3)</span>
-                    <input id="ds-kurt" type="number" step="any" value="${state.params.kurtosis}"></label>
+                    <input id="ds-kurt" type="number" step="any" value="${state.params.kurtosis}" data-tip="view.deflated_sharpe.tip.kurt"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.trials">Trials run</span>
-                    <input id="ds-trials" type="number" step="1" min="1" value="${state.params.n_trials}"></label>
-                <button data-i18n="view.deflated_sharpe.btn.deflate" id="ds-run" class="primary" type="button">Deflate</button>
-                <button data-i18n="view.deflated_sharpe.btn.trials_sweep" id="ds-sweep" class="secondary" type="button">+ Trials sweep</button>
+                    <input id="ds-trials" type="number" step="1" min="1" value="${state.params.n_trials}" data-tip="view.deflated_sharpe.tip.trials"></label>
+                <button data-i18n="view.deflated_sharpe.btn.deflate" data-tip="view.deflated_sharpe.tip.deflate" data-shortcut="deflated_sharpe_compute" id="ds-run" class="primary" type="button">Deflate</button>
+                <button data-i18n="view.deflated_sharpe.btn.trials_sweep" data-tip="view.deflated_sharpe.tip.sweep" data-shortcut="deflated_sharpe_sweep" id="ds-sweep" class="secondary" type="button">+ Trials sweep</button>
             </div>
             <p class="muted">
                 The deflated threshold SR<sub>★</sub> ≈ √(2 ln N) is the noise floor
@@ -106,17 +107,22 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.anlyDeflatedSharpe(buildBody(state.params));
         if (!res) throw new Error(t('view.deflated_sharpe.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderSrBar(res);
+    const psr = res.psr ?? res.probabilistic_sharpe ?? res.deflated_sharpe ?? null;
+    showToast(t('view.deflated_sharpe.toast.done', {
+        psr: psr != null ? fmtProb(psr) : '—',
+    }), { level: (psr != null && psr >= 0.95) ? 'success' : 'warning' });
 }
 
 async function computeSweep(tok) {
