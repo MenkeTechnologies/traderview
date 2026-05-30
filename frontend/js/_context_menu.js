@@ -157,6 +157,21 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Backtest-preset-row context items. Right-click on a <tr data-
+// context-scope="backtest-preset-row" data-id="X" data-slug="Y"
+// data-name="Z" data-mine="bool"> shows: Copy slug / Open preset /
+// Fork (toasts if mine) / Delete (toasts if not mine).
+export const BACKTEST_PRESET_ROW_ITEMS = [
+    { id: 'bp_row_copy_slug', labelKey: 'ctxmenu.bp_row_copy_slug',
+      actionKey: 'tv:bp-row-copy-slug', section: 'preset' },
+    { id: 'bp_row_open',      labelKey: 'ctxmenu.bp_row_open',
+      actionKey: 'tv:bp-row-open',      section: 'preset' },
+    { id: 'bp_row_fork',      labelKey: 'ctxmenu.bp_row_fork',
+      actionKey: 'tv:bp-row-fork',      section: 'preset' },
+    { id: 'bp_row_delete',    labelKey: 'ctxmenu.bp_row_delete',
+      actionKey: 'tv:bp-row-delete',    section: 'preset' },
+];
+
 // Share-row context items. Right-click on a <tr data-context-scope=
 // "share-row" data-id="X" data-slug="Y" data-mine="bool"> shows:
 // Copy share URL / Open shared trade / Delete. Delete toasts a
@@ -323,6 +338,7 @@ export const ALL_SCOPED_ITEMS = [
     ['account-row',            ACCOUNT_ROW_ITEMS],
     ['plan-row',               PLAN_ROW_ITEMS],
     ['share-row',              SHARE_ROW_ITEMS],
+    ['backtest-preset-row',    BACKTEST_PRESET_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

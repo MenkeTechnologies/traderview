@@ -275,6 +275,64 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Backtest-preset-row actions — read data-id / data-slug / data-name / data-mine.
+    window.addEventListener('tv:bp-row-copy-slug', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        if (!slug) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(slug).then(
+                () => showToast(t('toast.copied', { what: slug }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:bp-row-open', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        if (!slug) return;
+        window.location.hash = `backtest-presets/${slug}`;
+    });
+    window.addEventListener('tv:bp-row-fork', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
+        if (!slug) return;
+        if (isMine) {
+            showToast(t('toast.bp_already_mine'), { level: 'warning' });
+            return;
+        }
+        void (async () => {
+            try {
+                const forked = await api.forkBacktestPreset(slug);
+                showToast(t('toast.bp_forked', { name: forked && forked.name ? forked.name : slug }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
+    window.addEventListener('tv:bp-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
+        if (!id) return;
+        if (!isMine) {
+            showToast(t('toast.bp_not_mine'), { level: 'warning' });
+            return;
+        }
+        void (async () => {
+            if (!await tConfirm('ctxmenu.bp_row_delete_confirm', { name }, { level: 'danger' })) return;
+            try {
+                await api.deleteBacktestPreset(id);
+                showToast(t('toast.bp_deleted', { name }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Share-row actions — read data-id / data-slug / data-mine.
     window.addEventListener('tv:share-row-copy-url', (e) => {
         const tgt = e.detail && e.detail.target;

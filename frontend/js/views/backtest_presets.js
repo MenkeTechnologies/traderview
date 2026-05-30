@@ -109,7 +109,11 @@ function table(rows, mine) {
             <th data-i18n="view.backtest_presets.th.forks">Forks</th><th data-i18n="view.backtest_presets.th.runs">Runs</th><th data-i18n="view.backtest_presets.th.updated">Updated</th><th></th>
         </tr></thead>
         <tbody>
-        ${rows.map(r => `<tr>
+        ${rows.map(r => `<tr data-context-scope="backtest-preset-row"
+                              data-id="${esc(r.id)}"
+                              data-slug="${esc(r.slug)}"
+                              data-name="${esc(r.name)}"
+                              data-mine="${mine ? 'true' : 'false'}">
             <td><a href="#backtest-presets/${esc(r.slug)}">${esc(r.name)}</a>
                 ${r.description ? `<div class="muted small">${esc(r.description)}</div>` : ''}
             </td>
