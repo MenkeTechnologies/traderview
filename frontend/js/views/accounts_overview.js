@@ -64,9 +64,15 @@ function render(r, mount) {
             <h2 data-i18n="view.accounts_overview.h2.pnl_chart">All-time P&L per account</h2>
             <div id="ao-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.accounts_overview.h2.winrate_chart">Win rate per account vs 50% baseline</h2>
+            <div id="ao-wr-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
     renderPnlChart(r.accounts);
+    renderWinRateChart(r.accounts);
 }
 
 function renderPnlChart(accounts) {
@@ -100,6 +106,39 @@ function renderPnlChart(accounts) {
         ],
         legend: { show: true },
     }, [xs, pnl, zero], el);
+}
+
+function renderWinRateChart(accounts) {
+    const el = document.getElementById('ao-wr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(accounts) || accounts.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.accounts_overview.empty_wr_chart">${esc(t('view.accounts_overview.empty_wr_chart'))}</div>`;
+        return;
+    }
+    const labels = accounts.map(a => `${a.broker}·${a.name}`);
+    const wr = accounts.map(a => Number.isFinite(a.win_rate) ? a.win_rate * 100 : null);
+    const xs = labels.map((_, i) => i + 1);
+    const fifty = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.accounts_overview.chart.acct_idx') },
+            { label: t('view.accounts_overview.chart.win_rate'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.accounts_overview.chart.baseline_50'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, wr, fifty], el);
 }
 
 function accountTable(accounts) {

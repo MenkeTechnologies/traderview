@@ -338,6 +338,8 @@ const PRESETS = [
     { id: 'no_gap_huge_change', label: t('view.scanners.preset.no_gap_huge_change.label'), desc: t('view.scanners.preset.no_gap_huge_change.desc') },
     { id: 'extreme_vol_flat_gap_flat_day', label: t('view.scanners.preset.extreme_vol_flat_gap_flat_day.label'), desc: t('view.scanners.preset.extreme_vol_flat_gap_flat_day.desc') },
     { id: 'illiquid_big_gap_flat_day', label: t('view.scanners.preset.illiquid_big_gap_flat_day.label'), desc: t('view.scanners.preset.illiquid_big_gap_flat_day.desc') },
+    { id: 'organic_up_day_close_at_hod', label: t('view.scanners.preset.organic_up_day_close_at_hod.label'), desc: t('view.scanners.preset.organic_up_day_close_at_hod.desc') },
+    { id: 'organic_down_day_close_at_lod', label: t('view.scanners.preset.organic_down_day_close_at_lod.label'), desc: t('view.scanners.preset.organic_down_day_close_at_lod.desc') },
 ];
 
 export async function renderScanners(mount) {

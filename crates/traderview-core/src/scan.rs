@@ -456,6 +456,8 @@ pub enum Preset {
     NoGapHugeChange,             // gap_pct.abs() < 0.3 AND change_pct.abs() > 5 AND rel_volume >= 1.5 — no overnight gap but huge intraday change on hot vol (intraday-only catalyst)
     ExtremeVolFlatGapFlatDay,    // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() < 1 — extreme vol with flat gap and small move (heavy churn no direction; potential trap)
     IlliquidBigGapFlatDay,       // rel_volume < 0.4 AND gap_pct.abs() > 3 AND change_pct.abs() < 1 — big gap on dry vol with flat day (illiquid gap; gap-fill risk)
+    OrganicUpDayCloseAtHod,      // gap_pct.abs() < 0.5 AND hod_dist.abs() < 0.3 AND day_pct > 2 AND rel_volume between 0.7 and 1.3 — flat open + close at HOD + strong day on avg vol (organic up-day; no overnight noise)
+    OrganicDownDayCloseAtLod,    // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.3 AND day_pct < -2 AND rel_volume between 0.7 and 1.3 — flat open + close at LOD + weak day on avg vol (organic down-day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2224,6 +2226,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 3.0
                 && hit.change_pct.abs() < 1.0
         }
+        Preset::OrganicUpDayCloseAtHod => {
+            hit.gap_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.day_pct > 2.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
+        Preset::OrganicDownDayCloseAtLod => {
+            hit.gap_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.day_pct < -2.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
     }
 }
 
@@ -2570,6 +2586,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NoGapHugeChange => "No Gap + Huge Change (Intraday Catalyst)",
         Preset::ExtremeVolFlatGapFlatDay => "Extreme-Vol Flat-Gap Flat-Day (Churn Trap)",
         Preset::IlliquidBigGapFlatDay => "Illiquid Big-Gap Flat-Day (Gap-Fill Risk)",
+        Preset::OrganicUpDayCloseAtHod => "Organic Up Day, Close at HOD",
+        Preset::OrganicDownDayCloseAtLod => "Organic Down Day, Close at LOD",
     }
 }
 
