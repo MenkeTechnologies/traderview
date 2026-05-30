@@ -186,6 +186,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'stress_test_demo',             keys: { key: 'l', meta: false, ctrl: false, shift: false, alt: false }, scope: 'stress-test',       descKey: 'shortcut.stress_test_demo',             actionKey: 'tv:stress-test-demo' },
     { id: 'chandelier_stop_run',          keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'chandelier-stop',   descKey: 'shortcut.chandelier_stop_run',          actionKey: 'tv:chandelier-stop-run' },
     { id: 'chandelier_stop_demo',         keys: { key: 'l', meta: false, ctrl: false, shift: false, alt: false }, scope: 'chandelier-stop',   descKey: 'shortcut.chandelier_stop_demo',         actionKey: 'tv:chandelier-stop-demo' },
+    { id: 'triple_screen_run',            keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'triple-screen',     descKey: 'shortcut.triple_screen_run',            actionKey: 'tv:triple-screen-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

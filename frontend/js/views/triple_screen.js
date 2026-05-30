@@ -14,6 +14,7 @@ import {
 } from '../_triple_screen_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { params: makeDemoData('buy') };
 
 export async function renderTripleScreen(mount, _appState) {
@@ -25,7 +26,7 @@ export async function renderTripleScreen(mount, _appState) {
             <h2 data-i18n="view.triple_screen.h2.screen_1_long_tide_weekly_trend">Screen 1 — Long-tide (weekly trend)</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.triple_screen.label.weekly_trend">Weekly trend</span>
-                    <select id="ts-trend">
+                    <select id="ts-trend" data-tip="view.triple_screen.tip.trend">
                         <option data-i18n="view.triple_screen.opt.up" value="up"      ${state.params.weekly_trend === 'up'      ? 'selected' : ''}>UP</option>
                         <option data-i18n="view.triple_screen.opt.down" value="down"    ${state.params.weekly_trend === 'down'    ? 'selected' : ''}>DOWN</option>
                         <option data-i18n="view.triple_screen.opt.neutral" value="neutral" ${state.params.weekly_trend === 'neutral' ? 'selected' : ''}>NEUTRAL</option>
@@ -37,11 +38,11 @@ export async function renderTripleScreen(mount, _appState) {
             <h2 data-i18n="view.triple_screen.h2.screen_2_intermediate_wave_daily_oscillator">Screen 2 — Intermediate-wave (daily oscillator)</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.triple_screen.label.oscillator">Oscillator value (RSI / stoch)</span>
-                    <input id="ts-osc" type="number" step="any" value="${state.params.daily_oscillator_value}"></label>
+                    <input id="ts-osc" type="number" step="any" value="${state.params.daily_oscillator_value}" data-tip="view.triple_screen.tip.osc"></label>
                 <label><span data-i18n="view.triple_screen.label.oversold">Oversold threshold</span>
-                    <input id="ts-os"  type="number" step="any" value="${state.params.oversold_threshold}"></label>
+                    <input id="ts-os"  type="number" step="any" value="${state.params.oversold_threshold}" data-tip="view.triple_screen.tip.os"></label>
                 <label><span data-i18n="view.triple_screen.label.overbought">Overbought threshold</span>
-                    <input id="ts-ob"  type="number" step="any" value="${state.params.overbought_threshold}"></label>
+                    <input id="ts-ob"  type="number" step="any" value="${state.params.overbought_threshold}" data-tip="view.triple_screen.tip.ob"></label>
             </div>
             <p data-i18n="view.triple_screen.hint.in_an_up_tide_pull_back_below_oversold_entry_zone_" class="muted">In an UP tide, pull-back below oversold = entry zone.
                 In a DOWN tide, rally above overbought = entry zone.</p>
@@ -50,16 +51,16 @@ export async function renderTripleScreen(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.triple_screen.h2.screen_3_short_ripple_intraday_breakout">Screen 3 — Short-ripple (intraday breakout)</h2>
             <div class="inline-form">
-                <label><input id="ts-buy"  type="checkbox" ${state.params.intraday_breakout_up   ? 'checked' : ''}> <span data-i18n="view.triple_screen.label.intraday_up">Intraday breakout UP</span></label>
-                <label><input id="ts-sell" type="checkbox" ${state.params.intraday_breakout_down ? 'checked' : ''}> <span data-i18n="view.triple_screen.label.intraday_down">Intraday breakout DOWN</span></label>
-                <button data-i18n="view.triple_screen.btn.evaluate" id="ts-run" class="primary" type="button">Evaluate</button>
+                <label><input id="ts-buy"  type="checkbox" ${state.params.intraday_breakout_up   ? 'checked' : ''} data-tip="view.triple_screen.tip.up"> <span data-i18n="view.triple_screen.label.intraday_up">Intraday breakout UP</span></label>
+                <label><input id="ts-sell" type="checkbox" ${state.params.intraday_breakout_down ? 'checked' : ''} data-tip="view.triple_screen.tip.down"> <span data-i18n="view.triple_screen.label.intraday_down">Intraday breakout DOWN</span></label>
+                <button data-i18n="view.triple_screen.btn.evaluate" id="ts-run" class="primary" type="button" data-tip="view.triple_screen.tip.run" data-shortcut="triple_screen_run">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.triple_screen.btn.demo_buy_all_aligned_long" id="ts-demo-buy"      class="secondary" type="button">Demo: BUY (all aligned long)</button>
-                <button data-i18n="view.triple_screen.btn.demo_sell_all_aligned_short" id="ts-demo-sell"     class="secondary" type="button">Demo: SELL (all aligned short)</button>
-                <button data-i18n="view.triple_screen.btn.demo_wait_no_pullback" id="ts-demo-no-pb"    class="secondary" type="button">Demo: WAIT — no pullback</button>
-                <button data-i18n="view.triple_screen.btn.demo_wait_no_breakout" id="ts-demo-no-bo"    class="secondary" type="button">Demo: WAIT — no breakout</button>
-                <button data-i18n="view.triple_screen.btn.demo_wait_neutral_tide" id="ts-demo-neutral"  class="secondary" type="button">Demo: WAIT — neutral tide</button>
+                <button data-i18n="view.triple_screen.btn.demo_buy_all_aligned_long" id="ts-demo-buy"      class="secondary" type="button" data-tip="view.triple_screen.tip.demo_buy">Demo: BUY (all aligned long)</button>
+                <button data-i18n="view.triple_screen.btn.demo_sell_all_aligned_short" id="ts-demo-sell"     class="secondary" type="button" data-tip="view.triple_screen.tip.demo_sell">Demo: SELL (all aligned short)</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_no_pullback" id="ts-demo-no-pb"    class="secondary" type="button" data-tip="view.triple_screen.tip.demo_no_pb">Demo: WAIT — no pullback</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_no_breakout" id="ts-demo-no-bo"    class="secondary" type="button" data-tip="view.triple_screen.tip.demo_no_bo">Demo: WAIT — no breakout</button>
+                <button data-i18n="view.triple_screen.btn.demo_wait_neutral_tide" id="ts-demo-neutral"  class="secondary" type="button" data-tip="view.triple_screen.tip.demo_neutral">Demo: WAIT — neutral tide</button>
             </div>
         </div>
 
@@ -117,7 +118,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.triple_screen.toast.invalid'), { level: 'warning' }); return; }
     // Pre-flight: render local verdict immediately so the UI is responsive,
     // then refresh once the backend confirms.
     renderSummary({ verdict: localEvaluate(state.params) }, true);
@@ -128,10 +129,15 @@ async function compute(tok) {
     try {
         resp = await api.discTripleScreen(buildBody(state.params));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.triple_screen.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
+    const verdict = (resp && resp.verdict) || 'wait';
+    const level = (verdict === 'buy' || verdict === 'sell') ? 'success' : 'info';
+    showToast(t('view.triple_screen.toast.evaluated', { verdict: verdict.toUpperCase() }), { level });
 }
 
 function renderSummary(resp, pending) {
