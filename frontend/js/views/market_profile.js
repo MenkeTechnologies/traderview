@@ -47,6 +47,11 @@ export async function renderMarketProfile(mount, _appState) {
                 actual TPO brackets that touched each price level.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.market_profile.h2.tpo_chart">TPO count by price level</h2>
+            <div id="mp-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="mp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('mp-demo').addEventListener('click', () => {
@@ -92,6 +97,36 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderTpo(report);
+    renderTpoChart(report);
+}
+
+function renderTpoChart(report) {
+    const el = document.getElementById('mp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const levels = (report && Array.isArray(report.levels)) ? [...report.levels] : [];
+    if (levels.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.market_profile.empty_chart">${esc(t('view.market_profile.empty_chart'))}</div>`;
+        return;
+    }
+    levels.sort((a, b) => a.price - b.price);
+    const xs = levels.map(l => Number(l.price));
+    const ys = levels.map(l => Number(l.tpo_count));
+    const pocLine = xs.map(() => null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.market_profile.chart.price') },
+            { label: t('view.market_profile.chart.tpo_count'),
+              stroke: '#00e5ff', width: 1.4,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.market_profile.chart.poc'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, pocLine], el);
 }
 
 function renderSummary(r) {
