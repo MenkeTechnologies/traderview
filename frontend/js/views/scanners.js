@@ -54,6 +54,8 @@ const PRESETS = [
     { id: 'anchor_drift_squeeze',      label: t('view.scanners.preset.anchor_drift_squeeze.label'),      desc: t('view.scanners.preset.anchor_drift_squeeze.desc') },
     { id: 'post_gap_fill_squeeze',     label: t('view.scanners.preset.post_gap_fill_squeeze.label'),     desc: t('view.scanners.preset.post_gap_fill_squeeze.desc') },
     { id: 'post_spike_quiet_squeeze',  label: t('view.scanners.preset.post_spike_quiet_squeeze.label'),  desc: t('view.scanners.preset.post_spike_quiet_squeeze.desc') },
+    { id: 'high_squeeze_bracket',      label: t('view.scanners.preset.high_squeeze_bracket.label'),      desc: t('view.scanners.preset.high_squeeze_bracket.desc') },
+    { id: 'low_squeeze_bracket',       label: t('view.scanners.preset.low_squeeze_bracket.label'),       desc: t('view.scanners.preset.low_squeeze_bracket.desc') },
 ];
 
 export async function renderScanners(mount) {

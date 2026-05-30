@@ -57,7 +57,48 @@ export async function renderCalendar(mount, state) {
     mount.innerHTML = `
         <h1 data-i18n="view.calendar.h1.calendar" class="view-title">// CALENDAR</h1>
         <div class="cal-months">${monthHtml}</div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.calendar.h2.daily_chart">Daily net P&L (sorted by date)</h2>
+            <div id="cal-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderDailyChart(cells);
+}
+
+function renderDailyChart(cells) {
+    const el = document.getElementById('cal-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const sorted = [...cells]
+        .filter(c => Number.isFinite(Number(c.net_pnl)))
+        .sort((a, b) => a.day.localeCompare(b.day));
+    if (sorted.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.calendar.empty_chart">${esc(t('view.calendar.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = sorted.map(c => c.day.slice(5));
+    const ys = sorted.map(c => Number(c.net_pnl));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.calendar.chart.day_idx') },
+            { label: t('view.calendar.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.calendar.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function monthName(m) {

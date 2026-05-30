@@ -172,6 +172,8 @@ pub enum Preset {
     AnchorDriftSqueeze,     // |day_pct| < 1 AND |change| < 1 AND |gap| < 1 AND rel_volume < 0.8 — generic light-day setup
     PostGapFillSqueeze,     // gap and change opposite signs AND |change| < |gap| / 2 AND day_pct.abs() < 0.5 — gap getting filled then stalling
     PostSpikeQuietSqueeze,  // |change_pct| > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.6 — quiet day after a spike
+    HighSqueezeBracket,     // tight HOD distance (<1) AND tight LOD distance (<1) AND year_high_pct >= -3 — both ends near top
+    LowSqueezeBracket,      // tight HOD distance (<1) AND tight LOD distance (<1) AND year_low_pct <= 3  — both ends near bottom
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -406,6 +408,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.3
                 && hit.rel_volume < 0.6
         }
+        Preset::HighSqueezeBracket => {
+            hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.year_high_pct >= -3.0
+        }
+        Preset::LowSqueezeBracket => {
+            hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.year_low_pct <= 3.0
+        }
     }
 }
 
@@ -468,6 +480,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AnchorDriftSqueeze => "Anchor-Drift Squeeze",
         Preset::PostGapFillSqueeze => "Post-Gap-Fill Squeeze",
         Preset::PostSpikeQuietSqueeze => "Post-Spike Quiet Squeeze",
+        Preset::HighSqueezeBracket => "High-Squeeze Bracket",
+        Preset::LowSqueezeBracket => "Low-Squeeze Bracket",
     }
 }
 
