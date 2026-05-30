@@ -63,6 +63,11 @@ export async function renderRiskReward(mount, _appState) {
             <div id="rr-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_reward.h2.levels_chart">Price levels: stop / entry / R-multiples / target</h2>
+            <div id="rr-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="rr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -111,6 +116,7 @@ async function compute(tok) {
     }
     renderSummary(local.report, null, true);
     renderTable(local.report);
+    renderLevelsChart();
     let resp;
     try {
         resp = await api.calcRiskReward(buildBody(state));
@@ -130,6 +136,61 @@ async function compute(tok) {
     };
     renderSummary(normalized, local.report, false);
     renderTable(normalized);
+    renderLevelsChart();
+}
+
+function renderLevelsChart() {
+    const el = document.getElementById('rr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const e = Number(state.entry), s = Number(state.stop), tgt = Number(state.target);
+    if (![e, s, tgt].every(Number.isFinite)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_reward.empty_chart">${esc(t('view.risk_reward.empty_chart'))}</div>`;
+        return;
+    }
+    const stopDist = Math.abs(e - s);
+    const dir = state.side === 'short' ? -1 : 1;
+    const r1 = e + dir * stopDist;
+    const r2 = e + dir * stopDist * 2;
+    const labels = [
+        t('view.risk_reward.chart.stop'),
+        t('view.risk_reward.chart.entry'),
+        t('view.risk_reward.chart.r1'),
+        t('view.risk_reward.chart.r2'),
+        t('view.risk_reward.chart.target'),
+    ];
+    const prices = [s, e, r1, r2, tgt];
+    const xs = labels.map((_, i) => i + 1);
+    const stopY  = [s,    null, null, null, null];
+    const entryY = [null, e,    null, null, null];
+    const rY     = [null, null, r1,   r2,   null];
+    const tgtY   = [null, null, null, null, tgt];
+    void prices;
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_reward.chart.level') },
+            { label: t('view.risk_reward.chart.stop'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.risk_reward.chart.entry'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.risk_reward.chart.r_levels'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.risk_reward.chart.target'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 16, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, stopY, entryY, rY, tgtY], el);
 }
 
 function renderSummary(report, localRef, pending) {

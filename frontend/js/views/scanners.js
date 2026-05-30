@@ -206,6 +206,8 @@ const PRESETS = [
     { id: 'channel_ride_down', label: t('view.scanners.preset.channel_ride_down.label'), desc: t('view.scanners.preset.channel_ride_down.desc') },
     { id: 'pullback_in_uptrend', label: t('view.scanners.preset.pullback_in_uptrend.label'), desc: t('view.scanners.preset.pullback_in_uptrend.desc') },
     { id: 'bounce_in_downtrend', label: t('view.scanners.preset.bounce_in_downtrend.label'), desc: t('view.scanners.preset.bounce_in_downtrend.desc') },
+    { id: 'deep_pullback_in_uptrend', label: t('view.scanners.preset.deep_pullback_in_uptrend.label'), desc: t('view.scanners.preset.deep_pullback_in_uptrend.desc') },
+    { id: 'deep_bounce_in_downtrend', label: t('view.scanners.preset.deep_bounce_in_downtrend.label'), desc: t('view.scanners.preset.deep_bounce_in_downtrend.desc') },
 ];
 
 export async function renderScanners(mount) {
