@@ -56,6 +56,11 @@ export async function renderCarhart4(mount, _appState) {
             <div id="c4-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.car4.h2.factor_chart">Factor coefficients</h2>
+            <div id="c4-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="c4-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -99,6 +104,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderFactors(local);
     renderStats();
+    renderFactorChart(local);
     let resp;
     try {
         resp = await api.anlyCarhart4(buildBody(state));
@@ -111,6 +117,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderFactors(resp);
     renderStats();
+    renderFactorChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -206,6 +213,51 @@ function tstat(b, se) {
 function near(a, b, tol = 1e-6) {
     if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
     return Math.abs(a - b) < tol;
+}
+
+function renderFactorChart(report) {
+    const el = document.getElementById('c4-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report) {
+        el.innerHTML = `<div class="muted" data-i18n="view.car4.empty_chart">${esc(t('view.car4.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.car4.row.alpha'),
+        t('view.car4.row.mkt'),
+        t('view.car4.row.smb'),
+        t('view.car4.row.hml'),
+        t('view.car4.row.wml'),
+    ];
+    const coefs = [
+        Number.isFinite(report.alpha) ? report.alpha : null,
+        Number.isFinite(report.beta_mkt) ? report.beta_mkt : null,
+        Number.isFinite(report.beta_smb) ? report.beta_smb : null,
+        Number.isFinite(report.beta_hml) ? report.beta_hml : null,
+        Number.isFinite(report.beta_wml) ? report.beta_wml : null,
+    ];
+    const xs = labels.map((_, i) => i + 1);
+    const zeroLine = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.car4.chart.factor_idx') },
+            { label: t('view.car4.chart.coef'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.car4.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, coefs, zeroLine], el);
 }
 
 function card(label, value, cls = '') {
