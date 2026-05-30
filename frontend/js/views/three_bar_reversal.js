@@ -13,6 +13,7 @@ import {
 } from '../_three_bar_reversal_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { barText: '' };
 
 export async function renderThreeBarReversal(mount, _appState) {
@@ -26,11 +27,11 @@ export async function renderThreeBarReversal(mount, _appState) {
                 Detection rule (fixed): bar1 trend bar, small middle (body ≤ 50% of bar1's body),
                 bar3 closes past bar1's opposite extreme. Demo includes one classic bullish
                 pattern at bars 2-3-4 and one classic bearish pattern at bars 11-12-13.</p>
-            <textarea id="tbr-bars" rows="6" placeholder="100 100.5 99.5 100.2&#10;100.2 100.5 99.8 100.0&#10;..."></textarea>
+            <textarea id="tbr-bars" rows="6" placeholder="100 100.5 99.5 100.2&#10;100.2 100.5 99.8 100.0&#10;..." data-tip="view.three_bar_reversal.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.three_bar_reversal.btn.load_demo_14_bars_bull_bear_pattern" id="tbr-demo" class="secondary" type="button">Load demo (14 bars, bull + bear pattern)</button>
-                <button data-i18n="view.three_bar_reversal.btn.clear" id="tbr-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.three_bar_reversal.btn.detect" id="tbr-run" class="primary" type="button">Detect</button>
+                <button data-i18n="view.three_bar_reversal.btn.load_demo_14_bars_bull_bear_pattern" id="tbr-demo" class="secondary" type="button" data-tip="view.three_bar_reversal.tip.demo" data-shortcut="three_bar_reversal_demo">Load demo (14 bars, bull + bear pattern)</button>
+                <button data-i18n="view.three_bar_reversal.btn.clear" id="tbr-clear" class="secondary" type="button" data-tip="view.three_bar_reversal.tip.clear">Clear</button>
+                <button data-i18n="view.three_bar_reversal.btn.detect" id="tbr-run" class="primary" type="button" data-tip="view.three_bar_reversal.tip.run" data-shortcut="three_bar_reversal_run">Detect</button>
             </div>
         </div>
 
@@ -55,9 +56,11 @@ export async function renderThreeBarReversal(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('tbr-bars').value =
             b.map(x => `${x.open} ${x.high} ${x.low} ${x.close}`).join('\n');
+        showToast(t('view.three_bar_reversal.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('tbr-clear').addEventListener('click', () => {
         document.getElementById('tbr-bars').value = '';
+        showToast(t('view.three_bar_reversal.toast.cleared'), { level: 'info' });
     });
     document.getElementById('tbr-run').addEventListener('click', () => {
         readInputs();
@@ -80,20 +83,25 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.three_bar_reversal.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length < 3) return;
     }
     const err = validateInputs(bars);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.three_bar_reversal.toast.invalid'), { level: 'warning' }); return; }
     let report;
     try {
         report = await api.anlyThreeBarReversal(buildBody(bars));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.three_bar_reversal.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars);
     renderChart(bars, report);
     renderEvents(report);
+    const events = (report.events || []).length;
+    showToast(t('view.three_bar_reversal.toast.detected', { events, bars: bars.length }), { level: 'success' });
 }
 
 function renderSummary(report, bars) {

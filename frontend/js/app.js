@@ -586,6 +586,16 @@ function bindTabs() {
         const el = document.getElementById('ha-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in three-bar-reversal scope → click Detect.
+    window.addEventListener('tv:three-bar-reversal-run', () => {
+        const el = document.getElementById('tbr-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in three-bar-reversal scope → click Load demo.
+    window.addEventListener('tv:three-bar-reversal-demo', () => {
+        const el = document.getElementById('tbr-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
