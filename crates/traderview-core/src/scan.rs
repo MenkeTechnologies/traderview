@@ -858,6 +858,8 @@ pub enum Preset {
     SmallDayPctBigChangeHotVol,          // day_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat intraday move + big net close + hot vol (overnight gap held intact through regular hours: the entire daily move was the gap, intraday flat acceptance with elevated participation; gap-acceptance day)
     Year52HighRangeExpansionHotVol,      // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct > 2 AND rel_volume >= 2 — new 52w high + wide intraday range + green close + hot vol (volatility-expansion breakout at new highs: wide-range trend day after the breakout level; institutional follow-through with elevated participation)
     Year52LowRangeExpansionHotVol,       // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct < -2 AND rel_volume >= 2 — new 52w low + wide intraday range + red close + hot vol (volatility-expansion breakdown at new lows: wide-range trend day after the breakdown level; institutional follow-through with elevated participation)
+    Year52HighRangeContractionHotVol,    // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct > 0 AND change_pct < 1 AND rel_volume >= 2 — new 52w high + tight intraday range + small green close + hot vol (post-breakout absorption coil at new highs: tight digestion with elevated participation; pre-extension consolidation)
+    Year52LowRangeContractionHotVol,     // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct < 0 AND change_pct > -1 AND rel_volume >= 2 — new 52w low + tight intraday range + small red close + hot vol (post-breakdown absorption coil at new lows: tight digestion with elevated participation; pre-continuation consolidation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5001,6 +5003,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighRangeContractionHotVol => {
+            hit.year_high_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct > 0.0
+                && hit.change_pct < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowRangeContractionHotVol => {
+            hit.year_low_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct < 0.0
+                && hit.change_pct > -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5749,6 +5765,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallDayPctBigChangeHotVol => "Flat Intraday Move + Big Net Close + Hot Vol (Overnight Gap Held Intact through Regular Hours: the Entire Daily Move Was the Gap, Intraday Flat Acceptance with Elevated Participation; Gap-acceptance Day)",
         Preset::Year52HighRangeExpansionHotVol => "New 52w High + Wide Intraday Range + Green Close + Hot Vol (Volatility-expansion Breakout at New Highs: Wide-range Trend Day after the Breakout Level; Institutional Follow-through with Elevated Participation)",
         Preset::Year52LowRangeExpansionHotVol => "New 52w Low + Wide Intraday Range + Red Close + Hot Vol (Volatility-expansion Breakdown at New Lows: Wide-range Trend Day after the Breakdown Level; Institutional Follow-through with Elevated Participation)",
+        Preset::Year52HighRangeContractionHotVol => "New 52w High + Tight Intraday Range + Small Green Close + Hot Vol (Post-breakout Absorption Coil at New Highs: Tight Digestion with Elevated Participation; Pre-extension Consolidation)",
+        Preset::Year52LowRangeContractionHotVol => "New 52w Low + Tight Intraday Range + Small Red Close + Hot Vol (Post-breakdown Absorption Coil at New Lows: Tight Digestion with Elevated Participation; Pre-continuation Consolidation)",
     }
 }
 

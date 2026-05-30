@@ -225,6 +225,11 @@ function renderResult(r, mount) {
             <h3 data-i18n="view.csv_wizard.h3.outcome_chart">Outcome breakdown</h3>
             <div id="cw-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel" style="margin-top:10px">
+            <h3 data-i18n="view.csv_wizard.h3.failure_reason_chart">Failure-reason histogram</h3>
+            <div id="cw-fail-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.csv_wizard.hint.failure_reason_chart" class="muted small">Counts of distinct failure reasons across rejected rows (truncated to first 40 chars). Reveals systemic causes — a single dominant bar usually means one bad column mapping; many small bars mean inconsistent per-row data. Orthogonal to the overall outcome breakdown above.</p>
+        </div>
         ${r.failed_rows.length === 0 ? '' : `<table class="trades">
             <thead><tr><th data-i18n="view.csv_wizard.th.row">Row #</th><th data-i18n="view.csv_wizard.th.reason">Reason</th></tr></thead>
             <tbody>
@@ -237,6 +242,43 @@ function renderResult(r, mount) {
     </div>`;
     try { applyUiI18n(el); } catch (_) {}
     renderOutcomeChart(r);
+    renderFailureReasonChart(r);
+}
+
+function renderFailureReasonChart(r) {
+    const el = document.getElementById('cw-fail-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const fails = r.failed_rows || [];
+    if (fails.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.csv_wizard.empty_fail_chart">${esc(t('view.csv_wizard.empty_fail_chart'))}</div>`;
+        return;
+    }
+    const buckets = new Map();
+    for (const f of fails) {
+        const key = String(f.reason || '?').trim().slice(0, 40) || '?';
+        buckets.set(key, (buckets.get(key) || 0) + 1);
+    }
+    const sorted = [...buckets.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20);
+    const labels = sorted.map(([k]) => k);
+    const ys = sorted.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.csv_wizard.chart.reason') },
+            { label: t('view.csv_wizard.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderOutcomeChart(r) {
