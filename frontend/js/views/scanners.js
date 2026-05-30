@@ -410,6 +410,8 @@ const PRESETS = [
     { id: 'micro_range_at_year_low', label: t('view.scanners.preset.micro_range_at_year_low.label'), desc: t('view.scanners.preset.micro_range_at_year_low.desc') },
     { id: 'consolidation_break_up', label: t('view.scanners.preset.consolidation_break_up.label'), desc: t('view.scanners.preset.consolidation_break_up.desc') },
     { id: 'consolidation_break_down', label: t('view.scanners.preset.consolidation_break_down.label'), desc: t('view.scanners.preset.consolidation_break_down.desc') },
+    { id: 'hot_vol_gap_held_flat_change', label: t('view.scanners.preset.hot_vol_gap_held_flat_change.label'), desc: t('view.scanners.preset.hot_vol_gap_held_flat_change.desc') },
+    { id: 'dry_vol_gap_held_flat_change', label: t('view.scanners.preset.dry_vol_gap_held_flat_change.label'), desc: t('view.scanners.preset.dry_vol_gap_held_flat_change.desc') },
 ];
 
 export async function renderScanners(mount) {

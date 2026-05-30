@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('normal') };
 let chart = null;
+let stressChart = null;
 
 export async function renderBorrowRate(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderBorrowRate(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.borrow.h2.chart">Rate + change %</h2>
             <div id="br-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.borrow.h2.stress_chart">Stress level per bar (0=low → 4=extreme)</h2>
+            <div id="br-stress-chart" style="width:100%;height:200px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.rates_pct, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderStressChart(local);
     renderDist(local);
     renderStats();
     let resp;
@@ -117,6 +124,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.stress)) { showErr(t('view.borrow.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderStressChart(resp);
     renderDist(resp);
     renderStats();
 }
@@ -172,6 +180,37 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, data, el);
+}
+
+function renderStressChart(report) {
+    const el = document.getElementById('br-stress-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(report.stress) || report.stress.length === 0) { el.innerHTML = ''; return; }
+    const stressToNum = (s) => {
+        if (s === 'low_available') return 0;
+        if (s === 'normal') return 1;
+        if (s === 'tight') return 2;
+        if (s === 'hard_to_borrow') return 3;
+        if (s === 'extreme_squeeze') return 4;
+        return null;
+    };
+    const xs = report.stress.map((_, i) => i);
+    const ys = report.stress.map(s => stressToNum(s));
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 180,
+        scales: { x: { time: false }, y: { range: [-0.5, 4.5] } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.borrow.series.stress_num'),
+              stroke: '#ff9f1a', width: 1.5,
+              points: { show: true, size: 5, fill: '#ff9f1a', stroke: '#ff9f1a' } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (stressChart) { try { stressChart.destroy(); } catch {} stressChart = null; }
+    stressChart = new window.uPlot(opts, [xs, ys], el);
 }
 
 function renderDist(report) {

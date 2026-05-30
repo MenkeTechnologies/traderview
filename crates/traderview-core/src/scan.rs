@@ -528,6 +528,8 @@ pub enum Preset {
     MicroRangeAtYearLow,            // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_low_pct < 3 — micro range at 52w low (zero-range pin at bottom; basing or pre-breakdown)
     ConsolidationBreakUp,           // hod_dist + lod_dist > 3 AND year_high_pct between -20 and -5 AND change_pct > 1 AND rel_volume >= 2 — wide range + mid-upper 52w + green + hot vol (consolidation breaking up)
     ConsolidationBreakDown,         // hod_dist + lod_dist > 3 AND year_low_pct between 5 and 20 AND change_pct < -1 AND rel_volume >= 2 — wide range + mid-lower 52w + red + hot vol (consolidation breaking down)
+    HotVolGapHeldFlatChange,        // rel_volume >= 2 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — hot vol + gap + flat change (gap held + heavy participation absorbing both sides)
+    DryVolGapHeldFlatChange,        // rel_volume < 0.5 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — dry vol + gap + flat change (gap held + no participation; thin tape)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2713,6 +2715,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::HotVolGapHeldFlatChange => {
+            hit.rel_volume >= 2.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::DryVolGapHeldFlatChange => {
+            hit.rel_volume < 0.5
+                && hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3131,6 +3143,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MicroRangeAtYearLow => "Micro Range at 52w Low (Zero-Range Pin Bottom)",
         Preset::ConsolidationBreakUp => "Consolidation Break Up (Mid-Upper 52w, Hot Vol)",
         Preset::ConsolidationBreakDown => "Consolidation Break Down (Mid-Lower 52w, Hot Vol)",
+        Preset::HotVolGapHeldFlatChange => "Hot-Vol Gap Held + Flat Change (Heavy Absorption)",
+        Preset::DryVolGapHeldFlatChange => "Dry-Vol Gap Held + Flat Change (Thin-Tape Hold)",
     }
 }
 
