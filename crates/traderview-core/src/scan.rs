@@ -686,6 +686,8 @@ pub enum Preset {
     HotVolHugeGapTinyDay,            // rel_volume >= 3 AND gap_pct.abs() > 2 AND day_pct.abs() < 0.3 — hot vol (3×+) + big gap + nearly flat intraday (heavy volume but no intraday movement; institutional repositioning at the new gap level; massive churn at one price)
     Year52LowGapUpHeldHotVol,        // year_low_pct < 5 AND gap_pct > 1 AND change_pct > 2 AND rel_volume >= 2 — at 52w low + gap up + finished up >2 + hot vol (relief gap HELD and extended on volume; reversal candidate at the floor; opposite of Year52LowGapUpFaded)
     Year52HighGapDownHeldHotVol,     // year_high_pct < 5 AND gap_pct < -1 AND change_pct < -2 AND rel_volume >= 2 — at 52w high + gap down + finished down <-2 + hot vol (rejection gap HELD and extended; distribution at the highs; opposite of Year52HighGapDownReclaimed)
+    HotVolSmallChangeSmallGapWideRange, // rel_volume >= 2 AND change_pct.abs() < 0.5 AND gap_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 1.5 — hot vol + tiny change + tiny gap + moderate range (heavy participation that visited both sides + flat finish + no overnight bias; pure intraday redistribution without directional resolution)
+    HotVolFlatCloseBigGap,           // change_pct.abs() < 0.5 AND gap_pct.abs() > 2 AND rel_volume >= 2 — flat finish + big gap + hot vol (intraday fully absorbed the gap on heavy participation; full round-trip on volume; market rejected the overnight move with confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3772,6 +3774,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::HotVolSmallChangeSmallGapWideRange => {
+            hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 1.5
+        }
+        Preset::HotVolFlatCloseBigGap => {
+            hit.change_pct.abs() < 0.5
+                && hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4348,6 +4361,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolHugeGapTinyDay => "Hot Vol (3×+) + Big Gap + Nearly Flat Intraday (Institutional Repositioning at New Gap Level; Massive Churn at One Price)",
         Preset::Year52LowGapUpHeldHotVol => "Near 52w Low + Gap Up + Held & Extended + Hot Vol (Relief Reclaim with Momentum at the Floor)",
         Preset::Year52HighGapDownHeldHotVol => "Near 52w High + Gap Down + Held & Extended + Hot Vol (Distribution at the Highs; Rejection Gap Confirmed)",
+        Preset::HotVolSmallChangeSmallGapWideRange => "Hot Vol + Tiny Change + Tiny Gap + Moderate Range (Pure Intraday Redistribution; Heavy Participation, No Resolution)",
+        Preset::HotVolFlatCloseBigGap => "Hot Vol + Flat Close + Big Gap (Intraday Round-trip Absorbed Overnight Move with Volume Confirmation)",
     }
 }
 

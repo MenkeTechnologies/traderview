@@ -48,6 +48,11 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             <div id="j-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.journal.h2.mood_dist_chart">Mood distribution (entry count per level)</h2>
+            <div id="j-dist-chart" style="width:100%;height:200px"></div>
+            <p data-i18n="view.journal.hint.mood_dist" class="muted small">Frequency of each mood level across all entries. Reveals overall sentiment shape — heavy-tailed toward frustrated vs. centered on focused — independent of when each entry happened.</p>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.journal.h2.new_entry">New entry</h2>
             ${isGeneral ? '' : `
                 <select id="mood" data-tip="view.journal.tip.mood">
@@ -68,6 +73,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         </div>
     `;
     renderMoodChart(entries);
+    renderMoodDistChart(entries);
     const refreshBtn = mount.querySelector('#journal-refresh-btn');
     if (refreshBtn) refreshBtn.addEventListener('click', () =>
         window.dispatchEvent(new HashChangeEvent('hashchange')));
@@ -157,4 +163,44 @@ function renderMoodChart(entries) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderMoodDistChart(entries) {
+    const el = document.getElementById('j-dist-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map([[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0]]);
+    for (const e of (entries || [])) {
+        const m = Number(e.mood);
+        if (counts.has(m)) counts.set(m, counts.get(m) + 1);
+    }
+    const labels = [
+        t('view.journal.opt.2_frustrated'),
+        t('view.journal.opt.1_off'),
+        t('view.journal.opt.0_neutral'),
+        t('view.journal.opt.1_focused'),
+        t('view.journal.opt.2_confident'),
+    ];
+    const ys = [-2, -1, 0, 1, 2].map(k => counts.get(k));
+    if (!ys.some(v => v > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.journal.empty_dist_chart">${esc(t('view.journal.empty_dist_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.journal.chart.mood_level') },
+            { label: t('view.journal.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
