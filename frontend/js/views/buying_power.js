@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     ACCOUNT_TYPES, DEFAULT_INPUTS,
@@ -24,30 +25,30 @@ export async function renderBuyingPower(mount, _appState) {
             <h2 data-i18n="view.buying_power.h2.account">Account</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.buying_power.label.account_type">Account type</span>
-                    <select id="bp-type">
+                    <select id="bp-type" data-tip="view.buying_power.tip.account_type">
                         ${ACCOUNT_TYPES.map(at => `<option value="${at}" ${state.account_type === at ? 'selected' : ''} data-i18n="view.buying_power.account.${at}">${at}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.buying_power.label.equity">Equity ($)</span>
-                    <input id="bp-eq" type="number" step="any" min="0" value="${state.equity}"></label>
+                    <input id="bp-eq" type="number" step="any" min="0" value="${state.equity}" data-tip="view.buying_power.tip.equity"></label>
                 <label><span data-i18n="view.buying_power.label.share_price">Share price ($)</span>
-                    <input id="bp-px" type="number" step="any" min="0" value="${state.share_price}"></label>
+                    <input id="bp-px" type="number" step="any" min="0" value="${state.share_price}" data-tip="view.buying_power.tip.share_price"></label>
                 <label><span data-i18n="view.buying_power.label.pdt">PDT flag?</span>
-                    <input id="bp-pdt" type="checkbox" ${state.is_pdt ? 'checked' : ''}></label>
+                    <input id="bp-pdt" type="checkbox" ${state.is_pdt ? 'checked' : ''} data-tip="view.buying_power.tip.pdt"></label>
                 <label><span data-i18n="view.buying_power.label.day_trade">Day-trade?</span>
-                    <input id="bp-dt"  type="checkbox" ${state.is_day_trade ? 'checked' : ''}></label>
+                    <input id="bp-dt"  type="checkbox" ${state.is_day_trade ? 'checked' : ''} data-tip="view.buying_power.tip.day_trade"></label>
                 <button data-i18n="view.buying_power.btn.compute" id="bp-run" class="primary"
-                        data-tip="view.buying_power.tip.compute" type="button">Compute</button>
+                        data-tip="view.buying_power.tip.compute" data-shortcut="buying_power_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.buying_power.btn.demo_cash"      id="bp-demo-cash"  class="secondary" type="button">Demo: cash 1×</button>
-                <button data-i18n="view.buying_power.btn.demo_regt"      id="bp-demo-regt"  class="secondary" type="button">Demo: Reg-T 2× overnight</button>
-                <button data-i18n="view.buying_power.btn.demo_pdt"       id="bp-demo-pdt"   class="secondary" type="button">Demo: PDT day-trade 4×</button>
-                <button data-i18n="view.buying_power.btn.demo_pdt_under" id="bp-demo-pu"    class="secondary" type="button">Demo: PDT flag but &lt;$25k → 2×</button>
-                <button data-i18n="view.buying_power.btn.demo_pdt_over"  id="bp-demo-po"    class="secondary" type="button">Demo: PDT overnight → 2×</button>
-                <button data-i18n="view.buying_power.btn.demo_sub5"      id="bp-demo-sub5"  class="secondary" type="button">Demo: sub-$5 → 1×</button>
-                <button data-i18n="view.buying_power.btn.demo_pdt_sub5"  id="bp-demo-ps5"   class="secondary" type="button">Demo: PDT + sub-$5 → 4× (corner)</button>
-                <button data-i18n="view.buying_power.btn.demo_pm"        id="bp-demo-pm"    class="secondary" type="button">Demo: portfolio margin 3×</button>
-                <button data-i18n="view.buying_power.btn.demo_pm_pdt"    id="bp-demo-pmpdt" class="secondary" type="button">Demo: portfolio + PDT 6×</button>
+                <button data-i18n="view.buying_power.btn.demo_cash"      id="bp-demo-cash"  class="secondary" type="button" data-tip="view.buying_power.tip.demo_cash">Demo: cash 1×</button>
+                <button data-i18n="view.buying_power.btn.demo_regt"      id="bp-demo-regt"  class="secondary" type="button" data-tip="view.buying_power.tip.demo_regt">Demo: Reg-T 2× overnight</button>
+                <button data-i18n="view.buying_power.btn.demo_pdt"       id="bp-demo-pdt"   class="secondary" type="button" data-tip="view.buying_power.tip.demo_pdt">Demo: PDT day-trade 4×</button>
+                <button data-i18n="view.buying_power.btn.demo_pdt_under" id="bp-demo-pu"    class="secondary" type="button" data-tip="view.buying_power.tip.demo_pu">Demo: PDT flag but &lt;$25k → 2×</button>
+                <button data-i18n="view.buying_power.btn.demo_pdt_over"  id="bp-demo-po"    class="secondary" type="button" data-tip="view.buying_power.tip.demo_po">Demo: PDT overnight → 2×</button>
+                <button data-i18n="view.buying_power.btn.demo_sub5"      id="bp-demo-sub5"  class="secondary" type="button" data-tip="view.buying_power.tip.demo_sub5">Demo: sub-$5 → 1×</button>
+                <button data-i18n="view.buying_power.btn.demo_pdt_sub5"  id="bp-demo-ps5"   class="secondary" type="button" data-tip="view.buying_power.tip.demo_ps5">Demo: PDT + sub-$5 → 4× (corner)</button>
+                <button data-i18n="view.buying_power.btn.demo_pm"        id="bp-demo-pm"    class="secondary" type="button" data-tip="view.buying_power.tip.demo_pm">Demo: portfolio margin 3×</button>
+                <button data-i18n="view.buying_power.btn.demo_pm_pdt"    id="bp-demo-pmpdt" class="secondary" type="button" data-tip="view.buying_power.tip.demo_pmpdt">Demo: portfolio + PDT 6×</button>
             </div>
             <p data-i18n="view.buying_power.hint.about" class="muted">FINRA Rule 4210 + Reg-T. Sub-$5 stocks require 100% initial in standard Reg-T (no leverage on penny stocks) — but PDT day-trades override even that. Portfolio margin treated as ~3× overnight, 6× PDT-day.</p>
         </div>
@@ -95,7 +96,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.buying_power.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state);
     renderSummary({
         max_notional: local.max_notional, max_shares: local.max_shares,
@@ -108,6 +109,7 @@ async function compute(tok) {
         resp = await api.calcBuyingPower(buildBody(state));
     } catch (e) {
         showErr(`${t('view.buying_power.err.api')}: ${e.message || e}`);
+        showToast(t('view.buying_power.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -117,6 +119,10 @@ async function compute(tok) {
         max_shares:   dec(resp.max_shares),
     }, false);
     renderSweepChart(dec(resp.leverage));
+    const lev = Number(dec(resp.leverage)) || 0;
+    const bp = Math.round(Number(dec(resp.max_notional)) || 0);
+    const level = lev >= 4 ? 'warning' : 'success';
+    showToast(t('view.buying_power.toast.computed', { lev: lev.toFixed(2), bp: bp.toLocaleString() }), { level });
 }
 
 function renderSweepChart(leverage) {
