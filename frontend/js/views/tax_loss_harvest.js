@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseLoserBlob, parseRecentBuyBlob, validateInputs, buildBody,
@@ -43,20 +44,20 @@ export async function renderTaxLossHarvest(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.tax_loss_harvest.label.today">Today</span>
-                    <input id="tlh-today" type="date" value="${esc(state.today)}"></label>
+                    <input id="tlh-today" type="date" value="${esc(state.today)}" data-tip="view.tax_loss_harvest.tip.today"></label>
                 <label><span data-i18n="view.tax_loss_harvest.label.ytd">YTD realized loss ($)</span>
-                    <input id="tlh-ytd" type="number" step="any" value="${state.realized_loss_ytd}"></label>
+                    <input id="tlh-ytd" type="number" step="any" value="${state.realized_loss_ytd}" data-tip="view.tax_loss_harvest.tip.ytd"></label>
                 <label><span data-i18n="view.tax_loss_harvest.label.mtm">MTM §475(f) elected?</span>
-                    <input id="tlh-mtm" type="checkbox" ${state.mtm_elected ? 'checked' : ''}></label>
+                    <input id="tlh-mtm" type="checkbox" ${state.mtm_elected ? 'checked' : ''} data-tip="view.tax_loss_harvest.tip.mtm"></label>
                 <button data-i18n="view.tax_loss_harvest.btn.suggest" id="tlh-run" class="primary"
-                        data-tip="view.tax_loss_harvest.tip.suggest" type="button">Suggest</button>
+                        data-tip="view.tax_loss_harvest.tip.suggest" data-shortcut="tax_loss_harvest_run" type="button">Suggest</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.tax_loss_harvest.btn.demo_mixed"    id="tlh-demo-mix"   class="secondary" type="button">Demo: mixed (3 losers)</button>
-                <button data-i18n="view.tax_loss_harvest.btn.demo_wash"     id="tlh-demo-wash"  class="secondary" type="button">Demo: wash-sale risk</button>
-                <button data-i18n="view.tax_loss_harvest.btn.demo_3k"       id="tlh-demo-3k"    class="secondary" type="button">Demo: exceeds $3k cap</button>
-                <button data-i18n="view.tax_loss_harvest.btn.demo_winners"  id="tlh-demo-win"   class="secondary" type="button">Demo: winners only (nothing to harvest)</button>
-                <button data-i18n="view.tax_loss_harvest.btn.demo_three"    id="tlh-demo-three" class="secondary" type="button">Demo: BIG / MID / TINY sort</button>
+                <button data-i18n="view.tax_loss_harvest.btn.demo_mixed"    id="tlh-demo-mix"   class="secondary" type="button" data-tip="view.tax_loss_harvest.tip.demo_mix">Demo: mixed (3 losers)</button>
+                <button data-i18n="view.tax_loss_harvest.btn.demo_wash"     id="tlh-demo-wash"  class="secondary" type="button" data-tip="view.tax_loss_harvest.tip.demo_wash">Demo: wash-sale risk</button>
+                <button data-i18n="view.tax_loss_harvest.btn.demo_3k"       id="tlh-demo-3k"    class="secondary" type="button" data-tip="view.tax_loss_harvest.tip.demo_3k">Demo: exceeds $3k cap</button>
+                <button data-i18n="view.tax_loss_harvest.btn.demo_winners"  id="tlh-demo-win"   class="secondary" type="button" data-tip="view.tax_loss_harvest.tip.demo_win">Demo: winners only (nothing to harvest)</button>
+                <button data-i18n="view.tax_loss_harvest.btn.demo_three"    id="tlh-demo-three" class="secondary" type="button" data-tip="view.tax_loss_harvest.tip.demo_three">Demo: BIG / MID / TINY sort</button>
             </div>
             <p data-i18n="view.tax_loss_harvest.hint.about" class="muted">Sorts genuine losers by loss size. Flags ±30-day wash-sale risk (§1091) and $3k capital-loss cap (unless MTM elected). YTD context lets the cap detector see your running tally.</p>
         </div>
@@ -117,7 +118,11 @@ function readInputs() {
         ...pl.errors.map(e => `loser[${e.line_no}] ${e.message}`),
         ...pb.errors.map(e => `buy[${e.line_no}] ${e.message}`),
     ];
-    if (errs.length) { showErr(errs.slice(0, 4).join('; ')); return; }
+    if (errs.length) {
+        showErr(errs.slice(0, 4).join('; '));
+        showToast(t('view.tax_loss_harvest.toast.parse_error', { n: errs.length }), { level: 'warning' });
+        return;
+    }
     hideErr();
     state.losers = pl.losers;
     state.recent_buys = pb.buys;
@@ -130,7 +135,7 @@ async function compute(tok) {
     hideErr();
     const err = validateInputs(state.losers, state.recent_buys, state.today,
                                state.realized_loss_ytd, state.mtm_elected);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.tax_loss_harvest.toast.invalid'), { level: 'warning' }); return; }
     const local = localSuggest(state.losers, state.recent_buys, state.today,
                                 state.realized_loss_ytd, state.mtm_elected);
     renderSummary(local, true);
@@ -145,6 +150,7 @@ async function compute(tok) {
             state.realized_loss_ytd, state.mtm_elected));
     } catch (e) {
         showErr(`${t('view.tax_loss_harvest.err.api')}: ${e.message || e}`);
+        showToast(t('view.tax_loss_harvest.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -163,6 +169,11 @@ async function compute(tok) {
     renderLossesChart(normalized);
     renderQtyChart(normalized);
     renderSummaryChart(normalized);
+    const candidates = (normalized.candidates || []).length;
+    const wash = (normalized.candidates || []).filter(c => c.wash_sale_risk).length;
+    const safe = Math.round(Number(normalized.safe_harvest_loss) || 0);
+    const level = wash > 0 ? 'warning' : candidates > 0 ? 'success' : 'info';
+    showToast(t('view.tax_loss_harvest.toast.suggested', { n: candidates, wash, safe: safe.toLocaleString() }), { level });
 }
 
 function renderSummaryChart(report) {

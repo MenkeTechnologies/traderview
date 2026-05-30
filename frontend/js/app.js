@@ -776,6 +776,11 @@ function bindTabs() {
         const el = document.getElementById('rr-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in tax-loss-harvest scope → click Suggest.
+    window.addEventListener('tv:tax-loss-harvest-run', () => {
+        const el = document.getElementById('tlh-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
