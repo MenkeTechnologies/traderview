@@ -698,6 +698,8 @@ pub enum Preset {
     GappingNearYearHighExtremeVol,   // year_high_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w high + significant gap + extreme vol (4×+) (high-intensity event at the highs; catalyst at the top; max-event-driven blow-off or distribution candidate)
     BothSidesTaggedDryVolFlat,       // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — both extremes well-distant from close + flat change + dry vol (thin-tape both-side raid that closed flat; algorithmic stop-hunt at low participation; possible spoof/wash on illiquid name)
     BothSidesTaggedBigChangeHotVol,  // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 — both extremes well-distant + big change + hot vol (full-range exploration ending decisively on volume; trend day that swept both sides first before resolving)
+    ModerateGreenGapDownReversal,    // gap_pct < -1 AND change_pct between 1 and 2 AND rel_volume between 1 and 1.5 — gap down + moderate green finish (1-2%) + slightly elevated vol (moderate-conviction gap reversal; institutional buying without panic; conservative reclaim)
+    ModerateRedGapUpFade,            // gap_pct > 1 AND change_pct between -2 and -1 AND rel_volume between 1 and 1.5 — gap up + moderate red finish (-1 to -2%) + slightly elevated vol (moderate-conviction gap fade; institutional selling without panic; conservative rejection)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3853,6 +3855,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::ModerateGreenGapDownReversal => {
+            hit.gap_pct < -1.0
+                && hit.change_pct >= 1.0
+                && hit.change_pct <= 2.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+        }
+        Preset::ModerateRedGapUpFade => {
+            hit.gap_pct > 1.0
+                && hit.change_pct <= -1.0
+                && hit.change_pct >= -2.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+        }
     }
 }
 
@@ -4441,6 +4457,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GappingNearYearHighExtremeVol => "Near 52w High + Significant Gap + Extreme Vol (4×+) (Event-driven Catalyst at the Top; Blow-off or Distribution Candidate)",
         Preset::BothSidesTaggedDryVolFlat => "Both Extremes Tagged + Flat Close + Dry Vol (Thin-tape Stop-hunt; Possible Spoof/Wash on Illiquid Name)",
         Preset::BothSidesTaggedBigChangeHotVol => "Both Extremes Tagged + Big Change + Hot Vol (Full-range Exploration Ending Decisively; Trend Day After Sweeping Both Sides)",
+        Preset::ModerateGreenGapDownReversal => "Gap Down + Moderate Green Finish + Slightly Elevated Vol (Moderate-conviction Gap Reversal; Conservative Reclaim)",
+        Preset::ModerateRedGapUpFade => "Gap Up + Moderate Red Finish + Slightly Elevated Vol (Moderate-conviction Gap Fade; Conservative Rejection)",
     }
 }
 

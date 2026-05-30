@@ -62,6 +62,12 @@ export async function renderLiquidity(mount, _appState) {
             <div id="lq-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.liquidity.h2.bucket_avg_pnl_chart">Avg P&amp;L per trade by ADV bucket</h2>
+            <div id="lq-bucket-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.liquidity.hint.bucket_avg_pnl" class="muted small">Per-bucket avg P&L per trade (net P&L / trades). Normalizes for bucket trade-count differences — reveals whether each bucket is profitable per-trade, not just in aggregate.</p>
+        </div>
+
         <div id="lq-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -118,6 +124,7 @@ async function compute(tok) {
     renderRows(res);
     renderBuckets(res);
     renderAdvPnlChart(res);
+    renderBucketAvgPnlChart(res);
     showToast(t('view.liquidity.toast.done', {
         symbols: res.rows ? res.rows.length : 0,
         trades: trades.length,
@@ -151,6 +158,40 @@ function renderAdvPnlChart(report) {
               points: { show: false } },
         ],
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
+}
+
+function renderBucketAvgPnlChart(report) {
+    const el = document.getElementById('lq-bucket-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = (report && report.buckets ? report.buckets : [])
+        .filter(b => Number(b.trades) > 0);
+    if (buckets.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.liquidity.empty_bucket_chart">${esc(t('view.liquidity.empty_bucket_chart'))}</div>`;
+        return;
+    }
+    const labels = buckets.map(b => b.label);
+    const ys = buckets.map(b => Number(b.net_pnl) / Number(b.trades));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.liquidity.chart.bucket_idx') },
+            { label: t('view.liquidity.chart.avg_pnl'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.liquidity.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
         legend: { show: true },
     }, [xs, ys, zero], el);
 }
