@@ -408,6 +408,8 @@ const PRESETS = [
     { id: 'all_red_tight_day', label: t('view.scanners.preset.all_red_tight_day.label'), desc: t('view.scanners.preset.all_red_tight_day.desc') },
     { id: 'micro_range_at_year_high', label: t('view.scanners.preset.micro_range_at_year_high.label'), desc: t('view.scanners.preset.micro_range_at_year_high.desc') },
     { id: 'micro_range_at_year_low', label: t('view.scanners.preset.micro_range_at_year_low.label'), desc: t('view.scanners.preset.micro_range_at_year_low.desc') },
+    { id: 'consolidation_break_up', label: t('view.scanners.preset.consolidation_break_up.label'), desc: t('view.scanners.preset.consolidation_break_up.desc') },
+    { id: 'consolidation_break_down', label: t('view.scanners.preset.consolidation_break_down.label'), desc: t('view.scanners.preset.consolidation_break_down.desc') },
 ];
 
 export async function renderScanners(mount) {
