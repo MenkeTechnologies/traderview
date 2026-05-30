@@ -12,6 +12,8 @@
 // user interacts with the page (clicks any button). The first call to
 // `playBell()` creates the context lazily; subsequent calls reuse it.
 
+import { t } from './i18n.js';
+
 let audioCtx = null;
 
 function getCtx() {
@@ -176,13 +178,13 @@ export function audioCapabilities() {
 export function formatSqueezeSpeech(ev) {
     if (!ev || !ev.symbol) return '';
     const pct = Number.isFinite(ev.price_change_pct)
-        ? `up ${(ev.price_change_pct * 100).toFixed(1)} percent`
+        ? t('view.alert_rules.tts.pct_up', { pct: (ev.price_change_pct * 100).toFixed(1) })
         : null;
     const vol = Number.isFinite(ev.volume_multiplier)
-        ? `${ev.volume_multiplier.toFixed(1)} times average volume`
+        ? t('view.alert_rules.tts.vol_mult', { mult: ev.volume_multiplier.toFixed(1) })
         : null;
-    const parts = [`${ev.symbol} squeezing`];
+    const parts = [t('view.alert_rules.tts.squeezing', { symbol: ev.symbol })];
     if (pct) parts.push(pct);
-    if (vol) parts.push(`on ${vol}`);
+    if (vol) parts.push(t('view.alert_rules.tts.on_vol', { vol }));
     return parts.join(', ');
 }
