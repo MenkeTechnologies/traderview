@@ -52,6 +52,8 @@ const PRESETS = [
     { id: 'narrow_after_trend_squeeze', label: t('view.scanners.preset.narrow_after_trend_squeeze.label'), desc: t('view.scanners.preset.narrow_after_trend_squeeze.desc') },
     { id: 'dead_center_squeeze',       label: t('view.scanners.preset.dead_center_squeeze.label'),       desc: t('view.scanners.preset.dead_center_squeeze.desc') },
     { id: 'anchor_drift_squeeze',      label: t('view.scanners.preset.anchor_drift_squeeze.label'),      desc: t('view.scanners.preset.anchor_drift_squeeze.desc') },
+    { id: 'post_gap_fill_squeeze',     label: t('view.scanners.preset.post_gap_fill_squeeze.label'),     desc: t('view.scanners.preset.post_gap_fill_squeeze.desc') },
+    { id: 'post_spike_quiet_squeeze',  label: t('view.scanners.preset.post_spike_quiet_squeeze.label'),  desc: t('view.scanners.preset.post_spike_quiet_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
