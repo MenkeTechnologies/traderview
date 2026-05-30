@@ -16,6 +16,7 @@ edition = "2021"
 authors = ["MenkeTechnologies <MenkeTechnologies@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/MenkeTechnologies/traderview"
+homepage = "https://menketechnologies.github.io/traderview/"
 
 [workspace.dependencies]
 # Async runtime
