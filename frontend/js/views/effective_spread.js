@@ -57,6 +57,11 @@ export async function renderEffectiveSpread(mount, _appState) {
             <div id="es-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.eff_spread.h2.ratio_chart">Effective/quoted ratio per observation — &lt;1 = price improvement, &gt;1 = trade-through</h2>
+            <div id="es-ratio-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="es-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -100,6 +105,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable();
     renderSpreadChart();
+    renderRatioChart();
     let resp;
     try {
         resp = await api.microEffectiveSpread(buildBody(state));
@@ -117,6 +123,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable();
     renderSpreadChart();
+    renderRatioChart();
     const refPrice = state.observations.length > 0 ? state.observations[0].current_mid : NaN;
     const effBps = Number.isFinite(refPrice) && refPrice > 0
         ? (Number(resp.avg_effective_spread) / refPrice) * 10000
@@ -238,6 +245,39 @@ function renderSpreadChart() {
         ],
         legend: { show: true },
     }, [xs, effective, realized, impact], el);
+}
+
+function renderRatioChart() {
+    const el = document.getElementById('es-ratio-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const obs = Array.isArray(state.observations) ? state.observations : [];
+    if (obs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.eff_spread.empty_ratio_chart">${esc(t('view.eff_spread.empty_ratio_chart'))}</div>`;
+        return;
+    }
+    const enriched = obs.map(enrich);
+    const xs = enriched.map((_, i) => i + 1);
+    const ratios = enriched.map(o => {
+        if (!Number.isFinite(o.quoted_spread) || o.quoted_spread <= 0) return null;
+        const r = o.effective_spread / o.quoted_spread;
+        return Number.isFinite(r) ? r : null;
+    });
+    const one = xs.map(() => 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.eff_spread.chart.obs_idx') },
+            { label: t('view.eff_spread.chart.eff_quoted_ratio'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.eff_spread.chart.at_quote'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, ratios, one], el);
 }
 
 function card(label, value, cls = '') {

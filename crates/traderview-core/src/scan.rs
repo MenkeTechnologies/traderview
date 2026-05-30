@@ -630,6 +630,8 @@ pub enum Preset {
     NarrowRangeBigChangeNoIntraday, // hod_dist + lod_dist < 1 AND change_pct.abs() > 1.5 AND day_pct.abs() < 0.3 — narrow range + big change + flat intraday (all change happened overnight; no intraday move; pure gap day)
     EveryAxisExtreme,               // gap_pct.abs() > 1 AND day_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — every measurable signal axis extreme simultaneously (multi-axis breakout; outlier across the full feature space)
     EveryAxisFlat,                  // gap_pct.abs() < 0.2 AND day_pct.abs() < 0.2 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1 — every measurable signal axis tiny simultaneously (silent day; total absence of activity across the full feature space)
+    Year52HighRejectedToLod,        // year_high_pct < 5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct < 0 — close at LOD even though near 52w high + hot vol + red day (sharp rejection at the highs; topping signal)
+    Year52LowReclaimedToHod,        // year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct > 0 — close at HOD even though near 52w low + hot vol + green day (sharp reclaim from the lows; bottoming signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3407,6 +3409,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
         }
+        Preset::Year52HighRejectedToLod => {
+            hit.year_high_pct < 5.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+                && hit.change_pct < 0.0
+        }
+        Preset::Year52LowReclaimedToHod => {
+            hit.year_low_pct < 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+                && hit.change_pct > 0.0
+        }
     }
 }
 
@@ -3927,6 +3941,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowRangeBigChangeNoIntraday => "Narrow Range + Big Change + Flat Intraday (Pure Gap Day; All Change Overnight)",
         Preset::EveryAxisExtreme => "Every Signal Axis Extreme Simultaneously (Multi-axis Breakout / Full-feature Outlier)",
         Preset::EveryAxisFlat => "Every Signal Axis Tiny Simultaneously (Silent Day / Full-feature Null)",
+        Preset::Year52HighRejectedToLod => "Near 52w High + Closed at LOD + Hot Vol + Red (Sharp Rejection at Highs)",
+        Preset::Year52LowReclaimedToHod => "Near 52w Low + Closed at HOD + Hot Vol + Green (Sharp Reclaim from Lows)",
     }
 }
 
