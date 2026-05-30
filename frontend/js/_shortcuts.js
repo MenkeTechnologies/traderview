@@ -100,6 +100,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'live_scanner_toggle_voice',    keys: { key: 'v', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live-scanner',      descKey: 'shortcut.live_scanner_toggle_voice',    actionKey: 'tv:live-scanner-toggle-voice' },
     { id: 'replay_refresh',               keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'replay',            descKey: 'shortcut.replay_refresh',               actionKey: 'tv:replay-refresh' },
     { id: 'top_signals_refresh',          keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'top-signals',       descKey: 'shortcut.top_signals_refresh',          actionKey: 'tv:top-signals-refresh' },
+    { id: 'pair_trade_analyze',           keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'pair-trade-calc',   descKey: 'shortcut.pair_trade_analyze',           actionKey: 'tv:pair-trade-analyze' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

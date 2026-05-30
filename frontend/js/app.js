@@ -655,6 +655,11 @@ function bindTabs() {
         const form = document.getElementById('top-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `a` in pair-trade-calc scope → click Analyze button.
+    window.addEventListener('tv:pair-trade-analyze', () => {
+        const el = document.getElementById('pt-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

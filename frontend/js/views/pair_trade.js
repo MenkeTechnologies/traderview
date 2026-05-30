@@ -21,6 +21,7 @@ import {
 } from '../_pair_trade_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_Y = `# Y leg prices (the dependent leg in the OLS β regression).
 # Demo: cointegrated pair — y wanders around 2 × x + 50 with noise.
 ${synthY(150).join('\n')}
@@ -90,11 +91,13 @@ export async function renderPairTrade(mount, _appState) {
                 <div>
                     <h3 data-i18n="view.pair_trade.h3.y_leg_dependent">y leg (dependent)</h3>
                     <textarea id="pt-y" rows="10"
+                        data-tip="view.pair_trade.tip.y"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.yText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.pair_trade.h3.x_leg_independent_hedge">x leg (independent / hedge)</h3>
                     <textarea id="pt-x" rows="10"
+                        data-tip="view.pair_trade.tip.x"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.xText)}</textarea>
                 </div>
             </div>
@@ -104,12 +107,12 @@ export async function renderPairTrade(mount, _appState) {
             <h2 data-i18n="view.pair_trade.h2.signal_thresholds_z_score_bands">Signal thresholds (z-score bands)</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.pair_trade.label.entry_z">Entry z (enter when |z| &gt;)</span>
-                    <input id="pt-entry" type="number" step="any" min="0" value="${state.config.entry_z}"></label>
+                    <input id="pt-entry" type="number" step="any" min="0" value="${state.config.entry_z}" data-tip="view.pair_trade.tip.entry"></label>
                 <label><span data-i18n="view.pair_trade.label.exit_z">Exit z (exit when |z| &lt;)</span>
-                    <input id="pt-exit"  type="number" step="any" min="0" value="${state.config.exit_z}"></label>
+                    <input id="pt-exit"  type="number" step="any" min="0" value="${state.config.exit_z}" data-tip="view.pair_trade.tip.exit"></label>
                 <label><span data-i18n="view.pair_trade.label.stop_z">Stop z (bail when |z| &gt;)</span>
-                    <input id="pt-stop"  type="number" step="any" min="0" value="${state.config.stop_z}"></label>
-                <button data-i18n="view.pair_trade.btn.analyze" id="pt-run" class="primary" type="button">Analyze</button>
+                    <input id="pt-stop"  type="number" step="any" min="0" value="${state.config.stop_z}" data-tip="view.pair_trade.tip.stop"></label>
+                <button data-i18n="view.pair_trade.btn.analyze" data-tip="view.pair_trade.tip.analyze" data-shortcut="pair_trade_analyze" id="pt-run" class="primary" type="button">Analyze</button>
             </div>
             <p data-i18n="view.pair_trade.hint.is_fit_by_ols_regression_of_y_on_x_spread_y_x_z_sp" class="muted">
                 β is fit by OLS regression of y on x. Spread = y − β·x. Z = (spread − mean) /
@@ -171,14 +174,15 @@ async function analyze(mount, tok) {
     if (errors.length) renderParseErrors(errors);
 
     const err = validateInputs(parsedY.value, parsedX.value, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyPairTradeSignal(buildBody(parsedY.value, parsedX.value, state.config));
         if (!res) throw new Error(t('view.pair_trade.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -187,6 +191,11 @@ async function analyze(mount, tok) {
     renderSummary(res, local);
     renderPriceChart(parsedY.value, parsedX.value, res.hedge_ratio);
     renderZChart(local.zs);
+    showToast(t('view.pair_trade.toast.done', {
+        signal: fmtSignal(res.signal),
+        beta: res.hedge_ratio.toFixed(4),
+        z: res.current_z.toFixed(3),
+    }), { level: 'success' });
 }
 
 function renderSummary(res, local) {
