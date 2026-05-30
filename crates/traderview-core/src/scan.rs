@@ -162,6 +162,8 @@ pub enum Preset {
     FlatRangeQuietSqueeze,  // |day_pct| < 0.2 AND |gap| < 0.2 AND |change| < 0.5 AND rel_volume < 0.5 — total stall
     NearAthQuietSqueeze,    // ≤ -1% from 52w high AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the top
     NearAtlQuietSqueeze,    // ≤ 1% from 52w low  AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the bottom
+    SilentBreakoutSetup,    // hod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_high_pct >= -5 — quiet edge of multi-month resistance
+    SilentBreakdownSetup,   // lod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_low_pct <= 5  — quiet edge of multi-month support
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -346,6 +348,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.6
                 && hit.day_pct.abs() < 1.0
         }
+        Preset::SilentBreakoutSetup => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.year_high_pct >= -5.0
+        }
+        Preset::SilentBreakdownSetup => {
+            hit.lod_dist_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.year_low_pct <= 5.0
+        }
     }
 }
 
@@ -398,6 +412,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FlatRangeQuietSqueeze => "Flat-Range Quiet Squeeze",
         Preset::NearAthQuietSqueeze => "Near-ATH Quiet Squeeze",
         Preset::NearAtlQuietSqueeze => "Near-ATL Quiet Squeeze",
+        Preset::SilentBreakoutSetup => "Silent Breakout Setup",
+        Preset::SilentBreakdownSetup => "Silent Breakdown Setup",
     }
 }
 

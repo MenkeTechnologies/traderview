@@ -47,6 +47,11 @@ export async function renderCarryScore(mount, _appState) {
 
         <div id="cs-summary" class="cards"></div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.carry_score.h2.vol_chart">Score sensitivity to annualized vol</h2>
+            <div id="cs-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="cs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -90,6 +95,47 @@ async function compute(tok) {
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
+    renderVolChart();
+}
+
+function renderVolChart() {
+    const el = document.getElementById('cs-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const diff = state.long_rate - state.funding_rate;
+    if (!Number.isFinite(diff)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.carry_score.empty_chart">${esc(t('view.carry_score.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ys = [];
+    const strong = [];
+    const okay = [];
+    for (let v = 0.02; v <= 0.40 + 1e-9; v += 0.005) {
+        const score = v > 0 ? diff / v : null;
+        xs.push(v);
+        ys.push(score);
+        strong.push(1.0);
+        okay.push(0.5);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.carry_score.chart.vol') },
+            { label: t('view.carry_score.chart.score'),
+              stroke: '#00e5ff', width: 1.6,
+              points: { show: false } },
+            { label: t('view.carry_score.chart.strong'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.carry_score.chart.okay'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, strong, okay], el);
 }
 
 function renderSummary(report, pending) {

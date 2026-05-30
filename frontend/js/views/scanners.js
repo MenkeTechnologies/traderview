@@ -44,6 +44,8 @@ const PRESETS = [
     { id: 'flat_range_quiet_squeeze',  label: t('view.scanners.preset.flat_range_quiet_squeeze.label'),  desc: t('view.scanners.preset.flat_range_quiet_squeeze.desc') },
     { id: 'near_ath_quiet_squeeze',    label: t('view.scanners.preset.near_ath_quiet_squeeze.label'),    desc: t('view.scanners.preset.near_ath_quiet_squeeze.desc') },
     { id: 'near_atl_quiet_squeeze',    label: t('view.scanners.preset.near_atl_quiet_squeeze.label'),    desc: t('view.scanners.preset.near_atl_quiet_squeeze.desc') },
+    { id: 'silent_breakout_setup',     label: t('view.scanners.preset.silent_breakout_setup.label'),     desc: t('view.scanners.preset.silent_breakout_setup.desc') },
+    { id: 'silent_breakdown_setup',    label: t('view.scanners.preset.silent_breakdown_setup.label'),    desc: t('view.scanners.preset.silent_breakdown_setup.desc') },
 ];
 
 export async function renderScanners(mount) {
