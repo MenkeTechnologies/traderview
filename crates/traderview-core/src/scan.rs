@@ -702,6 +702,8 @@ pub enum Preset {
     ModerateRedGapUpFade,            // gap_pct > 1 AND change_pct between -2 and -1 AND rel_volume between 1 and 1.5 — gap up + moderate red finish (-1 to -2%) + slightly elevated vol (moderate-conviction gap fade; institutional selling without panic; conservative rejection)
     GapAndIntradayBothBigSameDirHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct > 0 AND rel_volume >= 1.5 — significant gap + significant intraday + same-direction + hot vol (gap-and-intraday-extend; both halves of the day pushed the same way on volume; conviction continuation)
     GapAndIntradayBothBigOpposingHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct < 0 AND rel_volume >= 1.5 — significant gap + significant intraday + opposite-direction + hot vol (gap rejected and reversed by significant intraday; full counter-move on volume)
+    CountertrendBounceInDowntrend,   // change_pct > 2 AND year_high_pct > 20 AND year_low_pct < 10 AND rel_volume >= 2 — big green day + ≥20% below 52w high + within 10% of 52w low + hot vol (countertrend bounce in long-running downtrend; strong-hands buying near the floor)
+    CountertrendFadeInUptrend,       // change_pct < -2 AND year_low_pct > 20 AND year_high_pct < 10 AND rel_volume >= 2 — big red day + ≥20% above 52w low + within 10% of 52w high + hot vol (countertrend fade in long-running uptrend; profit-taking near the ceiling)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3883,6 +3885,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct * hit.day_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::CountertrendBounceInDowntrend => {
+            hit.change_pct > 2.0
+                && hit.year_high_pct > 20.0
+                && hit.year_low_pct < 10.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::CountertrendFadeInUptrend => {
+            hit.change_pct < -2.0
+                && hit.year_low_pct > 20.0
+                && hit.year_high_pct < 10.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4475,6 +4489,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ModerateRedGapUpFade => "Gap Up + Moderate Red Finish + Slightly Elevated Vol (Moderate-conviction Gap Fade; Conservative Rejection)",
         Preset::GapAndIntradayBothBigSameDirHotVol => "Big Gap + Big Same-direction Intraday + Hot Vol (Both Halves of the Day Pushed Same Way on Volume; Conviction Continuation)",
         Preset::GapAndIntradayBothBigOpposingHotVol => "Big Gap + Big Opposing Intraday + Hot Vol (Gap Rejected and Reversed by Significant Intraday; Full Counter-move on Volume)",
+        Preset::CountertrendBounceInDowntrend => "Big Green + Deep Below 52w High + Near 52w Low + Hot Vol (Countertrend Bounce in Long-running Downtrend; Strong-hands Buying Near the Floor)",
+        Preset::CountertrendFadeInUptrend => "Big Red + Deep Above 52w Low + Near 52w High + Hot Vol (Countertrend Fade in Long-running Uptrend; Profit-taking Near the Ceiling)",
     }
 }
 

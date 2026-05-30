@@ -63,6 +63,11 @@ export async function renderLiveScanner(mount, _state) {
             <h2 data-i18n="view.live_scanner.h2.universe_chart">Universe change % snapshot</h2>
             <div id="ls-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.live_scanner.h2.volume_chart">Day volume per symbol (live)</h2>
+            <div id="ls-vol-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.live_scanner.hint.volume_chart" class="muted small">Sorted day volume across the live universe. Compare against change% above — a name moving big without volume is weaker than the chart suggests.</p>
+        </div>
     `;
 
     mount.querySelector('#ls-voice').addEventListener('change', (e) => {
@@ -161,6 +166,47 @@ function rerender(mount) {
     panel(mount, 'p-vol',  all.slice().sort((a, b) => b.day_volume - a.day_volume).slice(0, 12), 'change_pct');
     panel(mount, 'p-ross', all.filter(s => s.gap_pct >= 10 && s.last > 0 && s.last <= 20).sort((a, b) => b.gap_pct - a.gap_pct).slice(0, 12), 'gap_pct');
     renderUniverseChart(all);
+    renderVolumeChart(all);
+}
+
+function renderVolumeChart(all) {
+    const el = document.getElementById('ls-vol-chart');
+    if (!el || !window.uPlot) return;
+    const valid = (all || []).filter(s => Number.isFinite(Number(s.day_volume)) && Number(s.day_volume) > 0);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.live_scanner.empty_volume_chart">${esc(t('view.live_scanner.empty_volume_chart'))}</div>`;
+        return;
+    }
+    if (el._uplot && el._uplot._count === valid.length) {
+        const sorted = valid.slice().sort((a, b) => Number(b.day_volume) - Number(a.day_volume));
+        const xs = sorted.map((_, i) => i + 1);
+        const ys = sorted.map(s => Number(s.day_volume));
+        el._uplot.setData([xs, ys]);
+        return;
+    }
+    el.innerHTML = '';
+    const sorted = valid.slice().sort((a, b) => Number(b.day_volume) - Number(a.day_volume));
+    const labels = sorted.map(s => s.symbol);
+    const ys = sorted.map(s => Number(s.day_volume));
+    const xs = labels.map((_, i) => i + 1);
+    const plot = new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.live_scanner.chart.symbol_idx') },
+            { label: t('view.live_scanner.chart.day_volume'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 8, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+    plot._count = valid.length;
+    el._uplot = plot;
 }
 
 function renderUniverseChart(all) {
