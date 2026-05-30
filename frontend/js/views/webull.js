@@ -71,6 +71,11 @@ export async function renderWebull(mount, _state) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.webull.h2.mv_chart">Market value per position</h2>
+            <div id="wb-mv-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.webull.h2.today_s_filled_orders">Today's filled orders</h2>
             <table class="trades" id="wb-orders">
                 <thead><tr>
@@ -129,6 +134,37 @@ function connectWs(mount, tok) {
             if (m.type === 'snapshot' && m.snap) render(mount, m.snap);
         } catch (_) {}
     });
+}
+
+function renderMvChart(positions) {
+    const el = document.getElementById('wb-mv-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (positions || []).filter(p => Number.isFinite(Number(p.market_value)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.webull.empty_mv_chart">${esc(t('view.webull.empty_mv_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.market_value) - Number(a.market_value));
+    const labels = rows.map(p => p.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(p => Number(p.market_value));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.webull.chart.symbol') },
+            { label: t('view.webull.chart.market_value'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderDayChart(positions) {
@@ -224,6 +260,7 @@ function render(mount, snap) {
     }
     renderUnrealChart(snap.positions || []);
     renderDayChart(snap.positions || []);
+    renderMvChart(snap.positions || []);
     const posBody = mount.querySelector('#wb-pos tbody');
     if (!posBody) return;
     if (snap.positions && snap.positions.length) {
