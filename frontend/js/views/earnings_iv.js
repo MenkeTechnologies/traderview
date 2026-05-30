@@ -50,7 +50,7 @@ export async function renderEarningsIv(mount, _state, symbol) {
             );
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#iv-result');
-            if (el2) el2.innerHTML = renderTable(hits);
+            if (el2) { el2.innerHTML = renderTable(hits); renderEdgeChart(hits, mount); }
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#iv-result');
@@ -90,7 +90,45 @@ function renderTable(hits) {
             }).join('')}</tbody>
         </table>
         <p data-i18n="view.earnings_iv.hint.long_short_p_l_is_per_quarter_average_return_on_1_" class="muted small">Long/Short P&L is per-quarter average return on $1 of premium across the historical sample.</p>
+    </div>
+    <div class="chart-panel">
+        <h2 data-i18n="view.earnings_iv.h2.edge_chart">Edge % per candidate</h2>
+        <div id="iv-chart" style="width:100%;height:240px"></div>
     </div>`;
+}
+
+function renderEdgeChart(hits, mount) {
+    const el = (mount ? mount.querySelector('#iv-chart') : document.getElementById('iv-chart'));
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (hits || []).filter(h => Number.isFinite(h.edge_pct));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.earnings_iv.empty_chart">${esc(t('view.earnings_iv.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(h => h.symbol);
+    const edges = valid.map(h => h.edge_pct);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.earnings_iv.chart.symbol_idx') },
+            { label: t('view.earnings_iv.chart.edge_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.earnings_iv.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, edges, zero], el);
 }
 
 async function renderDetail(mount, sym) {
