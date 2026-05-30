@@ -322,6 +322,8 @@ const PRESETS = [
     { id: 'down_day_on_hot_vol_near_52w_low', label: t('view.scanners.preset.down_day_on_hot_vol_near_52w_low.label'), desc: t('view.scanners.preset.down_day_on_hot_vol_near_52w_low.desc') },
     { id: 'narrow_day_dry_vol_mid', label: t('view.scanners.preset.narrow_day_dry_vol_mid.label'), desc: t('view.scanners.preset.narrow_day_dry_vol_mid.desc') },
     { id: 'wide_day_hot_vol_mid', label: t('view.scanners.preset.wide_day_hot_vol_mid.label'), desc: t('view.scanners.preset.wide_day_hot_vol_mid.desc') },
+    { id: 'hot_vol_at_mid_no_move', label: t('view.scanners.preset.hot_vol_at_mid_no_move.label'), desc: t('view.scanners.preset.hot_vol_at_mid_no_move.desc') },
+    { id: 'dry_vol_at_mid_no_move', label: t('view.scanners.preset.dry_vol_at_mid_no_move.label'), desc: t('view.scanners.preset.dry_vol_at_mid_no_move.desc') },
 ];
 
 export async function renderScanners(mount) {

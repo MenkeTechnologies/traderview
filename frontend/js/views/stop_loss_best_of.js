@@ -56,6 +56,11 @@ export async function renderStopLossBestOf(mount, _appState) {
             <div id="sl-stop-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.stop_loss_best_of.h2.win_chart">Winning trade count per candidate</h2>
+            <div id="sl-win-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="sl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('sl-demo').addEventListener('click', () => {
@@ -106,6 +111,41 @@ async function compute(tok) {
     renderResults(results || [], candidates);
     renderTotalChart(results || [], candidates);
     renderStopChart(results || [], candidates);
+    renderWinChart(results || [], candidates);
+}
+
+function renderWinChart(results, candidates) {
+    const el = document.getElementById('sl-win-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (results || []).filter(r => Number.isFinite(Number(r.winning_trades)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.stop_loss_best_of.empty_win_chart">${esc(t('view.stop_loss_best_of.empty_win_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.winning_trades) - Number(a.winning_trades));
+    const labels = rows.map(r => {
+        const c = candidates.find(x => x.method === r.method && x.value === r.value);
+        return c ? describeCandidate(c) : r.method;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => Number(r.winning_trades));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.stop_loss_best_of.chart.candidate') },
+            { label: t('view.stop_loss_best_of.chart.wins'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderStopChart(results, candidates) {
