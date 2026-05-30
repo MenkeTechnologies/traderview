@@ -586,6 +586,8 @@ pub enum Preset {
     FullSpectrumDayDown,            // change_pct < -1 AND day_pct < 0 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at LOD + visited HOD intraday + red + decent vol (volatile session that traded full range and went down)
     GreenStreakAccumulator,         // change_pct > 0.5 AND day_pct > 0 AND rel_volume >= 1.2 AND gap_pct >= 0 — modest gain + green intraday + decent vol + non-negative gap (steady accumulation day; multi-day green-streak candidate)
     RedStreakDistributor,           // change_pct < -0.5 AND day_pct < 0 AND rel_volume >= 1.2 AND gap_pct <= 0 — modest loss + red intraday + decent vol + non-positive gap (steady distribution day; multi-day red-streak candidate)
+    GapDownReclaim,                 // gap_pct < -1 AND change_pct >= 0 AND day_pct > -gap_pct * 0.8 — gap down + reclaimed positive + intraday recovered most of gap (full intraday rotation; gap-down reclaim)
+    GapUpFailReclaimed,             // gap_pct > 1 AND change_pct <= 0 AND day_pct < -gap_pct * 0.8 — gap up + faded negative + intraday gave up most of gap (full intraday rotation; gap-up fail)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3113,6 +3115,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.2
                 && hit.gap_pct <= 0.0
         }
+        Preset::GapDownReclaim => {
+            hit.gap_pct < -1.0
+                && hit.change_pct >= 0.0
+                && hit.day_pct > -hit.gap_pct * 0.8
+        }
+        Preset::GapUpFailReclaimed => {
+            hit.gap_pct > 1.0
+                && hit.change_pct <= 0.0
+                && hit.day_pct < -hit.gap_pct * 0.8
+        }
     }
 }
 
@@ -3589,6 +3601,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FullSpectrumDayDown => "Closed LOD + Visited HOD + Red (Volatile Full-Range Day Down)",
         Preset::GreenStreakAccumulator => "Modest Gain + Green Intraday + Non-neg Gap + Decent Vol (Streak Accumulator)",
         Preset::RedStreakDistributor => "Modest Loss + Red Intraday + Non-pos Gap + Decent Vol (Streak Distributor)",
+        Preset::GapDownReclaim => "Gap Down + Reclaimed Positive (Full Intraday Rotation Up)",
+        Preset::GapUpFailReclaimed => "Gap Up + Failed Negative (Full Intraday Rotation Down)",
     }
 }
 

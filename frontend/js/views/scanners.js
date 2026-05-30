@@ -468,6 +468,8 @@ const PRESETS = [
     { id: 'full_spectrum_day_down', label: t('view.scanners.preset.full_spectrum_day_down.label'), desc: t('view.scanners.preset.full_spectrum_day_down.desc') },
     { id: 'green_streak_accumulator', label: t('view.scanners.preset.green_streak_accumulator.label'), desc: t('view.scanners.preset.green_streak_accumulator.desc') },
     { id: 'red_streak_distributor', label: t('view.scanners.preset.red_streak_distributor.label'), desc: t('view.scanners.preset.red_streak_distributor.desc') },
+    { id: 'gap_down_reclaim', label: t('view.scanners.preset.gap_down_reclaim.label'), desc: t('view.scanners.preset.gap_down_reclaim.desc') },
+    { id: 'gap_up_fail_reclaimed', label: t('view.scanners.preset.gap_up_fail_reclaimed.label'), desc: t('view.scanners.preset.gap_up_fail_reclaimed.desc') },
 ];
 
 export async function renderScanners(mount) {

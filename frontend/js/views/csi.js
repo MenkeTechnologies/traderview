@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('mixed') };
 let chart = null;
+let rawChart = null;
 
 export async function renderCsi(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderCsi(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.csi.h2.chart">CSI series</h2>
             <div id="cs-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.csi.h2.raw_chart">Raw per-bar body/range ratio (unsmoothed — what EMA is averaging)</h2>
+            <div id="cs-raw-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderRawChart();
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.csi.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderRawChart();
     renderStats();
 }
 
@@ -163,6 +171,38 @@ function renderChart(csi) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderRawChart() {
+    const el = document.getElementById('cs-raw-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars || state.bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.csi.empty_raw_chart">${esc(t('view.csi.empty_raw_chart'))}</div>`;
+        return;
+    }
+    const xs = state.bars.map((_, i) => i);
+    const raw = state.bars.map(b => {
+        const range = b.high - b.low;
+        if (!(range > 0)) return null;
+        const v = (b.close - b.open) / range;
+        return Number.isFinite(v) ? v : null;
+    });
+    const zero = xs.map(() => 0);
+    if (rawChart) { try { rawChart.destroy(); } catch {} rawChart = null; }
+    rawChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { range: [-1.05, 1.05] } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.csi.series.raw'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 6, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.csi.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, raw, zero], el);
 }
 
 function renderStats() {
