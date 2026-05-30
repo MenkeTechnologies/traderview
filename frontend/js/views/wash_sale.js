@@ -66,6 +66,11 @@ export async function renderWashSale(mount, _appState) {
             <div id="ws-chart" style="width:100%;height:220px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.wash_sale.h2.days_chart">Days offset per hit (±30 window)</h2>
+            <div id="ws-days-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="ws-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -114,6 +119,7 @@ async function compute(tok) {
     renderSummary({ hits: localHits, total_disallowed: localTotal }, true);
     renderTable(localHits);
     renderHitsChart(localHits);
+    renderDaysChart(localHits);
     let resp;
     try {
         resp = await api.calcWashSale(buildBody(state.closings, state.openings));
@@ -133,6 +139,46 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized.hits);
     renderHitsChart(normalized.hits);
+    renderDaysChart(normalized.hits);
+}
+
+function renderDaysChart(hits) {
+    const el = document.getElementById('ws-days-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (hits || []).filter(h => Number.isFinite(Number(h.days_offset)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.wash_sale.empty_days_chart">${esc(t('view.wash_sale.empty_days_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(a.days_offset) - Number(b.days_offset));
+    const labels = rows.map(h => h.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const before = rows.map(h => Number(h.days_offset) < 0 ? Number(h.days_offset) : null);
+    const after  = rows.map(h => Number(h.days_offset) >= 0 ? Number(h.days_offset) : null);
+    const zero   = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { range: () => [-32, 32] } },
+        series: [
+            { label: t('view.wash_sale.chart.symbol') },
+            { label: t('view.wash_sale.chart.before'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.wash_sale.chart.after'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.wash_sale.chart.zero'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, before, after, zero], el);
 }
 
 function renderHitsChart(hits) {

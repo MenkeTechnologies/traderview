@@ -376,6 +376,8 @@ pub enum Preset {
     MiddleZoneDownDrift,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct < -0.5 AND rel_volume < 1 — mid-zone drift down on light vol (no-conviction continuation down)
     MiddleZoneHotVolBreakoutHigh, // year_high_pct between -50 and -20 AND change_pct > 2 AND rel_volume >= 2 — mid-zone breakout up on heavy vol (range-exit conviction)
     MiddleZoneHotVolBreakoutLow, // year_low_pct between 20 and 50 AND change_pct < -2 AND rel_volume >= 2 — mid-zone breakdown on heavy vol (range-exit conviction)
+    GapUpSmallButHotVol,         // gap_pct between 0.5 and 1.5 AND rel_volume >= 2 — small overnight gap-up on heavy vol (early-positioning signal)
+    GapDownSmallButHotVol,       // gap_pct between -1.5 and -0.5 AND rel_volume >= 2 — small overnight gap-down on heavy vol (early-positioning signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1686,6 +1688,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::GapUpSmallButHotVol => {
+            hit.gap_pct >= 0.5 && hit.gap_pct <= 1.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapDownSmallButHotVol => {
+            hit.gap_pct <= -0.5 && hit.gap_pct >= -1.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1952,6 +1962,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MiddleZoneDownDrift => "Middle-Zone Down Drift",
         Preset::MiddleZoneHotVolBreakoutHigh => "Mid-Zone Hot-Vol Breakout High",
         Preset::MiddleZoneHotVolBreakoutLow => "Mid-Zone Hot-Vol Breakout Low",
+        Preset::GapUpSmallButHotVol => "Gap-Up Small + Hot Vol",
+        Preset::GapDownSmallButHotVol => "Gap-Down Small + Hot Vol",
     }
 }
 
