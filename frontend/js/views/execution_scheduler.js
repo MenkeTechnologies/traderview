@@ -83,6 +83,11 @@ export async function renderExecutionScheduler(mount, _appState) {
             <p data-i18n="view.execution_scheduler.hint.three_series_one_per_algo_vertical_bars_show_share" class="muted">Three series, one per algo. Vertical bars show shares per bar.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.execution_scheduler.h2.cumulative_chart">Cumulative shares filled per algo — completion timing comparison</h2>
+            <div id="es-cum-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="es-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -124,6 +129,7 @@ async function schedule(mount, tok) {
 
     renderSummary(pov, twap, vwap);
     renderChart(parsed.value, pov, twap, vwap);
+    renderCumChart(parsed.value, pov, twap, vwap);
     showToast(t('view.execution_scheduler.toast.done', { bars: numBars }), { level: 'success' });
 }
 
@@ -206,6 +212,50 @@ function renderChart(volumeCurve, pov, twap, vwap) {
         series,
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, data, el);
+}
+
+function renderCumChart(volumeCurve, pov, twap, vwap) {
+    const el = document.getElementById('es-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const n = volumeCurve.length;
+    if (n < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.execution_scheduler.empty_cum_chart">${esc(t('view.execution_scheduler.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const xs = Array.from({ length: n }, (_, i) => i);
+    const cum = (slices) => {
+        if (!Array.isArray(slices)) return new Array(n).fill(null);
+        const out = new Array(n).fill(null);
+        let acc = 0;
+        for (let i = 0; i < n; i++) {
+            const v = Number(slices[i]);
+            if (Number.isFinite(v)) acc += v;
+            out[i] = acc;
+        }
+        return out;
+    };
+    const povCum = cum(pov ? pov.slices : null);
+    const twapCum = cum(twap ? padToLength(twap.slices, n) : null);
+    const vwapCum = cum(vwap ? vwap.slices : null);
+    const target = xs.map(() => state.totalOrder);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.execution_scheduler.chart.pov_cum'),
+              stroke: '#00e5ff', width: 1.6, points: { show: false } },
+            { label: t('view.execution_scheduler.chart.twap_cum'),
+              stroke: '#ff9f1a', width: 1.6, points: { show: false } },
+            { label: t('view.execution_scheduler.chart.vwap_cum'),
+              stroke: '#a06bff', width: 1.6, points: { show: false } },
+            { label: t('view.execution_scheduler.chart.target'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
+    }, [xs, povCum, twapCum, vwapCum, target], el);
 }
 
 function padToLength(arr, n) {

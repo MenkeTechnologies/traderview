@@ -636,6 +636,8 @@ pub enum Preset {
     LowVolWithLargeGap,             // gap_pct.abs() > 2 AND rel_volume < 0.7 AND change_pct.abs() > 1 — big gap + dry vol + meaningful change (gap held quietly; minimal participation needed to absorb the overnight move)
     GapErasedByIntradayFlat,        // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND gap_pct * day_pct < 0 — gap + opposite-direction intraday + flat close (intraday completely erased the gap; full counter-move absorption)
     BothSidesTaggedFlatBalance,     // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume >= 1.2 — both extremes well-distant from close + flat change + decent vol (range-bound balance; close mid-range after exploring both sides)
+    OutsideDayWideBalanceHotVol,    // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — really wide range + flat change + hot vol (outside-day balance; both extremes visited then closed flat on heavy participation)
+    InsideDayBigChangeBigVol,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 2 AND rel_volume >= 2 — narrow range + big change + hot vol (inside-day big move; gap-driven change but with massive participation at flat-after-gap level)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3446,6 +3448,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume >= 1.2
         }
+        Preset::OutsideDayWideBalanceHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::InsideDayBigChangeBigVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -3972,6 +3984,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowVolWithLargeGap => "Big Gap + Dry Vol + Meaningful Change (Gap Absorbed Quietly)",
         Preset::GapErasedByIntradayFlat => "Gap + Opposite Intraday + Flat Close (Gap Completely Erased)",
         Preset::BothSidesTaggedFlatBalance => "Both Extremes Visited + Flat Change + Decent Vol (Range-bound Balance)",
+        Preset::OutsideDayWideBalanceHotVol => "Very Wide Range + Flat Change + Hot Vol (Outside-Day Balance on Heavy Vol)",
+        Preset::InsideDayBigChangeBigVol => "Narrow Range + Big Change + Hot Vol (Inside-Day Gap Day on Heavy Participation)",
     }
 }
 
