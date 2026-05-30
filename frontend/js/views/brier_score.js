@@ -55,6 +55,11 @@ export async function renderBrierScore(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.brier.h2.hist_chart">Forecast histogram (counts per bin)</h2>
+            <div id="br-hist-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.brier.h2.table">Per-bin calibration</h2>
             <div id="br-table"></div>
         </div>
@@ -100,6 +105,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.brier.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderHistChart();
     renderTable();
     let resp;
     try {
@@ -112,6 +118,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.brier.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderHistChart();
     renderTable();
 }
 
@@ -178,6 +185,37 @@ function renderChart() {
         ],
         legend: { show: true },
     }, [xs, ys, ident], el);
+}
+
+function renderHistChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('br-hist-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!state.probabilities.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.brier.empty_hist">${esc(t('view.brier.empty_hist'))}</div>`;
+        return;
+    }
+    const bins = reliabilityBins(state.probabilities, state.outcomes, state.n_bins);
+    const labels = bins.map(b => `${b.lo.toFixed(2)}–${b.hi.toFixed(2)}`);
+    const ys = bins.map(b => b.count);
+    const xs = bins.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.brier.chart.bin_idx') },
+            { label: t('view.brier.chart.count'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable() {

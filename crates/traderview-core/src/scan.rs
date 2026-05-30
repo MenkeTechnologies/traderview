@@ -536,6 +536,8 @@ pub enum Preset {
     IntradayRejectionFromGapUp,     // year_low_pct between 10 and 30 AND day_pct < -1 AND gap_pct > 0.5 AND rel_volume >= 1.5 — mid-range from bottom + red intraday + gap-up + hot vol (intraday rejection from gap-up)
     Pct52wMidUpperHotVolDown,       // year_high_pct between -30 and -10 AND change_pct < -3 AND rel_volume >= 2 — mid-upper 52w + big down + hot vol (correction in uptrend)
     Pct52wMidLowerHotVolUp,         // year_low_pct between 10 and 30 AND change_pct > 3 AND rel_volume >= 2 — mid-lower 52w + big up + hot vol (rally in downtrend)
+    OrderlyMidRangeRally,           // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct > 1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + up move + normal vol (orderly rally in middle)
+    OrderlyMidRangePullback,        // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct < -1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + down move + normal vol (orderly pullback in middle)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2769,6 +2771,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::OrderlyMidRangeRally => {
+            hit.year_high_pct >= -25.0
+                && hit.year_high_pct <= -15.0
+                && hit.year_low_pct >= 15.0
+                && hit.year_low_pct <= 25.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 0.8
+                && hit.rel_volume <= 1.5
+        }
+        Preset::OrderlyMidRangePullback => {
+            hit.year_high_pct >= -25.0
+                && hit.year_high_pct <= -15.0
+                && hit.year_low_pct >= 15.0
+                && hit.year_low_pct <= 25.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 0.8
+                && hit.rel_volume <= 1.5
+        }
     }
 }
 
@@ -3195,6 +3215,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayRejectionFromGapUp => "Intraday Rejection from Gap-Up (Mid-Lower 52w)",
         Preset::Pct52wMidUpperHotVolDown => "Mid-Upper 52w + Big Down + Hot Vol (Uptrend Correction)",
         Preset::Pct52wMidLowerHotVolUp => "Mid-Lower 52w + Big Up + Hot Vol (Downtrend Rally)",
+        Preset::OrderlyMidRangeRally => "Orderly Mid-Range Rally (Symmetric 52w, Normal Vol)",
+        Preset::OrderlyMidRangePullback => "Orderly Mid-Range Pullback (Symmetric 52w, Normal Vol)",
     }
 }
 

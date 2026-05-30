@@ -418,6 +418,8 @@ const PRESETS = [
     { id: 'intraday_rejection_from_gap_up', label: t('view.scanners.preset.intraday_rejection_from_gap_up.label'), desc: t('view.scanners.preset.intraday_rejection_from_gap_up.desc') },
     { id: 'pct52w_mid_upper_hot_vol_down', label: t('view.scanners.preset.pct52w_mid_upper_hot_vol_down.label'), desc: t('view.scanners.preset.pct52w_mid_upper_hot_vol_down.desc') },
     { id: 'pct52w_mid_lower_hot_vol_up', label: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.label'), desc: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.desc') },
+    { id: 'orderly_mid_range_rally', label: t('view.scanners.preset.orderly_mid_range_rally.label'), desc: t('view.scanners.preset.orderly_mid_range_rally.desc') },
+    { id: 'orderly_mid_range_pullback', label: t('view.scanners.preset.orderly_mid_range_pullback.label'), desc: t('view.scanners.preset.orderly_mid_range_pullback.desc') },
 ];
 
 export async function renderScanners(mount) {
