@@ -744,6 +744,8 @@ pub enum Preset {
     ChangeIntradayDisagreeFlatRange,     // change_pct * day_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — change/day signs disagree + tight intraday + decent vol (gap-vs-intraday sign disagreement but intraday compressed; overnight news held even as intraday tried to fade in narrow range)
     BigGapHugeVolHalfFade,               // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() < gap_pct.abs() * 0.5 — big gap + extreme vol (3×+) + change < half the gap (gap absorbed substantially even on extreme volume; institutional offloading at gap level; >50% gap fade with conviction)
     BigGapHugeVolFullExtension,          // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() > gap_pct.abs() * 1.5 — big gap + extreme vol (3×+) + change > 1.5× the gap (gap extended substantially on extreme volume; institutional commitment beyond the gap; momentum continuation on max participation)
+    GapWithChangeWideRangeHotVol,        // change_pct * gap_pct > 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change same-sign + meaningful gap + bigger change + wide range + hot vol (gap extended through wide intraday exploration in same direction on volume; max-conviction trend day with both halves contributing)
+    GapAgainstChangeWideRangeHotVol,     // change_pct * gap_pct < 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change opposite-sign + meaningful gap + bigger change + wide range + hot vol (intraday more than reversed the gap with wide range and hot vol; full institutional reversal with extreme volatility)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4194,6 +4196,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 3.0
                 && hit.change_pct.abs() > hit.gap_pct.abs() * 1.5
         }
+        Preset::GapWithChangeWideRangeHotVol => {
+            hit.change_pct * hit.gap_pct > 0.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapAgainstChangeWideRangeHotVol => {
+            hit.change_pct * hit.gap_pct < 0.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4828,6 +4844,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ChangeIntradayDisagreeFlatRange => "Change/Day Signs Disagree + Tight Intraday + Decent Vol (Overnight News Held While Intraday Tried to Fade in Narrow Range)",
         Preset::BigGapHugeVolHalfFade => "Big Gap + Extreme Vol (3×+) + Change < Half Gap (Institutional Offloading at Gap Level; >50% Gap Fade on Conviction)",
         Preset::BigGapHugeVolFullExtension => "Big Gap + Extreme Vol (3×+) + Change > 1.5× Gap (Institutional Commitment Beyond the Gap; Momentum Continuation on Max Participation)",
+        Preset::GapWithChangeWideRangeHotVol => "Gap-with-change + Wide Range + Hot Vol (Max-conviction Trend Day; Gap and Intraday Both Pushed Same Way Through Wide Exploration)",
+        Preset::GapAgainstChangeWideRangeHotVol => "Gap-against-change + Wide Range + Hot Vol (Full Institutional Reversal; Intraday More Than Reversed the Gap with Wide-range Exploration)",
     }
 }
 

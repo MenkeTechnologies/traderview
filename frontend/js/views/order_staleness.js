@@ -70,6 +70,12 @@ export async function renderOrderStaleness(mount, _appState) {
             <div id="os-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.order_staleness.h2.age_dist_chart">Age distribution (hours)</h2>
+            <div id="os-age-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.order_staleness.hint.age_dist" class="muted small">Histogram of resting-order ages. Reveals the shape — long tail = forgotten cluster, peak near zero = active scalping cluster. Yellow dashed = your warn threshold.</p>
+        </div>
+
         <div id="os-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -137,6 +143,48 @@ async function compute(tok) {
         stale,
     }), { level: stale > 0 ? 'warning' : 'success' });
     renderTierChart(report);
+    renderAgeDistChart(report);
+}
+
+function renderAgeDistChart(report) {
+    const el = document.getElementById('os-age-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report && report.rows) || [];
+    const ages = rows.map(r => Number(r.age_hours)).filter(Number.isFinite);
+    if (ages.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.order_staleness.empty_age_chart">${esc(t('view.order_staleness.empty_age_chart'))}</div>`;
+        return;
+    }
+    const maxA = Math.max(...ages);
+    const bins = Math.min(20, Math.max(4, Math.ceil(Math.sqrt(ages.length))));
+    const span = maxA || 1;
+    const counts = new Array(bins).fill(0);
+    for (const a of ages) {
+        const idx = Math.min(bins - 1, Math.max(0, Math.floor(a / span * bins)));
+        counts[idx] += 1;
+    }
+    const xs = Array.from({ length: bins }, (_, i) => (i + 0.5) * (span / bins));
+    const warn = Number(state.thresholds.warn_hours) || 0;
+    const peak = Math.max(...counts);
+    const warnLine = xs.map(x => Math.abs(x - warn) < (span / bins / 2) ? peak : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.order_staleness.chart.age_bin') },
+            { label: t('view.order_staleness.chart.count'),
+              stroke: '#b86bff', width: 1.5,
+              fill: '#b86bff33', points: { show: true, size: 5 } },
+            { label: t('view.order_staleness.chart.warn_marker'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [{ stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + 'h') },
+            { stroke: '#aab', size: 40 }],
+        legend: { show: true },
+    }, [xs, counts, warnLine], el);
 }
 
 function renderTierChart(report) {
