@@ -541,6 +541,11 @@ function bindTabs() {
         const el = document.getElementById('ac-frontier');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in implementation-shortfall scope → click Analyze.
+    window.addEventListener('tv:implementation-shortfall-run', () => {
+        const el = document.getElementById('is-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

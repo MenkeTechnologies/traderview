@@ -21,6 +21,7 @@ import {
     fillKind, fmtUSD, fmtBps, fmtPct, } from '../_implementation_shortfall_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULTS = {
     direction:               'buy',
     decision_mid:            100.00,
@@ -43,25 +44,25 @@ export async function renderImplementationShortfall(mount, _appState) {
             <h2 data-i18n="view.implementation_shortfall.h2.order_lifecycle">Order lifecycle</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.implementation_shortfall.label.direction">Direction</span>
-                    <select id="is-dir">
+                    <select id="is-dir" data-tip="view.implementation_shortfall.tip.dir">
                         <option data-i18n="view.implementation_shortfall.opt.buy" value="buy"  ${state.params.direction === 'buy'  ? 'selected' : ''}>Buy</option>
                         <option data-i18n="view.implementation_shortfall.opt.sell" value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
                     </select></label>
                 <label><span data-i18n="view.implementation_shortfall.label.decision_mid">Decision mid</span>
-                    <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}"></label>
+                    <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}" data-tip="view.implementation_shortfall.tip.decision_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.arrival_mid">Arrival mid</span>
-                    <input id="is-am" type="number" step="any" min="0" value="${state.params.arrival_mid}"></label>
+                    <input id="is-am" type="number" step="any" min="0" value="${state.params.arrival_mid}" data-tip="view.implementation_shortfall.tip.arrival_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.vwap_fill">VWAP fill</span>
-                    <input id="is-vw" type="number" step="any" min="0" value="${state.params.vwap_fill}"></label>
+                    <input id="is-vw" type="number" step="any" min="0" value="${state.params.vwap_fill}" data-tip="view.implementation_shortfall.tip.vwap_fill"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.final_mid">Final mid</span>
-                    <input id="is-fm" type="number" step="any" min="0" value="${state.params.final_mid}"></label>
+                    <input id="is-fm" type="number" step="any" min="0" value="${state.params.final_mid}" data-tip="view.implementation_shortfall.tip.final_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.half_spread">½-spread @ decision</span>
-                    <input id="is-hs" type="number" step="any" min="0" value="${state.params.half_spread_at_decision}"></label>
+                    <input id="is-hs" type="number" step="any" min="0" value="${state.params.half_spread_at_decision}" data-tip="view.implementation_shortfall.tip.half_spread"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.intended_qty">Intended qty</span>
-                    <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}"></label>
+                    <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}" data-tip="view.implementation_shortfall.tip.intended_qty"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.filled_qty">Filled qty</span>
-                    <input id="is-fq" type="number" step="1" min="0" value="${state.params.filled_qty}"></label>
-                <button data-i18n="view.implementation_shortfall.btn.analyze" id="is-run" class="primary" type="button">Analyze</button>
+                    <input id="is-fq" type="number" step="1" min="0" value="${state.params.filled_qty}" data-tip="view.implementation_shortfall.tip.filled_qty"></label>
+                <button data-i18n="view.implementation_shortfall.btn.analyze" id="is-run" class="primary" type="button" data-tip="view.implementation_shortfall.tip.run" data-shortcut="implementation_shortfall_run">Analyze</button>
             </div>
             <p data-i18n="view.implementation_shortfall.hint.buy_convention_a_positive_cost_means_the_trader_pa" class="muted">
                 Buy convention: a positive $ cost means the trader paid up.
@@ -114,13 +115,14 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.implementation_shortfall.toast.invalid'), { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microImplementationShortfall(buildBody(state.params));
         if (!res) throw new Error(t('view.implementation_shortfall.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.implementation_shortfall.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -128,6 +130,7 @@ async function compute(tok) {
     renderBars(res);
     renderComponentChart(res);
     document.getElementById('is-note').textContent = res.note || '—';
+    showToast(t('view.implementation_shortfall.toast.analyzed', { bps: (res.total_bps ?? 0).toFixed(2) }), { level: 'success' });
 }
 
 function renderComponentChart(report) {
