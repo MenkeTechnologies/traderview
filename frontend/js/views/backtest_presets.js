@@ -139,7 +139,7 @@ function wireRowButtons(scope, mine, mount, tok) {
             b.addEventListener('click', async () => {
                 try {
                     const forked = await api.forkBacktestPreset(b.dataset.slug);
-                    alert(`Forked as "${forked.name}"`);
+                    alert(t('view.backtest_presets.alert.forked', { name: forked.name }));
                     if (viewIsCurrent(tok)) await refresh(mount, tok);
                 } catch (e) { alert(t('common.error', { err: e.message })); }
             });
@@ -178,7 +178,7 @@ async function renderPresetDetail(mount, slug) {
         if (btn) btn.addEventListener('click', async () => {
             try {
                 const f = await api.forkBacktestPreset(slug);
-                alert(`Forked as "${f.name}"`);
+                alert(t('view.backtest_presets.alert.forked', { name: f.name }));
                 window.location.hash = `backtest-presets/${f.slug}`;
             } catch (e) { alert(t('common.error', { err: e.message })); }
         });

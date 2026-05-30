@@ -5484,6 +5484,7 @@
   "view.boards.placeholder.name": "board name",
   "view.backtest_presets.placeholder.name": "name (unique per user)",
   "view.backtest_presets.placeholder.description": "optional description",
+  "view.backtest_presets.alert.forked":     "Forked as \"{name}\"",
   "view.darkpool.placeholder.symbol": "symbol (NVDA)",
   "view.community.placeholder.body": "markdown body",
   "view.community.placeholder.reply": "markdown reply",
