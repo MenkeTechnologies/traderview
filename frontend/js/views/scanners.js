@@ -818,6 +818,8 @@ const PRESETS = [
     { id: 'gravestone_doji_at_mid_year_high', label: t('view.scanners.preset.gravestone_doji_at_mid_year_high.label'), desc: t('view.scanners.preset.gravestone_doji_at_mid_year_high.desc') },
     { id: 'dragonfly_doji_at_deep_pullback', label: t('view.scanners.preset.dragonfly_doji_at_deep_pullback.label'), desc: t('view.scanners.preset.dragonfly_doji_at_deep_pullback.desc') },
     { id: 'gravestone_doji_at_deep_bounce', label: t('view.scanners.preset.gravestone_doji_at_deep_bounce.label'), desc: t('view.scanners.preset.gravestone_doji_at_deep_bounce.desc') },
+    { id: 'marubozu_green_at_mid_year_high', label: t('view.scanners.preset.marubozu_green_at_mid_year_high.label'), desc: t('view.scanners.preset.marubozu_green_at_mid_year_high.desc') },
+    { id: 'marubozu_red_at_mid_year_low', label: t('view.scanners.preset.marubozu_red_at_mid_year_low.label'), desc: t('view.scanners.preset.marubozu_red_at_mid_year_low.desc') },
 ];
 
 export async function renderScanners(mount) {
