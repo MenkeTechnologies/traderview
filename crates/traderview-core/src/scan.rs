@@ -136,6 +136,8 @@ pub enum Preset {
     InsideDaySqueeze,   // tight day + low volume + close not near either extreme (compression)
     LowVolSqueeze,      // very quiet bar: rel_volume < 0.5 AND |day_pct| < 1
     CoilingSqueeze,     // change near zero (|change_pct| < 1) AND quiet volume (< 0.7×) AND narrow gap
+    MidRangeSqueeze,    // far from both 52w extremes (year_high_pct < -10 AND year_low_pct > 10) AND quiet day
+    BracketSqueeze,     // very tight day_pct (<0.5) AND narrow distance to HOD/LOD (<0.5) — coiled spring
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -181,6 +183,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::CoilingSqueeze => {
             hit.change_pct.abs() < 1.0 && hit.rel_volume < 0.7 && hit.gap_pct.abs() < 0.5
         }
+        Preset::MidRangeSqueeze => {
+            hit.year_high_pct <= -10.0
+                && hit.year_low_pct >= 10.0
+                && hit.rel_volume <= 0.8
+                && hit.day_pct.abs() <= 1.0
+        }
+        Preset::BracketSqueeze => {
+            hit.day_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -207,6 +220,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::InsideDaySqueeze => "Inside-Day Squeeze",
         Preset::LowVolSqueeze => "Low-Volume Squeeze",
         Preset::CoilingSqueeze => "Coiling Squeeze",
+        Preset::MidRangeSqueeze => "Mid-Range Squeeze",
+        Preset::BracketSqueeze => "Bracket Squeeze",
     }
 }
 
