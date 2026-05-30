@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderHeatmap(mount) {
     const tok = currentViewToken();
@@ -9,6 +10,10 @@ export async function renderHeatmap(mount) {
         <h1 data-i18n="view.heatmap.h1.market_heatmap" class="view-title">// MARKET HEATMAP</h1>
         <p data-i18n="view.heatmap.hint.150_s_p_500_names_grouped_by_gics_sector_colored_b" class="muted small">~150 S&P 500 names grouped by GICS sector, colored by today's % change. Your watchlist symbols add to a "Watchlist" pseudo-sector.</p>
         <div id="hm" data-i18n="common.loading">loading…</div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.heatmap.h2.sector_chart">Avg sector change %</h2>
+            <div id="hm-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try {
         const r = await api.heatmap();
@@ -58,4 +63,43 @@ function renderTiles(r, mount) {
 
     const el = mount.querySelector('#hm');
     if (el) el.innerHTML = html || '<p data-i18n="view.heatmap.hint.no_quotes_cached_yet_refresh_in_a_minute" class="muted">No quotes cached yet — refresh in a minute.</p>';
+    renderSectorChart(sectors);
+}
+
+function renderSectorChart(sectors) {
+    const el = document.getElementById('hm-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!sectors || !sectors.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.heatmap.empty_chart">${esc(t('view.heatmap.empty_chart'))}</div>`;
+        return;
+    }
+    const avgs = sectors.map(([sector, tiles]) => ({
+        sector,
+        avg: tiles.reduce((a, t) => a + Number(t.change_pct), 0) / tiles.length,
+    })).filter(s => Number.isFinite(s.avg))
+       .sort((a, b) => b.avg - a.avg);
+    const labels = avgs.map(s => s.sector);
+    const ys = avgs.map(s => s.avg);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.heatmap.chart.sector_idx') },
+            { label: t('view.heatmap.chart.avg_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.heatmap.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }

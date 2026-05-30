@@ -204,6 +204,8 @@ pub enum Preset {
     ChangeButHodNearbySqueeze,   // change_pct <= -1 AND hod_dist.abs() < 1 — down day but close is back near HOD (bullish reversal)
     GapAndCloseAtHodSqueeze,     // gap >= 0.5 AND hod_dist.abs() < 0.5 AND day_pct >= 0 — gap up + close at HOD (consolidation high)
     GapAndCloseAtLodSqueeze,     // gap <= -0.5 AND lod_dist.abs() < 0.5 AND day_pct <= 0 — gap down + close at LOD (consolidation low)
+    LongInsideQuietSqueeze,      // hod_dist + lod_dist between 2 and 4 AND day_pct.abs() < 0.5 AND rel_volume < 0.8 — wider-than-tight inside bar
+    TripleZeroSqueeze,           // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 — gap, change, AND day all near zero
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -622,6 +624,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.day_pct <= 0.0
         }
+        Preset::LongInsideQuietSqueeze => {
+            let span = hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs();
+            span >= 2.0
+                && span <= 4.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
+        Preset::TripleZeroSqueeze => {
+            hit.gap_pct.abs() < 0.1
+                && hit.change_pct.abs() < 0.1
+                && hit.day_pct.abs() < 0.1
+        }
     }
 }
 
@@ -716,6 +730,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ChangeButHodNearbySqueeze => "Down-Day-Reversed Squeeze",
         Preset::GapAndCloseAtHodSqueeze => "Gap-Up Hold-HOD Squeeze",
         Preset::GapAndCloseAtLodSqueeze => "Gap-Down Hold-LOD Squeeze",
+        Preset::LongInsideQuietSqueeze => "Long-Inside Quiet Squeeze",
+        Preset::TripleZeroSqueeze => "Triple-Zero Squeeze",
     }
 }
 
