@@ -9,7 +9,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseSampleBlob, sampleToBlob, validateInputs, buildBody, localTest,
     verdictBadge, approxPValue, summarizeSample,
-    makeDemoInput,
+    makeDemoInput, qqPlotData,
     fmtNum, fmtNumSigned, fmtPVal, fmtInt,
 } from '../_ad_normality_inputs.js';
 
@@ -56,6 +56,11 @@ export async function renderAdNormality(mount, _appState) {
             <div id="adn-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.ad_norm.h2.qq">Q-Q plot vs standard normal</h2>
+            <div id="adn-qq" style="width:100%;height:280px"></div>
+        </div>
+
         <div id="adn-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -94,6 +99,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderCrit(local);
     renderStats();
+    renderQQ();
     let resp;
     try {
         resp = await api.anlyAdNormality(buildBody(state));
@@ -189,6 +195,45 @@ function renderStats() {
             </tbody>
         </table>
     `;
+}
+
+function renderQQ() {
+    const el = document.getElementById('adn-qq');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const { theoretical, empirical, n } = qqPlotData(state.sample);
+    if (n < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.ad_norm.empty_qq">${esc(t('view.ad_norm.empty_qq'))}</div>`;
+        return;
+    }
+    // Diagonal reference line y = x scaled to the empirical span.
+    const tmin = theoretical[0], tmax = theoretical[n - 1];
+    const emin = Math.min(...empirical), emax = Math.max(...empirical);
+    // Use empirical mean and stdev to map theoretical z -> y_ref so the
+    // line is meaningful in the same units as the data.
+    const mean = empirical.reduce((a, b) => a + b, 0) / n;
+    const variance = empirical.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1);
+    const sd = Math.sqrt(variance);
+    const refY = theoretical.map(z => mean + sd * z);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 260,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.ad_norm.chart.x') },
+            { label: t('view.ad_norm.chart.empirical'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 6, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.ad_norm.chart.normal_line'),
+              stroke: '#ffd84a', width: 1.5, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [theoretical, empirical, refY], el);
+    void tmin; void tmax; void emin; void emax;
 }
 
 function card(label, value, cls = '') {
