@@ -690,6 +690,8 @@ pub enum Preset {
     HotVolFlatCloseBigGap,           // change_pct.abs() < 0.5 AND gap_pct.abs() > 2 AND rel_volume >= 2 — flat finish + big gap + hot vol (intraday fully absorbed the gap on heavy participation; full round-trip on volume; market rejected the overnight move with confirmation)
     OrganicMicroGainNormalVol,       // change_pct between 0.3 and 1 AND day_pct > 0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest gain (0.3-1%) + green intraday + normal vol + no gap (silent drift up; pure organic accumulation under the radar; ideal for long-term adds without alerting)
     OrganicMicroDropNormalVol,       // change_pct between -1 and -0.3 AND day_pct < -0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest drop (-1 to -0.3%) + red intraday + normal vol + no gap (silent drift down; pure organic distribution under the radar)
+    IntradayRangeWiderThanGapHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > gap_pct.abs() * 2 AND gap_pct.abs() > 1 AND rel_volume >= 2 — intraday range > 2× the gap + meaningful gap + hot vol (intraday discovery dominates the gap; market traded a much wider range than overnight expected on volume)
+    GapWiderThanIntradayRangeHotVol, // gap_pct.abs() > hod_dist_pct.abs() + lod_dist_pct.abs() AND gap_pct.abs() > 1.5 AND rel_volume >= 2 — gap > entire intraday range + significant gap + hot vol (gap dominates the day's move; intraday only consolidated in a narrow band near the new level on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3803,6 +3805,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 1.2
                 && hit.gap_pct.abs() < 0.2
         }
+        Preset::IntradayRangeWiderThanGapHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > hit.gap_pct.abs() * 2.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapWiderThanIntradayRangeHotVol => {
+            hit.gap_pct.abs() > hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()
+                && hit.gap_pct.abs() > 1.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4383,6 +4395,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolFlatCloseBigGap => "Hot Vol + Flat Close + Big Gap (Intraday Round-trip Absorbed Overnight Move with Volume Confirmation)",
         Preset::OrganicMicroGainNormalVol => "Modest Gain (0.3-1%) + Green Intraday + Normal Vol + No Gap (Silent Organic Accumulation Under the Radar)",
         Preset::OrganicMicroDropNormalVol => "Modest Drop (-1 to -0.3%) + Red Intraday + Normal Vol + No Gap (Silent Organic Distribution Under the Radar)",
+        Preset::IntradayRangeWiderThanGapHotVol => "Intraday Range > 2× Gap + Hot Vol (Intraday Discovery Dominates the Gap; Market Traded Far Wider Than Overnight Expected)",
+        Preset::GapWiderThanIntradayRangeHotVol => "Gap > Intraday Range + Hot Vol (Gap Dominates; Intraday Only Consolidated Near the New Level on Volume)",
     }
 }
 

@@ -62,6 +62,12 @@ export async function renderKagiChart(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.kagi.h2.moves_chart">Per-line signed move (up positive, down negative)</h2>
+            <div id="kg-moves-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.kagi.hint.moves" class="muted small">Bar magnitude per kagi line, signed by direction. Reveals the line-level strength distribution that the cumulative polyline above obscures by stacking. Yellow dashed = zero reference.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.kagi.h2.table">Kagi lines</h2>
             <div id="kg-table"></div>
         </div>
@@ -107,6 +113,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.reversal, state.kind);
     renderSummary(local, true);
     renderChart(local);
+    renderMovesChart(local);
     renderTable(local);
     let resp;
     try {
@@ -119,6 +126,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderMovesChart(resp);
     renderTable(resp);
     const lines = Array.isArray(resp) ? resp.length : 0;
     const last = lines > 0 ? resp[lines - 1] : null;
@@ -181,6 +189,37 @@ function renderChart(lines) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderMovesChart(lines) {
+    const el = document.getElementById('kg-moves-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!lines || lines.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.kagi.empty_moves_chart">${esc(t('view.kagi.empty_moves_chart'))}</div>`;
+        return;
+    }
+    const xs = lines.map((_, i) => i + 1);
+    const moves = lines.map(l => Number(l.end_price) - Number(l.anchor_price));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.line') },
+            { label: t('view.kagi.chart.signed_move'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.kagi.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, moves, zero], el);
 }
 
 function renderTable(lines) {
