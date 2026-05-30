@@ -164,6 +164,8 @@ pub enum Preset {
     NearAtlQuietSqueeze,    // ≤ 1% from 52w low  AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the bottom
     SilentBreakoutSetup,    // hod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_high_pct >= -5 — quiet edge of multi-month resistance
     SilentBreakdownSetup,   // lod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_low_pct <= 5  — quiet edge of multi-month support
+    GapDownNoFollowSqueeze, // gap_pct <= -1 AND change_pct >= -0.5 AND day_pct.abs() < 0.5 — gap down failing to extend
+    GapUpNoFollowSqueeze,   // gap_pct >=  1 AND change_pct <=  0.5 AND day_pct.abs() < 0.5 — gap up failing to extend
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -360,6 +362,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.year_low_pct <= 5.0
         }
+        Preset::GapDownNoFollowSqueeze => {
+            hit.gap_pct <= -1.0
+                && hit.change_pct >= -0.5
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::GapUpNoFollowSqueeze => {
+            hit.gap_pct >= 1.0
+                && hit.change_pct <= 0.5
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -414,6 +426,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NearAtlQuietSqueeze => "Near-ATL Quiet Squeeze",
         Preset::SilentBreakoutSetup => "Silent Breakout Setup",
         Preset::SilentBreakdownSetup => "Silent Breakdown Setup",
+        Preset::GapDownNoFollowSqueeze => "Gap-Down No-Follow Squeeze",
+        Preset::GapUpNoFollowSqueeze => "Gap-Up No-Follow Squeeze",
     }
 }
 

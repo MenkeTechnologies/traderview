@@ -50,6 +50,11 @@ export async function renderCatalysts(mount, _state) {
                 <tbody><tr><td colspan="5" class="muted" data-i18n="common.connecting">connecting…</td></tr></tbody>
             </table>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.catalysts.h2.source_chart">Catalysts by source (current snapshot)</h2>
+            <div id="cat-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
 
     mount.querySelector('#cat-voice').addEventListener('change', (e) => {
@@ -150,4 +155,40 @@ function render() {
             <td>${linkHtml}</td>
         </tr>`;
     }).join('');
+    renderSourceChart(all);
+}
+
+function renderSourceChart(all) {
+    const el = document.getElementById('cat-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!all || all.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.catalysts.empty_chart">${esc(t('view.catalysts.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const c of all) {
+        const key = c.source || '?';
+        counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.catalysts.chart.source_idx') },
+            { label: t('view.catalysts.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
