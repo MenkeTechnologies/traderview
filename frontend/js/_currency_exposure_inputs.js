@@ -81,7 +81,7 @@ function stripComment(raw) {
 }
 
 export function validateInputs(positions, home, fx) {
-    if (!Array.isArray(positions)) return 'positions must be an array';
+    if (!Array.isArray(positions)) return t('common.validate.must_be_array', { field: 'positions' });
     if (typeof home !== 'string' || !/^[A-Z]{2,5}$/.test(home))
         return 'home_currency must be 2-5 uppercase alpha';
     if (typeof fx !== 'object' || fx === null) return 'fx_to_home must be an object';

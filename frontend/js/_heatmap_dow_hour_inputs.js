@@ -85,7 +85,7 @@ export function dowFromIsoDate(s) {
 }
 
 export function validateInputs(rows) {
-    if (!Array.isArray(rows)) return 'rows must be an array';
+    if (!Array.isArray(rows)) return t('common.validate.must_be_array', { field: 'rows' });
     return null;
 }
 

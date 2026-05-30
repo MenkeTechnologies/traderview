@@ -7075,6 +7075,7 @@
   "common.parse.input_must_be_string":     "input must be a string",
   "common.validate.field_must_be_finite":  "{field} must be finite",
   "common.validate.field_must_be_non_neg": "{field} must be ≥ 0",
+  "common.validate.must_be_array":         "{field} must be an array",
   "view.bartlett.demo.tight":              "Tight",
   "view.bartlett.demo.loose":              "Loose",
   "view.bartlett.demo.calm":               "Calm",
