@@ -460,6 +460,8 @@ const PRESETS = [
     { id: 'steady_grinder_no_vol_pickup', label: t('view.scanners.preset.steady_grinder_no_vol_pickup.label'), desc: t('view.scanners.preset.steady_grinder_no_vol_pickup.desc') },
     { id: 'steady_decliner_no_vol_pickup', label: t('view.scanners.preset.steady_decliner_no_vol_pickup.label'), desc: t('view.scanners.preset.steady_decliner_no_vol_pickup.desc') },
     { id: 'high_vol_stall_near_high_of_year', label: t('view.scanners.preset.high_vol_stall_near_high_of_year.label'), desc: t('view.scanners.preset.high_vol_stall_near_high_of_year.desc') },
+    { id: 'high_vol_stall_near_low_of_year', label: t('view.scanners.preset.high_vol_stall_near_low_of_year.label'), desc: t('view.scanners.preset.high_vol_stall_near_low_of_year.desc') },
+    { id: 'outlier_session_big_move_big_vol', label: t('view.scanners.preset.outlier_session_big_move_big_vol.label'), desc: t('view.scanners.preset.outlier_session_big_move_big_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

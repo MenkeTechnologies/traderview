@@ -578,6 +578,8 @@ pub enum Preset {
     SteadyGrinderNoVolPickup,       // change_pct between 0.5 and 2 AND rel_volume between 0.8 and 1.0 AND day_pct between 0.3 and 1.5 AND gap_pct.abs() < 0.2 — small steady gain + below-average vol + steady intraday + no gap (low-vol grinder; quiet uptrend continuation)
     SteadyDeclinerNoVolPickup,      // change_pct between -2 and -0.5 AND rel_volume between 0.8 and 1.0 AND day_pct between -1.5 and -0.3 AND gap_pct.abs() < 0.2 — small steady decline + below-average vol + steady intraday + no gap (low-vol decliner; quiet downtrend continuation)
     HighVolStallNearHighOfYear,     // year_high_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w high + hot vol + flat day (high-vol stall at the top; supply meeting demand at resistance)
+    HighVolStallNearLowOfYear,      // year_low_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w low + hot vol + flat day (high-vol stall at the bottom; demand meeting supply at floor)
+    OutlierSessionBigMoveBigVol,    // change_pct.abs() > 3 AND rel_volume >= 3 AND hod_dist + lod_dist > 2.5 — really big move + really hot vol + wide range (outlier session; momentum/news/squeeze event)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3057,6 +3059,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::HighVolStallNearLowOfYear => {
+            hit.year_low_pct < 2.0
+                && hit.rel_volume >= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::OutlierSessionBigMoveBigVol => {
+            hit.change_pct.abs() > 3.0
+                && hit.rel_volume >= 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.5
+        }
     }
 }
 
@@ -3525,6 +3537,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SteadyGrinderNoVolPickup => "Small Steady Gain + Sub-avg Vol + No Gap (Quiet Uptrend Grinder)",
         Preset::SteadyDeclinerNoVolPickup => "Small Steady Decline + Sub-avg Vol + No Gap (Quiet Downtrend Decliner)",
         Preset::HighVolStallNearHighOfYear => "Near 52w High + Hot Vol + Flat Day (High-Vol Stall at Top)",
+        Preset::HighVolStallNearLowOfYear => "Near 52w Low + Hot Vol + Flat Day (High-Vol Stall at Bottom)",
+        Preset::OutlierSessionBigMoveBigVol => "Big Move + Big Vol + Wide Range (Outlier / Momentum / News Event)",
     }
 }
 

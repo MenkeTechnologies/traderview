@@ -47,8 +47,14 @@ export async function renderCommunity(mount, _state, catSlug) {
             <h2 data-i18n="view.community.h2.engagement_chart">Top threads — views vs posts</h2>
             <div id="comm-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.community.h2.recency_chart">Thread last-post recency (activity timing distribution)</h2>
+            <div id="comm-recency-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     renderEngagementChart(threads);
+    renderRecencyChart(threads);
     mount.querySelector('#thread-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -99,6 +105,53 @@ function renderEngagementChart(threads) {
         ],
         legend: { show: true },
     }, [xs, views, posts], el);
+}
+
+function renderRecencyChart(threads) {
+    const el = document.getElementById('comm-recency-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(threads) || threads.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.community.empty_recency_chart">${esc(t('view.community.empty_recency_chart'))}</div>`;
+        return;
+    }
+    const now = Date.now();
+    const labels = [
+        t('view.community.chart.recency.hour'),
+        t('view.community.chart.recency.day'),
+        t('view.community.chart.recency.week'),
+        t('view.community.chart.recency.month'),
+        t('view.community.chart.recency.older'),
+    ];
+    const counts = new Array(labels.length).fill(0);
+    for (const th of threads) {
+        const ts = Date.parse(th.last_post_at || th.created_at);
+        if (!Number.isFinite(ts)) continue;
+        const ageMs = now - ts;
+        const hr = 3600 * 1000;
+        if (ageMs < hr) counts[0] += 1;
+        else if (ageMs < 24 * hr) counts[1] += 1;
+        else if (ageMs < 7 * 24 * hr) counts[2] += 1;
+        else if (ageMs < 30 * 24 * hr) counts[3] += 1;
+        else counts[4] += 1;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.community.chart.recency_idx') },
+            { label: t('view.community.chart.thread_count'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 export async function renderCommunityThread(mount, _state, catSlug, threadSlug) {
