@@ -786,6 +786,8 @@ pub enum Preset {
     CloseAtLodTinyHodHotVol,             // lod_dist_pct.abs() < 0.3 AND hod_dist_pct < -4 AND rel_volume >= 1.5 — closed pinned to LOD + HOD far above + hot vol (full intraday range collapse; momentum sell ramp into the close with elevated participation)
     BigGreenCloseAtHodHotVol,            // change_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big green + closed pinned to HOD + hot vol (strong trend day closing on the highs with institutional sponsorship; trend-following long signal)
     BigRedCloseAtLodHotVol,              // change_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big red + closed pinned to LOD + hot vol (strong trend day closing on the lows with institutional sponsorship; trend-following short signal)
+    GapAndGoBigGreenCloseAtHod,          // gap_pct > 2 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + continued higher + closed at HOD + hot vol (gap-and-go continuation; momentum sustained through the close)
+    GapAndDropBigRedCloseAtLod,          // gap_pct < -2 AND change_pct < gap_pct AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + continued lower + closed at LOD + hot vol (gap-and-drop continuation; selling sustained through the close)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4483,6 +4485,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::GapAndGoBigGreenCloseAtHod => {
+            hit.gap_pct > 2.0
+                && hit.change_pct > hit.gap_pct
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapAndDropBigRedCloseAtLod => {
+            hit.gap_pct < -2.0
+                && hit.change_pct < hit.gap_pct
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5159,6 +5173,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseAtLodTinyHodHotVol => "Close Pinned to LOD + HOD Far Above + Hot Vol (Full Intraday Range Collapse; Momentum Sell Ramp into the Close with Elevated Participation)",
         Preset::BigGreenCloseAtHodHotVol => "Big Green + Close at HOD + Hot Vol (Strong Trend Day Closing on the Highs with Institutional Sponsorship; Trend-following Long Signal)",
         Preset::BigRedCloseAtLodHotVol => "Big Red + Close at LOD + Hot Vol (Strong Trend Day Closing on the Lows with Institutional Sponsorship; Trend-following Short Signal)",
+        Preset::GapAndGoBigGreenCloseAtHod => "Gap Up + Continued Higher + Close at HOD + Hot Vol (Gap-and-go Continuation; Momentum Sustained through the Close)",
+        Preset::GapAndDropBigRedCloseAtLod => "Gap Down + Continued Lower + Close at LOD + Hot Vol (Gap-and-drop Continuation; Selling Sustained through the Close)",
     }
 }
 

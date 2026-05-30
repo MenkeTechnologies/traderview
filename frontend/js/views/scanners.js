@@ -668,6 +668,8 @@ const PRESETS = [
     { id: 'close_at_lod_tiny_hod_hot_vol', label: t('view.scanners.preset.close_at_lod_tiny_hod_hot_vol.label'), desc: t('view.scanners.preset.close_at_lod_tiny_hod_hot_vol.desc') },
     { id: 'big_green_close_at_hod_hot_vol', label: t('view.scanners.preset.big_green_close_at_hod_hot_vol.label'), desc: t('view.scanners.preset.big_green_close_at_hod_hot_vol.desc') },
     { id: 'big_red_close_at_lod_hot_vol', label: t('view.scanners.preset.big_red_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.big_red_close_at_lod_hot_vol.desc') },
+    { id: 'gap_and_go_big_green_close_at_hod', label: t('view.scanners.preset.gap_and_go_big_green_close_at_hod.label'), desc: t('view.scanners.preset.gap_and_go_big_green_close_at_hod.desc') },
+    { id: 'gap_and_drop_big_red_close_at_lod', label: t('view.scanners.preset.gap_and_drop_big_red_close_at_lod.label'), desc: t('view.scanners.preset.gap_and_drop_big_red_close_at_lod.desc') },
 ];
 
 export async function renderScanners(mount) {

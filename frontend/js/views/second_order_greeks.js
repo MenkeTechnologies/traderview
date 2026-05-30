@@ -87,6 +87,12 @@ export async function renderSecondOrderGreeks(mount, _appState) {
 
         <div id="sg-grid" class="gp-grid"></div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.second_order_greeks.h2.normalized_chart">Peak-normalized overlay (vanna / charm / vomma / veta on one axis)</h2>
+            <div id="sg-norm-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.second_order_greeks.hint.normalized" class="muted small">Each metric divided by its own peak |value| so all four fit in [−1, +1]. Reveals where peaks line up across spot (e.g. vomma peaking at the same OTM spots where vanna crosses zero) — orthogonal to the per-metric mini-charts above.</p>
+        </div>
+
         <div id="sg-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -147,6 +153,7 @@ async function compute(_mount, tok) {
 
     renderSummary(atmLocal, atmBackend);
     renderGrid(grid, atmLocal);
+    renderNormalizedChart(grid);
     showToast(t('view.second_order_greeks.toast.computed', { n: grid.spots.length }), { level: 'success' });
 }
 
@@ -184,6 +191,46 @@ function renderGrid(grid, atmLocal) {
     for (const m of METRICS) {
         drawMini(`sg-chart-${m}`, grid.spots, grid[m], METRIC_COLORS[m], atmSpot);
     }
+}
+
+function renderNormalizedChart(grid) {
+    const el = document.getElementById('sg-norm-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const xs = grid.spots;
+    if (!xs || xs.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.second_order_greeks.empty_norm_chart">${esc(t('view.second_order_greeks.empty_norm_chart'))}</div>`;
+        return;
+    }
+    const norm = (arr) => {
+        let peak = 0;
+        for (const v of arr) { const a = Math.abs(Number(v)); if (Number.isFinite(a) && a > peak) peak = a; }
+        if (!(peak > 0)) return arr.map(() => null);
+        return arr.map(v => Number.isFinite(v) ? Number(v) / peak : null);
+    };
+    const series = METRICS.map(m => norm(grid[m]));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { range: [-1.1, 1.1] } },
+        series: [
+            { label: t('chart.series.spot') },
+            { label: t('view.second_order_greeks.chart.vanna_n'),
+              stroke: METRIC_COLORS.vanna, width: 1.5, points: { show: false } },
+            { label: t('view.second_order_greeks.chart.charm_n'),
+              stroke: METRIC_COLORS.charm, width: 1.5, points: { show: false } },
+            { label: t('view.second_order_greeks.chart.vomma_n'),
+              stroke: METRIC_COLORS.vomma, width: 1.5, points: { show: false } },
+            { label: t('view.second_order_greeks.chart.veta_n'),
+              stroke: METRIC_COLORS.veta, width: 1.5, points: { show: false } },
+            { label: t('view.second_order_greeks.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 },
+                { stroke: '#aab', size: 50,
+                  values: (_u, splits) => splits.map(v => v.toFixed(2)) } ],
+        legend: { show: true },
+    }, [xs, ...series, zero], el);
 }
 
 function drawMini(elId, xs, ys, stroke, atmSpot) {
