@@ -204,7 +204,7 @@ function renderFavsSection() {
         .map(viewId => TILE_INDEX.get(viewId) ? { viewId, ...TILE_INDEX.get(viewId) } : null)
         .filter(Boolean);
     wrap.innerHTML = `
-        <div class="db-sidebar-head">★ FAVORITES (${favTiles.length})</div>
+        <div class="db-sidebar-head">${esc(t('view.dashboards.sidebar.favorites', { count: favTiles.length }))}</div>
         <ul class="db-list">
             ${favTiles.map(f => `
                 <li class="db-list-item">
@@ -218,7 +218,7 @@ function renderFavsSection() {
             `).join('')}
         </ul>
         ${fState.bookmarks.length ? `
-            <div class="db-sidebar-head" style="margin-top:8px">🔖 BOOKMARKS (${fState.bookmarks.length})</div>
+            <div class="db-sidebar-head" style="margin-top:8px">${esc(t('view.dashboards.sidebar.bookmarks', { count: fState.bookmarks.length }))}</div>
             <ul class="db-list">
                 ${fState.bookmarks.map(b => `
                     <li class="db-list-item">

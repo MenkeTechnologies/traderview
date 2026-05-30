@@ -7045,6 +7045,8 @@
   "view.dividend_calendar.empty.no_upcoming":"No upcoming dividends in the selected horizon.",
   "view.optimal_f.empty.need_losing_trade":"Need at least one losing trade to compute the TWR curve.",
   "view.dashboards.sidebar.head":          "DASHBOARDS",
+  "view.dashboards.sidebar.favorites":      "★ FAVORITES ({count})",
+  "view.dashboards.sidebar.bookmarks":      "🔖 BOOKMARKS ({count})",
   "view.optimal_f.sub.twr_at_optimal":     "TWR @ optimal",
   "view.optimal_f.sub.conservative_default":"conservative default",
   "view.optimal_f.sub.ultra_conservative": "ultra-conservative",
