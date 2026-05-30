@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_NUM_BINS, DEFAULT_VA_PCT,
@@ -30,21 +31,21 @@ export async function renderVolumeAtPrice(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.vap.label.num_bins">Bins</span>
-                    <input id="vap-bins" type="number" step="1" min="2" value="${state.num_bins}"></label>
+                    <input id="vap-bins" type="number" step="1" min="2" value="${state.num_bins}" data-tip="view.vap.tip.num_bins"></label>
                 <label><span data-i18n="view.vap.label.va_pct">Value-area %</span>
-                    <input id="vap-va" type="number" step="any" min="1" max="99.9" value="${state.value_area_pct}"></label>
+                    <input id="vap-va" type="number" step="any" min="1" max="99.9" value="${state.value_area_pct}" data-tip="view.vap.tip.va_pct"></label>
                 <button data-i18n="view.vap.btn.compute" id="vap-run" class="primary"
-                        data-tip="view.vap.tip.compute" type="button">Build profile</button>
+                        data-tip="view.vap.tip.compute" data-shortcut="volume_at_price_run" type="button">Build profile</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.vap.btn.demo_normal"  id="vap-demo-norm"   class="secondary" type="button">Demo: normal session</button>
-                <button data-i18n="view.vap.btn.demo_tight"   id="vap-demo-tight"  class="secondary" type="button">Demo: tight balanced</button>
-                <button data-i18n="view.vap.btn.demo_trend"   id="vap-demo-trend"  class="secondary" type="button">Demo: trending up</button>
-                <button data-i18n="view.vap.btn.demo_double"  id="vap-demo-double" class="secondary" type="button">Demo: double-distribution</button>
-                <button data-i18n="view.vap.btn.demo_spike"   id="vap-demo-spike"  class="secondary" type="button">Demo: spike POC</button>
-                <button data-i18n="view.vap.btn.demo_narrow"  id="vap-demo-narrow" class="secondary" type="button">Demo: narrow VA (90%)</button>
-                <button data-i18n="view.vap.btn.demo_wide"    id="vap-demo-wide"   class="secondary" type="button">Demo: wide VA (50%)</button>
-                <button data-i18n="view.vap.btn.demo_fine"    id="vap-demo-fine"   class="secondary" type="button">Demo: fine bins (100)</button>
+                <button data-i18n="view.vap.btn.demo_normal"  id="vap-demo-norm"   class="secondary" type="button" data-tip="view.vap.tip.demo_norm">Demo: normal session</button>
+                <button data-i18n="view.vap.btn.demo_tight"   id="vap-demo-tight"  class="secondary" type="button" data-tip="view.vap.tip.demo_tight">Demo: tight balanced</button>
+                <button data-i18n="view.vap.btn.demo_trend"   id="vap-demo-trend"  class="secondary" type="button" data-tip="view.vap.tip.demo_trend">Demo: trending up</button>
+                <button data-i18n="view.vap.btn.demo_double"  id="vap-demo-double" class="secondary" type="button" data-tip="view.vap.tip.demo_double">Demo: double-distribution</button>
+                <button data-i18n="view.vap.btn.demo_spike"   id="vap-demo-spike"  class="secondary" type="button" data-tip="view.vap.tip.demo_spike">Demo: spike POC</button>
+                <button data-i18n="view.vap.btn.demo_narrow"  id="vap-demo-narrow" class="secondary" type="button" data-tip="view.vap.tip.demo_narrow">Demo: narrow VA (90%)</button>
+                <button data-i18n="view.vap.btn.demo_wide"    id="vap-demo-wide"   class="secondary" type="button" data-tip="view.vap.tip.demo_wide">Demo: wide VA (50%)</button>
+                <button data-i18n="view.vap.btn.demo_fine"    id="vap-demo-fine"   class="secondary" type="button" data-tip="view.vap.tip.demo_fine">Demo: fine bins (100)</button>
             </div>
             <p data-i18n="view.vap.hint.about" class="muted">Each bar's volume is split across price buckets it overlaps, proportional to overlap length. POC = bin with the most volume (price the market accepted most). Value Area = bracket around POC covering N% of total volume.</p>
         </div>
@@ -86,6 +87,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.vap.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.vap.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -99,7 +101,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.vap.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.num_bins, state.value_area_pct);
     renderSummary(local, true);
     renderChart(local);
@@ -109,12 +111,19 @@ async function compute(tok) {
         resp = await api.chartsVolumeAtPrice(buildBody(state));
     } catch (e) {
         showErr(`${t('view.vap.err.api')}: ${e.message || e}`);
+        showToast(t('view.vap.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const bins = (resp.bins || []).length;
+    const poc = resp.poc_index != null && resp.bins && resp.bins[resp.poc_index]
+        ? Number(resp.bins[resp.poc_index].price_mid).toFixed(2)
+        : '—';
+    const vaPct = (Number(resp.value_area_pct) || 0).toFixed(0);
+    showToast(t('view.vap.toast.built', { bins, poc, va: vaPct }), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
