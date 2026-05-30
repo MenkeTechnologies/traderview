@@ -154,6 +154,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'yield_curve_pca_run',          keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'yield-curve-pca',   descKey: 'shortcut.yield_curve_pca_run',          actionKey: 'tv:yield-curve-pca-run' },
     { id: 'dividend_calendar_run',        keys: { key: 'f', meta: false, ctrl: false, shift: false, alt: false }, scope: 'dividend-calendar', descKey: 'shortcut.dividend_calendar_run',        actionKey: 'tv:dividend-calendar-run' },
     { id: 'signal_decomposition_run',     keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'signal-decomposition', descKey: 'shortcut.signal_decomposition_run', actionKey: 'tv:signal-decomposition-run' },
+    { id: 'rr_butterfly_run',             keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'rr-butterfly',      descKey: 'shortcut.rr_butterfly_run',             actionKey: 'tv:rr-butterfly-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

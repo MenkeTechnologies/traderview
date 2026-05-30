@@ -20,6 +20,7 @@ import {
 } from '../_rr_butterfly_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULTS = {
     decompose:   { sigma_25_call: 0.085, sigma_25_put: 0.097, sigma_atm: 0.090 },
     reconstruct: { atm: 0.090, rr: -0.012, bf: 0.001 },
@@ -37,11 +38,11 @@ export async function renderRrButterfly(mount, _appState) {
             <h2 data-i18n="view.rr_butterfly.h2.mode">Mode</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.rr_butterfly.label.direction">Direction</span>
-                    <select id="rr-mode">
+                    <select id="rr-mode" data-tip="view.rr_butterfly.tip.mode">
                         <option data-i18n="view.rr_butterfly.opt.decompose_atm_rr_bf" value="decompose"   ${state.mode === 'decompose'   ? 'selected' : ''}>Decompose → ATM + RR + BF</option>
                         <option data-i18n="view.rr_butterfly.opt.reconstruct_wings" value="reconstruct" ${state.mode === 'reconstruct' ? 'selected' : ''}>Reconstruct → σ wings</option>
                     </select></label>
-                <button data-i18n="view.rr_butterfly.btn.compute" id="rr-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.rr_butterfly.btn.compute" id="rr-run" class="primary" type="button" data-tip="view.rr_butterfly.tip.run" data-shortcut="rr_butterfly_run">Compute</button>
             </div>
             <p data-i18n="view.rr_butterfly.hint.fx_vol_quotes_are_conventionally_in_vol_points_per" class="muted">
                 FX vol quotes are conventionally in vol-points (percent). RR &gt; 0 = calls
@@ -75,11 +76,11 @@ function renderInputsForm() {
     if (state.mode === 'decompose') {
         wrap.innerHTML = `
             <label><span data-i18n="view.rr_butterfly.label.sigma_25c">σ_25C (call wing)</span>
-                <input id="rr-sc"  type="number" step="any" min="0" value="${state.params.sigma_25_call}"></label>
+                <input id="rr-sc"  type="number" step="any" min="0" value="${state.params.sigma_25_call}" data-tip="view.rr_butterfly.tip.sigma_25c"></label>
             <label><span data-i18n="view.rr_butterfly.label.sigma_25p">σ_25P (put wing)</span>
-                <input id="rr-sp"  type="number" step="any" min="0" value="${state.params.sigma_25_put}"></label>
+                <input id="rr-sp"  type="number" step="any" min="0" value="${state.params.sigma_25_put}" data-tip="view.rr_butterfly.tip.sigma_25p"></label>
             <label><span data-i18n="view.rr_butterfly.label.sigma_atm">σ_ATM</span>
-                <input id="rr-atm" type="number" step="any" min="0" value="${state.params.sigma_atm}"></label>
+                <input id="rr-atm" type="number" step="any" min="0" value="${state.params.sigma_atm}" data-tip="view.rr_butterfly.tip.sigma_atm"></label>
         `;
         wrap.querySelector('#rr-sc').addEventListener('change',  e => state.params.sigma_25_call = Number(e.target.value));
         wrap.querySelector('#rr-sp').addEventListener('change',  e => state.params.sigma_25_put  = Number(e.target.value));
@@ -87,11 +88,11 @@ function renderInputsForm() {
     } else {
         wrap.innerHTML = `
             <label><span data-i18n="view.rr_butterfly.label.atm_iv">ATM IV</span>
-                <input id="rr-atm-in" type="number" step="any" min="0" value="${state.params.atm}"></label>
+                <input id="rr-atm-in" type="number" step="any" min="0" value="${state.params.atm}" data-tip="view.rr_butterfly.tip.atm"></label>
             <label><span data-i18n="view.rr_butterfly.label.rr">Risk reversal (RR)</span>
-                <input id="rr-rr"     type="number" step="any" value="${state.params.rr}"></label>
+                <input id="rr-rr"     type="number" step="any" value="${state.params.rr}" data-tip="view.rr_butterfly.tip.rr"></label>
             <label><span data-i18n="view.rr_butterfly.label.bf">Butterfly (BF)</span>
-                <input id="rr-bf"     type="number" step="any" value="${state.params.bf}"></label>
+                <input id="rr-bf"     type="number" step="any" value="${state.params.bf}" data-tip="view.rr_butterfly.tip.bf"></label>
         `;
         wrap.querySelector('#rr-atm-in').addEventListener('change', e => state.params.atm = Number(e.target.value));
         wrap.querySelector('#rr-rr').addEventListener('change',     e => state.params.rr  = Number(e.target.value));
@@ -114,7 +115,7 @@ function wireForm(mount, tok) {
 async function compute(mount, tok) {
     hideErr();
     const err = validateInputs(state.mode, state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.rr_butterfly.toast.invalid'), { level: 'warning' }); return; }
 
     // Local sanity preview so the user sees instant numbers even if the
     // network round-trip stalls. Backend response overwrites this on
@@ -133,6 +134,7 @@ async function compute(mount, tok) {
         if (!res) throw new Error(t('view.rr_butterfly.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.rr_butterfly.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -145,12 +147,14 @@ async function compute(mount, tok) {
             skew_zscore: res.skew_zscore,
         }, /*fromBackend=*/true);
         renderSmileChart(state.params.sigma_25_put, res.atm, state.params.sigma_25_call);
+        showToast(t('view.rr_butterfly.toast.decomposed'), { level: 'success' });
     } else {
         renderReconstructSummary({
             sigma_25_call: res.sigma_25_call,
             sigma_25_put: res.sigma_25_put,
         }, /*fromBackend=*/true);
         renderSmileChart(res.sigma_25_put, state.params.atm, res.sigma_25_call);
+        showToast(t('view.rr_butterfly.toast.reconstructed'), { level: 'success' });
     }
 }
 
