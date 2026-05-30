@@ -115,6 +115,11 @@ export async function renderTaxWorkshop(mount, _state) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.tax_workshop.h2.qt_chart">Quarterly estimated payments (Q1-Q4)</h2>
+            <div id="qt-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.tax_workshop.h2.recurring_subscription_detector">// Recurring Subscription Detector</h2>
             <p data-i18n="view.tax_workshop.hint.scans_your_imported_transactions_for_monthly_quart" class="muted small">Scans your imported transactions for monthly/quarterly/annual charges with stable amounts. Largest annual leak first.</p>
             <button data-i18n="view.tax_workshop.btn.detect_from_my_transactions" id="sub-run" class="primary" type="button">Detect from my transactions</button>
@@ -201,6 +206,7 @@ export async function renderTaxWorkshop(mount, _state) {
             const r = await api.calcQuarterlyTax(body);
             if (!viewIsCurrent(tok)) return;
             renderQt(mount, r);
+            renderQtChart(r);
         } catch (err) { showError(mount, '#qt-out', err); }
     });
 
@@ -288,6 +294,36 @@ ${t('view.tax_workshop.qt.quarter_due', { period: q[0].period_label, date: q[0].
 ${t('view.tax_workshop.qt.quarter_due', { period: q[1].period_label, date: q[1].due_date, amount: fmtMoney(q[1].estimated_payment) })}
 ${t('view.tax_workshop.qt.quarter_due', { period: q[2].period_label, date: q[2].due_date, amount: fmtMoney(q[2].estimated_payment) })}
 ${t('view.tax_workshop.qt.quarter_due', { period: q[3].period_label, date: q[3].due_date, amount: fmtMoney(q[3].estimated_payment) })}`;
+}
+
+function renderQtChart(r) {
+    const el = document.getElementById('qt-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const qs = (r?.quarters || []).filter(q => Number.isFinite(Number(q.estimated_payment)));
+    if (qs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_workshop.empty_chart">${esc(t('view.tax_workshop.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = qs.map(q => q.period_label);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = qs.map(q => Number(q.estimated_payment));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_workshop.chart.quarter') },
+            { label: t('view.tax_workshop.chart.payment'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSubs(mount, subs) {

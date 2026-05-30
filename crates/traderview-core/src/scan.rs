@@ -346,6 +346,8 @@ pub enum Preset {
     IntradayOnlyRedDay,          // change_pct < -1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work red day (initiative selling continuation)
     ReversalUpFromOpen,          // gap_pct < -1 AND change_pct > 0 AND rel_volume >= 1.5 AND hod_dist.abs() < 0.5 — gap-down reversed and closed at HOD on heavy vol (powerful reclaim)
     ReversalDownFromOpen,        // gap_pct > 1 AND change_pct < 0 AND rel_volume >= 1.5 AND lod_dist.abs() < 0.5 — gap-up reversed and closed at LOD on heavy vol (powerful failure)
+    TrendDayUp,                  // change_pct > 2 AND day_pct > 1 AND rel_volume >= 1.2 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 — trend-day-up: opened low, closed near HOD on heavy vol
+    TrendDayDown,                // change_pct < -2 AND day_pct < -1 AND rel_volume >= 1.2 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 — trend-day-down: opened high, closed near LOD on heavy vol
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1493,6 +1495,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::TrendDayUp => {
+            hit.change_pct > 2.0
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 1.2
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() > 2.0
+        }
+        Preset::TrendDayDown => {
+            hit.change_pct < -2.0
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 1.2
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() > 2.0
+        }
     }
 }
 
@@ -1729,6 +1745,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayOnlyRedDay => "Intraday-Only Red Day",
         Preset::ReversalUpFromOpen => "Reversal Up From Open",
         Preset::ReversalDownFromOpen => "Reversal Down From Open",
+        Preset::TrendDayUp => "Trend Day Up",
+        Preset::TrendDayDown => "Trend Day Down",
     }
 }
 
