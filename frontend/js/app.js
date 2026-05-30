@@ -1031,6 +1031,11 @@ function bindTabs() {
         const el = document.getElementById('bt-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in bollinger-percent-b scope → click Compute.
+    window.addEventListener('tv:bb-pb-run', () => {
+        const el = document.getElementById('pb-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
