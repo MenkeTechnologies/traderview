@@ -77,7 +77,7 @@ function renderGauge(s, mount) {
     const gaugeEl = mount.querySelector('#fgGauge');
     if (!gaugeEl) return;
     gaugeEl.innerHTML = `
-        <h2>${esc(s.label)} — ${s.score}/100</h2>
+        <h2>${esc(t('view.fear_greed.h2.score', { label: s.label, score: s.score }))}</h2>
         <svg viewBox="0 0 320 180" width="100%" height="180" style="display:block;max-width:480px;margin:0 auto;">
             <defs>
                 <linearGradient id="fg-grad" x1="0" y1="0" x2="1" y2="0">

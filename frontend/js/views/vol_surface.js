@@ -53,7 +53,7 @@ function renderSurface(s, out, mount) {
     }
     out.innerHTML = `
         <div class="chart-panel">
-            <h2>${esc(s.symbol)} — spot ${s.spot.toFixed(2)}</h2>
+            <h2>${esc(t('view.vol_surface.h2.symbol_spot', { symbol: s.symbol, spot: s.spot.toFixed(2) }))}</h2>
             <p class="muted small">${esc(t('view.vol_surface.stats', {
                 exps: s.expirations.length,
                 buckets: s.moneyness.length,

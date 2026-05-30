@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderEconomy(mount) {
     const tok = currentViewToken();
@@ -63,7 +64,7 @@ function renderEvents(evs, mount) {
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([day, items]) => `
             <div class="chart-panel">
-                <h2>${esc(day)} · ${dayName(day)}</h2>
+                <h2>${esc(t('view.economy.h2.day', { day, dayName: dayName(day) }))}</h2>
                 <table class="trades">
                     <thead><tr><th data-i18n="view.economy.th.time_et">Time (ET)</th><th data-i18n="view.economy.th.importance">Importance</th><th data-i18n="view.economy.th.event">Event</th>
                         <th data-i18n="view.economy.th.category">Category</th><th data-i18n="view.economy.th.country">Country</th></tr></thead>
