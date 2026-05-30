@@ -956,6 +956,8 @@ pub enum Preset {
     ShootingStarAtDeepDiscountContinuation, // year_high_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in a beaten-down name: intraday rip sold deep in the extended decline; trend-weakness signal far from the ceiling)
     BothLongWicksHotVol,                 // hod_dist_pct.abs() > 2 AND lod_dist_pct > 2 AND rel_volume >= 2 — long upper wick + long lower wick + hot vol (two-sided exploration day with elevated participation: both supply and demand tested at extremes; high-rotation indecision day with full intraday whipsaw range)
     BothShortWicksTinyChangeHotVol,      // hod_dist_pct.abs() < 0.5 AND lod_dist_pct < 0.5 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — short upper wick + short lower wick + flat close + hot vol (compressed-cylinder day: close pinned with no wick exploration on either side; pre-breakout coil with elevated absorption at a specific price)
+    HammerAtConfirmedBreakdown,          // year_low_pct >= -3 AND year_low_pct < -1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — 1-3% below prior 52w low + long lower wick + close near HOD + green close + hot vol (failed-breakdown hammer: confirmed breakdown level retested intraday then reclaimed back above prior support; potential failed-breakdown reversal signal)
+    ShootingStarAtConfirmedBreakout,     // year_high_pct >= -3 AND year_high_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — 1-3% above prior 52w high + long upper wick + close near LOD + red close + hot vol (failed-breakout shooting star: confirmed breakout level retested intraday then rejected back below prior resistance; potential failed-breakout reversal signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5708,6 +5710,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume >= 2.0
         }
+        Preset::HammerAtConfirmedBreakdown => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < -1.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtConfirmedBreakout => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < -1.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6554,6 +6572,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarAtDeepDiscountContinuation => "Deep Discount Zone (>=30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in a Beaten-down Name: Intraday Rip Sold Deep in the Extended Decline; Trend-weakness Signal Far from the Ceiling)",
         Preset::BothLongWicksHotVol => "Long Upper Wick + Long Lower Wick + Hot Vol (Two-sided Exploration Day with Elevated Participation: Both Supply and Demand Tested at Extremes; High-rotation Indecision Day with Full Intraday Whipsaw Range)",
         Preset::BothShortWicksTinyChangeHotVol => "Short Upper Wick + Short Lower Wick + Flat Close + Hot Vol (Compressed-cylinder Day: Close Pinned with No Wick Exploration on Either Side; Pre-breakout Coil with Elevated Absorption at a Specific Price)",
+        Preset::HammerAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Failed-breakdown Hammer: Confirmed Breakdown Level Retested Intraday then Reclaimed Back above Prior Support; Potential Failed-breakdown Reversal Signal)",
+        Preset::ShootingStarAtConfirmedBreakout => "1-3 % above Prior 52w High + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Failed-breakout Shooting Star: Confirmed Breakout Level Retested Intraday then Rejected Back below Prior Resistance; Potential Failed-breakout Reversal Signal)",
     }
 }
 
