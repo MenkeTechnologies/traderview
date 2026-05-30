@@ -308,6 +308,8 @@ pub enum Preset {
     QuietNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w low on light vol (coiled spring down)
     NoisyNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w high on heavy vol (battle for the top)
     NoisyNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w low on heavy vol (battle for the bottom)
+    MidRangeChopHotVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume >= 2 — equidistant mid-range on heavy vol (indecision squeeze)
+    MidRangeChopDryVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume < 0.5 — equidistant mid-range on dry vol (range-bound digestion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1253,6 +1255,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MidRangeChopHotVol => {
+            let h = hit.hod_dist_pct.abs();
+            let l = hit.lod_dist_pct.abs();
+            h >= 1.0 && h <= 3.0
+                && l >= 1.0 && l <= 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MidRangeChopDryVol => {
+            let h = hit.hod_dist_pct.abs();
+            let l = hit.lod_dist_pct.abs();
+            h >= 1.0 && h <= 3.0
+                && l >= 1.0 && l <= 3.0
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -1451,6 +1467,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuietNearTheBottom => "Quiet Near The Bottom",
         Preset::NoisyNearTheTop => "Noisy Near The Top",
         Preset::NoisyNearTheBottom => "Noisy Near The Bottom",
+        Preset::MidRangeChopHotVol => "Mid-Range Chop on Hot Vol",
+        Preset::MidRangeChopDryVol => "Mid-Range Chop on Dry Vol",
     }
 }
 
