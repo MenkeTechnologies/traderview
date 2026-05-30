@@ -34,9 +34,15 @@ export async function renderMentorship(mount) {
                 <h2 data-i18n="view.mentorship.h2.status_chart">Mentorship status counts</h2>
                 <div id="m-chart" style="width:100%;height:240px"></div>
             </div>
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2 data-i18n="view.mentorship.h2.scope_chart">Mentorship scope distribution (read-only vs read+comment)</h2>
+                <div id="m-scope-chart" style="width:100%;height:220px"></div>
+                <p data-i18n="view.mentorship.hint.scope_chart" class="muted small">Permission level across all connections. Complementary to the lifecycle status chart — reveals how much trust your mentors and mentees actually share.</p>
+            </div>
         </div>
     `;
     renderStatusChart(mentors, mentees);
+    renderScopeChart(mentors, mentees);
 
     mount.querySelector('#mentor-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -89,6 +95,46 @@ function renderStatusChart(mentors, mentees) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, data, el);
+}
+
+function renderScopeChart(mentors, mentees) {
+    const el = document.getElementById('m-scope-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = [
+        { key: 'mentors_read',     count: (mentors || []).filter(r => r.scope === 'read').length,    color: '#aab' },
+        { key: 'mentors_comment',  count: (mentors || []).filter(r => r.scope === 'comment').length, color: '#7af0a8' },
+        { key: 'mentees_read',     count: (mentees || []).filter(r => r.scope === 'read').length,    color: '#ffd84a' },
+        { key: 'mentees_comment',  count: (mentees || []).filter(r => r.scope === 'comment').length, color: '#b86bff' },
+    ];
+    if (!buckets.some(b => b.count > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mentorship.empty_scope_chart">${esc(t('view.mentorship.empty_scope_chart'))}</div>`;
+        return;
+    }
+    const labels = buckets.map(b => t(`view.mentorship.chart.${b.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.mentorship.chart.bucket_idx') }];
+    const data = [xs];
+    buckets.forEach((b, i) => {
+        const ys = xs.map((_, j) => j === i ? b.count : null);
+        series.push({
+            label: labels[i],
+            stroke: b.color, width: 0,
+            points: { show: true, size: 16, fill: b.color, stroke: b.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
         scales: { x: {}, y: { auto: true } },
         series,
         axes: [

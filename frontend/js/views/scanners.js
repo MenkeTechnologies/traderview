@@ -598,6 +598,8 @@ const PRESETS = [
     { id: 'mid_range_compression_dry_vol', label: t('view.scanners.preset.mid_range_compression_dry_vol.label'), desc: t('view.scanners.preset.mid_range_compression_dry_vol.desc') },
     { id: 'opening_range_hold_close_at_hod_green', label: t('view.scanners.preset.opening_range_hold_close_at_hod_green.label'), desc: t('view.scanners.preset.opening_range_hold_close_at_hod_green.desc') },
     { id: 'opening_range_hold_close_at_lod_red', label: t('view.scanners.preset.opening_range_hold_close_at_lod_red.label'), desc: t('view.scanners.preset.opening_range_hold_close_at_lod_red.desc') },
+    { id: 'window_dressing_mark_up', label: t('view.scanners.preset.window_dressing_mark_up.label'), desc: t('view.scanners.preset.window_dressing_mark_up.desc') },
+    { id: 'window_dressing_mark_down', label: t('view.scanners.preset.window_dressing_mark_down.label'), desc: t('view.scanners.preset.window_dressing_mark_down.desc') },
 ];
 
 export async function renderScanners(mount) {
