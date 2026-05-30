@@ -864,6 +864,8 @@ pub enum Preset {
     Year52LowBreakdownDryVolBounce,      // year_low_pct >= 0 AND year_low_pct < 2 AND change_pct > 0.5 AND change_pct < 2 AND rel_volume < 0.8 — just above 52w low + small green bounce + dry vol (low-vol bounce to retest the prior breakdown level; weak-hands shaken out without participation; rejection setup)
     BigGapBigCounterMoveBigRangeHotVol,  // gap_pct.abs() > 3 AND day_pct * gap_pct < 0 AND day_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — big gap + big opposite intraday move + wide range + hot vol (gap-and-fight reversal: significant overnight gap fully battled by the intraday session; two-sided rotation day with extended range and elevated participation; trapped gap traders flushed)
     BigGapBigContinuationBigDayPctHotVol, // gap_pct.abs() > 3 AND day_pct * gap_pct > 0 AND day_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — big gap + big same-direction intraday + wide range + hot vol (gap-and-go acceleration: overnight gap held + extended further intraday with wide range; two-leg directional conviction with full range expansion)
+    NoGapBigChangeBigDayPctHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND day_pct.abs() > 4 AND rel_volume >= 2 — no overnight gap + big net move + big intraday move + hot vol (intraday-only conviction trend day: entire move built during regular hours with no overnight aid + matching intraday displacement; pure regular-hours directional thrust)
+    MidYearHighBigGreenHotVol,           // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range + big green + hot vol (mid-range bullish thrust well above the floor but well below the ceiling; institutional momentum without breakout-fatigue or basing context)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5049,6 +5051,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::NoGapBigChangeBigDayPctHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.change_pct.abs() > 4.0
+                && hit.day_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MidYearHighBigGreenHotVol => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5803,6 +5817,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowBreakdownDryVolBounce => "Just above 52w Low + Small Green Bounce + Dry Vol (Low-vol Bounce to Retest the Prior Breakdown Level; Weak-hands Shaken Out without Participation; Rejection Setup)",
         Preset::BigGapBigCounterMoveBigRangeHotVol => "Big Gap + Big Opposite Intraday Move + Wide Range + Hot Vol (Gap-and-fight Reversal: Significant Overnight Gap Fully Battled by the Intraday Session; Two-sided Rotation Day with Extended Range and Elevated Participation; Trapped Gap Traders Flushed)",
         Preset::BigGapBigContinuationBigDayPctHotVol => "Big Gap + Big Same-direction Intraday + Wide Range + Hot Vol (Gap-and-go Acceleration: Overnight Gap Held + Extended Further Intraday with Wide Range; Two-leg Directional Conviction with Full Range Expansion)",
+        Preset::NoGapBigChangeBigDayPctHotVol => "No Overnight Gap + Big Net Move + Big Intraday Move + Hot Vol (Intraday-only Conviction Trend Day: Entire Move Built during Regular Hours with No Overnight Aid + Matching Intraday Displacement; Pure Regular-hours Directional Thrust)",
+        Preset::MidYearHighBigGreenHotVol => "Middle-of-year-range + Big Green + Hot Vol (Mid-range Bullish Thrust Well above the Floor but Well below the Ceiling; Institutional Momentum without Breakout-fatigue or Basing Context)",
     }
 }
 
