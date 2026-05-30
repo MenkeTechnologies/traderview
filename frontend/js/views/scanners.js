@@ -406,6 +406,8 @@ const PRESETS = [
     { id: 'gap_down_lod_close_controlled', label: t('view.scanners.preset.gap_down_lod_close_controlled.label'), desc: t('view.scanners.preset.gap_down_lod_close_controlled.desc') },
     { id: 'all_green_tight_day', label: t('view.scanners.preset.all_green_tight_day.label'), desc: t('view.scanners.preset.all_green_tight_day.desc') },
     { id: 'all_red_tight_day', label: t('view.scanners.preset.all_red_tight_day.label'), desc: t('view.scanners.preset.all_red_tight_day.desc') },
+    { id: 'micro_range_at_year_high', label: t('view.scanners.preset.micro_range_at_year_high.label'), desc: t('view.scanners.preset.micro_range_at_year_high.desc') },
+    { id: 'micro_range_at_year_low', label: t('view.scanners.preset.micro_range_at_year_low.label'), desc: t('view.scanners.preset.micro_range_at_year_low.desc') },
 ];
 
 export async function renderScanners(mount) {

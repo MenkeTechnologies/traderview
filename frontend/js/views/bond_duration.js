@@ -75,6 +75,11 @@ export async function renderBondDuration(mount, _appState) {
             <div id="bd-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.bond_duration.h2.pv_chart">Discounted PV of each cash flow</h2>
+            <div id="bd-pv-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="bd-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -133,6 +138,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderSensitivity(local);
     renderCfChart();
+    renderPvChart();
     let resp;
     try {
         resp = await api.calcBondDuration(buildBody(
@@ -146,10 +152,14 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderSensitivity(resp);
     renderCfChart();
+<<<<<<< Updated upstream
     const price = Number(resp.price || 0).toFixed(2);
     const mac = Number(resp.macaulay_duration || 0).toFixed(2);
     const mod = Number(resp.modified_duration || 0).toFixed(2);
     showToast(t('view.bond_duration.toast.computed', { price, mac, mod }), { level: 'success' });
+=======
+    renderPvChart();
+>>>>>>> Stashed changes
 }
 
 function renderSummary(report, pending) {
@@ -236,6 +246,39 @@ function renderCfChart() {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderPvChart() {
+    const el = document.getElementById('bd-pv-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const cfs = Array.isArray(state.cash_flows) ? state.cash_flows : [];
+    const finite = cfs.filter(cf => Number.isFinite(cf.time_years) && Number.isFinite(cf.amount));
+    if (finite.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bond_duration.empty_pv">${esc(t('view.bond_duration.empty_pv'))}</div>`;
+        return;
+    }
+    const m = Math.max(1, state.compounding_per_year || 1);
+    const y = state.ytm;
+    const sorted = [...finite].sort((a, b) => a.time_years - b.time_years);
+    const xs = sorted.map(cf => cf.time_years);
+    const pv = sorted.map(cf => cf.amount / Math.pow(1 + y / m, m * cf.time_years));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.bond_duration.chart.years') },
+            { label: t('view.bond_duration.chart.pv'),
+              stroke: '#7af0a8', width: 1.0,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: true, size: 8, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, pv], el);
 }
 
 function card(label, value, cls = '') {

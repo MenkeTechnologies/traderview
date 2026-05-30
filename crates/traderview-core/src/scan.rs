@@ -524,6 +524,8 @@ pub enum Preset {
     GapDownLodCloseControlled,      // gap_pct < -0.5 AND lod_dist.abs() < 0.5 AND change_pct < 0 AND rel_volume between 0.7 and 1.5 — gap down + close at LOD + red close + normal vol (gap-and-hold; controlled decline)
     AllGreenTightDay,               // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist + lod_dist < 2 — all green directions + tight range (strong-hands tight up day)
     AllRedTightDay,                 // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND hod_dist + lod_dist < 2 — all red directions + tight range (strong-sellers tight down day)
+    MicroRangeAtYearHigh,           // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_high_pct > -3 — micro range at 52w high (zero-range pin at top; topping or pre-breakout)
+    MicroRangeAtYearLow,            // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_low_pct < 3 — micro range at 52w low (zero-range pin at bottom; basing or pre-breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2685,6 +2687,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < 0.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
         }
+        Preset::MicroRangeAtYearHigh => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.year_high_pct > -3.0
+        }
+        Preset::MicroRangeAtYearLow => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.year_low_pct < 3.0
+        }
     }
 }
 
@@ -3099,6 +3111,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownLodCloseControlled => "Gap Down + LOD Close + Normal Vol (Controlled Decline)",
         Preset::AllGreenTightDay => "All Green Directions + Tight Range (Strong Hands)",
         Preset::AllRedTightDay => "All Red Directions + Tight Range (Strong Sellers)",
+        Preset::MicroRangeAtYearHigh => "Micro Range at 52w High (Zero-Range Pin Top)",
+        Preset::MicroRangeAtYearLow => "Micro Range at 52w Low (Zero-Range Pin Bottom)",
     }
 }
 
