@@ -254,6 +254,8 @@ const PRESETS = [
     { id: 'dry_vol_dry_gap', label: t('view.scanners.preset.dry_vol_dry_gap.label'), desc: t('view.scanners.preset.dry_vol_dry_gap.desc') },
     { id: 'outer_edge_push_up', label: t('view.scanners.preset.outer_edge_push_up.label'), desc: t('view.scanners.preset.outer_edge_push_up.desc') },
     { id: 'outer_edge_push_down', label: t('view.scanners.preset.outer_edge_push_down.label'), desc: t('view.scanners.preset.outer_edge_push_down.desc') },
+    { id: 'middle_zone_up_drift', label: t('view.scanners.preset.middle_zone_up_drift.label'), desc: t('view.scanners.preset.middle_zone_up_drift.desc') },
+    { id: 'middle_zone_down_drift', label: t('view.scanners.preset.middle_zone_down_drift.label'), desc: t('view.scanners.preset.middle_zone_down_drift.desc') },
 ];
 
 export async function renderScanners(mount) {

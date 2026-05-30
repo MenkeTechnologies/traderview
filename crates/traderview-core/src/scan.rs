@@ -372,6 +372,8 @@ pub enum Preset {
     DryVolDryGap,                // gap_pct.abs() < 0.5 AND rel_volume < 0.5 — flat gap on dry volume (no overnight positioning; no day participation)
     OuterEdgePushUp,             // year_high_pct > -10 AND change_pct > 5 AND rel_volume >= 2 — strong push into the top decile on heavy vol (continuation buyers)
     OuterEdgePushDown,           // year_low_pct < 10 AND change_pct < -5 AND rel_volume >= 2 — strong push into the bottom decile on heavy vol (continuation sellers)
+    MiddleZoneUpDrift,           // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct > 0.5 AND rel_volume < 1 — mid-zone drift up on light vol (no-conviction continuation up)
+    MiddleZoneDownDrift,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct < -0.5 AND rel_volume < 1 — mid-zone drift down on light vol (no-conviction continuation down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1654,6 +1656,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MiddleZoneUpDrift => {
+            hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.year_low_pct <= 50.0
+                && hit.change_pct > 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::MiddleZoneDownDrift => {
+            hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.year_low_pct <= 50.0
+                && hit.change_pct < -0.5
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -1916,6 +1934,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolDryGap => "Dry Vol + Dry Gap",
         Preset::OuterEdgePushUp => "Outer-Edge Push Up",
         Preset::OuterEdgePushDown => "Outer-Edge Push Down",
+        Preset::MiddleZoneUpDrift => "Middle-Zone Up Drift",
+        Preset::MiddleZoneDownDrift => "Middle-Zone Down Drift",
     }
 }
 

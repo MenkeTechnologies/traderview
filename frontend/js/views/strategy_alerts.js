@@ -79,6 +79,11 @@ export async function renderStrategyAlerts(mount) {
             <h2 data-i18n="view.strategy_alerts.h2.fires_chart">Fires per rule</h2>
             <div id="sa-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.strategy_alerts.h2.truth_chart">Last-truth distribution (TRUE / FALSE / UNEVAL)</h2>
+            <div id="sa-truth-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     mount.querySelector('#sa-form [name=template]').addEventListener('change', (e) => {
         const tpl = TEMPLATES.find(x => x.id === e.target.value);
@@ -143,11 +148,59 @@ async function refresh(mount, tok) {
         renderRules(rules, mount, tok);
         renderFires(fires, rules, mount);
         renderFiresChart(rules);
+        renderTruthChart(rules);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#sa-list');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderTruthChart(rules) {
+    const el = document.getElementById('sa-truth-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    let tTrue = 0, tFalse = 0, tNull = 0;
+    for (const r of rules || []) {
+        if (r.last_truth === true)  tTrue++;
+        else if (r.last_truth === false) tFalse++;
+        else tNull++;
+    }
+    if (tTrue + tFalse + tNull < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.strategy_alerts.empty_truth_chart">${esc(t('view.strategy_alerts.empty_truth_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.strategy_alerts.chart.truth_true'),
+        t('view.strategy_alerts.chart.truth_false'),
+        t('view.strategy_alerts.chart.truth_uneval'),
+    ];
+    const xs = labels.map((_, i) => i + 1);
+    const trueY  = [tTrue,  null, null];
+    const falseY = [null, tFalse, null];
+    const unevY  = [null, null, tNull];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.strategy_alerts.chart.bucket') },
+            { label: t('view.strategy_alerts.chart.truth_true'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 18, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.strategy_alerts.chart.truth_false'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.strategy_alerts.chart.truth_uneval'),
+              stroke: '#aab',    width: 0,
+              points: { show: true, size: 18, fill: '#aab',    stroke: '#aab'    } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, trueY, falseY, unevY], el);
 }
 
 function renderFiresChart(rules) {
