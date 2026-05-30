@@ -61,6 +61,11 @@ export async function renderAdNormality(mount, _appState) {
             <div id="adn-qq" style="width:100%;height:280px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.ad_norm.h2.ecdf">Empirical vs theoretical normal CDF</h2>
+            <div id="adn-ecdf" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="adn-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -100,6 +105,7 @@ async function compute(tok) {
     renderCrit(local);
     renderStats();
     renderQQ();
+    renderECdf();
     let resp;
     try {
         resp = await api.anlyAdNormality(buildBody(state));
@@ -234,6 +240,57 @@ function renderQQ() {
         legend: { show: true },
     }, [theoretical, empirical, refY], el);
     void tmin; void tmax; void emin; void emax;
+}
+
+function normCdf(x) {
+    const a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741;
+    const a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911;
+    const sign = x < 0 ? -1 : 1;
+    const ax = Math.abs(x) / Math.sqrt(2);
+    const tt = 1.0 / (1.0 + p * ax);
+    const y = 1.0 - (((((a5 * tt + a4) * tt) + a3) * tt + a2) * tt + a1) * tt * Math.exp(-ax * ax);
+    return 0.5 * (1.0 + sign * y);
+}
+
+function renderECdf() {
+    const el = document.getElementById('adn-ecdf');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const sample = state.sample;
+    const n = sample.length;
+    if (n < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.ad_norm.empty_ecdf">${esc(t('view.ad_norm.empty_ecdf'))}</div>`;
+        return;
+    }
+    const sorted = [...sample].sort((a, b) => a - b);
+    const mean = sorted.reduce((a, b) => a + b, 0) / n;
+    const variance = sorted.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1);
+    const sd = Math.sqrt(variance);
+    if (!(sd > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.ad_norm.empty_ecdf">${esc(t('view.ad_norm.empty_ecdf'))}</div>`;
+        return;
+    }
+    const xs = sorted;
+    const ecdf = sorted.map((_, i) => (i + 0.5) / n);
+    const ncdf = sorted.map(v => normCdf((v - mean) / sd));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.ad_norm.chart.x') },
+            { label: t('view.ad_norm.chart.ecdf_emp'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 4, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.ad_norm.chart.ecdf_norm'),
+              stroke: '#ffd84a', width: 1.5, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ecdf, ncdf], el);
 }
 
 function card(label, value, cls = '') {

@@ -344,6 +344,8 @@ const PRESETS = [
     { id: 'strong_day_dry_vol_down', label: t('view.scanners.preset.strong_day_dry_vol_down.label'), desc: t('view.scanners.preset.strong_day_dry_vol_down.desc') },
     { id: 'tight_coil_at_mid_range', label: t('view.scanners.preset.tight_coil_at_mid_range.label'), desc: t('view.scanners.preset.tight_coil_at_mid_range.desc') },
     { id: 'wide_outside_range_dry_vol', label: t('view.scanners.preset.wide_outside_range_dry_vol.label'), desc: t('view.scanners.preset.wide_outside_range_dry_vol.desc') },
+    { id: 'gap_held_and_extended_up', label: t('view.scanners.preset.gap_held_and_extended_up.label'), desc: t('view.scanners.preset.gap_held_and_extended_up.desc') },
+    { id: 'gap_held_and_extended_down', label: t('view.scanners.preset.gap_held_and_extended_down.label'), desc: t('view.scanners.preset.gap_held_and_extended_down.desc') },
 ];
 
 export async function renderScanners(mount) {

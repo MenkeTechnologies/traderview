@@ -462,6 +462,8 @@ pub enum Preset {
     StrongDayDryVolDown,         // change_pct < -3 AND day_pct < -2 AND rel_volume < 0.5 — strong down day on dry vol (no participation; suspect-quality flush)
     TightCoilAtMidRange,         // hod_dist 0.5-1.5 AND lod_dist 0.5-1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — tight coil at center of intraday range on dry vol (pre-breakout setup)
     WideOutsideRangeDryVol,      // hod_dist + lod_dist > 6 AND rel_volume < 0.6 — wide outside range on dry vol (one-sided liquidation; no follow-through)
+    GapHeldAndExtendedUp,        // gap_pct > 1 AND day_pct > 1 AND rel_volume >= 1.5 — gap up + held + extended intraday on vol (continuation buyers)
+    GapHeldAndExtendedDown,      // gap_pct < -1 AND day_pct < -1 AND rel_volume >= 1.5 — gap down + held + extended intraday on vol (continuation sellers)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2266,6 +2268,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
                 && hit.rel_volume < 0.6
         }
+        Preset::GapHeldAndExtendedUp => {
+            hit.gap_pct > 1.0
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapHeldAndExtendedDown => {
+            hit.gap_pct < -1.0
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2618,6 +2630,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StrongDayDryVolDown => "Strong Down Day, Dry Vol (Suspect Flush)",
         Preset::TightCoilAtMidRange => "Tight Coil at Mid-Range, Dry Vol",
         Preset::WideOutsideRangeDryVol => "Wide Outside Range, Dry Vol (One-Sided Liquidation)",
+        Preset::GapHeldAndExtendedUp => "Gap Held & Extended Up (Continuation Buyers)",
+        Preset::GapHeldAndExtendedDown => "Gap Held & Extended Down (Continuation Sellers)",
     }
 }
 
