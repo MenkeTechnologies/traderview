@@ -572,6 +572,8 @@ pub enum Preset {
     LowVolWideRangeAccumulator,     // rel_volume < 0.5 AND hod_dist + lod_dist > 2 AND change_pct.abs() > 1 — dry vol + wider intraday range + meaningful change (low-participation but wide spread; accumulator working orders quietly)
     BullishEngulfingHotVol,         // gap_pct < -0.5 AND change_pct > 1.5 AND day_pct > 1 AND rel_volume >= 1.5 — gap down + reversed strong + closed positive intraday + hot vol (bullish engulfing with volume confirmation)
     BearishEngulfingHotVol,         // gap_pct > 0.5 AND change_pct < -1.5 AND day_pct < -1 AND rel_volume >= 1.5 — gap up + reversed weak + closed negative intraday + hot vol (bearish engulfing with volume confirmation)
+    DoubleBottomRetest,             // year_low_pct < 3 AND rel_volume >= 1.2 AND change_pct >= 0 AND day_pct >= 0 — near 52w low + decent vol + non-negative day (potential double-bottom retest forming)
+    DoubleTopRetest,                // year_high_pct < 3 AND rel_volume >= 1.2 AND change_pct <= 0 AND day_pct <= 0 — near 52w high + decent vol + non-positive day (potential double-top retest forming)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3009,6 +3011,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::DoubleBottomRetest => {
+            hit.year_low_pct < 3.0
+                && hit.rel_volume >= 1.2
+                && hit.change_pct >= 0.0
+                && hit.day_pct >= 0.0
+        }
+        Preset::DoubleTopRetest => {
+            hit.year_high_pct < 3.0
+                && hit.rel_volume >= 1.2
+                && hit.change_pct <= 0.0
+                && hit.day_pct <= 0.0
+        }
     }
 }
 
@@ -3471,6 +3485,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowVolWideRangeAccumulator => "Dry Vol + Wider Range + Meaningful Change (Quiet Accumulator Working)",
         Preset::BullishEngulfingHotVol => "Bullish Engulfing + Hot Vol (Gap Down + Strong Reversal)",
         Preset::BearishEngulfingHotVol => "Bearish Engulfing + Hot Vol (Gap Up + Strong Reversal)",
+        Preset::DoubleBottomRetest => "Near 52w Low + Holding Day + Decent Vol (Potential Double-Bottom Retest)",
+        Preset::DoubleTopRetest => "Near 52w High + Failing Day + Decent Vol (Potential Double-Top Retest)",
     }
 }
 

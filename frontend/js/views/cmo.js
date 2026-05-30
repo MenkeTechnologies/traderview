@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let distChart = null;
 
 export async function renderCmo(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderCmo(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cmo.h2.chart">CMO series</h2>
             <div id="cm-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.cmo.h2.distribution_chart">CMO value distribution (25-pt buckets across [−100, +100])</h2>
+            <div id="cm-dist-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderDistChart(local);
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.cmo.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderDistChart(resp);
     renderStats();
 }
 
@@ -163,6 +171,43 @@ function renderChart(cmo) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderDistChart(cmo) {
+    const el = document.getElementById('cm-dist-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(cmo) || cmo.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cmo.empty_dist_chart">${esc(t('view.cmo.empty_dist_chart'))}</div>`;
+        return;
+    }
+    const bucketLo = [-100, -75, -50, -25, 0, 25, 50, 75];
+    const labels = ['[−100,−75)', '[−75,−50)', '[−50,−25)', '[−25,0)', '[0,25)', '[25,50)', '[50,75)', '[75,100]'];
+    const counts = new Array(bucketLo.length).fill(0);
+    for (const v of cmo) {
+        if (v == null || !Number.isFinite(v)) continue;
+        let idx = Math.floor((Math.max(-100, Math.min(100, v)) + 100) / 25);
+        if (idx >= bucketLo.length) idx = bucketLo.length - 1;
+        if (idx < 0) idx = 0;
+        counts[idx] += 1;
+    }
+    const xs = bucketLo.map((_, i) => i + 1);
+    if (distChart) { try { distChart.destroy(); } catch {} distChart = null; }
+    distChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cmo.chart.bucket_idx') },
+            { label: t('view.cmo.chart.bar_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function renderStats() {

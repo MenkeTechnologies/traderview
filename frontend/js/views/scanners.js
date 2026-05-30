@@ -454,6 +454,8 @@ const PRESETS = [
     { id: 'low_vol_wide_range_accumulator', label: t('view.scanners.preset.low_vol_wide_range_accumulator.label'), desc: t('view.scanners.preset.low_vol_wide_range_accumulator.desc') },
     { id: 'bullish_engulfing_hot_vol', label: t('view.scanners.preset.bullish_engulfing_hot_vol.label'), desc: t('view.scanners.preset.bullish_engulfing_hot_vol.desc') },
     { id: 'bearish_engulfing_hot_vol', label: t('view.scanners.preset.bearish_engulfing_hot_vol.label'), desc: t('view.scanners.preset.bearish_engulfing_hot_vol.desc') },
+    { id: 'double_bottom_retest', label: t('view.scanners.preset.double_bottom_retest.label'), desc: t('view.scanners.preset.double_bottom_retest.desc') },
+    { id: 'double_top_retest', label: t('view.scanners.preset.double_top_retest.label'), desc: t('view.scanners.preset.double_top_retest.desc') },
 ];
 
 export async function renderScanners(mount) {
