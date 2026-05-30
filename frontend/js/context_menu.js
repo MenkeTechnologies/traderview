@@ -17,12 +17,15 @@ import { esc } from './util.js';
 import { showToast } from './toast.js';
 import { loadState, saveState, toggleFavorite, isFavorite, addBookmark } from './_favorites_storage.js';
 import { getGlobalSymbol } from './_global_symbol.js';
+import { api } from './api.js';
+import { tConfirm } from './dialog.js';
 
 let _installed = false;
 let _open = false;
 let _items = [];
 let _selected = -1;
 let _editingTarget = null;          // the input/textarea/CE the menu was opened on
+let _scopeTarget = null;            // the element carrying the matched data-context-scope
 const _customByScope = new Map();   // scope-string → items[]
 
 export function installContextMenu() {
@@ -121,6 +124,50 @@ export function installContextMenu() {
     // News view doesn't accept a hash-path symbol — it's filtered via
     // its own form. Navigate to the view; the user picks the symbol.
     window.addEventListener('tv:open-news-for-symbol',     () => { window.location.hash = 'news'; });
+    // Trade-row actions — read data-id from the right-clicked <tr>.
+    const tradeIdFrom = (detail) => {
+        const t = detail && detail.target;
+        if (!t || !t.dataset) return null;
+        return t.dataset.id || null;
+    };
+    window.addEventListener('tv:trade-view-detail', (e) => {
+        const id = tradeIdFrom(e.detail);
+        if (!id) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            return;
+        }
+        window.location.hash = `trade/${id}`;
+    });
+    window.addEventListener('tv:trade-copy-id', (e) => {
+        const id = tradeIdFrom(e.detail);
+        if (!id) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(id).then(
+                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:trade-delete', (e) => {
+        const id = tradeIdFrom(e.detail);
+        if (!id) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            return;
+        }
+        void (async () => {
+            if (!await tConfirm('view.trades.confirm.delete', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteTrade(id);
+                showToast(t('toast.trade_deleted', { id }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {
@@ -159,9 +206,10 @@ function onContextMenu(e) {
     // Hold Shift to bypass and get native browser menu (escape hatch).
     if (e.shiftKey) return;
     e.preventDefault();
-    const scope = nearestScope(e.target);
+    const { scope, el } = nearestScopeAndElement(e.target);
     const editing = isTextEntry(e.target) ? e.target : null;
     _editingTarget = editing;
+    _scopeTarget = el;
     openAt(e.clientX, e.clientY, scope, !!editing);
 }
 
@@ -219,13 +267,20 @@ function resolveEditTarget() {
 }
 
 function nearestScope(el) {
+    return nearestScopeAndElement(el).scope;
+}
+
+// Like nearestScope but also returns the element carrying the matched
+// attribute. Handlers reading row-level data (data-id, data-symbol) use
+// the element via CustomEvent detail.target.
+function nearestScopeAndElement(el) {
     let cur = el;
     while (cur && cur.nodeType === 1) {
         const s = cur.getAttribute && cur.getAttribute('data-context-scope');
-        if (s) return s;
+        if (s) return { scope: s, el: cur };
         cur = cur.parentNode;
     }
-    return null;
+    return { scope: null, el: null };
 }
 
 function openAt(x, y, scope, editing = false) {
@@ -314,9 +369,12 @@ function onKey(e) {
 
 function activate(item) {
     if (!item) return;
+    const scopeTarget = _scopeTarget;
     close();
     if (item.actionKey) {
-        window.dispatchEvent(new CustomEvent(item.actionKey, { detail: { item } }));
+        window.dispatchEvent(new CustomEvent(item.actionKey, {
+            detail: { item, target: scopeTarget },
+        }));
     }
     if (item.navTo) {
         window.location.hash = item.navTo;
@@ -329,6 +387,7 @@ function activate(item) {
 
 function close() {
     _open = false;
+    _scopeTarget = null;
     const root = document.getElementById('tv-ctxmenu-root');
     if (root) root.innerHTML = '';
 }

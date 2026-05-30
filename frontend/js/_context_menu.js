@@ -110,6 +110,18 @@ export const SYMBOL_ITEMS = [
       actionKey: 'tv:open-news-for-symbol',     section: 'symbol' },
 ];
 
+// Trade-row context items. Right-click on a <tr data-context-scope=
+// "trade-row" data-id="X"> shows: View detail / Copy ID / Delete.
+// Handlers read `data-id` from `CustomEvent.detail.target`.
+export const TRADE_ROW_ITEMS = [
+    { id: 'trade_view_detail', labelKey: 'ctxmenu.trade_view_detail',
+      actionKey: 'tv:trade-view-detail', section: 'trade' },
+    { id: 'trade_copy_id',     labelKey: 'ctxmenu.trade_copy_id',
+      actionKey: 'tv:trade-copy-id',     section: 'trade' },
+    { id: 'trade_delete',      labelKey: 'ctxmenu.trade_delete',
+      actionKey: 'tv:trade-delete',      section: 'trade' },
+];
+
 // View IDs (URL slugs) where SYMBOL_ITEMS are auto-registered. Matches
 // the views that take `sym()` in the app.js dispatcher.
 export const SYMBOL_AWARE_SCOPES = [

@@ -117,7 +117,7 @@ export async function renderTradesView(mount, state) {
                     <th data-i18n="view.trades.th.hold">Hold</th><th data-i18n="view.trades.th.opened">Opened</th><th data-i18n="view.trades.th.closed">Closed</th><th></th>
                 </tr></thead>
                 <tbody>${trades.map(t => `
-                    <tr class="trade-row" data-id="${t.id}">
+                    <tr class="trade-row" data-id="${t.id}" data-context-scope="trade-row">
                         <td><input type="checkbox" value="${t.id}"></td>
                         <td><a href="#trade/${t.id}">${esc(t.symbol)}</a></td>
                         <td>${esc(t.asset_class)}</td>
