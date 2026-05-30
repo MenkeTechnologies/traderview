@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, MIN_PERIOD, MAX_PERIOD, STRESS_LEVELS,
@@ -32,19 +33,20 @@ export async function renderBorrowRate(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.borrow.label.period">Lookback period</span>
-                    <input id="br-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="br-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.borrow.tip.period"></label>
                 <button data-i18n="view.borrow.btn.compute" id="br-run" class="primary"
-                        data-tip="view.borrow.tip.compute" type="button">Compute</button>
+                        data-tip="view.borrow.tip.compute" data-shortcut="borrow_rate_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.borrow.btn.demo_norm"  id="br-d1" class="secondary" type="button">Demo: normal</button>
-                <button data-i18n="view.borrow.btn.demo_grad"  id="br-d2" class="secondary" type="button">Demo: gradually escalating</button>
-                <button data-i18n="view.borrow.btn.demo_spike" id="br-d3" class="secondary" type="button">Demo: sudden spike</button>
-                <button data-i18n="view.borrow.btn.demo_ext"   id="br-d4" class="secondary" type="button">Demo: extreme squeeze</button>
-                <button data-i18n="view.borrow.btn.demo_easy"  id="br-d5" class="secondary" type="button">Demo: easy borrow</button>
-                <button data-i18n="view.borrow.btn.demo_osc"   id="br-d6" class="secondary" type="button">Demo: oscillating</button>
-                <button data-i18n="view.borrow.btn.demo_relax" id="br-d7" class="secondary" type="button">Demo: spike → relax</button>
-                <button data-i18n="view.borrow.btn.demo_short" id="br-d8" class="secondary" type="button">Demo: short period (2)</button>
+                <button data-i18n="view.borrow.btn.demo_norm"  id="br-d1" class="secondary" data-tip="view.borrow.tip.demo_norm"  type="button">Demo: normal</button>
+                <button data-i18n="view.borrow.btn.demo_grad"  id="br-d2" class="secondary" data-tip="view.borrow.tip.demo_grad"  type="button">Demo: gradually escalating</button>
+                <button data-i18n="view.borrow.btn.demo_spike" id="br-d3" class="secondary" data-tip="view.borrow.tip.demo_spike" type="button">Demo: sudden spike</button>
+                <button data-i18n="view.borrow.btn.demo_ext"   id="br-d4" class="secondary" data-tip="view.borrow.tip.demo_ext"   type="button">Demo: extreme squeeze</button>
+                <button data-i18n="view.borrow.btn.demo_easy"  id="br-d5" class="secondary" data-tip="view.borrow.tip.demo_easy"  type="button">Demo: easy borrow</button>
+                <button data-i18n="view.borrow.btn.demo_osc"   id="br-d6" class="secondary" data-tip="view.borrow.tip.demo_osc"   type="button">Demo: oscillating</button>
+                <button data-i18n="view.borrow.btn.demo_relax" id="br-d7" class="secondary" data-tip="view.borrow.tip.demo_relax" type="button">Demo: spike → relax</button>
+                <button data-i18n="view.borrow.btn.demo_short" id="br-d8" class="secondary" data-tip="view.borrow.tip.demo_short" type="button">Demo: short period (2)</button>
             </div>
             <p data-i18n="view.borrow.hint.about" class="muted">Tracks per-bar annualized securities-lending fee + N-bar rate of change. Classification: < 1% Low-Available · 1–10% Normal · 10–50% Tight · 50–200% Hard-to-Borrow · ≥ 200% OR change ≥ 100% Extreme Squeeze. Rising borrow cost flags increasing short demand → squeeze risk.</p>
         </div>
@@ -95,6 +97,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.borrow.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.borrow.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -106,7 +109,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.borrow.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.rates_pct, state.period);
     renderSummary(local, true);
     renderChart(local);
@@ -118,15 +121,17 @@ async function compute(tok) {
         resp = await api.anlyBorrowRateIndicator(buildBody(state));
     } catch (e) {
         showErr(`${t('view.borrow.err.api')}: ${e.message || e}`);
+        showToast(t('view.borrow.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.stress)) { showErr(t('view.borrow.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.stress)) { showErr(t('view.borrow.err.server_rejected')); showToast(t('view.borrow.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderStressChart(resp);
     renderDist(resp);
     renderStats();
+    showToast(t('view.borrow.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
