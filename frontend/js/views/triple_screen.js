@@ -75,6 +75,11 @@ export async function renderTripleScreen(mount, _appState) {
             <div id="ts-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.triple_screen.h2.stage_chart">Screen pass/fail (Tide / Wave / Ripple)</h2>
+            <div id="ts-stage-chart" style="width:100%;height:180px"></div>
+        </div>
+
         <div id="ts-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -118,6 +123,7 @@ async function compute(tok) {
     renderSummary({ verdict: localEvaluate(state.params) }, true);
     renderCascade();
     renderOscChart();
+    renderStageChart();
     let resp;
     try {
         resp = await api.discTripleScreen(buildBody(state.params));
@@ -154,6 +160,42 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderStageChart() {
+    const el = document.getElementById('ts-stage-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const r = stageResults(state.params);
+    const stages = [r.longTide, r.intermediate, r.shortRipple];
+    if (stages.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.triple_screen.empty_stage_chart">${esc(t('view.triple_screen.empty_stage_chart'))}</div>`;
+        return;
+    }
+    const labels = stages.map(s => s.label);
+    const xs = labels.map((_, i) => i + 1);
+    const passY = stages.map(s => s.pass ? 1 : null);
+    const failY = stages.map(s => s.pass ? null : 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 160,
+        scales: { x: {}, y: { range: () => [-0.3, 1.3] } },
+        series: [
+            { label: t('view.triple_screen.chart.screen') },
+            { label: t('view.triple_screen.chart.pass'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 18, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.triple_screen.chart.fail'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => v === 1 ? 'pass' : v === 0 ? 'fail' : '') },
+        ],
+        legend: { show: true },
+    }, [xs, passY, failY], el);
 }
 
 function renderOscChart() {

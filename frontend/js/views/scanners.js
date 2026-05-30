@@ -302,6 +302,8 @@ const PRESETS = [
     { id: 'leading_down_day_light_vol', label: t('view.scanners.preset.leading_down_day_light_vol.label'), desc: t('view.scanners.preset.leading_down_day_light_vol.desc') },
     { id: 'small_change_on_vol_near_high', label: t('view.scanners.preset.small_change_on_vol_near_high.label'), desc: t('view.scanners.preset.small_change_on_vol_near_high.desc') },
     { id: 'small_change_on_vol_near_low', label: t('view.scanners.preset.small_change_on_vol_near_low.label'), desc: t('view.scanners.preset.small_change_on_vol_near_low.desc') },
+    { id: 'big_gap_big_vol_big_day', label: t('view.scanners.preset.big_gap_big_vol_big_day.label'), desc: t('view.scanners.preset.big_gap_big_vol_big_day.desc') },
+    { id: 'big_gap_no_follow_through', label: t('view.scanners.preset.big_gap_no_follow_through.label'), desc: t('view.scanners.preset.big_gap_no_follow_through.desc') },
 ];
 
 export async function renderScanners(mount) {

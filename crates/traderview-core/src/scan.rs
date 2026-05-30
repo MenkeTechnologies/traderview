@@ -420,6 +420,8 @@ pub enum Preset {
     LeadingDownDayLightVol,      // change_pct < -2 AND rel_volume < 0.7 AND lod_dist.abs() < 0.5 — strong down close on light volume (leadership without participation; suspect quality)
     SmallChangeOnVolNearHigh,    // year_high_pct > -3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w high on above-avg vol (top consolidation / distribution prep)
     SmallChangeOnVolNearLow,     // year_low_pct < 3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w low on above-avg vol (bottom consolidation / accumulation prep)
+    BigGapBigVolBigDay,          // gap_pct.abs() > 3 AND change_pct.abs() > 5 AND rel_volume >= 3 — extreme gap + extreme day + extreme vol (all-in conviction trade)
+    BigGapNoFollowThrough,       // gap_pct.abs() > 3 AND change_pct.abs() < 1 AND rel_volume < 1 — extreme gap + flat day + dry vol (failed positioning; no follow-through)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1976,6 +1978,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() <= 1.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigGapBigVolBigDay => {
+            hit.gap_pct.abs() > 3.0
+                && hit.change_pct.abs() > 5.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::BigGapNoFollowThrough => {
+            hit.gap_pct.abs() > 3.0
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -2286,6 +2298,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LeadingDownDayLightVol => "Strong Down, Light Vol (Suspect)",
         Preset::SmallChangeOnVolNearHigh => "Small Move + Vol at 52w High",
         Preset::SmallChangeOnVolNearLow => "Small Move + Vol at 52w Low",
+        Preset::BigGapBigVolBigDay => "Big Gap + Big Vol + Big Day",
+        Preset::BigGapNoFollowThrough => "Big Gap, No Follow-Through",
     }
 }
 
