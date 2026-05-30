@@ -280,6 +280,8 @@ const PRESETS = [
     { id: 'down_trend_day_wide_range', label: t('view.scanners.preset.down_trend_day_wide_range.label'), desc: t('view.scanners.preset.down_trend_day_wide_range.desc') },
     { id: 'silent_spring_near_52w_low', label: t('view.scanners.preset.silent_spring_near_52w_low.label'), desc: t('view.scanners.preset.silent_spring_near_52w_low.desc') },
     { id: 'silent_up_thrust_near_52w_high', label: t('view.scanners.preset.silent_up_thrust_near_52w_high.label'), desc: t('view.scanners.preset.silent_up_thrust_near_52w_high.desc') },
+    { id: 'gap_strong_day_open_pivot', label: t('view.scanners.preset.gap_strong_day_open_pivot.label'), desc: t('view.scanners.preset.gap_strong_day_open_pivot.desc') },
+    { id: 'gap_weak_day_open_pivot', label: t('view.scanners.preset.gap_weak_day_open_pivot.label'), desc: t('view.scanners.preset.gap_weak_day_open_pivot.desc') },
 ];
 
 export async function renderScanners(mount) {

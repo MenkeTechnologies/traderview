@@ -398,6 +398,8 @@ pub enum Preset {
     DownTrendDayWideRange,       // lod_dist.abs() < 0.3 AND hod_dist.abs() > 5 AND change_pct < -3 AND rel_volume >= 2 — strong trend down with wide range; close at LOD on heavy vol (continuation sellers)
     SilentSpringNear52wLow,      // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w low on dry vol (silent spring waiting)
     SilentUpThrustNear52wHigh,   // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w high on dry vol (silent upthrust waiting)
+    GapStrongDayOpenPivot,       // gap_pct >= 1 AND gap_pct <= 3 AND change_pct > 4 AND rel_volume >= 2 — small-to-medium gap + strong day on heavy vol (gap held + accelerated)
+    GapWeakDayOpenPivot,         // gap_pct <= -1 AND gap_pct >= -3 AND change_pct < -4 AND rel_volume >= 2 — small-to-medium gap-down + weak day on heavy vol (gap held + accelerated)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1828,6 +1830,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
         }
+        Preset::GapStrongDayOpenPivot => {
+            hit.gap_pct >= 1.0 && hit.gap_pct <= 3.0
+                && hit.change_pct > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapWeakDayOpenPivot => {
+            hit.gap_pct <= -1.0 && hit.gap_pct >= -3.0
+                && hit.change_pct < -4.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2116,6 +2128,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownTrendDayWideRange => "Down-Trend Day Wide-Range",
         Preset::SilentSpringNear52wLow => "Silent Spring Near 52w Low",
         Preset::SilentUpThrustNear52wHigh => "Silent Upthrust Near 52w High",
+        Preset::GapStrongDayOpenPivot => "Gap + Strong Day Pivot",
+        Preset::GapWeakDayOpenPivot => "Gap + Weak Day Pivot",
     }
 }
 
