@@ -886,6 +886,8 @@ pub enum Preset {
     ExtremeRangeDryVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume < 0.5 — extreme intraday range + dry vol (thin-liquidity whipsaw: extreme range expansion with no institutional sponsorship; gappy market-maker void or low-volume rip; fade with caution)
     BigGreenUpperRangeHotVol,            // change_pct > 2 AND lod_dist_pct > 2 * hod_dist_pct.abs() AND rel_volume >= 2 — big green + close clearly in upper portion of intraday range + hot vol (bullish strength close in the top half of the intraday range without requiring close pinned to HOD; demand-side dominance with elevated participation)
     BigRedLowerRangeHotVol,              // change_pct < -2 AND hod_dist_pct.abs() > 2 * lod_dist_pct AND rel_volume >= 2 — big red + close clearly in lower portion of intraday range + hot vol (bearish weakness close in the bottom half of the intraday range without requiring close pinned to LOD; supply-side dominance with elevated participation)
+    BigBreakoutAboveYearHigh,            // year_high_pct < -3 AND change_pct > 1 AND rel_volume >= 1.5 — close more than 3% above the prior 52w high + green + hot vol (deep breakout extension: not just a fresh peak but materially above it; price-discovery expansion with elevated participation)
+    BigBreakdownBelowYearLow,            // year_low_pct < -3 AND change_pct < -1 AND rel_volume >= 1.5 — close more than 3% below the prior 52w low + red + hot vol (deep breakdown extension: not just a fresh trough but materially below it; price-discovery contraction with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5185,6 +5187,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() > 2.0 * hit.lod_dist_pct
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigBreakoutAboveYearHigh => {
+            hit.year_high_pct < -3.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigBreakdownBelowYearLow => {
+            hit.year_low_pct < -3.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5961,6 +5973,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeRangeDryVol => "Extreme Intraday Range + Dry Vol (Thin-liquidity Whipsaw: Extreme Range Expansion with No Institutional Sponsorship; Gappy Market-maker Void or Low-volume Rip; Fade with Caution)",
         Preset::BigGreenUpperRangeHotVol => "Big Green + Close Clearly in Upper Portion of Intraday Range + Hot Vol (Bullish Strength Close in the Top Half of the Intraday Range without Requiring Close Pinned to HOD; Demand-side Dominance with Elevated Participation)",
         Preset::BigRedLowerRangeHotVol => "Big Red + Close Clearly in Lower Portion of Intraday Range + Hot Vol (Bearish Weakness Close in the Bottom Half of the Intraday Range without Requiring Close Pinned to LOD; Supply-side Dominance with Elevated Participation)",
+        Preset::BigBreakoutAboveYearHigh => "Close More than 3% above the Prior 52w High + Green + Hot Vol (Deep Breakout Extension: Not Just a Fresh Peak but Materially above It; Price-discovery Expansion with Elevated Participation)",
+        Preset::BigBreakdownBelowYearLow => "Close More than 3% below the Prior 52w Low + Red + Hot Vol (Deep Breakdown Extension: Not Just a Fresh Trough but Materially below It; Price-discovery Contraction with Elevated Participation)",
     }
 }
 
