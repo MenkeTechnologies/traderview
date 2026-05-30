@@ -188,6 +188,8 @@ pub enum Preset {
     EvenWidthSqueeze,            // hod_dist between 1 and 2 AND lod_dist between 1 and 2 AND |change_pct| < 0.5 AND rel_volume < 0.9 — evenly distributed range
     SmallGapNoFollowSqueeze,     // |gap_pct| between 0.3 and 0.8 AND |change_pct| < 0.3 AND quiet — small gap that fades to flat
     HoldingHighsSqueeze,         // change_pct >= 0 AND change_pct < 1 AND hod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_high_pct >= -5 — closing at HOD without explosion
+    HoldingLowsSqueeze,          // change_pct <= 0 AND change_pct > -1 AND lod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_low_pct <= 5 — closing at LOD without panic
+    StableMidSqueeze,            // 30% < (1 - year_high_pct.abs() / (year_high_pct.abs() + year_low_pct.abs())) < 70% — true 30-70 from top, tight day
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -516,6 +518,23 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 1.2
                 && hit.year_high_pct >= -5.0
         }
+        Preset::HoldingLowsSqueeze => {
+            hit.change_pct <= 0.0
+                && hit.change_pct > -1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume < 1.2
+                && hit.year_low_pct <= 5.0
+        }
+        Preset::StableMidSqueeze => {
+            let denom = hit.year_high_pct.abs() + hit.year_low_pct.abs();
+            let mid_frac = if denom > 1e-9 {
+                1.0 - hit.year_high_pct.abs() / denom
+            } else { 0.5 };
+            mid_frac > 0.30
+                && mid_frac < 0.70
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -594,6 +613,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::EvenWidthSqueeze => "Even-Width Squeeze",
         Preset::SmallGapNoFollowSqueeze => "Small-Gap No-Follow Squeeze",
         Preset::HoldingHighsSqueeze => "Holding-Highs Squeeze",
+        Preset::HoldingLowsSqueeze => "Holding-Lows Squeeze",
+        Preset::StableMidSqueeze => "Stable-Mid Squeeze",
     }
 }
 
