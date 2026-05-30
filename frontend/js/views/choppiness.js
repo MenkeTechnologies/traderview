@@ -157,7 +157,7 @@ function renderChart(bars, report) {
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'),         stroke: '#00e5ff', width: 1.5, points: { show: false } },
-            { label: 'CI',            stroke: '#ffd84a', width: 1.5, scale: 'y_ci',
+            { label: t('chart.series.ci'),            stroke: '#ffd84a', width: 1.5, scale: 'y_ci',
               points: { show: false } },
             { label: t('chart.series.618_choppy'), stroke: '#ff3860', width: 1.0, dash: [4, 4],
               scale: 'y_ci', points: { show: false } },

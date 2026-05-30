@@ -173,8 +173,8 @@ function renderOverlay(a, b) {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.idx') },
-            { label: 'A', stroke: '#00e5ff', width: 2, points: { show: false } },
-            { label: 'B', stroke: '#ff9f1a', width: 2, points: { show: false } },
+            { label: t('chart.series.a'), stroke: '#00e5ff', width: 2, points: { show: false } },
+            { label: t('chart.series.b'), stroke: '#ff9f1a', width: 2, points: { show: false } },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, padded(a), padded(b)], el);

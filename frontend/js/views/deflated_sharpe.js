@@ -205,7 +205,7 @@ function renderSweep(points, currentN) {
         scales: { x: { distr: 3, log: 10 }, y: { range: [0, 1] } },
         series: [
             { label: t('view.deflated_sharpe.series.n_trials_log') },
-            { label: 'PSR', stroke: '#a06bff', width: 1.5,
+            { label: t('chart.series.psr'), stroke: '#a06bff', width: 1.5,
               fill: '#a06bff1A', points: { show: true, size: 5 } },
             { label: t('view.deflated_sharpe.series.you_are_here'), stroke: '#fff', width: 0,
               points: { show: true, size: 10, stroke: '#fff', fill: 'transparent' } },
