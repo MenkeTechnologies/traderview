@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseSampleBlob, sampleToBlob, validateInputs, buildBody, localTest,
@@ -29,17 +30,17 @@ export async function renderAdNormality(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.ad_norm.btn.compute" id="adn-run" class="primary"
-                        data-tip="view.ad_norm.tip.compute" type="button">Test</button>
+                        data-tip="view.ad_norm.tip.compute" data-shortcut="ad_normality_run" type="button">Test</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.ad_norm.btn.demo_gauss"  id="adn-d1" class="secondary" type="button">Demo: Gaussian (n=500)</button>
-                <button data-i18n="view.ad_norm.btn.demo_heavy"  id="adn-d2" class="secondary" type="button">Demo: heavy tail mixture</button>
-                <button data-i18n="view.ad_norm.btn.demo_right"  id="adn-d3" class="secondary" type="button">Demo: right-skew (half-normal)</button>
-                <button data-i18n="view.ad_norm.btn.demo_left"   id="adn-d4" class="secondary" type="button">Demo: left-skew</button>
-                <button data-i18n="view.ad_norm.btn.demo_unif"   id="adn-d5" class="secondary" type="button">Demo: uniform</button>
-                <button data-i18n="view.ad_norm.btn.demo_bimod"  id="adn-d6" class="secondary" type="button">Demo: bimodal</button>
-                <button data-i18n="view.ad_norm.btn.demo_exp"    id="adn-d7" class="secondary" type="button">Demo: exponential</button>
-                <button data-i18n="view.ad_norm.btn.demo_small"  id="adn-d8" class="secondary" type="button">Demo: small sample (n=12)</button>
+                <button data-i18n="view.ad_norm.btn.demo_gauss"  id="adn-d1" class="secondary" data-tip="view.ad_norm.tip.demo_gauss" type="button">Demo: Gaussian (n=500)</button>
+                <button data-i18n="view.ad_norm.btn.demo_heavy"  id="adn-d2" class="secondary" data-tip="view.ad_norm.tip.demo_heavy" type="button">Demo: heavy tail mixture</button>
+                <button data-i18n="view.ad_norm.btn.demo_right"  id="adn-d3" class="secondary" data-tip="view.ad_norm.tip.demo_right" type="button">Demo: right-skew (half-normal)</button>
+                <button data-i18n="view.ad_norm.btn.demo_left"   id="adn-d4" class="secondary" data-tip="view.ad_norm.tip.demo_left"  type="button">Demo: left-skew</button>
+                <button data-i18n="view.ad_norm.btn.demo_unif"   id="adn-d5" class="secondary" data-tip="view.ad_norm.tip.demo_unif"  type="button">Demo: uniform</button>
+                <button data-i18n="view.ad_norm.btn.demo_bimod"  id="adn-d6" class="secondary" data-tip="view.ad_norm.tip.demo_bimod" type="button">Demo: bimodal</button>
+                <button data-i18n="view.ad_norm.btn.demo_exp"    id="adn-d7" class="secondary" data-tip="view.ad_norm.tip.demo_exp"   type="button">Demo: exponential</button>
+                <button data-i18n="view.ad_norm.btn.demo_small"  id="adn-d8" class="secondary" data-tip="view.ad_norm.tip.demo_small" type="button">Demo: small sample (n=12)</button>
             </div>
             <p data-i18n="view.ad_norm.hint.about" class="muted">A² uses the full empirical CDF — more powerful in the tails than Jarque-Bera. Stephens (1986) small-sample correction is applied. Critical values: α=0.10 → 0.631; α=0.05 → 0.752; α=0.025 → 0.873; α=0.01 → 1.035.</p>
         </div>
@@ -89,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.ad_norm.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.ad_norm.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -98,9 +100,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.ad_norm.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.sample);
-    if (!local) { showErr(t('view.ad_norm.err.degenerate')); return; }
+    if (!local) { showErr(t('view.ad_norm.err.degenerate')); showToast(t('view.ad_norm.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderCrit(local);
     renderStats();
@@ -111,13 +113,15 @@ async function compute(tok) {
         resp = await api.anlyAdNormality(buildBody(state));
     } catch (e) {
         showErr(`${t('view.ad_norm.err.api')}: ${e.message || e}`);
+        showToast(t('view.ad_norm.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.ad_norm.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.ad_norm.err.server_rejected')); showToast(t('view.ad_norm.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderCrit(resp);
     renderStats();
+    showToast(t('view.ad_norm.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
