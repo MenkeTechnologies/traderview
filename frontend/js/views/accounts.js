@@ -51,8 +51,14 @@ export async function renderAccounts(mount, _state, onChange) {
             <h2 data-i18n="view.accounts.h2.broker_chart">Accounts by broker</h2>
             <div id="acct-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.accounts.h2.currency_chart">Accounts by currency</h2>
+            <div id="acct-ccy-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderBrokerChart(accounts);
+    renderCurrencyChart(accounts);
 
     mount.querySelector('#acct-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -83,6 +89,41 @@ export async function renderAccounts(mount, _state, onChange) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
         }));
+}
+
+function renderCurrencyChart(accounts) {
+    const el = document.getElementById('acct-ccy-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!accounts || !accounts.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.accounts.empty_ccy_chart">${esc(t('view.accounts.empty_ccy_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const a of accounts) {
+        const key = (a.base_currency || '?').toUpperCase();
+        counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.accounts.chart.ccy_idx') },
+            { label: t('view.accounts.chart.count'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderBrokerChart(accounts) {

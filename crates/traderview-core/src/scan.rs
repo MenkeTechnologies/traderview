@@ -454,6 +454,8 @@ pub enum Preset {
     ChurnAtBottomDryVol,         // year_low_pct < 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w low on dry vol (consolidation at lows; potential capitulation done)
     HugeGapFlatChange,           // gap_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — huge overnight gap but flat close on avg vol (frozen open; gap-fill candidate)
     NoGapHugeChange,             // gap_pct.abs() < 0.3 AND change_pct.abs() > 5 AND rel_volume >= 1.5 — no overnight gap but huge intraday change on hot vol (intraday-only catalyst)
+    ExtremeVolFlatGapFlatDay,    // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() < 1 — extreme vol with flat gap and small move (heavy churn no direction; potential trap)
+    IlliquidBigGapFlatDay,       // rel_volume < 0.4 AND gap_pct.abs() > 3 AND change_pct.abs() < 1 — big gap on dry vol with flat day (illiquid gap; gap-fill risk)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2212,6 +2214,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 5.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::ExtremeVolFlatGapFlatDay => {
+            hit.rel_volume >= 3.0
+                && hit.gap_pct.abs() < 0.3
+                && hit.change_pct.abs() < 1.0
+        }
+        Preset::IlliquidBigGapFlatDay => {
+            hit.rel_volume < 0.4
+                && hit.gap_pct.abs() > 3.0
+                && hit.change_pct.abs() < 1.0
+        }
     }
 }
 
@@ -2556,6 +2568,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ChurnAtBottomDryVol => "Churn at 52w Low, Dry Vol",
         Preset::HugeGapFlatChange => "Huge Gap + Flat Change (Frozen Open)",
         Preset::NoGapHugeChange => "No Gap + Huge Change (Intraday Catalyst)",
+        Preset::ExtremeVolFlatGapFlatDay => "Extreme-Vol Flat-Gap Flat-Day (Churn Trap)",
+        Preset::IlliquidBigGapFlatDay => "Illiquid Big-Gap Flat-Day (Gap-Fill Risk)",
     }
 }
 
