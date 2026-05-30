@@ -14,6 +14,7 @@ import {
 } from '../_per_symbol_slippage_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { recordsText: '' };
 
 export async function renderPerSymbolSlippage(mount, _appState) {
@@ -27,11 +28,11 @@ export async function renderPerSymbolSlippage(mount, _appState) {
                 positive = trader-favorable (beat benchmark). Demo loads 108 fills
                 across 6 symbols spanning the full execution-quality spectrum from
                 ETF to micro-cap.</p>
-            <textarea id="ps-recs" rows="6" placeholder="AAPL -2.5&#10;SPY 7.0&#10;ILQD -28.0&#10;..."></textarea>
+            <textarea id="ps-recs" rows="6" placeholder="AAPL -2.5&#10;SPY 7.0&#10;ILQD -28.0&#10;..." data-tip="view.per_symbol_slippage.tip.records"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.per_symbol_slippage.btn.load_demo_108_fills_6_symbols" id="ps-demo" class="secondary" type="button">Load demo (108 fills, 6 symbols)</button>
-                <button data-i18n="view.per_symbol_slippage.btn.clear" id="ps-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.per_symbol_slippage.btn.aggregate" id="ps-run" class="primary" type="button">Aggregate</button>
+                <button data-i18n="view.per_symbol_slippage.btn.load_demo_108_fills_6_symbols" data-tip="view.per_symbol_slippage.tip.demo" data-shortcut="per_symbol_slippage_demo" id="ps-demo" class="secondary" type="button">Load demo (108 fills, 6 symbols)</button>
+                <button data-i18n="view.per_symbol_slippage.btn.clear" data-tip="view.per_symbol_slippage.tip.clear" id="ps-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.per_symbol_slippage.btn.aggregate" data-tip="view.per_symbol_slippage.tip.aggregate" data-shortcut="per_symbol_slippage_run" id="ps-run" class="primary" type="button">Aggregate</button>
             </div>
         </div>
 
@@ -85,17 +86,23 @@ async function compute(tok) {
         if (records.length === 0) return;
     }
     const err = validateInputs(records);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let report;
     try {
         report = await api.microPerSymbolSlippage(buildBody(records));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, records);
     renderTable(report);
     renderMeanChart(report);
+    const worst = worstSymbol(report);
+    showToast(t('view.per_symbol_slippage.toast.done', {
+        symbols: (report || []).length,
+        worst: worst ? worst.symbol : '—',
+    }), { level: 'success' });
 }
 
 function renderMeanChart(report) {
