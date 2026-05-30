@@ -56,6 +56,11 @@ export async function renderCholesky(mount, _appState) {
             <div id="ch-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.chol.h2.diag_chart">L diagonal (conditional std devs)</h2>
+            <div id="ch-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ch-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -93,6 +98,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderFactor(local);
     renderStats();
+    renderDiagChart(local);
     let resp;
     try {
         resp = await api.anlyCholesky(buildBody(state));
@@ -105,6 +111,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderFactor(resp);
     renderStats();
+    renderDiagChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -182,6 +189,34 @@ function renderStats() {
             </tbody>
         </table>
     `;
+}
+
+function renderDiagChart(report) {
+    const el = document.getElementById('ch-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.l) || !report.l.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.chol.empty_chart">${esc(t('view.chol.empty_chart'))}</div>`;
+        return;
+    }
+    const diag = report.l.map((row, i) => Number.isFinite(row[i]) ? row[i] : null);
+    const xs = diag.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.chol.chart.row_idx') },
+            { label: t('view.chol.chart.diag'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => String(Math.round(v))) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, diag], el);
 }
 
 function card(label, value, cls = '') {
