@@ -866,6 +866,8 @@ const PRESETS = [
     { id: 'midpoint_close_near_year_low_hot_vol', label: t('view.scanners.preset.midpoint_close_near_year_low_hot_vol.label'), desc: t('view.scanners.preset.midpoint_close_near_year_low_hot_vol.desc') },
     { id: 'midpoint_close_confirmed_above_year_high_hot_vol', label: t('view.scanners.preset.midpoint_close_confirmed_above_year_high_hot_vol.label'), desc: t('view.scanners.preset.midpoint_close_confirmed_above_year_high_hot_vol.desc') },
     { id: 'midpoint_close_confirmed_below_year_low_hot_vol', label: t('view.scanners.preset.midpoint_close_confirmed_below_year_low_hot_vol.label'), desc: t('view.scanners.preset.midpoint_close_confirmed_below_year_low_hot_vol.desc') },
+    { id: 'midpoint_close_deep_below_year_high_hot_vol', label: t('view.scanners.preset.midpoint_close_deep_below_year_high_hot_vol.label'), desc: t('view.scanners.preset.midpoint_close_deep_below_year_high_hot_vol.desc') },
+    { id: 'midpoint_close_deep_above_year_low_hot_vol', label: t('view.scanners.preset.midpoint_close_deep_above_year_low_hot_vol.label'), desc: t('view.scanners.preset.midpoint_close_deep_above_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
