@@ -195,6 +195,8 @@
   "shortcut.open_research_for_symbol":  "Research for active symbol",
   "shortcut.open_earnings_for_symbol":  "Earnings / IV for active symbol",
   "shortcut.open_news_for_symbol":      "News for active symbol",
+  "shortcut.trades_new":                "New trade (in Trades view)",
+  "shortcut.dashboard_refresh":         "Refresh dashboard (in Dashboard view)",
 
   "view.keyboard_shortcuts.title":      "Keyboard Shortcuts",
   "view.keyboard_shortcuts.placeholder": "Filter shortcuts…",

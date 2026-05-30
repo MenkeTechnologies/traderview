@@ -418,6 +418,12 @@ function bindTabs() {
     // Bridge: hash-based help/tutorial action from the new registry.
     window.addEventListener('tv:open-help', () => { window.location.hash = 'keyboard-shortcuts'; });
     window.addEventListener('tv:go-home',   () => { window.location.hash = 'launcher'; });
+    // View-scoped: `n` in trades scope → new trade route.
+    window.addEventListener('tv:trades-new', () => { window.location.hash = 'new-trade'; });
+    // View-scoped: `r` in dashboard scope → re-render via hashchange.
+    window.addEventListener('tv:dashboard-refresh', () => {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {
