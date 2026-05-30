@@ -200,6 +200,8 @@ pub enum Preset {
     NearZeroChangeQuietSqueeze,  // |change_pct| < 0.5 AND |gap_pct| < 0.5 AND |day_pct| < 1 AND rel_volume < 0.7 — chop-and-rest quiet bar
     SilentInsideSqueeze,         // day_pct.abs() < 0.4 AND change_pct.abs() < 0.4 AND gap_pct.abs() < 0.4 AND rel_volume < 0.7 — true tri-quiet inside bar
     HighVolNoMoveSqueeze,        // rel_volume >= 2 AND |change_pct| < 0.5 AND |day_pct| < 0.7 — heavy distribution-without-move bar
+    ChangeButLodNearbySqueeze,   // change_pct >= 1 AND lod_dist.abs() < 1 — up day but close is back near LOD (failed)
+    ChangeButHodNearbySqueeze,   // change_pct <= -1 AND hod_dist.abs() < 1 — down day but close is back near HOD (bullish reversal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -602,6 +604,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.day_pct.abs() < 0.7
         }
+        Preset::ChangeButLodNearbySqueeze => {
+            hit.change_pct >= 1.0 && hit.lod_dist_pct.abs() < 1.0
+        }
+        Preset::ChangeButHodNearbySqueeze => {
+            hit.change_pct <= -1.0 && hit.hod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -692,6 +700,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NearZeroChangeQuietSqueeze => "Chop-And-Rest Quiet Squeeze",
         Preset::SilentInsideSqueeze => "Silent Inside Squeeze",
         Preset::HighVolNoMoveSqueeze => "Heavy-Vol No-Move Squeeze",
+        Preset::ChangeButLodNearbySqueeze => "Up-Day-Failed Squeeze",
+        Preset::ChangeButHodNearbySqueeze => "Down-Day-Reversed Squeeze",
     }
 }
 

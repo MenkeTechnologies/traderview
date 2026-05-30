@@ -290,9 +290,46 @@ function renderEarnings(el, e) {
                 <td>${rawVal(h.epsEstimate)}</td>
                 <td>${rawVal(h.epsActual)}</td>
                 <td class="${(h.surprisePercent?.raw ?? 0) >= 0 ? 'pos' : 'neg'}">${rawVal(h.surprisePercent)}</td></tr>
-        `).join('')}</tbody></table>` : ''}
+        `).join('')}</tbody></table>
+        <h3 data-i18n="view.research.h3.surprise_chart">EPS surprise % per period</h3>
+        <div id="res-earn-chart" style="width:100%;height:240px"></div>` : ''}
     `;
     try { applyUiI18n(el); } catch (_) {}
+    renderEarningsSurpriseChart(hist);
+}
+
+function renderEarningsSurpriseChart(hist) {
+    const el = document.getElementById('res-earn-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (hist || []).filter(h => Number.isFinite(Number(h.surprisePercent?.raw)));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.research.empty_chart">${esc(t('view.research.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = pts.map(h => h.period || '');
+    const ys = pts.map(h => Number(h.surprisePercent.raw));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.research.chart.period_idx') },
+            { label: t('view.research.chart.surprise'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.research.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderInsiders(el, i) {

@@ -82,6 +82,8 @@ const PRESETS = [
     { id: 'chop_and_rest_quiet_squeeze', label: t('view.scanners.preset.chop_and_rest_quiet_squeeze.label'), desc: t('view.scanners.preset.chop_and_rest_quiet_squeeze.desc') },
     { id: 'silent_inside_squeeze',      label: t('view.scanners.preset.silent_inside_squeeze.label'),      desc: t('view.scanners.preset.silent_inside_squeeze.desc') },
     { id: 'heavy_vol_no_move_squeeze',  label: t('view.scanners.preset.heavy_vol_no_move_squeeze.label'),  desc: t('view.scanners.preset.heavy_vol_no_move_squeeze.desc') },
+    { id: 'up_day_failed_squeeze',      label: t('view.scanners.preset.up_day_failed_squeeze.label'),      desc: t('view.scanners.preset.up_day_failed_squeeze.desc') },
+    { id: 'down_day_reversed_squeeze',  label: t('view.scanners.preset.down_day_reversed_squeeze.label'),  desc: t('view.scanners.preset.down_day_reversed_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
