@@ -265,6 +265,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bg_test_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breusch-godfrey',   descKey: 'shortcut.bg_test_run',                  actionKey: 'tv:bg-test-run' },
     { id: 'beta_run',                     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'beta',              descKey: 'shortcut.beta_run',                     actionKey: 'tv:beta-run' },
     { id: 'bid_ask_vol_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bid-ask-volume-ratio', descKey: 'shortcut.bid_ask_vol_run',           actionKey: 'tv:bid-ask-vol-run' },
+    { id: 'bipower_variation_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bpv',               descKey: 'shortcut.bipower_variation_run',        actionKey: 'tv:bipower-variation-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

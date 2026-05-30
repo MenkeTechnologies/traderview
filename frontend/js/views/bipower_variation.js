@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseReturnsBlob, returnsToBlob, validateInputs, buildBody, localCompute,
@@ -29,17 +30,17 @@ export async function renderBipowerVariation(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.bpv.btn.compute" id="bv-run" class="primary"
-                        data-tip="view.bpv.tip.compute" type="button">Compute BPV</button>
+                        data-tip="view.bpv.tip.compute" data-shortcut="bipower_variation_run" type="button">Compute BPV</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bpv.btn.demo_smooth"  id="bv-demo-smooth"  class="secondary" type="button">Demo: smooth no-jumps</button>
-                <button data-i18n="view.bpv.btn.demo_big"     id="bv-demo-big"     class="secondary" type="button">Demo: single big jump (50%)</button>
-                <button data-i18n="view.bpv.btn.demo_multi"   id="bv-demo-multi"   class="secondary" type="button">Demo: multiple small jumps</button>
-                <button data-i18n="view.bpv.btn.demo_flat"    id="bv-demo-flat"    class="secondary" type="button">Demo: flat zero returns</button>
-                <button data-i18n="view.bpv.btn.demo_highvol" id="bv-demo-hi"      class="secondary" type="button">Demo: high vol, no jumps</button>
-                <button data-i18n="view.bpv.btn.demo_crash"   id="bv-demo-crash"   class="secondary" type="button">Demo: −30% crash bar</button>
-                <button data-i18n="view.bpv.btn.demo_short"   id="bv-demo-short"   class="secondary" type="button">Demo: short series (5 bars)</button>
-                <button data-i18n="view.bpv.btn.demo_persist" id="bv-demo-persist" class="secondary" type="button">Demo: persistent vol</button>
+                <button data-i18n="view.bpv.btn.demo_smooth"  id="bv-demo-smooth"  class="secondary" data-tip="view.bpv.tip.demo_smooth"  type="button">Demo: smooth no-jumps</button>
+                <button data-i18n="view.bpv.btn.demo_big"     id="bv-demo-big"     class="secondary" data-tip="view.bpv.tip.demo_big"     type="button">Demo: single big jump (50%)</button>
+                <button data-i18n="view.bpv.btn.demo_multi"   id="bv-demo-multi"   class="secondary" data-tip="view.bpv.tip.demo_multi"   type="button">Demo: multiple small jumps</button>
+                <button data-i18n="view.bpv.btn.demo_flat"    id="bv-demo-flat"    class="secondary" data-tip="view.bpv.tip.demo_flat"    type="button">Demo: flat zero returns</button>
+                <button data-i18n="view.bpv.btn.demo_highvol" id="bv-demo-hi"      class="secondary" data-tip="view.bpv.tip.demo_highvol" type="button">Demo: high vol, no jumps</button>
+                <button data-i18n="view.bpv.btn.demo_crash"   id="bv-demo-crash"   class="secondary" data-tip="view.bpv.tip.demo_crash"   type="button">Demo: −30% crash bar</button>
+                <button data-i18n="view.bpv.btn.demo_short"   id="bv-demo-short"   class="secondary" data-tip="view.bpv.tip.demo_short"   type="button">Demo: short series (5 bars)</button>
+                <button data-i18n="view.bpv.btn.demo_persist" id="bv-demo-persist" class="secondary" data-tip="view.bpv.tip.demo_persist" type="button">Demo: persistent vol</button>
             </div>
             <p data-i18n="view.bpv.hint.about" class="muted">BPV = (π/2)·Σ|r_i|·|r_{i−1}|. Jump-robust IV estimator. Jump variation = max(0, RV − BPV). Huang-Tauchen z = √n·(RV−BPV)/BPV/√(θ·max(1, TQ/BPV²)) ~ N(0, 1) under H₀ (no jumps).</p>
         </div>
@@ -84,6 +85,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bpv.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bpv.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -93,9 +95,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bpv.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.returns);
-    if (!local) { showErr(t('view.bpv.err.degenerate')); return; }
+    if (!local) { showErr(t('view.bpv.err.degenerate')); showToast(t('view.bpv.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart();
     renderJumpChart();
@@ -105,14 +107,16 @@ async function compute(tok) {
         resp = await api.anlyBipowerVariation(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bpv.err.api')}: ${e.message || e}`);
+        showToast(t('view.bpv.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.bpv.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.bpv.err.server_rejected')); showToast(t('view.bpv.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart();
     renderJumpChart();
     renderTable(resp);
+    showToast(t('view.bpv.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
