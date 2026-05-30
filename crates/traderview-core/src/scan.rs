@@ -1124,6 +1124,8 @@ pub enum Preset {
     BigDownDayDoubledVolJustOffYearLowHotVol,  // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — big intraday down (<-3%) + doubled vol (>=2) + just off 52w low (2-5%) (institutional intraday distribution just off the year trough: regular session prints a sustained sell-driven move on doubled participation immediately after a shallow bounce from the 52w low; conviction-post-tag-rejection signal worth a re-test-screen)
     QuintupledVolUpHotVol,                     // rel_volume >= 5 AND change_pct > 3 — quintupled vol (>=5) + big up move (>3%) (extreme participation event with bull-direction: vol is 5x its average and price prints a significant up move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
     QuintupledVolDownHotVol,                   // rel_volume >= 5 AND change_pct < -3 — quintupled vol (>=5) + big down move (<-3%) (extreme participation event with bear-direction: vol is 5x its average and price prints a significant down move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
+    QuintupledVolUpNearYearHighHotVol,         // rel_volume >= 5 AND change_pct > 3 AND year_high_pct < 2 — quintupled vol (>=5) + big up move (>3%) + at/near 52w high (<2%) (once-per-quarter breakout event at the year peak: vol is 5x its average, price prints a significant up move and reaches the 52w high simultaneously; highest-conviction breakout-at-extreme signal worth a tier-1 alert)
+    QuintupledVolDownNearYearLowHotVol,        // rel_volume >= 5 AND change_pct < -3 AND year_low_pct < 2 — quintupled vol (>=5) + big down move (<-3%) + at/near 52w low (<2%) (once-per-quarter breakdown event at the year trough: vol is 5x its average, price prints a significant down move and reaches the 52w low simultaneously; highest-conviction breakdown-at-extreme signal worth a tier-1 alert)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6926,6 +6928,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::QuintupledVolDownHotVol => {
             hit.rel_volume >= 5.0 && hit.change_pct < -3.0
         }
+        Preset::QuintupledVolUpNearYearHighHotVol => {
+            hit.rel_volume >= 5.0 && hit.change_pct > 3.0 && hit.year_high_pct < 2.0
+        }
+        Preset::QuintupledVolDownNearYearLowHotVol => {
+            hit.rel_volume >= 5.0 && hit.change_pct < -3.0 && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -7940,6 +7948,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigDownDayDoubledVolJustOffYearLowHotVol => "Big Intraday Down (<-3 %) + Doubled Vol (>=2) + Just off 52w Low (2-5 %) (Institutional Intraday Distribution Just off the Year Trough: Regular Session Prints a Sustained Sell-driven Move on Doubled Participation Immediately after a Shallow Bounce from the 52w Low; Conviction-post-tag-rejection Signal Worth a Re-test-screen)",
         Preset::QuintupledVolUpHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) (Extreme Participation Event with Bull-direction: Vol Is 5x Its Average and Price Prints a Significant Up Move; Rare News/earnings/catalyst Day at the Highest Possible Conviction Tier, Typically a Once-per-quarter Occurrence per Name)",
         Preset::QuintupledVolDownHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) (Extreme Participation Event with Bear-direction: Vol Is 5x Its Average and Price Prints a Significant Down Move; Rare News/earnings/catalyst Day at the Highest Possible Conviction Tier, Typically a Once-per-quarter Occurrence per Name)",
+        Preset::QuintupledVolUpNearYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + At/near 52w High (<2 %) (Once-per-quarter Breakout Event at the Year Peak: Vol Is 5x Its Average, Price Prints a Significant Up Move and Reaches the 52w High Simultaneously; Highest-conviction Breakout-at-extreme Signal Worth a Tier-1 Alert)",
+        Preset::QuintupledVolDownNearYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + At/near 52w Low (<2 %) (Once-per-quarter Breakdown Event at the Year Trough: Vol Is 5x Its Average, Price Prints a Significant Down Move and Reaches the 52w Low Simultaneously; Highest-conviction Breakdown-at-extreme Signal Worth a Tier-1 Alert)",
     }
 }
 
