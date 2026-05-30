@@ -87,6 +87,12 @@ export async function renderIvSolver(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.iv_solver.h2.vega_chart">Numerical vega vs σ (slope of price curve)</h2>
+            <div id="iv-vega-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.iv_solver.hint.vega" class="muted">First difference of the BS price curve at each σ — that's vega (premium sensitivity per σ-point). Peaks near ATM σ; falls off at extremes. Green dashed = solved σ. The slope of the price curve at solved σ = your live vega.</p>
+        </div>
+
         <div id="iv-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -128,6 +134,7 @@ async function solve(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    renderVegaChart(res);
     showToast(t('view.iv_solver.toast.done', {
         iv: fmtVolPct(res.implied_volatility),
         iter: res.iterations,
@@ -199,6 +206,46 @@ function renderChart(res) {
             { stroke: '#aab' },
         ],
     }, [xs, ys, marketLine, markerYs], el);
+}
+
+function renderVegaChart(res) {
+    const el = document.getElementById('iv-vega-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const p = state.params;
+    const maxSigma = Math.max(2.0, res.implied_vol * 1.5);
+    const { xs, ys } = priceVsSigmaSweep(p, maxSigma, 161);
+    if (xs.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.iv_solver.empty_vega_chart">${esc(t('view.iv_solver.empty_vega_chart'))}</div>`;
+        return;
+    }
+    const vega = new Array(xs.length).fill(0);
+    for (let i = 1; i < xs.length - 1; i++) {
+        vega[i] = (ys[i + 1] - ys[i - 1]) / (xs[i + 1] - xs[i - 1]);
+    }
+    vega[0] = vega[1];
+    vega[xs.length - 1] = vega[xs.length - 2];
+    const halfWidth = (xs[1] - xs[0]) / 2;
+    const peakVega = Math.max(...vega);
+    const marker = xs.map(x => Math.abs(x - res.implied_vol) < halfWidth ? peakVega : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: 'σ' },
+            { label: t('view.iv_solver.chart.vega'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.iv_solver.chart.solved_sigma'),
+              stroke: '#39ff14', width: 1.0, dash: [4, 4],
+              points: { show: true, size: 8, stroke: '#39ff14', fill: '#39ff14' } },
+        ],
+        axes: [
+            { stroke: '#aab',
+              values: (_, ticks) => ticks.map(tv => `${(tv * 100).toFixed(0)}%`) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, vega, marker], el);
 }
 
 function showErr(msg) {

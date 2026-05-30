@@ -684,6 +684,8 @@ pub enum Preset {
     IntradayBigDayGapWithHotVol,     // day_pct.abs() > 3 AND gap_pct * day_pct > 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-with-day-direction + hot vol (textbook gap-and-go continuation: open kept running same direction as the gap on heavy participation)
     OvernightDriftDryVol,            // gap_pct.abs() > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.5 — significant gap + flat intraday + very dry vol (overnight news repriced and nobody traded during the day; max-silence post-news; news absorbed instantly)
     HotVolHugeGapTinyDay,            // rel_volume >= 3 AND gap_pct.abs() > 2 AND day_pct.abs() < 0.3 — hot vol (3×+) + big gap + nearly flat intraday (heavy volume but no intraday movement; institutional repositioning at the new gap level; massive churn at one price)
+    Year52LowGapUpHeldHotVol,        // year_low_pct < 5 AND gap_pct > 1 AND change_pct > 2 AND rel_volume >= 2 — at 52w low + gap up + finished up >2 + hot vol (relief gap HELD and extended on volume; reversal candidate at the floor; opposite of Year52LowGapUpFaded)
+    Year52HighGapDownHeldHotVol,     // year_high_pct < 5 AND gap_pct < -1 AND change_pct < -2 AND rel_volume >= 2 — at 52w high + gap down + finished down <-2 + hot vol (rejection gap HELD and extended; distribution at the highs; opposite of Year52HighGapDownReclaimed)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3758,6 +3760,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 2.0
                 && hit.day_pct.abs() < 0.3
         }
+        Preset::Year52LowGapUpHeldHotVol => {
+            hit.year_low_pct < 5.0
+                && hit.gap_pct > 1.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52HighGapDownHeldHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.gap_pct < -1.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4332,6 +4346,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayBigDayGapWithHotVol => "Big Intraday Day + Gap With Day + Hot Vol (Textbook Gap-and-go Continuation on Heavy Participation)",
         Preset::OvernightDriftDryVol => "Significant Gap + Flat Intraday + Very Dry Vol (News Absorbed Instantly; Nobody Traded the Day)",
         Preset::HotVolHugeGapTinyDay => "Hot Vol (3×+) + Big Gap + Nearly Flat Intraday (Institutional Repositioning at New Gap Level; Massive Churn at One Price)",
+        Preset::Year52LowGapUpHeldHotVol => "Near 52w Low + Gap Up + Held & Extended + Hot Vol (Relief Reclaim with Momentum at the Floor)",
+        Preset::Year52HighGapDownHeldHotVol => "Near 52w High + Gap Down + Held & Extended + Hot Vol (Distribution at the Highs; Rejection Gap Confirmed)",
     }
 }
 
