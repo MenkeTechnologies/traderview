@@ -157,7 +157,7 @@ function renderSummary(motif, discords) {
         ? `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_discords_dist">Top discords (by distance)</div>
              <div class="value pd-discord-value">
                 ${discords.map(d =>
-                    `<div class="vc-row"><span class="muted">idx ${d.start}</span> <strong>${d.distance.toFixed(4)}</strong></div>`
+                    `<div class="vc-row"><span class="muted">${esc(t('view.pattern_discovery.row.idx', { start: d.start }))}</span> <strong>${d.distance.toFixed(4)}</strong></div>`
                 ).join('')}
              </div>
            </div>`

@@ -3,7 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 export async function renderRDist(mount, state) {
     const tok = currentViewToken();
@@ -52,10 +52,10 @@ function render(r, mount) {
             <div class="card"><div class="label" data-i18n="view.r_distribution.card.avg_winner_loser">Avg winner / loser</div>
                 <div class="value"><span class="pos">+${s.avg_winner_r.toFixed(2)}R</span> /
                     <span class="neg">${s.avg_loser_r.toFixed(2)}R</span></div>
-                <div class="small muted">payoff ${s.payoff_ratio.toFixed(2)}×</div></div>
+                <div class="small muted">${esc(t('view.r_distribution.card.payoff', { ratio: s.payoff_ratio.toFixed(2) }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.r_distribution.card.profit_factor">Profit factor</div>
                 <div class="value ${s.profit_factor >= 1.5 ? 'pos' : s.profit_factor >= 1 ? '' : 'neg'}">${s.profit_factor.toFixed(2)}</div>
-                <div class="small muted">max win ${s.max_winner_r.toFixed(2)}R · max loss ${s.max_loser_r.toFixed(2)}R</div></div>
+                <div class="small muted">${esc(t('view.r_distribution.card.max_win_loss', { maxWin: s.max_winner_r.toFixed(2), maxLoss: s.max_loser_r.toFixed(2) }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.r_distribution.card.stdev_r">Stdev R</div>
                 <div class="value">${s.stdev_r.toFixed(3)}</div></div>
         </div>

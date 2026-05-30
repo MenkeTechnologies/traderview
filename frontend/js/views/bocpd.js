@@ -225,7 +225,7 @@ function renderDetectedList(res) {
     }
     panel.style.display = '';
     body.innerHTML = top.map(d =>
-        `<div class="vc-row"><span class="muted">index ${d.index}</span>
+        `<div class="vc-row"><span class="muted">${esc(t('view.bocpd.row.index', { index: d.index }))}</span>
             <strong>P = ${(d.probability * 100).toFixed(1)}%</strong></div>`
     ).join('');
 }

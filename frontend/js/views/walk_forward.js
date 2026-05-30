@@ -103,7 +103,7 @@ function renderResult(r, body, out, mount) {
                 <div class="small muted">= ${r.windows.length * r.grid_size} backtests</div></div>
             <div class="card"><div class="label" data-i18n="view.walk_forward.card.final_equity">Final equity</div>
                 <div class="value">$${fmt(r.final_oos_equity)}</div>
-                <div class="small muted">from $${fmt(body.initial_capital)}</div></div>
+                <div class="small muted">${esc(t('view.walk_forward.card.from_capital', { capital: fmt(body.initial_capital) }))}</div></div>
         </div>
 
         <div class="chart-panel">
