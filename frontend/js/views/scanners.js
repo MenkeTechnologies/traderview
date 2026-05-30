@@ -448,6 +448,8 @@ const PRESETS = [
     { id: 'intraday_fakeout_top_reject', label: t('view.scanners.preset.intraday_fakeout_top_reject.label'), desc: t('view.scanners.preset.intraday_fakeout_top_reject.desc') },
     { id: 'intraday_fakeout_bottom_reject', label: t('view.scanners.preset.intraday_fakeout_bottom_reject.label'), desc: t('view.scanners.preset.intraday_fakeout_bottom_reject.desc') },
     { id: 'range_contraction_after_move', label: t('view.scanners.preset.range_contraction_after_move.label'), desc: t('view.scanners.preset.range_contraction_after_move.desc') },
+    { id: 'relative_strength_build', label: t('view.scanners.preset.relative_strength_build.label'), desc: t('view.scanners.preset.relative_strength_build.desc') },
+    { id: 'relative_weakness_build', label: t('view.scanners.preset.relative_weakness_build.label'), desc: t('view.scanners.preset.relative_weakness_build.desc') },
 ];
 
 export async function renderScanners(mount) {

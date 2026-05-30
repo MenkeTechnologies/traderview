@@ -566,6 +566,8 @@ pub enum Preset {
     IntradayFakeoutTopReject,       // hod_dist_pct.abs() > 2 AND day_pct < -0.5 AND rel_volume >= 1.5 — significant pullback from HOD + red day + hot vol (intraday failed breakout; top rejection)
     IntradayFakeoutBottomReject,    // lod_dist_pct.abs() > 2 AND day_pct > 0.5 AND rel_volume >= 1.5 — significant bounce from LOD + green day + hot vol (intraday failed breakdown; bottom rejection)
     RangeContractionAfterMove,      // hod_dist + lod_dist < 0.8 AND day_pct.abs() < 0.3 AND change_pct.abs() > 1 AND rel_volume between 0.8 and 1.3 — narrow range + flat close + meaningful change + normal vol (continuation pause / range contraction after move)
+    RelativeStrengthBuild,          // change_pct > 1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful gain + slightly elevated vol + no big gap (organic relative-strength build; no catalyst-driven gap)
+    RelativeWeaknessBuild,          // change_pct < -1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful drop + slightly elevated vol + no big gap (organic relative-weakness build; no catalyst-driven gap)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2969,6 +2971,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.8
                 && hit.rel_volume <= 1.3
         }
+        Preset::RelativeStrengthBuild => {
+            hit.change_pct > 1.5
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+                && hit.gap_pct.abs() < 0.5
+        }
+        Preset::RelativeWeaknessBuild => {
+            hit.change_pct < -1.5
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+                && hit.gap_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3425,6 +3439,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayFakeoutTopReject => "Pullback from HOD + Red Day + Hot Vol (Intraday Top Rejection)",
         Preset::IntradayFakeoutBottomReject => "Bounce from LOD + Green Day + Hot Vol (Intraday Bottom Rejection)",
         Preset::RangeContractionAfterMove => "Narrow Range + Flat Close + Meaningful Change + Normal Vol (Continuation Pause)",
+        Preset::RelativeStrengthBuild => "Organic Up + Slight Vol Pickup + No Gap (Relative-Strength Build)",
+        Preset::RelativeWeaknessBuild => "Organic Down + Slight Vol Pickup + No Gap (Relative-Weakness Build)",
     }
 }
 

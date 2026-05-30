@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let spreadChart = null;
 
 export async function renderCks(mount, _appState) {
     const tok = currentViewToken();
@@ -57,6 +58,11 @@ export async function renderCks(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cks.h2.chart">Stops overlay</h2>
             <div id="ck-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.cks.h2.spread_chart">Stop spread (short_stop − long_stop) — positive = long bias active</h2>
+            <div id="ck-spread-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -109,6 +115,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.p, state.x, state.q);
     renderSummary(local, true);
     renderChart(local);
+    renderSpreadChart(local);
     renderStats();
     let resp;
     try {
@@ -121,6 +128,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.long_stop)) { showErr(t('view.cks.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderSpreadChart(resp);
     renderStats();
 }
 
@@ -189,6 +197,37 @@ function renderChart(report) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderSpreadChart(report) {
+    const el = document.getElementById('ck-spread-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars || state.bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cks.empty_spread_chart">${esc(t('view.cks.empty_spread_chart'))}</div>`;
+        return;
+    }
+    const xs = state.bars.map((_, i) => i);
+    const spread = report.long_stop.map((l, i) => {
+        const s = report.short_stop[i];
+        if (l == null || s == null || !Number.isFinite(l) || !Number.isFinite(s)) return null;
+        return s - l;
+    });
+    const zero = xs.map(() => 0);
+    if (spreadChart) { try { spreadChart.destroy(); } catch {} spreadChart = null; }
+    spreadChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 200,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.cks.series.spread'),
+              stroke: '#b86bff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.cks.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, spread, zero], el);
 }
 
 function renderStats() {
