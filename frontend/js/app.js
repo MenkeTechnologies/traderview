@@ -826,6 +826,16 @@ function bindTabs() {
         const el = document.getElementById('yc-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in cost-basis scope → click Compute.
+    window.addEventListener('tv:cost-basis-run', () => {
+        const el = document.getElementById('cb-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `o` in cost-basis scope → click Use tax-optimal.
+    window.addEventListener('tv:cost-basis-opt', () => {
+        const el = document.getElementById('cb-opt');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

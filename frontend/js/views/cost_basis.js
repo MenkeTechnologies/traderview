@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     METHODS, parseLotBlob, validateInputs, buildBody, localClose, dec,
@@ -35,25 +36,25 @@ export async function renderCostBasis(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.cost_basis.label.qty">Qty to close</span>
-                    <input id="cb-qty" type="number" step="any" min="0" value="${state.qty_to_close}"></label>
+                    <input id="cb-qty" type="number" step="any" min="0" value="${state.qty_to_close}" data-tip="view.cost_basis.tip.qty"></label>
                 <label><span data-i18n="view.cost_basis.label.price">Price per share ($)</span>
-                    <input id="cb-px" type="number" step="any" min="0" value="${state.price_per_share}"></label>
+                    <input id="cb-px" type="number" step="any" min="0" value="${state.price_per_share}" data-tip="view.cost_basis.tip.price"></label>
                 <label><span data-i18n="view.cost_basis.label.method">Method</span>
-                    <select id="cb-method">
+                    <select id="cb-method" data-tip="view.cost_basis.tip.method">
                         ${METHODS.map(m => `<option value="${m}" ${state.method === m ? 'selected' : ''} data-i18n="${methodLabelKey(m)}">${m.toUpperCase()}</option>`).join('')}
                     </select></label>
                 <button data-i18n="view.cost_basis.btn.compute" id="cb-run" class="primary"
-                        data-tip="view.cost_basis.tip.compute" type="button">Compute</button>
+                        data-tip="view.cost_basis.tip.compute" data-shortcut="cost_basis_run" type="button">Compute</button>
                 <button data-i18n="view.cost_basis.btn.optimize" id="cb-opt" class="secondary"
-                        data-tip="view.cost_basis.tip.optimize" type="button">Use tax-optimal method</button>
+                        data-tip="view.cost_basis.tip.optimize" data-shortcut="cost_basis_opt" type="button">Use tax-optimal method</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.cost_basis.btn.demo_classic" id="cb-demo-classic" class="secondary" type="button">Demo: 3 lots @ different prices</button>
-                <button data-i18n="view.cost_basis.btn.demo_gain"    id="cb-demo-gain"    class="secondary" type="button">Demo: all gains (HIFO wins)</button>
-                <button data-i18n="view.cost_basis.btn.demo_loss"    id="cb-demo-loss"    class="secondary" type="button">Demo: all losses (LOFO wins)</button>
-                <button data-i18n="view.cost_basis.btn.demo_many"    id="cb-demo-many"    class="secondary" type="button">Demo: 6 lots ladder</button>
-                <button data-i18n="view.cost_basis.btn.demo_single"  id="cb-demo-single"  class="secondary" type="button">Demo: single lot partial</button>
-                <button data-i18n="view.cost_basis.btn.demo_over"    id="cb-demo-over"    class="secondary" type="button">Demo: over-close (200/100)</button>
+                <button data-i18n="view.cost_basis.btn.demo_classic" id="cb-demo-classic" class="secondary" type="button" data-tip="view.cost_basis.tip.demo_classic">Demo: 3 lots @ different prices</button>
+                <button data-i18n="view.cost_basis.btn.demo_gain"    id="cb-demo-gain"    class="secondary" type="button" data-tip="view.cost_basis.tip.demo_gain">Demo: all gains (HIFO wins)</button>
+                <button data-i18n="view.cost_basis.btn.demo_loss"    id="cb-demo-loss"    class="secondary" type="button" data-tip="view.cost_basis.tip.demo_loss">Demo: all losses (LOFO wins)</button>
+                <button data-i18n="view.cost_basis.btn.demo_many"    id="cb-demo-many"    class="secondary" type="button" data-tip="view.cost_basis.tip.demo_many">Demo: 6 lots ladder</button>
+                <button data-i18n="view.cost_basis.btn.demo_single"  id="cb-demo-single"  class="secondary" type="button" data-tip="view.cost_basis.tip.demo_single">Demo: single lot partial</button>
+                <button data-i18n="view.cost_basis.btn.demo_over"    id="cb-demo-over"    class="secondary" type="button" data-tip="view.cost_basis.tip.demo_over">Demo: over-close (200/100)</button>
             </div>
             <p data-i18n="view.cost_basis.hint.about" class="muted">FIFO = oldest first (IRS default). LIFO = newest. HIFO = highest cost (minimize gain). LOFO = lowest cost (maximize gain — useful for tax-loss carryforward). Realized = (price − cost) × qty per lot.</p>
         </div>
@@ -92,6 +93,7 @@ export async function renderCostBasis(mount, _appState) {
         const opt = suggestMethod(state.lots, state.qty_to_close, state.price_per_share);
         state.method = opt;
         document.getElementById('cb-method').value = opt;
+        showToast(t('view.cost_basis.toast.optimized', { method: opt.toUpperCase() }), { level: 'info' });
         void compute(tok);
     });
     document.getElementById('cb-run').addEventListener('click', () => { readInputs(); void compute(tok); });
@@ -107,6 +109,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.cost_basis.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.cost_basis.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -119,7 +122,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.lots, state.qty_to_close, state.price_per_share, state.method);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.cost_basis.toast.invalid'), { level: 'warning' }); return; }
     const local = localClose(state.lots, state.qty_to_close, state.price_per_share, state.method);
     renderSummary(local, true);
     renderTable(local);
@@ -130,6 +133,7 @@ async function compute(tok) {
             state.lots, state.qty_to_close, state.price_per_share, state.method));
     } catch (e) {
         showErr(`${t('view.cost_basis.err.api')}: ${e.message || e}`);
+        showToast(t('view.cost_basis.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -147,6 +151,14 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized);
     renderRealizedChart(normalized);
+    const realized = Number(normalized.total_realized) || 0;
+    const remaining = Number(normalized.qty_remaining_to_close) || 0;
+    const level = remaining > 0 ? 'warning' : realized >= 0 ? 'success' : 'info';
+    showToast(t('view.cost_basis.toast.computed', {
+        method: state.method.toUpperCase(),
+        realized: Math.round(realized).toLocaleString(),
+        remaining,
+    }), { level });
 }
 
 function renderSummary(report, pending) {
