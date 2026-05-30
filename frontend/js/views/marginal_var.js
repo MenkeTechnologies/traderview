@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_Z_ALPHA, Z_CONFIDENCE_LEVELS,
@@ -31,23 +32,23 @@ export async function renderMarginalVar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.mvar.label.confidence">Confidence</span>
-                    <select id="mv-conf">
+                    <select id="mv-conf" data-tip="view.mvar.tip.confidence">
                         ${Z_CONFIDENCE_LEVELS.map(c => `<option value="${c.z}" ${Math.abs(c.z - state.z_alpha) < 1e-9 ? 'selected' : ''}>${esc(c.label)} (z=${c.z})</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.mvar.label.z_custom">… or custom z</span>
-                    <input id="mv-z" type="number" step="any" min="0" value="${state.z_alpha}"></label>
+                    <input id="mv-z" type="number" step="any" min="0" value="${state.z_alpha}" data-tip="view.mvar.tip.z_custom"></label>
                 <button data-i18n="view.mvar.btn.compute" id="mv-run" class="primary"
-                        data-tip="view.mvar.tip.compute" type="button">Analyze</button>
+                        data-tip="view.mvar.tip.compute" data-shortcut="marginal_var_run" type="button">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.mvar.btn.demo_mixed"   id="mv-demo-mixed"  class="secondary" type="button">Demo: mixed 3-asset (SPY/EMB/GLD)</button>
-                <button data-i18n="view.mvar.btn.demo_equal"   id="mv-demo-equal"  class="secondary" type="button">Demo: 3 equal uncorrelated</button>
-                <button data-i18n="view.mvar.btn.demo_conc"    id="mv-demo-conc"   class="secondary" type="button">Demo: concentrated (70% one name)</button>
-                <button data-i18n="view.mvar.btn.demo_hedged"  id="mv-demo-hedged" class="secondary" type="button">Demo: fully-hedged pair (vol=0)</button>
-                <button data-i18n="view.mvar.btn.demo_corr"    id="mv-demo-corr"   class="secondary" type="button">Demo: highly-correlated pair</button>
-                <button data-i18n="view.mvar.btn.demo_div"     id="mv-demo-div"    class="secondary" type="button">Demo: 5-asset w/ diversifier</button>
-                <button data-i18n="view.mvar.btn.demo_99"      id="mv-demo-99"     class="secondary" type="button">Demo: same, 99% z</button>
-                <button data-i18n="view.mvar.btn.demo_99_9"    id="mv-demo-99_9"   class="secondary" type="button">Demo: same, 99.9% z</button>
+                <button data-i18n="view.mvar.btn.demo_mixed"   id="mv-demo-mixed"  class="secondary" type="button" data-tip="view.mvar.tip.demo_mixed">Demo: mixed 3-asset (SPY/EMB/GLD)</button>
+                <button data-i18n="view.mvar.btn.demo_equal"   id="mv-demo-equal"  class="secondary" type="button" data-tip="view.mvar.tip.demo_equal">Demo: 3 equal uncorrelated</button>
+                <button data-i18n="view.mvar.btn.demo_conc"    id="mv-demo-conc"   class="secondary" type="button" data-tip="view.mvar.tip.demo_conc">Demo: concentrated (70% one name)</button>
+                <button data-i18n="view.mvar.btn.demo_hedged"  id="mv-demo-hedged" class="secondary" type="button" data-tip="view.mvar.tip.demo_hedged">Demo: fully-hedged pair (vol=0)</button>
+                <button data-i18n="view.mvar.btn.demo_corr"    id="mv-demo-corr"   class="secondary" type="button" data-tip="view.mvar.tip.demo_corr">Demo: highly-correlated pair</button>
+                <button data-i18n="view.mvar.btn.demo_div"     id="mv-demo-div"    class="secondary" type="button" data-tip="view.mvar.tip.demo_div">Demo: 5-asset w/ diversifier</button>
+                <button data-i18n="view.mvar.btn.demo_99"      id="mv-demo-99"     class="secondary" type="button" data-tip="view.mvar.tip.demo_99">Demo: same, 99% z</button>
+                <button data-i18n="view.mvar.btn.demo_99_9"    id="mv-demo-99_9"   class="secondary" type="button" data-tip="view.mvar.tip.demo_99_9">Demo: same, 99.9% z</button>
             </div>
             <p data-i18n="view.mvar.hint.about" class="muted">marginal_i = z·(Σw)_i / vol. component_i = w_i · marginal_i. Σ components = portfolio VaR. Σ pct = 100%. Marginal answers "how does VaR change if I add one unit of position i?" Component splits total VaR by position.</p>
         </div>
@@ -93,6 +94,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.mvar.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.mvar.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -106,9 +108,13 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.mvar.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state.portfolio, state.z_alpha);
-    if (!local) { showErr(t('view.mvar.err.degenerate')); return; }
+    if (!local) {
+        showErr(t('view.mvar.err.degenerate'));
+        showToast(t('view.mvar.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(local, true);
     renderChart(local);
     renderTable(local);
@@ -117,13 +123,28 @@ async function compute(tok) {
         resp = await api.portfolioMarginalVar(buildBody(state));
     } catch (e) {
         showErr(`${t('view.mvar.err.api')}: ${e.message || e}`);
+        showToast(t('view.mvar.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.mvar.err.server_rejected')); return; }
+    if (!resp) {
+        showErr(t('view.mvar.err.server_rejected'));
+        showToast(t('view.mvar.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const pvar = Number(resp.portfolio_var) || 0;
+    const pcts = Array.isArray(resp.pct_contribution) ? resp.pct_contribution : [];
+    let maxPct = 0;
+    for (const p of pcts) { if (Math.abs(p) > maxPct) maxPct = Math.abs(p); }
+    const maxStr = (Number(maxPct) * 100).toFixed(1);
+    const level = maxPct >= 0.5 ? 'warning' : 'success';
+    showToast(t('view.mvar.toast.analyzed', {
+        var: pvar.toFixed(4),
+        max: maxStr,
+    }), { level });
 }
 
 function renderSummary(report, pending) {
