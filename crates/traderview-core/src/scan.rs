@@ -774,6 +774,8 @@ pub enum Preset {
     MidMagnitudeRedMidWickHotVol,        // change_pct in [-3, -1] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate red + mid-range close + decent vol (moderate-conviction down day with mid-wick finish; less extreme than BigDownMidRangeClose; basing candidate)
     HotVolHugeRangeBigChange,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() > 4 — extreme vol (3×+) + extreme range (>6%) + big change (>4%) (catalyst day with massive participation, wide exploration, and big finish; max-volatility resolution)
     HotVolHugeRangeFlatClose,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() < 0.5 — extreme vol + extreme range + flat close (max-absorption pattern at scale: huge intraday exploration but no net result; institutional indecision day)
+    Year52HighDistributionChurn,         // year_high_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w high + flat close + hot vol (distribution at the highs; heavy churn without movement; institutional offloading at the top)
+    Year52LowAccumulationChurn,          // year_low_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w low + flat close + hot vol (accumulation at the lows; heavy churn without movement; institutional bottom-fishing at the floor)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4411,6 +4413,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::Year52HighDistributionChurn => {
+            hit.year_high_pct < 2.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowAccumulationChurn => {
+            hit.year_low_pct < 2.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5075,6 +5087,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidMagnitudeRedMidWickHotVol => "Moderate Red + Mid-wick Close + Decent Vol (Moderate-conviction Down Day with Mid-range Finish; Basing Candidate)",
         Preset::HotVolHugeRangeBigChange => "Extreme Vol (3×+) + Extreme Range (>6%) + Big Change (>4%) (Catalyst Day; Massive Participation, Wide Exploration, Big Finish)",
         Preset::HotVolHugeRangeFlatClose => "Extreme Vol + Extreme Range + Flat Close (Max-absorption Pattern at Scale; Institutional Indecision Day)",
+        Preset::Year52HighDistributionChurn => "Near 52w High + Flat Close + Hot Vol (Distribution at the Highs; Heavy Churn Without Movement; Institutional Offloading at the Top)",
+        Preset::Year52LowAccumulationChurn => "Near 52w Low + Flat Close + Hot Vol (Accumulation at the Lows; Heavy Churn Without Movement; Institutional Bottom-fishing at the Floor)",
     }
 }
 

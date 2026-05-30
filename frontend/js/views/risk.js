@@ -79,8 +79,15 @@ export async function renderRisk(mount, state) {
             <h2 data-i18n="view.risk.h2.daily_pnl_chart">Recent daily P&L vs goal / max-loss</h2>
             <div id="rk-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk.h2.cum_pnl_chart">Cumulative P&L over recent days</h2>
+            <div id="rk-cum-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.risk.hint.cum_pnl" class="muted small">Running sum of daily net P&L. Reveals trajectory (uptrend, drawdown, treading water) independent of any single day's result.</p>
+        </div>
     `;
     renderDailyPnlChart(eq, goal, maxLoss);
+    renderCumPnlChart(eq);
     mount.querySelector('#risk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -100,6 +107,42 @@ export async function renderRisk(mount, state) {
         }
     });
     void fmt;
+}
+
+function renderCumPnlChart(eq) {
+    const el = document.getElementById('rk-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (eq || [])
+        .filter(p => p.day && Number.isFinite(Number(p.day_net_pnl)))
+        .slice(-30);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk.empty_cum_chart">${esc(t('view.risk.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(p => p.day);
+    const xs = labels.map((_, i) => i + 1);
+    const cum = [];
+    let acc = 0;
+    for (const p of rows) { acc += Number(p.day_net_pnl); cum.push(acc); }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk.chart.day') },
+            { label: t('view.risk.chart.cum_pnl'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.risk.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderDailyPnlChart(eq, goal, maxLoss) {
