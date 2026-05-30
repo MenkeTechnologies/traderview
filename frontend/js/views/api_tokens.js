@@ -48,6 +48,11 @@ export async function renderDeveloper(mount) {
             <pre style="background:#0d0d22;padding:12px;overflow:auto;font-size:11px;">curl -H "Authorization: Bearer pat_xxx_yyy" \\
      ${esc(window.location.origin)}/api/trades?status=closed&amp;limit=50</pre>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.api_tokens.h2.usage_chart">Token uses (top 20)</h2>
+            <div id="tok-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
 
     mount.querySelector('#tok-form').addEventListener('submit', async (e) => {
@@ -148,9 +153,43 @@ async function loadList(mount, tok) {
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); if (viewIsCurrent(tok)) await loadList(mount, tok); }
             });
         });
+        renderUsageChart(rows);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el2 = mount.querySelector('#tok-list');
         if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderUsageChart(rows) {
+    const el = document.getElementById('tok-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (rows || [])
+        .filter(r => Number.isFinite(Number(r.use_count)))
+        .sort((a, b) => Number(b.use_count) - Number(a.use_count))
+        .slice(0, 20);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.api_tokens.empty_chart">${esc(t('view.api_tokens.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.name);
+    const ys = top.map(r => Number(r.use_count));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.api_tokens.chart.token_idx') },
+            { label: t('view.api_tokens.chart.uses'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

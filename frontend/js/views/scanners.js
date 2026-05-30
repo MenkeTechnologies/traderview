@@ -106,6 +106,8 @@ const PRESETS = [
     { id: 'pct52w_mid_wide_range_squeeze',  label: t('view.scanners.preset.pct52w_mid_wide_range_squeeze.label'),  desc: t('view.scanners.preset.pct52w_mid_wide_range_squeeze.desc') },
     { id: 'inside_and_coiled_squeeze',  label: t('view.scanners.preset.inside_and_coiled_squeeze.label'),  desc: t('view.scanners.preset.inside_and_coiled_squeeze.desc') },
     { id: 'pct52w_high_breath_squeeze', label: t('view.scanners.preset.pct52w_high_breath_squeeze.label'), desc: t('view.scanners.preset.pct52w_high_breath_squeeze.desc') },
+    { id: 'pct52w_low_breath_squeeze',  label: t('view.scanners.preset.pct52w_low_breath_squeeze.label'),  desc: t('view.scanners.preset.pct52w_low_breath_squeeze.desc') },
+    { id: 'gap_around_close_squeeze',   label: t('view.scanners.preset.gap_around_close_squeeze.label'),   desc: t('view.scanners.preset.gap_around_close_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
