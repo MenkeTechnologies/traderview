@@ -30,7 +30,8 @@ export async function renderCsvWizard(mount, state) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.csv_wizard.h2.1_upload_csv">1 — Upload CSV</h2>
-            <input type="file" id="cw-file" accept=".csv,text/csv">
+            <input type="file" id="cw-file" accept=".csv,text/csv"
+                   data-tip="view.csv_wizard.tip.file" data-shortcut="csv_wizard_upload">
             <span id="cw-status" class="muted small" style="margin-left:8px;"></span>
         </div>
 
@@ -65,10 +66,12 @@ export async function renderCsvWizard(mount, state) {
             renderMap(mount);
             renderPreview(mount);
             renderCommit(acct.id, mount, tok);
+            showToast(t('view.csv_wizard.toast.parsed', { rows: parsedCsv.total_rows, cols: parsedCsv.headers.length }), { level: 'success' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#cw-status');
             if (status2) status2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
@@ -154,7 +157,7 @@ function renderCommit(accountId, mount, tok) {
     if (!commitEl) return;
     commitEl.innerHTML = `<div class="chart-panel">
         <h2 data-i18n="view.csv_wizard.h2.4_commit">4 — Commit</h2>
-        <button data-i18n="view.csv_wizard.btn.insert_rows_into_account" class="primary" id="cw-go">Insert rows into account</button>
+        <button data-i18n="view.csv_wizard.btn.insert_rows_into_account" data-tip="view.csv_wizard.tip.commit" class="primary" id="cw-go">Insert rows into account</button>
         <span id="cw-go-status" class="muted small" style="margin-left:8px;"></span>
     </div>`;
     mount.querySelector('#cw-go').addEventListener('click', async () => {
@@ -190,10 +193,15 @@ function renderCommit(accountId, mount, tok) {
             renderResult(r, mount);
             const status2 = mount.querySelector('#cw-go-status');
             if (status2) status2.textContent = '';
+            const failed = (r.failed_rows || []).length;
+            showToast(t('view.csv_wizard.toast.committed', {
+                inserted: r.inserted, skipped: r.skipped_dedupe, failed,
+            }), { level: failed > 0 ? 'warning' : 'success' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#cw-go-status');
             if (status2) status2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
@@ -204,13 +212,13 @@ function renderResult(r, mount) {
     el.innerHTML = `<div class="chart-panel">
         <h2 data-i18n="view.csv_wizard.h2.5_result">5 — Result</h2>
         <div class="cards">
-            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.inserted">Inserted</div>
+            <div class="card" data-tip="view.csv_wizard.tip.inserted"><div class="label" data-i18n="view.csv_wizard.card.inserted">Inserted</div>
                 <div class="value pos">${r.inserted}</div></div>
-            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.skipped_dedupe">Skipped (dedupe)</div>
+            <div class="card" data-tip="view.csv_wizard.tip.skipped"><div class="label" data-i18n="view.csv_wizard.card.skipped_dedupe">Skipped (dedupe)</div>
                 <div class="value">${r.skipped_dedupe}</div></div>
-            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.row_failures">Row failures</div>
+            <div class="card" data-tip="view.csv_wizard.tip.failures"><div class="label" data-i18n="view.csv_wizard.card.row_failures">Row failures</div>
                 <div class="value ${r.failed_rows.length > 0 ? 'neg' : ''}">${r.failed_rows.length}</div></div>
-            <div class="card"><div class="label" data-i18n="view.csv_wizard.card.import_id">Import id</div>
+            <div class="card" data-tip="view.csv_wizard.tip.import_id"><div class="label" data-i18n="view.csv_wizard.card.import_id">Import id</div>
                 <div class="value small"><code>${esc(r.import_id)}</code></div></div>
         </div>
         <div class="chart-panel" style="margin-top:10px">

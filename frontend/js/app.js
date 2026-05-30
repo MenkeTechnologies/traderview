@@ -498,6 +498,11 @@ function bindTabs() {
         const el = document.querySelector('#bp-form input[name="name"]');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `u` in csv-wizard scope → open the file picker.
+    window.addEventListener('tv:csv-wizard-upload', () => {
+        const el = document.getElementById('cw-file');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
