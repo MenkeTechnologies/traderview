@@ -15,6 +15,7 @@ import {
 } from '../_spread_tracker_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { quotesText: '' };
 
 export async function renderSpreadTracker(mount, _appState) {
@@ -27,11 +28,11 @@ export async function renderSpreadTracker(mount, _appState) {
             <p class="muted" data-i18n-html="view.spread_tracker.help">Paste <code>bid ask</code> per line. Demo loads 300
                 samples that include a 20-sample pathological burst near the end
                 (a feed glitch / circuit breaker analog).</p>
-            <textarea id="st-quotes" rows="8" placeholder="100.04 100.05&#10;100.05 100.06&#10;..."></textarea>
+            <textarea id="st-quotes" rows="8" placeholder="100.04 100.05&#10;100.05 100.06&#10;..." data-tip="view.spread_tracker.tip.quotes"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.spread_tracker.btn.load_demo_300_quotes" id="st-demo" class="secondary" type="button">Load demo (300 quotes)</button>
-                <button data-i18n="view.spread_tracker.btn.clear" id="st-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.spread_tracker.btn.analyze" id="st-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.spread_tracker.btn.load_demo_300_quotes" id="st-demo" class="secondary" type="button" data-tip="view.spread_tracker.tip.demo" data-shortcut="spread_tracker_demo">Load demo (300 quotes)</button>
+                <button data-i18n="view.spread_tracker.btn.clear" id="st-clear" class="secondary" type="button" data-tip="view.spread_tracker.tip.clear">Clear</button>
+                <button data-i18n="view.spread_tracker.btn.analyze" id="st-run" class="primary" type="button" data-tip="view.spread_tracker.tip.run" data-shortcut="spread_tracker_run">Analyze</button>
             </div>
             <p data-i18n="view.spread_tracker.hint.regime_cuts_at_5_25_100_bps_wide_use_limit_orders_" class="muted">Regime cuts at 5 / 25 / 100 bps. Wide → use limit orders.
                 Pathological → feed broken or illiquid name; sit out.</p>
@@ -65,9 +66,11 @@ export async function renderSpreadTracker(mount, _appState) {
         const q = makeDemoQuotes(42);
         document.getElementById('st-quotes').value =
             q.map(s => `${s.bid} ${s.ask}`).join('\n');
+        showToast(t('view.spread_tracker.toast.demo_loaded', { n: q.length }), { level: 'info' });
     });
     document.getElementById('st-clear').addEventListener('click', () => {
         document.getElementById('st-quotes').value = '';
+        showToast(t('view.spread_tracker.toast.cleared'), { level: 'info' });
     });
     document.getElementById('st-run').addEventListener('click', () => {
         readInputs();
@@ -90,20 +93,26 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.spread_tracker.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (samples.length < 5) return;
     }
     const err = validateInputs(samples);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.spread_tracker.toast.invalid'), { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microSpreadTracker(buildBody(samples));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.spread_tracker.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     document.getElementById('st-note').textContent = res.note || '—';
     renderCharts(samples, res);
+    const regime = res.regime || 'normal';
+    const level = (regime === 'wide' || regime === 'pathological') ? 'warning' : 'success';
+    showToast(t('view.spread_tracker.toast.analyzed', { n: res.samples, regime, avg: (res.avg_spread_bps ?? 0).toFixed(1) }), { level });
 }
 
 function renderSummary(r) {

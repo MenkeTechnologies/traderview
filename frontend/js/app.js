@@ -546,6 +546,16 @@ function bindTabs() {
         const el = document.getElementById('is-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in spread-tracker scope → click Analyze.
+    window.addEventListener('tv:spread-tracker-run', () => {
+        const el = document.getElementById('st-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `d` in spread-tracker scope → click Load demo.
+    window.addEventListener('tv:spread-tracker-demo', () => {
+        const el = document.getElementById('st-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
