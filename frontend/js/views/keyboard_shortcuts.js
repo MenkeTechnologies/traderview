@@ -43,6 +43,11 @@ export async function renderKeyboardShortcuts(mount, _appState) {
             <p data-i18n="view.keyboard_shortcuts.scoped_hint" class="muted">Right-click a row or tile to get scope-specific actions on top of the global ones above.</p>
             <div id="ks-scoped-ctx"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.keyboard_shortcuts.section.scope_chart">Shortcuts per scope</h2>
+            <div id="ks-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     const input = document.getElementById('ks-filter');
     if (input) {
@@ -64,6 +69,43 @@ function paint(isMac) {
     paintShortcuts(isMac);
     paintCtxMenu();
     paintScopedCtx();
+    paintScopeChart();
+}
+
+function paintScopeChart() {
+    const el = document.getElementById('ks-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const all = listShortcuts();
+    if (!all.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.keyboard_shortcuts.empty_chart">${esc(t('view.keyboard_shortcuts.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const sc of all) {
+        const scope = sc.scope || 'global';
+        counts.set(scope, (counts.get(scope) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.keyboard_shortcuts.chart.scope_idx') },
+            { label: t('view.keyboard_shortcuts.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function paintShortcuts(isMac) {

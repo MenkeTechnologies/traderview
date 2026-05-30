@@ -114,6 +114,8 @@ const PRESETS = [
     { id: 'low_vol_green_squeeze',      label: t('view.scanners.preset.low_vol_green_squeeze.label'),      desc: t('view.scanners.preset.low_vol_green_squeeze.desc') },
     { id: 'low_vol_red_squeeze',        label: t('view.scanners.preset.low_vol_red_squeeze.label'),        desc: t('view.scanners.preset.low_vol_red_squeeze.desc') },
     { id: 'gap_aligns_change_squeeze',  label: t('view.scanners.preset.gap_aligns_change_squeeze.label'),  desc: t('view.scanners.preset.gap_aligns_change_squeeze.desc') },
+    { id: 'unaffected_gap_squeeze',     label: t('view.scanners.preset.unaffected_gap_squeeze.label'),     desc: t('view.scanners.preset.unaffected_gap_squeeze.desc') },
+    { id: 'stacked_closes_squeeze',     label: t('view.scanners.preset.stacked_closes_squeeze.label'),     desc: t('view.scanners.preset.stacked_closes_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -232,6 +232,8 @@ pub enum Preset {
     LowVolatilityGreenSqueeze,   // change_pct > 0 AND change_pct < 1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet up day with dry volume
     LowVolatilityRedSqueeze,     // change_pct < 0 AND change_pct > -1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet down day with dry volume
     GapAlignsChangeSqueeze,      // gap_pct.signum() == change_pct.signum() AND (|gap| + |change|) < 1.5 AND day_pct.abs() < 0.5 — small aligned move
+    UnaffectedGapSqueeze,        // |gap_pct| >= 0.3 AND |gap_pct| <= 1 AND day_pct.abs() < 0.3 AND |change_pct - gap_pct| < 0.3 — gap simply transferred without intraday motion
+    StackedClosesSqueeze,        // hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND |day_pct| < 0.5 AND |change_pct| < 1 — close, HOD, LOD, open all stacked
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -810,6 +812,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.gap_pct.abs() + hit.change_pct.abs()) < 1.5
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::UnaffectedGapSqueeze => {
+            hit.gap_pct.abs() >= 0.3
+                && hit.gap_pct.abs() <= 1.0
+                && hit.day_pct.abs() < 0.3
+                && (hit.change_pct - hit.gap_pct).abs() < 0.3
+        }
+        Preset::StackedClosesSqueeze => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.change_pct.abs() < 1.0
+        }
     }
 }
 
@@ -932,6 +946,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowVolatilityGreenSqueeze => "Low-Vol Green Squeeze",
         Preset::LowVolatilityRedSqueeze => "Low-Vol Red Squeeze",
         Preset::GapAlignsChangeSqueeze => "Gap-Aligns-Change Squeeze",
+        Preset::UnaffectedGapSqueeze => "Unaffected-Gap Squeeze",
+        Preset::StackedClosesSqueeze => "Stacked-Closes Squeeze",
     }
 }
 
