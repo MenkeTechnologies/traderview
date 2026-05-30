@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, validateInputs, buildBody, localScore,
@@ -24,23 +25,23 @@ export async function renderCarryScore(mount, _appState) {
             <h2 data-i18n="view.carry_score.h2.pair">Pair definition</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.carry_score.label.long_rate">Long rate (decimal — 0.05 = 5%)</span>
-                    <input id="cs-long" type="number" step="any" value="${state.long_rate}"></label>
+                    <input id="cs-long" type="number" step="any" value="${state.long_rate}" data-tip="view.carry_score.tip.long_rate"></label>
                 <label><span data-i18n="view.carry_score.label.funding_rate">Funding rate (decimal)</span>
-                    <input id="cs-fund" type="number" step="any" value="${state.funding_rate}"></label>
+                    <input id="cs-fund" type="number" step="any" value="${state.funding_rate}" data-tip="view.carry_score.tip.funding_rate"></label>
                 <label><span data-i18n="view.carry_score.label.vol">Annualized vol (decimal)</span>
-                    <input id="cs-vol" type="number" step="any" min="0" value="${state.annualized_vol}"></label>
+                    <input id="cs-vol" type="number" step="any" min="0" value="${state.annualized_vol}" data-tip="view.carry_score.tip.vol"></label>
                 <button data-i18n="view.carry_score.btn.score" id="cs-run" class="primary"
-                        data-tip="view.carry_score.tip.score" type="button">Score</button>
+                        data-tip="view.carry_score.tip.score" data-shortcut="carry_score_run" type="button">Score</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.carry_score.btn.demo_strong"   id="cs-demo-strong"  class="secondary" type="button">Demo: MXN/JPY strong</button>
-                <button data-i18n="view.carry_score.btn.demo_okay"     id="cs-demo-okay"    class="secondary" type="button">Demo: AUD/JPY okay</button>
-                <button data-i18n="view.carry_score.btn.demo_poor"     id="cs-demo-poor"    class="secondary" type="button">Demo: poor (high-vol EM)</button>
-                <button data-i18n="view.carry_score.btn.demo_negative" id="cs-demo-neg"     class="secondary" type="button">Demo: negative carry</button>
-                <button data-i18n="view.carry_score.btn.demo_bstrong"  id="cs-demo-bs"      class="secondary" type="button">Demo: boundary 1.0 (strong)</button>
-                <button data-i18n="view.carry_score.btn.demo_bokay"    id="cs-demo-bo"      class="secondary" type="button">Demo: boundary 0.5 (okay)</button>
-                <button data-i18n="view.carry_score.btn.demo_zerovol"  id="cs-demo-zv"      class="secondary" type="button">Demo: zero-vol edge</button>
-                <button data-i18n="view.carry_score.btn.demo_eur_usd"  id="cs-demo-eu"      class="secondary" type="button">Demo: EUR/USD 2024 (negative)</button>
+                <button data-i18n="view.carry_score.btn.demo_strong"   id="cs-demo-strong"  class="secondary" type="button" data-tip="view.carry_score.tip.demo_strong">Demo: MXN/JPY strong</button>
+                <button data-i18n="view.carry_score.btn.demo_okay"     id="cs-demo-okay"    class="secondary" type="button" data-tip="view.carry_score.tip.demo_okay">Demo: AUD/JPY okay</button>
+                <button data-i18n="view.carry_score.btn.demo_poor"     id="cs-demo-poor"    class="secondary" type="button" data-tip="view.carry_score.tip.demo_poor">Demo: poor (high-vol EM)</button>
+                <button data-i18n="view.carry_score.btn.demo_negative" id="cs-demo-neg"     class="secondary" type="button" data-tip="view.carry_score.tip.demo_neg">Demo: negative carry</button>
+                <button data-i18n="view.carry_score.btn.demo_bstrong"  id="cs-demo-bs"      class="secondary" type="button" data-tip="view.carry_score.tip.demo_bs">Demo: boundary 1.0 (strong)</button>
+                <button data-i18n="view.carry_score.btn.demo_bokay"    id="cs-demo-bo"      class="secondary" type="button" data-tip="view.carry_score.tip.demo_bo">Demo: boundary 0.5 (okay)</button>
+                <button data-i18n="view.carry_score.btn.demo_zerovol"  id="cs-demo-zv"      class="secondary" type="button" data-tip="view.carry_score.tip.demo_zv">Demo: zero-vol edge</button>
+                <button data-i18n="view.carry_score.btn.demo_eur_usd"  id="cs-demo-eu"      class="secondary" type="button" data-tip="view.carry_score.tip.demo_eu">Demo: EUR/USD 2024 (negative)</button>
             </div>
             <p data-i18n="view.carry_score.hint.about" class="muted">Score = (long − funding) / vol. ≥ 1.0 strong · ≥ 0.5 okay · &lt; 0.5 poor · negative differential overrides. Sharpe-like FX-carry attractiveness; ignores skew + jump risk.</p>
         </div>
@@ -83,7 +84,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.carry_score.toast.invalid'), { level: 'warning' }); return; }
     const local = localScore(state.long_rate, state.funding_rate, state.annualized_vol);
     renderSummary(local, true);
     let resp;
@@ -91,11 +92,16 @@ async function compute(tok) {
         resp = await api.calcCarryScore(buildBody(state));
     } catch (e) {
         showErr(`${t('view.carry_score.err.api')}: ${e.message || e}`);
+        showToast(t('view.carry_score.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderVolChart();
+    const tier = String(resp.tier || '');
+    const score = Number(resp.carry_score || 0).toFixed(2);
+    const level = tier === 'strong' ? 'success' : tier === 'okay' ? 'info' : 'warning';
+    showToast(t('view.carry_score.toast.scored', { tier, score }), { level });
 }
 
 function renderVolChart() {
