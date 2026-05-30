@@ -19,9 +19,9 @@ export function parseSeries(text) {
  *  isn't worth smoothing visually anyway. */
 export function validateSeries(series, minLen = 10) {
     if (!Array.isArray(series) || series.length < minLen) {
-        return `need at least ${minLen} values for smoothing`;
+        return t('view.series_smoother.validate.series_min', { n: minLen });
     }
-    if (series.some(x => !Number.isFinite(x))) return 'series contains non-finite values';
+    if (series.some(x => !Number.isFinite(x))) return t('view.series_smoother.validate.series_finite');
     return null;
 }
 

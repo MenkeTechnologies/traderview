@@ -7719,6 +7719,8 @@
   "view.discipline.window.weekly":                           "This week (7d)",
   "view.discipline.window.monthly":                          "This month (30d)",
   "view.discipline.window.all_time":                         "All time",
+  "view.series_smoother.validate.series_min":                "need at least {n} values for smoothing",
+  "view.series_smoother.validate.series_finite":             "series contains non-finite values",
   "view.series_smoother.validate.lowess_frac":               "LOWESS frac must be in (0, 1]",
   "view.series_smoother.validate.lowess_robust":             "LOWESS robustness iterations must be a non-negative integer",
   "view.series_smoother.validate.kalman_q":                  "Kalman process noise (q) must be ≥ 0",
