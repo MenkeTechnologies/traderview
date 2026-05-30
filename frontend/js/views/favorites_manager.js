@@ -55,10 +55,16 @@ export async function renderFavoritesManager(mount, _state) {
             <h2 data-i18n="view.favorites.h2.inventory_chart">Favorites &amp; bookmarks inventory</h2>
             <div id="fav-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.favorites.h2.bookmarks_timeline_chart">Bookmarks created over time (cumulative)</h2>
+            <div id="fav-tl-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
 
     paint();
     renderInventoryChart();
+    renderBookmarksTimelineChart();
     document.getElementById('fav-clear').addEventListener('click', clearFavoritesClick);
     document.getElementById('bm-clear').addEventListener('click', clearBookmarksClick);
     const filter = document.getElementById('fav-filter');
@@ -237,6 +243,34 @@ function paint() {
             });
         }
     }
+}
+
+function renderBookmarksTimelineChart() {
+    const el = document.getElementById('fav-tl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const state = favs.loadState();
+    const rows = (state.bookmarks || [])
+        .filter(b => b.created_at)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.favorites.empty_tl_chart">${esc(t('view.favorites.empty_tl_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map((_, i) => i + 1);
+    const ys = rows.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.favorites.chart.bookmark_idx') },
+            { label: t('view.favorites.chart.cumulative'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderInventoryChart() {

@@ -410,6 +410,8 @@ pub enum Preset {
     RangeExpansionAtBottomOnVol, // year_low_pct < 5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w low with no net move on heavy vol (accumulation at bottom)
     GapInsideRangeBalanced,      // gap_pct.abs() < 1 AND hod_dist + lod_dist < 2 AND change_pct.abs() < 0.5 — flat gap + tight range + flat day (multi-day balance candidate)
     GapInsideRangeImpulse,       // gap_pct.abs() < 1 AND hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — flat gap but wide impulsive day on heavy vol (intraday breakout from balance)
+    OneWickCloseAtMid,           // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long upper wick but closed near LOD flat (rejection from upper extreme)
+    OneWickCloseAtMidDown,       // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long lower wick but closed near HOD flat (rejection from lower extreme)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1913,6 +1915,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::OneWickCloseAtMid => {
+            hit.hod_dist_pct.abs() > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::OneWickCloseAtMidDown => {
+            hit.lod_dist_pct.abs() > 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2213,6 +2225,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RangeExpansionAtBottomOnVol => "Range-Expansion Churn at 52w Low",
         Preset::GapInsideRangeBalanced => "Flat-Gap Balance Day",
         Preset::GapInsideRangeImpulse => "Flat-Gap Impulse Breakout",
+        Preset::OneWickCloseAtMid => "Upper-Wick Flat-Close Reject",
+        Preset::OneWickCloseAtMidDown => "Lower-Wick Flat-Close Reject",
     }
 }
 

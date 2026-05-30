@@ -292,6 +292,8 @@ const PRESETS = [
     { id: 'range_expansion_at_bottom_on_vol', label: t('view.scanners.preset.range_expansion_at_bottom_on_vol.label'), desc: t('view.scanners.preset.range_expansion_at_bottom_on_vol.desc') },
     { id: 'gap_inside_range_balanced', label: t('view.scanners.preset.gap_inside_range_balanced.label'), desc: t('view.scanners.preset.gap_inside_range_balanced.desc') },
     { id: 'gap_inside_range_impulse', label: t('view.scanners.preset.gap_inside_range_impulse.label'), desc: t('view.scanners.preset.gap_inside_range_impulse.desc') },
+    { id: 'one_wick_close_at_mid', label: t('view.scanners.preset.one_wick_close_at_mid.label'), desc: t('view.scanners.preset.one_wick_close_at_mid.desc') },
+    { id: 'one_wick_close_at_mid_down', label: t('view.scanners.preset.one_wick_close_at_mid_down.label'), desc: t('view.scanners.preset.one_wick_close_at_mid_down.desc') },
 ];
 
 export async function renderScanners(mount) {
