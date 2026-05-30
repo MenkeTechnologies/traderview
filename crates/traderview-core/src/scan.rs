@@ -1006,6 +1006,8 @@ pub enum Preset {
     GapDownCloseAtLodNearYearLowHotVol,        // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + at/near 52w low (<2%) + red close + hot vol (maximum-conviction breakdown day: gap down at the 52w low held all session and closed at the day's low on elevated participation; rarest multi-axis aligned bearish signal with no underlying support)
     GapUpCloseAtHodDeepBelowYearHighHotVol,    // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + far below 52w high (>=20%) + green close + hot vol (high-conviction recovery from extended pullback: gap up well below the prior peak held all session and closed at the day's high on elevated participation; trend-change reversal candidate after extended decline)
     GapDownCloseAtLodDeepAboveYearLowHotVol,   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + far above 52w low (>=20%) + red close + hot vol (high-conviction rejection of extended advance: gap down well above the prior trough held all session and closed at the day's low on elevated participation; trend-change reversal candidate after extended advance)
+    GapUpCloseAtHodConfirmedAboveYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + already 1-3% past 52w high + green close + hot vol (confirmed-breakout day-trade signal: gap up continues breakout that was already validated and closed at the day's high on elevated participation; aligned-axis momentum extension above the prior peak)
+    GapDownCloseAtLodConfirmedBelowYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + already 1-3% past 52w low + red close + hot vol (confirmed-breakdown day-trade signal: gap down continues breakdown that was already validated and closed at the day's low on elevated participation; aligned-axis momentum extension below the prior trough)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6102,6 +6104,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpCloseAtHodConfirmedAboveYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownCloseAtLodConfirmedBelowYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6998,6 +7016,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownCloseAtLodNearYearLowHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + At/near 52w Low (<2 %) + Red Close + Hot Vol (Maximum-conviction Breakdown Day: Gap down at the 52w Low Held All Session and Closed at the Day's Low on Elevated Participation; Rarest Multi-axis Aligned Bearish Signal with No Underlying Support)",
         Preset::GapUpCloseAtHodDeepBelowYearHighHotVol => "Gap Up (>2 %) + Close Pinned to HOD + Far below 52w High (>=20 %) + Green Close + Hot Vol (High-conviction Recovery from Extended Pullback: Gap up Well below the Prior Peak Held All Session and Closed at the Day's High on Elevated Participation; Trend-change Reversal Candidate after Extended Decline)",
         Preset::GapDownCloseAtLodDeepAboveYearLowHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Far above 52w Low (>=20 %) + Red Close + Hot Vol (High-conviction Rejection of Extended Advance: Gap down Well above the Prior Trough Held All Session and Closed at the Day's Low on Elevated Participation; Trend-change Reversal Candidate after Extended Advance)",
+        Preset::GapUpCloseAtHodConfirmedAboveYearHighHotVol => "Gap Up (>2 %) + Close Pinned to HOD + Confirmed-breakout Zone (1-3 % past 52w High) + Green Close + Hot Vol (Confirmed-breakout Day-trade Signal: Gap up Continues Breakout that Was Already Validated and Closed at the Day's High on Elevated Participation; Aligned-axis Momentum Extension above the Prior Peak)",
+        Preset::GapDownCloseAtLodConfirmedBelowYearLowHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Confirmed-breakdown Zone (1-3 % past 52w Low) + Red Close + Hot Vol (Confirmed-breakdown Day-trade Signal: Gap down Continues Breakdown that Was Already Validated and Closed at the Day's Low on Elevated Participation; Aligned-axis Momentum Extension below the Prior Trough)",
     }
 }
 
