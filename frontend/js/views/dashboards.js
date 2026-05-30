@@ -289,7 +289,7 @@ function renderPicker() {
     return `
         <div class="chart-panel db-picker">
             <h3 data-i18n="view.dashboards.h3.add_tile">+ Add tile</h3>
-            <input id="db-pick-search" type="text" placeholder="filter views…" data-i18n-placeholder="view.dashboards.placeholder.filter" class="db-pick-search">
+            <input id="db-pick-search" type="text" data-shortcut="focus_search" placeholder="filter views…" data-i18n-placeholder="view.dashboards.placeholder.filter" class="db-pick-search">
             <div id="db-pick-grid" class="db-pick-grid"></div>
         </div>
     `;

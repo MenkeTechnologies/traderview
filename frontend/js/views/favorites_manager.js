@@ -23,6 +23,7 @@ export async function renderFavoritesManager(mount, _state) {
             <input id="fav-filter" type="text" autocomplete="off" spellcheck="false"
                    data-i18n-placeholder="view.favorites.filter_placeholder"
                    data-tip="view.favorites.filter_tip"
+                   data-shortcut="focus_search"
                    value="${esc(_filter)}"
                    placeholder="Filter favorites + bookmarks…  (Esc to clear)"
                    style="width:100%">
