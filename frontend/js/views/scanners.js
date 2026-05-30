@@ -234,6 +234,8 @@ const PRESETS = [
     { id: 'double_top_candidate', label: t('view.scanners.preset.double_top_candidate.label'), desc: t('view.scanners.preset.double_top_candidate.desc') },
     { id: 'pct52w_mid_zone', label: t('view.scanners.preset.pct52w_mid_zone.label'), desc: t('view.scanners.preset.pct52w_mid_zone.desc') },
     { id: 'pct52w_range_breakout_triggered', label: t('view.scanners.preset.pct52w_range_breakout_triggered.label'), desc: t('view.scanners.preset.pct52w_range_breakout_triggered.desc') },
+    { id: 'pct52w_range_breakdown_triggered', label: t('view.scanners.preset.pct52w_range_breakdown_triggered.label'), desc: t('view.scanners.preset.pct52w_range_breakdown_triggered.desc') },
+    { id: 'pct52w_tight_coil', label: t('view.scanners.preset.pct52w_tight_coil.label'), desc: t('view.scanners.preset.pct52w_tight_coil.desc') },
 ];
 
 export async function renderScanners(mount) {

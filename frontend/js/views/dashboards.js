@@ -46,9 +46,14 @@ export async function renderDashboards(mount, _appState) {
             <aside id="db-sidebar" class="db-sidebar"></aside>
             <section id="db-main" class="db-main"></section>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.dashboards.h2.tiles_chart">Tiles per dashboard</h2>
+            <div id="db-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderSidebar();
     await renderActive();
+    renderTilesChart();
     if (!_wired) {
         _wired = true;
         // External mutations (e.g. launcher 📌 pin button) wake this view
@@ -62,6 +67,39 @@ export async function renderDashboards(mount, _appState) {
             void renderActive();
         });
     }
+}
+
+function renderTilesChart() {
+    const el = document.getElementById('db-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = store.listDashboards(state)
+        .map(d => ({ name: d.name, n: d.tiles.length }))
+        .filter(r => Number.isFinite(r.n));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dashboards.empty_chart">${esc(t('view.dashboards.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.n - a.n);
+    const labels = rows.map(r => r.name);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.n);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dashboards.chart.dashboard') },
+            { label: t('view.dashboards.chart.tiles'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function persist() {

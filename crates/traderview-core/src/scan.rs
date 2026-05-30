@@ -352,6 +352,8 @@ pub enum Preset {
     DoubleTopCandidate,          // year_high_pct > -5 AND lod_dist.abs() > 1 AND hod_dist.abs() < 0.5 AND change_pct < 0 — touched 52w-high zone but closed lower (double-top candidate)
     Pct52wMidZone,               // year_high_pct < -40 AND year_high_pct > -60 AND year_low_pct > 40 AND year_low_pct < 60 — mid-zone of 52w range (no extreme positioning; chop bias)
     Pct52wRangeBreakoutTriggered, // year_high_pct >= 0 AND change_pct > 2 AND rel_volume >= 2 — broke above 52w high range on heavy vol (range-breakout trigger)
+    Pct52wRangeBreakdownTriggered, // year_low_pct <= 0 AND change_pct < -2 AND rel_volume >= 2 — broke below 52w low range on heavy vol (range-breakdown trigger)
+    Pct52wTightCoil,             // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND hod_dist + lod_dist < 2 — coiled mid-high zone on tight range (decision-zone setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1536,6 +1538,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Pct52wRangeBreakdownTriggered => {
+            hit.year_low_pct <= 0.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wTightCoil => {
+            hit.year_high_pct >= -10.0
+                && hit.year_high_pct <= -5.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 10.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
+        }
     }
 }
 
@@ -1778,6 +1792,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DoubleTopCandidate => "Double-Top Candidate",
         Preset::Pct52wMidZone => "52w Mid Zone",
         Preset::Pct52wRangeBreakoutTriggered => "52w Range Breakout Triggered",
+        Preset::Pct52wRangeBreakdownTriggered => "52w Range Breakdown Triggered",
+        Preset::Pct52wTightCoil => "52w Tight Coil",
     }
 }
 
