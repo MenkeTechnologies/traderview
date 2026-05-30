@@ -115,9 +115,15 @@ function render(r, mount) {
             <h2 data-i18n="view.equity_forecast.h2.percentile_chart">Percentile bands by trade #</h2>
             <div id="ef-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.equity_forecast.h2.uncertainty_chart">Forecast uncertainty growth — (p95 − p5) / p50 by trade #</h2>
+            <div id="ef-uncertainty-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
     renderPercentileChart(r);
+    renderUncertaintyChart(r);
 }
 
 function renderPercentileChart(r) {
@@ -157,6 +163,38 @@ function renderPercentileChart(r) {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
         legend: { show: true },
     }, [xs, p5, p25, p50, p75, p95, start], el);
+}
+
+function renderUncertaintyChart(r) {
+    const el = document.getElementById('ef-uncertainty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const stats = r.steps_stats || [];
+    if (stats.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.equity_forecast.empty_uncertainty_chart">${esc(t('view.equity_forecast.empty_uncertainty_chart'))}</div>`;
+        return;
+    }
+    const xs = stats.map((_, i) => i);
+    const uncertainty = stats.map(s => {
+        const p50 = Number(s.bands.p50);
+        const p5 = Number(s.bands.p5);
+        const p95 = Number(s.bands.p95);
+        if (!(p50 > 0) || !Number.isFinite(p5) || !Number.isFinite(p95)) return null;
+        return (p95 - p5) / p50;
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.equity_forecast.chart.trade_idx') },
+            { label: t('view.equity_forecast.chart.band_width_ratio'),
+              stroke: '#b86bff', width: 1.5,
+              fill: 'rgba(184,107,255,0.10)',
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, uncertainty], el);
 }
 
 function fanSvg(r) {

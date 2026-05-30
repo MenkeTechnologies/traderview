@@ -514,6 +514,8 @@ const PRESETS = [
     { id: 'every_axis_flat', label: t('view.scanners.preset.every_axis_flat.label'), desc: t('view.scanners.preset.every_axis_flat.desc') },
     { id: 'year52_high_rejected_to_lod', label: t('view.scanners.preset.year52_high_rejected_to_lod.label'), desc: t('view.scanners.preset.year52_high_rejected_to_lod.desc') },
     { id: 'year52_low_reclaimed_to_hod', label: t('view.scanners.preset.year52_low_reclaimed_to_hod.label'), desc: t('view.scanners.preset.year52_low_reclaimed_to_hod.desc') },
+    { id: 'high_vol_no_gap_moderate_change', label: t('view.scanners.preset.high_vol_no_gap_moderate_change.label'), desc: t('view.scanners.preset.high_vol_no_gap_moderate_change.desc') },
+    { id: 'low_vol_with_large_gap', label: t('view.scanners.preset.low_vol_with_large_gap.label'), desc: t('view.scanners.preset.low_vol_with_large_gap.desc') },
 ];
 
 export async function renderScanners(mount) {
