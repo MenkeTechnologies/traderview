@@ -814,6 +814,8 @@ pub enum Preset {
     RangeExpansionHotVolBigIntraday,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND day_pct.abs() > 3 AND rel_volume >= 2 AND gap_pct.abs() < 1 — wide intraday range + big intraday move from open + hot vol + no overnight gap (full intraday range expansion off the open with no gap aid; pure intraday breakout day driven by regular-hours conviction)
     GapPlusDriveBullHotVol,              // gap_pct > 1 AND day_pct > 3 AND change_pct > 4 AND rel_volume >= 1.5 — gap up + big intraday drive up + hot vol (two-leg bullish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
     GapPlusDriveBearHotVol,              // gap_pct < -1 AND day_pct < -3 AND change_pct < -4 AND rel_volume >= 1.5 — gap down + big intraday drive down + hot vol (two-leg bearish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
+    GapFadeBullDayPctOpposite,           // gap_pct < -2 AND day_pct > 3 AND change_pct > 0 AND rel_volume >= 1.5 — gap down + closed up from open + net green + hot vol (full gap-down fade reversal: opened lower, recovered intraday and closed above prior close; trapped overnight shorts squeezed during regular hours)
+    GapFadeBearDayPctOpposite,           // gap_pct > 2 AND day_pct < -3 AND change_pct < 0 AND rel_volume >= 1.5 — gap up + closed down from open + net red + hot vol (full gap-up fade rejection: opened higher, sold off intraday and closed below prior close; trapped overnight longs flushed during regular hours)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4675,6 +4677,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -4.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapFadeBullDayPctOpposite => {
+            hit.gap_pct < -2.0
+                && hit.day_pct > 3.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapFadeBearDayPctOpposite => {
+            hit.gap_pct > 2.0
+                && hit.day_pct < -3.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5379,6 +5393,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RangeExpansionHotVolBigIntraday => "Wide Intraday Range + Big Intraday Move from Open + Hot Vol + No Overnight Gap (Full Intraday Range Expansion off the Open with No Gap Aid; Pure Intraday Breakout Day Driven by Regular-hours Conviction)",
         Preset::GapPlusDriveBullHotVol => "Gap Up + Big Intraday Drive Up + Hot Vol (Two-leg Bullish Conviction: Overnight Gap Held + Extended Further during Regular Hours; Gap-and-extend Trend Day)",
         Preset::GapPlusDriveBearHotVol => "Gap Down + Big Intraday Drive Down + Hot Vol (Two-leg Bearish Conviction: Overnight Gap Held + Extended Further during Regular Hours; Gap-and-extend Trend Day)",
+        Preset::GapFadeBullDayPctOpposite => "Gap Down + Closed Up from Open + Net Green + Hot Vol (Full Gap-down Fade Reversal: Opened Lower, Recovered Intraday and Closed above Prior Close; Trapped Overnight Shorts Squeezed during Regular Hours)",
+        Preset::GapFadeBearDayPctOpposite => "Gap Up + Closed Down from Open + Net Red + Hot Vol (Full Gap-up Fade Rejection: Opened Higher, Sold off Intraday and Closed below Prior Close; Trapped Overnight Longs Flushed during Regular Hours)",
     }
 }
 

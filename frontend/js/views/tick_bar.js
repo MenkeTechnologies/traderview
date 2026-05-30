@@ -56,6 +56,12 @@ export async function renderTickBar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.tick_bar.h2.vol_chart">Per-bar volume (size aggregated within each tick window)</h2>
+            <div id="tb-vol-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.tick_bar.hint.vol_chart" class="muted small">Each bar's total trade size. Since each bar spans the same number of ticks (not the same wall-clock time), high-volume bars are heavy-print-size moments. Orthogonal to the OHLC chart above.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.tick_bar.h2.table">Bars (tail — last 30)</h2>
             <div id="tb-table"></div>
         </div>
@@ -100,6 +106,7 @@ async function compute(tok) {
     const local = localCompute(state.prints, state.ticks_per_bar);
     renderSummary(local, true);
     renderChart(local);
+    renderVolChart(local);
     renderTable(local);
     let resp;
     try {
@@ -112,6 +119,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderVolChart(resp);
     renderTable(resp);
     const bars = Array.isArray(resp) ? resp.length : 0;
     const covered = bars * state.ticks_per_bar;
@@ -184,6 +192,35 @@ function renderChart(bars) {
         ],
         legend: { show: true },
     }, [xs, closes, highs, lows], el);
+}
+
+function renderVolChart(bars) {
+    const el = document.getElementById('tb-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (bars || []).filter(b => Number.isFinite(Number(b.volume)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tick_bar.empty_vol_chart">${esc(t('view.tick_bar.empty_vol_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(b => Number(b.volume));
+    const xs = ys.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tick_bar.chart.bar_idx') },
+            { label: t('view.tick_bar.chart.volume'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable(bars) {

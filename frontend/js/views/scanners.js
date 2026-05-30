@@ -696,6 +696,8 @@ const PRESETS = [
     { id: 'range_expansion_hot_vol_big_intraday', label: t('view.scanners.preset.range_expansion_hot_vol_big_intraday.label'), desc: t('view.scanners.preset.range_expansion_hot_vol_big_intraday.desc') },
     { id: 'gap_plus_drive_bull_hot_vol', label: t('view.scanners.preset.gap_plus_drive_bull_hot_vol.label'), desc: t('view.scanners.preset.gap_plus_drive_bull_hot_vol.desc') },
     { id: 'gap_plus_drive_bear_hot_vol', label: t('view.scanners.preset.gap_plus_drive_bear_hot_vol.label'), desc: t('view.scanners.preset.gap_plus_drive_bear_hot_vol.desc') },
+    { id: 'gap_fade_bull_day_pct_opposite', label: t('view.scanners.preset.gap_fade_bull_day_pct_opposite.label'), desc: t('view.scanners.preset.gap_fade_bull_day_pct_opposite.desc') },
+    { id: 'gap_fade_bear_day_pct_opposite', label: t('view.scanners.preset.gap_fade_bear_day_pct_opposite.label'), desc: t('view.scanners.preset.gap_fade_bear_day_pct_opposite.desc') },
 ];
 
 export async function renderScanners(mount) {
