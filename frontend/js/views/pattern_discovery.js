@@ -23,6 +23,7 @@ import {
 } from '../_matrix_profile_inputs.js';
 
 import { t, applyUiI18n } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_TEXT = `# Paste a numeric series. One value per token.
 # Demo: 200 samples with two embedded copies of a sine "pattern"
 # (at positions 30 and 120) plus a single anomaly spike.
@@ -67,10 +68,10 @@ export async function renderPatternDiscovery(mount, _appState) {
             <h2 data-i18n="view.pattern_discovery.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.pattern_discovery.label.window_m">Window m</span>
-                    <input id="pd-m" type="number" step="1" min="4" value="${state.m}"></label>
+                    <input id="pd-m" type="number" step="1" min="4" value="${state.m}" data-tip="view.pattern_discovery.tip.m"></label>
                 <label><span data-i18n="view.pattern_discovery.label.top_k">Top-K discords</span>
-                    <input id="pd-k" type="number" step="1" min="1" max="20" value="${state.top_k}"></label>
-                <button data-i18n="view.pattern_discovery.btn.discover" id="pd-run" class="primary" type="button">Discover</button>
+                    <input id="pd-k" type="number" step="1" min="1" max="20" value="${state.top_k}" data-tip="view.pattern_discovery.tip.top_k"></label>
+                <button data-i18n="view.pattern_discovery.btn.discover" data-tip="view.pattern_discovery.tip.discover" data-shortcut="pattern_discovery_run" id="pd-run" class="primary" type="button">Discover</button>
             </div>
             <p data-i18n="view.pattern_discovery.hint.m_sets_the_pattern_length_low_matrix_profile_value" class="muted">
                 m sets the pattern length. Low matrix-profile values = repeated patterns (motifs);
@@ -78,6 +79,7 @@ export async function renderPatternDiscovery(mount, _appState) {
             </p>
             <h3 data-i18n="view.pattern_discovery.h3.series">Series</h3>
             <textarea id="pd-text" rows="8"
+                data-tip="view.pattern_discovery.tip.series"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
 
@@ -118,9 +120,10 @@ async function discover(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const err = validateMatrixProfileInputs(parsed.value, state.m);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     if (!Number.isInteger(state.top_k) || state.top_k < 1 || state.top_k > 20) {
-        showErr(t('view.pattern_discovery.err.top_k_must_be_an_integer_in_1_20')); return;
+        const m = t('view.pattern_discovery.err.top_k_must_be_an_integer_in_1_20');
+        showErr(m); showToast(m, { level: 'warning' }); return;
     }
 
     let res;
@@ -132,7 +135,8 @@ async function discover(mount, tok) {
         });
         if (!res) throw new Error(t('view.pattern_discovery.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -141,6 +145,11 @@ async function discover(mount, tok) {
     const discords = unpackDiscords(res.top_discords);
     renderSummary(motif, discords);
     renderCharts(parsed.value, state.m, res.profile, motif, discords);
+    showToast(t('view.pattern_discovery.toast.done', {
+        n: parsed.value.length,
+        motif: motif ? '✓' : '—',
+        discords: discords.length,
+    }), { level: motif ? 'success' : 'info' });
 }
 
 function renderSummary(motif, discords) {
