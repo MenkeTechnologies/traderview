@@ -523,6 +523,11 @@ function bindTabs() {
         const form = document.getElementById('ai-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `n` in community scope → focus new-thread title input.
+    window.addEventListener('tv:community-focus-title', () => {
+        const el = document.querySelector('#thread-form input[name="title"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmtDateTime, md } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderCommunity(mount, _state, catSlug) {
     const tok = currentViewToken();
@@ -22,9 +23,11 @@ export async function renderCommunity(mount, _state, catSlug) {
         <div class="chart-panel">
             <h2>${esc(t('view.community.h2.new_thread', { category: cat.name }))}</h2>
             <form id="thread-form">
-                <input name="title" placeholder="title" data-i18n-placeholder="common.placeholder.title" required>
-                <textarea name="body_md" placeholder="markdown body" data-i18n-placeholder="view.community.placeholder.body" required></textarea>
-                <button data-i18n="view.community.btn.post" class="primary" type="submit">Post</button>
+                <input name="title" placeholder="title" data-i18n-placeholder="common.placeholder.title"
+                       data-tip="view.community.tip.title" data-shortcut="community_focus_title" required>
+                <textarea name="body_md" placeholder="markdown body" data-i18n-placeholder="view.community.placeholder.body"
+                          data-tip="view.community.tip.body" required></textarea>
+                <button data-i18n="view.community.btn.post" data-tip="view.community.tip.post" class="primary" type="submit">Post</button>
             </form>
         </div>
 
@@ -49,9 +52,15 @@ export async function renderCommunity(mount, _state, catSlug) {
     mount.querySelector('#thread-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.forumCreateThread(cat.id, fd.get('title'), fd.get('body_md'));
-        if (!viewIsCurrent(tok)) return;
-        renderCommunity(mount, _state, cat.slug);
+        const title = String(fd.get('title') || '').trim();
+        try {
+            await api.forumCreateThread(cat.id, title, fd.get('body_md'));
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.community.toast.thread_posted', { title }), { level: 'success' });
+            renderCommunity(mount, _state, cat.slug);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
 }
 
@@ -112,8 +121,9 @@ export async function renderCommunityThread(mount, _state, catSlug, threadSlug) 
             <div class="chart-panel">
                 <h2 data-i18n="view.community.h2.reply">Reply</h2>
                 <form id="reply-form">
-                    <textarea name="body_md" placeholder="markdown reply" data-i18n-placeholder="view.community.placeholder.reply" required></textarea>
-                    <button data-i18n="view.community.btn.post_2" class="primary" type="submit">Post</button>
+                    <textarea name="body_md" placeholder="markdown reply" data-i18n-placeholder="view.community.placeholder.reply"
+                              data-tip="view.community.tip.reply" required></textarea>
+                    <button data-i18n="view.community.btn.post_2" data-tip="view.community.tip.post_reply" class="primary" type="submit">Post</button>
                 </form>
             </div>
         `}
@@ -122,9 +132,14 @@ export async function renderCommunityThread(mount, _state, catSlug, threadSlug) 
         mount.querySelector('#reply-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
-            await api.forumCreatePost(thread.id, fd.get('body_md'));
-            if (!viewIsCurrent(tok)) return;
-            renderCommunityThread(mount, _state, catSlug, threadSlug);
+            try {
+                await api.forumCreatePost(thread.id, fd.get('body_md'));
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.community.toast.reply_posted'), { level: 'success' });
+                renderCommunityThread(mount, _state, catSlug, threadSlug);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         });
     }
 }
