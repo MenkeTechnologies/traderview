@@ -57,8 +57,47 @@ function render(r, mount) {
             ${accountTable(r.accounts)}
             <p class="muted small">${esc(t('view.accounts_overview.hint.updated', { time: new Date(r.computed_at).toLocaleString() }))}</p>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.accounts_overview.h2.pnl_chart">All-time P&L per account</h2>
+            <div id="ao-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
+    renderPnlChart(r.accounts);
+}
+
+function renderPnlChart(accounts) {
+    const el = document.getElementById('ao-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(accounts) || accounts.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.accounts_overview.empty_chart">${esc(t('view.accounts_overview.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = accounts.map(a => `${a.broker}·${a.name}`);
+    const pnl = accounts.map(a => Number.isFinite(a.total_closed_pnl) ? a.total_closed_pnl : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.accounts_overview.chart.acct_idx') },
+            { label: t('view.accounts_overview.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.accounts_overview.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, pnl, zero], el);
 }
 
 function accountTable(accounts) {
