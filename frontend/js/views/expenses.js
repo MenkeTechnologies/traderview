@@ -105,7 +105,7 @@ function drawShell(mount) {
             </select>
         </label>
         <label><span data-i18n="view.expenses.label.search">Search</span>
-            <input type="text" id="exp-search" placeholder="merchant / description"
+            <input type="text" id="exp-search" data-shortcut="focus_search" placeholder="merchant / description"
                    data-i18n-placeholder="view.expenses.placeholder.search"></label>
         <button data-i18n="view.expenses.btn.apply" id="exp-apply">Apply</button>
     </div>
