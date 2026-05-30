@@ -78,6 +78,11 @@ export async function renderCovDenoiser(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.cov_denoiser.h2.cum_variance_chart">Cumulative variance explained (cleaned-spectrum PCA share)</h2>
+            <div id="cd-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.cov_denoiser.h2.cleaned_covariance">Cleaned covariance</h2>
             <div id="cd-cleaned"></div>
         </div>
@@ -119,6 +124,7 @@ async function denoise(mount, tok) {
 
     renderSummary(parsed.value, res);
     renderEigenChart(parsed.value, res);
+    renderCumChart(parsed.value, res);
     renderCleanedMatrix(parsed.value, res);
     showToast(t('view.cov_denoiser.toast.denoised', { signal: res.signal_count, bulk: res.bulk_count }), { level: 'success' });
 }
@@ -183,6 +189,43 @@ function renderEigenChart(originalCov, res) {
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, cleaned, lambdaMaxLine], el);
+}
+
+function renderCumChart(originalCov, res) {
+    const el = document.getElementById('cd-cum-chart');
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
+    el.innerHTML = '';
+    const n = originalCov.length;
+    const signalCount = res.signal_count;
+    const bulkAvg = res.bulk_eigenvalue_avg;
+    const cleaned = new Array(n).fill(bulkAvg);
+    for (let i = 0; i < signalCount && i < res.eigenvalues_signal.length; i++) {
+        cleaned[i] = res.eigenvalues_signal[i];
+    }
+    const total = cleaned.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+    if (!(total > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cov_denoiser.empty_cum_chart">${esc(t('view.cov_denoiser.empty_cum_chart'))}</div>`;
+        return;
+    }
+    let acc = 0;
+    const cum = cleaned.map(v => { acc += (Number.isFinite(v) ? v : 0); return acc / total * 100; });
+    const xs = cum.map((_, i) => i + 1);
+    const ref80 = xs.map(() => 80);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('chart.series.rank') },
+            { label: t('view.cov_denoiser.chart.cum_variance'),
+              stroke: '#7af0a8', width: 1.5,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: false } },
+            { label: t('view.cov_denoiser.chart.eighty_ref'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
+    }, [xs, cum, ref80], el);
 }
 
 function renderCleanedMatrix(originalCov, res) {

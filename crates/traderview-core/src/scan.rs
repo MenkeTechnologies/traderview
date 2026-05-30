@@ -582,6 +582,8 @@ pub enum Preset {
     OutlierSessionBigMoveBigVol,    // change_pct.abs() > 3 AND rel_volume >= 3 AND hod_dist + lod_dist > 2.5 — really big move + really hot vol + wide range (outlier session; momentum/news/squeeze event)
     EodParabolicAccelerationUp,     // change_pct > 2 AND day_pct > change_pct * 0.7 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at HOD + hot vol (EOD parabolic acceleration up; possible MOC short-covering finale)
     EodParabolicAccelerationDown,   // change_pct < -2 AND day_pct < change_pct * 0.7 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at LOD + hot vol (EOD parabolic acceleration down; possible MOC long-liquidation finale)
+    FullSpectrumDayUp,              // change_pct > 1 AND day_pct > 0 AND hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at HOD + visited LOD intraday + green + decent vol (volatile session that traded full range and went up)
+    FullSpectrumDayDown,            // change_pct < -1 AND day_pct < 0 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at LOD + visited HOD intraday + red + decent vol (volatile session that traded full range and went down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3083,6 +3085,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.3
                 && hit.rel_volume >= 1.5
         }
+        Preset::FullSpectrumDayUp => {
+            hit.change_pct > 1.0
+                && hit.day_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.rel_volume >= 1.2
+        }
+        Preset::FullSpectrumDayDown => {
+            hit.change_pct < -1.0
+                && hit.day_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.rel_volume >= 1.2
+        }
     }
 }
 
@@ -3555,6 +3571,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OutlierSessionBigMoveBigVol => "Big Move + Big Vol + Wide Range (Outlier / Momentum / News Event)",
         Preset::EodParabolicAccelerationUp => "EOD Parabolic Acceleration Up (Intraday Drive + HOD Close + Hot Vol)",
         Preset::EodParabolicAccelerationDown => "EOD Parabolic Acceleration Down (Intraday Drive + LOD Close + Hot Vol)",
+        Preset::FullSpectrumDayUp => "Closed HOD + Visited LOD + Green (Volatile Full-Range Day Up)",
+        Preset::FullSpectrumDayDown => "Closed LOD + Visited HOD + Red (Volatile Full-Range Day Down)",
     }
 }
 

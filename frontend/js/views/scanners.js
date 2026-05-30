@@ -464,6 +464,8 @@ const PRESETS = [
     { id: 'outlier_session_big_move_big_vol', label: t('view.scanners.preset.outlier_session_big_move_big_vol.label'), desc: t('view.scanners.preset.outlier_session_big_move_big_vol.desc') },
     { id: 'eod_parabolic_acceleration_up', label: t('view.scanners.preset.eod_parabolic_acceleration_up.label'), desc: t('view.scanners.preset.eod_parabolic_acceleration_up.desc') },
     { id: 'eod_parabolic_acceleration_down', label: t('view.scanners.preset.eod_parabolic_acceleration_down.label'), desc: t('view.scanners.preset.eod_parabolic_acceleration_down.desc') },
+    { id: 'full_spectrum_day_up', label: t('view.scanners.preset.full_spectrum_day_up.label'), desc: t('view.scanners.preset.full_spectrum_day_up.desc') },
+    { id: 'full_spectrum_day_down', label: t('view.scanners.preset.full_spectrum_day_down.label'), desc: t('view.scanners.preset.full_spectrum_day_down.desc') },
 ];
 
 export async function renderScanners(mount) {
