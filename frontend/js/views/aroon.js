@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD,
@@ -30,19 +31,20 @@ export async function renderAroon(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.aroon.label.period">Period</span>
-                    <input id="ar-period" type="number" step="1" min="2" value="${state.period}"></label>
+                    <input id="ar-period" type="number" step="1" min="2" value="${state.period}"
+                           data-tip="view.aroon.tip.period"></label>
                 <button data-i18n="view.aroon.btn.compute" id="ar-run" class="primary"
-                        data-tip="view.aroon.tip.compute" type="button">Compute Aroon</button>
+                        data-tip="view.aroon.tip.compute" data-shortcut="aroon_run" type="button">Compute Aroon</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.aroon.btn.demo_up"     id="ar-demo-up"     class="secondary" type="button">Demo: strong uptrend</button>
-                <button data-i18n="view.aroon.btn.demo_down"   id="ar-demo-down"   class="secondary" type="button">Demo: strong downtrend</button>
-                <button data-i18n="view.aroon.btn.demo_flat"   id="ar-demo-flat"   class="secondary" type="button">Demo: flat (consolidation)</button>
-                <button data-i18n="view.aroon.btn.demo_chop"   id="ar-demo-chop"   class="secondary" type="button">Demo: consolidation oscillator</button>
-                <button data-i18n="view.aroon.btn.demo_bull"   id="ar-demo-bull"   class="secondary" type="button">Demo: bullish crossover</button>
-                <button data-i18n="view.aroon.btn.demo_bear"   id="ar-demo-bear"   class="secondary" type="button">Demo: bearish crossover</button>
-                <button data-i18n="view.aroon.btn.demo_noisy"  id="ar-demo-noisy"  class="secondary" type="button">Demo: noisy walk (200 bars)</button>
-                <button data-i18n="view.aroon.btn.demo_short"  id="ar-demo-short"  class="secondary" type="button">Demo: short period (10)</button>
+                <button data-i18n="view.aroon.btn.demo_up"     id="ar-demo-up"     class="secondary" data-tip="view.aroon.tip.demo_up"    type="button">Demo: strong uptrend</button>
+                <button data-i18n="view.aroon.btn.demo_down"   id="ar-demo-down"   class="secondary" data-tip="view.aroon.tip.demo_down"  type="button">Demo: strong downtrend</button>
+                <button data-i18n="view.aroon.btn.demo_flat"   id="ar-demo-flat"   class="secondary" data-tip="view.aroon.tip.demo_flat"  type="button">Demo: flat (consolidation)</button>
+                <button data-i18n="view.aroon.btn.demo_chop"   id="ar-demo-chop"   class="secondary" data-tip="view.aroon.tip.demo_chop"  type="button">Demo: consolidation oscillator</button>
+                <button data-i18n="view.aroon.btn.demo_bull"   id="ar-demo-bull"   class="secondary" data-tip="view.aroon.tip.demo_bull"  type="button">Demo: bullish crossover</button>
+                <button data-i18n="view.aroon.btn.demo_bear"   id="ar-demo-bear"   class="secondary" data-tip="view.aroon.tip.demo_bear"  type="button">Demo: bearish crossover</button>
+                <button data-i18n="view.aroon.btn.demo_noisy"  id="ar-demo-noisy"  class="secondary" data-tip="view.aroon.tip.demo_noisy" type="button">Demo: noisy walk (200 bars)</button>
+                <button data-i18n="view.aroon.btn.demo_short"  id="ar-demo-short"  class="secondary" data-tip="view.aroon.tip.demo_short" type="button">Demo: short period (10)</button>
             </div>
             <p data-i18n="view.aroon.hint.about" class="muted">AroonUp = 100·(period − bars_since_high)/period. AroonDown = 100·(period − bars_since_low)/period. Oscillator = Up − Down ∈ [−100, +100]. ≥ 80 = strong trend. Crossovers signal reversals.</p>
         </div>
@@ -88,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.aroon.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.aroon.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -99,7 +102,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.aroon.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
@@ -110,6 +113,7 @@ async function compute(tok) {
         resp = await api.anlyAroonIndicator(buildBody(state));
     } catch (e) {
         showErr(`${t('view.aroon.err.api')}: ${e.message || e}`);
+        showToast(t('view.aroon.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -117,6 +121,7 @@ async function compute(tok) {
     renderChart(resp);
     renderStrengthChart(resp);
     renderTable(resp);
+    showToast(t('view.aroon.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
