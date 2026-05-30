@@ -51,8 +51,15 @@ export async function renderImportView(mount, state) {
             <h2 data-i18n="view.import.h2.rows_chart">Rows per import (chronological)</h2>
             <div id="imp-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.import.h2.broker_chart">Total rows imported per broker</h2>
+            <div id="imp-broker-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.import.hint.broker_chart" class="muted small">Cumulative row count per source across all uploads. Reveals which broker dominates your data lake and which sources have been silent.</p>
+        </div>
     `;
     renderRowsChart(history);
+    renderBrokerChart(history);
 
     const drop = mount.querySelector('#drop');
     const fileInput = mount.querySelector('#file');
@@ -115,6 +122,43 @@ function renderRowsChart(history) {
             { label: t('view.import.chart.rows'),
               stroke: '#00e5ff', width: 0,
               points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
+function renderBrokerChart(history) {
+    const el = document.getElementById('imp-broker-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const totals = new Map();
+    for (const h of (history || [])) {
+        const rows = Number(h.row_count);
+        if (!Number.isFinite(rows)) continue;
+        const src = h.source || '?';
+        totals.set(src, (totals.get(src) || 0) + rows);
+    }
+    if (totals.size < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.import.empty_broker_chart">${esc(t('view.import.empty_broker_chart'))}</div>`;
+        return;
+    }
+    const pairs = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([s]) => s);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.import.chart.broker_idx') },
+            { label: t('view.import.chart.total_rows'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

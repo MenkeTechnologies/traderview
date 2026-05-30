@@ -678,6 +678,8 @@ pub enum Preset {
     BigChangeDryVolFromGap,          // change_pct.abs() > 3 AND rel_volume < 0.7 AND gap_pct.abs() > 2 — big change + dry vol + significant gap (overnight repricing held with minimal intraday participation; pure pre-market re-rating absorbed without daytime confirmation)
     ExtremeVolGapDownReversal,       // rel_volume >= 5 AND gap_pct < -3 AND change_pct > 0 — extreme vol (5×+) + gap down >3 + finished green (extreme institutional reversal of overnight gap-down; max-conviction reclaim)
     ExtremeVolGapUpReversal,         // rel_volume >= 5 AND gap_pct > 3 AND change_pct < 0 — extreme vol (5×+) + gap up >3 + finished red (extreme institutional reversal of overnight gap-up; max-conviction distribution)
+    AtYearHighRangeExpansionDryVol,  // year_high_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w high + wide intraday range + dry vol (no-volume rally at all-time highs; distribution warning; wide range without participation = supply meeting thin demand)
+    AtYearLowRangeExpansionDryVol,   // year_low_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w low + wide intraday range + dry vol (no-volume capitulation at multi-year lows; thin-tape bounces without conviction; unlikely to stick)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3720,6 +3722,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct > 3.0
                 && hit.change_pct < 0.0
         }
+        Preset::AtYearHighRangeExpansionDryVol => {
+            hit.year_high_pct < 1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::AtYearLowRangeExpansionDryVol => {
+            hit.year_low_pct < 1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -4288,6 +4300,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigChangeDryVolFromGap => "Big Change + Dry Vol + Significant Gap (Pre-market Re-rating Absorbed without Daytime Confirmation)",
         Preset::ExtremeVolGapDownReversal => "Extreme Vol (5×+) + Gap Down + Finished Green (Max-conviction Reversal of Overnight Gap-down)",
         Preset::ExtremeVolGapUpReversal => "Extreme Vol (5×+) + Gap Up + Finished Red (Max-conviction Reversal of Overnight Gap-up; Institutional Distribution)",
+        Preset::AtYearHighRangeExpansionDryVol => "At 52w High + Wide Range + Dry Vol (No-volume Rally Warning; Distribution at All-time Highs)",
+        Preset::AtYearLowRangeExpansionDryVol => "At 52w Low + Wide Range + Dry Vol (Thin-tape Capitulation; Bounces Unlikely to Stick)",
     }
 }
 
