@@ -69,6 +69,12 @@ export async function renderMomentumCrash(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.mcp.h2.drawdown_chart">Running drawdown: managed vs raw</h2>
+            <div id="mcp-dd-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.mcp.hint.drawdown" class="muted small">Per-bar drawdown from peak for each equity curve. Cyan = managed, red dashed = raw. The gap shows where the crash filter saved drawdown vs holding the unscaled strategy.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.mcp.h2.table">Per-bar managed series (tail — last 30 bars)</h2>
             <div id="mcp-table"></div>
         </div>
@@ -131,6 +137,7 @@ async function compute(tok) {
     }
     renderSummary(local, true);
     renderChart(local);
+    renderDrawdownChart(local);
     renderTable(local);
     let resp;
     try {
@@ -148,6 +155,7 @@ async function compute(tok) {
     }
     renderSummary(resp, false);
     renderChart(resp);
+    renderDrawdownChart(resp);
     renderTable(resp);
     const meanLev = Number(resp.mean_leverage) || 0;
     const filtered = resp.crash_filter_triggered_count | 0;
@@ -242,6 +250,50 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, levs, cumManaged, cumRaw], el);
+}
+
+function renderDrawdownChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('mcp-dd-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report || !report.managed_returns || !report.managed_returns.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mcp.empty_dd_chart">${esc(t('view.mcp.empty_dd_chart'))}</div>`;
+        return;
+    }
+    const n = report.managed_returns.length;
+    const xs = [];
+    const ddManaged = [];
+    const ddRaw = [];
+    let mEq = 1, rEq = 1, mPeak = 1, rPeak = 1;
+    for (let i = 0; i < n; i++) {
+        const mr = report.managed_returns[i];
+        const rr = state.momentum_returns[i];
+        if (mr != null) mEq *= (1 + mr);
+        if (Number.isFinite(rr)) rEq *= (1 + rr);
+        if (mEq > mPeak) mPeak = mEq;
+        if (rEq > rPeak) rPeak = rEq;
+        xs.push(i);
+        ddManaged.push(mr != null ? (mEq / mPeak - 1) * 100 : null);
+        ddRaw.push((rEq / rPeak - 1) * 100);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.mcp.chart.managed_dd'),
+              stroke: '#00e5ff', width: 1.5, points: { show: false } },
+            { label: t('view.mcp.chart.raw_dd'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ddManaged, ddRaw], el);
 }
 
 function renderTable(report) {

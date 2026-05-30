@@ -720,6 +720,8 @@ pub enum Preset {
     WindowDressingMarkDown,          // change_pct.abs() < 0.3 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny red + close near LOD + hot vol (mark-down behavior; possible reverse window-dressing; deliberate end-of-day mark-down on volume)
     Year52HighSustainedStrengthHotVol, // year_high_pct < 5 AND day_pct > 1 AND change_pct > 1 AND rel_volume >= 2 — near 52w high + green intraday + green close + hot vol (sustained strength confirmation at the highs; intraday-and-daily both confirm; high-conviction breakout candidate)
     Year52LowSustainedWeaknessHotVol,  // year_low_pct < 5 AND day_pct < -1 AND change_pct < -1 AND rel_volume >= 2 — near 52w low + red intraday + red close + hot vol (sustained weakness confirmation at the lows; intraday-and-daily both confirm; high-conviction breakdown candidate)
+    BigGreenWithModestGapDecentVol,    // change_pct > 3 AND gap_pct between 0.5 and 1.5 AND rel_volume >= 1.5 — meaningful gain >3 + modest gap (0.5-1.5%) + decent vol (gap-assisted rally; overnight bias kicked off the day but intraday extended substantially on volume)
+    BigRedWithModestGapDownDecentVol,  // change_pct < -3 AND gap_pct between -1.5 and -0.5 AND rel_volume >= 1.5 — meaningful drop <-3 + modest gap down (-0.5 to -1.5%) + decent vol (gap-assisted decline; overnight bias kicked off the day but intraday extended substantially on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4009,6 +4011,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGreenWithModestGapDecentVol => {
+            hit.change_pct > 3.0
+                && hit.gap_pct >= 0.5
+                && hit.gap_pct <= 1.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigRedWithModestGapDownDecentVol => {
+            hit.change_pct < -3.0
+                && hit.gap_pct >= -1.5
+                && hit.gap_pct <= -0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4619,6 +4633,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WindowDressingMarkDown => "Tiny Red + Close Near LOD + Hot Vol (Mark-down Behavior; Possible Reverse Window-dressing)",
         Preset::Year52HighSustainedStrengthHotVol => "Near 52w High + Green Intraday + Green Close + Hot Vol (Sustained Strength Confirmation; Intraday-and-Daily Both Up; Breakout Candidate)",
         Preset::Year52LowSustainedWeaknessHotVol => "Near 52w Low + Red Intraday + Red Close + Hot Vol (Sustained Weakness Confirmation; Intraday-and-Daily Both Down; Breakdown Candidate)",
+        Preset::BigGreenWithModestGapDecentVol => "Big Green + Modest Gap Up + Decent Vol (Gap-assisted Rally; Overnight Bias Kicked Off the Day, Intraday Extended)",
+        Preset::BigRedWithModestGapDownDecentVol => "Big Red + Modest Gap Down + Decent Vol (Gap-assisted Decline; Overnight Bias Kicked Off the Day, Intraday Extended)",
     }
 }
 

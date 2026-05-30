@@ -602,6 +602,8 @@ const PRESETS = [
     { id: 'window_dressing_mark_down', label: t('view.scanners.preset.window_dressing_mark_down.label'), desc: t('view.scanners.preset.window_dressing_mark_down.desc') },
     { id: 'year52_high_sustained_strength_hot_vol', label: t('view.scanners.preset.year52_high_sustained_strength_hot_vol.label'), desc: t('view.scanners.preset.year52_high_sustained_strength_hot_vol.desc') },
     { id: 'year52_low_sustained_weakness_hot_vol', label: t('view.scanners.preset.year52_low_sustained_weakness_hot_vol.label'), desc: t('view.scanners.preset.year52_low_sustained_weakness_hot_vol.desc') },
+    { id: 'big_green_with_modest_gap_decent_vol', label: t('view.scanners.preset.big_green_with_modest_gap_decent_vol.label'), desc: t('view.scanners.preset.big_green_with_modest_gap_decent_vol.desc') },
+    { id: 'big_red_with_modest_gap_down_decent_vol', label: t('view.scanners.preset.big_red_with_modest_gap_down_decent_vol.label'), desc: t('view.scanners.preset.big_red_with_modest_gap_down_decent_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
