@@ -602,6 +602,8 @@ pub enum Preset {
     FullConvictionDownDay,          // gap_pct < 0 AND change_pct < -1 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned down + LOD close + hot vol (full-conviction down day; institutional commitment across session)
     YearLowProximityRallyAttempt,   // year_low_pct < 5 AND gap_pct >= 0 AND day_pct > 1 AND change_pct > 0.5 AND rel_volume >= 1 — close near 52w low but rallied intraday with green close + decent vol (rally attempt off the lows; potential trend reversal seedling)
     YearHighProximityFailAttempt,   // year_high_pct < 5 AND gap_pct <= 0 AND day_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1 — close near 52w high but faded intraday with red close + decent vol (failed move at high; potential top forming)
+    OpenGapFilledNetFlat,           // gap_pct.abs() > 1.5 AND change_pct.abs() < 0.5 — significant gap opened the day but ended near flat (full gap absorption / round-trip; market rejected the overnight move)
+    CompressedRangeVolatileSession, // year_high_pct < 15 AND year_low_pct < 25 AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — small 52w range with volatile session (structurally compressed asset moving today; multi-month coil breaking out intraday)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3221,6 +3223,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -0.5
                 && hit.rel_volume >= 1.0
         }
+        Preset::OpenGapFilledNetFlat => {
+            hit.gap_pct.abs() > 1.5
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::CompressedRangeVolatileSession => {
+            hit.year_high_pct < 15.0
+                && hit.year_low_pct < 25.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3713,6 +3725,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FullConvictionDownDay => "Gap Down + Red Day + Intraday Down + LOD Close + Hot Vol (Full-Conviction Down Day)",
         Preset::YearLowProximityRallyAttempt => "Near 52w Low + Intraday Rally + Green Close (Rally Attempt off Lows)",
         Preset::YearHighProximityFailAttempt => "Near 52w High + Intraday Fail + Red Close (Failed Move at Highs)",
+        Preset::OpenGapFilledNetFlat => "Big Gap Opened + Closed Near Flat (Full Gap Absorption / Round-Trip)",
+        Preset::CompressedRangeVolatileSession => "Small 52w Range + Wide Intraday + Hot Vol (Coiled Asset Breaking Out)",
     }
 }
 

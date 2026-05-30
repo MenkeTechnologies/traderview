@@ -52,6 +52,11 @@ export async function renderCypherPattern(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.cypher_pattern.h2.quality_chart">Per-match geometric quality (lower = closer to ideal Cypher)</h2>
+            <div id="cy-quality-chart" style="height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.cypher_pattern.h2.pattern_matches">Pattern matches</h2>
             <div id="cy-matches"></div>
         </div>
@@ -107,6 +112,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(matches || [], pivots);
     renderChart(pivots, matches || []);
+    renderQualityChart(matches || []);
     renderMatches(matches || []);
     const n = (matches || []).length;
     showToast(t('view.cypher_pattern.toast.detected', { n, pivots: pivots.length }), { level: n > 0 ? 'success' : 'info' });
@@ -168,6 +174,36 @@ function renderChart(pivots, matches) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, ys, matchMarkers], el);
+}
+
+function renderQualityChart(matches) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cy-quality-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!matches.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cypher_pattern.empty_quality_chart">${esc(t('view.cypher_pattern.empty_quality_chart'))}</div>`;
+        return;
+    }
+    const qs = matches.map(m => patternQuality(m));
+    const xs = matches.map((_, i) => i + 1);
+    const labels = matches.map((m, i) => `${i + 1}·${m.direction === 'bullish' ? '↑' : '↓'}`);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cypher_pattern.chart.match_idx') },
+            { label: t('view.cypher_pattern.chart.quality'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, qs], el);
 }
 
 function renderMatches(matches) {
