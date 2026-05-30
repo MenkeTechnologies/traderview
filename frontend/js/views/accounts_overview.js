@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderAccountsOverview(mount) {
     const tok = currentViewToken();
@@ -21,6 +22,7 @@ export async function renderAccountsOverview(mount) {
         if (!viewIsCurrent(tok)) return;
         const out = mount.querySelector('#ao-out');
         if (out) out.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
     }
 }
 
@@ -31,23 +33,23 @@ function render(r, mount) {
     if (!out) return;
     out.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.accounts">Accounts</div>
+            <div class="card" data-tip="view.accounts_overview.tip.accounts"><div class="label" data-i18n="view.accounts_overview.card.accounts">Accounts</div>
                 <div class="value">${g.accounts}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.closed_trades">Closed trades (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.closed_trades"><div class="label" data-i18n="view.accounts_overview.card.closed_trades">Closed trades (∑)</div>
                 <div class="value">${g.trade_count}</div>
                 <div class="small muted">${g.win_count}W / ${g.loss_count}L</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.today_pnl">Today P/L (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.today_pnl"><div class="label" data-i18n="view.accounts_overview.card.today_pnl">Today P/L (∑)</div>
                 <div class="value ${cls(g.today_pnl)}">$${fmt(g.today_pnl)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.mtd_pnl">MTD P/L (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.mtd_pnl"><div class="label" data-i18n="view.accounts_overview.card.mtd_pnl">MTD P/L (∑)</div>
                 <div class="value ${cls(g.mtd_pnl)}">$${fmt(g.mtd_pnl)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.ytd_pnl">YTD P/L (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.ytd_pnl"><div class="label" data-i18n="view.accounts_overview.card.ytd_pnl">YTD P/L (∑)</div>
                 <div class="value ${cls(g.ytd_pnl)}">$${fmt(g.ytd_pnl)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.alltime_pnl">All-time P/L (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.alltime_pnl"><div class="label" data-i18n="view.accounts_overview.card.alltime_pnl">All-time P/L (∑)</div>
                 <div class="value ${cls(g.total_closed_pnl)}">$${fmt(g.total_closed_pnl)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.open_positions">Open positions (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.open_positions"><div class="label" data-i18n="view.accounts_overview.card.open_positions">Open positions (∑)</div>
                 <div class="value">${g.open_positions_count}</div>
                 <div class="small muted">${esc(t('view.accounts_overview.card.notional', { notional: fmt(g.open_notional) }))}</div></div>
-            <div class="card"><div class="label" data-i18n="view.accounts_overview.card.unrealized">Unrealized (∑)</div>
+            <div class="card" data-tip="view.accounts_overview.tip.unrealized"><div class="label" data-i18n="view.accounts_overview.card.unrealized">Unrealized (∑)</div>
                 <div class="value ${cls(g.open_unrealized_pnl)}">$${fmt(g.open_unrealized_pnl)}</div>
                 <div class="small muted">${esc(t('view.accounts_overview.card.day_delta', { sign: g.open_day_pnl >= 0 ? '+' : '', amount: fmt(g.open_day_pnl) }))}</div></div>
         </div>

@@ -477,6 +477,7 @@ function bindTabs() {
     window.addEventListener('tv:watchlists-refresh', refreshNow);
     window.addEventListener('tv:webull-refresh',     refreshNow);
     window.addEventListener('tv:charts-refresh',     refreshNow);
+    window.addEventListener('tv:accounts-overview-refresh', refreshNow);
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
