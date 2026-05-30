@@ -624,6 +624,8 @@ pub enum Preset {
     OverextendedLowBounceHealthy,   // year_low_pct < 3 AND lod_dist_pct.abs() > 1.5 AND day_pct > 0.5 AND change_pct <= 0 — at 52w low + bounced from LOD + green intraday + still negative day (healthy bounce retrace while in downtrend)
     CleanTrendDayUp,                // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal positive + close near HOD + decent vol (clean trend day up; everything aligned without extremity)
     CleanTrendDayDown,              // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal negative + close near LOD + decent vol (clean trend day down; everything aligned without extremity)
+    ClimaxRedBouncedFromLod,        // change_pct < -3 AND day_pct > 1 AND rel_volume >= 2 AND lod_dist_pct.abs() > 1.5 — big red overall + significant green intraday + hot vol + bounced from LOD (climax low; capitulation followed by intraday bounce)
+    ClimaxGreenFadedFromHod,        // change_pct > 3 AND day_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() > 1.5 — big green overall + significant red intraday + hot vol + pulled from HOD (climax high; euphoria followed by intraday fade)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3364,6 +3366,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.0
         }
+        Preset::ClimaxRedBouncedFromLod => {
+            hit.change_pct < -3.0
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 2.0
+                && hit.lod_dist_pct.abs() > 1.5
+        }
+        Preset::ClimaxGreenFadedFromHod => {
+            hit.change_pct > 3.0
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() > 1.5
+        }
     }
 }
 
@@ -3878,6 +3892,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OverextendedLowBounceHealthy => "Near 52w Low + LOD Bounce + Still Negative Day (Healthy Retrace in Downtrend)",
         Preset::CleanTrendDayUp => "Gap + Intraday + Change All Positive + HOD Close + Decent Vol (Clean Trend Day Up)",
         Preset::CleanTrendDayDown => "Gap + Intraday + Change All Negative + LOD Close + Decent Vol (Clean Trend Day Down)",
+        Preset::ClimaxRedBouncedFromLod => "Big Red Day + LOD Bounce + Hot Vol (Climax Low / Capitulation Reversal)",
+        Preset::ClimaxGreenFadedFromHod => "Big Green Day + HOD Fade + Hot Vol (Climax High / Euphoric Reversal)",
     }
 }
 

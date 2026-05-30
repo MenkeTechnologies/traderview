@@ -506,6 +506,8 @@ const PRESETS = [
     { id: 'overextended_low_bounce_healthy', label: t('view.scanners.preset.overextended_low_bounce_healthy.label'), desc: t('view.scanners.preset.overextended_low_bounce_healthy.desc') },
     { id: 'clean_trend_day_up', label: t('view.scanners.preset.clean_trend_day_up.label'), desc: t('view.scanners.preset.clean_trend_day_up.desc') },
     { id: 'clean_trend_day_down', label: t('view.scanners.preset.clean_trend_day_down.label'), desc: t('view.scanners.preset.clean_trend_day_down.desc') },
+    { id: 'climax_red_bounced_from_lod', label: t('view.scanners.preset.climax_red_bounced_from_lod.label'), desc: t('view.scanners.preset.climax_red_bounced_from_lod.desc') },
+    { id: 'climax_green_faded_from_hod', label: t('view.scanners.preset.climax_green_faded_from_hod.label'), desc: t('view.scanners.preset.climax_green_faded_from_hod.desc') },
 ];
 
 export async function renderScanners(mount) {
