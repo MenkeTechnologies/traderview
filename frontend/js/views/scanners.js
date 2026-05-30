@@ -244,6 +244,8 @@ const PRESETS = [
     { id: 'chain_breakdown_level', label: t('view.scanners.preset.chain_breakdown_level.label'), desc: t('view.scanners.preset.chain_breakdown_level.desc') },
     { id: 'pct52w_range_pos_top', label: t('view.scanners.preset.pct52w_range_pos_top.label'), desc: t('view.scanners.preset.pct52w_range_pos_top.desc') },
     { id: 'pct52w_range_pos_bottom', label: t('view.scanners.preset.pct52w_range_pos_bottom.label'), desc: t('view.scanners.preset.pct52w_range_pos_bottom.desc') },
+    { id: 'high_range_high_vol_strong', label: t('view.scanners.preset.high_range_high_vol_strong.label'), desc: t('view.scanners.preset.high_range_high_vol_strong.desc') },
+    { id: 'high_range_high_vol_weak', label: t('view.scanners.preset.high_range_high_vol_weak.label'), desc: t('view.scanners.preset.high_range_high_vol_weak.desc') },
 ];
 
 export async function renderScanners(mount) {

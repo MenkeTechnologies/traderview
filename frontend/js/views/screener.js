@@ -45,6 +45,10 @@ export async function renderScreener(mount) {
             <h2 data-i18n="view.screener.h2.score_chart">Score per hit symbol</h2>
             <div id="sc-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.screener.h2.rsi_chart">RSI(14) per hit symbol</h2>
+            <div id="sc-rsi-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#sc-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -60,6 +64,7 @@ export async function renderScreener(mount) {
             const elNow = mount.querySelector('#sc-result');
             if (elNow) elNow.innerHTML = renderResult(r);
             renderScoreChart(r.hits);
+            renderRsiChart(r.hits);
             showToast(t('view.screener.toast.done', {
                 hits: r.hits.length, universe: r.universe_size,
             }), { level: r.hits.length > 0 ? 'success' : 'info' });
@@ -70,6 +75,45 @@ export async function renderScreener(mount) {
             showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
+}
+
+function renderRsiChart(hits) {
+    const el = document.getElementById('sc-rsi-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (hits || []).filter(h => Number.isFinite(Number(h.rsi14)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.screener.empty_rsi_chart">${esc(t('view.screener.empty_rsi_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.score) - Number(a.score));
+    const labels = rows.map(h => h.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(h => Number(h.rsi14));
+    const ob = xs.map(() => 70);
+    const os = xs.map(() => 30);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: () => [0, 100] } },
+        series: [
+            { label: t('view.screener.chart.symbol_idx') },
+            { label: t('view.screener.chart.rsi'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.screener.chart.ob_70'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.screener.chart.os_30'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, ob, os], el);
 }
 
 function renderScoreChart(hits) {

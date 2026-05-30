@@ -362,6 +362,8 @@ pub enum Preset {
     ChainBreakdownLevel,         // lod_dist.abs() < 0.3 AND hod_dist.abs() > 2 AND change_pct < -1 — close at LOD with broad day-range; breakdown below prior level
     Pct52wRangePosTop,           // year_high_pct > -20 AND year_low_pct > 30 — position in top half of 52w range (bullish positioning)
     Pct52wRangePosBottom,        // year_high_pct < -50 AND year_low_pct < 30 — position in bottom half of 52w range (bearish positioning)
+    HighRangeHighVolStrong,      // hod_dist + lod_dist > 4 AND change_pct > 3 AND rel_volume >= 1.5 — wide-range strong up day on heavy vol (initiative buying day)
+    HighRangeHighVolWeak,        // hod_dist + lod_dist > 4 AND change_pct < -3 AND rel_volume >= 1.5 — wide-range weak day on heavy vol (initiative selling day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1595,6 +1597,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::Pct52wRangePosBottom => {
             hit.year_high_pct < -50.0 && hit.year_low_pct < 30.0
         }
+        Preset::HighRangeHighVolStrong => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::HighRangeHighVolWeak => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -1847,6 +1859,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ChainBreakdownLevel => "Chain Breakdown Level",
         Preset::Pct52wRangePosTop => "52w Range Position: Top Half",
         Preset::Pct52wRangePosBottom => "52w Range Position: Bottom Half",
+        Preset::HighRangeHighVolStrong => "Hi-Range Hi-Vol Strong Day",
+        Preset::HighRangeHighVolWeak => "Hi-Range Hi-Vol Weak Day",
     }
 }
 
