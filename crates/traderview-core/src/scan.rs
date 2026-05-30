@@ -1056,6 +1056,8 @@ pub enum Preset {
     UltraDeepAboveYearLowHotVol,               // year_low_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w low (>=50%) + hot vol (multibagger territory: price has doubled or more off its 52w trough with elevated participation; momentum-leader candidate riding a multi-month trend with sustained institutional interest)
     UltraDeepBelowYearHighCloseAtHodHotVol,    // year_high_pct >= 50 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + close pinned to HOD + green close + hot vol (turnaround momentum signal: distressed equity closes at the day's high on elevated participation; rare bullish-conviction tape in beaten-down territory worth a reversal-trade screen)
     UltraDeepAboveYearLowCloseAtLodHotVol,     // year_low_pct >= 50 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + close pinned to LOD + red close + hot vol (topping signal: extended-trend leader closes at the day's low on elevated participation; rare bearish-conviction tape in stretched territory worth a top-fade trade screen)
+    UltraDeepBelowYearHighGapUpHotVol,         // year_high_pct >= 50 AND gap_pct > 2 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + hot vol (catalyst-driven turn candidate: beaten-down equity gaps up on news/earnings with elevated participation; potential institutional re-rating event worth a turnaround-trade screen)
+    UltraDeepAboveYearLowGapDownHotVol,        // year_low_pct >= 50 AND gap_pct < -2 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + hot vol (catalyst-driven top candidate: extended-trend leader gaps down on news/earnings with elevated participation; potential institutional de-rating event worth a top-fade trade screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6492,6 +6494,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::UltraDeepBelowYearHighGapUpHotVol => {
+            hit.year_high_pct >= 50.0
+                && hit.gap_pct > 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::UltraDeepAboveYearLowGapDownHotVol => {
+            hit.year_low_pct >= 50.0
+                && hit.gap_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7438,6 +7450,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::UltraDeepAboveYearLowHotVol => "Ultra-deep Distance from 52w Low (>=50 %) + Hot Vol (Multibagger Territory: Price Has Doubled or More off Its 52w Trough with Elevated Participation; Momentum-leader Candidate Riding a Multi-month Trend with Sustained Institutional Interest)",
         Preset::UltraDeepBelowYearHighCloseAtHodHotVol => "Distressed Stock (>=50 % below 52w High) + Close Pinned to HOD + Green Close + Hot Vol (Turnaround Momentum Signal: Distressed Equity Closes at the Day's High on Elevated Participation; Rare Bullish-conviction Tape in Beaten-down Territory Worth a Reversal-trade Screen)",
         Preset::UltraDeepAboveYearLowCloseAtLodHotVol => "Multibagger (>=50 % above 52w Low) + Close Pinned to LOD + Red Close + Hot Vol (Topping Signal: Extended-trend Leader Closes at the Day's Low on Elevated Participation; Rare Bearish-conviction Tape in Stretched Territory Worth a Top-fade Trade Screen)",
+        Preset::UltraDeepBelowYearHighGapUpHotVol => "Distressed Stock (>=50 % below 52w High) + Gap Up (>2 %) + Hot Vol (Catalyst-driven Turn Candidate: Beaten-down Equity Gaps up on News/earnings with Elevated Participation; Potential Institutional Re-rating Event Worth a Turnaround-trade Screen)",
+        Preset::UltraDeepAboveYearLowGapDownHotVol => "Multibagger (>=50 % above 52w Low) + Gap Down (<-2 %) + Hot Vol (Catalyst-driven Top Candidate: Extended-trend Leader Gaps down on News/earnings with Elevated Participation; Potential Institutional De-rating Event Worth a Top-fade Trade Screen)",
     }
 }
 
