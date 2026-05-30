@@ -51,6 +51,11 @@ export async function renderStopLossBestOf(mount, _appState) {
             <div id="sl-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.stop_loss_best_of.h2.stop_chart">Stop-out count per candidate</h2>
+            <div id="sl-stop-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="sl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('sl-demo').addEventListener('click', () => {
@@ -100,6 +105,41 @@ async function compute(tok) {
     renderSummary(results || [], trades, candidates);
     renderResults(results || [], candidates);
     renderTotalChart(results || [], candidates);
+    renderStopChart(results || [], candidates);
+}
+
+function renderStopChart(results, candidates) {
+    const el = document.getElementById('sl-stop-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (results || []).filter(r => Number.isFinite(Number(r.stopped_out_count)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.stop_loss_best_of.empty_stop_chart">${esc(t('view.stop_loss_best_of.empty_stop_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.stopped_out_count) - Number(a.stopped_out_count));
+    const labels = rows.map(r => {
+        const c = candidates.find(x => x.method === r.method && x.value === r.value);
+        return c ? describeCandidate(c) : r.method;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => Number(r.stopped_out_count));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.stop_loss_best_of.chart.candidate') },
+            { label: t('view.stop_loss_best_of.chart.stopped'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSummary(results, trades, candidates) {

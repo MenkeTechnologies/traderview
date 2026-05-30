@@ -392,6 +392,8 @@ pub enum Preset {
     DownFromTopUpthrust,         // year_high_pct > -10 AND change_pct < -5 AND rel_volume >= 2 — strong sell-off from the 52w highs on heavy vol (upthrust reversal)
     UpThrustBarReject,           // hod_dist.abs() > 3 AND lod_dist.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 2 — wick high then closed near LOD on heavy vol (textbook upthrust bar)
     DownThrustBarReject,         // lod_dist.abs() > 3 AND hod_dist.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 2 — wick low then closed near HOD on heavy vol (textbook spring bar)
+    ExhaustionTopWideRange,      // year_high_pct > -5 AND hod_dist.abs() > 5 AND lod_dist.abs() < 0.5 AND change_pct > 5 AND rel_volume >= 3 — extreme range close-at-HOD into prior high (exhaustion top candidate)
+    ExhaustionBottomWideRange,   // year_low_pct < 5 AND lod_dist.abs() > 5 AND hod_dist.abs() < 0.5 AND change_pct < -5 AND rel_volume >= 3 — extreme range close-at-LOD into prior low (exhaustion bottom candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1784,6 +1786,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::ExhaustionTopWideRange => {
+            hit.year_high_pct > -5.0
+                && hit.hod_dist_pct.abs() > 5.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::ExhaustionBottomWideRange => {
+            hit.year_low_pct < 5.0
+                && hit.lod_dist_pct.abs() > 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 3.0
+        }
     }
 }
 
@@ -2066,6 +2082,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownFromTopUpthrust => "Down-From-Top Upthrust",
         Preset::UpThrustBarReject => "Upthrust Bar Reject",
         Preset::DownThrustBarReject => "Spring Bar Reject",
+        Preset::ExhaustionTopWideRange => "Exhaustion Top Wide-Range",
+        Preset::ExhaustionBottomWideRange => "Exhaustion Bottom Wide-Range",
     }
 }
 

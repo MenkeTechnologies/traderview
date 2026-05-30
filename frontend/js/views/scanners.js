@@ -274,6 +274,8 @@ const PRESETS = [
     { id: 'down_from_top_upthrust', label: t('view.scanners.preset.down_from_top_upthrust.label'), desc: t('view.scanners.preset.down_from_top_upthrust.desc') },
     { id: 'up_thrust_bar_reject', label: t('view.scanners.preset.up_thrust_bar_reject.label'), desc: t('view.scanners.preset.up_thrust_bar_reject.desc') },
     { id: 'down_thrust_bar_reject', label: t('view.scanners.preset.down_thrust_bar_reject.label'), desc: t('view.scanners.preset.down_thrust_bar_reject.desc') },
+    { id: 'exhaustion_top_wide_range', label: t('view.scanners.preset.exhaustion_top_wide_range.label'), desc: t('view.scanners.preset.exhaustion_top_wide_range.desc') },
+    { id: 'exhaustion_bottom_wide_range', label: t('view.scanners.preset.exhaustion_bottom_wide_range.label'), desc: t('view.scanners.preset.exhaustion_bottom_wide_range.desc') },
 ];
 
 export async function renderScanners(mount) {
