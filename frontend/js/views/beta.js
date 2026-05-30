@@ -56,6 +56,11 @@ export async function renderBeta(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.beta.h2.resid_chart">Per-period residuals (asset − (α + β·bench))</h2>
+            <div id="bt-resid-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.beta.h2.table">Paired returns (tail — last 30)</h2>
             <div id="bt-table"></div>
         </div>
@@ -104,6 +109,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.beta.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart(local);
+    renderResidChart(local);
     renderTable();
     let resp;
     try {
@@ -116,6 +122,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.beta.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderResidChart(resp);
     renderTable();
 }
 
@@ -186,6 +193,42 @@ function renderChart(report) {
         legend: { show: true },
     }, [xsSorted, assetSorted, fitSorted], el);
     void mnB; void mxB;
+}
+
+function renderResidChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bt-resid-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!state.benchmark.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.beta.empty_resid">${esc(t('view.beta.empty_resid'))}</div>`;
+        return;
+    }
+    const xs = state.benchmark.map((_, i) => i + 1);
+    const resid = state.asset.map((a, i) => {
+        const b = state.benchmark[i];
+        if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+        return (a - (report.alpha + report.beta * b)) * 100;
+    });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.beta.series.resid_pct'),
+              stroke: '#7af0a8', width: 1.2,
+              points: { show: true, size: 4, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.beta.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => v.toFixed(2) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, resid, zero], el);
 }
 
 function renderTable() {

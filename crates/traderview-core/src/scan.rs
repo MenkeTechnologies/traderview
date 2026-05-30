@@ -508,6 +508,8 @@ pub enum Preset {
     GapDownAtMidRange,              // gap_pct < -1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap down while in middle of 52w range on vol (breakdown from consolidation)
     BattleBarHotVol,                // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume >= 2.5 — wide intraday range + flat change + hot vol (battle bar with extreme participation)
     IlliquidSwingDryVol,            // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — wide intraday range + flat change + dry vol (illiquid swing both directions)
+    GapDownIntradayReclaimUp,       // gap_pct < -1 AND hod_dist.abs() < 0.5 AND change_pct > 0.5 — gap down + close at HOD + close above prior (full intraday reclaim + extension)
+    GapUpIntradayRejectDown,        // gap_pct > 1 AND lod_dist.abs() < 0.5 AND change_pct < -0.5 — gap up + close at LOD + close below prior (full intraday rejection)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2573,6 +2575,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume < 0.5
         }
+        Preset::GapDownIntradayReclaimUp => {
+            hit.gap_pct < -1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.5
+        }
+        Preset::GapUpIntradayRejectDown => {
+            hit.gap_pct > 1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -0.5
+        }
     }
 }
 
@@ -2971,6 +2983,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownAtMidRange => "Gap Down at 52w Mid-Range (Consolidation Breakdown)",
         Preset::BattleBarHotVol => "Battle Bar (Wide Range, Flat Change, Hot Vol)",
         Preset::IlliquidSwingDryVol => "Illiquid Swing (Wide Range, Flat Change, Dry Vol)",
+        Preset::GapDownIntradayReclaimUp => "Gap Down + HOD Close + Reclaim Above Prior",
+        Preset::GapUpIntradayRejectDown => "Gap Up + LOD Close + Reject Below Prior",
     }
 }
 

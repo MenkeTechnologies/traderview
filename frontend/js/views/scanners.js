@@ -390,6 +390,8 @@ const PRESETS = [
     { id: 'gap_down_at_mid_range', label: t('view.scanners.preset.gap_down_at_mid_range.label'), desc: t('view.scanners.preset.gap_down_at_mid_range.desc') },
     { id: 'battle_bar_hot_vol', label: t('view.scanners.preset.battle_bar_hot_vol.label'), desc: t('view.scanners.preset.battle_bar_hot_vol.desc') },
     { id: 'illiquid_swing_dry_vol', label: t('view.scanners.preset.illiquid_swing_dry_vol.label'), desc: t('view.scanners.preset.illiquid_swing_dry_vol.desc') },
+    { id: 'gap_down_intraday_reclaim_up', label: t('view.scanners.preset.gap_down_intraday_reclaim_up.label'), desc: t('view.scanners.preset.gap_down_intraday_reclaim_up.desc') },
+    { id: 'gap_up_intraday_reject_down', label: t('view.scanners.preset.gap_up_intraday_reject_down.label'), desc: t('view.scanners.preset.gap_up_intraday_reject_down.desc') },
 ];
 
 export async function renderScanners(mount) {
