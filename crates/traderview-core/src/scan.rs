@@ -284,6 +284,8 @@ pub enum Preset {
     HighVolumeDownDayNoExtreme,  // change_pct -2 to -1 AND rel_volume >= 2 AND lod_dist.abs() > 0.5 — down day on heavy volume but didn't push LOD
     GapUpFadeToFlat,             // gap_pct > 2 AND change_pct.abs() < 0.5 — gapped up overnight but unchanged on the day (full fade)
     GapDownReclaimToFlat,        // gap_pct < -2 AND change_pct.abs() < 0.5 — gapped down overnight but unchanged on the day (full reclaim)
+    GapUpHeldGreen,              // gap_pct > 2 AND change_pct > gap_pct AND rel_volume >= 1 — gap held + extended on participation (continuation squeeze)
+    GapDownHeldRed,              // gap_pct < -2 AND change_pct < gap_pct AND rel_volume >= 1 — gap-down extended lower on participation (continuation squeeze)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1133,6 +1135,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.gap_pct < -2.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::GapUpHeldGreen => {
+            hit.gap_pct > 2.0
+                && hit.change_pct > hit.gap_pct
+                && hit.rel_volume >= 1.0
+        }
+        Preset::GapDownHeldRed => {
+            hit.gap_pct < -2.0
+                && hit.change_pct < hit.gap_pct
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -1307,6 +1319,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HighVolumeDownDayNoExtreme => "Hi-Vol Down-Day No-LOD Squeeze",
         Preset::GapUpFadeToFlat => "Gap-Up Fade To Flat",
         Preset::GapDownReclaimToFlat => "Gap-Down Reclaim To Flat",
+        Preset::GapUpHeldGreen => "Gap-Up Held + Extended",
+        Preset::GapDownHeldRed => "Gap-Down Held + Extended",
     }
 }
 

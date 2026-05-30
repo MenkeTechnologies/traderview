@@ -18,6 +18,10 @@ export async function renderSearch(mount) {
             <button data-i18n="view.search.btn.search" class="primary" type="submit">Search</button>
         </form>
         <div id="search-results"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.search.h2.hits_chart">Hits by category</h2>
+            <div id="se-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#search-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -32,12 +36,50 @@ export async function renderSearch(mount) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#search-results');
             if (elNow) elNow.innerHTML = renderHits(r);
+            renderHitsChart(r);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#search-results');
             if (elNow) elNow.innerHTML = `<p class="boot">${err.message}</p>`;
         }
     });
+}
+
+function renderHitsChart(r) {
+    const el = document.getElementById('se-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const labels = [
+        t('view.search.chart.trades'),
+        t('view.search.chart.journal'),
+        t('view.search.chart.forum'),
+    ];
+    const ys = [
+        Number((r.trades || []).length),
+        Number((r.journal || []).length),
+        Number((r.forum || []).length),
+    ];
+    if (ys.reduce((a, b) => a + b, 0) < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.search.empty_chart">${esc(t('view.search.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.search.chart.scope') },
+            { label: t('view.search.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderHits(r) {
