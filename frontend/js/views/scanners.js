@@ -760,6 +760,8 @@ const PRESETS = [
     { id: 'extreme_gap_full_reversal_extreme_vol', label: t('view.scanners.preset.extreme_gap_full_reversal_extreme_vol.label'), desc: t('view.scanners.preset.extreme_gap_full_reversal_extreme_vol.desc') },
     { id: 'apathy_at_year_high', label: t('view.scanners.preset.apathy_at_year_high.label'), desc: t('view.scanners.preset.apathy_at_year_high.desc') },
     { id: 'apathy_at_year_low', label: t('view.scanners.preset.apathy_at_year_low.label'), desc: t('view.scanners.preset.apathy_at_year_low.desc') },
+    { id: 'stealth_at_year52_high', label: t('view.scanners.preset.stealth_at_year52_high.label'), desc: t('view.scanners.preset.stealth_at_year52_high.desc') },
+    { id: 'stealth_at_year52_low', label: t('view.scanners.preset.stealth_at_year52_low.label'), desc: t('view.scanners.preset.stealth_at_year52_low.desc') },
 ];
 
 export async function renderScanners(mount) {
