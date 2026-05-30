@@ -59,6 +59,11 @@ export async function renderArchLm(mount, _appState) {
             <div id="arl-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.arch_lm.h2.sq_returns">Squared returns (volatility clustering)</h2>
+            <div id="arl-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="arl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -100,6 +105,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderCrit(local);
     renderStats();
+    renderSqChart();
     let resp;
     try {
         resp = await api.anlyArchLm(buildBody(state));
@@ -191,6 +197,36 @@ function renderStats() {
             </tbody>
         </table>
     `;
+}
+
+function renderSqChart() {
+    const el = document.getElementById('arl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const series = Array.isArray(state.returns) ? state.returns.filter(Number.isFinite) : [];
+    if (series.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.arch_lm.empty_chart">${esc(t('view.arch_lm.empty_chart'))}</div>`;
+        return;
+    }
+    const mean = series.reduce((a, b) => a + b, 0) / series.length;
+    const sqResiduals = series.map(r => (r - mean) ** 2);
+    const xs = sqResiduals.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.arch_lm.chart.bar_idx') },
+            { label: t('view.arch_lm.chart.sq_residual'),
+              stroke: '#00e5ff', width: 1.0,
+              fill: 'rgba(0,229,255,0.12)',
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, sqResiduals], el);
 }
 
 function card(label, value, cls = '') {
