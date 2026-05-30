@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseWeightsBlob, weightsToBlob, validateInputs, buildBody, localCompute,
@@ -30,17 +31,17 @@ export async function renderActiveShare(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.act_share.btn.compute" id="as-run" class="primary"
-                        data-tip="view.act_share.tip.compute" type="button">Compute</button>
+                        data-tip="view.act_share.tip.compute" data-shortcut="active_share_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.act_share.btn.demo_identical"  id="as-demo-id"     class="secondary" type="button">Demo: identical (AS=0)</button>
-                <button data-i18n="view.act_share.btn.demo_disjoint"   id="as-demo-disj"   class="secondary" type="button">Demo: disjoint (AS=1)</button>
-                <button data-i18n="view.act_share.btn.demo_canonical"  id="as-demo-can"    class="secondary" type="button">Demo: Cremers canonical 50%</button>
-                <button data-i18n="view.act_share.btn.demo_closet"     id="as-demo-closet" class="secondary" type="button">Demo: closet indexer</button>
-                <button data-i18n="view.act_share.btn.demo_active"     id="as-demo-active" class="secondary" type="button">Demo: highly active</button>
-                <button data-i18n="view.act_share.btn.demo_sector"     id="as-demo-sect"   class="secondary" type="button">Demo: sector bet</button>
-                <button data-i18n="view.act_share.btn.demo_short"      id="as-demo-short"  class="secondary" type="button">Demo: long-only with missing names</button>
-                <button data-i18n="view.act_share.btn.demo_unnorm"     id="as-demo-unnorm" class="secondary" type="button">Demo: unnormalized weights</button>
+                <button data-i18n="view.act_share.btn.demo_identical"  id="as-demo-id"     class="secondary" data-tip="view.act_share.tip.demo_identical" type="button">Demo: identical (AS=0)</button>
+                <button data-i18n="view.act_share.btn.demo_disjoint"   id="as-demo-disj"   class="secondary" data-tip="view.act_share.tip.demo_disjoint"  type="button">Demo: disjoint (AS=1)</button>
+                <button data-i18n="view.act_share.btn.demo_canonical"  id="as-demo-can"    class="secondary" data-tip="view.act_share.tip.demo_canonical" type="button">Demo: Cremers canonical 50%</button>
+                <button data-i18n="view.act_share.btn.demo_closet"     id="as-demo-closet" class="secondary" data-tip="view.act_share.tip.demo_closet"    type="button">Demo: closet indexer</button>
+                <button data-i18n="view.act_share.btn.demo_active"     id="as-demo-active" class="secondary" data-tip="view.act_share.tip.demo_active"    type="button">Demo: highly active</button>
+                <button data-i18n="view.act_share.btn.demo_sector"     id="as-demo-sect"   class="secondary" data-tip="view.act_share.tip.demo_sector"    type="button">Demo: sector bet</button>
+                <button data-i18n="view.act_share.btn.demo_short"      id="as-demo-short"  class="secondary" data-tip="view.act_share.tip.demo_short"     type="button">Demo: long-only with missing names</button>
+                <button data-i18n="view.act_share.btn.demo_unnorm"     id="as-demo-unnorm" class="secondary" data-tip="view.act_share.tip.demo_unnorm"    type="button">Demo: unnormalized weights</button>
             </div>
             <p data-i18n="view.act_share.hint.about" class="muted">AS = ½·Σ|w_port − w_bench|. Range [0, 1]: 0 = closet indexer, 1 = disjoint from benchmark. Cremers & Petajisto found AS ≥ 0.60 correlates with managers who actually outperform their benchmark net of fees.</p>
         </div>
@@ -85,6 +86,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.act_share.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.act_share.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -94,9 +96,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.act_share.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.weights);
-    if (!local) { showErr(t('view.act_share.err.degenerate')); return; }
+    if (!local) { showErr(t('view.act_share.err.degenerate')); showToast(t('view.act_share.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart();
     renderWeightsChart();
@@ -106,14 +108,16 @@ async function compute(tok) {
         resp = await api.portfolioActiveShare(buildBody(state));
     } catch (e) {
         showErr(`${t('view.act_share.err.api')}: ${e.message || e}`);
+        showToast(t('view.act_share.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.act_share.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.act_share.err.server_rejected')); showToast(t('view.act_share.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart();
     renderWeightsChart();
     renderTable();
+    showToast(t('view.act_share.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
