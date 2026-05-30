@@ -5944,6 +5944,7 @@
   "view.rebalance.card.cash_target": "Cash now → target",
   "view.pattern_discovery.card.top_motif_pair": "Top motif pair",
   "view.pattern_discovery.row.idx": "idx {start}",
+  "view.pattern_discovery.row.motif_pair": "idx {i} ↔ idx {j}",
   "view.pattern_discovery.card.top_discords_dist": "Top discords (by distance)",
   "view.pattern_discovery.card.top_discords": "Top discords",
   "view.mood_analytics.card.samples": "Samples",
