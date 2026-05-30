@@ -60,6 +60,11 @@ export async function renderRoundLevels(mount, _appState) {
             <div id="rl-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.round_levels.h2.levels_chart">Levels by price (colored by weight)</h2>
+            <div id="rl-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="rl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -96,6 +101,7 @@ async function compute(tok) {
     const local = localDetect(state.current_price, state.atr, state.config);
     renderSummary(local, true);
     renderTable(local);
+    renderLevelsChart(local);
     let resp;
     try {
         resp = await api.chartsRoundLevels(buildBody(state));
@@ -106,6 +112,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
+    renderLevelsChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -143,6 +150,44 @@ function renderSummary(report, pending) {
              parityOk ? t('view.round_levels.tag.ok') : t('view.round_levels.tag.diverged'),
              parityOk ? 'pos' : 'neg'),
     ].join('');
+}
+
+function renderLevelsChart(report) {
+    const el = document.getElementById('rl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report?.levels || []).filter(l => Number.isFinite(Number(l.price)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.round_levels.empty_chart">${esc(t('view.round_levels.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(a.price) - Number(b.price));
+    const xs = rows.map((_, i) => i + 1);
+    const major  = rows.map(l => l.weight === 'major'  ? Number(l.price) : null);
+    const medium = rows.map(l => l.weight === 'medium' ? Number(l.price) : null);
+    const minor  = rows.map(l => l.weight === 'minor'  ? Number(l.price) : null);
+    const cur    = xs.map(() => Number(state.current_price));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.round_levels.chart.idx') },
+            { label: t('view.round_levels.chart.major'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.round_levels.chart.medium'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.round_levels.chart.minor'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.round_levels.chart.current'),
+              stroke: '#7af0a8', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 56 } ],
+        legend: { show: true },
+    }, [xs, major, medium, minor, cur], el);
 }
 
 function renderTable(report) {

@@ -304,6 +304,8 @@ pub enum Preset {
     NewLowGreenDay,              // year_low_pct <= 0 AND change_pct >= 1 — printed a new 52w low then reversed green (failed breakdown)
     NewHighOnHotVol,             // year_high_pct >= 0 AND rel_volume >= 3 — new 52w high on >=3× volume (institutional accumulation)
     NewLowOnHotVol,              // year_low_pct <= 0 AND rel_volume >= 3 — new 52w low on >=3× volume (institutional distribution)
+    QuietNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w high on light vol (coiled spring up)
+    QuietNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w low on light vol (coiled spring down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1229,6 +1231,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NewLowOnHotVol => {
             hit.year_low_pct <= 0.0 && hit.rel_volume >= 3.0
         }
+        Preset::QuietNearTheTop => {
+            hit.year_high_pct > -3.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::QuietNearTheBottom => {
+            hit.year_low_pct < 3.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -1423,6 +1435,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NewLowGreenDay => "New 52w Low + Green Day",
         Preset::NewHighOnHotVol => "New 52w High on Hot Vol",
         Preset::NewLowOnHotVol => "New 52w Low on Hot Vol",
+        Preset::QuietNearTheTop => "Quiet Near The Top",
+        Preset::QuietNearTheBottom => "Quiet Near The Bottom",
     }
 }
 
