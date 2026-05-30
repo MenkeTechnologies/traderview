@@ -446,6 +446,8 @@ const PRESETS = [
     { id: 'year_high_gap_down_hot_vol', label: t('view.scanners.preset.year_high_gap_down_hot_vol.label'), desc: t('view.scanners.preset.year_high_gap_down_hot_vol.desc') },
     { id: 'year_low_gap_up_hot_vol', label: t('view.scanners.preset.year_low_gap_up_hot_vol.label'), desc: t('view.scanners.preset.year_low_gap_up_hot_vol.desc') },
     { id: 'intraday_fakeout_top_reject', label: t('view.scanners.preset.intraday_fakeout_top_reject.label'), desc: t('view.scanners.preset.intraday_fakeout_top_reject.desc') },
+    { id: 'intraday_fakeout_bottom_reject', label: t('view.scanners.preset.intraday_fakeout_bottom_reject.label'), desc: t('view.scanners.preset.intraday_fakeout_bottom_reject.desc') },
+    { id: 'range_contraction_after_move', label: t('view.scanners.preset.range_contraction_after_move.label'), desc: t('view.scanners.preset.range_contraction_after_move.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -48,6 +48,11 @@ export async function renderChoppiness(mount, _appState) {
             <p data-i18n="view.choppiness.hint.cyan_close_left_axis_yellow_ci_right_axis_0_100_re" class="muted">Cyan = close (left axis). Yellow = CI (right axis 0–100). Red dashed = 61.8 (chop), green dashed = 38.2 (trend).</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.choppiness.h2.regime_chart">Regime time-allocation (trending / mixed / choppy bar counts)</h2>
+            <div id="cp-regime-chart" style="height:220px"></div>
+        </div>
+
         <div id="cp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -86,6 +91,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(state.bars, local);
+    renderRegimeChart(local);
     let resp;
     try {
         resp = await api.anlyChoppiness(buildBody(state.bars, state.period));
@@ -97,6 +103,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.bars, resp);
+    renderRegimeChart(resp);
     const regime = String(resp.regime || '');
     const latest = resp.latest == null ? '—' : Number(resp.latest).toFixed(1);
     const level = regime === 'trending' ? 'success' : regime === 'choppy' ? 'warning' : 'info';
@@ -179,6 +186,41 @@ function renderChart(bars, report) {
         ],
         legend: { show: true },
     }, [xs, closes, ci, chopBand, trendBand], el);
+}
+
+function renderRegimeChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cp-regime-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.series)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.choppiness.empty_regime_chart">${esc(t('view.choppiness.empty_regime_chart'))}</div>`;
+        return;
+    }
+    const buckets = regimeBuckets(report.series);
+    const labels = [
+        t('view.choppiness.regime.trending.label'),
+        t('view.choppiness.regime.mixed.label'),
+        t('view.choppiness.regime.choppy.label'),
+    ];
+    const ys = [buckets.trending, buckets.mixed, buckets.choppy];
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.choppiness.chart.regime_idx') },
+            { label: t('view.choppiness.chart.bar_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function showErr(msg) {
