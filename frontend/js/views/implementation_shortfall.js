@@ -80,6 +80,11 @@ export async function renderImplementationShortfall(mount, _appState) {
             <div id="is-note" class="muted">—</div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.implementation_shortfall.h2.component_chart">Cost components ($)</h2>
+            <div id="is-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="is-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -121,7 +126,42 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderBars(res);
+    renderComponentChart(res);
     document.getElementById('is-note').textContent = res.note || '—';
+}
+
+function renderComponentChart(report) {
+    const el = document.getElementById('is-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const items = decompose(report);
+    if (!items.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.implementation_shortfall.empty_chart">${esc(t('view.implementation_shortfall.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = items.map(it => it.label);
+    const ys = items.map(it => Number(it.value));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.implementation_shortfall.chart.component_idx') },
+            { label: t('view.implementation_shortfall.chart.cost'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.implementation_shortfall.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSummary(r) {

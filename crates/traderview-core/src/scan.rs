@@ -220,6 +220,8 @@ pub enum Preset {
     HighVolGapHoldSqueeze,       // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume >= 1.5 — gap holds with high volume (institutional accumulation)
     UpsideAttemptedSqueeze,      // hod_dist.abs() >= 1 AND lod_dist.abs() < 0.5 AND change_pct < 0 — tried up, settled at lows (bear control)
     DownsideAttemptedSqueeze,    // lod_dist.abs() >= 1 AND hod_dist.abs() < 0.5 AND change_pct > 0 — tried down, settled at highs (bull control)
+    TightGapSmallChangeSqueeze,  // |gap_pct| < 0.2 AND change_pct between -2 and 2 AND day_pct.abs() < 0.5 — slow drift with no overnight surprise
+    Pct52wMidWideRangeSqueeze,   // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND (hod_dist+lod_dist)>3 — at exact 52w mid with wide intraday
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -727,6 +729,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.change_pct > 0.0
         }
+        Preset::TightGapSmallChangeSqueeze => {
+            hit.gap_pct.abs() < 0.2
+                && hit.change_pct >= -2.0
+                && hit.change_pct <= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::Pct52wMidWideRangeSqueeze => {
+            hit.year_high_pct >= -10.0
+                && hit.year_high_pct <= -5.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 10.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 3.0
+        }
     }
 }
 
@@ -837,6 +852,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HighVolGapHoldSqueeze => "High-Vol Gap-Hold Squeeze",
         Preset::UpsideAttemptedSqueeze => "Upside-Attempted Reject Squeeze",
         Preset::DownsideAttemptedSqueeze => "Downside-Attempted Reject Squeeze",
+        Preset::TightGapSmallChangeSqueeze => "Tight-Gap Small-Change Squeeze",
+        Preset::Pct52wMidWideRangeSqueeze => "52w-Mid Wide-Range Squeeze",
     }
 }
 

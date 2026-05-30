@@ -102,6 +102,8 @@ const PRESETS = [
     { id: 'high_vol_gap_hold_squeeze',  label: t('view.scanners.preset.high_vol_gap_hold_squeeze.label'),  desc: t('view.scanners.preset.high_vol_gap_hold_squeeze.desc') },
     { id: 'upside_attempted_reject_squeeze', label: t('view.scanners.preset.upside_attempted_reject_squeeze.label'), desc: t('view.scanners.preset.upside_attempted_reject_squeeze.desc') },
     { id: 'downside_attempted_reject_squeeze', label: t('view.scanners.preset.downside_attempted_reject_squeeze.label'), desc: t('view.scanners.preset.downside_attempted_reject_squeeze.desc') },
+    { id: 'tight_gap_small_change_squeeze', label: t('view.scanners.preset.tight_gap_small_change_squeeze.label'), desc: t('view.scanners.preset.tight_gap_small_change_squeeze.desc') },
+    { id: 'pct52w_mid_wide_range_squeeze',  label: t('view.scanners.preset.pct52w_mid_wide_range_squeeze.label'),  desc: t('view.scanners.preset.pct52w_mid_wide_range_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
