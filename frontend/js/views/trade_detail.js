@@ -95,7 +95,11 @@ export async function renderTradeDetail(mount, state, tradeId) {
           <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.tags">Tags</h2>
             <div class="tag-wrap" id="tags-wrap">
-              ${tags.map(t => `<span class="tag-chip" style="border-color:${esc(t.color)}">${esc(t.name)}</span>`).join('')}
+              ${tags.map(t => `<span class="tag-chip"
+                    data-context-scope="tag-chip"
+                    data-id="${esc(t.id)}"
+                    data-name="${esc(t.name)}"
+                    style="border-color:${esc(t.color)}">${esc(t.name)}</span>`).join('')}
             </div>
             <div class="tag-add">
               <select id="tag-add-select"></select>
@@ -135,7 +139,10 @@ export async function renderTradeDetail(mount, state, tradeId) {
           <div class="chart-panel" style="grid-column: 1 / -1;">
             <h2 data-i18n="view.trade_detail.h2.journal_per_trade">Journal — per-trade</h2>
             <div id="journal-list">${journal.map(j => `
-              <div class="journal-entry">
+              <div class="journal-entry"
+                   data-context-scope="journal-entry"
+                   data-id="${esc(j.id)}"
+                   data-trade-id="${esc(j.trade_id || '')}">
                 <div class="meta">${fmtDateTime(j.created_at)}</div>
                 <div class="body">${md(j.body_md)}</div>
                 <button data-i18n="view.trade_detail.btn.delete_2" class="link" data-del-journal="${j.id}">delete</button>

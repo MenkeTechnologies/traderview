@@ -52,7 +52,8 @@ function renderPicker(trades, mount, tok) {
     el.innerHTML = trades.map(t => {
         const sel = selectedIds.includes(t.id);
         const cls = (t.net_pnl ?? 0) >= 0 ? 'pos' : 'neg';
-        return `<label style="display:flex;gap:6px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border);cursor:pointer;${sel ? 'background:rgba(0,229,255,0.10);' : ''}">
+        return `<label data-context-scope="trade-row" data-id="${esc(t.id)}"
+                    style="display:flex;gap:6px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border);cursor:pointer;${sel ? 'background:rgba(0,229,255,0.10);' : ''}">
             <input type="checkbox" class="tc-pick" data-id="${t.id}" ${sel ? 'checked' : ''}>
             <span style="flex:1;font-size:11px;">
                 <strong>${esc(t.symbol)}</strong>
