@@ -146,7 +146,7 @@ function sampleTable(samples) {
         <tbody>
         ${samples.map(s => {
             const slipCls = s.slippage_bps <= 5 ? 'pos' : s.slippage_bps <= 25 ? '' : 'neg';
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(s.symbol)}">
                 <td class="small">${new Date(s.executed_at).toLocaleString()}</td>
                 <td>${esc(s.symbol)}</td>
                 <td class="small">${esc(s.side)}</td>

@@ -68,7 +68,7 @@ async function refresh(mount, tok) {
     const newsEl = mount.querySelector('#tape-news');
     if (newsEl) newsEl.innerHTML = allNews.length
         ? allNews.slice(0, 40).map(n => `
-            <div class="news-item">
+            <div class="news-item" data-context-scope="symbol-row" data-symbol="${esc(n.symbol)}">
                 <a href="${esc(n.link || '#')}" target="_blank" rel="noopener noreferrer">
                     <span class="tape-sym">${esc(n.symbol)}</span> ${esc(n.title || '(no title)')}
                 </a>
@@ -102,7 +102,7 @@ async function refresh(mount, tok) {
     }
     const quotesEl = mount.querySelector('#tape-quotes');
     if (quotesEl) quotesEl.innerHTML = quotes.length ? `<table class="trades">
-        ${quotes.map(q => `<tr>
+        ${quotes.map(q => `<tr data-context-scope="symbol-row" data-symbol="${esc(q.symbol)}">
             <td><a href="#research/${encodeURIComponent(q.symbol)}">${esc(q.symbol)}</a></td>
             <td>${Number(q.price).toFixed(2)}</td>
             <td class="${(q.change_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${q.change_pct != null ? (q.change_pct >= 0 ? '+' : '') + q.change_pct.toFixed(2) + '%' : '—'}</td>
