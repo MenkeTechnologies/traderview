@@ -730,6 +730,11 @@ function bindTabs() {
         const el = document.getElementById('hu-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in bocpd scope → click Detect.
+    window.addEventListener('tv:bocpd-detect', () => {
+        const el = document.getElementById('bo-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

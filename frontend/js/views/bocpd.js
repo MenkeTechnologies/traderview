@@ -20,6 +20,7 @@ import {
 } from '../_bocpd_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_RETURNS = `# Paste a return series. One value per token.
 # Demo: 100 low-vol returns, then 100 high-vol returns. BOCPD should
 # flag a clear change point near index 100.
@@ -60,12 +61,12 @@ export async function renderBocpd(mount, _appState) {
             <h2 data-i18n="view.bocpd.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.bocpd.label.hazard">Hazard rate (per-bar prior)</span>
-                    <input id="bo-hazard" type="number" step="any" min="0.0001" max="0.5" value="${state.hazard}"></label>
+                    <input id="bo-hazard" type="number" step="any" min="0.0001" max="0.5" value="${state.hazard}" data-tip="view.bocpd.tip.hazard"></label>
                 <label><span data-i18n="view.bocpd.label.threshold">Threshold (P ≥)</span>
-                    <input id="bo-thresh" type="number" step="0.01" min="0" max="1" value="${state.threshold}"></label>
+                    <input id="bo-thresh" type="number" step="0.01" min="0" max="1" value="${state.threshold}" data-tip="view.bocpd.tip.threshold"></label>
                 <label><span data-i18n="view.bocpd.label.top_k">Show top-K</span>
-                    <input id="bo-topk" type="number" step="1" min="1" max="20" value="${state.topK}"></label>
-                <button data-i18n="view.bocpd.btn.detect" id="bo-run" class="primary" type="button">Detect</button>
+                    <input id="bo-topk" type="number" step="1" min="1" max="20" value="${state.topK}" data-tip="view.bocpd.tip.top_k"></label>
+                <button data-i18n="view.bocpd.btn.detect" data-tip="view.bocpd.tip.detect" data-shortcut="bocpd_detect" id="bo-run" class="primary" type="button">Detect</button>
             </div>
             <p data-i18n="view.bocpd.hint.hazard_the_per_bar_prior_probability_that_the_unde" class="muted">
                 Hazard = the per-bar prior probability that the underlying distribution
@@ -75,6 +76,7 @@ export async function renderBocpd(mount, _appState) {
             </p>
             <h3 data-i18n="view.bocpd.h3.return_series">Return series</h3>
             <textarea id="bo-text" rows="9"
+                data-tip="view.bocpd.tip.returns"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
 
@@ -125,9 +127,10 @@ async function detect(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const err = validateInputs(parsed.value, state.hazard);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     if (!Number.isFinite(state.threshold) || state.threshold < 0 || state.threshold > 1) {
-        showErr(t('view.bocpd.err.threshold_must_be_in_0_1')); return;
+        const m = t('view.bocpd.err.threshold_must_be_in_0_1');
+        showErr(m); showToast(m, { level: 'warning' }); return;
     }
 
     let res;
@@ -135,7 +138,8 @@ async function detect(mount, tok) {
         res = await api.anlyBayesianChangePoint(buildBody(parsed.value, state.hazard));
         if (!res) throw new Error(t('view.bocpd.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -144,6 +148,12 @@ async function detect(mount, tok) {
     renderCpChart(parsed.value, res);
     renderRlChart(res);
     renderDetectedList(res);
+    const detected = countAboveThreshold(res.change_point_probability, state.threshold);
+    showToast(t('view.bocpd.toast.done', {
+        n: parsed.value.length,
+        cps: detected,
+        thresh: (state.threshold * 100).toFixed(0),
+    }), { level: 'success' });
 }
 
 function renderSummary(returns, res) {
