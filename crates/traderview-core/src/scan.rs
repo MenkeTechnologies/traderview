@@ -248,6 +248,8 @@ pub enum Preset {
     VolWithoutChangeSqueeze,     // rel_volume >= 1.5 AND change_pct.abs() < 0.2 AND day_pct.abs() < 0.5 — vol arrives but price doesn't move
     TickInsideOpenSqueeze,       // |day_pct| < 0.15 AND |change_pct| < 0.5 AND |gap_pct| < 0.3 — closing within a tick of open
     Pct52wExactHalfSqueeze,      // year_high_pct -55 to -45 AND year_low_pct 45 to 55 AND |change_pct| < 0.5 — sitting at exact 52w midpoint
+    UnchangedOnVolumeSqueeze,    // |change_pct| < 0.1 AND rel_volume >= 1 — totally unchanged on at-or-above-average volume
+    WideHodNarrowLodSqueeze,     // hod_dist.abs() >= 2 AND lod_dist.abs() < 0.5 AND change_pct < 0 — high failed, close pinned to low
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -916,6 +918,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 55.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::UnchangedOnVolumeSqueeze => {
+            hit.change_pct.abs() < 0.1 && hit.rel_volume >= 1.0
+        }
+        Preset::WideHodNarrowLodSqueeze => {
+            hit.hod_dist_pct.abs() >= 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+        }
     }
 }
 
@@ -1054,6 +1064,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::VolWithoutChangeSqueeze => "Vol-Without-Change Squeeze",
         Preset::TickInsideOpenSqueeze => "Tick-Inside-Open Squeeze",
         Preset::Pct52wExactHalfSqueeze => "52w Exact-Half Squeeze",
+        Preset::UnchangedOnVolumeSqueeze => "Unchanged-On-Volume Squeeze",
+        Preset::WideHodNarrowLodSqueeze => "Wide-HOD Narrow-LOD Squeeze",
     }
 }
 

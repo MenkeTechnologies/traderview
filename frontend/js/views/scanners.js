@@ -130,6 +130,8 @@ const PRESETS = [
     { id: 'vol_without_change_squeeze', label: t('view.scanners.preset.vol_without_change_squeeze.label'), desc: t('view.scanners.preset.vol_without_change_squeeze.desc') },
     { id: 'tick_inside_open_squeeze',   label: t('view.scanners.preset.tick_inside_open_squeeze.label'),   desc: t('view.scanners.preset.tick_inside_open_squeeze.desc') },
     { id: 'pct52w_exact_half_squeeze',  label: t('view.scanners.preset.pct52w_exact_half_squeeze.label'),  desc: t('view.scanners.preset.pct52w_exact_half_squeeze.desc') },
+    { id: 'unchanged_on_volume_squeeze', label: t('view.scanners.preset.unchanged_on_volume_squeeze.label'), desc: t('view.scanners.preset.unchanged_on_volume_squeeze.desc') },
+    { id: 'wide_hod_narrow_lod_squeeze', label: t('view.scanners.preset.wide_hod_narrow_lod_squeeze.label'), desc: t('view.scanners.preset.wide_hod_narrow_lod_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

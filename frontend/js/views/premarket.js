@@ -17,6 +17,10 @@ export async function renderPremarket(mount) {
 
         <div id="pmEvents"></div>
         <div id="pmContent" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.premarket.h2.change_chart">Overnight change % across contracts</h2>
+            <div id="pm-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
@@ -35,6 +39,7 @@ async function refresh(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         renderGroups(s.contracts, mount);
         renderEvents(s.today_events, s.fetched_at, mount);
+        renderChangeChart(s.contracts);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#pmContent');
@@ -85,6 +90,41 @@ function card(c) {
         <div class="small ${magCls}">${magTxt}</div>
         ${rng}${ms}
     </div>`;
+}
+
+function renderChangeChart(contracts) {
+    const el = document.getElementById('pm-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (contracts || []).filter(c => Number.isFinite(Number(c.change_pct)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.premarket.empty_chart">${esc(t('view.premarket.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.change_pct) - Number(a.change_pct));
+    const labels = valid.map(c => c.symbol);
+    const ys = valid.map(c => Number(c.change_pct));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.premarket.chart.contract_idx') },
+            { label: t('view.premarket.chart.change_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.premarket.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderEvents(events, fetched, mount) {
