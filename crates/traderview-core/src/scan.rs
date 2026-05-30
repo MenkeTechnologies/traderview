@@ -712,6 +712,8 @@ pub enum Preset {
     BearishOutsideDayHotVol,         // change_pct < -1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — red close + wide range + same-direction intraday + hot vol (bearish outside day with conviction; large-range exploration ending down on volume; institutional distribution through range expansion)
     BelowAvgVolBigChangeGreen,       // change_pct > 2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big green + below-avg vol (50-90%) + no gap (efficient organic up move on quiet tape; small participants chasing without catalyst; low-effort momentum)
     BelowAvgVolBigChangeRed,         // change_pct < -2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big red + below-avg vol (50-90%) + no gap (efficient organic down move on quiet tape; small participants distributing without catalyst; low-effort weakness)
+    MidRangeFullExpansionHotVol,     // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — structurally mid-52w + wide intraday range + hot vol (undecided asset having a high-vol expansion day; potential trend genesis from balance; range break candidate)
+    MidRangeCompressionDryVol,       // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 0.8 AND rel_volume < 0.5 — structurally mid-52w + tight intraday + dry vol (undecided + intraday compression + nobody trading; classic dormancy day; pre-event coil)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3951,6 +3953,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.9
                 && hit.gap_pct.abs() < 0.5
         }
+        Preset::MidRangeFullExpansionHotVol => {
+            hit.year_high_pct > 15.0
+                && hit.year_low_pct > 15.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MidRangeCompressionDryVol => {
+            hit.year_high_pct > 15.0
+                && hit.year_low_pct > 15.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 0.8
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -4553,6 +4567,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BearishOutsideDayHotVol => "Bearish Outside Day + Wide Range + Same-direction Intraday + Hot Vol (Institutional Distribution Through Range Expansion)",
         Preset::BelowAvgVolBigChangeGreen => "Big Green + Below-avg Vol (50-90%) + No Gap (Efficient Organic Up Move; Low-effort Momentum on Quiet Tape)",
         Preset::BelowAvgVolBigChangeRed => "Big Red + Below-avg Vol (50-90%) + No Gap (Efficient Organic Down Move; Low-effort Weakness on Quiet Tape)",
+        Preset::MidRangeFullExpansionHotVol => "Mid 52w + Wide Intraday Range + Hot Vol (Undecided Asset Having a High-vol Expansion Day; Trend Genesis from Balance)",
+        Preset::MidRangeCompressionDryVol => "Mid 52w + Tight Intraday + Dry Vol (Structural Undecided + Compression + No Trade; Classic Dormancy / Pre-event Coil)",
     }
 }
 

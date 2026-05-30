@@ -53,6 +53,12 @@ export async function renderMarketProfile(mount, _appState) {
             <div id="mp-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.market_profile.h2.cum_tpo_chart">Cumulative TPO % by price (low → high)</h2>
+            <div id="mp-cum-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.market_profile.hint.cum_tpo" class="muted small">Cumulative share of TPOs walking from low to high. Yellow dashed at 15% / 85% = VAL / VAH reference; the steep middle = value-area density. Flat tails = single-print excess.</p>
+        </div>
+
         <div id="mp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('mp-demo').addEventListener('click', () => {
@@ -104,6 +110,7 @@ async function compute(tok) {
     renderSummary(report);
     renderTpo(report);
     renderTpoChart(report);
+    renderCumTpoChart(report);
     const lvls = Array.isArray(report?.levels) ? report.levels.length : 0;
     showToast(t('view.market_profile.toast.built', { brackets: brackets.length, levels: lvls }), { level: 'success' });
 }
@@ -135,6 +142,45 @@ function renderTpoChart(report) {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
         legend: { show: true },
     }, [xs, ys, pocLine], el);
+}
+
+function renderCumTpoChart(report) {
+    const el = document.getElementById('mp-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const levels = (report && Array.isArray(report.levels)) ? [...report.levels] : [];
+    if (levels.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.market_profile.empty_cum_chart">${esc(t('view.market_profile.empty_cum_chart'))}</div>`;
+        return;
+    }
+    levels.sort((a, b) => a.price - b.price);
+    const total = levels.reduce((s, l) => s + Number(l.tpo_count), 0) || 1;
+    const xs = [];
+    const cum = [];
+    let acc = 0;
+    for (const l of levels) {
+        acc += Number(l.tpo_count);
+        xs.push(Number(l.price));
+        cum.push(acc / total * 100);
+    }
+    const val = xs.map(() => 15);
+    const vah = xs.map(() => 85);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.market_profile.chart.price') },
+            { label: t('view.market_profile.chart.cum_tpo'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.market_profile.chart.val_ref'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.market_profile.chart.vah_ref'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40,
+            values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') }],
+        legend: { show: true },
+    }, [xs, cum, val, vah], el);
 }
 
 function renderSummary(r) {
