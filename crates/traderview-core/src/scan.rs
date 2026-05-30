@@ -912,6 +912,8 @@ pub enum Preset {
     ModerateGapBearContinuationHotVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume >= 2 — moderate gap down + bear continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for panic but big enough for directional commitment with elevated participation)
     ModerateGapBullContinuationDryVol,   // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume < 0.8 — moderate gap up + bull continuation + dry vol (modest gap extended on no participation; suspect rally without institutional sponsorship; fade-prone setup despite positive net move)
     ModerateGapBearContinuationDryVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume < 0.8 — moderate gap down + bear continuation + dry vol (modest gap extended on no participation; suspect decline without institutional sponsorship; fade-prone setup despite negative net move)
+    ModerateGapBullFadeHotVol,           // gap_pct >= 1 AND gap_pct <= 2 AND change_pct < -1 AND rel_volume >= 2 — moderate gap up + closed red + hot vol (moderate-gap fade reversal: gap up was sold throughout the session below prior close; trapped overnight longs flushed with elevated participation; reversal-short signal)
+    ModerateGapBearReclaimHotVol,        // gap_pct >= -2 AND gap_pct <= -1 AND change_pct > 1 AND rel_volume >= 2 — moderate gap down + closed green + hot vol (moderate-gap reclaim reversal: gap down was bought throughout the session above prior close; trapped overnight shorts squeezed with elevated participation; reversal-long signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5357,6 +5359,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume < 0.8
         }
+        Preset::ModerateGapBullFadeHotVol => {
+            hit.gap_pct >= 1.0
+                && hit.gap_pct <= 2.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::ModerateGapBearReclaimHotVol => {
+            hit.gap_pct >= -2.0
+                && hit.gap_pct <= -1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6159,6 +6173,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ModerateGapBearContinuationHotVol => "Moderate Gap Down + Bear Continuation + Hot Vol (Modest Gap Held + Extended Further during Regular Hours; the In-between Gap Regime Not Large Enough for Panic but Big Enough for Directional Commitment with Elevated Participation)",
         Preset::ModerateGapBullContinuationDryVol => "Moderate Gap Up + Bull Continuation + Dry Vol (Modest Gap Extended on No Participation; Suspect Rally without Institutional Sponsorship; Fade-prone Setup despite Positive Net Move)",
         Preset::ModerateGapBearContinuationDryVol => "Moderate Gap Down + Bear Continuation + Dry Vol (Modest Gap Extended on No Participation; Suspect Decline without Institutional Sponsorship; Fade-prone Setup despite Negative Net Move)",
+        Preset::ModerateGapBullFadeHotVol => "Moderate Gap Up + Closed Red + Hot Vol (Moderate-gap Fade Reversal: Gap Up Was Sold throughout the Session below Prior Close; Trapped Overnight Longs Flushed with Elevated Participation; Reversal-short Signal)",
+        Preset::ModerateGapBearReclaimHotVol => "Moderate Gap Down + Closed Green + Hot Vol (Moderate-gap Reclaim Reversal: Gap Down Was Bought throughout the Session above Prior Close; Trapped Overnight Shorts Squeezed with Elevated Participation; Reversal-long Signal)",
     }
 }
 

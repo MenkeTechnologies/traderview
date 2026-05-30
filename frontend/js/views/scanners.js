@@ -794,6 +794,8 @@ const PRESETS = [
     { id: 'moderate_gap_bear_continuation_hot_vol', label: t('view.scanners.preset.moderate_gap_bear_continuation_hot_vol.label'), desc: t('view.scanners.preset.moderate_gap_bear_continuation_hot_vol.desc') },
     { id: 'moderate_gap_bull_continuation_dry_vol', label: t('view.scanners.preset.moderate_gap_bull_continuation_dry_vol.label'), desc: t('view.scanners.preset.moderate_gap_bull_continuation_dry_vol.desc') },
     { id: 'moderate_gap_bear_continuation_dry_vol', label: t('view.scanners.preset.moderate_gap_bear_continuation_dry_vol.label'), desc: t('view.scanners.preset.moderate_gap_bear_continuation_dry_vol.desc') },
+    { id: 'moderate_gap_bull_fade_hot_vol', label: t('view.scanners.preset.moderate_gap_bull_fade_hot_vol.label'), desc: t('view.scanners.preset.moderate_gap_bull_fade_hot_vol.desc') },
+    { id: 'moderate_gap_bear_reclaim_hot_vol', label: t('view.scanners.preset.moderate_gap_bear_reclaim_hot_vol.label'), desc: t('view.scanners.preset.moderate_gap_bear_reclaim_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
