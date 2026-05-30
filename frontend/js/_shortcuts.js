@@ -85,6 +85,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'dashboards_focus_new',         keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'dashboards',        descKey: 'shortcut.dashboards_focus_new',         actionKey: 'tv:dashboards-focus-new' },
     { id: 'dashboards_toggle_edit',       keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'dashboards',        descKey: 'shortcut.dashboards_toggle_edit',       actionKey: 'tv:dashboards-toggle-edit' },
     { id: 'new_trade_add',                keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'new-trade',         descKey: 'shortcut.new_trade_add',                actionKey: 'tv:new-trade-add' },
+    { id: 'research_action',              keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'research',          descKey: 'shortcut.research_action',              actionKey: 'tv:research-action' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

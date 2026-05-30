@@ -574,6 +574,16 @@ function bindTabs() {
         const form = document.getElementById('ex-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `r` in research scope → submit search form if in
+    // search-mode, else re-fetch the active research page.
+    window.addEventListener('tv:research-action', () => {
+        const form = document.getElementById('rs-form');
+        if (form && typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+        }
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
