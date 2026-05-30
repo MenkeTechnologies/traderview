@@ -64,6 +64,8 @@ const PRESETS = [
     { id: 'pivot_pin_squeeze',         label: t('view.scanners.preset.pivot_pin_squeeze.label'),         desc: t('view.scanners.preset.pivot_pin_squeeze.desc') },
     { id: 'even_sides_squeeze',        label: t('view.scanners.preset.even_sides_squeeze.label'),        desc: t('view.scanners.preset.even_sides_squeeze.desc') },
     { id: 'quarter_day_inside_squeeze', label: t('view.scanners.preset.quarter_day_inside_squeeze.label'), desc: t('view.scanners.preset.quarter_day_inside_squeeze.desc') },
+    { id: 'even_volume_quiet_squeeze',  label: t('view.scanners.preset.even_volume_quiet_squeeze.label'),  desc: t('view.scanners.preset.even_volume_quiet_squeeze.desc') },
+    { id: 'tight_coil_high_squeeze',    label: t('view.scanners.preset.tight_coil_high_squeeze.label'),    desc: t('view.scanners.preset.tight_coil_high_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

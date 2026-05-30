@@ -182,6 +182,8 @@ pub enum Preset {
     PivotPinSqueeze,             // day_pct.abs() < 0.3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close pinned to open with tight extremes
     EvenSidesSqueeze,            // gap and change opposite sign AND each |x| < 1 AND tight day AND quiet — overnight + intraday cancel out
     InsideQuarterDaySqueeze,     // day_pct.abs() < 0.25 AND change_pct.abs() < 1 AND rel_volume < 0.8 — barely-moving inside bar
+    EvenVolumeQuietSqueeze,      // rel_volume between 0.9 and 1.1 AND |day_pct| < 0.3 AND |change_pct| < 0.5 — average vol but no move
+    TightCoilHighSqueeze,        // year_high_pct >= -2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND hod_dist.abs() < 1 — coiled near all-time/52w high
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -471,6 +473,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 1.0
                 && hit.rel_volume < 0.8
         }
+        Preset::EvenVolumeQuietSqueeze => {
+            hit.rel_volume >= 0.9
+                && hit.rel_volume <= 1.1
+                && hit.day_pct.abs() < 0.3
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::TightCoilHighSqueeze => {
+            hit.year_high_pct >= -2.0
+                && hit.day_pct.abs() < 0.5
+                && hit.change_pct.abs() < 0.8
+                && hit.hod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -543,6 +557,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PivotPinSqueeze => "Pivot-Pin Squeeze",
         Preset::EvenSidesSqueeze => "Even-Sides Squeeze",
         Preset::InsideQuarterDaySqueeze => "Quarter-Day Inside Squeeze",
+        Preset::EvenVolumeQuietSqueeze => "Even-Volume Quiet Squeeze",
+        Preset::TightCoilHighSqueeze => "Tight Coil at 52w-High",
     }
 }
 

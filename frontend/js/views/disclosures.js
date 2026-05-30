@@ -66,8 +66,13 @@ export async function renderDisclosures(mount) {
                 <h2 data-i18n="view.disclosures.h2.live_feed_auto_refreshes_every_20s">Live feed · auto-refreshes every 20s</h2>
                 <div id="feed">${renderFeed(filings)}</div>
             </div>
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2 data-i18n="view.disclosures.h2.amount_chart">Top filings by dollar amount</h2>
+                <div id="d-chart" style="width:100%;height:240px"></div>
+            </div>
         </div>
     `;
+    renderAmountChart(filings);
 
     mount.querySelector('#poll-now').addEventListener('click', async () => {
         const status = mount.querySelector('#poll-status');
@@ -130,10 +135,44 @@ export async function renderDisclosures(mount) {
     }, { once: true });
 }
 
+function renderAmountChart(items) {
+    const el = document.getElementById('d-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (items || [])
+        .filter(d => d.amount_usd != null && Number.isFinite(Number(d.amount_usd)))
+        .sort((a, b) => Number(b.amount_usd) - Number(a.amount_usd))
+        .slice(0, 30);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.disclosures.empty_chart">${esc(t('view.disclosures.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(d => d.symbol || d.filer_name.slice(0, 12));
+    const ys = valid.map(d => Number(d.amount_usd));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.disclosures.chart.filing_idx') },
+            { label: t('view.disclosures.chart.amount'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 70 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
 async function refreshFeed(watchers, mount, tok) {
     try {
         const all = await api.disclosures(null, null, 100);
         if (tok != null && !viewIsCurrent(tok)) return;
+        renderAmountChart(all);
         const top = all[0]?.id || '';
         // Fire watchers on any new rows we haven't seen.
         const fresh = [];
