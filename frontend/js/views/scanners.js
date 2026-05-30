@@ -474,6 +474,8 @@ const PRESETS = [
     { id: 'at_year_extreme_volatility_expansion', label: t('view.scanners.preset.at_year_extreme_volatility_expansion.label'), desc: t('view.scanners.preset.at_year_extreme_volatility_expansion.desc') },
     { id: 'breakout_from_mid_levels', label: t('view.scanners.preset.breakout_from_mid_levels.label'), desc: t('view.scanners.preset.breakout_from_mid_levels.desc') },
     { id: 'breakdown_from_mid_levels', label: t('view.scanners.preset.breakdown_from_mid_levels.label'), desc: t('view.scanners.preset.breakdown_from_mid_levels.desc') },
+    { id: 'intraday_stronger_than_gap', label: t('view.scanners.preset.intraday_stronger_than_gap.label'), desc: t('view.scanners.preset.intraday_stronger_than_gap.desc') },
+    { id: 'overnight_stronger_than_intraday', label: t('view.scanners.preset.overnight_stronger_than_intraday.label'), desc: t('view.scanners.preset.overnight_stronger_than_intraday.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -592,6 +592,8 @@ pub enum Preset {
     AtYearExtremeVolatilityExpansion, // (year_high_pct < 3 OR year_low_pct < 3) AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — at either 52w extreme + wide range + decent vol (at-extreme volatility expansion; testing structural level)
     BreakoutFromMidLevels,          // year_high_pct < 10 AND year_low_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — within 10% of 52w high coming from mid-range + decent move + hot vol (breakout candidate from mid-range to upper-zone)
     BreakdownFromMidLevels,         // year_low_pct < 10 AND year_high_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — within 10% of 52w low coming from mid-range + decent drop + hot vol (breakdown candidate from mid-range to lower-zone)
+    IntradayStrongerThanGap,        // gap_pct.abs() < 1 AND day_pct.abs() > 1.5 AND change_pct.abs() > 1 AND rel_volume >= 1.2 — small gap + big intraday + decent change + decent vol (intraday energy > overnight; all action during regular session)
+    OvernightStrongerThanIntraday,  // gap_pct.abs() > 1.5 AND day_pct.abs() < 0.5 AND change_pct.abs() > 1 — big gap + flat intraday + decent change (overnight dominated; market accepted gap without intraday expansion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3152,6 +3154,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::IntradayStrongerThanGap => {
+            hit.gap_pct.abs() < 1.0
+                && hit.day_pct.abs() > 1.5
+                && hit.change_pct.abs() > 1.0
+                && hit.rel_volume >= 1.2
+        }
+        Preset::OvernightStrongerThanIntraday => {
+            hit.gap_pct.abs() > 1.5
+                && hit.day_pct.abs() < 0.5
+                && hit.change_pct.abs() > 1.0
+        }
     }
 }
 
@@ -3634,6 +3647,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AtYearExtremeVolatilityExpansion => "At 52w Extreme + Wide Range + Decent Vol (Structural Test)",
         Preset::BreakoutFromMidLevels => "Near 52w High Coming from Mid + Hot Vol (Breakout from Mid-range)",
         Preset::BreakdownFromMidLevels => "Near 52w Low Coming from Mid + Hot Vol (Breakdown from Mid-range)",
+        Preset::IntradayStrongerThanGap => "Intraday Move > Gap (All Action Regular Session)",
+        Preset::OvernightStrongerThanIntraday => "Overnight Gap > Intraday (Market Accepted Gap Without Expansion)",
     }
 }
 

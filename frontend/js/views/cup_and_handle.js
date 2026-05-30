@@ -84,6 +84,11 @@ export async function renderCupAndHandle(mount, _appState) {
                 handle low. Green dashed = pivot (IBD buy-point = right-rim high).</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cup_and_handle.h2.cup_profile_chart">Cup profile — closes normalized within the cup span (curvature symmetry)</h2>
+            <div id="ch-profile-chart" style="height:220px"></div>
+        </div>
+
         <div id="ch-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -141,6 +146,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, bars);
     renderChart(bars, res);
+    renderProfileChart(bars, res);
     showToast(t('view.cup_and_handle.toast.done', {
         bars: bars.length,
         verdict: res ? t('view.cup_and_handle.verdict.found') : t('view.cup_and_handle.verdict.none'),
@@ -223,6 +229,53 @@ function renderChart(bars, cand) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderProfileChart(bars, cand) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ch-profile-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!cand) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cup_and_handle.empty_profile_chart">${esc(t('view.cup_and_handle.empty_profile_chart'))}</div>`;
+        return;
+    }
+    const lo = Math.max(0, Math.min(bars.length - 1, cand.left_rim_index));
+    const hi = Math.max(lo, Math.min(bars.length - 1, cand.right_rim_index));
+    if (hi - lo < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cup_and_handle.empty_profile_chart">${esc(t('view.cup_and_handle.empty_profile_chart'))}</div>`;
+        return;
+    }
+    const slice = bars.slice(lo, hi + 1).map(b => b.close);
+    const minV = Math.min(...slice);
+    const maxV = Math.max(...slice);
+    const range = maxV - minV;
+    if (!(range > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cup_and_handle.empty_profile_chart">${esc(t('view.cup_and_handle.empty_profile_chart'))}</div>`;
+        return;
+    }
+    const len = slice.length;
+    const xs = slice.map((_, i) => i / (len - 1));
+    const ys = slice.map(v => (v - minV) / range);
+    const mid = xs.map(() => 0.5);
+    const symmetryAxis = xs.map(() => 0.5);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { range: [0, 1] }, y: { range: [-0.05, 1.05] } },
+        series: [
+            { label: t('view.cup_and_handle.chart.position') },
+            { label: t('view.cup_and_handle.chart.norm_close'),
+              stroke: '#00e5ff', width: 1.5,
+              fill: 'rgba(0,229,255,0.10)',
+              points: { show: false } },
+            { label: t('view.cup_and_handle.chart.mid_y'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.cup_and_handle.chart.symmetry_x'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, ys, mid, symmetryAxis], el);
 }
 
 function showErr(msg) {
