@@ -442,6 +442,15 @@ export function dataFromTarget(detail, key) {
     return (target && target.dataset && target.dataset[key]) || null;
 }
 
+// Specialization: read `data-symbol`, uppercase, null on missing.
+// Symbols are case-insensitive but routes expect them upper-case;
+// crypto views render lower-case (`btc-usd`) but the resulting
+// `#charts/btc-usd` works thanks to encodeURIComponent.
+export function symbolFromTarget(detail) {
+    const raw = dataFromTarget(detail, 'symbol');
+    return raw ? raw.toUpperCase() : null;
+}
+
 // For the up/down keyboard navigation through visible items.
 export function nextVisibleIdx(items, currentIdx, delta) {
     if (!Array.isArray(items) || items.length === 0) return 0;

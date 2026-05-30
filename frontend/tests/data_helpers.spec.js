@@ -2,8 +2,8 @@
 // every row-context handler in context_menu.js uses to read payload
 // from the right-clicked element.
 
-import { test, expect } from 'vitest';
-import { dataFromTarget } from '../js/_context_menu.js';
+import { test, expect, describe } from 'vitest';
+import { dataFromTarget, symbolFromTarget } from '../js/_context_menu.js';
 
 test('returns the attribute when chain is intact', () => {
     const detail = { target: { dataset: { id: 'abc-123', symbol: 'AAPL' } } };
@@ -45,4 +45,32 @@ test('camelCase key matches dataset HTML kebab-case attribute', () => {
     const detail = { target: { dataset: { ruleId: 'r-42', wid: 'w-9' } } };
     expect(dataFromTarget(detail, 'ruleId')).toBe('r-42');
     expect(dataFromTarget(detail, 'wid')).toBe('w-9');
+});
+
+describe('symbolFromTarget', () => {
+    test('reads data-symbol and uppercases', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: 'aapl' } } })).toBe('AAPL');
+    });
+    test('already-uppercase symbol passes through', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: 'NVDA' } } })).toBe('NVDA');
+    });
+    test('mixed-case from broker feeds normalizes', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: 'Brk.B' } } })).toBe('BRK.B');
+    });
+    test('crypto symbols preserve the suffix', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: 'btc-usd' } } })).toBe('BTC-USD');
+    });
+    test('index symbols preserve the caret', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: '^gspc' } } })).toBe('^GSPC');
+    });
+    test('missing data-symbol → null', () => {
+        expect(symbolFromTarget({ target: { dataset: {} } })).toBeNull();
+    });
+    test('empty data-symbol → null (treated as missing)', () => {
+        expect(symbolFromTarget({ target: { dataset: { symbol: '' } } })).toBeNull();
+    });
+    test('null detail / target safe', () => {
+        expect(symbolFromTarget(null)).toBeNull();
+        expect(symbolFromTarget({ target: null })).toBeNull();
+    });
 });

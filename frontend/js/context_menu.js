@@ -10,7 +10,7 @@
 
 import {
     GLOBAL_ITEMS, EDITING_ITEMS, positionMenu, compileMenu, mergeMenu,
-    mergeMenuWithEditing, nextVisibleIdx, dataFromTarget,
+    mergeMenuWithEditing, nextVisibleIdx, dataFromTarget, symbolFromTarget,
 } from './_context_menu.js';
 import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
@@ -61,14 +61,6 @@ function toastErr(msg) {
 // boilerplate t-wrap on every showToast call with level=success.
 function toastOk(key, params) {
     showToast(t(key, params || {}), { level: 'success' });
-}
-
-// `symbolFromTarget(detail)` — read data-symbol off the right-clicked
-// element, uppercase, return null when missing. Used by every per-row
-// symbol-nav handler (charts / research / options / set-active / etc.).
-function symbolFromTarget(detail) {
-    const raw = dataFromTarget(detail, 'symbol');
-    return raw ? raw.toUpperCase() : null;
 }
 
 export function installContextMenu() {
