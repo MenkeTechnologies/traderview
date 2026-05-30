@@ -416,6 +416,8 @@ pub enum Preset {
     LowerWickRedDayConfirm,      // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct < -1 — long lower wick + closed red day (failed reversal; trend continuation)
     InsideBarTightAtMid,         // hod_dist + lod_dist < 1 AND change_pct.abs() < 0.2 AND rel_volume < 0.8 — extremely tight inside bar at mid (NR4 / NR7 silent compression)
     OutsideBarVolumeBoth,        // hod_dist.abs() > 3 AND lod_dist.abs() > 3 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — outside-bar both extremes touched on heavy vol with no net move (battle for direction)
+    LeadingUpDayLightVol,        // change_pct > 2 AND rel_volume < 0.7 AND hod_dist.abs() < 0.5 — strong up close on light volume (leadership without participation; suspect quality)
+    LeadingDownDayLightVol,      // change_pct < -2 AND rel_volume < 0.7 AND lod_dist.abs() < 0.5 — strong down close on light volume (leadership without participation; suspect quality)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1950,6 +1952,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::LeadingUpDayLightVol => {
+            hit.change_pct > 2.0
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::LeadingDownDayLightVol => {
+            hit.change_pct < -2.0
+                && hit.rel_volume < 0.7
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2256,6 +2268,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowerWickRedDayConfirm => "Lower-Wick Red-Day Confirm",
         Preset::InsideBarTightAtMid => "Inside Bar Tight At Mid",
         Preset::OutsideBarVolumeBoth => "Outside Bar, Heavy Vol Battle",
+        Preset::LeadingUpDayLightVol => "Strong Up, Light Vol (Suspect)",
+        Preset::LeadingDownDayLightVol => "Strong Down, Light Vol (Suspect)",
     }
 }
 

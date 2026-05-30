@@ -308,8 +308,48 @@ function renderEvents(events) {
             <h2 data-i18n="view.alert_rules.h2.events_chart">Events per rule</h2>
             <div id="ar-chart" style="width:100%;height:200px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.alert_rules.h2.sound_chart">Events per sound</h2>
+            <div id="ar-sound-chart" style="width:100%;height:180px"></div>
+        </div>
     `;
     renderEventsChart(events);
+    renderSoundChart(events);
+}
+
+function renderSoundChart(events) {
+    const el = document.getElementById('ar-sound-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map();
+    for (const ev of events || []) {
+        const s = ev.sound || 'unknown';
+        counts.set(s, (counts.get(s) || 0) + 1);
+    }
+    const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.alert_rules.empty_sound_chart">${esc(tr('view.alert_rules.empty_sound_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r[0]);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r[1]);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 160,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: tr('view.alert_rules.chart.sound') },
+            { label: tr('view.alert_rules.chart.count'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderEventsChart(events) {
