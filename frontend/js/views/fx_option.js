@@ -127,31 +127,31 @@ function renderSummary(res) {
 
     const fxSummary = document.getElementById('fx-summary');
     fxSummary.innerHTML = [
-        bigCard('Price', fmtRate(res.price), `
+        bigCard(t('view.fx_option.card.price'), fmtRate(res.price), `
             <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.intrinsic">Intrinsic</span> <strong>${fmtRate(intrinsic)}</strong></div>
             <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.time_value">Time value</span> <strong>${fmtRate(timeValue)}</strong></div>
         `),
-        bigCard('Delta', fmtGreek(res.delta, 4), `
+        bigCard(t('view.fx_option.card.delta'), fmtGreek(res.delta, 4), `
             <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.hedge_ratio">Hedge ratio</span> <strong>${fmtGreek(res.delta, 4)}</strong></div>
             <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.atm_target">ATM target</span>
                 <strong>${p.kind === 'call' ? '~ +0.5' : '~ −0.5'}</strong></div>
         `),
-        bigCard('Gamma', fmtGreek(res.gamma), `
+        bigCard(t('view.fx_option.card.gamma'), fmtGreek(res.gamma), `
             <div class="vc-row"><span class="muted">d²V/dS²</span> <strong>${fmtGreek(res.gamma)}</strong></div>
             <div class="vc-row"><span class="muted" data-i18n="view.fx_option.row.peak">Peak</span> <strong data-i18n="view.fx_option.row.at_atm">at ATM</strong></div>
         `),
-        bigCard('Vega', fmtGreek(res.vega), `
-            <div class="vc-row"><span class="muted">per 1.00 σ</span> <strong>${fmtGreek(res.vega)}</strong></div>
-            <div class="vc-row"><span class="muted">per 1% σ</span> <strong>${fmtGreek(res.vega / 100)}</strong></div>
+        bigCard(t('view.fx_option.card.vega'), fmtGreek(res.vega), `
+            <div class="vc-row"><span class="muted">${esc(t('view.fx_option.row.per_100_sigma'))}</span> <strong>${fmtGreek(res.vega)}</strong></div>
+            <div class="vc-row"><span class="muted">${esc(t('view.fx_option.row.per_1pct_sigma'))}</span> <strong>${fmtGreek(res.vega / 100)}</strong></div>
         `),
-        bigCard('Theta', fmtGreek(res.theta), `
-            <div class="vc-row"><span class="muted">per year</span> <strong>${fmtGreek(res.theta)}</strong></div>
-            <div class="vc-row"><span class="muted">per day (365)</span> <strong>${fmtGreek(res.theta / 365)}</strong></div>
+        bigCard(t('view.fx_option.card.theta'), fmtGreek(res.theta), `
+            <div class="vc-row"><span class="muted">${esc(t('view.fx_option.row.per_year'))}</span> <strong>${fmtGreek(res.theta)}</strong></div>
+            <div class="vc-row"><span class="muted">${esc(t('view.fx_option.row.per_day_365'))}</span> <strong>${fmtGreek(res.theta / 365)}</strong></div>
         `),
-        bigCard('ρ domestic', fmtGreek(res.rho_domestic), `
+        bigCard(t('view.fx_option.card.rho_domestic'), fmtGreek(res.rho_domestic), `
             <div class="vc-row"><span class="muted">dV/dr_d</span> <strong>${fmtGreek(res.rho_domestic)}</strong></div>
         `),
-        bigCard('ρ foreign', fmtGreek(res.rho_foreign), `
+        bigCard(t('view.fx_option.card.rho_foreign'), fmtGreek(res.rho_foreign), `
             <div class="vc-row"><span class="muted">dV/dr_f</span> <strong>${fmtGreek(res.rho_foreign)}</strong></div>
         `),
     ].join('');

@@ -155,12 +155,12 @@ function renderDecomposeSummary(d, fromBackend) {
         card(t('view.rr_butterfly.card.atm'),                fmtVolPct(d.atm), '', subtitle(fromBackend)),
         card(t('view.rr_butterfly.card.risk_reversal_rr'), fmtVolPct(d.rr),   rrClass,
             `<div class="vc-row"><span class="muted" data-i18n="view.rr_butterfly.row.sigma_diff">σ_25C − σ_25P</span> <strong>${fmtVolPct(d.rr)}</strong></div>
-             <div class="vc-row"><span class="muted">interp</span> <strong>${rrInterp(d.rr)}</strong></div>`),
+             <div class="vc-row"><span class="muted">${esc(t('view.rr_butterfly.row.interp'))}</span> <strong>${rrInterp(d.rr)}</strong></div>`),
         card(t('view.rr_butterfly.card.butterfly_bf'),     fmtVolPct(d.bf),   bfClass,
-            `<div class="vc-row"><span class="muted">(σ_25C + σ_25P)/2 − σ_ATM</span> <strong>${fmtVolPct(d.bf)}</strong></div>
-             <div class="vc-row"><span class="muted">interp</span> <strong>${bfInterp(d.bf)}</strong></div>`),
+            `<div class="vc-row"><span class="muted">${esc(t('view.rr_butterfly.row.bf_formula'))}</span> <strong>${fmtVolPct(d.bf)}</strong></div>
+             <div class="vc-row"><span class="muted">${esc(t('view.rr_butterfly.row.interp'))}</span> <strong>${bfInterp(d.bf)}</strong></div>`),
         card(t('view.rr_butterfly.card.skew_z_score'),       fmtSkewZ(d.skew_zscore), skewClass,
-            `<div class="vc-row"><span class="muted">RR / ATM</span> <strong>${fmtSkewZ(d.skew_zscore)}</strong></div>`),
+            `<div class="vc-row"><span class="muted">${esc(t('view.rr_butterfly.row.rr_over_atm'))}</span> <strong>${fmtSkewZ(d.skew_zscore)}</strong></div>`),
     ].join('');
 }
 
