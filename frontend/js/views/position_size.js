@@ -167,8 +167,53 @@ function render(r, mount) {
             <h2 data-i18n="view.position_size.h2.method_chart">Shares + risk $ per method</h2>
             <div id="ps-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.position_size.h2.notional_chart">Notional $ + % of equity per method</h2>
+            <div id="ps-notional-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.position_size.hint.notional" class="muted small">Capital deployment view. Notional $ on cyan; % of equity (×1000 for axis-share) on purple. Reveals which method commits the most capital regardless of share count.</p>
+        </div>
     `;
     renderMethodChart(r);
+    renderNotionalChart(r);
+}
+
+function renderNotionalChart(r) {
+    const el = document.getElementById('ps-notional-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const methods = [
+        { key: 'fixed_fractional', sizing: r.fixed_fractional },
+        { key: 'r_based',          sizing: r.r_based },
+        { key: 'kelly',            sizing: r.kelly },
+    ].filter(m => m.sizing && Number.isFinite(Number(m.sizing.notional)));
+    if (methods.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.position_size.empty_notional_chart">${esc(t('view.position_size.empty_notional_chart'))}</div>`;
+        return;
+    }
+    const labels = methods.map(m => t(`view.position_size.method.${m.key}`));
+    const notional = methods.map(m => Number(m.sizing.notional));
+    const pctScaled = methods.map(m => Number(m.sizing.position_pct_of_equity) * 1000);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.position_size.chart.method_idx') },
+            { label: t('view.position_size.chart.notional'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.position_size.chart.pct_equity_scaled'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, notional, pctScaled], el);
 }
 
 function renderMethodChart(r) {

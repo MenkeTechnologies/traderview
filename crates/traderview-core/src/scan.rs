@@ -752,6 +752,8 @@ pub enum Preset {
     MicroPinTinyRangeDryVol,             // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume < 0.5 — close pinned at exactly HOD AND LOD + DRY vol (dead day; nothing happened at all; market truly absent; possibly halted or extremely illiquid)
     FullRange52wAtHighSide,              // year_high_pct < 2 AND year_low_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w high + >50% above 52w low + decent vol (stock has doubled+ from 52w low and is at the highs; max-uptrend + at decision point for breakout/exhaustion)
     FullRange52wAtLowSide,               // year_low_pct < 2 AND year_high_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w low + >50% below 52w high + decent vol (stock has dropped 50%+ from 52w high and is at the lows; max-downtrend + at decision point for capitulation/reversal)
+    PullbackAndRallyAtYearHigh,          // change_pct in [0.5, 1.5] AND day_pct > 0.5 AND gap_pct in [-0.5, 0] AND year_high_pct < 5 AND rel_volume in [1, 1.8] — moderate green (0.5-1.5%) + green intraday + small red gap + within 5% of 52w high + decent vol (textbook pullback-and-rally setup near the highs; gap-down bought intraday)
+    DeadCatBounceAtYearLow,              // change_pct in [-1.5, -0.5] AND day_pct < -0.5 AND gap_pct in [0, 0.5] AND year_low_pct < 5 AND rel_volume in [1, 1.8] — moderate red + red intraday + small green gap + within 5% of 52w low + decent vol (textbook dead-cat-bounce setup near the lows; gap-up sold intraday)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4247,6 +4249,26 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct > 50.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::PullbackAndRallyAtYearHigh => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 1.5
+                && hit.day_pct > 0.5
+                && hit.gap_pct >= -0.5
+                && hit.gap_pct <= 0.0
+                && hit.year_high_pct < 5.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.8
+        }
+        Preset::DeadCatBounceAtYearLow => {
+            hit.change_pct >= -1.5
+                && hit.change_pct <= -0.5
+                && hit.day_pct < -0.5
+                && hit.gap_pct >= 0.0
+                && hit.gap_pct <= 0.5
+                && hit.year_low_pct < 5.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.8
+        }
     }
 }
 
@@ -4889,6 +4911,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MicroPinTinyRangeDryVol => "Close Pinned at HOD=LOD + Dry Vol (Dead Day; Market Truly Absent; Possibly Halted or Extremely Illiquid)",
         Preset::FullRange52wAtHighSide => "Near 52w High + >50% Above 52w Low + Decent Vol (Stock Has Doubled+ From the Floor; Max-uptrend at Decision Point)",
         Preset::FullRange52wAtLowSide => "Near 52w Low + >50% Below 52w High + Decent Vol (Stock Has Dropped 50%+ From the Ceiling; Max-downtrend at Decision Point)",
+        Preset::PullbackAndRallyAtYearHigh => "Moderate Green + Green Intraday + Small Red Gap + Near 52w High + Decent Vol (Textbook Pullback-and-rally Near the Highs; Gap-down Bought Intraday)",
+        Preset::DeadCatBounceAtYearLow => "Moderate Red + Red Intraday + Small Green Gap + Near 52w Low + Decent Vol (Textbook Dead-cat-bounce Near the Lows; Gap-up Sold Intraday)",
     }
 }
 
