@@ -84,7 +84,7 @@ function render(r, mount) {
                 <div style="font-size:10px;opacity:0.7;">${rs}</div>
             </td>`;
         }).join('');
-        return `<tr>
+        return `<tr data-context-scope="symbol-row" data-symbol="${esc(s.symbol)}">
             <td><strong>${esc(s.symbol)}</strong>
                 <span class="muted small">${esc(s.label)}</span></td>
             ${cells}
