@@ -784,6 +784,8 @@ pub enum Preset {
     OutsideRangeFlatCloseHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — wide intraday range + flat close + hot vol (outside-range whip; high participation but no commitment; institutional indecision with wide whipsaw)
     CloseAtHodTinyLodHotVol,             // hod_dist_pct.abs() < 0.3 AND lod_dist_pct > 4 AND rel_volume >= 1.5 — closed pinned to HOD + LOD far below + hot vol (full intraday range claim; momentum buy ramp into the close with elevated participation)
     CloseAtLodTinyHodHotVol,             // lod_dist_pct.abs() < 0.3 AND hod_dist_pct < -4 AND rel_volume >= 1.5 — closed pinned to LOD + HOD far above + hot vol (full intraday range collapse; momentum sell ramp into the close with elevated participation)
+    BigGreenCloseAtHodHotVol,            // change_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big green + closed pinned to HOD + hot vol (strong trend day closing on the highs with institutional sponsorship; trend-following long signal)
+    BigRedCloseAtLodHotVol,              // change_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big red + closed pinned to LOD + hot vol (strong trend day closing on the lows with institutional sponsorship; trend-following short signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4471,6 +4473,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct < -4.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigGreenCloseAtHodHotVol => {
+            hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigRedCloseAtLodHotVol => {
+            hit.change_pct < -3.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5145,6 +5157,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OutsideRangeFlatCloseHotVol => "Wide Intraday Range + Flat Close + Hot Vol (Outside-range Whip; High Participation but No Commitment; Institutional Indecision with Wide Whipsaw)",
         Preset::CloseAtHodTinyLodHotVol => "Close Pinned to HOD + LOD Far Below + Hot Vol (Full Intraday Range Claim; Momentum Buy Ramp into the Close with Elevated Participation)",
         Preset::CloseAtLodTinyHodHotVol => "Close Pinned to LOD + HOD Far Above + Hot Vol (Full Intraday Range Collapse; Momentum Sell Ramp into the Close with Elevated Participation)",
+        Preset::BigGreenCloseAtHodHotVol => "Big Green + Close at HOD + Hot Vol (Strong Trend Day Closing on the Highs with Institutional Sponsorship; Trend-following Long Signal)",
+        Preset::BigRedCloseAtLodHotVol => "Big Red + Close at LOD + Hot Vol (Strong Trend Day Closing on the Lows with Institutional Sponsorship; Trend-following Short Signal)",
     }
 }
 

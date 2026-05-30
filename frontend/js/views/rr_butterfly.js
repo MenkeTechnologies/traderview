@@ -63,6 +63,12 @@ export async function renderRrButterfly(mount, _appState) {
             <div id="rr-chart" style="width:100%;height:220px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.rr_butterfly.h2.premium_chart">Wing premium over ATM (σ_wing − σ_ATM, vol-points)</h2>
+            <div id="rr-premium-chart" style="width:100%;height:200px"></div>
+            <p data-i18n="view.rr_butterfly.hint.premium" class="muted small">Signed wing vol minus ATM at ±25 delta. Both above zero = smile bowl (wing premium); one above + one below = skew (directional fear). Yellow dashed = ATM (zero premium).</p>
+        </div>
+
         <div id="rr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -147,6 +153,7 @@ async function compute(mount, tok) {
             skew_zscore: res.skew_zscore,
         }, /*fromBackend=*/true);
         renderSmileChart(state.params.sigma_25_put, res.atm, state.params.sigma_25_call);
+        renderPremiumChart(state.params.sigma_25_put, res.atm, state.params.sigma_25_call);
         showToast(t('view.rr_butterfly.toast.decomposed'), { level: 'success' });
     } else {
         renderReconstructSummary({
@@ -154,6 +161,7 @@ async function compute(mount, tok) {
             sigma_25_put: res.sigma_25_put,
         }, /*fromBackend=*/true);
         renderSmileChart(res.sigma_25_put, state.params.atm, res.sigma_25_call);
+        renderPremiumChart(res.sigma_25_put, state.params.atm, res.sigma_25_call);
         showToast(t('view.rr_butterfly.toast.reconstructed'), { level: 'success' });
     }
 }
@@ -187,6 +195,39 @@ function renderSmileChart(sigPut, sigAtm, sigCall) {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
         legend: { show: true },
     }, [xs, ys, atmRef], el);
+}
+
+function renderPremiumChart(sigPut, sigAtm, sigCall) {
+    const el = document.getElementById('rr-premium-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const put = Number(sigPut);
+    const atm = Number(sigAtm);
+    const call = Number(sigCall);
+    if (![put, atm, call].every(Number.isFinite)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rr_butterfly.empty_premium_chart">${esc(t('view.rr_butterfly.empty_premium_chart'))}</div>`;
+        return;
+    }
+    const xs = [-25, 0, 25];
+    const ys = [(put - atm) * 100, 0, (call - atm) * 100];
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.rr_butterfly.chart.delta') },
+            { label: t('view.rr_butterfly.chart.premium'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 16, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.rr_butterfly.chart.atm_zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 },
+                { stroke: '#aab', size: 50,
+                  values: (_u, splits) => splits.map(v => (v > 0 ? '+' : '') + v.toFixed(2) + '%') } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderDecomposeSummary(d, fromBackend) {

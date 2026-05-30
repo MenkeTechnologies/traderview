@@ -666,6 +666,8 @@ const PRESETS = [
     { id: 'outside_range_flat_close_hot_vol', label: t('view.scanners.preset.outside_range_flat_close_hot_vol.label'), desc: t('view.scanners.preset.outside_range_flat_close_hot_vol.desc') },
     { id: 'close_at_hod_tiny_lod_hot_vol', label: t('view.scanners.preset.close_at_hod_tiny_lod_hot_vol.label'), desc: t('view.scanners.preset.close_at_hod_tiny_lod_hot_vol.desc') },
     { id: 'close_at_lod_tiny_hod_hot_vol', label: t('view.scanners.preset.close_at_lod_tiny_hod_hot_vol.label'), desc: t('view.scanners.preset.close_at_lod_tiny_hod_hot_vol.desc') },
+    { id: 'big_green_close_at_hod_hot_vol', label: t('view.scanners.preset.big_green_close_at_hod_hot_vol.label'), desc: t('view.scanners.preset.big_green_close_at_hod_hot_vol.desc') },
+    { id: 'big_red_close_at_lod_hot_vol', label: t('view.scanners.preset.big_red_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.big_red_close_at_lod_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
