@@ -116,9 +116,49 @@ function render(r, mount) {
             <h2 data-i18n="view.sector_rotation.h2.rs_now">Latest 60-day RS edge by sector</h2>
             <div id="sr-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.sector_rotation.h2.rs_cum">Cumulative 60-day RS edge per sector (sum of daily outperformance)</h2>
+            <div id="sr-cum-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.sector_rotation.hint.rs_cum" class="muted small">Sum of daily (sector − SPY) returns over the 60-day window per sector. Orthogonal to the latest-reading chart: reveals sectors quietly accumulating outperformance vs ones that just popped today.</p>
+        </div>
     `;
     renderRsChart(r.sectors);
+    renderRsCumChart(r.sectors);
     void fmt;
+}
+
+function renderRsCumChart(sectors) {
+    const el = document.getElementById('sr-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (sectors || []).filter(s => Array.isArray(s.rs_sparkline) && s.rs_sparkline.length > 0);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.sector_rotation.empty_cum_chart">${esc(t('view.sector_rotation.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(s => s.symbol);
+    const cum = valid.map(s => s.rs_sparkline.reduce((a, v) => a + (Number.isFinite(Number(v)) ? Number(v) : 0), 0));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.sector_rotation.chart.sector_idx') },
+            { label: t('view.sector_rotation.chart.rs_cum'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.sector_rotation.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderRsChart(sectors) {
