@@ -44,7 +44,7 @@ export function parseTradeBlob(text) {
         }
         const [entry, mae, mfe, exit] = parts.map(Number);
         if ([entry, mae, mfe, exit].some(n => !Number.isFinite(n))) {
-            errors.push({ line_no: i + 1, raw, message: t('common.parse.tokens_must_be_finite') });
+            errors.push({ line_no: i + 1, raw, message: tr('common.parse.tokens_must_be_finite') });
             continue;
         }
         if (entry <= 0) {

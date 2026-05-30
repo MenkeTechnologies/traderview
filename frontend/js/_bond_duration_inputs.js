@@ -37,7 +37,7 @@ export function parseCashFlowBlob(text) {
         const t = Number(parts[0]);
         const a = Number(parts[1]);
         if (!Number.isFinite(t) || !Number.isFinite(a)) {
-            errors.push({ line_no: i + 1, raw, message: t('common.parse.tokens_must_be_finite') });
+            errors.push({ line_no: i + 1, raw, message: tr('common.parse.tokens_must_be_finite') });
             continue;
         }
         if (t <= 0) {

@@ -91,7 +91,7 @@ export function parsePositionsBlob(blob) {
             continue;
         }
         if (!Number.isFinite(weight)) {
-            out.errors.push({ line_no: i + 1, message: t('common.parse.weight_not_finite') });
+            out.errors.push({ line_no: i + 1, message: tr('common.parse.weight_not_finite') });
             continue;
         }
         if (weight < 0) {
