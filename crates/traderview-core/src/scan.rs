@@ -424,6 +424,8 @@ pub enum Preset {
     BigGapNoFollowThrough,       // gap_pct.abs() > 3 AND change_pct.abs() < 1 AND rel_volume < 1 — extreme gap + flat day + dry vol (failed positioning; no follow-through)
     ConfluenceLongSetup,         // gap_pct between -0.5 and 0.5 AND year_low_pct between 5 and 15 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1.2 — flat-open + above 52w low + minor green move + above-avg vol (confluence long setup)
     ConfluenceShortSetup,        // gap_pct between -0.5 and 0.5 AND year_high_pct between -15 and -5 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1.2 — flat-open + below 52w high + minor red move + above-avg vol (confluence short setup)
+    NoExtremeDay,                // year_high_pct < -10 AND year_high_pct > -40 AND year_low_pct > 10 AND year_low_pct < 40 AND change_pct.abs() < 0.5 — middle-of-range flat day (no extreme positioning; no edge)
+    AcceleratingUpTrend,         // change_pct > 1 AND day_pct > 0 AND year_high_pct > -5 AND rel_volume > 1 — pushing harder + at 52w high + above-avg vol (accelerating uptrend)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2006,6 +2008,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct >= -1.5
                 && hit.rel_volume >= 1.2
         }
+        Preset::NoExtremeDay => {
+            hit.year_high_pct < -10.0
+                && hit.year_high_pct > -40.0
+                && hit.year_low_pct > 10.0
+                && hit.year_low_pct < 40.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::AcceleratingUpTrend => {
+            hit.change_pct > 1.0
+                && hit.day_pct > 0.0
+                && hit.year_high_pct > -5.0
+                && hit.rel_volume > 1.0
+        }
     }
 }
 
@@ -2320,6 +2335,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapNoFollowThrough => "Big Gap, No Follow-Through",
         Preset::ConfluenceLongSetup => "Confluence Long Setup",
         Preset::ConfluenceShortSetup => "Confluence Short Setup",
+        Preset::NoExtremeDay => "No-Extreme Mid-Range Day",
+        Preset::AcceleratingUpTrend => "Accelerating Up-Trend",
     }
 }
 

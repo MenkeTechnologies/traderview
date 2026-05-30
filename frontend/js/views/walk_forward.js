@@ -137,6 +137,11 @@ function renderResult(r, body, out, mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.walk_forward.h2.trades_chart">OOS trade count per window</h2>
+            <div id="wf-trades-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.walk_forward.h2.per_window_is_vs_oos">Per-window IS vs OOS</h2>
             <table class="trades">
                 <thead><tr>
@@ -165,6 +170,32 @@ function renderResult(r, body, out, mount) {
     renderEqSvg(r.oos_equity, body.initial_capital, mount);
     renderIsOosChart(r.windows);
     renderSharpeChart(r.windows);
+    renderTradesChart(r.windows);
+}
+
+function renderTradesChart(windows) {
+    const el = document.getElementById('wf-trades-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (windows || []).filter(w => Number.isFinite(Number(w.oos_trades)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.walk_forward.empty_trades_chart">${esc(t('view.walk_forward.empty_trades_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(w => w.idx + 1);
+    const ys = rows.map(w => Number(w.oos_trades));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.walk_forward.chart.window') },
+            { label: t('view.walk_forward.chart.oos_trades'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSharpeChart(windows) {
