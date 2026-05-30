@@ -19,6 +19,7 @@ import {
 } from '../_order_book_imbalance_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { bidText: '', askText: '', levels: 5 };
 
 export async function renderOrderBookImbalance(mount, _appState) {
@@ -28,20 +29,20 @@ export async function renderOrderBookImbalance(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.order_book_imbalance.h2.bid_sizes_top_of_book_first">Bid sizes (top-of-book first)</h2>
-            <textarea id="obi-bid" rows="4" placeholder="500&#10;380&#10;290&#10;220&#10;180"></textarea>
+            <textarea id="obi-bid" rows="4" placeholder="500&#10;380&#10;290&#10;220&#10;180" data-tip="view.order_book_imbalance.tip.bid"></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.order_book_imbalance.h2.ask_sizes">Ask sizes</h2>
-            <textarea id="obi-ask" rows="4" placeholder="120&#10;100&#10;80&#10;60&#10;50"></textarea>
+            <textarea id="obi-ask" rows="4" placeholder="120&#10;100&#10;80&#10;60&#10;50" data-tip="view.order_book_imbalance.tip.ask"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.order_book_imbalance.label.levels">Levels (top-N to aggregate)</span>
-                    <input id="obi-lvls" type="number" step="1" min="1" max="50" value="${state.levels}"></label>
-                <button data-i18n="view.order_book_imbalance.btn.demo_balanced" id="obi-balanced" class="secondary" type="button">Demo: balanced</button>
-                <button data-i18n="view.order_book_imbalance.btn.demo_bid_pressure" id="obi-bidp" class="secondary" type="button">Demo: bid pressure</button>
-                <button data-i18n="view.order_book_imbalance.btn.demo_ask_pressure" id="obi-askp" class="secondary" type="button">Demo: ask pressure</button>
-                <button data-i18n="view.order_book_imbalance.btn.clear" id="obi-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.order_book_imbalance.btn.compute" id="obi-run" class="primary" type="button">Compute</button>
+                    <input id="obi-lvls" type="number" step="1" min="1" max="50" value="${state.levels}" data-tip="view.order_book_imbalance.tip.levels"></label>
+                <button data-i18n="view.order_book_imbalance.btn.demo_balanced" data-tip="view.order_book_imbalance.tip.demo_bal" id="obi-balanced" class="secondary" type="button">Demo: balanced</button>
+                <button data-i18n="view.order_book_imbalance.btn.demo_bid_pressure" data-tip="view.order_book_imbalance.tip.demo_bid" id="obi-bidp" class="secondary" type="button">Demo: bid pressure</button>
+                <button data-i18n="view.order_book_imbalance.btn.demo_ask_pressure" data-tip="view.order_book_imbalance.tip.demo_ask" id="obi-askp" class="secondary" type="button">Demo: ask pressure</button>
+                <button data-i18n="view.order_book_imbalance.btn.clear" data-tip="view.order_book_imbalance.tip.clear" id="obi-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_book_imbalance.btn.compute" data-tip="view.order_book_imbalance.tip.compute" data-shortcut="obi_compute" id="obi-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.order_book_imbalance.hint.imbalance_bid_ask_bid_ask_over_top_n_levels_range_" class="muted">Imbalance = (Σbid − Σask) / (Σbid + Σask) over top-N levels.
                 Range [-1, 1]. Used by HFT firms as a microsecond-scale directional signal.</p>
@@ -111,18 +112,22 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(bidSizes, askSizes, state.levels);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microOrderBookImbalance(buildBody(bidSizes, askSizes, state.levels));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, bidSizes.length, askSizes.length);
     renderGauge(res);
     renderTable(bidSizes, askSizes, state.levels);
     renderDepthChart(bidSizes, askSizes, state.levels);
+    showToast(t('view.order_book_imbalance.toast.done', {
+        imbalance: fmtImbalance(res.imbalance),
+    }), { level: 'success' });
 }
 
 function renderDepthChart(bidSizes, askSizes, levels) {
