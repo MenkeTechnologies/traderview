@@ -1004,6 +1004,8 @@ const PRESETS = [
     { id: 'big_down_day_doubled_vol_mid_year_low_hot_vol', label: t('view.scanners.preset.big_down_day_doubled_vol_mid_year_low_hot_vol.label'), desc: t('view.scanners.preset.big_down_day_doubled_vol_mid_year_low_hot_vol.desc') },
     { id: 'big_up_day_doubled_vol_just_off_year_high_hot_vol', label: t('view.scanners.preset.big_up_day_doubled_vol_just_off_year_high_hot_vol.label'), desc: t('view.scanners.preset.big_up_day_doubled_vol_just_off_year_high_hot_vol.desc') },
     { id: 'big_down_day_doubled_vol_just_off_year_low_hot_vol', label: t('view.scanners.preset.big_down_day_doubled_vol_just_off_year_low_hot_vol.label'), desc: t('view.scanners.preset.big_down_day_doubled_vol_just_off_year_low_hot_vol.desc') },
+    { id: 'quintupled_vol_up_hot_vol', label: t('view.scanners.preset.quintupled_vol_up_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_up_hot_vol.desc') },
+    { id: 'quintupled_vol_down_hot_vol', label: t('view.scanners.preset.quintupled_vol_down_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_down_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
