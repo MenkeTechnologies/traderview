@@ -14,6 +14,7 @@ import {
 } from '../_liquidity_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { tradesText: '', advText: '' };
 
 export async function renderLiquidity(mount, _appState) {
@@ -24,16 +25,16 @@ export async function renderLiquidity(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.liquidity.h2.trades">Trades</h2>
             <p class="muted" data-i18n="view.liquidity.hint.format">One line per trade: symbol qty net_pnl. Negative pnl = loss. Other Trade fields are auto-filled.</p>
-            <textarea id="lq-trades" rows="8" placeholder="AAPL 100 75&#10;MSFT 2000 -150&#10;..."></textarea>
+            <textarea id="lq-trades" rows="8" placeholder="AAPL 100 75&#10;MSFT 2000 -150&#10;..." data-tip="view.liquidity.tip.trades"></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.liquidity.h2.adv_avg_daily_volume_per_symbol">ADV (avg daily volume per symbol)</h2>
-            <textarea id="lq-adv" rows="4" placeholder="AAPL 50000000&#10;MSFT 1500000&#10;..."></textarea>
+            <textarea id="lq-adv" rows="4" placeholder="AAPL 50000000&#10;MSFT 1500000&#10;..." data-tip="view.liquidity.tip.adv"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.liquidity.btn.load_demo_4_symbols_53_trades" id="lq-demo" class="secondary" type="button">Load demo (4 symbols, 53 trades)</button>
-                <button data-i18n="view.liquidity.btn.clear" id="lq-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.liquidity.btn.analyze" id="lq-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.liquidity.btn.load_demo_4_symbols_53_trades" data-tip="view.liquidity.tip.demo" data-shortcut="liquidity_demo" id="lq-demo" class="secondary" type="button">Load demo (4 symbols, 53 trades)</button>
+                <button data-i18n="view.liquidity.btn.clear" data-tip="view.liquidity.tip.clear" id="lq-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.liquidity.btn.analyze" data-tip="view.liquidity.tip.analyze" data-shortcut="liquidity_analyze" id="lq-run" class="primary" type="button">Analyze</button>
             </div>
             <p data-i18n="view.liquidity.hint.symbols_not_in_the_adv_table_are_silently_dropped_" class="muted">Symbols not in the ADV table are silently dropped from
                 bucket analysis. Per-symbol rows still show their qty / pnl regardless.</p>
@@ -103,19 +104,24 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(trades, adv);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.microLiquidity(buildBody(trades, adv));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, trades);
     renderRows(res);
     renderBuckets(res);
     renderAdvPnlChart(res);
+    showToast(t('view.liquidity.toast.done', {
+        symbols: res.rows ? res.rows.length : 0,
+        trades: trades.length,
+    }), { level: 'success' });
 }
 
 function renderAdvPnlChart(report) {

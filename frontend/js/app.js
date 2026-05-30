@@ -795,6 +795,16 @@ function bindTabs() {
         const el = document.getElementById('mi-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in liquidity scope → click Analyze.
+    window.addEventListener('tv:liquidity-analyze', () => {
+        const el = document.getElementById('lq-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in liquidity scope → click Load demo.
+    window.addEventListener('tv:liquidity-demo', () => {
+        const el = document.getElementById('lq-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
