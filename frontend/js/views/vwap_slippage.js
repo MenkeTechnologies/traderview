@@ -13,6 +13,7 @@ import {
 } from '../_vwap_slippage_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { side: 'long', fillPrice: 100, barText: '' };
 
 export async function renderVwapSlippage(mount, _appState) {
@@ -24,23 +25,23 @@ export async function renderVwapSlippage(mount, _appState) {
             <h2 data-i18n="view.vwap_slippage.h2.trade">Trade</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vwap_slippage.label.side">Side</span>
-                    <select id="vw-side">
+                    <select id="vw-side" data-tip="view.vwap_slippage.tip.side">
                         <option data-i18n="view.vwap_slippage.opt.long_buy_entry" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long (buy entry)</option>
                         <option data-i18n="view.vwap_slippage.opt.short_sell_entry" value="short" ${state.side === 'short' ? 'selected' : ''}>Short (sell entry)</option>
                     </select></label>
                 <label><span data-i18n="view.vwap_slippage.label.fill_price">Fill price</span>
-                    <input id="vw-fill" type="number" step="any" min="0" value="${state.fillPrice}"></label>
+                    <input id="vw-fill" type="number" step="any" min="0" value="${state.fillPrice}" data-tip="view.vwap_slippage.tip.fill"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.vwap_slippage.h2.bars_during_the_trade_s_open_window">Bars during the trade's open window</h2>
             <p class="muted" data-i18n="view.vwap_slippage.hint.format">One line per bar: typical_price volume. Typical = (high+low+close)/3. Pre-computed by the caller so this view stays agnostic about whether you're feeding 1-second, 1-minute, or 1-hour bars. Demo loads 200 bars with an intentional below-VWAP long fill.</p>
-            <textarea id="vw-bars" rows="6" placeholder="100.05 1200&#10;100.08 850&#10;..."></textarea>
+            <textarea id="vw-bars" rows="6" placeholder="100.05 1200&#10;100.08 850&#10;..." data-tip="view.vwap_slippage.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.vwap_slippage.btn.load_demo_200_bars_fill_beats_vwap" id="vw-demo" class="secondary" type="button">Load demo (200 bars, fill beats VWAP)</button>
-                <button data-i18n="view.vwap_slippage.btn.clear" id="vw-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.vwap_slippage.btn.analyze" id="vw-run" class="primary" type="button">Analyze</button>
+                <button data-i18n="view.vwap_slippage.btn.load_demo_200_bars_fill_beats_vwap" data-tip="view.vwap_slippage.tip.demo" data-shortcut="vwap_slippage_demo" id="vw-demo" class="secondary" type="button">Load demo (200 bars, fill beats VWAP)</button>
+                <button data-i18n="view.vwap_slippage.btn.clear" data-tip="view.vwap_slippage.tip.clear" id="vw-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.vwap_slippage.btn.analyze" data-tip="view.vwap_slippage.tip.analyze" data-shortcut="vwap_slippage_analyze" id="vw-run" class="primary" type="button">Analyze</button>
             </div>
         </div>
 
@@ -93,18 +94,26 @@ async function compute(tok) {
         if (bars.length === 0) return;
     }
     const err = validateInputs(state.side, state.fillPrice, bars);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let resp;
     try {
         resp = await api.microVwapSlippage(buildBody(state.side, state.fillPrice, bars));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     const unwrapped = unwrapResponse(resp);
-    if (!unwrapped.ok) { showErr(t('common.error.backend', { reason: unwrapped.reason })); return; }
+    if (!unwrapped.ok) {
+        const m = t('common.error.backend', { reason: unwrapped.reason });
+        showErr(m); showToast(m, { level: 'error' }); return;
+    }
     renderSummary(unwrapped.result, bars);
     renderChart(bars, decToNum(unwrapped.result.vwap), state.fillPrice);
+    showToast(t('view.vwap_slippage.toast.done', {
+        bps: fmtBps(unwrapped.result.slippage_bps),
+        beat: unwrapped.result.beat_vwap ? t('common.yes') : t('common.no'),
+    }), { level: unwrapped.result.beat_vwap ? 'success' : 'warning' });
 }
 
 function renderSummary(r, bars) {
