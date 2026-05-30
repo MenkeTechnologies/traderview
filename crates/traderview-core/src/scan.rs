@@ -1096,6 +1096,8 @@ pub enum Preset {
     GapDownBigDayHotVol,                       // gap_pct < -2 AND day_pct < -2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday down (<-2%) + hot vol (double-momentum day: overnight gap down followed by intraday continuation lower with elevated participation; gap+intraday both aligned red = aggregate change_pct <-4% from prior close with sustained sell pressure across both regular and after-hours sessions)
     GapUpBigDayDownHotVol,                     // gap_pct > 2 AND day_pct < -2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday down (<-2%) + hot vol (gap-fade pressure: overnight gap up met with intraday selling that erodes the gap by 2%+; counter-trend intraday pressure on a positive gap that may or may not flip the close to red depending on gap size; suggests active sellers stepping in at the gap level)
     GapDownBigDayUpHotVol,                     // gap_pct < -2 AND day_pct > 2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday up (>2%) + hot vol (gap-absorb pressure: overnight gap down met with intraday buying that reclaims the gap by 2%+; counter-trend intraday pressure on a negative gap that may or may not flip the close to green depending on gap size; suggests active buyers stepping in at the gap level)
+    SmallGapBigDayUpHotVol,                    // gap_pct.abs() < 0.5 AND day_pct > 3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + hot vol (clean intraday-led rally: open is essentially flat to prior close, then regular session prints a sustained buy-driven move higher; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
+    SmallGapBigDayDownHotVol,                  // gap_pct.abs() < 0.5 AND day_pct < -3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + hot vol (clean intraday-led decline: open is essentially flat to prior close, then regular session prints a sustained sell-driven move lower; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6760,6 +6762,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::GapDownBigDayUpHotVol => {
             hit.gap_pct < -2.0 && hit.day_pct > 2.0 && hit.rel_volume >= 1.5
         }
+        Preset::SmallGapBigDayUpHotVol => {
+            hit.gap_pct.abs() < 0.5 && hit.day_pct > 3.0 && hit.rel_volume >= 1.5
+        }
+        Preset::SmallGapBigDayDownHotVol => {
+            hit.gap_pct.abs() < 0.5 && hit.day_pct < -3.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7746,6 +7754,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownBigDayHotVol => "Gap Down (<-2 %) + Big Intraday Down (<-2 %) + Hot Vol (Double-momentum Day: Overnight Gap down Followed by Intraday Continuation Lower with Elevated Participation; Gap+intraday Both Aligned Red = Aggregate Change_pct <-4 % from Prior Close with Sustained Sell Pressure across Both Regular and After-hours Sessions)",
         Preset::GapUpBigDayDownHotVol => "Gap Up (>2 %) + Big Intraday Down (<-2 %) + Hot Vol (Gap-fade Pressure: Overnight Gap up Met with Intraday Selling that Erodes the Gap by 2 %+; Counter-trend Intraday Pressure on a Positive Gap that May or May Not Flip the Close to Red Depending on Gap Size; Suggests Active Sellers Stepping in at the Gap Level)",
         Preset::GapDownBigDayUpHotVol => "Gap Down (<-2 %) + Big Intraday Up (>2 %) + Hot Vol (Gap-absorb Pressure: Overnight Gap down Met with Intraday Buying that Reclaims the Gap by 2 %+; Counter-trend Intraday Pressure on a Negative Gap that May or May Not Flip the Close to Green Depending on Gap Size; Suggests Active Buyers Stepping in at the Gap Level)",
+        Preset::SmallGapBigDayUpHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + Hot Vol (Clean Intraday-led Rally: Open Is Essentially Flat to Prior Close, Then Regular Session Prints a Sustained Buy-driven Move Higher; Intraday Momentum Signal Isolated from Overnight Repricing or After-hours Catalyst Noise)",
+        Preset::SmallGapBigDayDownHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Hot Vol (Clean Intraday-led Decline: Open Is Essentially Flat to Prior Close, Then Regular Session Prints a Sustained Sell-driven Move Lower; Intraday Momentum Signal Isolated from Overnight Repricing or After-hours Catalyst Noise)",
     }
 }
 
