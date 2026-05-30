@@ -89,7 +89,7 @@ function renderIndicators(s, mount) {
         <div class="cards">
             ${inds.map(i => {
                 const chCls = i.change_pct >= 0 ? 'pos' : 'neg';
-                return `<div class="card">
+                return `<div class="card" data-context-scope="symbol-row" data-symbol="${esc(i.symbol)}">
                     <div class="label">${esc(i.label)} (${esc(i.symbol)})</div>
                     <div class="value">${fmt(i.value, Math.abs(i.value) < 10 ? 3 : 0)}</div>
                     <div class="small ${chCls}">${i.change_pct >= 0 ? '+' : ''}${i.change_pct.toFixed(2)}%</div>

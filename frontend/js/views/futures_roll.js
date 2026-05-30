@@ -158,7 +158,7 @@ function renderTable(report) {
             <tbody>
                 ${report.rows.map(r => {
                     const badge = urgencyBadge(r.urgency);
-                    return `<tr class="${badge.cls === 'neg' ? 'neg' : ''}">
+                    return `<tr class="${badge.cls === 'neg' ? 'neg' : ''}" data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                         <td><strong>${esc(r.symbol)}</strong></td>
                         <td class="${r.contracts >= 0 ? 'pos' : 'neg'}">${esc(fmtContracts(r.contracts))}</td>
                         <td>${esc(r.expiration)}</td>

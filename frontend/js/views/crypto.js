@@ -77,7 +77,7 @@ function renderTable(rows, mount) {
             <th data-i18n="view.crypto.th.24h">24h</th><th data-i18n="view.crypto.th.7d">7d</th><th data-i18n="view.crypto.th.mcap">Mcap</th><th data-i18n="view.crypto.th.vol_24h">Vol 24h</th>
             <th data-i18n="view.crypto.th.circ_supply">Circ supply</th><th data-i18n="view.crypto.th.ath">ATH</th><th data-i18n="view.crypto.th.from_ath">From ATH</th></tr></thead>
         <tbody>${rows.map(r => `
-            <tr>
+            <tr data-context-scope="symbol-row" data-symbol="${esc((r.symbol || '').toUpperCase() + '-USD')}">
                 <td>${r.market_cap_rank ?? '—'}</td>
                 <td>${r.image ? `<img src="${esc(r.image)}" width="18" height="18" style="vertical-align:middle">` : ''}</td>
                 <td><a href="#research/${encodeURIComponent(r.symbol.toUpperCase() + '-USD')}">
