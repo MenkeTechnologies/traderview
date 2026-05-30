@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD,
@@ -30,19 +31,20 @@ export async function renderAmihud(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.amihud.label.period">Rolling period</span>
-                    <input id="am-period" type="number" step="1" min="1" value="${state.period}"></label>
+                    <input id="am-period" type="number" step="1" min="1" value="${state.period}"
+                           data-tip="view.amihud.tip.period"></label>
                 <button data-i18n="view.amihud.btn.compute" id="am-run" class="primary"
-                        data-tip="view.amihud.tip.compute" type="button">Compute Amihud</button>
+                        data-tip="view.amihud.tip.compute" data-shortcut="amihud_run" type="button">Compute Amihud</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.amihud.btn.demo_large"  id="am-demo-large"  class="secondary" type="button">Demo: large-cap ($10B/d)</button>
-                <button data-i18n="view.amihud.btn.demo_mid"    id="am-demo-mid"    class="secondary" type="button">Demo: mid-cap ($100M/d)</button>
-                <button data-i18n="view.amihud.btn.demo_small"  id="am-demo-small"  class="secondary" type="button">Demo: small-cap ($1M/d)</button>
-                <button data-i18n="view.amihud.btn.demo_penny"  id="am-demo-penny"  class="secondary" type="button">Demo: penny ($50k/d)</button>
-                <button data-i18n="view.amihud.btn.demo_shock"  id="am-demo-shock"  class="secondary" type="button">Demo: liquidity shock</button>
-                <button data-i18n="view.amihud.btn.demo_recover" id="am-demo-recover" class="secondary" type="button">Demo: recovery (illiquid → liquid)</button>
-                <button data-i18n="view.amihud.btn.demo_spotty" id="am-demo-spotty" class="secondary" type="button">Demo: spotty volume (NaN + zero)</button>
-                <button data-i18n="view.amihud.btn.demo_short"  id="am-demo-short"  class="secondary" type="button">Demo: short period (5)</button>
+                <button data-i18n="view.amihud.btn.demo_large"   id="am-demo-large"   class="secondary" data-tip="view.amihud.tip.demo_large"   type="button">Demo: large-cap ($10B/d)</button>
+                <button data-i18n="view.amihud.btn.demo_mid"     id="am-demo-mid"     class="secondary" data-tip="view.amihud.tip.demo_mid"     type="button">Demo: mid-cap ($100M/d)</button>
+                <button data-i18n="view.amihud.btn.demo_small"   id="am-demo-small"   class="secondary" data-tip="view.amihud.tip.demo_small"   type="button">Demo: small-cap ($1M/d)</button>
+                <button data-i18n="view.amihud.btn.demo_penny"   id="am-demo-penny"   class="secondary" data-tip="view.amihud.tip.demo_penny"   type="button">Demo: penny ($50k/d)</button>
+                <button data-i18n="view.amihud.btn.demo_shock"   id="am-demo-shock"   class="secondary" data-tip="view.amihud.tip.demo_shock"   type="button">Demo: liquidity shock</button>
+                <button data-i18n="view.amihud.btn.demo_recover" id="am-demo-recover" class="secondary" data-tip="view.amihud.tip.demo_recover" type="button">Demo: recovery (illiquid → liquid)</button>
+                <button data-i18n="view.amihud.btn.demo_spotty"  id="am-demo-spotty"  class="secondary" data-tip="view.amihud.tip.demo_spotty"  type="button">Demo: spotty volume (NaN + zero)</button>
+                <button data-i18n="view.amihud.btn.demo_short"   id="am-demo-short"   class="secondary" data-tip="view.amihud.tip.demo_short"   type="button">Demo: short period (5)</button>
             </div>
             <p data-i18n="view.amihud.hint.about" class="muted">illiq_t = |r_t|/dollar_vol_t · 10⁶. Higher = less liquid. Mean over rolling period bars. S&amp;P 500 large-caps ≈ 0.0001; penny stocks ≈ 1.0+.</p>
         </div>
@@ -88,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.amihud.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.amihud.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -100,7 +103,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.amihud.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.returns, state.dollar_volumes, state.period);
     renderSummary(local, true);
     renderChart(local);
@@ -111,6 +114,7 @@ async function compute(tok) {
         resp = await api.anlyAmihudIlliquidity(buildBody(state));
     } catch (e) {
         showErr(`${t('view.amihud.err.api')}: ${e.message || e}`);
+        showToast(t('view.amihud.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -118,6 +122,7 @@ async function compute(tok) {
     renderChart(resp);
     renderDvolChart();
     renderTable(resp);
+    showToast(t('view.amihud.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(series, pending) {
