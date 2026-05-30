@@ -45,6 +45,11 @@ export async function renderTradesView(mount, state) {
             <h2 data-i18n="view.trades.h2.pnl_chart">Net P&L by trade (closed only)</h2>
             <div id="trades-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.trades.h2.cum_chart">Cumulative equity over closed trades</h2>
+            <div id="trades-cum-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.trades.hint.cum_chart" class="muted small">Running sum of net P&L in close-date order. Orthogonal to per-trade dots: reveals trajectory, drawdowns and recovery across the filtered set. Yellow dashed = breakeven.</p>
+        </div>
     `;
     const { el: fEl } = makeFilter(currentFilter, async (f) => {
         currentFilter = f;
@@ -129,6 +134,7 @@ export async function renderTradesView(mount, state) {
         const trades = await api.trades(state.accountId, currentFilter);
         if (!viewIsCurrent(tok)) return;
         renderPnlChart(trades);
+        renderCumChart(trades);
         const tableEl = mount.querySelector('#trades-table');
         if (!tableEl) return;
         if (!trades.length) { tableEl.innerHTML = '<p data-i18n="view.trades.hint.no_trades_match" class="boot">No trades match.</p>'; return; }
@@ -194,6 +200,39 @@ export async function renderTradesView(mount, state) {
 function holdSeconds(t) {
     if (!t.closed_at) return null;
     return Math.round((new Date(t.closed_at) - new Date(t.opened_at)) / 1000);
+}
+
+function renderCumChart(trades) {
+    const el = document.getElementById('trades-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const closed = (trades || [])
+        .filter(tr => tr.closed_at && Number.isFinite(Number(tr.net_pnl)))
+        .sort((a, b) => new Date(a.closed_at) - new Date(b.closed_at));
+    if (closed.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trades.empty_cum_chart">${esc(t('view.trades.empty_cum_chart'))}</div>`;
+        return;
+    }
+    let acc = 0;
+    const cum = closed.map(tr => (acc += Number(tr.net_pnl)));
+    const xs = cum.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trades.chart.trade_idx') },
+            { label: t('view.trades.chart.cum_pnl'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.trades.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderPnlChart(trades) {
