@@ -880,6 +880,8 @@ pub enum Preset {
     ApathyAtYearLow,                     // year_low_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w low + extreme dry vol + flat close + tight range (total apathy at the breakdown zone; neither buyers nor sellers committed; coiled-spring pre-breakdown setup with no participation flush yet)
     StealthAtYear52High,                 // year_high_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w high + flat close + extreme vol (stealth distribution at the breakout zone: extreme participation with no net price expansion; institutional offloading masked as quiet acceptance)
     StealthAtYear52Low,                  // year_low_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w low + flat close + extreme vol (stealth accumulation at the breakdown zone: extreme participation with no net price expansion; institutional bottom-fishing masked as quiet acceptance)
+    ExtremeVolCloseAtHod,                // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 — extreme vol + close pinned to HOD (max-conviction bullish close at any price level: extreme participation finishing on the highs; institutional ramp into the close)
+    ExtremeVolCloseAtLod,                // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 — extreme vol + close pinned to LOD (max-conviction bearish close at any price level: extreme participation finishing on the lows; institutional dump into the close)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5153,6 +5155,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 5.0
         }
+        Preset::ExtremeVolCloseAtHod => {
+            hit.rel_volume >= 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::ExtremeVolCloseAtLod => {
+            hit.rel_volume >= 5.0
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -5923,6 +5933,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ApathyAtYearLow => "At 52w Low + Extreme Dry Vol + Flat Close + Tight Range (Total Apathy at the Breakdown Zone; Neither Buyers nor Sellers Committed; Coiled-spring Pre-breakdown Setup with No Participation Flush Yet)",
         Preset::StealthAtYear52High => "At 52w High + Flat Close + Extreme Vol (Stealth Distribution at the Breakout Zone: Extreme Participation with No Net Price Expansion; Institutional Offloading Masked as Quiet Acceptance)",
         Preset::StealthAtYear52Low => "At 52w Low + Flat Close + Extreme Vol (Stealth Accumulation at the Breakdown Zone: Extreme Participation with No Net Price Expansion; Institutional Bottom-fishing Masked as Quiet Acceptance)",
+        Preset::ExtremeVolCloseAtHod => "Extreme Vol + Close Pinned to HOD (Max-conviction Bullish Close at Any Price Level: Extreme Participation Finishing on the Highs; Institutional Ramp into the Close)",
+        Preset::ExtremeVolCloseAtLod => "Extreme Vol + Close Pinned to LOD (Max-conviction Bearish Close at Any Price Level: Extreme Participation Finishing on the Lows; Institutional Dump into the Close)",
     }
 }
 

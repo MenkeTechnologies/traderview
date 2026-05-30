@@ -762,6 +762,8 @@ const PRESETS = [
     { id: 'apathy_at_year_low', label: t('view.scanners.preset.apathy_at_year_low.label'), desc: t('view.scanners.preset.apathy_at_year_low.desc') },
     { id: 'stealth_at_year52_high', label: t('view.scanners.preset.stealth_at_year52_high.label'), desc: t('view.scanners.preset.stealth_at_year52_high.desc') },
     { id: 'stealth_at_year52_low', label: t('view.scanners.preset.stealth_at_year52_low.label'), desc: t('view.scanners.preset.stealth_at_year52_low.desc') },
+    { id: 'extreme_vol_close_at_hod', label: t('view.scanners.preset.extreme_vol_close_at_hod.label'), desc: t('view.scanners.preset.extreme_vol_close_at_hod.desc') },
+    { id: 'extreme_vol_close_at_lod', label: t('view.scanners.preset.extreme_vol_close_at_lod.label'), desc: t('view.scanners.preset.extreme_vol_close_at_lod.desc') },
 ];
 
 export async function renderScanners(mount) {
