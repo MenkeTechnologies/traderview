@@ -85,6 +85,11 @@ export async function renderTradePlanChecklist(mount, _appState) {
             <div id="tpc-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_plan_checklist.h2.rr_chart">R-multiple vs risk %</h2>
+            <div id="tpc-rr-chart" style="width:100%;height:180px"></div>
+        </div>
+
         <div id="tpc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -143,6 +148,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderGates(local);
     renderGatesChart(local);
+    renderRrChart(local);
 
     let resp;
     try {
@@ -154,6 +160,53 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderGates(resp);
     renderGatesChart(resp);
+    renderRrChart(resp);
+}
+
+function renderRrChart(report) {
+    const el = document.getElementById('tpc-rr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const r = Number(report?.computed_r_multiple);
+    const risk = Number(report?.risk_pct);
+    if (!Number.isFinite(r) && !Number.isFinite(risk)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_plan_checklist.empty_rr_chart">${esc(t('view.trade_plan_checklist.empty_rr_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.trade_plan_checklist.chart.r_mult'),
+        t('view.trade_plan_checklist.chart.risk_pct'),
+    ];
+    const xs = [1, 2];
+    const ry  = [Number.isFinite(r)    ? r          : null, null];
+    const rpY = [null, Number.isFinite(risk) ? risk * 100 : null];
+    const minR = xs.map(() => Number(state.config.min_r_multiple));
+    const maxR = xs.map(() => Number(state.config.max_risk_pct_per_trade) * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 160,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_plan_checklist.chart.bucket') },
+            { label: t('view.trade_plan_checklist.chart.r_mult'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 18, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.trade_plan_checklist.chart.risk_pct'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.trade_plan_checklist.chart.min_r'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.trade_plan_checklist.chart.max_risk'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ry, rpY, minR, maxR], el);
 }
 
 function renderGatesChart(report) {
