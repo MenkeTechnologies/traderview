@@ -54,6 +54,11 @@ async function renderBrowse(mount) {
             <h2 data-i18n="view.backtest_presets.h2.public_chart">Public presets by forks (top 20)</h2>
             <div id="bp-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.backtest_presets.h2.age_chart">Public preset age (days since last update)</h2>
+            <div id="bp-age-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.backtest_presets.hint.age_chart" class="muted small">Days since each top-20 public preset's last <code>updated_at</code>. Reveals which popular presets are actively maintained vs stale clones. Orthogonal to the forks/runs popularity chart above.</p>
+        </div>
     `;
     mount.querySelector('#bp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -111,6 +116,7 @@ function renderPublic(rows, mount, tok) {
     el.innerHTML = table(rows, false);
     wireRowButtons(el, false, mount, tok);
     renderForksChart(rows);
+    renderAgeChart(rows);
 }
 
 function renderForksChart(rows) {
@@ -153,6 +159,47 @@ function renderForksChart(rows) {
         ],
         legend: { show: true },
     }, [xs, forks, runs], el);
+}
+
+function renderAgeChart(rows) {
+    const el = document.getElementById('bp-age-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const now = Date.now();
+    const top = (rows || [])
+        .filter(r => r && r.updated_at)
+        .map(r => ({
+            name: r.name || '?',
+            age: (now - new Date(r.updated_at).getTime()) / (1000 * 60 * 60 * 24),
+            forks: Number(r.fork_count != null ? r.fork_count : (r.forks || 0)),
+        }))
+        .filter(r => Number.isFinite(r.age))
+        .sort((a, b) => b.forks - a.forks)
+        .slice(0, 20);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.backtest_presets.empty_age_chart">${esc(t('view.backtest_presets.empty_age_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.name);
+    const ys = top.map(r => r.age);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.backtest_presets.chart.preset_idx') },
+            { label: t('view.backtest_presets.chart.age_days'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + 'd') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function table(rows, mine) {
