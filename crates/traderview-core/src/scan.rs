@@ -530,6 +530,8 @@ pub enum Preset {
     ConsolidationBreakDown,         // hod_dist + lod_dist > 3 AND year_low_pct between 5 and 20 AND change_pct < -1 AND rel_volume >= 2 — wide range + mid-lower 52w + red + hot vol (consolidation breaking down)
     HotVolGapHeldFlatChange,        // rel_volume >= 2 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — hot vol + gap + flat change (gap held + heavy participation absorbing both sides)
     DryVolGapHeldFlatChange,        // rel_volume < 0.5 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — dry vol + gap + flat change (gap held + no participation; thin tape)
+    AllDirectionsAlignedHotVolUp,   // rel_volume >= 3 AND change_pct > 0 AND day_pct > 0 AND gap_pct > 0 — extreme vol + all up directions (full directional bull bar; conviction long)
+    AllDirectionsAlignedHotVolDown, // rel_volume >= 3 AND change_pct < 0 AND day_pct < 0 AND gap_pct < 0 — extreme vol + all down directions (full directional bear bar; conviction short)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2725,6 +2727,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 1.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::AllDirectionsAlignedHotVolUp => {
+            hit.rel_volume >= 3.0
+                && hit.change_pct > 0.0
+                && hit.day_pct > 0.0
+                && hit.gap_pct > 0.0
+        }
+        Preset::AllDirectionsAlignedHotVolDown => {
+            hit.rel_volume >= 3.0
+                && hit.change_pct < 0.0
+                && hit.day_pct < 0.0
+                && hit.gap_pct < 0.0
+        }
     }
 }
 
@@ -3145,6 +3159,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ConsolidationBreakDown => "Consolidation Break Down (Mid-Lower 52w, Hot Vol)",
         Preset::HotVolGapHeldFlatChange => "Hot-Vol Gap Held + Flat Change (Heavy Absorption)",
         Preset::DryVolGapHeldFlatChange => "Dry-Vol Gap Held + Flat Change (Thin-Tape Hold)",
+        Preset::AllDirectionsAlignedHotVolUp => "All Up + Hot Vol (Full Conviction Bull Bar)",
+        Preset::AllDirectionsAlignedHotVolDown => "All Down + Hot Vol (Full Conviction Bear Bar)",
     }
 }
 

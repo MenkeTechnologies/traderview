@@ -412,6 +412,8 @@ const PRESETS = [
     { id: 'consolidation_break_down', label: t('view.scanners.preset.consolidation_break_down.label'), desc: t('view.scanners.preset.consolidation_break_down.desc') },
     { id: 'hot_vol_gap_held_flat_change', label: t('view.scanners.preset.hot_vol_gap_held_flat_change.label'), desc: t('view.scanners.preset.hot_vol_gap_held_flat_change.desc') },
     { id: 'dry_vol_gap_held_flat_change', label: t('view.scanners.preset.dry_vol_gap_held_flat_change.label'), desc: t('view.scanners.preset.dry_vol_gap_held_flat_change.desc') },
+    { id: 'all_directions_aligned_hot_vol_up', label: t('view.scanners.preset.all_directions_aligned_hot_vol_up.label'), desc: t('view.scanners.preset.all_directions_aligned_hot_vol_up.desc') },
+    { id: 'all_directions_aligned_hot_vol_down', label: t('view.scanners.preset.all_directions_aligned_hot_vol_down.label'), desc: t('view.scanners.preset.all_directions_aligned_hot_vol_down.desc') },
 ];
 
 export async function renderScanners(mount) {

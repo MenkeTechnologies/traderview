@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('homoskedastic') };
 let chart = null;
+let auxChart = null;
 
 export async function renderBpTest(mount, _appState) {
     const tok = currentViewToken();
@@ -51,6 +52,11 @@ export async function renderBpTest(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bp.h2.chart">x vs y scatter</h2>
             <div id="bp-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bp.h2.aux_chart">Squared residuals (ê²) vs x — BP auxiliary regression</h2>
+            <div id="bp-aux-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -96,6 +102,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.bp.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderAuxChart();
     renderStats();
     let resp;
     try {
@@ -108,6 +115,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.bp.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderAuxChart();
     renderStats();
 }
 
@@ -166,6 +174,44 @@ function renderChart() {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderAuxChart() {
+    const el = document.getElementById('bp-aux-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const n = state.x.length;
+    if (n < 3) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bp.empty_aux">${esc(t('view.bp.empty_aux'))}</div>`;
+        return;
+    }
+    let sumX = 0, sumY = 0;
+    for (let i = 0; i < n; i++) { sumX += state.x[i]; sumY += state.y[i]; }
+    const xMean = sumX / n, yMean = sumY / n;
+    let sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) {
+        sxx += (state.x[i] - xMean) ** 2;
+        sxy += (state.x[i] - xMean) * (state.y[i] - yMean);
+    }
+    const beta = sxx > 0 ? sxy / sxx : 0;
+    const alpha = yMean - beta * xMean;
+    const pairs = state.x.map((xi, i) => [xi, (state.y[i] - (alpha + beta * xi)) ** 2]).sort((a, b) => a[0] - b[0]);
+    const xs = pairs.map(p => p[0]);
+    const ys = pairs.map(p => p[1]);
+    if (auxChart) { try { auxChart.destroy(); } catch {} auxChart = null; }
+    auxChart = new window.uPlot({
+        width: el.clientWidth || 800,
+        height: 220,
+        scales: { x: { time: false } },
+        series: [
+            { label: 'x' },
+            { label: t('view.bp.series.resid_sq'),
+              stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 6, fill: '#ff9f1a', stroke: '#ff9f1a' } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderStats() {
