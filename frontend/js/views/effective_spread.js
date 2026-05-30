@@ -51,6 +51,11 @@ export async function renderEffectiveSpread(mount, _appState) {
             <div id="es-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.eff_spread.h2.spread_chart">Effective vs realized spread per observation</h2>
+            <div id="es-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="es-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -88,6 +93,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.eff_spread.err.degenerate')); return; }
     renderSummary(local, true);
     renderTable();
+    renderSpreadChart();
     let resp;
     try {
         resp = await api.microEffectiveSpread(buildBody(state));
@@ -99,6 +105,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.eff_spread.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderTable();
+    renderSpreadChart();
 }
 
 function renderSummary(report, pending) {
@@ -171,6 +178,43 @@ function renderTable() {
             </tbody>
         </table>
     `;
+}
+
+function renderSpreadChart() {
+    const el = document.getElementById('es-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const obs = Array.isArray(state.observations) ? state.observations : [];
+    if (obs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.eff_spread.empty_chart">${esc(t('view.eff_spread.empty_chart'))}</div>`;
+        return;
+    }
+    const enriched = obs.map(enrich);
+    const xs = enriched.map((_, i) => i + 1);
+    const effective = enriched.map(o => Number.isFinite(o.effective_spread) ? o.effective_spread : null);
+    const realized = enriched.map(o => Number.isFinite(o.realized_spread) ? o.realized_spread : null);
+    const impact = enriched.map(o => Number.isFinite(o.price_impact) ? o.price_impact : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.eff_spread.chart.obs_idx') },
+            { label: t('view.eff_spread.chart.effective'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.eff_spread.chart.realized'),
+              stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 8, fill: '#ff9f1a', stroke: '#ff9f1a' } },
+            { label: t('view.eff_spread.chart.impact'),
+              stroke: '#a06bff', width: 0,
+              points: { show: true, size: 8, fill: '#a06bff', stroke: '#a06bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, effective, realized, impact], el);
 }
 
 function card(label, value, cls = '') {
