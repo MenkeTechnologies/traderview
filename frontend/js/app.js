@@ -549,6 +549,11 @@ function bindTabs() {
         const el = document.getElementById('capture');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in paper scope → submit order-ticket form.
+    window.addEventListener('tv:paper-submit', () => {
+        const form = document.getElementById('ord-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
