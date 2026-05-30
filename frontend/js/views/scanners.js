@@ -976,6 +976,8 @@ const PRESETS = [
     { id: 'gap_down_flat_day_hot_vol', label: t('view.scanners.preset.gap_down_flat_day_hot_vol.label'), desc: t('view.scanners.preset.gap_down_flat_day_hot_vol.desc') },
     { id: 'gap_up_big_day_hot_vol', label: t('view.scanners.preset.gap_up_big_day_hot_vol.label'), desc: t('view.scanners.preset.gap_up_big_day_hot_vol.desc') },
     { id: 'gap_down_big_day_hot_vol', label: t('view.scanners.preset.gap_down_big_day_hot_vol.label'), desc: t('view.scanners.preset.gap_down_big_day_hot_vol.desc') },
+    { id: 'gap_up_big_day_down_hot_vol', label: t('view.scanners.preset.gap_up_big_day_down_hot_vol.label'), desc: t('view.scanners.preset.gap_up_big_day_down_hot_vol.desc') },
+    { id: 'gap_down_big_day_up_hot_vol', label: t('view.scanners.preset.gap_down_big_day_up_hot_vol.label'), desc: t('view.scanners.preset.gap_down_big_day_up_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

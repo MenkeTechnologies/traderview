@@ -1094,6 +1094,8 @@ pub enum Preset {
     GapDownFlatDayHotVol,                      // gap_pct < -2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap down held through the regular session without intraday recovery or further deterioration; supports the gap without re-test, suggesting seller distribution at the gap level)
     GapUpBigDayHotVol,                         // gap_pct > 2 AND day_pct > 2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday up (>2%) + hot vol (double-momentum day: overnight gap up followed by intraday continuation higher with elevated participation; gap+intraday both aligned green = aggregate change_pct >4% from prior close with sustained buy pressure across both regular and after-hours sessions)
     GapDownBigDayHotVol,                       // gap_pct < -2 AND day_pct < -2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday down (<-2%) + hot vol (double-momentum day: overnight gap down followed by intraday continuation lower with elevated participation; gap+intraday both aligned red = aggregate change_pct <-4% from prior close with sustained sell pressure across both regular and after-hours sessions)
+    GapUpBigDayDownHotVol,                     // gap_pct > 2 AND day_pct < -2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday down (<-2%) + hot vol (gap-fade pressure: overnight gap up met with intraday selling that erodes the gap by 2%+; counter-trend intraday pressure on a positive gap that may or may not flip the close to red depending on gap size; suggests active sellers stepping in at the gap level)
+    GapDownBigDayUpHotVol,                     // gap_pct < -2 AND day_pct > 2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday up (>2%) + hot vol (gap-absorb pressure: overnight gap down met with intraday buying that reclaims the gap by 2%+; counter-trend intraday pressure on a negative gap that may or may not flip the close to green depending on gap size; suggests active buyers stepping in at the gap level)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6752,6 +6754,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::GapDownBigDayHotVol => {
             hit.gap_pct < -2.0 && hit.day_pct < -2.0 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpBigDayDownHotVol => {
+            hit.gap_pct > 2.0 && hit.day_pct < -2.0 && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownBigDayUpHotVol => {
+            hit.gap_pct < -2.0 && hit.day_pct > 2.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7736,6 +7744,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownFlatDayHotVol => "Gap Down (<-2 %) + Flat-day Bar (|day_pct|<0.5 %) + Hot Vol (Gap-and-hold Institutional Signal: Overnight Gap down Held through the Regular Session without Intraday Recovery or Further Deterioration; Supports the Gap without Re-test, Suggesting Seller Distribution at the Gap Level)",
         Preset::GapUpBigDayHotVol => "Gap Up (>2 %) + Big Intraday Up (>2 %) + Hot Vol (Double-momentum Day: Overnight Gap up Followed by Intraday Continuation Higher with Elevated Participation; Gap+intraday Both Aligned Green = Aggregate Change_pct >4 % from Prior Close with Sustained Buy Pressure across Both Regular and After-hours Sessions)",
         Preset::GapDownBigDayHotVol => "Gap Down (<-2 %) + Big Intraday Down (<-2 %) + Hot Vol (Double-momentum Day: Overnight Gap down Followed by Intraday Continuation Lower with Elevated Participation; Gap+intraday Both Aligned Red = Aggregate Change_pct <-4 % from Prior Close with Sustained Sell Pressure across Both Regular and After-hours Sessions)",
+        Preset::GapUpBigDayDownHotVol => "Gap Up (>2 %) + Big Intraday Down (<-2 %) + Hot Vol (Gap-fade Pressure: Overnight Gap up Met with Intraday Selling that Erodes the Gap by 2 %+; Counter-trend Intraday Pressure on a Positive Gap that May or May Not Flip the Close to Red Depending on Gap Size; Suggests Active Sellers Stepping in at the Gap Level)",
+        Preset::GapDownBigDayUpHotVol => "Gap Down (<-2 %) + Big Intraday Up (>2 %) + Hot Vol (Gap-absorb Pressure: Overnight Gap down Met with Intraday Buying that Reclaims the Gap by 2 %+; Counter-trend Intraday Pressure on a Negative Gap that May or May Not Flip the Close to Green Depending on Gap Size; Suggests Active Buyers Stepping in at the Gap Level)",
     }
 }
 
