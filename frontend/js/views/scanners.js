@@ -414,6 +414,8 @@ const PRESETS = [
     { id: 'dry_vol_gap_held_flat_change', label: t('view.scanners.preset.dry_vol_gap_held_flat_change.label'), desc: t('view.scanners.preset.dry_vol_gap_held_flat_change.desc') },
     { id: 'all_directions_aligned_hot_vol_up', label: t('view.scanners.preset.all_directions_aligned_hot_vol_up.label'), desc: t('view.scanners.preset.all_directions_aligned_hot_vol_up.desc') },
     { id: 'all_directions_aligned_hot_vol_down', label: t('view.scanners.preset.all_directions_aligned_hot_vol_down.label'), desc: t('view.scanners.preset.all_directions_aligned_hot_vol_down.desc') },
+    { id: 'intraday_recovery_from_gap_down', label: t('view.scanners.preset.intraday_recovery_from_gap_down.label'), desc: t('view.scanners.preset.intraday_recovery_from_gap_down.desc') },
+    { id: 'intraday_rejection_from_gap_up', label: t('view.scanners.preset.intraday_rejection_from_gap_up.label'), desc: t('view.scanners.preset.intraday_rejection_from_gap_up.desc') },
 ];
 
 export async function renderScanners(mount) {

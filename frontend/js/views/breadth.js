@@ -21,6 +21,11 @@ export async function renderBreadth(mount) {
             <h2 data-i18n="view.breadth.h2.indicator_chart">Indicator % change snapshot</h2>
             <div id="b-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.breadth.h2.value_chart">Indicator raw values (current level)</h2>
+            <div id="b-value-chart" style="width:100%;height:200px"></div>
+        </div>
         <div class="chart-panel">
             <h2 data-i18n="view.breadth.h2.regime_guide">Regime guide</h2>
             <table class="trades">
@@ -99,6 +104,37 @@ function renderIndicators(s, mount) {
         </div>
     `;
     renderIndicatorChart(inds);
+    renderValueChart(inds);
+}
+
+function renderValueChart(inds) {
+    const el = document.getElementById('b-value-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (inds || []).filter(i => Number.isFinite(Number(i.value)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.breadth.empty_value_chart">${esc(t('view.breadth.empty_value_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(i => i.symbol);
+    const ys = valid.map(i => Number(i.value));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.breadth.chart.indicator_idx') },
+            { label: t('view.breadth.chart.value'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderIndicatorChart(inds) {

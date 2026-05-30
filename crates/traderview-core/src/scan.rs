@@ -532,6 +532,8 @@ pub enum Preset {
     DryVolGapHeldFlatChange,        // rel_volume < 0.5 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — dry vol + gap + flat change (gap held + no participation; thin tape)
     AllDirectionsAlignedHotVolUp,   // rel_volume >= 3 AND change_pct > 0 AND day_pct > 0 AND gap_pct > 0 — extreme vol + all up directions (full directional bull bar; conviction long)
     AllDirectionsAlignedHotVolDown, // rel_volume >= 3 AND change_pct < 0 AND day_pct < 0 AND gap_pct < 0 — extreme vol + all down directions (full directional bear bar; conviction short)
+    IntradayRecoveryFromGapDown,    // year_high_pct between -30 and -10 AND day_pct > 1 AND gap_pct < -0.5 AND rel_volume >= 1.5 — mid-range from top + green intraday + gap-down + hot vol (intraday recovery from gap-down)
+    IntradayRejectionFromGapUp,     // year_low_pct between 10 and 30 AND day_pct < -1 AND gap_pct > 0.5 AND rel_volume >= 1.5 — mid-range from bottom + red intraday + gap-up + hot vol (intraday rejection from gap-up)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2739,6 +2741,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < 0.0
                 && hit.gap_pct < 0.0
         }
+        Preset::IntradayRecoveryFromGapDown => {
+            hit.year_high_pct >= -30.0
+                && hit.year_high_pct <= -10.0
+                && hit.day_pct > 1.0
+                && hit.gap_pct < -0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::IntradayRejectionFromGapUp => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct <= 30.0
+                && hit.day_pct < -1.0
+                && hit.gap_pct > 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3161,6 +3177,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolGapHeldFlatChange => "Dry-Vol Gap Held + Flat Change (Thin-Tape Hold)",
         Preset::AllDirectionsAlignedHotVolUp => "All Up + Hot Vol (Full Conviction Bull Bar)",
         Preset::AllDirectionsAlignedHotVolDown => "All Down + Hot Vol (Full Conviction Bear Bar)",
+        Preset::IntradayRecoveryFromGapDown => "Intraday Recovery from Gap-Down (Mid-Upper 52w)",
+        Preset::IntradayRejectionFromGapUp => "Intraday Rejection from Gap-Up (Mid-Lower 52w)",
     }
 }
 
