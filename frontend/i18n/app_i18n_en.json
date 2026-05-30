@@ -7040,6 +7040,7 @@
   "common.parse_error_inline":             "line {line}: {msg} — {raw}",
   "common.parse.input_must_be_string":     "input must be a string",
   "common.range_label":                    "range {low} – {high}",
+  "common.month_year":                     "{month} {year}",
   "common.parse.non_finite_token":         "non-finite token",
   "common.parse.high_lt_low":              "high < low",
   "common.parse.expected_price_size":      "expected 2 tokens (price size)",
