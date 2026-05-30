@@ -46,10 +46,10 @@ let state = {
 };
 
 const SMOOTHER_META = {
-    lowess:     { label: 'LOWESS',        color: '#00e5ff' },
+    lowess:     { label: t('chart.series.lowess'),      color: '#00e5ff' },
     kalman_rts: { label: t('chart.series.kalman_rts'),  color: '#ff9f1a' },
-    theil_sen:  { label: 'Theil-Sen',     color: '#a06bff' },
-    polynomial: { label: 'Polynomial',    color: '#39ff14' },
+    theil_sen:  { label: t('chart.series.theil_sen'),   color: '#a06bff' },
+    polynomial: { label: t('chart.series.polynomial'),  color: '#39ff14' },
 };
 
 export async function renderSeriesSmoother(mount, _appState) {
