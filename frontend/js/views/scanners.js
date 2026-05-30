@@ -850,6 +850,8 @@ const PRESETS = [
     { id: 'triple_aligned_bear_big_conviction_day', label: t('view.scanners.preset.triple_aligned_bear_big_conviction_day.label'), desc: t('view.scanners.preset.triple_aligned_bear_big_conviction_day.desc') },
     { id: 'distant_from_year_high_range_contraction_hot_vol', label: t('view.scanners.preset.distant_from_year_high_range_contraction_hot_vol.label'), desc: t('view.scanners.preset.distant_from_year_high_range_contraction_hot_vol.desc') },
     { id: 'distant_from_year_low_range_contraction_hot_vol', label: t('view.scanners.preset.distant_from_year_low_range_contraction_hot_vol.label'), desc: t('view.scanners.preset.distant_from_year_low_range_contraction_hot_vol.desc') },
+    { id: 'distant_from_year_high_range_expansion_hot_vol', label: t('view.scanners.preset.distant_from_year_high_range_expansion_hot_vol.label'), desc: t('view.scanners.preset.distant_from_year_high_range_expansion_hot_vol.desc') },
+    { id: 'distant_from_year_low_range_expansion_hot_vol', label: t('view.scanners.preset.distant_from_year_low_range_expansion_hot_vol.label'), desc: t('view.scanners.preset.distant_from_year_low_range_expansion_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

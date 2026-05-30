@@ -968,6 +968,8 @@ pub enum Preset {
     TripleAlignedBearBigConvictionDay,   // gap_pct < -1.5 AND change_pct < -3 AND day_pct < -1.5 AND rel_volume >= 2 — gap down + big net move + big intraday down + hot vol (triple-aligned bearish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
     DistantFromYearHighRangeContractionHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far below 52w high (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the pullback territory: tight digestion with elevated participation deep below the prior peak; pre-reversal coil with institutional positioning)
     DistantFromYearLowRangeContractionHotVol,  // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far above 52w low (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the advance territory: tight digestion with elevated participation deep above the prior trough; pre-reversal coil with institutional positioning)
+    DistantFromYearHighRangeExpansionHotVol,   // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far below 52w high (>=20%) + wide intraday range + hot vol (volatility expansion deep in the pullback territory: institutional fight day occurring well below the prior peak with elevated participation; regime-shift candidate after extended decline)
+    DistantFromYearLowRangeExpansionHotVol,    // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far above 52w low (>=20%) + wide intraday range + hot vol (volatility expansion deep in the advance territory: institutional fight day occurring well above the prior trough with elevated participation; regime-shift candidate after extended advance)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5808,6 +5810,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::DistantFromYearHighRangeExpansionHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DistantFromYearLowRangeExpansionHotVol => {
+            hit.year_low_pct >= 20.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6666,6 +6678,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TripleAlignedBearBigConvictionDay => "Gap Down + Big Net Move + Big Intraday Down + Hot Vol (Triple-aligned Bearish Conviction: Overnight, Regular Hours, and Net All Moved Meaningfully in the Same Direction with Elevated Participation; Full-stack Directional Commitment Day)",
         Preset::DistantFromYearHighRangeContractionHotVol => "Far below 52w High (>=20 %) + Tight Intraday Range + Flat Close + Hot Vol (Stealth Absorption in the Pullback Territory: Tight Digestion with Elevated Participation Deep below the Prior Peak; Pre-reversal Coil with Institutional Positioning)",
         Preset::DistantFromYearLowRangeContractionHotVol => "Far above 52w Low (>=20 %) + Tight Intraday Range + Flat Close + Hot Vol (Stealth Absorption in the Advance Territory: Tight Digestion with Elevated Participation Deep above the Prior Trough; Pre-reversal Coil with Institutional Positioning)",
+        Preset::DistantFromYearHighRangeExpansionHotVol => "Far below 52w High (>=20 %) + Wide Intraday Range + Hot Vol (Volatility Expansion Deep in the Pullback Territory: Institutional Fight Day Occurring Well below the Prior Peak with Elevated Participation; Regime-shift Candidate after Extended Decline)",
+        Preset::DistantFromYearLowRangeExpansionHotVol => "Far above 52w Low (>=20 %) + Wide Intraday Range + Hot Vol (Volatility Expansion Deep in the Advance Territory: Institutional Fight Day Occurring Well above the Prior Trough with Elevated Participation; Regime-shift Candidate after Extended Advance)",
     }
 }
 
