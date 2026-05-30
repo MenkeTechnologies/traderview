@@ -840,6 +840,8 @@ pub enum Preset {
     HotVolBigChangeDayPctAligned,        // change_pct.abs() > 3 AND day_pct.abs() > 3 AND day_pct * change_pct > 0 AND rel_volume >= 2 — big net move + intraday move aligned with same direction + hot vol (full-conviction directional day: both overnight + regular hours pushed the same direction with elevated participation; two-leg trend confirmation)
     Year52HighBreakoutHotVolNoExtreme,   // year_high_pct < 0 AND change_pct > 1.5 AND change_pct < 4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w high + modest green + moderate hot vol (controlled-conviction breakout to new highs; institutional accumulation without exhaustion; sustainable trend continuation candidate)
     Year52LowBreakdownHotVolNoExtreme,   // year_low_pct < 0 AND change_pct < -1.5 AND change_pct > -4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w low + modest red + moderate hot vol (controlled-conviction breakdown to new lows; institutional distribution without panic; sustainable trend continuation candidate)
+    BigGreenTopWickRejectHotVol,         // change_pct > 1 AND hod_dist_pct < -2 AND rel_volume >= 1.5 — green close + HOD far above (long upper wick) + hot vol (upper-wick rejection on a green day: rally faded into the close but still finished green; supply tested with elevated participation; potential follow-through hesitation)
+    BigRedBottomWickRejectHotVol,        // change_pct < -1 AND lod_dist_pct > 2 AND rel_volume >= 1.5 — red close + LOD far below (long lower wick) + hot vol (lower-wick rejection on a red day: sell-off bounced into the close but still finished red; demand tested with elevated participation; potential follow-through hesitation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4871,6 +4873,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.rel_volume < 3.0
         }
+        Preset::BigGreenTopWickRejectHotVol => {
+            hit.change_pct > 1.0
+                && hit.hod_dist_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigRedBottomWickRejectHotVol => {
+            hit.change_pct < -1.0
+                && hit.lod_dist_pct > 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5601,6 +5613,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolBigChangeDayPctAligned => "Big Net Move + Intraday Move Aligned with Same Direction + Hot Vol (Full-conviction Directional Day: Both Overnight + Regular Hours Pushed the Same Direction with Elevated Participation; Two-leg Trend Confirmation)",
         Preset::Year52HighBreakoutHotVolNoExtreme => "New 52w High + Modest Green + Moderate Hot Vol (Controlled-conviction Breakout to New Highs; Institutional Accumulation without Exhaustion; Sustainable Trend Continuation Candidate)",
         Preset::Year52LowBreakdownHotVolNoExtreme => "New 52w Low + Modest Red + Moderate Hot Vol (Controlled-conviction Breakdown to New Lows; Institutional Distribution without Panic; Sustainable Trend Continuation Candidate)",
+        Preset::BigGreenTopWickRejectHotVol => "Green Close + HOD Far Above (Long Upper Wick) + Hot Vol (Upper-wick Rejection on a Green Day: Rally Faded into the Close but Still Finished Green; Supply Tested with Elevated Participation; Potential Follow-through Hesitation)",
+        Preset::BigRedBottomWickRejectHotVol => "Red Close + LOD Far Below (Long Lower Wick) + Hot Vol (Lower-wick Rejection on a Red Day: Sell-off Bounced into the Close but Still Finished Red; Demand Tested with Elevated Participation; Potential Follow-through Hesitation)",
     }
 }
 

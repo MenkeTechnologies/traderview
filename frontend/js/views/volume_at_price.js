@@ -58,6 +58,12 @@ export async function renderVolumeAtPrice(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.vap.h2.cum_chart">Cumulative volume share by price bin (low → high)</h2>
+            <div id="vap-cum-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.vap.hint.cum_chart" class="muted small">Running cumulative volume fraction as price rises through the bins. Reveals concentration: a steep early rise = volume sits at the lows; a steep late rise = at the highs; a near-diagonal = uniform. Orthogonal to the per-bin histogram above. Yellow dashed = 50 % accumulation reference.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.vap.h2.table">Top 10 bins by volume</h2>
             <div id="vap-table"></div>
         </div>
@@ -105,6 +111,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.num_bins, state.value_area_pct);
     renderSummary(local, true);
     renderChart(local);
+    renderCumChart(local);
     renderTable(local);
     let resp;
     try {
@@ -117,6 +124,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCumChart(resp);
     renderTable(resp);
     const bins = (resp.bins || []).length;
     const poc = resp.poc_index != null && resp.bins && resp.bins[resp.poc_index]
@@ -193,6 +201,41 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, vaSeries, pocSeries], el);
+}
+
+function renderCumChart(report) {
+    const el = document.getElementById('vap-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bins = (report.bins || []).filter(b => Number.isFinite(Number(b.volume)));
+    const total = Number(report.total_volume);
+    if (bins.length < 1 || !(total > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vap.empty_cum_chart">${esc(t('view.vap.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...bins].sort((a, b) => Number(a.center) - Number(b.center));
+    let acc = 0;
+    const cum = sorted.map(b => (acc += Number(b.volume) / total) * 100);
+    const xs = sorted.map(b => Number(b.center));
+    const half = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.vap.chart.price') },
+            { label: t('view.vap.chart.cum_pct'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.vap.chart.half'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => fmtUSD(v)) },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, cum, half], el);
 }
 
 function renderTable(report) {
