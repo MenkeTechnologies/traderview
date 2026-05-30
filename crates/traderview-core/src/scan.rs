@@ -1018,6 +1018,8 @@ pub enum Preset {
     GapDownCloseAtHodConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + confirmed-breakdown zone (1-3% past 52w low) + green close + hot vol (post-breakdown accumulation signal: gap down in the already-confirmed breakdown zone completely reversed and closed at the day's high on elevated participation; failed-extension warning that breakdown sellers are getting trapped below the prior trough)
     GapUpCloseAtLodDeepBelowYearHighHotVol,    // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + far below 52w high (>=20%) + red close + hot vol (failed dead-cat bounce signal: gap up deep in the pullback territory completely reversed and closed at the day's low on elevated participation; bear-market continuation candidate with sellers in control well below the prior peak)
     GapDownCloseAtHodDeepAboveYearLowHotVol,   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + far above 52w low (>=20%) + green close + hot vol (failed shake-out signal: gap down deep in the advance territory completely reversed and closed at the day's high on elevated participation; bull-market continuation candidate with buyers in control well above the prior trough)
+    GapUpCloseAtLodJustOffYearHighHotVol,      // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + just off 52w high (2-5%) + red close + hot vol (failed recovery attempt: gap up immediately after shallow pullback from the year peak completely reversed and closed at the day's low on elevated participation; second leg lower starting candidate)
+    GapDownCloseAtHodJustOffYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + just off 52w low (2-5%) + green close + hot vol (failed rejection attempt: gap down immediately after shallow bounce from the year trough completely reversed and closed at the day's high on elevated participation; second leg higher starting candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6206,6 +6208,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpCloseAtLodJustOffYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownCloseAtHodJustOffYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7114,6 +7132,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownCloseAtHodConfirmedBelowYearLowHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Confirmed-breakdown Zone (1-3 % past 52w Low) + Green Close + Hot Vol (Post-breakdown Accumulation Signal: Gap down in the Already-confirmed Breakdown Zone Completely Reversed and Closed at the Day's High on Elevated Participation; Failed-extension Warning that Breakdown Sellers Are Getting Trapped below the Prior Trough)",
         Preset::GapUpCloseAtLodDeepBelowYearHighHotVol => "Gap Up (>2 %) Faded Completely to LOD + Far below 52w High (>=20 %) + Red Close + Hot Vol (Failed Dead-cat Bounce Signal: Gap up Deep in the Pullback Territory Completely Reversed and Closed at the Day's Low on Elevated Participation; Bear-market Continuation Candidate with Sellers in Control Well below the Prior Peak)",
         Preset::GapDownCloseAtHodDeepAboveYearLowHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Far above 52w Low (>=20 %) + Green Close + Hot Vol (Failed Shake-out Signal: Gap down Deep in the Advance Territory Completely Reversed and Closed at the Day's High on Elevated Participation; Bull-market Continuation Candidate with Buyers in Control Well above the Prior Trough)",
+        Preset::GapUpCloseAtLodJustOffYearHighHotVol => "Gap Up (>2 %) Faded Completely to LOD + Just off 52w High (2-5 %) + Red Close + Hot Vol (Failed Recovery Attempt: Gap up Immediately after Shallow Pullback from the Year Peak Completely Reversed and Closed at the Day's Low on Elevated Participation; Second Leg Lower Starting Candidate)",
+        Preset::GapDownCloseAtHodJustOffYearLowHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Just off 52w Low (2-5 %) + Green Close + Hot Vol (Failed Rejection Attempt: Gap down Immediately after Shallow Bounce from the Year Trough Completely Reversed and Closed at the Day's High on Elevated Participation; Second Leg Higher Starting Candidate)",
     }
 }
 
