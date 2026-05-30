@@ -65,6 +65,11 @@ export async function renderAbcPattern(mount, _appState) {
             <div id="abc-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.abc.h2.swing_chart">Swing chart</h2>
+            <div id="abc-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="abc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -107,6 +112,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderEvents(local);
     renderStats();
+    renderSwingChart();
     let resp;
     try {
         resp = await api.anlyAbcPattern(buildBody(state));
@@ -118,6 +124,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderEvents(resp);
     renderStats();
+    renderSwingChart();
 }
 
 function renderSummary(report, pending) {
@@ -211,6 +218,35 @@ function renderStats() {
             </tbody>
         </table>
     `;
+}
+
+function renderSwingChart() {
+    const el = document.getElementById('abc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const swings = Array.isArray(state.swings) ? state.swings.filter(s => Number.isFinite(s.index) && Number.isFinite(s.price)) : [];
+    if (swings.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.abc.empty_chart">${esc(t('view.abc.empty_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...swings].sort((a, b) => a.index - b.index);
+    const xs = sorted.map(s => s.index);
+    const ys = sorted.map(s => s.price);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.abc.chart.bar_idx') },
+            { label: t('view.abc.chart.swing_price'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function card(label, value, cls = '') {
