@@ -958,6 +958,8 @@ pub enum Preset {
     BothShortWicksTinyChangeHotVol,      // hod_dist_pct.abs() < 0.5 AND lod_dist_pct < 0.5 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — short upper wick + short lower wick + flat close + hot vol (compressed-cylinder day: close pinned with no wick exploration on either side; pre-breakout coil with elevated absorption at a specific price)
     HammerAtConfirmedBreakdown,          // year_low_pct >= -3 AND year_low_pct < -1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — 1-3% below prior 52w low + long lower wick + close near HOD + green close + hot vol (failed-breakdown hammer: confirmed breakdown level retested intraday then reclaimed back above prior support; potential failed-breakdown reversal signal)
     ShootingStarAtConfirmedBreakout,     // year_high_pct >= -3 AND year_high_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — 1-3% above prior 52w high + long upper wick + close near LOD + red close + hot vol (failed-breakout shooting star: confirmed breakout level retested intraday then rejected back below prior resistance; potential failed-breakout reversal signal)
+    DragonflyDojiAtConfirmedBreakdown,   // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% below prior 52w low + flat close + LOD far below + close near HOD + hot vol (dragonfly doji at confirmed breakdown: intraday plunge fully reclaimed by close with flat finish above prior support; failed-breakdown demand-test signal)
+    GravestoneDojiAtConfirmedBreakout,   // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% above prior 52w high + flat close + HOD far above + close near LOD + hot vol (gravestone doji at confirmed breakout: intraday rip fully sold by close with flat finish below prior resistance; failed-breakout supply-test signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5726,6 +5728,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::DragonflyDojiAtConfirmedBreakdown => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < -1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.lod_dist_pct > 4.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GravestoneDojiAtConfirmedBreakout => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < -1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.hod_dist_pct < -4.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6574,6 +6592,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BothShortWicksTinyChangeHotVol => "Short Upper Wick + Short Lower Wick + Flat Close + Hot Vol (Compressed-cylinder Day: Close Pinned with No Wick Exploration on Either Side; Pre-breakout Coil with Elevated Absorption at a Specific Price)",
         Preset::HammerAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Failed-breakdown Hammer: Confirmed Breakdown Level Retested Intraday then Reclaimed Back above Prior Support; Potential Failed-breakdown Reversal Signal)",
         Preset::ShootingStarAtConfirmedBreakout => "1-3 % above Prior 52w High + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Failed-breakout Shooting Star: Confirmed Breakout Level Retested Intraday then Rejected Back below Prior Resistance; Potential Failed-breakout Reversal Signal)",
+        Preset::DragonflyDojiAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Flat Close + LOD Far Below + Close Near HOD + Hot Vol (Dragonfly Doji at Confirmed Breakdown: Intraday Plunge Fully Reclaimed by Close with Flat Finish above Prior Support; Failed-breakdown Demand-test Signal)",
+        Preset::GravestoneDojiAtConfirmedBreakout => "1-3 % above Prior 52w High + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji at Confirmed Breakout: Intraday Rip Fully Sold by Close with Flat Finish below Prior Resistance; Failed-breakout Supply-test Signal)",
     }
 }
 
