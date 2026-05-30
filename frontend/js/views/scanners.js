@@ -440,6 +440,8 @@ const PRESETS = [
     { id: 'outside_day_hot_vol_expansion', label: t('view.scanners.preset.outside_day_hot_vol_expansion.label'), desc: t('view.scanners.preset.outside_day_hot_vol_expansion.desc') },
     { id: 'mid_range_dry_vol_no_conviction', label: t('view.scanners.preset.mid_range_dry_vol_no_conviction.label'), desc: t('view.scanners.preset.mid_range_dry_vol_no_conviction.desc') },
     { id: 'low_of_year_hot_vol_panic', label: t('view.scanners.preset.low_of_year_hot_vol_panic.label'), desc: t('view.scanners.preset.low_of_year_hot_vol_panic.desc') },
+    { id: 'high_of_year_hot_vol_euphoria', label: t('view.scanners.preset.high_of_year_hot_vol_euphoria.label'), desc: t('view.scanners.preset.high_of_year_hot_vol_euphoria.desc') },
+    { id: 'wide_range_flat_close_heavy_churn', label: t('view.scanners.preset.wide_range_flat_close_heavy_churn.label'), desc: t('view.scanners.preset.wide_range_flat_close_heavy_churn.desc') },
 ];
 
 export async function renderScanners(mount) {

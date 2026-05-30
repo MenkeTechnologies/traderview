@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let cushionChart = null;
 
 export async function renderChandelier(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderChandelier(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.chx.h2.chart">Stops overlay</h2>
             <div id="cx-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.chx.h2.cushion_chart">Close-to-stop cushion (% of close) — negative = flip imminent</h2>
+            <div id="cx-cushion-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period, state.multiplier);
     renderSummary(local, true);
     renderChart(local);
+    renderCushionChart(local);
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.stop)) { showErr(t('view.chx.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderCushionChart(resp);
     renderStats();
 }
 
@@ -192,6 +200,45 @@ function renderChart(report) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderCushionChart(report) {
+    const el = document.getElementById('cx-cushion-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars || state.bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.chx.empty_cushion_chart">${esc(t('view.chx.empty_cushion_chart'))}</div>`;
+        return;
+    }
+    const xs = state.bars.map((_, i) => i);
+    const longCushion = state.bars.map((b, i) => {
+        const s = report.stop[i];
+        if (s == null || !Number.isFinite(s) || !b.close || report.direction[i] !== 'long') return null;
+        return ((b.close - s) / b.close) * 100;
+    });
+    const shortCushion = state.bars.map((b, i) => {
+        const s = report.stop[i];
+        if (s == null || !Number.isFinite(s) || !b.close || report.direction[i] !== 'short') return null;
+        return ((s - b.close) / b.close) * 100;
+    });
+    const zero = xs.map(() => 0);
+    if (cushionChart) { try { cushionChart.destroy(); } catch {} cushionChart = null; }
+    cushionChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.chx.series.long_cushion'),
+              stroke: '#7af0a8', width: 1.5,
+              points: { show: false } },
+            { label: t('view.chx.series.short_cushion'),
+              stroke: '#ff3860', width: 1.5,
+              points: { show: false } },
+            { label: t('view.chx.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, longCushion, shortCushion, zero], el);
 }
 
 function renderStats() {
