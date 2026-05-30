@@ -800,6 +800,8 @@ pub enum Preset {
     MarubozuRedHotVol,                   // change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big red + closed at LOD + no overnight gap + hot vol (red marubozu; full intraday trend day with no gap aid; max-conviction short built entirely during regular hours)
     Year52HighParabolicExtreme,          // year_high_pct < 0 AND change_pct > 10 AND rel_volume >= 5 — new 52w high + parabolic green + extreme vol (parabolic blow-off at new highs; exhaustion-vol squeeze; either continuation rocket or terminal top)
     Year52LowParabolicExtreme,           // year_low_pct < 0 AND change_pct < -10 AND rel_volume >= 5 — new 52w low + parabolic red + extreme vol (panic capitulation at new lows; exhaustion-vol flush; either continuation or terminal bottom)
+    HotVolNoChangeTightRange,            // rel_volume >= 3 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND gap_pct.abs() < 0.5 — hot vol + tight intraday range + flat close + no gap (extreme absorption coil; institutional accumulation / distribution with no price expansion; pre-breakout compression at scale)
+    DryVolBigMoveNoFollow,               // rel_volume < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 — dry vol + big move + tight close range (low-participation thrust; illiquidity-driven move without follow-through; fade candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4577,6 +4579,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -10.0
                 && hit.rel_volume >= 5.0
         }
+        Preset::HotVolNoChangeTightRange => {
+            hit.rel_volume >= 3.0
+                && hit.change_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+                && hit.gap_pct.abs() < 0.5
+        }
+        Preset::DryVolBigMoveNoFollow => {
+            hit.rel_volume < 0.5
+                && hit.change_pct.abs() > 4.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 3.0
+        }
     }
 }
 
@@ -5267,6 +5280,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MarubozuRedHotVol => "Big Red + Close at LOD + No Overnight Gap + Hot Vol (Red Marubozu; Full Intraday Trend Day with No Gap Aid; Max-conviction Short Built Entirely during Regular Hours)",
         Preset::Year52HighParabolicExtreme => "New 52w High + Parabolic Green + Extreme Vol (Parabolic Blow-off at New Highs; Exhaustion-vol Squeeze; Either Continuation Rocket or Terminal Top)",
         Preset::Year52LowParabolicExtreme => "New 52w Low + Parabolic Red + Extreme Vol (Panic Capitulation at New Lows; Exhaustion-vol Flush; Either Continuation or Terminal Bottom)",
+        Preset::HotVolNoChangeTightRange => "Hot Vol + Tight Intraday Range + Flat Close + No Gap (Extreme Absorption Coil; Institutional Accumulation / Distribution with No Price Expansion; Pre-breakout Compression at Scale)",
+        Preset::DryVolBigMoveNoFollow => "Dry Vol + Big Move + Tight Close Range (Low-participation Thrust; Illiquidity-driven Move without Follow-through; Fade Candidate)",
     }
 }
 

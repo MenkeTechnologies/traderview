@@ -84,6 +84,12 @@ export async function renderSignalDecomposition(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.signal_decomposition.h2.energy_chart">Component energy share (% of total Σx²)</h2>
+            <div id="sd-energy-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.signal_decomposition.hint.energy" class="muted small">Each component's sum-of-squares divided by total component energy. Reveals which IMF / wavelet level / SSA eigentriple holds the bulk of the signal vs which carry mostly noise — orthogonal to the per-component subplots above.</p>
+        </div>
+
         <div id="sd-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -159,6 +165,7 @@ async function decompose(mount, tok) {
 
     renderSummary(parsed.value, components, res);
     renderComponents(parsed.value, components);
+    renderEnergyChart(components);
     showToast(t('view.signal_decomposition.toast.decomposed', { method: method.label, n: components.length }), { level: 'success' });
 }
 
@@ -214,6 +221,46 @@ function renderComponents(series, components) {
     if (!window.uPlot) return;
     drawMini('sd-chart-orig', series, '#aab');
     components.forEach((c, i) => drawMini(`sd-chart-${i}`, c.data, c.color));
+}
+
+function renderEnergyChart(components) {
+    const el = document.getElementById('sd-energy-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (components || []).filter(c => Array.isArray(c.data) && c.data.length > 0);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.signal_decomposition.empty_energy_chart">${esc(t('view.signal_decomposition.empty_energy_chart'))}</div>`;
+        return;
+    }
+    const energies = valid.map(c => c.data.reduce((acc, v) => {
+        const n = Number(v);
+        return acc + (Number.isFinite(n) ? n * n : 0);
+    }, 0));
+    const total = energies.reduce((a, b) => a + b, 0);
+    if (!(total > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.signal_decomposition.empty_energy_chart">${esc(t('view.signal_decomposition.empty_energy_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(c => c.label);
+    const ys = energies.map(e => (e / total) * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.signal_decomposition.chart.component_idx') },
+            { label: t('view.signal_decomposition.chart.energy_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function drawMini(elId, ys, stroke) {

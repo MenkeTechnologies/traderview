@@ -682,6 +682,8 @@ const PRESETS = [
     { id: 'marubozu_red_hot_vol', label: t('view.scanners.preset.marubozu_red_hot_vol.label'), desc: t('view.scanners.preset.marubozu_red_hot_vol.desc') },
     { id: 'year52_high_parabolic_extreme', label: t('view.scanners.preset.year52_high_parabolic_extreme.label'), desc: t('view.scanners.preset.year52_high_parabolic_extreme.desc') },
     { id: 'year52_low_parabolic_extreme', label: t('view.scanners.preset.year52_low_parabolic_extreme.label'), desc: t('view.scanners.preset.year52_low_parabolic_extreme.desc') },
+    { id: 'hot_vol_no_change_tight_range', label: t('view.scanners.preset.hot_vol_no_change_tight_range.label'), desc: t('view.scanners.preset.hot_vol_no_change_tight_range.desc') },
+    { id: 'dry_vol_big_move_no_follow', label: t('view.scanners.preset.dry_vol_big_move_no_follow.label'), desc: t('view.scanners.preset.dry_vol_big_move_no_follow.desc') },
 ];
 
 export async function renderScanners(mount) {
