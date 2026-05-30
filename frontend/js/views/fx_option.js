@@ -77,6 +77,11 @@ export async function renderFxOption(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.fx_option.h2.delta_chart">Numerical delta vs spot — sigmoid through strike</h2>
+            <div id="fx-delta-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="fx-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -118,6 +123,7 @@ async function price(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    renderDeltaChart(res);
     showToast(t('view.fx_option.toast.done', {
         kind: state.params.kind,
         price: fmtRate(res.price),
@@ -207,6 +213,50 @@ function renderChart(res) {
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, ys, mcPoint], el);
+}
+
+function renderDeltaChart(res) {
+    const el = document.getElementById('fx-delta-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const p = state.params;
+    const lo = Math.max(p.spot * 0.8, 1e-9);
+    const hi = p.spot * 1.2;
+    const n = 121;
+    const xs = new Array(n);
+    const prices = new Array(n);
+    for (let i = 0; i < n; i++) {
+        const s = lo + (hi - lo) * i / (n - 1);
+        xs[i] = s;
+        prices[i] = garmanKohlhagenPrice(p.kind, s, p.strike, p.t_years, p.rate_dom, p.rate_for, p.sigma);
+    }
+    const delta = new Array(n).fill(null);
+    for (let i = 1; i < n - 1; i++) {
+        const dS = xs[i + 1] - xs[i - 1];
+        if (dS > 0) delta[i] = (prices[i + 1] - prices[i - 1]) / dS;
+    }
+    const half = (hi - lo) / (2 * (n - 1));
+    const backend = xs.map(s => Math.abs(s - p.spot) < half ? Number(res.delta) : null);
+    const strike = xs.map(() => null);
+    const strikeMark = xs.map(s => Math.abs(s - p.strike) < half ? 0 : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.fx_option.series.spot') },
+            { label: t('view.fx_option.chart.delta_local'),
+              stroke: '#7af0a8', width: 1.6, points: { show: false } },
+            { label: t('view.fx_option.chart.delta_backend'),
+              stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
+            { label: t('view.fx_option.chart.strike_mark'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 10, stroke: '#ffd84a', fill: '#ffd84a' } },
+        ],
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
+    }, [xs, delta, backend, strikeMark], el);
+    void strike;
 }
 
 function showErr(msg) {

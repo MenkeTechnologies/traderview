@@ -652,6 +652,8 @@ pub enum Preset {
     Year52LowGapUpFaded,            // year_low_pct < 5 AND gap_pct > 0.5 AND change_pct <= 0 AND rel_volume >= 1 — at 52w low + gap up + faded negative + decent vol (relief gap rejected at the lows; continuation lower)
     IntradayMatchesChange,          // gap_pct.abs() < 0.2 AND change_pct.abs() > 1 AND (change_pct - day_pct).abs() < 0.3 — no gap + meaningful change + intraday matches change (entire move came from regular session; no overnight component)
     IntradayOpposesChange,          // change_pct.abs() > 1 AND day_pct * change_pct < 0 AND day_pct.abs() > 0.5 — meaningful change + opposite-sign intraday + meaningful intraday (gap dominated; intraday reversed but couldn't overpower gap)
+    SymmetricMidRangeBalance,       // (hod_dist - lod_dist).abs() < 0.2 AND hod_dist + lod_dist > 1 AND change_pct.abs() < 0.3 — close exactly mid-range + meaningful range visited + flat change (geometric symmetry; perfect balance day)
+    AsymmetricExtremeBias,          // (hod_dist - lod_dist).abs() > 2 AND hod_dist + lod_dist > 3 — close strongly biased to one extreme + wide range visited (one-sided range; close clearly favored one side of the day's exploration)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3551,6 +3553,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct * hit.change_pct < 0.0
                 && hit.day_pct.abs() > 0.5
         }
+        Preset::SymmetricMidRangeBalance => {
+            (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.2
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.3
+        }
+        Preset::AsymmetricExtremeBias => {
+            (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+        }
     }
 }
 
@@ -4093,6 +4104,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowGapUpFaded => "Near 52w Low + Gap Up Faded Negative + Decent Vol (Relief Gap Rejected at Lows)",
         Preset::IntradayMatchesChange => "No Gap + Intraday Matches Change (All Move from Regular Session)",
         Preset::IntradayOpposesChange => "Meaningful Change + Intraday Opposes Sign + Meaningful Intraday (Gap Dominated)",
+        Preset::SymmetricMidRangeBalance => "Close Exactly Mid-Range + Meaningful Range + Flat Change (Symmetric Balance Day)",
+        Preset::AsymmetricExtremeBias => "Asymmetric Close + Wide Range (One-sided Range Exploration)",
     }
 }
 
