@@ -17,6 +17,10 @@ export async function renderTradesView(mount, state) {
         <h1 data-i18n="view.trades.h1.trades" class="view-title">// TRADES</h1>
         <div id="filter-mount"></div>
         <div class="trades-toolbar">
+            <a href="#new-trade" class="btn primary" id="new-trade-link"
+               data-i18n="view.trades.btn.new_trade"
+               data-tip="view.trades.tip.new_trade"
+               data-shortcut="trades_new">+ New trade</a>
             <button data-i18n="view.trades.btn.re_run_fifo" class="primary" id="rollup-btn">Re-run FIFO</button>
             <button data-i18n="view.trades.btn.close_expired_options" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
             <span class="muted" id="sel-count" style="margin-left:14px">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>

@@ -432,6 +432,15 @@ function bindTabs() {
         const el = document.getElementById('body') || document.getElementById('journal-body');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `n` in watchlists scope → focus add-symbol input.
+    window.addEventListener('tv:watchlists-focus-add', () => {
+        const el = document.querySelector('#add-sym input[name="symbol"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
+    // View-scoped: `r` in live (positions) scope → refresh via hashchange.
+    window.addEventListener('tv:live-refresh', () => {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {

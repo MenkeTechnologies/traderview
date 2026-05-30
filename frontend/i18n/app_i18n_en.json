@@ -206,6 +206,8 @@
   "shortcut.trades_new":                "New trade (in Trades view)",
   "shortcut.dashboard_refresh":         "Refresh dashboard (in Dashboard view)",
   "shortcut.journal_focus_body":        "Focus journal body (in Journal view)",
+  "shortcut.watchlists_focus_add":      "Focus add-symbol (in Watchlists view)",
+  "shortcut.live_refresh":              "Refresh live positions",
 
   "view.keyboard_shortcuts.title":      "Keyboard Shortcuts",
   "view.keyboard_shortcuts.placeholder": "Filter shortcuts…",
@@ -11431,6 +11433,8 @@
   "view.trade_reviews.th.would_change": "Would change",
   "view.trades.h1.trades": "// TRADES",
   "view.trades.btn.re_run_fifo": "Re-run FIFO",
+  "view.trades.btn.new_trade":   "+ New trade",
+  "view.trades.tip.new_trade":   "Open the new-trade form",
   "view.trades.btn.close_expired_options": "Close expired options",
   "view.trades.btn.apply": "Apply",
   "view.trades.btn.delete": "delete",
