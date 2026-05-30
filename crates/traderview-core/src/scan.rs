@@ -708,6 +708,8 @@ pub enum Preset {
     BigRedNarrowRangeHotVol,         // change_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big red + tight intraday range + hot vol (gap-and-hold down; no intraday recovery; max-weakness continuation candidate; entire move from gap held all day)
     OneSidedRangeCloseAtHODGreen,    // hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 2 AND change_pct > 1 AND rel_volume >= 1.5 — close at HOD + LOD >2% away + green + decent vol (one-sided up-day exploration; sellers shown low side but couldn't hold; trend day finished on the highs)
     OneSidedRangeCloseAtLODRed,      // lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 2 AND change_pct < -1 AND rel_volume >= 1.5 — close at LOD + HOD >2% away + red + decent vol (one-sided down-day exploration; buyers shown high side but couldn't hold; trend day finished on the lows)
+    BullishOutsideDayHotVol,         // change_pct > 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — green close + wide range + same-direction intraday + hot vol (bullish outside day with conviction; large-range exploration ending up on volume; institutional accumulation through range expansion)
+    BearishOutsideDayHotVol,         // change_pct < -1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — red close + wide range + same-direction intraday + hot vol (bearish outside day with conviction; large-range exploration ending down on volume; institutional distribution through range expansion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3923,6 +3925,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BullishOutsideDayHotVol => {
+            hit.change_pct > 1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.change_pct * hit.day_pct > 0.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BearishOutsideDayHotVol => {
+            hit.change_pct < -1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.change_pct * hit.day_pct > 0.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4521,6 +4535,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedNarrowRangeHotVol => "Big Red + Tight Intraday Range + Hot Vol (Gap-and-hold Down; No Recovery; Max-weakness Continuation Candidate)",
         Preset::OneSidedRangeCloseAtHODGreen => "Close at HOD + LOD >2% Away + Green + Decent Vol (One-sided Up-day; Sellers Shown Low Side But Couldn't Hold)",
         Preset::OneSidedRangeCloseAtLODRed => "Close at LOD + HOD >2% Away + Red + Decent Vol (One-sided Down-day; Buyers Shown High Side But Couldn't Hold)",
+        Preset::BullishOutsideDayHotVol => "Bullish Outside Day + Wide Range + Same-direction Intraday + Hot Vol (Institutional Accumulation Through Range Expansion)",
+        Preset::BearishOutsideDayHotVol => "Bearish Outside Day + Wide Range + Same-direction Intraday + Hot Vol (Institutional Distribution Through Range Expansion)",
     }
 }
 

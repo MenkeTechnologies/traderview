@@ -61,6 +61,12 @@ export async function renderMarginalVar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.mvar.h2.weight_vs_contrib">Weight vs VaR % contribution (per asset)</h2>
+            <div id="mv-wvc-chart" style="width:100%;height:260px"></div>
+            <p data-i18n="view.mvar.hint.weight_vs_contrib" class="muted small">Position weight on x, % contribution to portfolio VaR on y. Above the yellow y=x line = the position's risk share exceeds its weight (concentration). Below the line = diversifier.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.mvar.h2.table">Per-asset breakdown</h2>
             <div id="mv-table"></div>
         </div>
@@ -117,6 +123,7 @@ async function compute(tok) {
     }
     renderSummary(local, true);
     renderChart(local);
+    renderWeightVsContribChart(local);
     renderTable(local);
     let resp;
     try {
@@ -134,6 +141,7 @@ async function compute(tok) {
     }
     renderSummary(resp, false);
     renderChart(resp);
+    renderWeightVsContribChart(resp);
     renderTable(resp);
     const pvar = Number(resp.portfolio_var) || 0;
     const pcts = Array.isArray(resp.pct_contribution) ? resp.pct_contribution : [];
@@ -213,6 +221,47 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderWeightVsContribChart(report) {
+    const el = document.getElementById('mv-wvc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pcts = report.pct_contribution || [];
+    const ws = state.portfolio.weights || [];
+    if (!pcts.length || pcts.length !== ws.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mvar.empty_wvc_chart">${esc(t('view.mvar.empty_wvc_chart'))}</div>`;
+        return;
+    }
+    const sumW = ws.reduce((s, w) => s + Math.abs(w), 0) || 1;
+    const indexed = ws.map((w, i) => ({
+        w: Math.abs(w) / sumW * 100,
+        pct: Number(pcts[i]),
+    })).filter(p => Number.isFinite(p.w) && Number.isFinite(p.pct));
+    indexed.sort((a, b) => a.w - b.w);
+    const xs = indexed.map(p => p.w);
+    const ys = indexed.map(p => p.pct);
+    const xMax = Math.max(...xs, ...ys, 1);
+    const ref = xs.map(x => x);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 240,
+        scales: { x: { range: [0, xMax * 1.05] }, y: { range: [0, xMax * 1.05] } },
+        series: [
+            { label: t('view.mvar.chart.weight_pct') },
+            { label: t('view.mvar.chart.var_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.mvar.chart.equal_line'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 30,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, ref], el);
 }
 
 function renderTable(report) {
