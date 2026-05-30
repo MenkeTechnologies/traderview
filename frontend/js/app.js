@@ -711,6 +711,11 @@ function bindTabs() {
         const el = document.getElementById('re-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in vol-stop-close scope → click Compute.
+    window.addEventListener('tv:vol-stop-close-run', () => {
+        const el = document.getElementById('vsc-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

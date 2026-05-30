@@ -12,6 +12,7 @@ import {
 } from '../_vol_stop_close_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     bars: makeDemoBars('wicks'),
     side: 'long',
@@ -26,26 +27,26 @@ export async function renderVolStopClose(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.vol_stop_close.h2.paste">Paste HLC bars (one per line:</span> <code>high low close</code>)</h2>
-            <textarea id="vsc-blob" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.6&#10;...">${esc(barsToBlob(state.bars))}</textarea>
+            <textarea id="vsc-blob" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.6&#10;..." data-tip="view.vol_stop_close.tip.blob">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.vol_stop_close.label.side">Side</span>
-                    <select id="vsc-side">
+                    <select id="vsc-side" data-tip="view.vol_stop_close.tip.side">
                         <option data-i18n="view.vol_stop_close.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.vol_stop_close.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.vol_stop_close.label.lookback">Lookback (bars)</span>
-                    <input id="vsc-lb" type="number" step="1" min="1" value="${state.cfg.lookback}"></label>
+                    <input id="vsc-lb" type="number" step="1" min="1" value="${state.cfg.lookback}" data-tip="view.vol_stop_close.tip.lookback"></label>
                 <label><span data-i18n="view.vol_stop_close.label.atr_multiplier">ATR multiplier</span>
-                    <input id="vsc-mult" type="number" step="any" min="0" value="${state.cfg.atr_multiplier}"></label>
+                    <input id="vsc-mult" type="number" step="any" min="0" value="${state.cfg.atr_multiplier}" data-tip="view.vol_stop_close.tip.atr_mult"></label>
                 <label><span data-i18n="view.vol_stop_close.label.atr_period">ATR period</span>
-                    <input id="vsc-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
-                <button data-i18n="view.vol_stop_close.btn.compute" id="vsc-run" class="primary" type="button">Compute</button>
+                    <input id="vsc-atr" type="number" step="1" min="1" value="${state.atrPeriod}" data-tip="view.vol_stop_close.tip.atr_period"></label>
+                <button data-i18n="view.vol_stop_close.btn.compute" id="vsc-run" class="primary" type="button" data-tip="view.vol_stop_close.tip.run" data-shortcut="vol_stop_close_run">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.vol_stop_close.btn.demo_wick_spike_long" id="vsc-demo-wicks"    class="secondary" type="button">Demo: wick-spike (long)</button>
-                <button data-i18n="view.vol_stop_close.btn.demo_uptrend_reversal" id="vsc-demo-rev"      class="secondary" type="button">Demo: uptrend → reversal</button>
-                <button data-i18n="view.vol_stop_close.btn.demo_downtrend_bounce" id="vsc-demo-down"     class="secondary" type="button">Demo: downtrend → bounce</button>
-                <button data-i18n="view.vol_stop_close.btn.demo_chop_with_wicks" id="vsc-demo-chop"     class="secondary" type="button">Demo: chop with wicks</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_wick_spike_long" id="vsc-demo-wicks"    class="secondary" type="button" data-tip="view.vol_stop_close.tip.demo_wicks">Demo: wick-spike (long)</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_uptrend_reversal" id="vsc-demo-rev"      class="secondary" type="button" data-tip="view.vol_stop_close.tip.demo_rev">Demo: uptrend → reversal</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_downtrend_bounce" id="vsc-demo-down"     class="secondary" type="button" data-tip="view.vol_stop_close.tip.demo_down">Demo: downtrend → bounce</button>
+                <button data-i18n="view.vol_stop_close.btn.demo_chop_with_wicks" id="vsc-demo-chop"     class="secondary" type="button" data-tip="view.vol_stop_close.tip.demo_chop">Demo: chop with wicks</button>
             </div>
             <p data-i18n="view.vol_stop_close.hint.both_stops_use_the_same_atr_multiplier_close_based" class="muted">Both stops use the same ATR + multiplier. Close-based references highest CLOSE in window; Chandelier references highest HIGH. On the wick-spike demo, watch Chandelier ratchet up to the wick while close-based ignores it.</p>
         </div>
@@ -65,6 +66,7 @@ export async function renderVolStopClose(mount, _appState) {
         state.side = k === 'downtrend' ? 'short' : 'long';
         document.getElementById('vsc-blob').value = barsToBlob(state.bars);
         document.getElementById('vsc-side').value = state.side;
+        showToast(t('view.vol_stop_close.toast.demo_loaded', { kind: k, n: state.bars.length }), { level: 'info' });
     };
     document.getElementById('vsc-demo-wicks').addEventListener('click', () => loadDemo('wicks'));
     document.getElementById('vsc-demo-rev').addEventListener('click',   () => loadDemo('uptrend-reverse'));
@@ -82,6 +84,7 @@ function readInputs() {
     const parsed = parseBarBlob(document.getElementById('vsc-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.vol_stop_close.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
     } else {
         hideErr();
         state.bars = parsed.bars;
@@ -98,7 +101,7 @@ async function compute(tok) {
     if (!state.bars.length) return;
     const atr = computeAtr(state.bars, state.atrPeriod).map(v => Number.isFinite(v) ? v : 0);
     const err = validateInputs(state.bars, atr, state.side, state.cfg);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.vol_stop_close.toast.invalid'), { level: 'warning' }); return; }
     hideErr();
     const localClose = localVolStopClose(state.bars, atr, state.side, state.cfg);
     const localChand = localChandelier(state.bars, atr, state.side, state.cfg);
@@ -108,11 +111,16 @@ async function compute(tok) {
     try {
         resp = await api.discVolStopClose(buildBody(state.bars, atr, state.side, state.cfg));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.vol_stop_close.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, localChand, false);
     renderChart(state.bars, resp, localChand);
+    const sumClose = summarize(resp, state.bars, state.side);
+    const sumChand = summarize(localChand, state.bars, state.side);
+    showToast(t('view.vol_stop_close.toast.computed', { close: sumClose.triggerCount, chand: sumChand.triggerCount }), { level: 'success' });
 }
 
 function renderSummary(closeStops, chandStops, pending) {
