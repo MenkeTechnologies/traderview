@@ -60,43 +60,43 @@ export function buildBody(order, nowIso, sessionOpenIso) {
 export function localEvaluate(order, nowIso, sessionOpenIso) {
     const remaining = order.original_qty - order.filled_qty;
     if (remaining <= 0) {
-        return { action: 'completed', reason: 'fully filled' };
+        return { action: 'completed', reason: t('view.time_in_force.reason.fully_filled') };
     }
     const placedDate = dateOnlyFromIso(order.placed_at);
     const sessionOpen = sessionOpenIso;
     switch (order.tif) {
         case 'day':
             if (cmpDate(sessionOpen, placedDate) > 0) {
-                return { action: 'cancel', reason: 'DAY order rolled into new session — expire' };
+                return { action: 'cancel', reason: t('view.time_in_force.reason.day_expired') };
             }
-            return { action: 'keep', reason: 'DAY order still in session' };
+            return { action: 'keep', reason: t('view.time_in_force.reason.day_in_session') };
         case 'gtc': {
             const ageDays = wholeDaysBetween(order.placed_at, nowIso);
             if (ageDays > 90) {
-                return { action: 'cancel', reason: 'GTC order exceeded 90-day broker timeout' };
+                return { action: 'cancel', reason: t('view.time_in_force.reason.gtc_90d_timeout') };
             }
-            return { action: 'keep', reason: `GTC order, age ${ageDays} days` };
+            return { action: 'keep', reason: t('view.time_in_force.reason.gtc_age', { days: ageDays }) };
         }
         case 'ioc':
-            return { action: 'cancel', reason: `IOC: cancel ${remaining} unfilled qty` };
+            return { action: 'cancel', reason: t('view.time_in_force.reason.ioc_cancel', { qty: remaining }) };
         case 'fok':
             if (order.filled_qty === 0) {
-                return { action: 'cancel', reason: 'FOK: no fill available, cancel entire order' };
+                return { action: 'cancel', reason: t('view.time_in_force.reason.fok_no_fill') };
             }
             if (remaining > 0) {
-                return { action: 'cancel', reason: 'FOK: partial fill not allowed, cancel rest' };
+                return { action: 'cancel', reason: t('view.time_in_force.reason.fok_partial') };
             }
-            return { action: 'completed', reason: 'FOK: fully filled' };
+            return { action: 'completed', reason: t('view.time_in_force.reason.fok_filled') };
         case 'gtd': {
             const good = order.good_until;
-            if (good == null) return { action: 'cancel', reason: 'GTD missing good_until date' };
+            if (good == null) return { action: 'cancel', reason: t('view.time_in_force.reason.gtd_missing') };
             if (cmpDate(sessionOpen, good) > 0) {
-                return { action: 'cancel', reason: `GTD order past good_until date ${good}` };
+                return { action: 'cancel', reason: t('view.time_in_force.reason.gtd_past', { date: good }) };
             }
-            return { action: 'keep', reason: `GTD valid until ${good}` };
+            return { action: 'keep', reason: t('view.time_in_force.reason.gtd_valid', { date: good }) };
         }
         default:
-            return { action: 'cancel', reason: `unknown TIF: ${order.tif}` };
+            return { action: 'cancel', reason: t('view.time_in_force.reason.unknown_tif', { tif: order.tif }) };
     }
 }
 
