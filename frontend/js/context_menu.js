@@ -30,6 +30,25 @@ let _editingTarget = null;          // the input/textarea/CE the menu was opened
 let _scopeTarget = null;            // the element carrying the matched data-context-scope
 const _customByScope = new Map();   // scope-string → items[]
 
+// ── Handler helpers ──────────────────────────────────────────────────
+// `clipboardWrite(text, whatLabel)` — write to clipboard, toast result.
+// `whatLabel` is shown in the success toast (`Copied: <whatLabel>`).
+// Falls back to a silent no-op when the clipboard API is unavailable.
+function clipboardWrite(text, whatLabel) {
+    if (!text) return;
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+    void navigator.clipboard.writeText(text).then(
+        () => showToast(t('toast.copied', { what: whatLabel || text }), { level: 'success' }),
+        () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+    );
+}
+
+// `refreshView()` — dispatch a HashChangeEvent so the dispatcher in
+// app.js re-renders the current view from fresh storage/API state.
+function refreshView() {
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+}
+
 export function installContextMenu() {
     if (_installed) return;
     _installed = true;
@@ -44,19 +63,14 @@ export function installContextMenu() {
     });
     window.addEventListener('tv:copy-view-url', () => {
         const url = window.location.href;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(url).then(
-                () => showToast(t('toast.copied', { what: t('toast.what.url') }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(url, t('toast.what.url'));
     });
     window.addEventListener('tv:nav-back', () => {
         if (typeof window.history?.back === 'function') window.history.back();
     });
     window.addEventListener('tv:reload', () => {
         // Force re-dispatch of the current view.
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        refreshView();
     });
     window.addEventListener('tv:open-new-tab', () => {
         window.open(window.location.href, '_blank', 'noopener,noreferrer');
@@ -67,12 +81,7 @@ export function installContextMenu() {
             showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
             return;
         }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(vid).then(
-                () => showToast(t('toast.copied', { what: vid }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(vid, vid);
     });
     window.addEventListener('tv:add-bookmark', () => {
         const vid = currentViewId();
@@ -104,12 +113,7 @@ export function installContextMenu() {
             showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
             return;
         }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(sym).then(
-                () => showToast(t('toast.copied', { what: sym }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(sym, sym);
     });
     const navForSymbol = (viewId) => () => {
         const sym = (getGlobalSymbol() || '').toUpperCase();
@@ -146,12 +150,7 @@ export function installContextMenu() {
             showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
             return;
         }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(id).then(
-                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(id, id);
     });
     // Watchlist-row actions — read data-symbol (and data-wid for remove)
     // from the right-clicked <tr>.
@@ -198,7 +197,7 @@ export function installContextMenu() {
             try {
                 await api.removeWatchlistSym(wid, sym);
                 showToast(t('toast.wl_symbol_removed', { sym }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -246,7 +245,7 @@ export function installContextMenu() {
         showToast(
             t(rule.enabled ? 'toast.ar_disabled' : 'toast.ar_enabled', { name: rule.name }),
             { level: 'success' });
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        refreshView();
     });
     window.addEventListener('tv:ar-row-duplicate', (e) => {
         const id = ruleIdFrom(e.detail);
@@ -260,7 +259,7 @@ export function installContextMenu() {
         s = alertEngine.addRule(s, dup);
         alertEngine.saveState(s);
         showToast(t('toast.ar_duplicated', { name: dup.name }), { level: 'success' });
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        refreshView();
     });
     window.addEventListener('tv:ar-row-delete', (e) => {
         const id = ruleIdFrom(e.detail);
@@ -273,7 +272,7 @@ export function installContextMenu() {
             const s = alertEngine.removeRule(s0, id);
             alertEngine.saveState(s);
             showToast(t('toast.ar_deleted', { name }), { level: 'success' });
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
+            refreshView();
         })();
     });
     // Dashboard-sidebar-item actions — read data-id / data-name. Each
@@ -285,7 +284,7 @@ export function installContextMenu() {
         if (!id) return;
         const next = dbStore.setActive(dbStore.loadState(), id);
         dbStore.saveState(next);
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        refreshView();
     });
     window.addEventListener('tv:db-side-rename', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -298,7 +297,7 @@ export function installContextMenu() {
             const next = dbStore.renameDashboard(dbStore.loadState(), id, name.trim());
             dbStore.saveState(next);
             showToast(t('toast.db_renamed', { name: name.trim() }), { level: 'success' });
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
+            refreshView();
         })();
     });
     window.addEventListener('tv:db-side-duplicate', (e) => {
@@ -309,7 +308,7 @@ export function installContextMenu() {
         const next = dbStore.duplicateDashboard(dbStore.loadState(), id);
         dbStore.saveState(next);
         showToast(t('toast.db_duplicated', { name }), { level: 'success' });
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        refreshView();
     });
     window.addEventListener('tv:db-side-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -321,7 +320,7 @@ export function installContextMenu() {
             const next = dbStore.deleteDashboard(dbStore.loadState(), id);
             dbStore.saveState(next);
             showToast(t('toast.db_deleted', { name }), { level: 'success' });
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
+            refreshView();
         })();
     });
     // Board-row actions — read data-id / data-name.
@@ -335,12 +334,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const id = tgt && tgt.dataset && tgt.dataset.id;
         if (!id) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(id).then(
-                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(id, id);
     });
     window.addEventListener('tv:board-row-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -352,7 +346,7 @@ export function installContextMenu() {
             try {
                 await api.deleteDashboard(id);
                 showToast(t('toast.board_deleted', { name }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -363,12 +357,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const slug = tgt && tgt.dataset && tgt.dataset.slug;
         if (!slug) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(slug).then(
-                () => showToast(t('toast.copied', { what: slug }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(slug, slug);
     });
     window.addEventListener('tv:bp-row-open', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -389,7 +378,7 @@ export function installContextMenu() {
             try {
                 const forked = await api.forkBacktestPreset(slug);
                 showToast(t('toast.bp_forked', { name: forked && forked.name ? forked.name : slug }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -410,7 +399,7 @@ export function installContextMenu() {
             try {
                 await api.deleteBacktestPreset(id);
                 showToast(t('toast.bp_deleted', { name }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -422,12 +411,7 @@ export function installContextMenu() {
         const slug = tgt && tgt.dataset && tgt.dataset.slug;
         if (!slug) return;
         const url = `${window.location.origin}${window.location.pathname}#shared/${slug}`;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(url).then(
-                () => showToast(t('toast.copied', { what: t('toast.what.url') }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(url, t('toast.what.url'));
     });
     window.addEventListener('tv:share-row-open', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -449,7 +433,7 @@ export function installContextMenu() {
             try {
                 await api.deleteShare(id);
                 showToast(t('toast.share_deleted'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -460,12 +444,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const sym = tgt && tgt.dataset && tgt.dataset.symbol;
         if (!sym) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(sym).then(
-                () => showToast(t('toast.copied', { what: sym }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(sym, sym);
     });
     window.addEventListener('tv:plan-row-abandon', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -477,7 +456,7 @@ export function installContextMenu() {
             try {
                 await api.abandonPlan(id);
                 showToast(t('toast.plan_abandoned', { sym }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -488,12 +467,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const id = tgt && tgt.dataset && tgt.dataset.id;
         if (!id) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(id).then(
-                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(id, id);
     });
     window.addEventListener('tv:acct-row-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -505,7 +479,7 @@ export function installContextMenu() {
             try {
                 await api.deleteAccount(id);
                 showToast(t('toast.acct_deleted', { name }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -517,12 +491,7 @@ export function installContextMenu() {
         const def = tgt && tgt.dataset && tgt.dataset.definition;
         const name = (tgt && tgt.dataset && tgt.dataset.name) || '';
         if (!def) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(def).then(
-                () => showToast(t('toast.copied', { what: name || 'definition' }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(def, name || 'definition');
     });
     window.addEventListener('tv:ci-row-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -534,7 +503,7 @@ export function installContextMenu() {
             try {
                 await api.deleteCustomIndicator(id);
                 showToast(t('toast.ci_deleted', { name }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -545,12 +514,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const combo = tgt && tgt.dataset && tgt.dataset.combo;
         if (!combo) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(combo).then(
-                () => showToast(t('toast.copied', { what: combo }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(combo, combo);
     });
     window.addEventListener('tv:hk-row-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -561,7 +525,7 @@ export function installContextMenu() {
             try {
                 await api.deleteHotkey(id);
                 showToast(t('toast.hk_deleted'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -586,7 +550,7 @@ export function installContextMenu() {
             try {
                 await api.deleteJournal(id);
                 showToast(t('toast.je_deleted'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -597,12 +561,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const prefix = tgt && tgt.dataset && tgt.dataset.prefix;
         if (!prefix) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(prefix).then(
-                () => showToast(t('toast.copied', { what: prefix }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(prefix, prefix);
     });
     window.addEventListener('tv:tok-row-revoke', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -618,7 +577,7 @@ export function installContextMenu() {
             try {
                 await api.revokeApiToken(id);
                 showToast(t('toast.tok_revoked'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -629,12 +588,7 @@ export function installContextMenu() {
         const tgt = e.detail && e.detail.target;
         const name = tgt && tgt.dataset && tgt.dataset.name;
         if (!name) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            void navigator.clipboard.writeText(name).then(
-                () => showToast(t('toast.copied', { what: name }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
-            );
-        }
+        clipboardWrite(name, name);
     });
     window.addEventListener('tv:tag-chip-delete', (e) => {
         const tgt = e.detail && e.detail.target;
@@ -646,7 +600,7 @@ export function installContextMenu() {
             try {
                 await api.deleteTag(id);
                 showToast(t('toast.tag_deleted', { name }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -664,7 +618,7 @@ export function installContextMenu() {
             try {
                 await api.testWebhook(id);
                 showToast(t('toast.wh_test_fired'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -679,7 +633,7 @@ export function installContextMenu() {
             try {
                 await api.toggleWebhook(id, !wasEnabled);
                 showToast(t(wasEnabled ? 'toast.wh_disabled' : 'toast.wh_enabled'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -693,7 +647,7 @@ export function installContextMenu() {
             try {
                 await api.deleteWebhook(id);
                 showToast(t('toast.wh_deleted'), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -713,7 +667,7 @@ export function installContextMenu() {
                 showToast(
                     t(row.enabled ? 'toast.sa_disabled' : 'toast.sa_enabled', { name: row.name }),
                     { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -728,7 +682,7 @@ export function installContextMenu() {
             try {
                 await api.deleteStrategyAlert(id);
                 showToast(t('toast.sa_deleted', { id }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
@@ -745,7 +699,7 @@ export function installContextMenu() {
             try {
                 await api.deleteTrade(id);
                 showToast(t('toast.trade_deleted', { id }), { level: 'success' });
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                refreshView();
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
