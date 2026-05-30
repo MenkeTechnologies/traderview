@@ -884,6 +884,8 @@ pub enum Preset {
     ExtremeVolCloseAtLod,                // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 — extreme vol + close pinned to LOD (max-conviction bearish close at any price level: extreme participation finishing on the lows; institutional dump into the close)
     ExtremeRangeExtremeVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 5 — extreme intraday range + extreme vol (extreme two-sided rotation: institutional fight day with wide whipsaw range and climax-level participation; max-volatility regime print)
     ExtremeRangeDryVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume < 0.5 — extreme intraday range + dry vol (thin-liquidity whipsaw: extreme range expansion with no institutional sponsorship; gappy market-maker void or low-volume rip; fade with caution)
+    BigGreenUpperRangeHotVol,            // change_pct > 2 AND lod_dist_pct > 2 * hod_dist_pct.abs() AND rel_volume >= 2 — big green + close clearly in upper portion of intraday range + hot vol (bullish strength close in the top half of the intraday range without requiring close pinned to HOD; demand-side dominance with elevated participation)
+    BigRedLowerRangeHotVol,              // change_pct < -2 AND hod_dist_pct.abs() > 2 * lod_dist_pct AND rel_volume >= 2 — big red + close clearly in lower portion of intraday range + hot vol (bearish weakness close in the bottom half of the intraday range without requiring close pinned to LOD; supply-side dominance with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5173,6 +5175,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
                 && hit.rel_volume < 0.5
         }
+        Preset::BigGreenUpperRangeHotVol => {
+            hit.change_pct > 2.0
+                && hit.lod_dist_pct > 2.0 * hit.hod_dist_pct.abs()
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigRedLowerRangeHotVol => {
+            hit.change_pct < -2.0
+                && hit.hod_dist_pct.abs() > 2.0 * hit.lod_dist_pct
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5947,6 +5959,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeVolCloseAtLod => "Extreme Vol + Close Pinned to LOD (Max-conviction Bearish Close at Any Price Level: Extreme Participation Finishing on the Lows; Institutional Dump into the Close)",
         Preset::ExtremeRangeExtremeVol => "Extreme Intraday Range + Extreme Vol (Extreme Two-sided Rotation: Institutional Fight Day with Wide Whipsaw Range and Climax-level Participation; Max-volatility Regime Print)",
         Preset::ExtremeRangeDryVol => "Extreme Intraday Range + Dry Vol (Thin-liquidity Whipsaw: Extreme Range Expansion with No Institutional Sponsorship; Gappy Market-maker Void or Low-volume Rip; Fade with Caution)",
+        Preset::BigGreenUpperRangeHotVol => "Big Green + Close Clearly in Upper Portion of Intraday Range + Hot Vol (Bullish Strength Close in the Top Half of the Intraday Range without Requiring Close Pinned to HOD; Demand-side Dominance with Elevated Participation)",
+        Preset::BigRedLowerRangeHotVol => "Big Red + Close Clearly in Lower Portion of Intraday Range + Hot Vol (Bearish Weakness Close in the Bottom Half of the Intraday Range without Requiring Close Pinned to LOD; Supply-side Dominance with Elevated Participation)",
     }
 }
 
