@@ -798,6 +798,8 @@ pub enum Preset {
     ShootingStarReversalHotVol,          // change_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — red close + HOD far above + close near LOD + hot vol (shooting star reversal; intraday rip sold + red finish; reversal short signal with elevated participation)
     MarubozuGreenHotVol,                 // change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big green + closed at HOD + no overnight gap + hot vol (green marubozu; full intraday trend day with no gap aid; max-conviction long built entirely during regular hours)
     MarubozuRedHotVol,                   // change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big red + closed at LOD + no overnight gap + hot vol (red marubozu; full intraday trend day with no gap aid; max-conviction short built entirely during regular hours)
+    Year52HighParabolicExtreme,          // year_high_pct < 0 AND change_pct > 10 AND rel_volume >= 5 — new 52w high + parabolic green + extreme vol (parabolic blow-off at new highs; exhaustion-vol squeeze; either continuation rocket or terminal top)
+    Year52LowParabolicExtreme,           // year_low_pct < 0 AND change_pct < -10 AND rel_volume >= 5 — new 52w low + parabolic red + extreme vol (panic capitulation at new lows; exhaustion-vol flush; either continuation or terminal bottom)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4565,6 +4567,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighParabolicExtreme => {
+            hit.year_high_pct < 0.0
+                && hit.change_pct > 10.0
+                && hit.rel_volume >= 5.0
+        }
+        Preset::Year52LowParabolicExtreme => {
+            hit.year_low_pct < 0.0
+                && hit.change_pct < -10.0
+                && hit.rel_volume >= 5.0
+        }
     }
 }
 
@@ -5253,6 +5265,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarReversalHotVol => "Red Close + HOD Far Above + Close Near LOD + Hot Vol (Shooting Star Reversal; Intraday Rip Sold + Red Finish; Reversal Short Signal with Elevated Participation)",
         Preset::MarubozuGreenHotVol => "Big Green + Close at HOD + No Overnight Gap + Hot Vol (Green Marubozu; Full Intraday Trend Day with No Gap Aid; Max-conviction Long Built Entirely during Regular Hours)",
         Preset::MarubozuRedHotVol => "Big Red + Close at LOD + No Overnight Gap + Hot Vol (Red Marubozu; Full Intraday Trend Day with No Gap Aid; Max-conviction Short Built Entirely during Regular Hours)",
+        Preset::Year52HighParabolicExtreme => "New 52w High + Parabolic Green + Extreme Vol (Parabolic Blow-off at New Highs; Exhaustion-vol Squeeze; Either Continuation Rocket or Terminal Top)",
+        Preset::Year52LowParabolicExtreme => "New 52w Low + Parabolic Red + Extreme Vol (Panic Capitulation at New Lows; Exhaustion-vol Flush; Either Continuation or Terminal Bottom)",
     }
 }
 

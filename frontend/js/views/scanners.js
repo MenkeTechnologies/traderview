@@ -680,6 +680,8 @@ const PRESETS = [
     { id: 'shooting_star_reversal_hot_vol', label: t('view.scanners.preset.shooting_star_reversal_hot_vol.label'), desc: t('view.scanners.preset.shooting_star_reversal_hot_vol.desc') },
     { id: 'marubozu_green_hot_vol', label: t('view.scanners.preset.marubozu_green_hot_vol.label'), desc: t('view.scanners.preset.marubozu_green_hot_vol.desc') },
     { id: 'marubozu_red_hot_vol', label: t('view.scanners.preset.marubozu_red_hot_vol.label'), desc: t('view.scanners.preset.marubozu_red_hot_vol.desc') },
+    { id: 'year52_high_parabolic_extreme', label: t('view.scanners.preset.year52_high_parabolic_extreme.label'), desc: t('view.scanners.preset.year52_high_parabolic_extreme.desc') },
+    { id: 'year52_low_parabolic_extreme', label: t('view.scanners.preset.year52_low_parabolic_extreme.label'), desc: t('view.scanners.preset.year52_low_parabolic_extreme.desc') },
 ];
 
 export async function renderScanners(mount) {

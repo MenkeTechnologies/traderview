@@ -45,6 +45,11 @@ export async function renderShortInterest(mount, _state, sym) {
             <div id="ranked"></div>
             <div id="ranked-chart" style="width:100%;height:240px;margin-top:14px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.short_interest.h2.dtc_chart">Days-to-cover ranking (squeeze potential vs raw short %)</h2>
+            <div id="ranked-dtc-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.short_interest.hint.dtc_chart" class="muted small">Top 20 by short_ratio (shares short ÷ avg daily volume). Orthogonal to short % of float: a 30 %-short name with 1 day-to-cover unwinds easily; a 5 %-short name with 10 days-to-cover is squeeze-prone because shorts can't exit on a single high-volume day.</p>
+        </div>
     `;
     mount.querySelector('#sf').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -64,6 +69,7 @@ export async function renderShortInterest(mount, _state, sym) {
             const elNow = mount.querySelector('#ranked');
             if (elNow) renderRanked(elNow, rows);
             renderRankedChart(rows, mount);
+            renderDtcChart(rows, mount);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#ranked');
@@ -101,6 +107,38 @@ function renderRankedChart(rows, mount) {
         ],
         legend: { show: true },
     }, [xs, sf], el);
+}
+
+function renderDtcChart(rows, mount) {
+    const el = mount.querySelector('#ranked-dtc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.short_ratio)) && Number(r.short_ratio) > 0);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.short_interest.empty_dtc_chart">${esc(t('view.short_interest.empty_dtc_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...valid].sort((a, b) => Number(b.short_ratio) - Number(a.short_ratio)).slice(0, 20);
+    const labels = sorted.map(r => r.symbol);
+    const ys = sorted.map(r => Number(r.short_ratio));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.short_interest.chart.symbol_idx') },
+            { label: t('view.short_interest.chart.dtc'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + 'd') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderRanked(el, rows) {
