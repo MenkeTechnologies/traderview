@@ -1134,6 +1134,8 @@ pub enum Preset {
     QuintupledVolDownMidYearLowHotVol,         // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — quintupled vol (>=5) + big down move (<-3%) + mid-range from low (5-20%) (extreme catalyst rejection in mid-cycle recovery zone: vol is 5x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-1 conviction-rejection signal worth a swing-screen)
     QuintupledVolUpJustOffYearHighHotVol,      // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — quintupled vol (>=5) + big up move (>3%) + just off 52w high (2-5%) (extreme catalyst rally just off the year peak: vol is 5x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-1 post-tag-recovery catalyst worth a re-test-screen)
     QuintupledVolDownJustOffYearLowHotVol,     // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — quintupled vol (>=5) + big down move (<-3%) + just off 52w low (2-5%) (extreme catalyst rejection just off the year trough: vol is 5x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-1 post-tag-rejection catalyst worth a re-test-screen)
+    QuintupledVolCloseAtHodHotVol,             // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + close pinned to HOD + green close + hot vol (tier-1 institutional rally with no end-of-day fade: vol is 5x average and close pins to the day's high with positive change; rarest possible bull-conviction close at the highest participation tier)
+    QuintupledVolCloseAtLodHotVol,             // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + close pinned to LOD + red close + hot vol (tier-1 institutional selloff with no end-of-day bounce: vol is 5x average and close pins to the day's low with negative change; rarest possible bear-conviction close at the highest participation tier)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6984,6 +6986,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::QuintupledVolCloseAtHodHotVol => {
+            hit.rel_volume >= 5.0 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 1.0
+        }
+        Preset::QuintupledVolCloseAtLodHotVol => {
+            hit.rel_volume >= 5.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -8008,6 +8016,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolDownMidYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Mid-range from Low (5-20 %) (Extreme Catalyst Rejection in Mid-cycle Recovery Zone: Vol Is 5x Average and Price Prints a Significant Down Move in the Proper Consolidation Range above the Prior Trough; Tier-1 Conviction-rejection Signal Worth a Swing-screen)",
         Preset::QuintupledVolUpJustOffYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + Just off 52w High (2-5 %) (Extreme Catalyst Rally Just off the Year Peak: Vol Is 5x Average and Price Prints a Significant Up Move Immediately after a Shallow Pullback from the 52w High; Tier-1 Post-tag-recovery Catalyst Worth a Re-test-screen)",
         Preset::QuintupledVolDownJustOffYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Just off 52w Low (2-5 %) (Extreme Catalyst Rejection Just off the Year Trough: Vol Is 5x Average and Price Prints a Significant Down Move Immediately after a Shallow Bounce from the 52w Low; Tier-1 Post-tag-rejection Catalyst Worth a Re-test-screen)",
+        Preset::QuintupledVolCloseAtHodHotVol => "Quintupled Vol (>=5) + Close Pinned to HOD + Green Close + Hot Vol (Tier-1 Institutional Rally with No End-of-day Fade: Vol Is 5x Average and Close Pins to the Day's High with Positive Change; Rarest Possible Bull-conviction Close at the Highest Participation Tier)",
+        Preset::QuintupledVolCloseAtLodHotVol => "Quintupled Vol (>=5) + Close Pinned to LOD + Red Close + Hot Vol (Tier-1 Institutional Selloff with No End-of-day Bounce: Vol Is 5x Average and Close Pins to the Day's Low with Negative Change; Rarest Possible Bear-conviction Close at the Highest Participation Tier)",
     }
 }
 
