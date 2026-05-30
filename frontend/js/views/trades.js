@@ -37,6 +37,10 @@ export async function renderTradesView(mount, state) {
             <button data-i18n="view.trades.btn.apply" class="primary" id="apply-bulk" disabled>Apply</button>
         </div>
         <div id="trades-table"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.trades.h2.pnl_chart">Net P&L by trade (closed only)</h2>
+            <div id="trades-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     const { el: fEl } = makeFilter(currentFilter, async (f) => {
         currentFilter = f;
@@ -108,6 +112,7 @@ export async function renderTradesView(mount, state) {
     async function refresh() {
         const trades = await api.trades(state.accountId, currentFilter);
         if (!viewIsCurrent(tok)) return;
+        renderPnlChart(trades);
         const tableEl = mount.querySelector('#trades-table');
         if (!tableEl) return;
         if (!trades.length) { tableEl.innerHTML = '<p data-i18n="view.trades.hint.no_trades_match" class="boot">No trades match.</p>'; return; }
@@ -173,4 +178,40 @@ export async function renderTradesView(mount, state) {
 function holdSeconds(t) {
     if (!t.closed_at) return null;
     return Math.round((new Date(t.closed_at) - new Date(t.opened_at)) / 1000);
+}
+
+function renderPnlChart(trades) {
+    const el = document.getElementById('trades-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const closed = (trades || [])
+        .filter(tr => tr.closed_at && Number.isFinite(Number(tr.net_pnl)))
+        .sort((a, b) => new Date(a.closed_at) - new Date(b.closed_at));
+    if (closed.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trades.empty_chart">${esc(t('view.trades.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = closed.map(tr => tr.symbol);
+    const ys = closed.map(tr => Number(tr.net_pnl));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trades.chart.trade_idx') },
+            { label: t('view.trades.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.trades.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }

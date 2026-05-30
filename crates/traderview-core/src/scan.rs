@@ -190,6 +190,8 @@ pub enum Preset {
     HoldingHighsSqueeze,         // change_pct >= 0 AND change_pct < 1 AND hod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_high_pct >= -5 — closing at HOD without explosion
     HoldingLowsSqueeze,          // change_pct <= 0 AND change_pct > -1 AND lod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_low_pct <= 5 — closing at LOD without panic
     StableMidSqueeze,            // 30% < (1 - year_high_pct.abs() / (year_high_pct.abs() + year_low_pct.abs())) < 70% — true 30-70 from top, tight day
+    LeanGapMatchSqueeze,         // gap & change same sign + each between 0.5 and 1.5 + tight day + quiet — modest opening gap held
+    LongShadowQuietSqueeze,      // (hod_dist.abs() + lod_dist.abs()) > 6 AND day_pct.abs() < 1 AND rel_volume < 0.9 — long-shadow doji on quiet vol
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -535,6 +537,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
+        Preset::LeanGapMatchSqueeze => {
+            hit.gap_pct.signum() == hit.change_pct.signum()
+                && hit.gap_pct.abs() >= 0.5
+                && hit.gap_pct.abs() <= 1.5
+                && hit.change_pct.abs() >= 0.5
+                && hit.change_pct.abs() <= 1.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.9
+        }
+        Preset::LongShadowQuietSqueeze => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.day_pct.abs() < 1.0
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -615,6 +631,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HoldingHighsSqueeze => "Holding-Highs Squeeze",
         Preset::HoldingLowsSqueeze => "Holding-Lows Squeeze",
         Preset::StableMidSqueeze => "Stable-Mid Squeeze",
+        Preset::LeanGapMatchSqueeze => "Lean-Gap Match Squeeze",
+        Preset::LongShadowQuietSqueeze => "Long-Shadow Quiet Squeeze",
     }
 }
 

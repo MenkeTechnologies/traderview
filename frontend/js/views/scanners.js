@@ -72,6 +72,8 @@ const PRESETS = [
     { id: 'holding_highs_squeeze',      label: t('view.scanners.preset.holding_highs_squeeze.label'),      desc: t('view.scanners.preset.holding_highs_squeeze.desc') },
     { id: 'holding_lows_squeeze',       label: t('view.scanners.preset.holding_lows_squeeze.label'),       desc: t('view.scanners.preset.holding_lows_squeeze.desc') },
     { id: 'stable_mid_squeeze',         label: t('view.scanners.preset.stable_mid_squeeze.label'),         desc: t('view.scanners.preset.stable_mid_squeeze.desc') },
+    { id: 'lean_gap_match_squeeze',     label: t('view.scanners.preset.lean_gap_match_squeeze.label'),     desc: t('view.scanners.preset.lean_gap_match_squeeze.desc') },
+    { id: 'long_shadow_quiet_squeeze',  label: t('view.scanners.preset.long_shadow_quiet_squeeze.label'),  desc: t('view.scanners.preset.long_shadow_quiet_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
