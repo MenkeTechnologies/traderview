@@ -1160,6 +1160,8 @@ pub enum Preset {
     TightIntradayRangeNearYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional compression at the year trough: regular session prints a tight trading range right at the 52w low with elevated participation; coiled-spring breakdown-or-bottom setup where heavy hands position without moving the tape and the next directional break carries weight)
     TightIntradayRangeConfirmedAboveYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional digestion of validated breakout: regular session prints a tight trading range immediately after price cleared the prior peak with elevated participation; post-breakout consolidation where bulls absorb and digest the breakout before the next leg)
     TightIntradayRangeConfirmedBelowYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional digestion of validated breakdown: regular session prints a tight trading range immediately after price cleared the prior trough with elevated participation; post-breakdown consolidation where bears absorb and digest the breakdown before the next leg)
+    TightIntradayRangeDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 20 — tight intraday range (<1%) + hot vol + far below 52w high (>=20%) (institutional accumulation deep in pullback territory: regular session prints a tight trading range well below the prior peak with elevated participation; basing-pattern signal where smart money builds position quietly in depressed-tape conditions)
+    TightIntradayRangeDeepAboveYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution deep in advance territory: regular session prints a tight trading range well above the prior trough with elevated participation; topping-pattern signal where smart money exits position quietly in euphoric-tape conditions)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7144,6 +7146,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= -3.0
                 && hit.year_low_pct <= -1.0
         }
+        Preset::TightIntradayRangeDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::TightIntradayRangeDeepAboveYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -8194,6 +8206,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightIntradayRangeNearYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + At/near 52w Low (<2 %) (Institutional Compression at the Year Trough: Regular Session Prints a Tight Trading Range Right at the 52w Low with Elevated Participation; Coiled-spring Breakdown-or-bottom Setup Where Heavy Hands Position without Moving the Tape and the Next Directional Break Carries Weight)",
         Preset::TightIntradayRangeConfirmedAboveYearHighHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Institutional Digestion of Validated Breakout: Regular Session Prints a Tight Trading Range Immediately after Price Cleared the Prior Peak with Elevated Participation; Post-breakout Consolidation Where Bulls Absorb and Digest the Breakout before the Next Leg)",
         Preset::TightIntradayRangeConfirmedBelowYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional Digestion of Validated Breakdown: Regular Session Prints a Tight Trading Range Immediately after Price Cleared the Prior Trough with Elevated Participation; Post-breakdown Consolidation Where Bears Absorb and Digest the Breakdown before the Next Leg)",
+        Preset::TightIntradayRangeDeepBelowYearHighHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Far below 52w High (>=20 %) (Institutional Accumulation Deep in Pullback Territory: Regular Session Prints a Tight Trading Range Well below the Prior Peak with Elevated Participation; Basing-pattern Signal Where Smart Money Builds Position Quietly in Depressed-tape Conditions)",
+        Preset::TightIntradayRangeDeepAboveYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + Far above 52w Low (>=20 %) (Institutional Distribution Deep in Advance Territory: Regular Session Prints a Tight Trading Range Well above the Prior Trough with Elevated Participation; Topping-pattern Signal Where Smart Money Exits Position Quietly in Euphoric-tape Conditions)",
     }
 }
 
