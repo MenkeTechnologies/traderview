@@ -656,6 +656,8 @@ pub enum Preset {
     AsymmetricExtremeBias,          // (hod_dist - lod_dist).abs() > 2 AND hod_dist + lod_dist > 3 — close strongly biased to one extreme + wide range visited (one-sided range; close clearly favored one side of the day's exploration)
     YearLowExplosiveSqueezeIgnition, // year_low_pct < 3 AND change_pct > 5 AND rel_volume >= 3 — at 52w low + huge gain + extreme vol (squeeze ignition from 52w low; potential reversal of a multi-month downtrend)
     YearHighSharpDistribution,       // year_high_pct < 3 AND change_pct < -5 AND rel_volume >= 3 — at 52w high + huge drop + extreme vol (sharp distribution from the highs; potential trend break)
+    LargeChangeOnNormalVol,          // change_pct.abs() > 3 AND rel_volume between 0.7 and 1.3 AND hod_dist + lod_dist > 2 — big change + normal vol + wide range (quality move without extreme participation; orderly directional day)
+    MassiveIntradayWithoutGap,       // gap_pct.abs() < 0.1 AND day_pct.abs() > 3 AND rel_volume >= 2 — basically no gap + massive intraday + hot vol (huge intraday move with zero overnight bias; pure intraday discovery)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3574,6 +3576,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 3.0
         }
+        Preset::LargeChangeOnNormalVol => {
+            hit.change_pct.abs() > 3.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+        }
+        Preset::MassiveIntradayWithoutGap => {
+            hit.gap_pct.abs() < 0.1
+                && hit.day_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4120,6 +4133,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AsymmetricExtremeBias => "Asymmetric Close + Wide Range (One-sided Range Exploration)",
         Preset::YearLowExplosiveSqueezeIgnition => "At 52w Low + Huge Green + Extreme Vol (Squeeze Ignition from Multi-month Lows)",
         Preset::YearHighSharpDistribution => "At 52w High + Huge Red + Extreme Vol (Sharp Distribution from Multi-month Highs)",
+        Preset::LargeChangeOnNormalVol => "Big Change + Normal Vol + Wide Range (Orderly Directional Day Without Extreme Participation)",
+        Preset::MassiveIntradayWithoutGap => "No Gap + Massive Intraday + Hot Vol (Pure Intraday Discovery; Zero Overnight Bias)",
     }
 }
 

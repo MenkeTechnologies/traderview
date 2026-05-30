@@ -538,6 +538,8 @@ const PRESETS = [
     { id: 'asymmetric_extreme_bias', label: t('view.scanners.preset.asymmetric_extreme_bias.label'), desc: t('view.scanners.preset.asymmetric_extreme_bias.desc') },
     { id: 'year_low_explosive_squeeze_ignition', label: t('view.scanners.preset.year_low_explosive_squeeze_ignition.label'), desc: t('view.scanners.preset.year_low_explosive_squeeze_ignition.desc') },
     { id: 'year_high_sharp_distribution', label: t('view.scanners.preset.year_high_sharp_distribution.label'), desc: t('view.scanners.preset.year_high_sharp_distribution.desc') },
+    { id: 'large_change_on_normal_vol', label: t('view.scanners.preset.large_change_on_normal_vol.label'), desc: t('view.scanners.preset.large_change_on_normal_vol.desc') },
+    { id: 'massive_intraday_without_gap', label: t('view.scanners.preset.massive_intraday_without_gap.label'), desc: t('view.scanners.preset.massive_intraday_without_gap.desc') },
 ];
 
 export async function renderScanners(mount) {

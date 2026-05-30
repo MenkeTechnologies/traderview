@@ -57,6 +57,10 @@ export async function renderGoals(mount, state) {
             <h2 data-i18n="view.goals.h2.progress_chart">P/L progress vs window elapsed per goal</h2>
             <div id="g-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.goals.h2.pace_chart">P/L pace distribution across all goals</h2>
+            <div id="g-pace-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     // Default date range based on selected period.
     const periodSel = mount.querySelector('#g-form [name=period]');
@@ -135,6 +139,7 @@ async function refresh(mount, tok) {
             <p class="boot">${esc(t('view.goals.boot.progress_failed', { name: goals[i].name }))}</p></div>`).join('');
         try { applyUiI18n(el2); } catch (_) {}
         renderProgressChart(progressList.filter(Boolean));
+        renderPaceChart(progressList.filter(Boolean));
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!await tConfirm('view.goals.confirm.delete', {}, { level: 'danger' })) return;
@@ -184,6 +189,45 @@ function renderProgressChart(progresses) {
         ],
         legend: { show: true },
     }, [xs, elapsed, pnlDone], el);
+}
+
+function renderPaceChart(progresses) {
+    const el = document.getElementById('g-pace-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!progresses || progresses.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.goals.empty_pace_chart">${esc(t('view.goals.empty_pace_chart'))}</div>`;
+        return;
+    }
+    const counts = { on_track: 0, exceeded: 0, falling_short: 0, no_target: 0 };
+    for (const p of progresses) {
+        const k = p.pnl_pace;
+        if (k in counts) counts[k] += 1;
+    }
+    const labels = [
+        t('view.goals.chart.pace.on_track'),
+        t('view.goals.chart.pace.exceeded'),
+        t('view.goals.chart.pace.falling_short'),
+        t('view.goals.chart.pace.no_target'),
+    ];
+    const ys = [counts.on_track, counts.exceeded, counts.falling_short, counts.no_target];
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.goals.chart.pace_idx') },
+            { label: t('view.goals.chart.goal_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function paceChip(pace) {
