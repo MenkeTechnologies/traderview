@@ -64,6 +64,11 @@ export async function renderOrderStaleness(mount, _appState) {
                 "what was that fill?" P&amp;L surprises come from forgotten resting orders.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.order_staleness.h2.tier_chart">Tier counts</h2>
+            <div id="os-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="os-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -123,6 +128,46 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderTable(report);
+    renderTierChart(report);
+}
+
+function renderTierChart(report) {
+    const el = document.getElementById('os-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const tiers = [
+        { key: 'fresh',     count: Number(report.fresh_count) || 0,     color: '#7af0a8' },
+        { key: 'aging',     count: Number(report.aging_count) || 0,     color: '#ffd84a' },
+        { key: 'stale',     count: Number(report.stale_count) || 0,     color: '#ff7a1f' },
+        { key: 'forgotten', count: Number(report.forgotten_count) || 0, color: '#ff3860' },
+    ];
+    if (!tiers.some(b => b.count > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.order_staleness.empty_chart">${esc(t('view.order_staleness.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = tiers.map(b => t(`view.order_staleness.chart.${b.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.order_staleness.chart.tier_idx') }];
+    const data = [xs];
+    tiers.forEach((b, i) => {
+        const ys = xs.map((_, j) => j === i ? b.count : null);
+        series.push({
+            label: labels[i], stroke: b.color, width: 0,
+            points: { show: true, size: 16, fill: b.color, stroke: b.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function renderSummary(r) {
