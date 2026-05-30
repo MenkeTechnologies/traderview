@@ -830,6 +830,8 @@ pub enum Preset {
     DistantFromYearLowDryVolCoil,        // year_low_pct >= 30 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.6 — far above 52w low + tight intraday range + flat close + extremely dry vol (deep-premium basing; no participation; potential exhaustion setup after extended uptrend)
     DistantFromYearHighBigGreenHotVol,   // year_high_pct >= 20 AND change_pct > 5 AND rel_volume >= 2 — far below 52w high + big green + hot vol (snap-back rally from deep discount; mean-reversion thrust with elevated participation toward the prior peak)
     DistantFromYearLowBigRedHotVol,      // year_low_pct >= 20 AND change_pct < -5 AND rel_volume >= 2 — far above 52w low + big red + hot vol (snap-back decline from deep premium; mean-reversion drop with elevated participation toward the prior trough)
+    MidRangeChurnHotVolBigDayPct,        // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() > 3 AND rel_volume >= 2 — close near mid of intraday range + big intraday move + hot vol (mid-range churn with intraday displacement; net move but no follow-through to either extreme; failed-trend day with continued participation)
+    MidRangeChurnHotVolFlatDayPct,       // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() < 0.5 AND rel_volume >= 2 — close near mid of intraday range + flat intraday move + hot vol (max-indecision day at scale; full range with no net direction and elevated participation; institutional indecision with rotation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4795,6 +4797,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MidRangeChurnHotVolBigDayPct => {
+            hit.hod_dist_pct.abs().min(hit.lod_dist_pct.abs()) >= 1.5
+                && hit.hod_dist_pct.abs().max(hit.lod_dist_pct.abs()) <= 5.0
+                && hit.day_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MidRangeChurnHotVolFlatDayPct => {
+            hit.hod_dist_pct.abs().min(hit.lod_dist_pct.abs()) >= 1.5
+                && hit.hod_dist_pct.abs().max(hit.lod_dist_pct.abs()) <= 5.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5515,6 +5529,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DistantFromYearLowDryVolCoil => "Far above 52w Low + Tight Intraday Range + Flat Close + Extremely Dry Vol (Deep-premium Basing; No Participation; Potential Exhaustion Setup after Extended Uptrend)",
         Preset::DistantFromYearHighBigGreenHotVol => "Far below 52w High + Big Green + Hot Vol (Snap-back Rally from Deep Discount; Mean-reversion Thrust with Elevated Participation toward the Prior Peak)",
         Preset::DistantFromYearLowBigRedHotVol => "Far above 52w Low + Big Red + Hot Vol (Snap-back Decline from Deep Premium; Mean-reversion Drop with Elevated Participation toward the Prior Trough)",
+        Preset::MidRangeChurnHotVolBigDayPct => "Close Near Mid of Intraday Range + Big Intraday Move + Hot Vol (Mid-range Churn with Intraday Displacement; Net Move but No Follow-through to Either Extreme; Failed-trend Day with Continued Participation)",
+        Preset::MidRangeChurnHotVolFlatDayPct => "Close Near Mid of Intraday Range + Flat Intraday Move + Hot Vol (Max-indecision Day at Scale; Full Range with No Net Direction and Elevated Participation; Institutional Indecision with Rotation)",
     }
 }
 

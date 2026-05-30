@@ -92,6 +92,12 @@ export async function renderVasicek(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.vasicek.h2.mean_path_chart">Closed-form mean path E[r_t] vs time with long-run target b</h2>
+            <div id="va-mean-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.vasicek.hint.mean_path" class="muted small">Deterministic conditional mean E[r_t] = b + (r₀ − b)·e^(−a·t) from current parameters — no simulation. Yellow dashed = long-run target b. Reveals how fast the mean reverts toward b given the chosen a; orthogonal to the terminal density above.</p>
+        </div>
+
         <div id="va-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -134,6 +140,7 @@ async function simulate(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    renderMeanPathChart();
     showToast(t('view.vasicek.toast.done', {
         mean: fmtRatePct(res.terminal_mean),
         neg_pct: (res.negative_path_fraction * 100).toFixed(1),
@@ -185,6 +192,46 @@ function renderChart(res) {
             { stroke: '#aab' },
         ],
     }, [xs, ys], el);
+}
+
+function renderMeanPathChart() {
+    const el = document.getElementById('va-mean-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const p = state.params;
+    const steps = Number.isInteger(p.steps) && p.steps > 0 ? p.steps : 0;
+    const dt = Number.isFinite(p.dt) && p.dt > 0 ? p.dt : 0;
+    if (steps < 1 || dt <= 0 || !Number.isFinite(p.a) || !Number.isFinite(p.b) || !Number.isFinite(p.r0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vasicek.empty_mean_chart">${esc(t('view.vasicek.empty_mean_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const mean = [];
+    const target = [];
+    for (let i = 0; i <= steps; i++) {
+        const t_i = i * dt;
+        xs.push(t_i);
+        mean.push(p.b + (p.r0 - p.b) * Math.exp(-p.a * t_i));
+        target.push(p.b);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vasicek.chart.time_years') },
+            { label: t('view.vasicek.chart.expected_rate'),
+              stroke: '#b86bff', width: 1.8, points: { show: false } },
+            { label: t('view.vasicek.chart.long_run_target'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => v.toFixed(2) + 'y') },
+            { stroke: '#aab', size: 56,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(2) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, mean, target], el);
 }
 
 function card(label, value, cls = '', body = '') {
