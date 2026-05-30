@@ -50,9 +50,15 @@ export async function renderFavoritesManager(mount, _state) {
         </div>
 
         <p data-i18n="view.favorites.hint" class="muted">Click a row to open. Use the star on launcher tiles to add favorites; right-click any view and pick "Bookmark this view…" (or press <kbd>Cmd+B</kbd>) to add a named bookmark.</p>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.favorites.h2.inventory_chart">Favorites &amp; bookmarks inventory</h2>
+            <div id="fav-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
 
     paint();
+    renderInventoryChart();
     document.getElementById('fav-clear').addEventListener('click', clearFavoritesClick);
     document.getElementById('bm-clear').addEventListener('click', clearBookmarksClick);
     const filter = document.getElementById('fav-filter');
@@ -231,6 +237,41 @@ function paint() {
             });
         }
     }
+}
+
+function renderInventoryChart() {
+    const el = document.getElementById('fav-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const state = favs.loadState();
+    const favCount = Array.isArray(state.favorites) ? state.favorites.length : 0;
+    const bmCount  = Array.isArray(state.bookmarks) ? state.bookmarks.length  : 0;
+    if (favCount + bmCount < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.favorites.empty_chart">${esc(t('view.favorites.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.favorites.chart.favorites'),
+        t('view.favorites.chart.bookmarks'),
+    ];
+    const xs = labels.map((_, i) => i + 1);
+    const ys = [favCount, bmCount];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.favorites.chart.kind') },
+            { label: t('view.favorites.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 async function clearFavoritesClick() {

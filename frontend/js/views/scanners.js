@@ -220,6 +220,8 @@ const PRESETS = [
     { id: 'impulsive_down_hot_vol', label: t('view.scanners.preset.impulsive_down_hot_vol.label'), desc: t('view.scanners.preset.impulsive_down_hot_vol.desc') },
     { id: 'parabolic_up', label: t('view.scanners.preset.parabolic_up.label'), desc: t('view.scanners.preset.parabolic_up.desc') },
     { id: 'parabolic_down', label: t('view.scanners.preset.parabolic_down.label'), desc: t('view.scanners.preset.parabolic_down.desc') },
+    { id: 'blow_off_top', label: t('view.scanners.preset.blow_off_top.label'), desc: t('view.scanners.preset.blow_off_top.desc') },
+    { id: 'selling_climax_bottom', label: t('view.scanners.preset.selling_climax_bottom.label'), desc: t('view.scanners.preset.selling_climax_bottom.desc') },
 ];
 
 export async function renderScanners(mount) {
