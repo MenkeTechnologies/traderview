@@ -745,6 +745,16 @@ function bindTabs() {
         const el = document.getElementById('mp-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in vpin scope → click Compute VPIN.
+    window.addEventListener('tv:vpin-compute', () => {
+        const el = document.getElementById('vp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `d` in vpin scope → click Load demo.
+    window.addEventListener('tv:vpin-demo', () => {
+        const el = document.getElementById('vp-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

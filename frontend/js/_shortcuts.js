@@ -118,6 +118,8 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bocpd_detect',                 keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bocpd',             descKey: 'shortcut.bocpd_detect',                 actionKey: 'tv:bocpd-detect' },
     { id: 'vasicek_simulate',             keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vasicek',           descKey: 'shortcut.vasicek_simulate',             actionKey: 'tv:vasicek-simulate' },
     { id: 'microprice_compute',           keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'microprice',        descKey: 'shortcut.microprice_compute',           actionKey: 'tv:microprice-compute' },
+    { id: 'vpin_compute',                 keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vpin',              descKey: 'shortcut.vpin_compute',                 actionKey: 'tv:vpin-compute' },
+    { id: 'vpin_demo',                    keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vpin',              descKey: 'shortcut.vpin_demo',                    actionKey: 'tv:vpin-demo' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

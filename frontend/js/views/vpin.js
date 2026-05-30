@@ -18,6 +18,7 @@ import {
 } from '../_vpin_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CONFIG = {
     volume_per_bucket: 50_000,
     window_buckets: 50,
@@ -43,10 +44,10 @@ export async function renderVpin(mount, _appState) {
                 Lines starting with <code>#</code> are ignored. Demo data
                 injects a benign random-walk regime followed by a toxic burst
                 so the VPIN line clearly crosses the 0.5 threshold.</p>
-            <textarea id="vp-ticks" rows="8" placeholder="100.05 250&#10;100.06 1200&#10;100.04 500&#10;..."></textarea>
+            <textarea id="vp-ticks" rows="8" placeholder="100.05 250&#10;100.06 1200&#10;100.04 500&#10;..." data-tip="view.vpin.tip.ticks"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.vpin.btn.load_demo_1500_ticks" id="vp-demo" class="secondary" type="button">Load demo (1500 ticks)</button>
-                <button data-i18n="view.vpin.btn.clear" id="vp-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.vpin.btn.load_demo_1500_ticks" data-tip="view.vpin.tip.demo" data-shortcut="vpin_demo" id="vp-demo" class="secondary" type="button">Load demo (1500 ticks)</button>
+                <button data-i18n="view.vpin.btn.clear" data-tip="view.vpin.tip.clear" id="vp-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -54,12 +55,12 @@ export async function renderVpin(mount, _appState) {
             <h2 data-i18n="view.vpin.h2.config">Config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vpin.label.volume_per_bucket">Volume per bucket</span>
-                    <input id="vp-vpb" type="number" step="any" min="1" value="${state.config.volume_per_bucket}"></label>
+                    <input id="vp-vpb" type="number" step="any" min="1" value="${state.config.volume_per_bucket}" data-tip="view.vpin.tip.vpb"></label>
                 <label><span data-i18n="view.vpin.label.window_buckets">Window buckets</span>
-                    <input id="vp-wb"  type="number" step="1" min="1" max="2000" value="${state.config.window_buckets}"></label>
+                    <input id="vp-wb"  type="number" step="1" min="1" max="2000" value="${state.config.window_buckets}" data-tip="view.vpin.tip.wb"></label>
                 <label><span data-i18n="view.vpin.label.return_window">Return window (ticks)</span>
-                    <input id="vp-rw"  type="number" step="1" min="2" max="10000" value="${state.config.return_window}"></label>
-                <button data-i18n="view.vpin.btn.compute_vpin" id="vp-run" class="primary" type="button">Compute VPIN</button>
+                    <input id="vp-rw"  type="number" step="1" min="2" max="10000" value="${state.config.return_window}" data-tip="view.vpin.tip.rw"></label>
+                <button data-i18n="view.vpin.btn.compute_vpin" data-tip="view.vpin.tip.compute" data-shortcut="vpin_compute" id="vp-run" class="primary" type="button">Compute VPIN</button>
             </div>
             <p class="muted">${esc(t('view.vpin.hint.toxic', { threshold: TOXIC_THRESHOLD }))}</p>
         </div>
@@ -120,18 +121,27 @@ async function compute(tok) {
         if (ticks.length < 10) return;
     }
     const err = validateInputs(ticks, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microVpin(buildBody(ticks, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, ticks);
     renderVpinChart(res);
     renderVolChart(res);
+    const s = summarize(res, TOXIC_THRESHOLD);
+    if (s) {
+        showToast(t('view.vpin.toast.done', {
+            buckets: s.nBuckets,
+            max: fmtN(s.maxVpin),
+            toxic: s.toxicCount,
+        }), { level: s.toxicCount > 0 ? 'warning' : 'success' });
+    }
 }
 
 function renderSummary(report, ticks) {
