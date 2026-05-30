@@ -65,6 +65,11 @@ export async function renderCostBasis(mount, _appState) {
             <div id="cb-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cost_basis.h2.realized_chart">Realized P&amp;L per lot</h2>
+            <div id="cb-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="cb-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -118,6 +123,7 @@ async function compute(tok) {
     const local = localClose(state.lots, state.qty_to_close, state.price_per_share, state.method);
     renderSummary(local, true);
     renderTable(local);
+    renderRealizedChart(local);
     let resp;
     try {
         resp = await api.calcCostBasis(buildBody(
@@ -140,6 +146,7 @@ async function compute(tok) {
     };
     renderSummary(normalized, false);
     renderTable(normalized);
+    renderRealizedChart(normalized);
 }
 
 function renderSummary(report, pending) {
@@ -201,6 +208,39 @@ function renderTable(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderRealizedChart(report) {
+    const el = document.getElementById('cb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.closes) || report.closes.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cost_basis.empty_chart">${esc(t('view.cost_basis.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = report.closes.map(c => c.lot_id);
+    const realized = report.closes.map(c => Number.isFinite(c.realized_total) ? c.realized_total : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cost_basis.chart.lot_idx') },
+            { label: t('view.cost_basis.chart.realized'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.cost_basis.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, realized, zero], el);
 }
 
 function card(label, value, cls = '') {
