@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const sign = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2);
@@ -27,6 +27,11 @@ export async function renderVol(mount) {
             <h2 data-i18n="view.vol.h2.u_s_dollar_major_fx">U.S. Dollar / major FX</h2>
             <div id="dxy" class="cards" data-i18n="common.loading">loading…</div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol.h2.yields_change_chart">Yield change per tenor (bp)</h2>
+            <div id="vol-bp-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     try {
         const [v, y, d] = await Promise.all([
@@ -38,6 +43,7 @@ export async function renderVol(mount) {
         renderVix(v, mount);
         renderYields(y, mount);
         renderDxy(d, mount);
+        renderYieldsBpChart(y);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const vixEl = mount.querySelector('#vix');
@@ -96,6 +102,41 @@ function renderYields(y, mount) {
             { color: '#00e5ff' },
         );
     }
+}
+
+function renderYieldsBpChart(y) {
+    const el = document.getElementById('vol-bp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (y?.points || []).filter(p => Number.isFinite(Number(p.change_bp)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol.empty_chart">${esc(t('view.vol.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(p => p.label);
+    const xs = labels.map((_, i) => i + 1);
+    const upY   = rows.map(p => Number(p.change_bp) >= 0 ? Number(p.change_bp) : null);
+    const downY = rows.map(p => Number(p.change_bp) <  0 ? Number(p.change_bp) : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vol.chart.tenor') },
+            { label: t('view.vol.chart.up_bp'),  stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.vol.chart.down_bp'), stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.vol.chart.zero'),    stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, upY, downY, zero], el);
 }
 
 function renderDxy(d, mount) {

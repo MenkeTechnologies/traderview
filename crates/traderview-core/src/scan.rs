@@ -300,6 +300,8 @@ pub enum Preset {
     Pct52wBottomDecileDryVol,    // year_low_pct < 10 AND rel_volume < 0.5 — within 10% of 52w low but dry volume (no panic at the lows)
     NewHighGreenDay,             // year_high_pct >= 0 AND change_pct >= 1 — printed a new 52w high and closed green (continuation)
     NewLowRedDay,                // year_low_pct <= 0 AND change_pct <= -1 — printed a new 52w low and closed red (continuation)
+    NewHighRedDay,               // year_high_pct >= 0 AND change_pct <= -1 — printed a new 52w high then reversed red (failed breakout)
+    NewLowGreenDay,              // year_low_pct <= 0 AND change_pct >= 1 — printed a new 52w low then reversed green (failed breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1213,6 +1215,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NewLowRedDay => {
             hit.year_low_pct <= 0.0 && hit.change_pct <= -1.0
         }
+        Preset::NewHighRedDay => {
+            hit.year_high_pct >= 0.0 && hit.change_pct <= -1.0
+        }
+        Preset::NewLowGreenDay => {
+            hit.year_low_pct <= 0.0 && hit.change_pct >= 1.0
+        }
     }
 }
 
@@ -1403,6 +1411,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wBottomDecileDryVol => "52w Bottom-Decile on Dry Vol",
         Preset::NewHighGreenDay => "New 52w High + Green Day",
         Preset::NewLowRedDay => "New 52w Low + Red Day",
+        Preset::NewHighRedDay => "New 52w High + Red Day",
+        Preset::NewLowGreenDay => "New 52w Low + Green Day",
     }
 }
 
