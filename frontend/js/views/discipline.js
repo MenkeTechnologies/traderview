@@ -5,6 +5,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderDiscipline(mount, state) {
     const tok = currentViewToken();
@@ -24,6 +25,7 @@ export async function renderDiscipline(mount, state) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#d-out');
         if (el) el.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
     }
 }
 
@@ -35,13 +37,13 @@ function render(r, mount) {
     if (!el) return;
     el.innerHTML = `
         <div class="cards">
-            <div class="card"><div class="label" data-i18n="view.discipline.card.total_closed">Total closed trades</div>
+            <div class="card" data-tip="view.discipline.tip.total_closed"><div class="label" data-i18n="view.discipline.card.total_closed">Total closed trades</div>
                 <div class="value">${s.total_closed}</div></div>
-            <div class="card"><div class="label" data-i18n="view.discipline.card.longest_win">Longest win streak</div>
+            <div class="card" data-tip="view.discipline.tip.longest_win"><div class="label" data-i18n="view.discipline.card.longest_win">Longest win streak</div>
                 <div class="value pos">${s.longest_win_streak}</div></div>
-            <div class="card"><div class="label" data-i18n="view.discipline.card.longest_loss">Longest loss streak</div>
+            <div class="card" data-tip="view.discipline.tip.longest_loss"><div class="label" data-i18n="view.discipline.card.longest_loss">Longest loss streak</div>
                 <div class="value neg">${s.longest_loss_streak}</div></div>
-            <div class="card"><div class="label" data-i18n="view.discipline.card.current_streak">Current streak</div>
+            <div class="card" data-tip="view.discipline.tip.current_streak"><div class="label" data-i18n="view.discipline.card.current_streak">Current streak</div>
                 <div class="value ${streakColor}">${s.current_streak_length} ${s.current_streak_kind}</div></div>
         </div>
 
@@ -135,20 +137,20 @@ function scoreCard(label, w) {
 }
 
 function ruleBars(rb) {
-    const row = (label, pct) => {
+    const row = (label, pct, tipKey) => {
         const cls = pct >= 80 ? 'pos' : pct >= 60 ? '' : 'neg';
         const color = pct >= 80 ? '#7af0a8' : pct >= 60 ? '#9aa0c8' : '#ff1f7a';
-        return `<div>${esc(label)}</div>
+        return `<div data-tip="${tipKey}">${esc(label)}</div>
             <div style="height:18px;background:#1a1d2e;">
                 <div style="width:${pct}%;height:100%;background:${color};"></div>
             </div>
             <div class="${cls}">${pct.toFixed(1)}%</div>`;
     };
     return `<div style="display:grid;grid-template-columns:140px 1fr 60px;gap:6px;font-size:11px;">
-        ${row(t('view.discipline.rule.stop_set'),        rb.stop_set_rate)}
-        ${row(t('view.discipline.rule.stop_honored'),    rb.stop_honored_rate)}
-        ${row(t('view.discipline.rule.qty_within'),      rb.qty_within_rate)}
-        ${row(t('view.discipline.rule.direction_match'), rb.direction_match_rate)}
+        ${row(t('view.discipline.rule.stop_set'),        rb.stop_set_rate,        'view.discipline.tip.rule_stop_set')}
+        ${row(t('view.discipline.rule.stop_honored'),    rb.stop_honored_rate,    'view.discipline.tip.rule_stop_honored')}
+        ${row(t('view.discipline.rule.qty_within'),      rb.qty_within_rate,      'view.discipline.tip.rule_qty_within')}
+        ${row(t('view.discipline.rule.direction_match'), rb.direction_match_rate, 'view.discipline.tip.rule_direction_match')}
     </div>`;
 }
 

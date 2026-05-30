@@ -478,6 +478,7 @@ function bindTabs() {
     window.addEventListener('tv:webull-refresh',     refreshNow);
     window.addEventListener('tv:charts-refresh',     refreshNow);
     window.addEventListener('tv:accounts-overview-refresh', refreshNow);
+    window.addEventListener('tv:discipline-refresh',        refreshNow);
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
