@@ -115,11 +115,11 @@ export function parseInputsBlob(blob) {
         const pr = pctOrDec(toks[3]);
         const br = pctOrDec(toks[4]);
         if (!Number.isFinite(pw) || pw < 0) {
-            out.errors.push({ line_no: i + 1, message: 'portfolio_weight must be ≥ 0 finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.portfolio_weight') });
             continue;
         }
         if (!Number.isFinite(bw) || bw < 0) {
-            out.errors.push({ line_no: i + 1, message: 'benchmark_weight must be ≥ 0 finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.benchmark_weight') });
             continue;
         }
         if (!Number.isFinite(pr) || !Number.isFinite(br)) {

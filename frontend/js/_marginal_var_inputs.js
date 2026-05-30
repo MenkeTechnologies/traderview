@@ -160,7 +160,7 @@ export function parsePortfolioBlob(blob) {
             continue;
         }
         if (!Number.isFinite(weight)) {
-            out.errors.push({ line_no: i + 1, message: 'weight not finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.weight_not_finite') });
             continue;
         }
         out.weights.push(weight);

@@ -90,11 +90,11 @@ export function parseWeightsBlob(blob) {
         const p = pctOrDec(toks[1]);
         const b = pctOrDec(toks[2]);
         if (!Number.isFinite(p) || p < 0) {
-            out.errors.push({ line_no: i + 1, message: 'portfolio_weight must be ≥ 0 finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.portfolio_weight') });
             continue;
         }
         if (!Number.isFinite(b) || b < 0) {
-            out.errors.push({ line_no: i + 1, message: 'benchmark_weight must be ≥ 0 finite' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.benchmark_weight') });
             continue;
         }
         out.weights.push({ symbol, portfolio_weight: p, benchmark_weight: b });

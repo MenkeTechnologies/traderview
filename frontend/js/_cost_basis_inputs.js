@@ -44,7 +44,7 @@ export function parseLotBlob(text) {
             continue;
         }
         if (!Number.isFinite(qty) || qty <= 0) {
-            errors.push({ line_no: i + 1, raw, message: 'qty must be > 0' });
+            errors.push({ line_no: i + 1, raw, message: t('common.parse.qty_must_be_positive') });
             continue;
         }
         if (!Number.isFinite(cost) || cost < 0) {

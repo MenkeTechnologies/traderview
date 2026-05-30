@@ -42,7 +42,7 @@ export function parseLoserBlob(text) {
             errors.push({ line_no: i + 1, raw, message: 'tokens must be finite numbers' });
             continue;
         }
-        if (qty <= 0)   { errors.push({ line_no: i + 1, raw, message: 'qty must be > 0' });   continue; }
+        if (qty <= 0)   { errors.push({ line_no: i + 1, raw, message: t('common.parse.qty_must_be_positive') });   continue; }
         if (cost <= 0)  { errors.push({ line_no: i + 1, raw, message: 'avg_cost must be > 0' });  continue; }
         if (price < 0)  { errors.push({ line_no: i + 1, raw, message: 'current_price must be ≥ 0' }); continue; }
         losers.push({ symbol: sym, qty, avg_cost: cost, current_price: price });

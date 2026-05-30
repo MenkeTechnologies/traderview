@@ -60,7 +60,7 @@ function parseBlob(text, schema, build) {
         }
         // For openings the last field is qty; for closings it's pnl + qty.
         if (schema[schema.length - 1] === 'qty' && numerics[numerics.length - 1] <= 0) {
-            errors.push({ line_no: i + 1, raw, message: 'qty must be > 0' });
+            errors.push({ line_no: i + 1, raw, message: t('common.parse.qty_must_be_positive') });
             continue;
         }
         rows.push(build(sym, date, ...numerics));

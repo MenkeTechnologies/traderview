@@ -98,7 +98,7 @@ export function parseBarsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 3) {
-            out.errors.push({ line_no: i + 1, message: 'expected 3 tokens (high low volume)' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.expected_high_low_volume') });
             continue;
         }
         const [high, low, volume] = toks.map(Number);
@@ -111,7 +111,7 @@ export function parseBarsBlob(blob) {
             continue;
         }
         if (volume < 0) {
-            out.errors.push({ line_no: i + 1, message: 'volume must be ≥ 0' });
+            out.errors.push({ line_no: i + 1, message: t('common.parse.volume_must_be_non_negative') });
             continue;
         }
         out.bars.push({ high, low, volume });
