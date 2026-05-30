@@ -14,6 +14,7 @@ import {
 } from '../_ha_reversal_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CFG = { min_body_ratio: 0.6, strong_streak: 3, weak_streak: 2 };
 
 let state = { barText: '', config: { ...DEFAULT_CFG } };
@@ -29,10 +30,10 @@ export async function renderHaReversal(mount, _appState) {
                 are converted to Heikin-Ashi candles client-side; the backend
                 detects color-flip reversal events on the HA series.
                 Demo loads 30 bars with bull-bear-bull regime structure.</p>
-            <textarea id="ha-bars" rows="6" placeholder="100.50 101.20 100.00 100.85&#10;100.85 101.50 100.40 101.30&#10;..."></textarea>
+            <textarea id="ha-bars" rows="6" placeholder="100.50 101.20 100.00 100.85&#10;100.85 101.50 100.40 101.30&#10;..." data-tip="view.ha_reversal.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.ha_reversal.btn.load_demo_30_bars_multi_regime" id="ha-demo" class="secondary" type="button">Load demo (30 bars, multi-regime)</button>
-                <button data-i18n="view.ha_reversal.btn.clear" id="ha-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.ha_reversal.btn.load_demo_30_bars_multi_regime" id="ha-demo" class="secondary" type="button" data-tip="view.ha_reversal.tip.demo" data-shortcut="ha_reversal_demo">Load demo (30 bars, multi-regime)</button>
+                <button data-i18n="view.ha_reversal.btn.clear" id="ha-clear" class="secondary" type="button" data-tip="view.ha_reversal.tip.clear">Clear</button>
             </div>
         </div>
 
@@ -40,12 +41,12 @@ export async function renderHaReversal(mount, _appState) {
             <h2 data-i18n="view.ha_reversal.h2.flip_config">Flip config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.ha_reversal.label.body_ratio">Min body ratio (Strong)</span>
-                    <input id="ha-body" type="number" step="0.01" min="0" max="1" value="${state.config.min_body_ratio}"></label>
+                    <input id="ha-body" type="number" step="0.01" min="0" max="1" value="${state.config.min_body_ratio}" data-tip="view.ha_reversal.tip.body"></label>
                 <label><span data-i18n="view.ha_reversal.label.strong_streak">Strong streak (≥ bars)</span>
-                    <input id="ha-strong" type="number" step="1" min="1" value="${state.config.strong_streak}"></label>
+                    <input id="ha-strong" type="number" step="1" min="1" value="${state.config.strong_streak}" data-tip="view.ha_reversal.tip.strong"></label>
                 <label><span data-i18n="view.ha_reversal.label.weak_streak">Weak streak (≥ bars)</span>
-                    <input id="ha-weak" type="number" step="1" min="1" value="${state.config.weak_streak}"></label>
-                <button data-i18n="view.ha_reversal.btn.detect" id="ha-run" class="primary" type="button">Detect</button>
+                    <input id="ha-weak" type="number" step="1" min="1" value="${state.config.weak_streak}" data-tip="view.ha_reversal.tip.weak"></label>
+                <button data-i18n="view.ha_reversal.btn.detect" id="ha-run" class="primary" type="button" data-tip="view.ha_reversal.tip.run" data-shortcut="ha_reversal_run">Detect</button>
             </div>
             <p data-i18n="view.ha_reversal.hint.strong_flips_need_both_a_long_prior_same_color_str" class="muted">Strong flips need both a long prior same-color streak (default 3+)
                 AND a decisive body (default ≥60% of bar range). Weak flips only need the
@@ -73,9 +74,11 @@ export async function renderHaReversal(mount, _appState) {
         const b = makeDemoBars(42);
         document.getElementById('ha-bars').value =
             b.map(x => `${x.open} ${x.high} ${x.low} ${x.close}`).join('\n');
+        showToast(t('view.ha_reversal.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('ha-clear').addEventListener('click', () => {
         document.getElementById('ha-bars').value = '';
+        showToast(t('view.ha_reversal.toast.cleared'), { level: 'info' });
     });
     document.getElementById('ha-run').addEventListener('click', () => {
         readInputs();
@@ -103,21 +106,26 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.ha_reversal.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length < 2) return;
     }
     const err = validateInputs(bars, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.ha_reversal.toast.invalid'), { level: 'warning' }); return; }
 
     let report;
     try {
         report = await api.anlyHaReversal(buildBody(bars, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.ha_reversal.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars);
     renderChart(bars, report);
     renderEvents(report);
+    const flips = (report.events || []).length;
+    showToast(t('view.ha_reversal.toast.detected', { flips, bars: bars.length }), { level: 'success' });
 }
 
 function renderSummary(report, bars) {

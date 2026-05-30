@@ -576,6 +576,16 @@ function bindTabs() {
         const el = document.getElementById('py-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in ha-reversal scope → click Detect.
+    window.addEventListener('tv:ha-reversal-run', () => {
+        const el = document.getElementById('ha-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in ha-reversal scope → click Load demo.
+    window.addEventListener('tv:ha-reversal-demo', () => {
+        const el = document.getElementById('ha-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
