@@ -670,6 +670,8 @@ pub enum Preset {
     BigGapNarrowIntradayHotVol,      // gap_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — huge gap + tight intraday range + hot vol (gap holds; no follow-through movement either direction; participants accept the new gap level on volume)
     Year52HighDryVolNarrowRange,     // year_high_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w high + dry vol + narrow range + flat (silent compression at multi-year highs; coiled spring before next leg or rejection)
     Year52LowDryVolNarrowRange,      // year_low_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w low + dry vol + narrow range + flat (silent compression at multi-year lows; capitulation exhaustion or coiled bounce setup)
+    CompressedYearRangeFlatDay,      // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — within 5% of BOTH 52w extremes simultaneously (compressed 52w range) + flat + dry vol (structurally narrow asset having yet another silent day; maximum coil at the regime level)
+    CompressedYearRangeRegimeBreak,  // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — within 5% of BOTH 52w extremes (compressed regime) BUT big change + hot vol (sudden break of a long-compressed 52w sideways range; regime-level breakout/breakdown candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3668,6 +3670,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
                 && hit.change_pct.abs() < 0.3
         }
+        Preset::CompressedYearRangeFlatDay => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::CompressedYearRangeRegimeBreak => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4228,6 +4242,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapNarrowIntradayHotVol => "Huge Gap + Tight Intraday Range + Hot Vol (Gap Accepted on Volume; No Follow-through)",
         Preset::Year52HighDryVolNarrowRange => "Near 52w High + Dry Vol + Narrow Range + Flat (Silent Compression at Multi-year Highs; Coiled Spring)",
         Preset::Year52LowDryVolNarrowRange => "Near 52w Low + Dry Vol + Narrow Range + Flat (Silent Compression at Multi-year Lows; Coiled Bounce Setup)",
+        Preset::CompressedYearRangeFlatDay => "Compressed 52w Range + Flat + Dry Vol (Structurally Narrow Asset on Another Silent Day; Regime-level Coil)",
+        Preset::CompressedYearRangeRegimeBreak => "Compressed 52w Range + Big Change + Hot Vol (Sudden Break of Long-compressed Sideways Range; Regime-level Breakout/Breakdown)",
     }
 }
 

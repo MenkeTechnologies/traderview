@@ -55,6 +55,12 @@ export async function renderHerfindahl(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.hhi.h2.lorenz_chart">Lorenz curve — cumulative share of weight by rank</h2>
+            <div id="hh-lorenz-chart" style="width:100%;height:280px"></div>
+            <p data-i18n="view.hhi.hint.lorenz" class="muted">Cumulative normalized weight from largest to smallest position. Yellow dashed line = perfect equal-weight line. The further the curve sits below the diagonal, the more concentrated the portfolio.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.hhi.h2.table">Position breakdown</h2>
             <div id="hh-table"></div>
         </div>
@@ -102,6 +108,7 @@ async function compute(tok) {
     }
     renderSummary(local, true);
     renderChart(local);
+    renderLorenzChart();
     renderTable(local);
     let resp;
     try {
@@ -119,6 +126,7 @@ async function compute(tok) {
     }
     renderSummary(resp, false);
     renderChart(resp);
+    renderLorenzChart();
     renderTable(resp);
     const scaled = Math.round(Number(resp.hhi_scaled) || 0);
     const effN = (Number(resp.effective_n) || 0).toFixed(2);
@@ -189,6 +197,45 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, weightPct, contribScaled], el);
+}
+
+function renderLorenzChart() {
+    const el = document.getElementById('hh-lorenz-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!state.weights || state.weights.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hhi.empty_lorenz">${esc(t('view.hhi.empty_lorenz'))}</div>`;
+        return;
+    }
+    const sumW = state.weights.reduce((s, w) => s + w, 0);
+    if (sumW <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hhi.empty_lorenz">${esc(t('view.hhi.empty_lorenz'))}</div>`;
+        return;
+    }
+    const sorted = state.weights.map(w => w / sumW).sort((a, b) => b - a);
+    const n = sorted.length;
+    const xs = [0];
+    const ys = [0];
+    let acc = 0;
+    for (let i = 0; i < n; i++) {
+        acc += sorted[i];
+        xs.push((i + 1) / n);
+        ys.push(acc);
+    }
+    const eq = xs.map(x => x);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 260,
+        scales: { x: { range: [0, 1] }, y: { range: [0, 1] } },
+        series: [
+            { label: t('view.hhi.chart.rank_frac') },
+            { label: t('view.hhi.chart.cumulative'),
+              stroke: '#00e5ff', width: 1.8, points: { show: true, size: 5 } },
+            { label: t('view.hhi.chart.equality_line'),
+              stroke: '#ffd84a', width: 1.0, dash: [6, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 30 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, ys, eq], el);
 }
 
 function renderTable(report) {
