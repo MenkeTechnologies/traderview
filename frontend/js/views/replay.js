@@ -5,6 +5,7 @@ import { ohlcChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderReplay(mount, state, day) {
     const tok = currentViewToken();
@@ -17,12 +18,12 @@ export async function renderReplay(mount, state, day) {
     if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.replay.title">// REPLAY ·</span>
-            <input type="date" id="day" value="${day}">
+            <input type="date" id="day" value="${day}" data-tip="view.replay.tip.day">
         </h1>
         ${trades.length ? `
             <div class="chart-panel">
                 <h2>${esc(t('view.replay.h2.trades_on', { day, count: trades.length }))}</h2>
-                <select id="trade-pick">
+                <select id="trade-pick" data-tip="view.replay.tip.trade_pick">
                     ${trades.map(t => `<option value="${t.id}">${esc(t.symbol)} · ${t.side} · ${fmtDateTime(t.opened_at).slice(11)} → ${t.closed_at ? fmtDateTime(t.closed_at).slice(11) : 'open'}</option>`).join('')}
                 </select>
             </div>
@@ -48,10 +49,16 @@ export async function renderReplay(mount, state, day) {
     }
 
     async function loadTrade(id) {
-        const trade = await api.trade(id);
-        if (!viewIsCurrent(tok)) return;
-        const execs = await api.executionsForTrade(id);
-        if (!viewIsCurrent(tok)) return;
+        let trade, execs;
+        try {
+            trade = await api.trade(id);
+            if (!viewIsCurrent(tok)) return;
+            execs = await api.executionsForTrade(id);
+            if (!viewIsCurrent(tok)) return;
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            return;
+        }
         const from = Math.floor(new Date(trade.opened_at).getTime() / 1000) - 1800;
         const to   = Math.floor((trade.closed_at ? new Date(trade.closed_at).getTime() : Date.now()) / 1000) + 1800;
         const span = to - from;
