@@ -85,6 +85,11 @@ export async function renderDividendCalendar(mount, _appState) {
             <div id="dc-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.dividend_calendar.h2.dte_chart">Days-to-ex distribution (when are dividends clustering)</h2>
+            <div id="dc-dte-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="dc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -160,6 +165,7 @@ async function runFetch(mount, tok) {
     renderSummary(symbols.length, valid);
     renderTable(valid);
     renderYieldChart(valid);
+    renderDteChart(valid);
     showToast(t('view.dividend_calendar.toast.fetched', { payers: valid.length, total: symbols.length }), { level: 'success' });
 }
 
@@ -276,6 +282,52 @@ function renderYieldChart(rows) {
         ],
         legend: { show: true },
     }, [xs, yields], el);
+}
+
+function renderDteChart(rows) {
+    const el = document.getElementById('dc-dte-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const now = new Date();
+    const days = (rows || [])
+        .map(r => r.ex_date ? daysBetween(now, r.ex_date) : null)
+        .filter(d => Number.isFinite(d) && d >= 0);
+    if (days.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dividend_calendar.empty_dte_chart">${esc(t('view.dividend_calendar.empty_dte_chart'))}</div>`;
+        return;
+    }
+    const buckets = [
+        { lo: 0,  hi: 7,   label: '0–7d' },
+        { lo: 7,  hi: 14,  label: '7–14d' },
+        { lo: 14, hi: 30,  label: '14–30d' },
+        { lo: 30, hi: 60,  label: '30–60d' },
+        { lo: 60, hi: 180, label: '60–180d' },
+        { lo: 180, hi: Infinity, label: '≥180d' },
+    ];
+    const counts = new Array(buckets.length).fill(0);
+    for (const d of days) {
+        for (let i = 0; i < buckets.length; i++) {
+            if (d >= buckets[i].lo && d < buckets[i].hi) { counts[i] += 1; break; }
+        }
+    }
+    const labels = buckets.map(b => b.label);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dividend_calendar.chart.dte_bucket') },
+            { label: t('view.dividend_calendar.chart.payer_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function showErr(msg) {

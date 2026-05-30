@@ -500,6 +500,8 @@ const PRESETS = [
     { id: 'deep_mid_range_active_outlier', label: t('view.scanners.preset.deep_mid_range_active_outlier.label'), desc: t('view.scanners.preset.deep_mid_range_active_outlier.desc') },
     { id: 'intraday_direction_exceeds_change', label: t('view.scanners.preset.intraday_direction_exceeds_change.label'), desc: t('view.scanners.preset.intraday_direction_exceeds_change.desc') },
     { id: 'change_exceeds_intraday_magnitude', label: t('view.scanners.preset.change_exceeds_intraday_magnitude.label'), desc: t('view.scanners.preset.change_exceeds_intraday_magnitude.desc') },
+    { id: 'just_off_year_low_bouncing_up', label: t('view.scanners.preset.just_off_year_low_bouncing_up.label'), desc: t('view.scanners.preset.just_off_year_low_bouncing_up.desc') },
+    { id: 'just_off_year_high_fading_down', label: t('view.scanners.preset.just_off_year_high_fading_down.label'), desc: t('view.scanners.preset.just_off_year_high_fading_down.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -618,6 +618,8 @@ pub enum Preset {
     DeepMidRangeActiveOutlier,      // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume >= 2 AND change_pct.abs() > 1 — deeply mid-52w-range + hot vol + meaningful change (mid-range action; out-of-character active day; potential trend genesis)
     IntradayDirectionExceedsChange, // day_pct * change_pct > 0 AND day_pct.abs() > change_pct.abs() * 1.5 AND change_pct.abs() > 0.5 — same direction but intraday dominates by 1.5x (intraday late-session continuation outweighs gap)
     ChangeExceedsIntradayMagnitude, // change_pct.abs() > day_pct.abs() * 2 AND change_pct.abs() > 1 — change dominated by overnight component (gap-dominant move; intraday small relative to total)
+    JustOffYearLowBouncingUp,       // year_low_pct between 5 and 15 AND change_pct > 1 AND rel_volume >= 1.5 — slightly off 52w lows + green move + hot vol (early bounce off lows; momentum picking up before fully reclaiming)
+    JustOffYearHighFadingDown,      // year_high_pct between 5 and 15 AND change_pct < -1 AND rel_volume >= 1.5 — slightly off 52w highs + red move + hot vol (early fade from highs; distribution starting before fully breaking)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3320,6 +3322,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.change_pct.abs() > hit.day_pct.abs() * 2.0
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::JustOffYearLowBouncingUp => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 15.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::JustOffYearHighFadingDown => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct <= 15.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3828,6 +3842,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DeepMidRangeActiveOutlier => "Deep Mid-52w-Range + Hot Vol + Meaningful Change (Trend Genesis Day)",
         Preset::IntradayDirectionExceedsChange => "Intraday Dominates Same-direction Change by 1.5× (Late-session Continuation)",
         Preset::ChangeExceedsIntradayMagnitude => "Change Dominates Intraday by 2× (Gap-dominant Move; Small Intraday)",
+        Preset::JustOffYearLowBouncingUp => "Just Off 52w Low (5–15%) + Hot Vol + Green (Early Bounce off Lows)",
+        Preset::JustOffYearHighFadingDown => "Just Off 52w High (5–15%) + Hot Vol + Red (Early Fade from Highs)",
     }
 }
 
