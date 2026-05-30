@@ -705,6 +705,11 @@ function bindTabs() {
         const el = document.getElementById('gp-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in iv-solver scope → click Solve IV.
+    window.addEventListener('tv:iv-solver-solve', () => {
+        const el = document.getElementById('iv-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
