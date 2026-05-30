@@ -54,6 +54,12 @@ export async function renderWeightedMidprice(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.wmp.h2.spread_chart">Per-snapshot relative spread (bps)</h2>
+            <div id="wmp-spread-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.wmp.hint.spread_chart" class="muted small">Bid-ask spread divided by midpoint at each snapshot. Reveals liquidity quality independent of imbalance direction. Wide spreads dilute the microprice signal; tight spreads make microprice-vs-midpoint deviation meaningful. Orthogonal to the deviation/imbalance chart above.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.wmp.h2.table">Per-snapshot breakdown</h2>
             <div id="wmp-table"></div>
         </div>
@@ -95,6 +101,7 @@ async function compute(tok) {
     const local = localSeries(state.quotes);
     renderSummary(local, true);
     renderChart(local);
+    renderSpreadChart(local);
     renderTable(local);
     let resp;
     try {
@@ -113,6 +120,7 @@ async function compute(tok) {
     }
     renderSummary(series, false);
     renderChart(series);
+    renderSpreadChart(series);
     renderTable(series);
     const last = series.length > 0 ? series[series.length - 1] : null;
     const imb = last ? Number(last.quote_imbalance) : 0;
@@ -182,6 +190,38 @@ function renderChart(series) {
         ],
         legend: { show: true },
     }, [xs, dev, imb], el);
+}
+
+function renderSpreadChart(series) {
+    const el = document.getElementById('wmp-spread-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (series || []).map((r, i) => ({
+        i,
+        bps: r && Number.isFinite(Number(r.relative_spread)) ? Number(r.relative_spread) * 10000 : null,
+    })).filter(p => p.bps != null);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.wmp.empty_spread_chart">${esc(t('view.wmp.empty_spread_chart'))}</div>`;
+        return;
+    }
+    const xs = valid.map(p => p.i + 1);
+    const ys = valid.map(p => p.bps);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.wmp.chart.snapshot_idx') },
+            { label: t('view.wmp.chart.relative_spread_bps'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + 'bp') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable(series) {
