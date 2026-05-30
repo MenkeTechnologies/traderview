@@ -222,6 +222,8 @@ const PRESETS = [
     { id: 'parabolic_down', label: t('view.scanners.preset.parabolic_down.label'), desc: t('view.scanners.preset.parabolic_down.desc') },
     { id: 'blow_off_top', label: t('view.scanners.preset.blow_off_top.label'), desc: t('view.scanners.preset.blow_off_top.desc') },
     { id: 'selling_climax_bottom', label: t('view.scanners.preset.selling_climax_bottom.label'), desc: t('view.scanners.preset.selling_climax_bottom.desc') },
+    { id: 'up_day_gap_only_move', label: t('view.scanners.preset.up_day_gap_only_move.label'), desc: t('view.scanners.preset.up_day_gap_only_move.desc') },
+    { id: 'down_day_gap_only_move', label: t('view.scanners.preset.down_day_gap_only_move.label'), desc: t('view.scanners.preset.down_day_gap_only_move.desc') },
 ];
 
 export async function renderScanners(mount) {

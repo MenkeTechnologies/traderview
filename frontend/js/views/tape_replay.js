@@ -118,7 +118,13 @@ async function renderReplay(mount, tradeId, tok) {
             </form>
             <div id="tr-notes" style="margin-top:8px;"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tape_replay.h2.vol_chart">Bar volume (green=up bar / red=down bar)</h2>
+            <div id="tr-vol-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+    renderVolChart(data);
 
     const $ = (id) => mount.querySelector('#' + id);
     $('tr-play').addEventListener('click', () => {
@@ -280,6 +286,35 @@ function renderChart(data, state, mount) {
     if (pos && cursorTime) {
         pos.textContent = t('view.tape_replay.status.bar', { i: state.idx + 1, n: bars.length, when: new Date(cursorTime).toLocaleString() });
     }
+}
+
+function renderVolChart(data) {
+    const el = document.getElementById('tr-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bars = (data?.bars || []).filter(b => Number.isFinite(Number(b.volume)));
+    if (bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tape_replay.empty_chart">${esc(t('view.tape_replay.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i + 1);
+    const upY   = bars.map(b => Number(b.close) >= Number(b.open) ? Number(b.volume) : null);
+    const downY = bars.map(b => Number(b.close) <  Number(b.open) ? Number(b.volume) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tape_replay.chart.bar') },
+            { label: t('view.tape_replay.chart.up_vol'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 8, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.tape_replay.chart.down_vol'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 8, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 56 } ],
+        legend: { show: true },
+    }, [xs, upY, downY], el);
 }
 
 function renderNotes(notes, mount) {
