@@ -446,6 +446,8 @@ pub enum Preset {
     BigChangeTinyRangeDown,      // change_pct < -2 AND hod_dist + lod_dist < 1 AND rel_volume >= 1.5 — strong down close on tight range (all-the-way trend bar; impressive efficiency)
     TinyChangeWideRangeOnVol,    // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide-range no-net-move on heavy vol (battle bar; reversal candidate)
     TinyChangeWideRangeOnDryVol, // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — wide-range no-net-move on light vol (failed setup; both sides absent)
+    LargeGapModerateMoveHotVol,  // gap_pct.abs() > 3 AND change_pct.abs() between 1.5 and 3 AND rel_volume >= 2 — large gap + moderate day on heavy vol (institutional execution post-gap)
+    SmallGapBigMoveHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat gap + big day on heavy vol (intraday-driven trend; no overnight positioning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2161,6 +2163,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.7
         }
+        Preset::LargeGapModerateMoveHotVol => {
+            hit.gap_pct.abs() > 3.0
+                && hit.change_pct.abs() >= 1.5
+                && hit.change_pct.abs() <= 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::SmallGapBigMoveHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.change_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2497,6 +2510,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigChangeTinyRangeDown => "Big-Change Tiny-Range Down",
         Preset::TinyChangeWideRangeOnVol => "Tiny-Change Wide-Range Hot Vol",
         Preset::TinyChangeWideRangeOnDryVol => "Tiny-Change Wide-Range Dry Vol",
+        Preset::LargeGapModerateMoveHotVol => "Large Gap + Moderate Day, Hot Vol",
+        Preset::SmallGapBigMoveHotVol => "Small Gap + Big Day, Hot Vol",
     }
 }
 

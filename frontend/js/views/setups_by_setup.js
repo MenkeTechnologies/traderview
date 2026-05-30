@@ -57,6 +57,11 @@ export async function renderSetupsBySetup(mount, _appState) {
             <div id="sbs-pf-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.setups_by_setup.h2.avgr_chart">Average R-multiple per setup</h2>
+            <div id="sbs-avgr-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="sbs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -100,6 +105,7 @@ async function compute(tok) {
     renderNetPnlChart(local);
     renderWlrChart(local);
     renderPfChart(local);
+    renderAvgRChart(local);
     let resp;
     try {
         resp = await api.setupsBySetup(buildBody(state.rows));
@@ -122,6 +128,7 @@ async function compute(tok) {
     renderNetPnlChart(normalized);
     renderWlrChart(normalized);
     renderPfChart(normalized);
+    renderAvgRChart(normalized);
     showToast(t('view.setups_by_setup.toast.analyzed', { n: normalized.length }), { level: 'success' });
 }
 
@@ -198,6 +205,45 @@ function renderWlrChart(stats) {
         ],
         legend: { show: true },
     }, [xs, wins, losses], el);
+}
+
+function renderAvgRChart(stats) {
+    const el = document.getElementById('sbs-avgr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (stats || []).filter(s => Number.isFinite(Number(s.avg_r)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.setups_by_setup.empty_avgr_chart">${esc(t('view.setups_by_setup.empty_avgr_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.avg_r) - Number(a.avg_r));
+    const labels = rows.map(s => s.setup);
+    const xs = labels.map((_, i) => i + 1);
+    const posY = rows.map(s => Number(s.avg_r) >= 0 ? Number(s.avg_r) : null);
+    const negY = rows.map(s => Number(s.avg_r) <  0 ? Number(s.avg_r) : null);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.setups_by_setup.chart.setup') },
+            { label: t('view.setups_by_setup.chart.avgr_pos'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.setups_by_setup.chart.avgr_neg'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.setups_by_setup.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, posY, negY, zero], el);
 }
 
 function renderSummary(stats, pending) {

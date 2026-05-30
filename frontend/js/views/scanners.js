@@ -328,6 +328,8 @@ const PRESETS = [
     { id: 'big_change_tiny_range_down', label: t('view.scanners.preset.big_change_tiny_range_down.label'), desc: t('view.scanners.preset.big_change_tiny_range_down.desc') },
     { id: 'tiny_change_wide_range_on_vol', label: t('view.scanners.preset.tiny_change_wide_range_on_vol.label'), desc: t('view.scanners.preset.tiny_change_wide_range_on_vol.desc') },
     { id: 'tiny_change_wide_range_on_dry_vol', label: t('view.scanners.preset.tiny_change_wide_range_on_dry_vol.label'), desc: t('view.scanners.preset.tiny_change_wide_range_on_dry_vol.desc') },
+    { id: 'large_gap_moderate_move_hot_vol', label: t('view.scanners.preset.large_gap_moderate_move_hot_vol.label'), desc: t('view.scanners.preset.large_gap_moderate_move_hot_vol.desc') },
+    { id: 'small_gap_big_move_hot_vol', label: t('view.scanners.preset.small_gap_big_move_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_move_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
