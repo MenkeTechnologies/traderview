@@ -214,7 +214,7 @@ function renderRsSvg(rows, mount) {
             <text x="${pad + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">100 = window start</text>
             ${paths}
             ${legend}
-            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">bar index (${maxLen} bars ≈ 1 year)</text>
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.compare.svg.x_axis', { bars: maxLen }))}</text>
         </svg>
     `;
 }

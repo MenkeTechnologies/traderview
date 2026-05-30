@@ -149,7 +149,7 @@ function overlaySvg(rows) {
         ${lines}
         ${yLabels}
         ${legend}
-        <text x="${padL + innerW / 2}" y="${H - 8}" text-anchor="middle" fill="#9aa0c8" font-size="11">normalized time (0 = open, 1 = close)</text>
+        <text x="${padL + innerW / 2}" y="${H - 8}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.trade_compare.svg.x_axis'))}</text>
     </svg>`;
 }
 

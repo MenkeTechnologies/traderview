@@ -108,9 +108,9 @@ function histogramSvg(bins, stats) {
         <line x1="${zeroX}" y1="${padT}" x2="${zeroX}" y2="${padT + innerH}" stroke="#666" stroke-dasharray="3,3"/>
         <text x="${zeroX + 4}" y="${padT + 10}" fill="#9aa0c8" font-size="9">0R</text>
         <line x1="${meanX}" y1="${padT}" x2="${meanX}" y2="${padT + innerH}" stroke="#ffd24a" stroke-width="2"/>
-        <text x="${meanX + 4}" y="${padT + 22}" fill="#ffd24a" font-size="10">mean ${stats.mean_r.toFixed(2)}R</text>
+        <text x="${meanX + 4}" y="${padT + 22}" fill="#ffd24a" font-size="10">${esc(t('view.r_distribution.svg.mean', { mean: stats.mean_r.toFixed(2) }))}</text>
         ${labels}
-        <text x="${padL + innerW / 2}" y="${H - 4}" text-anchor="middle" fill="#9aa0c8" font-size="11">R-multiple bin</text>
+        <text x="${padL + innerW / 2}" y="${H - 4}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.r_distribution.svg.x_axis'))}</text>
     </svg>`;
 }
 

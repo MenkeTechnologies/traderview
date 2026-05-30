@@ -172,9 +172,9 @@ function renderEqSvg(pts, capital, mount) {
             <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#444"/>
             <line x1="${pad}" y1="${baseY}" x2="${w - pad}" y2="${baseY}" stroke="#666" stroke-dasharray="3,3"/>
-            <text x="${pad + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">starting capital $${fmt(capital)}</text>
+            <text x="${pad + 4}" y="${baseY - 4}" fill="#9aa0c8" font-size="10">${esc(t('view.walk_forward.svg.starting_capital', { capital: fmt(capital) }))}</text>
             <path d="${path}" stroke="#00e5ff" stroke-width="2" fill="none"/>
-            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">OOS bar index (stitched across ${pts.length} bars)</text>
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.walk_forward.svg.x_axis', { bars: pts.length }))}</text>
         </svg>
     `;
 }
