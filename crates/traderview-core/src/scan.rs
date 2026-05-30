@@ -1178,6 +1178,8 @@ pub enum Preset {
     GapDownWideRangeDeepAboveYearLowHotVol,    // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (gap-and-fight deep in advance territory: overnight gap down followed by a wide trading range well above the prior trough with elevated participation; top-attempt-vs-rebound battle where catalyst tries to reverse the extended advance)
     GapUpWideRangeMidYearHighHotVol,           // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (gap-and-fight in mid-cycle pullback zone: overnight gap up followed by a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle consolidation-fight where catalyst meets resistance from prior consolidation supply)
     GapDownWideRangeMidYearLowHotVol,          // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (gap-and-fight in mid-cycle recovery zone: overnight gap down followed by a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle consolidation-fight where catalyst meets support from prior consolidation demand)
+    GapUpWideRangeJustOffYearHighHotVol,       // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (gap-and-fight just off the year peak: overnight gap up followed by a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh highs)
+    GapDownWideRangeJustOffYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (gap-and-fight just off the year trough: overnight gap down followed by a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7268,6 +7270,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::GapUpWideRangeJustOffYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::GapDownWideRangeJustOffYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -8336,6 +8352,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownWideRangeDeepAboveYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + Far above 52w Low (>=20 %) (Gap-and-fight Deep in Advance Territory: Overnight Gap down Followed by a Wide Trading Range Well above the Prior Trough with Elevated Participation; Top-attempt-vs-rebound Battle Where Catalyst Tries to Reverse the Extended Advance)",
         Preset::GapUpWideRangeMidYearHighHotVol => "Gap Up (>2 %) + Wide Intraday Range (>8 %) + Hot Vol + Mid-range from High (5-20 %) (Gap-and-fight in Mid-cycle Pullback Zone: Overnight Gap up Followed by a Wide Trading Range in the Proper Consolidation Range below the Prior Peak with Elevated Participation; Mid-cycle Consolidation-fight Where Catalyst Meets Resistance from Prior Consolidation Supply)",
         Preset::GapDownWideRangeMidYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + Mid-range from Low (5-20 %) (Gap-and-fight in Mid-cycle Recovery Zone: Overnight Gap down Followed by a Wide Trading Range in the Proper Consolidation Range above the Prior Trough with Elevated Participation; Mid-cycle Consolidation-fight Where Catalyst Meets Support from Prior Consolidation Demand)",
+        Preset::GapUpWideRangeJustOffYearHighHotVol => "Gap Up (>2 %) + Wide Intraday Range (>8 %) + Hot Vol + Just off 52w High (2-5 %) (Gap-and-fight Just off the Year Peak: Overnight Gap up Followed by a Wide Trading Range Immediately after a Shallow Pullback from the 52w High with Elevated Participation; Post-tag Re-test Battle Where Catalyst Tries to Push Price back to Fresh Highs)",
+        Preset::GapDownWideRangeJustOffYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + Just off 52w Low (2-5 %) (Gap-and-fight Just off the Year Trough: Overnight Gap down Followed by a Wide Trading Range Immediately after a Shallow Bounce from the 52w Low with Elevated Participation; Post-tag Re-test Battle Where Catalyst Tries to Push Price back to Fresh Lows)",
     }
 }
 
