@@ -64,6 +64,12 @@ export async function renderVarEstimator(mount, _appState) {
             <p data-i18n="view.var_estimator.hint.histogram_of_daily_losses_yellow_dashed_historical" class="muted">Histogram of daily losses. Yellow dashed = historical VaR, red dashed = historical ES, cyan dashed = parametric VaR.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.var_estimator.h2.rolling_vol_chart">Rolling 20-day volatility with mean-σ reference</h2>
+            <div id="var-rollvol-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.var_estimator.hint.rolling_vol_chart" class="muted small">20-day rolling stdev of returns. The yellow dashed line is the full-sample σ used by the parametric Gaussian VaR. Spikes above the line are vol-regime shifts that the parametric estimate under-prices. Orthogonal to the binned distribution above.</p>
+        </div>
+
         <div id="var-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -105,6 +111,7 @@ async function compute(tok) {
     renderSummary(localHist, localGauss, true);
     renderCompare(localHist, localGauss);
     renderHistogram(state.returns, state.positionValue, localHist, localGauss);
+    renderRollingVolChart(state.returns);
     let hist, gauss;
     try {
         [hist, gauss] = await Promise.all([
@@ -193,6 +200,48 @@ function renderCompare(hist, gauss) {
             </tbody>
         </table>
     `;
+}
+
+function renderRollingVolChart(returns) {
+    const el = document.getElementById('var-rollvol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const arr = (returns || []).map(Number).filter(Number.isFinite);
+    const W = 20;
+    if (arr.length < W + 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.var_estimator.empty_rollvol_chart">${esc(t('view.var_estimator.empty_rollvol_chart'))}</div>`;
+        return;
+    }
+    const mu = arr.reduce((a, b) => a + b, 0) / arr.length;
+    const sigma = Math.sqrt(arr.reduce((s, v) => s + (v - mu) * (v - mu), 0) / Math.max(arr.length - 1, 1));
+    const rollVol = new Array(arr.length).fill(null);
+    let sum = 0, sumSq = 0;
+    for (let i = 0; i < W; i++) { sum += arr[i]; sumSq += arr[i] * arr[i]; }
+    rollVol[W - 1] = Math.sqrt(Math.max(0, (sumSq - sum * sum / W) / Math.max(W - 1, 1)));
+    for (let i = W; i < arr.length; i++) {
+        sum += arr[i] - arr[i - W];
+        sumSq += arr[i] * arr[i] - arr[i - W] * arr[i - W];
+        rollVol[i] = Math.sqrt(Math.max(0, (sumSq - sum * sum / W) / Math.max(W - 1, 1)));
+    }
+    const xs = arr.map((_, i) => i + 1);
+    const meanRef = xs.map(() => sigma);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.var_estimator.chart.day_idx') },
+            { label: t('view.var_estimator.chart.roll_vol'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.var_estimator.chart.mean_vol'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 56,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(2) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, rollVol, meanRef], el);
 }
 
 function renderHistogram(returns, positionValue, hist, gauss) {
