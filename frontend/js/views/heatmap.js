@@ -52,6 +52,7 @@ function renderTiles(r, mount) {
                         ? `rgba(35, 209, 96, ${0.15 + intensity * 0.7})`
                         : `rgba(255, 56, 96, ${0.15 + intensity * 0.7})`;
                     return `<a class="hm-tile" href="#research/${encodeURIComponent(t.symbol)}"
+                        data-context-scope="symbol-row" data-symbol="${esc(t.symbol)}"
                         style="background:${color}" title="${esc(t.symbol)} · ${fmt(t.price)} · ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%">
                         <span class="hm-sym">${esc(t.symbol)}</span>
                         <span class="hm-pct">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>
