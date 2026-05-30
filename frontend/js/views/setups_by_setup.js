@@ -51,6 +51,11 @@ export async function renderSetupsBySetup(mount, _appState) {
             <div id="sbs-wlr-chart" style="width:100%;height:220px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.setups_by_setup.h2.pf_chart">Profit factor per setup</h2>
+            <div id="sbs-pf-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="sbs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -92,6 +97,7 @@ async function compute(tok) {
     renderStats(local, true);
     renderNetPnlChart(local);
     renderWlrChart(local);
+    renderPfChart(local);
     let resp;
     try {
         resp = await api.setupsBySetup(buildBody(state.rows));
@@ -111,6 +117,46 @@ async function compute(tok) {
     renderStats(normalized, false);
     renderNetPnlChart(normalized);
     renderWlrChart(normalized);
+    renderPfChart(normalized);
+}
+
+function renderPfChart(stats) {
+    const el = document.getElementById('sbs-pf-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (stats || []).filter(s => Number.isFinite(Number(s.profit_factor)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.setups_by_setup.empty_pf_chart">${esc(t('view.setups_by_setup.empty_pf_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.profit_factor) - Number(a.profit_factor));
+    const labels = rows.map(s => s.setup);
+    const xs = labels.map((_, i) => i + 1);
+    const winY  = rows.map(s => Number(s.profit_factor) >= 1 ? Number(s.profit_factor) : null);
+    const loseY = rows.map(s => Number(s.profit_factor) <  1 ? Number(s.profit_factor) : null);
+    const one   = xs.map(() => 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.setups_by_setup.chart.setup') },
+            { label: t('view.setups_by_setup.chart.pf_good'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.setups_by_setup.chart.pf_bad'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.setups_by_setup.chart.pf_one'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, winY, loseY, one], el);
 }
 
 function renderWlrChart(stats) {

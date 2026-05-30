@@ -406,6 +406,8 @@ pub enum Preset {
     PullbackInsideTrendDown,     // year_low_pct between 5 and 20 AND change_pct between 0.2 and 1 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small bounce inside a downtrend with avg vol (orderly continuation entry)
     RangeContractionSqueezeHigh, // year_high_pct > -5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w high (mega-squeeze coil)
     RangeContractionSqueezeLow,  // year_low_pct < 5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w low (mega-squeeze coil)
+    RangeExpansionAtTopOnVol,    // year_high_pct > -5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w high with no net move on heavy vol (distribution at top)
+    RangeExpansionAtBottomOnVol, // year_low_pct < 5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w low with no net move on heavy vol (accumulation at bottom)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1886,6 +1888,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.change_pct.abs() < 0.3
         }
+        Preset::RangeExpansionAtTopOnVol => {
+            hit.year_high_pct > -5.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::RangeExpansionAtBottomOnVol => {
+            hit.year_low_pct < 5.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2182,6 +2196,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PullbackInsideTrendDown => "Orderly Bounce in Downtrend",
         Preset::RangeContractionSqueezeHigh => "Range-Contraction Coil at 52w High",
         Preset::RangeContractionSqueezeLow => "Range-Contraction Coil at 52w Low",
+        Preset::RangeExpansionAtTopOnVol => "Range-Expansion Churn at 52w High",
+        Preset::RangeExpansionAtBottomOnVol => "Range-Expansion Churn at 52w Low",
     }
 }
 
