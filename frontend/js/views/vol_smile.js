@@ -127,8 +127,8 @@ function renderSummary(res, tYears) {
         tYears,
     );
     const arbCell = res.arbitrage_ok
-        ? '<span class="pos">no-arb OK</span>'
-        : '<span class="neg">violated</span>';
+        ? `<span class="pos">${esc(t('view.vol_smile.arb.ok'))}</span>`
+        : `<span class="neg">${esc(t('view.vol_smile.arb.violated'))}</span>`;
     const vsSummary = document.getElementById('vs-summary');
     vsSummary.innerHTML = `
         <div class="card"><div class="label"><span data-i18n="view.vol_smile.card.a">a</span> (level)</div>

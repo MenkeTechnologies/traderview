@@ -191,14 +191,14 @@ function card(p) {
         <div style="display:grid;grid-template-columns:160px 1fr 160px;gap:6px;font-size:11px;align-items:center;margin-top:8px;">
             <div>P/L vs target ${targetPnl != null ? '$' + fmt(targetPnl) : ''}</div>
             <div>${progressBar(p.actual_pnl, targetPnl, false)}</div>
-            <div>${paceChip(p.pnl_pace)}${p.pnl_pct_complete != null ? ` <span class="muted">${p.pnl_pct_complete.toFixed(1)}% done</span>` : ''}</div>
+            <div>${paceChip(p.pnl_pace)}${p.pnl_pct_complete != null ? ` <span class="muted">${esc(t('view.goals.card.pct_done', { pct: p.pnl_pct_complete.toFixed(1) }))}</span>` : ''}</div>
 
-            <div>Win rate vs ${targetWin != null ? targetWin.toFixed(1) + '%' : '—'}</div>
-            <div>${targetWin != null ? progressBar(p.actual_win_rate * 100, targetWin, false) : '<div class="muted small">no target</div>'}</div>
+            <div>${esc(t('view.goals.card.win_rate_vs', { target: targetWin != null ? targetWin.toFixed(1) + '%' : '—' }))}</div>
+            <div>${targetWin != null ? progressBar(p.actual_win_rate * 100, targetWin, false) : `<div class="muted small">${esc(t('view.goals.card.no_target'))}</div>`}</div>
             <div>${paceChip(p.win_rate_pace)}</div>
 
-            <div>Max DD vs cap ${targetDD != null ? targetDD.toFixed(1) + '%' : '—'}</div>
-            <div>${targetDD != null ? progressBar(p.actual_max_drawdown_pct, targetDD, true) : '<div class="muted small">no cap</div>'}</div>
+            <div>${esc(t('view.goals.card.max_dd_vs_cap', { target: targetDD != null ? targetDD.toFixed(1) + '%' : '—' }))}</div>
+            <div>${targetDD != null ? progressBar(p.actual_max_drawdown_pct, targetDD, true) : `<div class="muted small">${esc(t('view.goals.card.no_cap'))}</div>`}</div>
             <div>${paceChip(p.drawdown_pace)}</div>
         </div>
         ${g.notes ? `<p class="muted small" style="margin-top:6px;">${esc(g.notes)}</p>` : ''}

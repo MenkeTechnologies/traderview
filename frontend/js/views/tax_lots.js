@@ -69,7 +69,7 @@ function renderReport(r, out) {
                 <div class="small muted">${r.long_term_gain >= 0 ? '+' : ''}$${fmt(r.long_term_gain)} / -$${fmt(r.long_term_loss)}</div></div>
             <div class="card"><div class="label" data-i18n="view.tax_lots.card.wash_sale_disallowed">Wash-sale disallowed</div>
                 <div class="value ${r.wash_sale_total > 0 ? 'warn' : ''}">$${fmt(r.wash_sale_total)}</div>
-                <div class="small muted">added back to net</div></div>
+                <div class="small muted">${esc(t('view.tax_lots.card.added_back_to_net'))}</div></div>
             <div class="card"><div class="label" data-i18n="view.tax_lots.card.realized_events">Realized events</div>
                 <div class="value">${r.realized_count}</div>
                 <div class="small muted">proceeds $${fmt(r.total_proceeds)} / basis $${fmt(r.total_basis)}</div></div>
