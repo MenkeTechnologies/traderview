@@ -110,10 +110,53 @@ function render(r, out) {
             ${overlaySvg(r.rows)}
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.trade_compare.h2.mfe_mae_chart">MFE vs MAE per trade</h2>
+            <div id="tc-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.trade_compare.h2.side_by_side_stats">Side-by-side stats</h2>
             ${statsTable(r.rows)}
         </div>
     `;
+    renderMfeMaeChart(r.rows);
+}
+
+function renderMfeMaeChart(rows) {
+    const el = document.getElementById('tc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.mfe)) || Number.isFinite(Number(r.mae)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_compare.empty_chart">${esc(t('view.trade_compare.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(r => r.symbol);
+    const mfe = valid.map(r => Number.isFinite(Number(r.mfe)) ? Number(r.mfe) : null);
+    const mae = valid.map(r => Number.isFinite(Number(r.mae)) ? Number(r.mae) : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_compare.chart.trade_idx') },
+            { label: t('view.trade_compare.chart.mfe'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.trade_compare.chart.mae'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.trade_compare.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, mfe, mae, zero], el);
 }
 
 function overlaySvg(rows) {

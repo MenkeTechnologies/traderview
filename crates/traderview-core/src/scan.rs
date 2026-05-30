@@ -192,6 +192,8 @@ pub enum Preset {
     StableMidSqueeze,            // 30% < (1 - year_high_pct.abs() / (year_high_pct.abs() + year_low_pct.abs())) < 70% — true 30-70 from top, tight day
     LeanGapMatchSqueeze,         // gap & change same sign + each between 0.5 and 1.5 + tight day + quiet — modest opening gap held
     LongShadowQuietSqueeze,      // (hod_dist.abs() + lod_dist.abs()) > 6 AND day_pct.abs() < 1 AND rel_volume < 0.9 — long-shadow doji on quiet vol
+    ChangeNoDayPctSqueeze,       // |change_pct| >= 1 AND |day_pct| < 0.2 AND quiet — overnight move with no intraday follow-through
+    DayPctNoChangeSqueeze,       // |day_pct| >= 1 AND |change_pct| < 0.2 AND quiet — intraday wiggle but closes near prior close
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -551,6 +553,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 1.0
                 && hit.rel_volume < 0.9
         }
+        Preset::ChangeNoDayPctSqueeze => {
+            hit.change_pct.abs() >= 1.0
+                && hit.day_pct.abs() < 0.2
+                && hit.rel_volume < 1.0
+        }
+        Preset::DayPctNoChangeSqueeze => {
+            hit.day_pct.abs() >= 1.0
+                && hit.change_pct.abs() < 0.2
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -633,6 +645,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StableMidSqueeze => "Stable-Mid Squeeze",
         Preset::LeanGapMatchSqueeze => "Lean-Gap Match Squeeze",
         Preset::LongShadowQuietSqueeze => "Long-Shadow Quiet Squeeze",
+        Preset::ChangeNoDayPctSqueeze => "Overnight Move Reset Squeeze",
+        Preset::DayPctNoChangeSqueeze => "Intraday Wiggle Reset Squeeze",
     }
 }
 
