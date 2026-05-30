@@ -58,8 +58,8 @@
 - **FIFO trade roll-up** — `traderview-core::rollup` matches buy/sell pairs in first-in-first-out order per `(account_id, symbol)`. Open positions stay in `status='open'`; fully-closed positions get `gross_pnl`, `exit_avg`, `closed_at`.
 - **Embedded Postgres on the desktop** — `postgresql_embedded` downloads a portable PostgreSQL on first launch (~80 MB, cached in `~/.theseus`), stores data under `$APP_DATA_DIR/traderview/pg/`, and shuts it down cleanly on app exit. Stale-PID lockfile cleanup survives a hard-killed parent. Zero external dependencies for desktop users.
 - **Multi-user web on the same crates** — the axum binary swaps the embedded pool for an external `DATABASE_URL`, layers in argon2 password hashing + JWT bearer auth, and serves the same vanilla-JS frontend.
-- **86-tile launcher (Cmd-K)** — categorized tile grid with live filter replaces the old 77-tab strip. Press `?` anywhere for the in-app tutorial. 11-shortcut topbar carries the most-used routes.
-- **Vanilla JS + uPlot frontend** — zero npm, zero bundler, zero framework. 84 view modules + 16 supporting modules across 16,470 LOC JS + 1,990 LOC CSS. Per-view race-token machinery prevents post-await DOM crashes; window.onerror + console.error funnel to a Rust-side `/api/client-errors` sink.
+- **256-tile launcher (Cmd-K)** — categorized tile grid with live filter replaces the old 77-tab strip. Press `?` anywhere for the in-app tutorial. 11-shortcut topbar carries the most-used routes.
+- **Vanilla JS + uPlot frontend** — zero npm, zero bundler, zero framework. 257 view modules + 184 pure helper modules + ~21 runtime modules across 93,692 LOC JS + 2,512 LOC CSS. Per-view race-token machinery prevents post-await DOM crashes; window.onerror + console.error funnel to a Rust-side `/api/client-errors` sink.
 - **Live data streams** — Nasdaq halts (3s RSS, TTS voice alerts), SEC EDGAR + 4 PR wires (catalyst radar with ticker NER), Finnhub WebSocket 6-panel intraday scanner, Webull read-only broker (paste session tokens, in-memory only), 16-symbol world markets snapshot (60s in-process cache). All live stores are bounded with oldest-first eviction.
 - **12 broker importers + Generic CSV wizard** — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, plus a column-mapping Generic parser for anything else.
 - **17 reports + R-multiple + Monte Carlo forecast + fill-quality TCA + tax-lot tracker** with Schedule-D export.
@@ -193,7 +193,7 @@ Desktop mode auto-logs in as the local user; the frontend talks to the embedded 
 
 ## [0x06] FRONTEND
 
-`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. **84 view modules + 16 supporting modules**, 16,470 LOC JS + 1,990 LOC CSS. All views render into `<main id="app">` via hash-routed dispatch. **86-tile launcher (Cmd-K)** is the primary entry point; topbar carries 11 shortcuts and the rest is the launcher. `?` opens the in-app tutorial.
+`frontend/` is **vanilla JS + uPlot**. Zero npm, zero bundler, zero framework. **257 view modules + 184 pure helper modules + ~21 runtime modules**, 93,692 LOC JS + 2,512 LOC CSS. All views render into `<main id="app">` via hash-routed dispatch. **256-tile launcher (Cmd-K)** is the primary entry point; topbar carries 11 shortcuts and the rest is the launcher. `?` opens the in-app tutorial.
 
 | Category              | Tiles | Notable views                                                       |
 |-----------------------|-------|---------------------------------------------------------------------|
