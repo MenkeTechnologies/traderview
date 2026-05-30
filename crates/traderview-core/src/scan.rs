@@ -868,6 +868,8 @@ pub enum Preset {
     MidYearHighBigGreenHotVol,           // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range + big green + hot vol (mid-range bullish thrust well above the floor but well below the ceiling; institutional momentum without breakout-fatigue or basing context)
     MidYearHighBigRedHotVol,             // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range + big red + hot vol (mid-range bearish thrust well below the ceiling but well above the floor; institutional distribution without breakdown-fatigue or topping context)
     MidYearLowBigRedHotVol,              // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range from low + big red + hot vol (rejection thrust well off the floor but still well below the ceiling; institutional distribution in the rebuild zone)
+    MidYearLowBigGreenHotVol,            // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range from low + big green + hot vol (continuation thrust off the floor with institutional accumulation in the rebuild zone; recovery momentum without near-extreme volatility)
+    Year52HighFullRangeDryVol,           // year_high_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w high + wide intraday range + dry vol (low-participation outside-day rotation at the highs; supply tested without conviction; failed exhaustion-vol setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5077,6 +5079,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MidYearLowBigGreenHotVol => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52HighFullRangeDryVol => {
+            hit.year_high_pct < 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -5835,6 +5848,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidYearHighBigGreenHotVol => "Middle-of-year-range + Big Green + Hot Vol (Mid-range Bullish Thrust Well above the Floor but Well below the Ceiling; Institutional Momentum without Breakout-fatigue or Basing Context)",
         Preset::MidYearHighBigRedHotVol => "Middle-of-year-range + Big Red + Hot Vol (Mid-range Bearish Thrust Well below the Ceiling but Well above the Floor; Institutional Distribution without Breakdown-fatigue or Topping Context)",
         Preset::MidYearLowBigRedHotVol => "Middle-of-year-range from Low + Big Red + Hot Vol (Rejection Thrust Well off the Floor but Still Well below the Ceiling; Institutional Distribution in the Rebuild Zone)",
+        Preset::MidYearLowBigGreenHotVol => "Middle-of-year-range from Low + Big Green + Hot Vol (Continuation Thrust off the Floor with Institutional Accumulation in the Rebuild Zone; Recovery Momentum without Near-extreme Volatility)",
+        Preset::Year52HighFullRangeDryVol => "At 52w High + Wide Intraday Range + Dry Vol (Low-participation Outside-day Rotation at the Highs; Supply Tested without Conviction; Failed Exhaustion-vol Setup)",
     }
 }
 

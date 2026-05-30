@@ -750,6 +750,8 @@ const PRESETS = [
     { id: 'mid_year_high_big_green_hot_vol', label: t('view.scanners.preset.mid_year_high_big_green_hot_vol.label'), desc: t('view.scanners.preset.mid_year_high_big_green_hot_vol.desc') },
     { id: 'mid_year_high_big_red_hot_vol', label: t('view.scanners.preset.mid_year_high_big_red_hot_vol.label'), desc: t('view.scanners.preset.mid_year_high_big_red_hot_vol.desc') },
     { id: 'mid_year_low_big_red_hot_vol', label: t('view.scanners.preset.mid_year_low_big_red_hot_vol.label'), desc: t('view.scanners.preset.mid_year_low_big_red_hot_vol.desc') },
+    { id: 'mid_year_low_big_green_hot_vol', label: t('view.scanners.preset.mid_year_low_big_green_hot_vol.label'), desc: t('view.scanners.preset.mid_year_low_big_green_hot_vol.desc') },
+    { id: 'year52_high_full_range_dry_vol', label: t('view.scanners.preset.year52_high_full_range_dry_vol.label'), desc: t('view.scanners.preset.year52_high_full_range_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
