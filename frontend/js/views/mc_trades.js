@@ -11,6 +11,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_CONFIG, parseRBlob, validateInputs, buildBody,
@@ -32,26 +33,26 @@ export async function renderMcTrades(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.mc_trades.h2.historical_r">Historical R-multiples
                 <small data-i18n="view.mc_trades.h2.historical_r_hint" class="muted">(one per token, csv/space/newline)</small></h2>
-            <textarea id="mct-blob" rows="5" placeholder="1.0 -1.0 0.5 -0.5 ...">${esc(rToBlob(state.historical_r))}</textarea>
+            <textarea id="mct-blob" rows="5" placeholder="1.0 -1.0 0.5 -0.5 ..." data-tip="view.mc_trades.tip.blob">${esc(rToBlob(state.historical_r))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.mc_trades.label.n_curves">N curves</span>
-                    <input id="mct-n" type="number" step="1" min="1" max="50000" value="${state.cfg.n_curves}"></label>
+                    <input id="mct-n" type="number" step="1" min="1" max="50000" value="${state.cfg.n_curves}" data-tip="view.mc_trades.tip.n_curves"></label>
                 <label><span data-i18n="view.mc_trades.label.trades_per_curve">Trades / curve</span>
-                    <input id="mct-tpc" type="number" step="1" min="1" max="10000" value="${state.cfg.trades_per_curve}"></label>
+                    <input id="mct-tpc" type="number" step="1" min="1" max="10000" value="${state.cfg.trades_per_curve}" data-tip="view.mc_trades.tip.trades_per_curve"></label>
                 <label><span data-i18n="view.mc_trades.label.start_equity">Start equity ($)</span>
-                    <input id="mct-eq" type="number" step="any" min="0" value="${state.cfg.start_equity}"></label>
+                    <input id="mct-eq" type="number" step="any" min="0" value="${state.cfg.start_equity}" data-tip="view.mc_trades.tip.start_equity"></label>
                 <label><span data-i18n="view.mc_trades.label.ruin_threshold">Ruin threshold ($)</span>
-                    <input id="mct-ruin" type="number" step="any" min="0" value="${state.cfg.ruin_threshold}"></label>
+                    <input id="mct-ruin" type="number" step="any" min="0" value="${state.cfg.ruin_threshold}" data-tip="view.mc_trades.tip.ruin_threshold"></label>
                 <label><span data-i18n="view.mc_trades.label.seed">RNG seed</span>
-                    <input id="mct-seed" type="number" step="1" min="0" value="${state.cfg.seed}"></label>
-                <button data-i18n="view.mc_trades.btn.simulate" id="mct-run" class="primary" type="button">Simulate</button>
+                    <input id="mct-seed" type="number" step="1" min="0" value="${state.cfg.seed}" data-tip="view.mc_trades.tip.seed"></label>
+                <button data-i18n="view.mc_trades.btn.simulate" id="mct-run" class="primary" type="button" data-tip="view.mc_trades.tip.run" data-shortcut="mc_trades_run">Simulate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.mc_trades.btn.demo_positive" id="mct-demo-pos"   class="secondary" type="button">Demo: positive edge</button>
-                <button data-i18n="view.mc_trades.btn.demo_negative" id="mct-demo-neg"   class="secondary" type="button">Demo: negative edge</button>
-                <button data-i18n="view.mc_trades.btn.demo_fat_tail" id="mct-demo-fat"   class="secondary" type="button">Demo: fat-tail</button>
-                <button data-i18n="view.mc_trades.btn.demo_lumpy"    id="mct-demo-lumpy" class="secondary" type="button">Demo: lumpy winners</button>
-                <button data-i18n="view.mc_trades.btn.demo_random"   id="mct-demo-rand"  class="secondary" type="button">Demo: random walk</button>
+                <button data-i18n="view.mc_trades.btn.demo_positive" id="mct-demo-pos"   class="secondary" type="button" data-tip="view.mc_trades.tip.demo_pos">Demo: positive edge</button>
+                <button data-i18n="view.mc_trades.btn.demo_negative" id="mct-demo-neg"   class="secondary" type="button" data-tip="view.mc_trades.tip.demo_neg">Demo: negative edge</button>
+                <button data-i18n="view.mc_trades.btn.demo_fat_tail" id="mct-demo-fat"   class="secondary" type="button" data-tip="view.mc_trades.tip.demo_fat">Demo: fat-tail</button>
+                <button data-i18n="view.mc_trades.btn.demo_lumpy"    id="mct-demo-lumpy" class="secondary" type="button" data-tip="view.mc_trades.tip.demo_lumpy">Demo: lumpy winners</button>
+                <button data-i18n="view.mc_trades.btn.demo_random"   id="mct-demo-rand"  class="secondary" type="button" data-tip="view.mc_trades.tip.demo_rand">Demo: random walk</button>
             </div>
             <p data-i18n="view.mc_trades.hint.about" class="muted">Draws N independent synthetic equity curves of length L by sampling R-multiples with replacement. Surfaces percentile + ruin-probability distribution so you can see realistic worst cases, not just expectancy. Deterministic given seed.</p>
         </div>
@@ -86,6 +87,7 @@ function readInputs() {
     if (parsed.errors.length) {
         showErr(`${t('view.mc_trades.err.parse_prefix')}: `
             + parsed.errors.slice(0, 3).map(e => `[${e.line}] ${e.message}`).join('; '));
+        showToast(t('view.mc_trades.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -102,9 +104,13 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.historical_r, state.cfg);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.mc_trades.toast.invalid'), { level: 'warning' }); return; }
     const local = localSimulateWithCurves(state.historical_r, state.cfg);
-    if (!local.report) { showErr(t('view.mc_trades.err.invalid')); return; }
+    if (!local.report) {
+        showErr(t('view.mc_trades.err.invalid'));
+        showToast(t('view.mc_trades.toast.invalid'), { level: 'warning' });
+        return;
+    }
     state.lastEnding = local.ending;
     renderSummary(local.report, true);
     renderChart(local.ending, local.report);
@@ -112,11 +118,17 @@ async function compute(tok) {
     try {
         resp = await api.calcMonteCarlo(buildBody(state.historical_r, state.cfg));
     } catch (e) {
-        showErr(`${t('view.mc_trades.err.api')}: ${e.message || e}`); return;
+        showErr(`${t('view.mc_trades.err.api')}: ${e.message || e}`);
+        showToast(t('view.mc_trades.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.lastEnding, resp);
+    const pRuin = (Number(resp.probability_of_ruin) * 100).toFixed(2);
+    const pProf = (Number(resp.probability_profitable) * 100).toFixed(1);
+    const level = resp.probability_of_ruin > 0.02 ? 'warning' : 'success';
+    showToast(t('view.mc_trades.toast.simulated', { n: resp.n_curves, ruin: pRuin, profit: pProf }), { level });
 }
 
 function renderSummary(report, pending) {

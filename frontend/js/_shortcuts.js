@@ -199,6 +199,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'clusters_correlation_run',     keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'clusters-correlation',    descKey: 'shortcut.clusters_correlation_run',    actionKey: 'tv:clusters-correlation-run' },
     { id: 'choppiness_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'choppiness',        descKey: 'shortcut.choppiness_run',               actionKey: 'tv:choppiness-run' },
     { id: 'var_estimator_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'var-estimator',     descKey: 'shortcut.var_estimator_run',            actionKey: 'tv:var-estimator-run' },
+    { id: 'mc_trades_run',                keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mc-trades',         descKey: 'shortcut.mc_trades_run',                actionKey: 'tv:mc-trades-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
