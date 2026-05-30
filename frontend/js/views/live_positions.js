@@ -16,7 +16,13 @@ export async function renderLivePositions(mount, state) {
         return;
     }
     mount.innerHTML = `
-        <h1 class="view-title">// LIVE P/L — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
+        <h1 class="view-title">// LIVE P/L — ${esc(acct.broker)} · ${esc(acct.name)}
+            <button type="button" class="btn btn-secondary" id="live-refresh-btn"
+                    data-i18n="view.live_positions.btn.refresh"
+                    data-tip="view.live_positions.tip.refresh"
+                    data-shortcut="live_refresh"
+                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
+        </h1>
         <p data-i18n="view.live_positions.hint.snapshot_of_every_open_trade_with_fresh_yahoo_quot" class="muted small">Snapshot of every open trade with fresh Yahoo quotes (60s
             server-cached). Unrealized P/L honors multiplier and side (long/short). Day P/L
             uses the quote's prev_close. Refreshes every 30 seconds.</p>
@@ -25,6 +31,8 @@ export async function renderLivePositions(mount, state) {
         <div id="lp-table"></div>
         <p class="muted small" id="lp-status"></p>
     `;
+    const refreshBtn = mount.querySelector('#live-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => refresh(acct.id, mount, tok));
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
         if (!viewIsCurrent(tok)) { clearInterval(timer); timer = null; return; }

@@ -25,7 +25,13 @@ export async function renderDashboard(mount, state) {
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
-        <h1 data-i18n="view.dashboard.h1.dashboard_2" class="view-title">// DASHBOARD</h1>
+        <h1 class="view-title"><span data-i18n="view.dashboard.h1.dashboard_2">// DASHBOARD</span>
+            <button type="button" class="btn btn-secondary" id="dashboard-refresh-btn"
+                    data-i18n="view.dashboard.btn.refresh"
+                    data-tip="view.dashboard.tip.refresh"
+                    data-shortcut="dashboard_refresh"
+                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
+        </h1>
         <div id="world-markets-mount"></div>
         <div class="cards">
             ${statCard(t('view.dashboard.stat.net_pnl'),      fmtMoney(summary.net_pnl), pnlClass(summary.net_pnl))}
@@ -63,6 +69,9 @@ export async function renderDashboard(mount, state) {
         </div>
     `;
 
+    const refreshBtn = mount.querySelector('#dashboard-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () =>
+        window.dispatchEvent(new HashChangeEvent('hashchange')));
     const eqEl = mount.querySelector('#equity-chart');
     const calEl = mount.querySelector('#mini-cal');
     const wmEl = mount.querySelector('#world-markets-mount');
