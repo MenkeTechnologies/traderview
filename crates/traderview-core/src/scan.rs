@@ -972,6 +972,8 @@ pub enum Preset {
     DistantFromYearLowRangeExpansionHotVol,    // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far above 52w low (>=20%) + wide intraday range + hot vol (volatility expansion deep in the advance territory: institutional fight day occurring well above the prior trough with elevated participation; regime-shift candidate after extended advance)
     CloseAtHodMidYearLowHotVol,                // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — mid-range from low (5-20%) + close pinned to HOD + green close + hot vol (closing-strength signal in the recovery zone: bull conviction ramped into the close without requiring a long lower-wick reclaim; demand-led mid-cycle continuation)
     CloseAtLodMidYearHighHotVol,               // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — mid-range from high (5-20%) + close pinned to LOD + red close + hot vol (closing-weakness signal in the pullback zone: bear conviction dumped into the close without requiring a long upper-wick rejection; supply-led mid-cycle continuation)
+    CloseAtHodDeepBelowYearHighHotVol,         // year_high_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — far below 52w high (>=20%) + close pinned to HOD + green close + hot vol (closing-strength signal deep in the pullback zone: bull conviction ramped into the close well below the prior peak; early-reversal candidate after extended decline without requiring wick-rejection context)
+    CloseAtLodDeepAboveYearLowHotVol,          // year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — far above 52w low (>=20%) + close pinned to LOD + red close + hot vol (closing-weakness signal deep in the advance zone: bear conviction dumped into the close well above the prior trough; early-reversal candidate after extended advance without requiring wick-rejection context)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5836,6 +5838,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::CloseAtHodDeepBelowYearHighHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseAtLodDeepAboveYearLowHotVol => {
+            hit.year_low_pct >= 20.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6698,6 +6712,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DistantFromYearLowRangeExpansionHotVol => "Far above 52w Low (>=20 %) + Wide Intraday Range + Hot Vol (Volatility Expansion Deep in the Advance Territory: Institutional Fight Day Occurring Well above the Prior Trough with Elevated Participation; Regime-shift Candidate after Extended Advance)",
         Preset::CloseAtHodMidYearLowHotVol => "Mid-range from Low (5-20 %) + Close Pinned to HOD + Green Close + Hot Vol (Closing-strength Signal in the Recovery Zone: Bull Conviction Ramped into the Close without Requiring a Long Lower-wick Reclaim; Demand-led Mid-cycle Continuation)",
         Preset::CloseAtLodMidYearHighHotVol => "Mid-range from High (5-20 %) + Close Pinned to LOD + Red Close + Hot Vol (Closing-weakness Signal in the Pullback Zone: Bear Conviction Dumped into the Close without Requiring a Long Upper-wick Rejection; Supply-led Mid-cycle Continuation)",
+        Preset::CloseAtHodDeepBelowYearHighHotVol => "Far below 52w High (>=20 %) + Close Pinned to HOD + Green Close + Hot Vol (Closing-strength Signal Deep in the Pullback Zone: Bull Conviction Ramped into the Close Well below the Prior Peak; Early-reversal Candidate after Extended Decline without Requiring Wick-rejection Context)",
+        Preset::CloseAtLodDeepAboveYearLowHotVol => "Far above 52w Low (>=20 %) + Close Pinned to LOD + Red Close + Hot Vol (Closing-weakness Signal Deep in the Advance Zone: Bear Conviction Dumped into the Close Well above the Prior Trough; Early-reversal Candidate after Extended Advance without Requiring Wick-rejection Context)",
     }
 }
 
