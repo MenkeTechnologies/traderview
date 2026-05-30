@@ -56,6 +56,11 @@ export async function renderDrawdownThrottle(mount, _appState) {
                 (peak − current as a negative %). Active throttle tier highlighted in legend.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.drawdown_throttle.h2.ladder_chart">Tier ladder — size multiplier as a function of drawdown</h2>
+            <div id="dt-ladder-chart" style="height:220px"></div>
+        </div>
+
         <div id="dt-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -141,6 +146,7 @@ async function compute(tok) {
     const local = localEvaluate(equity, state.tiers);
     renderSummary(local, true);
     renderChart(equity, state.tiers, local);
+    renderLadderChart(state.tiers, local);
 
     let resp;
     try {
@@ -153,6 +159,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(equity, state.tiers, resp);
+    renderLadderChart(state.tiers, resp);
     const dd = (Number(resp.drawdown_pct) * 100).toFixed(1);
     const mult = Number(resp.active_multiplier).toFixed(2);
     const level = Number(resp.active_multiplier) < 0.5 ? 'warning' : 'success';
@@ -209,6 +216,51 @@ function renderChart(equity, tiers, report) {
         legend: { show: true },
     }, [xs, equity, peaks, dds], el);
     void activeTier_;
+}
+
+function renderLadderChart(tiers, report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('dt-ladder-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!Array.isArray(tiers) || !tiers.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.drawdown_throttle.empty_ladder_chart">${esc(t('view.drawdown_throttle.empty_ladder_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...tiers].sort((a, b) => a.min_dd - b.min_dd);
+    const maxDd = Math.max(0.5, sorted[sorted.length - 1].min_dd * 1.3);
+    const step = Math.max(0.005, maxDd / 80);
+    const xs = [];
+    const ys = [];
+    for (let dd = 0; dd <= maxDd + 1e-9; dd += step) {
+        let m = 1.0;
+        for (const tier of sorted) {
+            if (dd >= tier.min_dd) m = tier.multiplier;
+        }
+        xs.push(dd);
+        ys.push(m);
+    }
+    const currentDd = Number(report.drawdown_pct);
+    const youHere = xs.map(x => Math.abs(x - currentDd) <= step / 2 ? Number(report.active_multiplier) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { range: [0, 1.2] } },
+        series: [
+            { label: t('view.drawdown_throttle.chart.dd_axis') },
+            { label: t('view.drawdown_throttle.chart.multiplier'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.drawdown_throttle.chart.you_are_here'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(0) + '%') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(2) + '×') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, youHere], el);
 }
 
 function showErr(msg) {

@@ -622,6 +622,8 @@ pub enum Preset {
     JustOffYearHighFadingDown,      // year_high_pct between 5 and 15 AND change_pct < -1 AND rel_volume >= 1.5 — slightly off 52w highs + red move + hot vol (early fade from highs; distribution starting before fully breaking)
     OverextendedHighPullbackHealthy,// year_high_pct < 3 AND hod_dist_pct.abs() > 1.5 AND day_pct < -0.5 AND change_pct >= 0 — at 52w high + pulled back from HOD + red intraday + still positive day (healthy pullback retrace while in trend)
     OverextendedLowBounceHealthy,   // year_low_pct < 3 AND lod_dist_pct.abs() > 1.5 AND day_pct > 0.5 AND change_pct <= 0 — at 52w low + bounced from LOD + green intraday + still negative day (healthy bounce retrace while in downtrend)
+    CleanTrendDayUp,                // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal positive + close near HOD + decent vol (clean trend day up; everything aligned without extremity)
+    CleanTrendDayDown,              // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal negative + close near LOD + decent vol (clean trend day down; everything aligned without extremity)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3348,6 +3350,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct > 0.5
                 && hit.change_pct <= 0.0
         }
+        Preset::CleanTrendDayUp => {
+            hit.change_pct > 0.0
+                && hit.day_pct > 0.0
+                && hit.gap_pct > 0.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.0
+        }
+        Preset::CleanTrendDayDown => {
+            hit.change_pct < 0.0
+                && hit.day_pct < 0.0
+                && hit.gap_pct < 0.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -3860,6 +3876,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::JustOffYearHighFadingDown => "Just Off 52w High (5–15%) + Hot Vol + Red (Early Fade from Highs)",
         Preset::OverextendedHighPullbackHealthy => "Near 52w High + HOD Pullback + Still Positive Day (Healthy Retrace in Trend)",
         Preset::OverextendedLowBounceHealthy => "Near 52w Low + LOD Bounce + Still Negative Day (Healthy Retrace in Downtrend)",
+        Preset::CleanTrendDayUp => "Gap + Intraday + Change All Positive + HOD Close + Decent Vol (Clean Trend Day Up)",
+        Preset::CleanTrendDayDown => "Gap + Intraday + Change All Negative + LOD Close + Decent Vol (Clean Trend Day Down)",
     }
 }
 
