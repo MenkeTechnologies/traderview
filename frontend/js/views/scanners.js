@@ -606,6 +606,8 @@ const PRESETS = [
     { id: 'big_red_with_modest_gap_down_decent_vol', label: t('view.scanners.preset.big_red_with_modest_gap_down_decent_vol.label'), desc: t('view.scanners.preset.big_red_with_modest_gap_down_decent_vol.desc') },
     { id: 'compound_confirmed_big_green', label: t('view.scanners.preset.compound_confirmed_big_green.label'), desc: t('view.scanners.preset.compound_confirmed_big_green.desc') },
     { id: 'compound_confirmed_big_red', label: t('view.scanners.preset.compound_confirmed_big_red.label'), desc: t('view.scanners.preset.compound_confirmed_big_red.desc') },
+    { id: 'follow_through_green', label: t('view.scanners.preset.follow_through_green.label'), desc: t('view.scanners.preset.follow_through_green.desc') },
+    { id: 'follow_through_red', label: t('view.scanners.preset.follow_through_red.label'), desc: t('view.scanners.preset.follow_through_red.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -50,6 +50,12 @@ export async function renderMurreyMath(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.murrey_math.h2.distance_chart">Signed distance from current price to each Murrey level</h2>
+            <div id="mm-dist-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.murrey_math.hint.distance" class="muted small">Positive = level above current price; negative = level below. Yellow dashed = zero (current price). Reveals which levels are nearest and how clustered the S/R rail is.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.murrey_math.h2.level_table">Level table</h2>
             <div id="mm-table"></div>
             <p data-i18n="view.murrey_math.hint.all_13_levels_2_8_to_10_8_with_significance_distan" class="muted">All 13 levels (−2/8 to 10/8) with significance + distance from price.
@@ -111,6 +117,7 @@ async function compute(tok) {
     }
     renderSummary(res, bars);
     renderChart(bars, res);
+    renderDistanceChart(res);
     renderTable(res);
     const nearest = res.nearest_level ? res.nearest_level[0] : '—';
     showToast(t('view.murrey_math.toast.computed', { levels: (res.levels || []).length, nearest }), { level: 'success' });
@@ -178,6 +185,41 @@ function renderChart(bars, r) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },
     }, [xs, closes, ...levelData], el);
+}
+
+function renderDistanceChart(r) {
+    const el = document.getElementById('mm-dist-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const levels = (r && r.levels) || [];
+    if (!levels.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.murrey_math.empty_distance_chart">${esc(t('view.murrey_math.empty_distance_chart'))}</div>`;
+        return;
+    }
+    const cp = Number(r.current_price);
+    const sorted = levels.slice().sort((a, b) => a[1] - b[1]);
+    const labels = sorted.map(l => l[0]);
+    const ys = sorted.map(l => Number(l[1]) - cp);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.murrey_math.chart.level') },
+            { label: t('view.murrey_math.chart.distance'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.murrey_math.chart.current'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderTable(r) {

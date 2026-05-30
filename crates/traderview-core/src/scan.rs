@@ -724,6 +724,8 @@ pub enum Preset {
     BigRedWithModestGapDownDecentVol,  // change_pct < -3 AND gap_pct between -1.5 and -0.5 AND rel_volume >= 1.5 — meaningful drop <-3 + modest gap down (-0.5 to -1.5%) + decent vol (gap-assisted decline; overnight bias kicked off the day but intraday extended substantially on volume)
     CompoundConfirmedBigGreen,         // change_pct > 3 AND day_pct > 1 AND gap_pct > 0.5 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big green close + green intraday + positive gap + close near HOD + decent vol (every signal aligned bullish; full conviction up day; max-confirmation long candidate)
     CompoundConfirmedBigRed,           // change_pct < -3 AND day_pct < -1 AND gap_pct < -0.5 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big red close + red intraday + negative gap + close near LOD + decent vol (every signal aligned bearish; full conviction down day; max-confirmation short candidate)
+    FollowThroughGreen,                // change_pct in [1, 3] AND day_pct in [0.5, 2] AND gap_pct in [-0.5, 0.5] AND hod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest green + green intraday + small gap + close near HOD + above-avg vol (clean follow-through up day; no catalyst spike, just steady accumulation with intraday confirmation)
+    FollowThroughRed,                  // change_pct in [-3, -1] AND day_pct in [-2, -0.5] AND gap_pct in [-0.5, 0.5] AND lod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest red + red intraday + small gap + close near LOD + above-avg vol (clean follow-through down day; no catalyst spike, just steady distribution with intraday confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4039,6 +4041,28 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::FollowThroughGreen => {
+            hit.change_pct >= 1.0
+                && hit.change_pct <= 3.0
+                && hit.day_pct >= 0.5
+                && hit.day_pct <= 2.0
+                && hit.gap_pct >= -0.5
+                && hit.gap_pct <= 0.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.2
+                && hit.rel_volume <= 2.0
+        }
+        Preset::FollowThroughRed => {
+            hit.change_pct >= -3.0
+                && hit.change_pct <= -1.0
+                && hit.day_pct >= -2.0
+                && hit.day_pct <= -0.5
+                && hit.gap_pct >= -0.5
+                && hit.gap_pct <= 0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.2
+                && hit.rel_volume <= 2.0
+        }
     }
 }
 
@@ -4653,6 +4677,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedWithModestGapDownDecentVol => "Big Red + Modest Gap Down + Decent Vol (Gap-assisted Decline; Overnight Bias Kicked Off the Day, Intraday Extended)",
         Preset::CompoundConfirmedBigGreen => "Big Green + Green Intraday + Positive Gap + Close Near HOD + Decent Vol (Every Signal Aligned Bullish; Max-confirmation Long Candidate)",
         Preset::CompoundConfirmedBigRed => "Big Red + Red Intraday + Negative Gap + Close Near LOD + Decent Vol (Every Signal Aligned Bearish; Max-confirmation Short Candidate)",
+        Preset::FollowThroughGreen => "Modest Green + Green Intraday + Small Gap + Close Near HOD + Above-avg Vol (Clean Follow-through Up Day; Steady Accumulation with Intraday Confirmation)",
+        Preset::FollowThroughRed => "Modest Red + Red Intraday + Small Gap + Close Near LOD + Above-avg Vol (Clean Follow-through Down Day; Steady Distribution with Intraday Confirmation)",
     }
 }
 
