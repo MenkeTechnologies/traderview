@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     WEIGHTS, MAX_INTEGER_SCAN,
@@ -25,30 +26,30 @@ export async function renderRoundLevels(mount, _appState) {
             <h2 data-i18n="view.round_levels.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.round_levels.label.price">Current price ($)</span>
-                    <input id="rl-price" type="number" step="any" min="0" value="${state.current_price}"></label>
+                    <input id="rl-price" type="number" step="any" min="0" value="${state.current_price}" data-tip="view.round_levels.tip.price"></label>
                 <label><span data-i18n="view.round_levels.label.atr">ATR ($, optional)</span>
                     <input id="rl-atr" type="number" step="any" min="0"
                            placeholder="leave blank to skip ATR-distance" data-i18n-placeholder="view.round_levels.placeholder.atr_blank"
-                           value="${state.atr == null ? '' : state.atr}"></label>
+                           value="${state.atr == null ? '' : state.atr}" data-tip="view.round_levels.tip.atr"></label>
                 <label><span data-i18n="view.round_levels.label.window">Window ($ either side)</span>
-                    <input id="rl-window" type="number" step="any" min="0" value="${state.config.window}"></label>
+                    <input id="rl-window" type="number" step="any" min="0" value="${state.config.window}" data-tip="view.round_levels.tip.window"></label>
                 <label><span data-i18n="view.round_levels.label.min_weight">Min weight</span>
-                    <select id="rl-min-weight">
+                    <select id="rl-min-weight" data-tip="view.round_levels.tip.min_weight">
                         ${WEIGHTS.map(w => `<option value="${w}" ${w === state.config.min_weight ? 'selected' : ''}
                             data-i18n="${weightLabelKey(w)}">${esc(t(weightLabelKey(w)))}</option>`).join('')}
                     </select></label>
                 <button data-i18n="view.round_levels.btn.detect" id="rl-run" class="primary"
-                        data-tip="view.round_levels.tip.detect" type="button">Detect levels</button>
+                        data-tip="view.round_levels.tip.detect" data-shortcut="round_levels_run" type="button">Detect levels</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.round_levels.btn.demo_aapl"   id="rl-demo-aapl"   class="secondary" type="button">Demo: AAPL ~180</button>
-                <button data-i18n="view.round_levels.btn.demo_spy"    id="rl-demo-spy"    class="secondary" type="button">Demo: SPY ~500</button>
-                <button data-i18n="view.round_levels.btn.demo_tsla"   id="rl-demo-tsla"   class="secondary" type="button">Demo: TSLA ~250 (medium+)</button>
-                <button data-i18n="view.round_levels.btn.demo_btc"    id="rl-demo-btc"    class="secondary" type="button">Demo: BTC ~100k (major-only)</button>
-                <button data-i18n="view.round_levels.btn.demo_penny"  id="rl-demo-penny"  class="secondary" type="button">Demo: penny ~3</button>
-                <button data-i18n="view.round_levels.btn.demo_pinned" id="rl-demo-pinned" class="secondary" type="button">Demo: pinned at $100</button>
-                <button data-i18n="view.round_levels.btn.demo_major"  id="rl-demo-major"  class="secondary" type="button">Demo: major-only ($175 ±100)</button>
-                <button data-i18n="view.round_levels.btn.demo_noatr"  id="rl-demo-noatr"  class="secondary" type="button">Demo: no ATR ($250)</button>
+                <button data-i18n="view.round_levels.btn.demo_aapl"   id="rl-demo-aapl"   class="secondary" type="button" data-tip="view.round_levels.tip.demo_aapl">Demo: AAPL ~180</button>
+                <button data-i18n="view.round_levels.btn.demo_spy"    id="rl-demo-spy"    class="secondary" type="button" data-tip="view.round_levels.tip.demo_spy">Demo: SPY ~500</button>
+                <button data-i18n="view.round_levels.btn.demo_tsla"   id="rl-demo-tsla"   class="secondary" type="button" data-tip="view.round_levels.tip.demo_tsla">Demo: TSLA ~250 (medium+)</button>
+                <button data-i18n="view.round_levels.btn.demo_btc"    id="rl-demo-btc"    class="secondary" type="button" data-tip="view.round_levels.tip.demo_btc">Demo: BTC ~100k (major-only)</button>
+                <button data-i18n="view.round_levels.btn.demo_penny"  id="rl-demo-penny"  class="secondary" type="button" data-tip="view.round_levels.tip.demo_penny">Demo: penny ~3</button>
+                <button data-i18n="view.round_levels.btn.demo_pinned" id="rl-demo-pinned" class="secondary" type="button" data-tip="view.round_levels.tip.demo_pinned">Demo: pinned at $100</button>
+                <button data-i18n="view.round_levels.btn.demo_major"  id="rl-demo-major"  class="secondary" type="button" data-tip="view.round_levels.tip.demo_major">Demo: major-only ($175 ±100)</button>
+                <button data-i18n="view.round_levels.btn.demo_noatr"  id="rl-demo-noatr"  class="secondary" type="button" data-tip="view.round_levels.tip.demo_noatr">Demo: no ATR ($250)</button>
             </div>
             <p data-i18n="view.round_levels.hint.about" class="muted">Major = ÷1000, ÷500, ÷100. Medium = ÷50, ÷25. Minor = any other integer. Window > ${MAX_INTEGER_SCAN.toLocaleString()} integers short-circuits to empty (memory guard).</p>
         </div>
@@ -102,7 +103,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.round_levels.toast.invalid'), { level: 'warning' }); return; }
     const local = localDetect(state.current_price, state.atr, state.config);
     renderSummary(local, true);
     renderTable(local);
@@ -113,6 +114,7 @@ async function compute(tok) {
         resp = await api.chartsRoundLevels(buildBody(state));
     } catch (e) {
         showErr(`${t('view.round_levels.err.api')}: ${e.message || e}`);
+        showToast(t('view.round_levels.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -120,6 +122,10 @@ async function compute(tok) {
     renderTable(resp);
     renderLevelsChart(resp);
     renderDistChart(resp);
+    const n = Array.isArray(resp.levels) ? resp.levels.length : 0;
+    const pinned = !!resp.is_pinned;
+    const level = pinned ? 'warning' : 'success';
+    showToast(t('view.round_levels.toast.detected', { n, pinned: pinned ? 'PINNED' : 'free' }), { level });
 }
 
 function renderDistChart(report) {

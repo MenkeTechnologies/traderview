@@ -221,6 +221,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'futures_roll_run',             keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'futures-roll',      descKey: 'shortcut.futures_roll_run',             actionKey: 'tv:futures-roll-run' },
     { id: 'heatmap_dow_hour_run',         keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'heatmap-dow-hour',  descKey: 'shortcut.heatmap_dow_hour_run',         actionKey: 'tv:heatmap-dow-hour-run' },
     { id: 'atr_cone_run',                 keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-cone',          descKey: 'shortcut.atr_cone_run',                 actionKey: 'tv:atr-cone-run' },
+    { id: 'round_levels_run',             keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'round-levels',      descKey: 'shortcut.round_levels_run',             actionKey: 'tv:round-levels-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
