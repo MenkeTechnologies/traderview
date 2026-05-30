@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('iid-residuals') };
 let chart = null;
+let lagChart = null;
 
 export async function renderBgTest(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderBgTest(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bg.h2.chart">x vs y scatter</h2>
             <div id="bg-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bg.h2.lag_chart">Residual lag-1 scatter (ε̂ₜ vs ε̂ₜ₋₁)</h2>
+            <div id="bg-lag-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -101,6 +107,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.bg.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderLagChart();
     renderStats();
     let resp;
     try {
@@ -113,6 +120,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.bg.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderLagChart();
     renderStats();
 }
 
@@ -168,6 +176,50 @@ function renderChart() {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderLagChart() {
+    const el = document.getElementById('bg-lag-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const n = state.x.length;
+    if (n < 3) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bg.empty_lag">${esc(t('view.bg.empty_lag'))}</div>`;
+        return;
+    }
+    let sumX = 0, sumY = 0;
+    for (let i = 0; i < n; i++) { sumX += state.x[i]; sumY += state.y[i]; }
+    const xMean = sumX / n, yMean = sumY / n;
+    let sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) {
+        sxx += (state.x[i] - xMean) ** 2;
+        sxy += (state.x[i] - xMean) * (state.y[i] - yMean);
+    }
+    const beta = sxx > 0 ? sxy / sxx : 0;
+    const alpha = yMean - beta * xMean;
+    const resid = state.y.map((y, i) => y - (alpha + beta * state.x[i]));
+    const prev = resid.slice(0, n - 1);
+    const cur  = resid.slice(1);
+    const sortedIdx = prev.map((_, i) => i).sort((a, b) => prev[a] - prev[b]);
+    const xs = sortedIdx.map(i => prev[i]);
+    const ys = sortedIdx.map(i => cur[i]);
+    const zero = xs.map(() => 0);
+    if (lagChart) { try { lagChart.destroy(); } catch {} lagChart = null; }
+    lagChart = new window.uPlot({
+        width: el.clientWidth || 800,
+        height: 220,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('view.bg.series.resid_lag1') },
+            { label: t('view.bg.series.resid'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 6, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.bg.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderStats() {
