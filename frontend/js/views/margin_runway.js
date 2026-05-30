@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, validateInputs, buildBody, localCompute,
@@ -24,22 +25,22 @@ export async function renderMarginRunway(mount, _appState) {
             <h2 data-i18n="view.margin_runway.h2.account">Account</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.margin_runway.label.equity">Account equity ($)</span>
-                    <input id="mr-eq" type="number" step="any" min="0" value="${state.account_equity}"></label>
+                    <input id="mr-eq" type="number" step="any" min="0" value="${state.account_equity}" data-tip="view.margin_runway.tip.equity"></label>
                 <label><span data-i18n="view.margin_runway.label.position">Position value ($)</span>
-                    <input id="mr-pos" type="number" step="any" min="0" value="${state.position_value}"></label>
+                    <input id="mr-pos" type="number" step="any" min="0" value="${state.position_value}" data-tip="view.margin_runway.tip.position"></label>
                 <label><span data-i18n="view.margin_runway.label.maint">Maintenance req %  (decimal — 0.25 = 25%)</span>
-                    <input id="mr-mp" type="number" step="any" min="0" max="0.99" value="${state.maintenance_req_pct}"></label>
-                <button data-i18n="view.margin_runway.btn.compute" id="mr-run" class="primary" type="button">Compute</button>
+                    <input id="mr-mp" type="number" step="any" min="0" max="0.99" value="${state.maintenance_req_pct}" data-tip="view.margin_runway.tip.maint"></label>
+                <button data-i18n="view.margin_runway.btn.compute" id="mr-run" class="primary" type="button" data-tip="view.margin_runway.tip.run" data-shortcut="margin_runway_run">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.margin_runway.btn.demo_safe"        id="mr-demo-safe"     class="secondary" type="button">Demo: safe (100% runway)</button>
-                <button data-i18n="view.margin_runway.btn.demo_moderate"    id="mr-demo-mod"      class="secondary" type="button">Demo: moderate (~33%)</button>
-                <button data-i18n="view.margin_runway.btn.demo_tight"       id="mr-demo-tight"    class="secondary" type="button">Demo: tight (~7%)</button>
-                <button data-i18n="view.margin_runway.btn.demo_critical"    id="mr-demo-crit"     class="secondary" type="button">Demo: critical (&lt;5%)</button>
-                <button data-i18n="view.margin_runway.btn.demo_in_call"     id="mr-demo-call"     class="secondary" type="button">Demo: already in call</button>
-                <button data-i18n="view.margin_runway.btn.demo_pdt"         id="mr-demo-pdt"      class="secondary" type="button">Demo: PDT 4× leveraged</button>
-                <button data-i18n="view.margin_runway.btn.demo_concentrated" id="mr-demo-conc"    class="secondary" type="button">Demo: concentrated (50% maint)</button>
-                <button data-i18n="view.margin_runway.btn.demo_cash"        id="mr-demo-cash"     class="secondary" type="button">Demo: cash only (no position)</button>
+                <button data-i18n="view.margin_runway.btn.demo_safe"        id="mr-demo-safe"     class="secondary" type="button" data-tip="view.margin_runway.tip.demo_safe">Demo: safe (100% runway)</button>
+                <button data-i18n="view.margin_runway.btn.demo_moderate"    id="mr-demo-mod"      class="secondary" type="button" data-tip="view.margin_runway.tip.demo_mod">Demo: moderate (~33%)</button>
+                <button data-i18n="view.margin_runway.btn.demo_tight"       id="mr-demo-tight"    class="secondary" type="button" data-tip="view.margin_runway.tip.demo_tight">Demo: tight (~7%)</button>
+                <button data-i18n="view.margin_runway.btn.demo_critical"    id="mr-demo-crit"     class="secondary" type="button" data-tip="view.margin_runway.tip.demo_crit">Demo: critical (&lt;5%)</button>
+                <button data-i18n="view.margin_runway.btn.demo_in_call"     id="mr-demo-call"     class="secondary" type="button" data-tip="view.margin_runway.tip.demo_call">Demo: already in call</button>
+                <button data-i18n="view.margin_runway.btn.demo_pdt"         id="mr-demo-pdt"      class="secondary" type="button" data-tip="view.margin_runway.tip.demo_pdt">Demo: PDT 4× leveraged</button>
+                <button data-i18n="view.margin_runway.btn.demo_concentrated" id="mr-demo-conc"    class="secondary" type="button" data-tip="view.margin_runway.tip.demo_conc">Demo: concentrated (50% maint)</button>
+                <button data-i18n="view.margin_runway.btn.demo_cash"        id="mr-demo-cash"     class="secondary" type="button" data-tip="view.margin_runway.tip.demo_cash">Demo: cash only (no position)</button>
             </div>
             <p data-i18n="view.margin_runway.hint.about" class="muted">Runway % = how far the position can fall before broker issues a margin call. Reg-T retail accounts default to 25% maintenance; brokers often raise it on concentrated / volatile names.</p>
         </div>
@@ -81,7 +82,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.account_equity, state.position_value, state.maintenance_req_pct);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.margin_runway.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.account_equity, state.position_value, state.maintenance_req_pct);
     renderSummary(local, true);
     renderChart(state.account_equity, state.position_value, state.maintenance_req_pct, local);
@@ -91,11 +92,19 @@ async function compute(tok) {
             state.account_equity, state.position_value, state.maintenance_req_pct));
     } catch (e) {
         showErr(`${t('view.margin_runway.err.api')}: ${e.message || e}`);
+        showToast(t('view.margin_runway.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.account_equity, state.position_value, state.maintenance_req_pct, resp);
+    if (resp.already_in_margin_call) {
+        showToast(t('view.margin_runway.toast.in_call'), { level: 'error' });
+    } else {
+        const pct = (Number(resp.runway_pct) * 100).toFixed(2);
+        const level = resp.runway_pct < 0.05 ? 'error' : resp.runway_pct < 0.15 ? 'warning' : 'success';
+        showToast(t('view.margin_runway.toast.computed', { pct }), { level });
+    }
 }
 
 function renderSummary(report, pending) {
