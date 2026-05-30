@@ -9,6 +9,7 @@ import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 let wsUnsub = null;
 
@@ -168,7 +169,7 @@ function renderRules(rules, mount, tok) {
         </tbody></table>`;
     el.querySelectorAll('.sa-del').forEach(b =>
         b.addEventListener('click', async () => {
-            if (!confirm(t('view.strategy_alerts.confirm.delete'))) return;
+            if (!await tConfirm('view.strategy_alerts.confirm.delete', {}, { level: 'danger' })) return;
             try {
                 await api.deleteStrategyAlert(b.dataset.id);
                 if (!viewIsCurrent(tok)) return;

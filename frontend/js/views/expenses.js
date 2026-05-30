@@ -12,6 +12,7 @@
 import { api, ApiError } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const state = {
@@ -264,14 +265,14 @@ function drawTable() {
 }
 
 async function createAccountFlow() {
-    const name = prompt(t('view.expenses.prompt.account_name'));
+    const name = await tPrompt('view.expenses.prompt.account_name', {});
     if (!name) return;
-    const kind = prompt(t('view.expenses.prompt.kind'), 'credit_card');
+    const kind = await tPrompt('view.expenses.prompt.kind', {}, { defaultValue: 'credit_card' });
     if (!['bank', 'credit_card', 'marketplace'].includes(kind)) {
         showToast(t('view.expenses.alert.invalid_kind'), { level: 'error' });
         return;
     }
-    const source = prompt(t('view.expenses.prompt.source'), 'chase');
+    const source = await tPrompt('view.expenses.prompt.source', {}, { defaultValue: 'chase' });
     if (!source) return;
     try {
         const acct = await api.createExpenseAccount({ kind, source, name });
@@ -397,7 +398,7 @@ async function openRulesModal() {
     modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
     modal.querySelectorAll('.rule-del').forEach(btn => {
         btn.onclick = async () => {
-            if (!confirm(t('view.expenses.confirm.delete_rule'))) return;
+            if (!await tConfirm('view.expenses.confirm.delete_rule', {}, { level: 'danger' })) return;
             try { await api.deleteExpenseRule(btn.dataset.id); }
             catch (e) { showToast(t('view.expenses.alert.delete_failed', { err: e.message }), { level: 'error' }); return; }
             if (!viewIsCurrent(state.tok)) return;

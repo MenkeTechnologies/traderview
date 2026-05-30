@@ -44,3 +44,27 @@ test('no view file calls native alert()', () => {
     }
     expect(offenders).toEqual([]);
 });
+
+test('no view file calls native confirm() / prompt()', () => {
+    const offenders = [];
+    for (const f of walk(VIEWS_DIR)) {
+        const src = readFileSync(f, 'utf8');
+        // Match bare `confirm(` / `prompt(` / `window.confirm(` / `window.prompt(`,
+        // but allow `tConfirm` / `tPrompt` / property accesses like `obj.confirm`.
+        // The negative lookbehind blocks letter/digit/underscore/$/. before the keyword.
+        const matches = [
+            ...src.matchAll(/(?<![A-Za-z0-9_$.])(?:window\.)?confirm\s*\(/g),
+            ...src.matchAll(/(?<![A-Za-z0-9_$.])(?:window\.)?prompt\s*\(/g),
+        ];
+        if (matches.length > 0) {
+            offenders.push({ file: f.split('/views/')[1], count: matches.length });
+        }
+    }
+    if (offenders.length > 0) {
+        const lines = offenders.map(o => `  ${o.file}: ${o.count} call(s)`).join('\n');
+        throw new Error(
+            `${offenders.length} view file(s) call native confirm()/prompt() — use tConfirm/tPrompt from dialog.js instead:\n${lines}`,
+        );
+    }
+    expect(offenders).toEqual([]);
+});

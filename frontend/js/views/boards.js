@@ -15,6 +15,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const WIDGET_KINDS = [
@@ -98,7 +99,7 @@ async function renderList(mount) {
     });
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if (!confirm(t('view.boards.confirm.delete'))) return;
+            if (!await tConfirm('view.boards.confirm.delete', {}, { level: 'danger' })) return;
             try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
             catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
@@ -158,7 +159,7 @@ async function renderBoard(mount, id) {
     `;
 
     mount.querySelector('#b-rename').addEventListener('click', async () => {
-        const next = prompt(t('view.boards.prompt.name'), state.board.name);
+        const next = await tPrompt('view.boards.prompt.name', {}, { defaultValue: state.board.name });
         if (!next || next === state.board.name) return;
         state.board.name = next;
         const nm = mount.querySelector('#b-name');
@@ -272,15 +273,15 @@ function renderGrid(state) {
 
 function configureWidget(w) {
     if (w.kind === 'quote' || w.kind === 'mini_chart') {
-        const s = prompt(t('view.boards.prompt.symbol'), w.params.symbol || 'SPY');
+        const s = await tPrompt('view.boards.prompt.symbol', {}, { defaultValue: w.params.symbol || 'SPY' });
         return s ? { symbol: s.toUpperCase() } : null;
     }
     if (w.kind === 'note') {
-        const txt = prompt(t('view.boards.prompt.note_text'), w.params.text || '');
+        const txt = await tPrompt('view.boards.prompt.note_text', {}, { defaultValue: w.params.text || '' });
         return txt === null ? null : { text: txt };
     }
     if (w.kind === 'watchlist' || w.kind === 'alerts') {
-        const n = prompt(t('view.boards.prompt.limit'), w.params.limit || 10);
+        const n = await tPrompt('view.boards.prompt.limit', {}, { defaultValue: w.params.limit || 10 });
         return n ? { limit: Number(n) || 10 } : null;
     }
     return null;

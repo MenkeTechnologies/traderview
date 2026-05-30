@@ -3,6 +3,7 @@ import { ohlcChart } from '../charts.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a', '#ffd24a'];
@@ -93,7 +94,7 @@ export async function renderCharts(mount, _state, symbol = '') {
         });
     });
     mount.querySelector('#clearDrawings').addEventListener('click', async () => {
-        if (!confirm(t('view.charts.confirm.delete_all_drawings', { symbol: ds.symbol }))) return;
+        if (!await tConfirm('view.charts.confirm.delete_all_drawings', { symbol: ds.symbol }, { level: 'danger' })) return;
         try {
             await api.deleteChartDrawings(ds.symbol);
             if (!viewIsCurrent(tok)) return;
@@ -251,7 +252,7 @@ async function onDrawClick(e, ds) {
         return;
     }
     if (ds.tool === 'text') {
-        const text = prompt(t('view.charts.prompt.text'), '');
+        const text = await tPrompt('view.charts.prompt.text', {}, { defaultValue: '' });
         if (!text) return;
         await persistAndAdd(ds, {
             kind: 'text',

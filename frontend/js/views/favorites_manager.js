@@ -9,6 +9,7 @@ import { t } from '../i18n.js';
 import { TILES } from './launcher.js';
 import { tilesByViewId } from '../_command_palette_inputs.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import * as favs from '../_favorites_storage.js';
 
 let _filter = '';
@@ -201,13 +202,13 @@ function paint() {
                 });
             });
             bmList.querySelectorAll('button[data-rename-bm]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const id = btn.dataset.renameBm;
                     const cur = favs.getBookmark(favs.loadState(), id);
                     if (!cur) return;
                     const name = (typeof window.prompt === 'function')
-                        ? window.prompt(t('prompt.bookmark_rename', { name: cur.name }), cur.name)
+                        ? await tPrompt('prompt.bookmark_rename', { name: cur.name }, { defaultValue: cur.name })
                         : null;
                     if (name == null) return;
                     const trimmed = String(name).trim();
@@ -231,15 +232,15 @@ function paint() {
     }
 }
 
-function clearFavoritesClick() {
-    if (typeof window.confirm === 'function' && !window.confirm(t('confirm.clear_favorites'))) return;
+async function clearFavoritesClick() {
+    if (!await tConfirm('confirm.clear_favorites', {}, { level: 'danger' })) return;
     favs.saveState(favs.clearFavorites(favs.loadState()));
     showToast(t('toast.favorites_cleared'), { level: 'success' });
     notify();
 }
 
-function clearBookmarksClick() {
-    if (typeof window.confirm === 'function' && !window.confirm(t('confirm.clear_bookmarks'))) return;
+async function clearBookmarksClick() {
+    if (!await tConfirm('confirm.clear_bookmarks', {}, { level: 'danger' })) return;
     const s = favs.loadState();
     favs.saveState({ ...s, bookmarks: [] });
     showToast(t('toast.bookmarks_cleared'), { level: 'success' });

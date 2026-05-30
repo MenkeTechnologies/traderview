@@ -4,6 +4,7 @@ import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 export async function renderBacktestPresets(mount, _state, slug = '') {
     if (slug) return renderPresetDetail(mount, slug);
@@ -130,7 +131,7 @@ function wireRowButtons(scope, mine, mount, tok) {
     if (mine) {
         scope.querySelectorAll('.bp-del').forEach(b => {
             b.addEventListener('click', async () => {
-                if (!confirm(t('view.backtest_presets.confirm.delete'))) return;
+                if (!await tConfirm('view.backtest_presets.confirm.delete', {}, { level: 'danger' })) return;
                 try { await api.deleteBacktestPreset(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });

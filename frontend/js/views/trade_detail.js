@@ -4,6 +4,7 @@ import { ohlcChart } from '../charts.js';
 import { renderAiAnalyze } from './journal_ai.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const dtLocal = (iso) => {
@@ -268,7 +269,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         }));
     mount.querySelectorAll('[data-del-ex]').forEach(b =>
         b.addEventListener('click', async () => {
-            if (!confirm(t('view.trade_detail.confirm.delete_execution'))) return;
+            if (!await tConfirm('view.trade_detail.confirm.delete_execution', {}, { level: 'danger' })) return;
             await api.deleteExecution(b.dataset.delEx);
             if (!viewIsCurrent(tok)) return;
             renderTradeDetail(mount, state, tradeId);

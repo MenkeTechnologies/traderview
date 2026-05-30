@@ -6,6 +6,7 @@ import { fmt } from '../util.js';
 import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 export async function renderNewTrade(mount, state) {
     const tok = currentViewToken();
@@ -134,9 +135,9 @@ export async function renderNewTrade(mount, state) {
                     return;
                 }
                 if (warnings.length) {
-                    const ok = confirm(t('view.new_trade.confirm.risk_warning', {
+                    const ok = await tConfirm(t('view.new_trade.confirm.risk_warning', {
                         warnings: warnings.map(w => `[${w.rule}] ${w.message}`).join('\n\n'),
-                    }));
+                    }), {}, { level: 'info' });
                     if (!ok) return;
                 }
             }

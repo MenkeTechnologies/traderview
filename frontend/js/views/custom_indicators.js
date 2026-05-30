@@ -6,6 +6,7 @@ import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 const KINDS = [
     { id: 'sma',       label: 'SMA',       params: { period: 20 } },
@@ -120,7 +121,7 @@ async function refresh(mount, tok) {
             </tbody></table>`;
         el2.querySelectorAll('.ci-del').forEach(b =>
             b.addEventListener('click', async () => {
-                if (!confirm(t('view.custom_indicators.confirm.delete_preset'))) return;
+                if (!await tConfirm('view.custom_indicators.confirm.delete_preset', {}, { level: 'danger' })) return;
                 try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             }));

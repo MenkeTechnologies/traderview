@@ -3,6 +3,7 @@ import { esc, fmt, fmtMoney, fmtDateTime, fmtSecs, makeFilter, pnlClass } from '
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 
 let currentFilter = {};
 
@@ -80,16 +81,16 @@ export async function renderTradesView(mount, state) {
             const tags = await api.tags();
             if (!viewIsCurrent(tok)) return null;
             if (!tags.length) { showToast(t('view.trades.alert.no_tags'), { level: 'error' }); return null; }
-            const name = prompt(t('view.trades.prompt.tag_name', { names: tags.map(x => x.name).join(', ') }));
+            const name = await tPrompt(t('view.trades.prompt.tag_name', { names: tags.map(x => x.name).join(', ') }));
             if (!name) return null;
             const tag = tags.find(x => x.name.toLowerCase() === name.toLowerCase());
             if (!tag) { showToast(t('view.trades.alert.no_tag_named', { name }), { level: 'error' }); return null; }
             return { tag_id: tag.id };
         }
         if (action === 'set_risk') {
-            const stop = prompt(t('view.trades.prompt.stop'));
-            const risk = prompt(t('view.trades.prompt.risk'));
-            const tgt = prompt(t('view.trades.prompt.target'));
+            const stop = await tPrompt('view.trades.prompt.stop', {});
+            const risk = await tPrompt('view.trades.prompt.risk', {});
+            const tgt = await tPrompt('view.trades.prompt.target', {});
             return {
                 stop_loss: stop ? Number(stop) : null,
                 risk_amount: risk ? Number(risk) : null,
@@ -156,7 +157,7 @@ export async function renderTradesView(mount, state) {
         tableEl.querySelectorAll('[data-del]').forEach(b =>
             b.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                if (!confirm(t('view.trades.confirm.delete'))) return;
+                if (!await tConfirm('view.trades.confirm.delete', {}, { level: 'danger' })) return;
                 await api.deleteTrade(b.dataset.del);
                 if (!viewIsCurrent(tok)) return;
                 await refresh();

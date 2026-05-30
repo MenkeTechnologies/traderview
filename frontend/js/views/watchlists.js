@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { esc, fmt } from '../util.js';
-import { t } from '../i18n.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 
 export async function renderWatchlists(mount) {
     const tok = currentViewToken();
@@ -73,14 +73,14 @@ export async function renderWatchlists(mount) {
     });
 
     mount.querySelector('#rename-wl').addEventListener('click', async () => {
-        const name = prompt(t('view.watchlists.prompt.rename'), active.name);
+        const name = await tPrompt('view.watchlists.prompt.rename', {}, { defaultValue: active.name });
         if (!name) return;
         await api.renameWatchlist(active.id, name);
         if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);
     });
     mount.querySelector('#delete-wl').addEventListener('click', async () => {
-        if (!confirm(t('view.watchlists.confirm.delete_named', { name: active.name }))) return;
+        if (!await tConfirm('view.watchlists.confirm.delete_named', { name: active.name }, { level: 'danger' })) return;
         await api.deleteWatchlist(active.id);
         if (!viewIsCurrent(tok)) return;
         renderWatchlists(mount);

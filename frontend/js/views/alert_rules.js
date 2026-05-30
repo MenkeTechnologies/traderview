@@ -6,6 +6,7 @@
 import { esc } from '../util.js';
 import * as engine from '../_alert_rules.js';
 import { t as tr } from '../i18n.js';
+import { tConfirm } from '../dialog.js';
 import * as squeeze from '../_squeeze_alerts_inputs.js';   // reuse tick + adv parsers
 import * as audio from '../_audio_alerts.js';
 
@@ -88,7 +89,7 @@ function bindRulesPanel() {
         const id = t.dataset.ruleId;
         if (!id) return;
         if (t.dataset.action === 'remove') {
-            if (window.confirm(tr('view.alert_rules.confirm.remove'))) {
+            if (await tConfirm(tr('view.alert_rules.confirm.remove'), {}, { level: 'info' })) {
                 state = engine.removeRule(state, id);
                 engine.saveState(state);
                 renderRulesList();

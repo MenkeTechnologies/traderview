@@ -4,6 +4,7 @@ import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 export async function renderPaper(mount) {
     const tok = currentViewToken();
@@ -145,7 +146,7 @@ export async function renderPaper(mount) {
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelector('#reset').addEventListener('click', async () => {
-        if (!confirm(t('view.paper.confirm.reset'))) return;
+        if (!await tConfirm('view.paper.confirm.reset', {}, { level: 'danger' })) return;
         await api.paperReset(acct.id, 200000);
         if (!viewIsCurrent(tok)) return;
         renderPaper(mount);

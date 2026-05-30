@@ -5,6 +5,7 @@ import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 const PACE_COLOR = {
     on_track:      '#7af0a8',
@@ -128,7 +129,7 @@ async function refresh(mount, tok) {
         try { applyUiI18n(el2); } catch (_) {}
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
-                if (!confirm(t('view.goals.confirm.delete'))) return;
+                if (!await tConfirm('view.goals.confirm.delete', {}, { level: 'danger' })) return;
                 try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });

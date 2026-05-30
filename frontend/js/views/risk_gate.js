@@ -8,6 +8,7 @@ import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 const RULE_TYPES = [
     { id: 'max_loss_per_trade_pct',       get label() { return t('view.risk_gate.rule.max_loss_per_trade_pct'); },     fields: [['pct', 'number', '1.0']] },
@@ -187,7 +188,7 @@ export async function renderRiskGate(mount, state) {
     mount.querySelectorAll('#rg-presets [data-preset]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const preset = btn.dataset.preset;
-            const ok = confirm(t('view.risk_gate.confirm.install_preset', { preset }));
+            const ok = await tConfirm('view.risk_gate.confirm.install_preset', { preset }, { level: 'danger' });
             if (!ok) return;
             try {
                 const r = await api.installRiskPreset(preset);
@@ -226,7 +227,7 @@ export async function renderRiskGate(mount, state) {
             const verb = !killBtn.dataset.id ? t('view.risk_gate.kill.install')
                 : wasEnabled                 ? t('view.risk_gate.kill.disable')
                                              : t('view.risk_gate.kill.enable');
-            if (!confirm(t('view.risk_gate.confirm.kill_switch', { verb }))) return;
+            if (!await tConfirm('view.risk_gate.confirm.kill_switch', { verb }, { level: 'danger' })) return;
             if (!killBtn.dataset.id) {
                 await api.createRiskRule({ rule: { type: 'kill_switch' }, account_id: null });
             } else {

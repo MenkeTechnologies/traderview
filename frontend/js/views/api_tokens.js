@@ -5,6 +5,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDeveloper(mount) {
@@ -129,7 +130,7 @@ async function loadList(mount, tok) {
         `;
         el2.querySelectorAll('.revoke-btn').forEach(b => {
             b.addEventListener('click', async () => {
-                if (!confirm(t('view.api_tokens.confirm.revoke'))) return;
+                if (!await tConfirm('view.api_tokens.confirm.revoke', {}, { level: 'danger' })) return;
                 try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });

@@ -15,6 +15,7 @@ import * as favs from '../_favorites_storage.js';
 import { TILES } from './launcher.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 
 // Re-export so the rest of the app can mount the same renderers in
 // other contexts later (e.g., browser extensions, popups).
@@ -122,7 +123,7 @@ function renderSidebar() {
     document.getElementById('db-rename').addEventListener('click', async () => {
         const d = store.getActiveDashboard(state);
         if (!d) return;
-        const n = window.prompt(t('view.dashboards.prompt.rename'), d.name);
+        const n = await tPrompt('view.dashboards.prompt.rename', {}, { defaultValue: d.name });
         if (!n || !n.trim()) return;
         state = store.renameDashboard(state, d.id, n);
         persist();
@@ -132,7 +133,7 @@ function renderSidebar() {
     document.getElementById('db-delete').addEventListener('click', async () => {
         const d = store.getActiveDashboard(state);
         if (!d) return;
-        if (!window.confirm(t('view.dashboards.confirm.delete_named', { name: d.name }))) return;
+        if (!await tConfirm('view.dashboards.confirm.delete_named', { name: d.name }, { level: 'danger' })) return;
         state = store.deleteDashboard(state, d.id);
         persist();
         renderSidebar();
@@ -156,14 +157,14 @@ function renderSidebar() {
         downloadJsonFile('traderview-dashboards.json', json);
     });
     document.getElementById('db-import').addEventListener('click', async () => {
-        const text = window.prompt(t('view.dashboards.prompt.paste_import'));
+        const text = await tPrompt('view.dashboards.prompt.paste_import', {});
         if (!text) return;
         const next = store.importState(text);
         if (!next) {
             showToast(t('view.dashboards.alert.import_failed'), { level: 'error' });
             return;
         }
-        if (!window.confirm(t('view.dashboards.confirm.import_replace'))) return;
+        if (!await tConfirm('view.dashboards.confirm.import_replace', {}, { level: 'warning' })) return;
         state = next;
         persist();
         renderSidebar();
