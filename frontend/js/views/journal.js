@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { fmtDateTime, md, esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderJournalView(mount, _state, dayOrGeneral) {
@@ -18,7 +19,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             // JOURNAL ·
             ${isGeneral
                 ? `<span style="color:var(--magenta)">${esc(t('view.journal.label.general'))}</span>`
-                : `<input type="date" id="journal-day" value="${day}">`}
+                : `<input type="date" id="journal-day" value="${day}" data-tip="view.journal.tip.day">`}
             <a href="#journal/${isGeneral ? new Date().toISOString().slice(0,10) : 'general'}" class="link small">
                 ${esc(t(isGeneral ? 'view.journal.link.switch_to_daily' : 'view.journal.link.switch_to_general'))}
             </a>
@@ -49,7 +50,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         <div class="chart-panel">
             <h2 data-i18n="view.journal.h2.new_entry">New entry</h2>
             ${isGeneral ? '' : `
-                <select id="mood">
+                <select id="mood" data-tip="view.journal.tip.mood">
                     <option data-i18n="view.journal.opt.no_mood" value="">no mood</option>
                     <option data-i18n="view.journal.opt.2_frustrated" value="-2">-2 frustrated</option>
                     <option data-i18n="view.journal.opt.1_off" value="-1">-1 off</option>
@@ -59,10 +60,10 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                 </select>
             `}
             <textarea id="body" placeholder="What happened today? Setups taken / missed? Process notes?"
-                      data-i18n-placeholder="view.journal.placeholder.body"></textarea>
+                      data-i18n-placeholder="view.journal.placeholder.body" data-tip="view.journal.tip.body"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.journal.btn.save" class="primary" id="save">Save</button>
-                <button data-i18n="view.journal.btn.insert_template" class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+                <button data-i18n="view.journal.btn.save" data-tip="view.journal.tip.save" data-shortcut="journal_save" class="primary" id="save">Save</button>
+                <button data-i18n="view.journal.btn.insert_template" data-tip="view.journal.tip.insert_template" class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
             </div>
         </div>
     `;
@@ -78,15 +79,23 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
     }
     mount.querySelector('#save').addEventListener('click', async () => {
         const body_md = mount.querySelector('#body').value.trim();
-        if (!body_md) return;
+        if (!body_md) {
+            showToast(t('view.journal.alert.empty_body'), { level: 'warning' });
+            return;
+        }
         const mood = mount.querySelector('#mood')?.value;
-        await api.createJournal({
-            day: isGeneral ? null : day,
-            body_md,
-            mood: mood === '' || mood === undefined ? null : Number(mood),
-        });
-        if (!viewIsCurrent(tok)) return;
-        renderJournalView(mount, _state, dayOrGeneral);
+        try {
+            await api.createJournal({
+                day: isGeneral ? null : day,
+                body_md,
+                mood: mood === '' || mood === undefined ? null : Number(mood),
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.journal.toast.saved'), { level: 'success' });
+            renderJournalView(mount, _state, dayOrGeneral);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
     mount.querySelector('#apply-template').addEventListener('click', async () => {
         const tpl = await api.defaultNoteTemplate('journal');
@@ -101,9 +110,15 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteJournal(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderJournalView(mount, _state, dayOrGeneral);
+            if (!await tConfirm('view.journal.confirm.delete', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteJournal(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.journal.toast.deleted'), { level: 'success' });
+                renderJournalView(mount, _state, dayOrGeneral);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         }));
     void esc;
 }
