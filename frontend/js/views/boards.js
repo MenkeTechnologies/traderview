@@ -339,7 +339,7 @@ function mountWidget(body, w, tok) {
         case 'fear_greed':  return mountFearGreed(body, tok);
         case 'news':        return mountNews(body, w, tok);
         case 'note':        return mountNote(body, w);
-        default:            body.innerHTML = `<p class="muted small">unknown widget: ${esc(w.kind)}</p>`;
+        default:            body.innerHTML = `<p class="muted small">${esc(t('view.boards.widget.unknown', { kind: w.kind }))}</p>`;
     }
 }
 

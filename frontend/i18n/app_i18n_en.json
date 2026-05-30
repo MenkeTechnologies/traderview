@@ -5530,6 +5530,7 @@
   "view.journal_ai.status.done": "done · {provider}/{model}",
   "view.journal_ai.status.tok_suffix": " · {p}+{r} tok",
   "view.boards.status.saved": "saved {when}",
+  "view.boards.widget.unknown": "unknown widget: {kind}",
   "view.position_size.status.loaded": "loaded {wins}W / {losses}L ({samples} closed)",
   "view.position_size.row.risk_per_share": "risk/share ${amount}",
   "common.status.unknown": "unknown",
