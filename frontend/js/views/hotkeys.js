@@ -61,8 +61,14 @@ export async function renderHotkeys(mount) {
             <h2 data-i18n="view.hotkeys.h2.action_chart">Bindings per action</h2>
             <div id="hk-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.hotkeys.h2.modifier_chart">Modifier-key usage across bindings</h2>
+            <div id="hk-mod-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.hotkeys.hint.modifier_chart" class="muted small">How many bindings include each modifier key (ctrl / alt / shift / meta / plain — no modifier). Reveals layout balance: many plain-key bindings risk accidental triggers; ctrl-heavy maps collide with browser shortcuts. Orthogonal to per-action distribution.</p>
+        </div>
     `;
     renderActionChart(keys);
+    renderModifierChart(keys);
     const comboInput = mount.querySelector('[name=combo]');
     mount.querySelector('#capture').addEventListener('click', () => {
         comboInput.value = '';
@@ -117,6 +123,46 @@ export async function renderHotkeys(mount) {
 
 function actionLabel(id) {
     return ACTIONS.find(a => a.id === id)?.label || id;
+}
+
+function renderModifierChart(keys) {
+    const el = document.getElementById('hk-mod-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!keys || !keys.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hotkeys.empty_mod_chart">${esc(t('view.hotkeys.empty_mod_chart'))}</div>`;
+        return;
+    }
+    const modKeys = ['ctrl', 'alt', 'shift', 'meta'];
+    const counts = { ctrl: 0, alt: 0, shift: 0, meta: 0, plain: 0 };
+    for (const k of keys) {
+        const parts = String(k.combo || '').toLowerCase().split('+').map(p => p.trim()).filter(Boolean);
+        let touched = false;
+        for (const m of modKeys) {
+            if (parts.includes(m)) { counts[m] += 1; touched = true; }
+        }
+        if (!touched) counts.plain += 1;
+    }
+    const order = ['ctrl', 'alt', 'shift', 'meta', 'plain'];
+    const labels = order.map(k => t(`view.hotkeys.chart.mod.${k}`));
+    const ys = order.map(k => counts[k]);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.hotkeys.chart.modifier') },
+            { label: t('view.hotkeys.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderActionChart(keys) {

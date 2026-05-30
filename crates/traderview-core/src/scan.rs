@@ -860,6 +860,8 @@ pub enum Preset {
     Year52LowRangeExpansionHotVol,       // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct < -2 AND rel_volume >= 2 — new 52w low + wide intraday range + red close + hot vol (volatility-expansion breakdown at new lows: wide-range trend day after the breakdown level; institutional follow-through with elevated participation)
     Year52HighRangeContractionHotVol,    // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct > 0 AND change_pct < 1 AND rel_volume >= 2 — new 52w high + tight intraday range + small green close + hot vol (post-breakout absorption coil at new highs: tight digestion with elevated participation; pre-extension consolidation)
     Year52LowRangeContractionHotVol,     // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct < 0 AND change_pct > -1 AND rel_volume >= 2 — new 52w low + tight intraday range + small red close + hot vol (post-breakdown absorption coil at new lows: tight digestion with elevated participation; pre-continuation consolidation)
+    Year52HighBreakoutDryVolPullback,    // year_high_pct >= 0 AND year_high_pct < 2 AND change_pct < -0.5 AND change_pct > -2 AND rel_volume < 0.8 — just below 52w high + small red pullback + dry vol (low-vol pullback to retest the prior breakout level; weak-hands shaken out without participation; reclaim setup)
+    Year52LowBreakdownDryVolBounce,      // year_low_pct >= 0 AND year_low_pct < 2 AND change_pct > 0.5 AND change_pct < 2 AND rel_volume < 0.8 — just above 52w low + small green bounce + dry vol (low-vol bounce to retest the prior breakdown level; weak-hands shaken out without participation; rejection setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5017,6 +5019,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighBreakoutDryVolPullback => {
+            hit.year_high_pct >= 0.0
+                && hit.year_high_pct < 2.0
+                && hit.change_pct < -0.5
+                && hit.change_pct > -2.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::Year52LowBreakdownDryVolBounce => {
+            hit.year_low_pct >= 0.0
+                && hit.year_low_pct < 2.0
+                && hit.change_pct > 0.5
+                && hit.change_pct < 2.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -5767,6 +5783,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowRangeExpansionHotVol => "New 52w Low + Wide Intraday Range + Red Close + Hot Vol (Volatility-expansion Breakdown at New Lows: Wide-range Trend Day after the Breakdown Level; Institutional Follow-through with Elevated Participation)",
         Preset::Year52HighRangeContractionHotVol => "New 52w High + Tight Intraday Range + Small Green Close + Hot Vol (Post-breakout Absorption Coil at New Highs: Tight Digestion with Elevated Participation; Pre-extension Consolidation)",
         Preset::Year52LowRangeContractionHotVol => "New 52w Low + Tight Intraday Range + Small Red Close + Hot Vol (Post-breakdown Absorption Coil at New Lows: Tight Digestion with Elevated Participation; Pre-continuation Consolidation)",
+        Preset::Year52HighBreakoutDryVolPullback => "Just below 52w High + Small Red Pullback + Dry Vol (Low-vol Pullback to Retest the Prior Breakout Level; Weak-hands Shaken Out without Participation; Reclaim Setup)",
+        Preset::Year52LowBreakdownDryVolBounce => "Just above 52w Low + Small Green Bounce + Dry Vol (Low-vol Bounce to Retest the Prior Breakdown Level; Weak-hands Shaken Out without Participation; Rejection Setup)",
     }
 }
 
