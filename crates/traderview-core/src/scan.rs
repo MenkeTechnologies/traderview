@@ -414,6 +414,8 @@ pub enum Preset {
     OneWickCloseAtMidDown,       // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long lower wick but closed near HOD flat (rejection from lower extreme)
     UpperWickGreenDayConfirm,    // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct > 1 — long upper wick + closed green day (failed reversal; trend continuation)
     LowerWickRedDayConfirm,      // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct < -1 — long lower wick + closed red day (failed reversal; trend continuation)
+    InsideBarTightAtMid,         // hod_dist + lod_dist < 1 AND change_pct.abs() < 0.2 AND rel_volume < 0.8 — extremely tight inside bar at mid (NR4 / NR7 silent compression)
+    OutsideBarVolumeBoth,        // hod_dist.abs() > 3 AND lod_dist.abs() > 3 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — outside-bar both extremes touched on heavy vol with no net move (battle for direction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1937,6 +1939,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.change_pct < -1.0
         }
+        Preset::InsideBarTightAtMid => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0
+                && hit.change_pct.abs() < 0.2
+                && hit.rel_volume < 0.8
+        }
+        Preset::OutsideBarVolumeBoth => {
+            hit.hod_dist_pct.abs() > 3.0
+                && hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2241,6 +2254,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OneWickCloseAtMidDown => "Lower-Wick Flat-Close Reject",
         Preset::UpperWickGreenDayConfirm => "Upper-Wick Green-Day Confirm",
         Preset::LowerWickRedDayConfirm => "Lower-Wick Red-Day Confirm",
+        Preset::InsideBarTightAtMid => "Inside Bar Tight At Mid",
+        Preset::OutsideBarVolumeBoth => "Outside Bar, Heavy Vol Battle",
     }
 }
 

@@ -95,8 +95,13 @@ async function renderList(mount) {
             <h2 data-i18n="view.boards.h2.widgets_chart">Widgets per board</h2>
             <div id="b-chart" style="width:100%;height:200px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.boards.h2.recency_chart">Days since last update per board</h2>
+            <div id="b-recency-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderWidgetsChart(boards);
+    renderRecencyChart(boards);
     mount.querySelector('#b-new').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -117,6 +122,48 @@ async function renderList(mount) {
             } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
     });
+}
+
+function renderRecencyChart(boards) {
+    const el = document.getElementById('b-recency-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const now = Date.now();
+    const rows = (boards || [])
+        .filter(b => b.updated_at)
+        .map(b => ({
+            name: b.name,
+            days: Math.max(0, (now - new Date(b.updated_at).getTime()) / 86400000),
+        }))
+        .filter(r => Number.isFinite(r.days));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.boards.empty_recency_chart">${esc(t('view.boards.empty_recency_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => a.days - b.days);
+    const labels = rows.map(r => r.name);
+    const xs = labels.map((_, i) => i + 1);
+    const recent = rows.map(r => r.days < 7  ? r.days : null);
+    const old    = rows.map(r => r.days >= 7 ? r.days : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.boards.chart.board') },
+            { label: t('view.boards.chart.recent'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.boards.chart.old'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, recent, old], el);
 }
 
 function renderWidgetsChart(boards) {

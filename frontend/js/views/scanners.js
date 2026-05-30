@@ -296,6 +296,8 @@ const PRESETS = [
     { id: 'one_wick_close_at_mid_down', label: t('view.scanners.preset.one_wick_close_at_mid_down.label'), desc: t('view.scanners.preset.one_wick_close_at_mid_down.desc') },
     { id: 'upper_wick_green_day_confirm', label: t('view.scanners.preset.upper_wick_green_day_confirm.label'), desc: t('view.scanners.preset.upper_wick_green_day_confirm.desc') },
     { id: 'lower_wick_red_day_confirm', label: t('view.scanners.preset.lower_wick_red_day_confirm.label'), desc: t('view.scanners.preset.lower_wick_red_day_confirm.desc') },
+    { id: 'inside_bar_tight_at_mid', label: t('view.scanners.preset.inside_bar_tight_at_mid.label'), desc: t('view.scanners.preset.inside_bar_tight_at_mid.desc') },
+    { id: 'outside_bar_volume_both', label: t('view.scanners.preset.outside_bar_volume_both.label'), desc: t('view.scanners.preset.outside_bar_volume_both.desc') },
 ];
 
 export async function renderScanners(mount) {
