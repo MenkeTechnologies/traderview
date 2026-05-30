@@ -224,6 +224,8 @@ const PRESETS = [
     { id: 'selling_climax_bottom', label: t('view.scanners.preset.selling_climax_bottom.label'), desc: t('view.scanners.preset.selling_climax_bottom.desc') },
     { id: 'up_day_gap_only_move', label: t('view.scanners.preset.up_day_gap_only_move.label'), desc: t('view.scanners.preset.up_day_gap_only_move.desc') },
     { id: 'down_day_gap_only_move', label: t('view.scanners.preset.down_day_gap_only_move.label'), desc: t('view.scanners.preset.down_day_gap_only_move.desc') },
+    { id: 'intraday_only_green_day', label: t('view.scanners.preset.intraday_only_green_day.label'), desc: t('view.scanners.preset.intraday_only_green_day.desc') },
+    { id: 'intraday_only_red_day', label: t('view.scanners.preset.intraday_only_red_day.label'), desc: t('view.scanners.preset.intraday_only_red_day.desc') },
 ];
 
 export async function renderScanners(mount) {

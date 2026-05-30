@@ -342,6 +342,8 @@ pub enum Preset {
     SellingClimaxBottom,         // change_pct < -5 AND rel_volume >= 5 AND year_low_pct < 2 — extreme volume + extreme move at the lows (selling climax candidate)
     UpDayGapOnlyMove,            // change_pct between 1 and 3 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire change came from overnight gap; flat day after (gap-and-fade indecision)
     DownDayGapOnlyMove,          // change_pct between -3 and -1 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire decline came from overnight gap-down; flat day after
+    IntradayOnlyGreenDay,        // change_pct > 1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work green day (initiative buying continuation)
+    IntradayOnlyRedDay,          // change_pct < -1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work red day (initiative selling continuation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1467,6 +1469,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.change_pct - hit.gap_pct).abs() < 0.3
                 && hit.rel_volume < 1.0
         }
+        Preset::IntradayOnlyGreenDay => {
+            hit.change_pct > 1.0
+                && hit.gap_pct.abs() < 0.3
+                && hit.rel_volume >= 1.0
+        }
+        Preset::IntradayOnlyRedDay => {
+            hit.change_pct < -1.0
+                && hit.gap_pct.abs() < 0.3
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -1699,6 +1711,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SellingClimaxBottom => "Selling Climax Bottom",
         Preset::UpDayGapOnlyMove => "Up-Day Gap-Only Move",
         Preset::DownDayGapOnlyMove => "Down-Day Gap-Only Move",
+        Preset::IntradayOnlyGreenDay => "Intraday-Only Green Day",
+        Preset::IntradayOnlyRedDay => "Intraday-Only Red Day",
     }
 }
 

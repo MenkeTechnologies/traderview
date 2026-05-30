@@ -1,7 +1,7 @@
 // Export hub — CSV downloads + printable tax-package HTML.
 // All downloads go through the authenticated api client (bearer token) and
 // arrive as blobs, then we trigger a synthetic <a download> click.
-import { apiFetchBlob } from '../api.js';
+import { api, apiFetchBlob } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
@@ -80,7 +80,14 @@ export async function renderExports(mount, state) {
             </table>
             <p data-i18n="view.exports.hint.tax_package_pdf_opens_in_a_new_tab_then_p_ctrl_p_s" class="muted small">Tax-package PDF: opens in a new tab, then ⌘P / Ctrl+P → "Save as PDF".</p>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.exports.h2.year_chart">Closed trades per year (last 5)</h2>
+            <div id="ex-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+
+    void renderYearChart(acct.id, years, tok);
 
     mount.querySelectorAll('button[data-action]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -116,6 +123,50 @@ export async function renderExports(mount, state) {
             }
         });
     });
+}
+
+async function renderYearChart(accountId, years, tok) {
+    const el = document.getElementById('ex-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = `<div class="muted" data-i18n="common.loading">${esc(t('common.loading'))}</div>`;
+    let trades;
+    try {
+        trades = await api.trades(accountId, { status: 'closed', limit: 2000 });
+    } catch (_) {
+        trades = [];
+    }
+    if (!viewIsCurrent(tok)) return;
+    const counts = new Map(years.map(y => [y, 0]));
+    for (const tr of trades || []) {
+        const iso = tr.closed_at || tr.opened_at;
+        if (!iso) continue;
+        const y = Number(String(iso).slice(0, 4));
+        if (counts.has(y)) counts.set(y, counts.get(y) + 1);
+    }
+    el.innerHTML = '';
+    const labels = years.slice().reverse().map(String);
+    const ys = labels.map(y => counts.get(Number(y)) || 0);
+    if (ys.reduce((a, b) => a + b, 0) < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.exports.empty_chart">${esc(t('view.exports.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.exports.chart.year') },
+            { label: t('view.exports.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 async function downloadBlob(path, filename) {
