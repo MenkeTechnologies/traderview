@@ -762,6 +762,8 @@ pub enum Preset {
     TripleZeroDryVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume < 0.5 — gap + change + day ALL near zero + dry vol (universal dormancy; market completely absent on all axes; near-dead-tape day; possibly halted or unattended)
     ExtremeGapModerateMoveHotVol,        // gap_pct.abs() > 5 AND change_pct.abs() in [2, 5] AND rel_volume >= 2 — huge gap (>5%) + moderate retained change (2-5%) + hot vol (extreme gap retained most but not all of itself on volume; partial-fill move with conviction at a new level)
     ExtremeGapBigContinuationHotVol,     // gap_pct.abs() > 5 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 2 — extreme gap + change EXCEEDS gap + hot vol (extreme gap that EXTENDED on volume; max-momentum continuation; >100% gap extension)
+    BigGreenBigGapDryVol,                // change_pct > 5 AND gap_pct > 3 AND rel_volume < 0.8 — big green + big gap up + below-avg vol (huge gap-up that held without participation; suspect rally; possibly fake breakout or stealth squeeze in thin tape)
+    BigRedBigGapDownDryVol,              // change_pct < -5 AND gap_pct < -3 AND rel_volume < 0.8 — big red + big gap down + below-avg vol (huge gap-down that held without participation; suspect breakdown; possibly forced-selling in thin tape or low-conviction capitulation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4326,6 +4328,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > hit.gap_pct.abs()
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGreenBigGapDryVol => {
+            hit.change_pct > 5.0
+                && hit.gap_pct > 3.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::BigRedBigGapDownDryVol => {
+            hit.change_pct < -5.0
+                && hit.gap_pct < -3.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -4978,6 +4990,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TripleZeroDryVol => "Gap + Change + Day All Near Zero + Dry Vol (Universal Dormancy; Near-dead Tape on All Axes; Possibly Halted or Unattended)",
         Preset::ExtremeGapModerateMoveHotVol => "Huge Gap (>5%) + Moderate Retained Change (2-5%) + Hot Vol (Extreme Gap Retained Most But Not All; Partial-fill Move with Conviction)",
         Preset::ExtremeGapBigContinuationHotVol => "Extreme Gap (>5%) + Change Exceeds Gap + Hot Vol (Max-momentum Continuation; >100% Gap Extension on Volume)",
+        Preset::BigGreenBigGapDryVol => "Big Green + Big Gap Up + Dry Vol (Huge Gap Held Without Participation; Suspect Rally; Fake Breakout or Stealth Squeeze in Thin Tape)",
+        Preset::BigRedBigGapDownDryVol => "Big Red + Big Gap Down + Dry Vol (Huge Gap Held Without Participation; Suspect Breakdown; Forced-selling or Low-conviction Capitulation in Thin Tape)",
     }
 }
 

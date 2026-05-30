@@ -69,6 +69,12 @@ export async function renderRangeExpansion(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.range_expansion.h2.range_atr_chart">Per-bar range / ATR with compression and expansion thresholds</h2>
+            <div id="re-ratio-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.range_expansion.hint.range_atr" class="muted small">Bar range as a multiple of ATR. Yellow dashed = prior_atr_max (compression cap); green dashed = min_expansion (expansion floor). Sequences that dip below yellow then spike above green are the textbook setup.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.range_expansion.h2.event_log">Event log</h2>
             <div id="re-events"></div>
         </div>
@@ -130,6 +136,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars, atr);
     renderChart(bars, atr, report);
+    renderRangeAtrChart(bars, atr);
     renderEvents(report);
     const events = (report.events || []).length;
     showToast(t('view.range_expansion.toast.detected', { events, bars: bars.length }), { level: 'success' });
@@ -189,6 +196,40 @@ function renderChart(bars, atr, report) {
         ],
         legend: { show: true },
     }, [xs, closes, atr, up, dn], el);
+}
+
+function renderRangeAtrChart(bars, atr) {
+    const el = document.getElementById('re-ratio-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!bars.length || !atr.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.range_expansion.empty_ratio_chart">${esc(t('view.range_expansion.empty_ratio_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i);
+    const ys = bars.map((b, i) => {
+        const a = Number(atr[i]);
+        return Number.isFinite(a) && a > 0 ? (Number(b.high) - Number(b.low)) / a : null;
+    });
+    const compression = xs.map(() => Number(state.config.prior_atr_max));
+    const expansion = xs.map(() => Number(state.config.min_expansion_atrs));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.range_expansion.chart.range_over_atr'),
+              stroke: '#b86bff', width: 1.5,
+              points: { show: true, size: 5, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.range_expansion.chart.compression_cap'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.range_expansion.chart.expansion_floor'),
+              stroke: '#39ff14', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50,
+            values: (_u, splits) => splits.map(v => v.toFixed(1) + '×') }],
+        legend: { show: true },
+    }, [xs, ys, compression, expansion], el);
 }
 
 function renderEvents(report) {
