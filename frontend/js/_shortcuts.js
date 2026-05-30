@@ -73,6 +73,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'boards_focus_name',            keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'boards',            descKey: 'shortcut.boards_focus_name',            actionKey: 'tv:boards-focus-name' },
     { id: 'import_pick_file',             keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'import',            descKey: 'shortcut.import_pick_file',             actionKey: 'tv:import-pick-file' },
     { id: 'import_upload',                keys: { key: 'u', meta: false, ctrl: false, shift: false, alt: false }, scope: 'import',            descKey: 'shortcut.import_upload',                actionKey: 'tv:import-upload' },
+    { id: 'ai_save',                      keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'ai',                descKey: 'shortcut.ai_save',                      actionKey: 'tv:ai-save' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

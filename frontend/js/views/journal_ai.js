@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderAiSettings(mount) {
     const tok = currentViewToken();
@@ -21,7 +22,7 @@ export async function renderAiSettings(mount) {
 
         <form id="ai-form" class="inline-form">
             <label><span data-i18n="view.journal_ai.label.provider">Provider</span>
-                <select name="provider">
+                <select name="provider" data-tip="view.journal_ai.tip.provider">
                     <option data-i18n="view.journal_ai.opt.none" value="">(none)</option>
                     <option data-i18n="view.journal_ai.opt.anthropic" value="anthropic" ${cfg.provider === 'anthropic' ? 'selected' : ''}>Anthropic</option>
                     <option data-i18n="view.journal_ai.opt.openai" value="openai"    ${cfg.provider === 'openai'    ? 'selected' : ''}>OpenAI</option>
@@ -31,25 +32,30 @@ export async function renderAiSettings(mount) {
             <label><span data-i18n="view.journal_ai.label.model">Model</span>
                 <input name="model" placeholder="claude-haiku-4-5-20251001 / gpt-4o-mini / llama3"
                        data-i18n-placeholder="view.journal_ai.placeholder.model"
+                       data-tip="view.journal_ai.tip.model"
                        value="${esc(cfg.model || '')}" style="min-width:280px;">
             </label>
             <label><span data-i18n="view.journal_ai.label.endpoint">Endpoint (override)</span>
                 <input name="endpoint" placeholder="default per provider"
                        data-i18n-placeholder="view.journal_ai.placeholder.endpoint"
+                       data-tip="view.journal_ai.tip.endpoint"
                        value="${esc(cfg.endpoint || '')}" style="min-width:240px;">
             </label>
             <label><span data-i18n="view.journal_ai.label.api_key">API key</span>
                 <input name="api_key" type="password"
                        placeholder="${esc(t(cfg.api_key ? 'view.journal_ai.placeholder.api_key_saved' : 'view.journal_ai.placeholder.api_key_paste'))}"
+                       data-tip="view.journal_ai.tip.api_key"
                        autocomplete="off">
             </label>
             <label><span data-i18n="view.journal_ai.label.max_tokens">Max tokens</span>
                 <input name="max_tokens" type="number" min="100" max="4000"
-                       value="${cfg.max_tokens ?? 800}" style="width:90px;"></label>
+                       value="${cfg.max_tokens ?? 800}" style="width:90px;"
+                       data-tip="view.journal_ai.tip.max_tokens"></label>
             <label><span data-i18n="view.journal_ai.label.temp">Temp</span>
                 <input name="temperature" type="number" min="0" max="2" step="0.05"
-                       value="${cfg.temperature ?? 0.2}" style="width:80px;"></label>
-            <button data-i18n="view.journal_ai.btn.save" class="primary" type="submit">Save</button>
+                       value="${cfg.temperature ?? 0.2}" style="width:80px;"
+                       data-tip="view.journal_ai.tip.temp"></label>
+            <button data-i18n="view.journal_ai.btn.save" data-tip="view.journal_ai.tip.save" data-shortcut="ai_save" class="primary" type="submit">Save</button>
             <span id="ai-save-status" class="muted small"></span>
         </form>
 
@@ -80,10 +86,12 @@ export async function renderAiSettings(mount) {
                     if (s3) s3.textContent = '';
                 }, 2000);
             }
+            showToast(t('view.journal_ai.toast.saved'), { level: 'success' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#ai-save-status');
             if (s2) s2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
@@ -97,7 +105,7 @@ export async function renderAiAnalyze(mount, tradeId) {
             <h2 data-i18n="view.journal_ai.h2.ai_analysis">AI analysis</h2>
             <div id="ai-status" class="muted small" data-i18n="view.journal_ai.status.checking_cache">checking cache…</div>
             <div id="ai-body"></div>
-            <button data-i18n="view.journal_ai.btn.run_analysis" class="btn" id="ai-run">Run analysis</button>
+            <button data-i18n="view.journal_ai.btn.run_analysis" data-tip="view.journal_ai.tip.run_analysis" class="btn" id="ai-run">Run analysis</button>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.journal_ai.h2.findings_chart">Findings by category</h2>
@@ -145,9 +153,11 @@ export async function renderAiAnalyze(mount, tradeId) {
             if (body) body.innerHTML = renderFindings(r.findings);
             renderFindingsChart(r.findings);
             btn.textContent = t('view.journal_ai.btn.reanalyze');
+            showToast(t('view.journal_ai.toast.done', { provider: r.provider, model: r.model }), { level: 'success' });
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             if (status) status.textContent = t('common.error', { err: e.message });
+            showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
         } finally {
             if (viewIsCurrent(tok)) btn.disabled = false;
         }
