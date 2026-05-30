@@ -986,6 +986,8 @@ pub enum Preset {
     MidpointCloseConfirmedBelowYearLowHotVol,  // year_low_pct >= -3 AND year_low_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w low + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakdown zone: price has cleared the prior trough but failed to push lower into the close on elevated participation; potential failed-breakdown warning)
     MidpointCloseDeepBelowYearHighHotVol,      // year_high_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far below 52w high (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the pullback zone: neither bulls nor bears closed in control well below the prior peak after extended decline on elevated participation; potential trend-exhaustion candidate)
     MidpointCloseDeepAboveYearLowHotVol,       // year_low_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far above 52w low (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the advance zone: neither bulls nor bears closed in control well above the prior trough after extended advance on elevated participation; potential trend-exhaustion candidate)
+    MidpointCloseMidYearHighHotVol,            // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from high (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle pullback zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
+    MidpointCloseMidYearLowHotVol,             // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from low (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle recovery zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5946,6 +5948,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::MidpointCloseMidYearHighHotVol => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::MidpointCloseMidYearLowHotVol => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6822,6 +6840,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidpointCloseConfirmedBelowYearLowHotVol => "Confirmed-breakdown Zone (1-3 % past 52w Low) + Midpoint Close between HOD and LOD + Hot Vol (Stall in the Confirmed-breakdown Zone: Price Has Cleared the Prior Trough but Failed to Push Lower into the Close on Elevated Participation; Potential Failed-breakdown Warning)",
         Preset::MidpointCloseDeepBelowYearHighHotVol => "Far below 52w High (>=20 %) + Midpoint Close between HOD and LOD + Hot Vol (Stall Deep in the Pullback Zone: Neither Bulls nor Bears Closed in Control Well below the Prior Peak after Extended Decline on Elevated Participation; Potential Trend-exhaustion Candidate)",
         Preset::MidpointCloseDeepAboveYearLowHotVol => "Far above 52w Low (>=20 %) + Midpoint Close between HOD and LOD + Hot Vol (Stall Deep in the Advance Zone: Neither Bulls nor Bears Closed in Control Well above the Prior Trough after Extended Advance on Elevated Participation; Potential Trend-exhaustion Candidate)",
+        Preset::MidpointCloseMidYearHighHotVol => "Mid-range from High (5-20 %) + Midpoint Close between HOD and LOD + Hot Vol (Context-free Intraday Indecision in the Mid-cycle Pullback Zone: Neither Bulls nor Bears Closed in Control in the Proper Consolidation Range on Elevated Participation; Standoff in the Middle of the Year-range)",
+        Preset::MidpointCloseMidYearLowHotVol => "Mid-range from Low (5-20 %) + Midpoint Close between HOD and LOD + Hot Vol (Context-free Intraday Indecision in the Mid-cycle Recovery Zone: Neither Bulls nor Bears Closed in Control in the Proper Consolidation Range on Elevated Participation; Standoff in the Middle of the Year-range)",
     }
 }
 
