@@ -90,6 +90,7 @@ export async function renderBacktest(mount) {
                 drawdown: (p.drawdown_pct / 100) * body.initial_capital,
             }));
             equityChart(eqMount, points, { height: 320 });
+            renderTradePnlChart(r.trades);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#bt-result');
@@ -121,6 +122,10 @@ function render(r) {
             <div id="bt-eq"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.backtest.h2.pnl_chart">Per-trade P/L % distribution</h2>
+            <div id="bt-pnl-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2>${esc(t('view.backtest.h2.trades', { count: r.trades.length }))}</h2>
             <table class="trades">
                 <thead><tr><th>#</th><th data-i18n="view.backtest.th.entry">Entry</th><th data-i18n="view.backtest.th.exit">Exit</th><th data-i18n="view.backtest.th.bars">Bars</th>
@@ -140,4 +145,33 @@ function render(r) {
             </table>
         </div>
     `;
+}
+
+function renderTradePnlChart(trades) {
+    const el = document.getElementById('bt-pnl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (trades || []).filter(tr => Number.isFinite(Number(tr.pnl_pct)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.backtest.empty_chart">${esc(t('view.backtest.empty_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(tr => Number(tr.pnl_pct));
+    const xs = ys.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.backtest.chart.trade_idx') },
+            { label: t('view.backtest.chart.pnl_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.backtest.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }

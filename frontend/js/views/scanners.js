@@ -92,6 +92,8 @@ const PRESETS = [
     { id: 'quarter_from_low_squeeze',   label: t('view.scanners.preset.quarter_from_low_squeeze.label'),   desc: t('view.scanners.preset.quarter_from_low_squeeze.desc') },
     { id: 'away_from_extremes_quiet_squeeze', label: t('view.scanners.preset.away_from_extremes_quiet_squeeze.label'), desc: t('view.scanners.preset.away_from_extremes_quiet_squeeze.desc') },
     { id: 'small_change_narrow_gap_squeeze', label: t('view.scanners.preset.small_change_narrow_gap_squeeze.label'), desc: t('view.scanners.preset.small_change_narrow_gap_squeeze.desc') },
+    { id: 'big_range_no_commit_squeeze', label: t('view.scanners.preset.big_range_no_commit_squeeze.label'), desc: t('view.scanners.preset.big_range_no_commit_squeeze.desc') },
+    { id: 'even_swing_squeeze',         label: t('view.scanners.preset.even_swing_squeeze.label'),         desc: t('view.scanners.preset.even_swing_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

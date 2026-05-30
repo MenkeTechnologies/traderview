@@ -210,6 +210,8 @@ pub enum Preset {
     Pct52wQuarterFromLowSqueeze,  // year_low_pct between 15 and 25 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-low resting
     NoExtremeAndQuietSqueeze,    // year_high_pct <= -5 AND year_low_pct >= 5 AND rel_volume < 0.7 AND |day_pct| < 0.8 — away from extremes + quiet
     SmallChangeNarrowGapSqueeze, // change_pct between 0.5 and 1 AND |gap_pct| < 0.3 AND |day_pct| < 0.5 AND rel_volume < 0.9 — modest move + tight day + quiet
+    BigRangeNoCommitSqueeze,     // hod_dist + lod_dist > 6 AND change_pct.abs() < 0.5 AND rel_volume < 1.5 — wide range, no commit (battle bar)
+    EvenSwingSqueeze,            // hod_dist.abs() between 1 and 3 AND lod_dist.abs() between 1 and 3 AND day_pct.abs() < 1 — small balanced swing
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -665,6 +667,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
+        Preset::BigRangeNoCommitSqueeze => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 1.5
+        }
+        Preset::EvenSwingSqueeze => {
+            hit.hod_dist_pct.abs() >= 1.0
+                && hit.hod_dist_pct.abs() <= 3.0
+                && hit.lod_dist_pct.abs() >= 1.0
+                && hit.lod_dist_pct.abs() <= 3.0
+                && hit.day_pct.abs() < 1.0
+        }
     }
 }
 
@@ -765,6 +779,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wQuarterFromLowSqueeze => "Quarter-From-Low Squeeze",
         Preset::NoExtremeAndQuietSqueeze => "Away-From-Extremes Quiet Squeeze",
         Preset::SmallChangeNarrowGapSqueeze => "Small-Change Narrow-Gap Squeeze",
+        Preset::BigRangeNoCommitSqueeze => "Big-Range No-Commit Squeeze",
+        Preset::EvenSwingSqueeze => "Even-Swing Squeeze",
     }
 }
 
