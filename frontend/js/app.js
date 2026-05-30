@@ -740,6 +740,11 @@ function bindTabs() {
         const el = document.getElementById('va-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in microprice scope → click Compute.
+    window.addEventListener('tv:microprice-compute', () => {
+        const el = document.getElementById('mp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

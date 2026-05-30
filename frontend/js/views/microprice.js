@@ -21,6 +21,7 @@ import {
 } from '../_microprice_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULTS = { bid: 100.00, ask: 100.05, bid_size: 1500, ask_size: 400 };
 
 let state = { quote: { ...DEFAULTS } };
@@ -35,14 +36,14 @@ export async function renderMicroprice(mount, _appState) {
             <h2 data-i18n="view.microprice.h2.l1_quote">L1 quote</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.microprice.label.bid">Bid</span>
-                    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}"></label>
+                    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}" data-tip="view.microprice.tip.bid"></label>
                 <label><span data-i18n="view.microprice.label.ask">Ask</span>
-                    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}"></label>
+                    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}" data-tip="view.microprice.tip.ask"></label>
                 <label><span data-i18n="view.microprice.label.bid_size">Bid size</span>
-                    <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}"></label>
+                    <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}" data-tip="view.microprice.tip.bid_sz"></label>
                 <label><span data-i18n="view.microprice.label.ask_size">Ask size</span>
-                    <input id="mp-ask-sz" type="number" step="1"   min="0" value="${state.quote.ask_size}"></label>
-                <button data-i18n="view.microprice.btn.compute" id="mp-run" class="primary" type="button">Compute</button>
+                    <input id="mp-ask-sz" type="number" step="1"   min="0" value="${state.quote.ask_size}" data-tip="view.microprice.tip.ask_sz"></label>
+                <button data-i18n="view.microprice.btn.compute" data-tip="view.microprice.tip.compute" data-shortcut="microprice_compute" id="mp-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.microprice.hint.microprice_bid_ask_size_total_ask_bid_size_total_w" class="muted">
                 Microprice = bid · (ask_size / total) + ask · (bid_size / total). When the bid
@@ -87,7 +88,7 @@ function readInputs() {
 async function compute(mount, tok) {
     hideErr();
     const err = validateQuote(state.quote);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     // Local-first preview so the cards update instantly even if the
     // backend round-trip stalls. Backend response overrides on success.
@@ -106,12 +107,17 @@ async function compute(mount, tok) {
             throw new Error(t('view.microprice.error.null'));
         }
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res[0], /*fromBackend=*/true);
     renderChart(res[0]);
+    showToast(t('view.microprice.toast.done', {
+        mp: fmtPrice(res[0].microprice),
+        bps: fmtBps(res[0].bias_bps),
+    }), { level: 'success' });
 }
 
 function renderSummary(bar, fromBackend) {
