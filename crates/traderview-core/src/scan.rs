@@ -710,6 +710,8 @@ pub enum Preset {
     OneSidedRangeCloseAtLODRed,      // lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 2 AND change_pct < -1 AND rel_volume >= 1.5 — close at LOD + HOD >2% away + red + decent vol (one-sided down-day exploration; buyers shown high side but couldn't hold; trend day finished on the lows)
     BullishOutsideDayHotVol,         // change_pct > 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — green close + wide range + same-direction intraday + hot vol (bullish outside day with conviction; large-range exploration ending up on volume; institutional accumulation through range expansion)
     BearishOutsideDayHotVol,         // change_pct < -1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — red close + wide range + same-direction intraday + hot vol (bearish outside day with conviction; large-range exploration ending down on volume; institutional distribution through range expansion)
+    BelowAvgVolBigChangeGreen,       // change_pct > 2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big green + below-avg vol (50-90%) + no gap (efficient organic up move on quiet tape; small participants chasing without catalyst; low-effort momentum)
+    BelowAvgVolBigChangeRed,         // change_pct < -2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big red + below-avg vol (50-90%) + no gap (efficient organic down move on quiet tape; small participants distributing without catalyst; low-effort weakness)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3937,6 +3939,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct * hit.day_pct > 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BelowAvgVolBigChangeGreen => {
+            hit.change_pct > 2.0
+                && hit.rel_volume >= 0.5
+                && hit.rel_volume < 0.9
+                && hit.gap_pct.abs() < 0.5
+        }
+        Preset::BelowAvgVolBigChangeRed => {
+            hit.change_pct < -2.0
+                && hit.rel_volume >= 0.5
+                && hit.rel_volume < 0.9
+                && hit.gap_pct.abs() < 0.5
+        }
     }
 }
 
@@ -4537,6 +4551,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OneSidedRangeCloseAtLODRed => "Close at LOD + HOD >2% Away + Red + Decent Vol (One-sided Down-day; Buyers Shown High Side But Couldn't Hold)",
         Preset::BullishOutsideDayHotVol => "Bullish Outside Day + Wide Range + Same-direction Intraday + Hot Vol (Institutional Accumulation Through Range Expansion)",
         Preset::BearishOutsideDayHotVol => "Bearish Outside Day + Wide Range + Same-direction Intraday + Hot Vol (Institutional Distribution Through Range Expansion)",
+        Preset::BelowAvgVolBigChangeGreen => "Big Green + Below-avg Vol (50-90%) + No Gap (Efficient Organic Up Move; Low-effort Momentum on Quiet Tape)",
+        Preset::BelowAvgVolBigChangeRed => "Big Red + Below-avg Vol (50-90%) + No Gap (Efficient Organic Down Move; Low-effort Weakness on Quiet Tape)",
     }
 }
 

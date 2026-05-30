@@ -592,6 +592,8 @@ const PRESETS = [
     { id: 'one_sided_range_close_at_lod_red', label: t('view.scanners.preset.one_sided_range_close_at_lod_red.label'), desc: t('view.scanners.preset.one_sided_range_close_at_lod_red.desc') },
     { id: 'bullish_outside_day_hot_vol', label: t('view.scanners.preset.bullish_outside_day_hot_vol.label'), desc: t('view.scanners.preset.bullish_outside_day_hot_vol.desc') },
     { id: 'bearish_outside_day_hot_vol', label: t('view.scanners.preset.bearish_outside_day_hot_vol.label'), desc: t('view.scanners.preset.bearish_outside_day_hot_vol.desc') },
+    { id: 'below_avg_vol_big_change_green', label: t('view.scanners.preset.below_avg_vol_big_change_green.label'), desc: t('view.scanners.preset.below_avg_vol_big_change_green.desc') },
+    { id: 'below_avg_vol_big_change_red', label: t('view.scanners.preset.below_avg_vol_big_change_red.label'), desc: t('view.scanners.preset.below_avg_vol_big_change_red.desc') },
 ];
 
 export async function renderScanners(mount) {

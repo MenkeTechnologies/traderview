@@ -62,6 +62,12 @@ export async function renderMarketImpact(mount, _appState) {
                 1% ADV you're paying the impact tax even if the average looks fine.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.market_impact.h2.scatter_chart">Per-trade participation % vs slippage (raw cliff)</h2>
+            <div id="mi-scatter-chart" style="width:100%;height:260px"></div>
+            <p data-i18n="view.market_impact.hint.scatter" class="muted small">Each trade as a point: qty/ADV on x, slippage bps on y. Continuous view of the cliff shape. Red dashed = spike threshold; trades above are paying the impact tax.</p>
+        </div>
+
         <div id="mi-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('mi-demo').addEventListener('click', () => {
@@ -109,6 +115,7 @@ async function compute(tok) {
     renderSummary(res, trades);
     renderBars(res, state.spikeBps);
     renderDistribution(trades);
+    renderScatterChart(trades, state.spikeBps);
     showToast(t('view.market_impact.toast.done', {
         trades: trades.length,
         cliff: res.impact_threshold_label || t('common.none'),
@@ -194,6 +201,45 @@ function renderDistribution(trades) {
         ],
         legend: { show: false },
     }, [xs, counts], el);
+}
+
+function renderScatterChart(trades, spikeBps) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('mi-scatter-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const valid = (trades || []).filter(tr =>
+        Number.isFinite(Number(tr.qty)) && Number.isFinite(Number(tr.adv)) && Number(tr.adv) > 0
+        && Number.isFinite(Number(tr.slippage_bps)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.market_impact.empty_scatter_chart">${esc(t('view.market_impact.empty_scatter_chart'))}</div>`;
+        return;
+    }
+    const sorted = valid.map(tr => ({
+        x: Number(tr.qty) / Number(tr.adv) * 100,
+        y: Number(tr.slippage_bps),
+    })).sort((a, b) => a.x - b.x);
+    const xs = sorted.map(p => p.x);
+    const ys = sorted.map(p => p.y);
+    const thresh = xs.map(() => Number(spikeBps) || 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 240,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.market_impact.chart.pct_adv') },
+            { label: t('view.market_impact.chart.slippage'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 5, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.market_impact.chart.threshold'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => v.toFixed(2) + '%') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, thresh], el);
 }
 
 function showErr(msg) {
