@@ -143,7 +143,7 @@ function renderChart(values) {
         scales: { x: {}, y: { range: [0, 1] } },
         series: [
             { label: t('chart.series.bar_num') },
-            { label: 'DeMarker', stroke: '#00e5ff', width: 1.5,
+            { label: t('chart.series.demarker'), stroke: '#00e5ff', width: 1.5,
               fill: '#00e5ff14', points: { show: false } },
             { label: t('chart.series.ob_070'),  stroke: '#ff3860', width: 1.0,
               dash: [4, 4], points: { show: false } },

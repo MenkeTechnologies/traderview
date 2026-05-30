@@ -142,7 +142,7 @@ function renderChart() {
         scales: { x: {}, y: {} },
         series: [
             { label: t('chart.series.days') },
-            { label: 'IV',
+            { label: t('chart.series.iv'),
               stroke: '#00e5ff', width: 2,
               fill: '#00e5ff14',
               points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
