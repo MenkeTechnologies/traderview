@@ -244,6 +244,8 @@ pub enum Preset {
     NoCloseDecisionSqueeze,      // hod_dist & lod_dist 0.4-0.6 AND day_pct.abs() < 0.3 — close exactly equidistant from extremes
     GapInsideRangeSqueeze,       // |gap_pct| < 0.5 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 AND rel_volume < 0.8 — small gap fully contained inside narrow range
     SubpointMoveSqueeze,         // |change_pct| < 0.05 AND |day_pct| < 0.05 — essentially zero net move
+    NoVolNoMoveSqueeze,          // rel_volume < 0.3 AND change_pct.abs() < 0.3 AND day_pct.abs() < 0.3 — both vol and price asleep
+    VolWithoutChangeSqueeze,     // rel_volume >= 1.5 AND change_pct.abs() < 0.2 AND day_pct.abs() < 0.5 — vol arrives but price doesn't move
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -890,6 +892,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::SubpointMoveSqueeze => {
             hit.change_pct.abs() < 0.05 && hit.day_pct.abs() < 0.05
         }
+        Preset::NoVolNoMoveSqueeze => {
+            hit.rel_volume < 0.3
+                && hit.change_pct.abs() < 0.3
+                && hit.day_pct.abs() < 0.3
+        }
+        Preset::VolWithoutChangeSqueeze => {
+            hit.rel_volume >= 1.5
+                && hit.change_pct.abs() < 0.2
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1024,6 +1036,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NoCloseDecisionSqueeze => "No-Close-Decision Squeeze",
         Preset::GapInsideRangeSqueeze => "Gap-Inside-Range Squeeze",
         Preset::SubpointMoveSqueeze => "Sub-Point Move Squeeze",
+        Preset::NoVolNoMoveSqueeze => "No-Vol No-Move Squeeze",
+        Preset::VolWithoutChangeSqueeze => "Vol-Without-Change Squeeze",
     }
 }
 

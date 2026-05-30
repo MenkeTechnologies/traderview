@@ -4,7 +4,7 @@
 import { api, ApiError } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 let timer = null;
 
@@ -29,6 +29,10 @@ export async function renderLivePositions(mount, state) {
 
         <div id="lp-cards" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         <div id="lp-table"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.live_positions.h2.upnl_chart">Unrealized P/L per position</h2>
+            <div id="lp-chart" style="width:100%;height:240px"></div>
+        </div>
         <p class="muted small" id="lp-status"></p>
     `;
     const refreshBtn = mount.querySelector('#live-refresh-btn');
@@ -52,6 +56,7 @@ async function refresh(accountId, mount, tok) {
         if (!viewIsCurrent(tok)) return;
         renderCards(r, mount);
         renderTable(r, mount);
+        renderUpnlChart(r);
         const st = mount.querySelector('#lp-status');
         if (st) st.textContent = t('view.live_positions.status.updated', {
             time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
@@ -139,4 +144,39 @@ function signed$(v) {
     if (v == null) return '—';
     const s = (v >= 0 ? '+' : '-') + '$' + fmt(Math.abs(v));
     return s;
+}
+
+function renderUpnlChart(r) {
+    const el = document.getElementById('lp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (r.positions || []).filter(p => Number.isFinite(Number(p.unrealized_pnl)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.live_positions.empty_chart">${esc(t('view.live_positions.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.unrealized_pnl) - Number(a.unrealized_pnl));
+    const labels = valid.map(p => p.symbol);
+    const ys = valid.map(p => Number(p.unrealized_pnl));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.live_positions.chart.symbol_idx') },
+            { label: t('view.live_positions.chart.upnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.live_positions.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
