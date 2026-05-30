@@ -322,6 +322,9 @@ export const TRADE_ROW_ITEMS = [
 // group is views that take `sym()` directly in the app.js dispatcher.
 // Second group is symbol-centric views that read the global symbol
 // internally (news/dashboard/etc) — same UX value from the menu.
+// Third group is symbol-displaying scanner / screener views — the
+// nav items act on the active global symbol, which the user can set
+// via the type-anywhere symbol hotkey.
 export const SYMBOL_AWARE_SCOPES = [
     // direct sym() consumers
     'research', 'replay', 'earnings-iv', 'sentiment', 'options',
@@ -330,6 +333,10 @@ export const SYMBOL_AWARE_SCOPES = [
     'dashboard', 'news', 'top-signals', 'premarket', 'webull',
     'vol-smile', 'vol-surface', 'option-payoff', 'compare',
     'live', 'pair-trade-calc',
+    // symbol-displaying scanner / screener / tape / vol views
+    'screener', 'scanners', 'live-scanner', 'catalysts', 'halts',
+    'heatmap', 'vol', 'tape', 'iv-rank', 'sector-rotation',
+    'correlation',
 ];
 
 // Native edit actions surfaced when the right-click target is a text-
