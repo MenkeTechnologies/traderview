@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_K, MIN_PERIOD, MAX_PERIOD,
@@ -32,21 +33,23 @@ export async function renderBbOsc(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bbosc.label.period">Period</span>
-                    <input id="bo-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="bo-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.bbosc.tip.period"></label>
                 <label><span data-i18n="view.bbosc.label.k">k (σ)</span>
-                    <input id="bo-k" type="number" step="0.1" min="0" value="${state.k}"></label>
+                    <input id="bo-k" type="number" step="0.1" min="0" value="${state.k}"
+                           data-tip="view.bbosc.tip.k"></label>
                 <button data-i18n="view.bbosc.btn.compute" id="bo-run" class="primary"
-                        data-tip="view.bbosc.tip.compute" type="button">Compute</button>
+                        data-tip="view.bbosc.tip.compute" data-shortcut="bb_osc_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bbosc.btn.demo_norm"  id="bo-d1" class="secondary" type="button">Demo: normal trend</button>
-                <button data-i18n="view.bbosc.btn.demo_ttm"   id="bo-d2" class="secondary" type="button">Demo: TTM squeeze</button>
-                <button data-i18n="view.bbosc.btn.demo_walku" id="bo-d3" class="secondary" type="button">Demo: walking upper</button>
-                <button data-i18n="view.bbosc.btn.demo_walkl" id="bo-d4" class="secondary" type="button">Demo: walking lower</button>
-                <button data-i18n="view.bbosc.btn.demo_osc"   id="bo-d5" class="secondary" type="button">Demo: oscillating</button>
-                <button data-i18n="view.bbosc.btn.demo_flat"  id="bo-d6" class="secondary" type="button">Demo: flat market</button>
-                <button data-i18n="view.bbosc.btn.demo_wide"  id="bo-d7" class="secondary" type="button">Demo: wide bands (k=3)</button>
-                <button data-i18n="view.bbosc.btn.demo_tight" id="bo-d8" class="secondary" type="button">Demo: tight bands (k=1)</button>
+                <button data-i18n="view.bbosc.btn.demo_norm"  id="bo-d1" class="secondary" data-tip="view.bbosc.tip.demo_norm"  type="button">Demo: normal trend</button>
+                <button data-i18n="view.bbosc.btn.demo_ttm"   id="bo-d2" class="secondary" data-tip="view.bbosc.tip.demo_ttm"   type="button">Demo: TTM squeeze</button>
+                <button data-i18n="view.bbosc.btn.demo_walku" id="bo-d3" class="secondary" data-tip="view.bbosc.tip.demo_walku" type="button">Demo: walking upper</button>
+                <button data-i18n="view.bbosc.btn.demo_walkl" id="bo-d4" class="secondary" data-tip="view.bbosc.tip.demo_walkl" type="button">Demo: walking lower</button>
+                <button data-i18n="view.bbosc.btn.demo_osc"   id="bo-d5" class="secondary" data-tip="view.bbosc.tip.demo_osc"   type="button">Demo: oscillating</button>
+                <button data-i18n="view.bbosc.btn.demo_flat"  id="bo-d6" class="secondary" data-tip="view.bbosc.tip.demo_flat"  type="button">Demo: flat market</button>
+                <button data-i18n="view.bbosc.btn.demo_wide"  id="bo-d7" class="secondary" data-tip="view.bbosc.tip.demo_wide"  type="button">Demo: wide bands (k=3)</button>
+                <button data-i18n="view.bbosc.btn.demo_tight" id="bo-d8" class="secondary" data-tip="view.bbosc.tip.demo_tight" type="button">Demo: tight bands (k=1)</button>
             </div>
             <p data-i18n="view.bbosc.hint.about" class="muted">Combined %B + Bandwidth oscillators. %B = (close − lower) / (upper − lower) ∈ [0, 1] at bands; > 1 breakout / < 0 breakdown. Bandwidth = (upper − lower) / middle squeezes absolute width into a unitless vol regime signal — low values flag the TTM-squeeze setup.</p>
         </div>
@@ -93,6 +96,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bbosc.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bbosc.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -106,7 +110,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bbosc.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.period, state.k);
     renderSummary(local, true);
     renderChartBands(local);
@@ -117,14 +121,16 @@ async function compute(tok) {
         resp = await api.anlyBollingerOscillators(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bbosc.err.api')}: ${e.message || e}`);
+        showToast(t('view.bbosc.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.bbosc.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.bbosc.err.server_rejected')); showToast(t('view.bbosc.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChartBands(resp);
     renderChartOsc(resp);
     renderStats();
+    showToast(t('view.bbosc.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
