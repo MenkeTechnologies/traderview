@@ -1034,6 +1034,8 @@ pub enum Preset {
     GapDownMidpointCloseJustOffYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + just off 52w low (2-5%) + hot vol (inconclusive pullback just off the year trough: gap down in the post-extreme zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff in the immediate post-tag zone with the rejection still undecided)
     HotVolFlatCloseNearYearHighHotVol,         // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w high (<2%) (institutional churn at the 52w high: doubled participation with no net price impact at the year peak; potential distribution-into-strength signal where smart money exchanges hands without moving the tape)
     HotVolFlatCloseNearYearLowHotVol,          // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w low (<2%) (institutional churn at the 52w low: doubled participation with no net price impact at the year trough; potential accumulation-into-weakness signal where smart money exchanges hands without moving the tape)
+    HotVolFlatCloseConfirmedAboveYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — flat close + hot vol + confirmed-breakout zone (1-3% past 52w high) (stealth distribution in the confirmed-breakout zone: doubled participation with no net price impact above the prior peak; institutions handling supply at the validated breakout level without giving back the move)
+    HotVolFlatCloseConfirmedBelowYearLowHotVol,  // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — flat close + hot vol + confirmed-breakdown zone (1-3% past 52w low) (stealth accumulation in the confirmed-breakdown zone: doubled participation with no net price impact below the prior trough; institutions handling demand at the validated breakdown level without giving back the move)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6350,6 +6352,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.year_low_pct < 2.0
         }
+        Preset::HotVolFlatCloseConfirmedAboveYearHighHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::HotVolFlatCloseConfirmedBelowYearLowHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -7274,6 +7288,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownMidpointCloseJustOffYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Just off 52w Low (2-5 %) + Hot Vol (Inconclusive Pullback Just off the Year Trough: Gap down in the Post-extreme Zone Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff in the Immediate Post-tag Zone with the Rejection Still Undecided)",
         Preset::HotVolFlatCloseNearYearHighHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + At/near 52w High (<2 %) (Institutional Churn at the 52w High: Doubled Participation with No Net Price Impact at the Year Peak; Potential Distribution-into-strength Signal Where Smart Money Exchanges Hands without Moving the Tape)",
         Preset::HotVolFlatCloseNearYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + At/near 52w Low (<2 %) (Institutional Churn at the 52w Low: Doubled Participation with No Net Price Impact at the Year Trough; Potential Accumulation-into-weakness Signal Where Smart Money Exchanges Hands without Moving the Tape)",
+        Preset::HotVolFlatCloseConfirmedAboveYearHighHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Confirmed-breakout Zone (1-3 % past 52w High) (Stealth Distribution in the Confirmed-breakout Zone: Doubled Participation with No Net Price Impact above the Prior Peak; Institutions Handling Supply at the Validated Breakout Level without Giving Back the Move)",
+        Preset::HotVolFlatCloseConfirmedBelowYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Stealth Accumulation in the Confirmed-breakdown Zone: Doubled Participation with No Net Price Impact below the Prior Trough; Institutions Handling Demand at the Validated Breakdown Level without Giving Back the Move)",
     }
 }
 
