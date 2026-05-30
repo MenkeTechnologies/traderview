@@ -198,6 +198,8 @@ pub enum Preset {
     ColdDryUpSqueeze,            // year_low_pct <= 1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w low with dried up volume
     HighVolGapFadeSqueeze,       // |gap| >= 1 AND change_pct opposite to gap AND |day_pct| < 0.5 AND rel_volume >= 1.2 — high-vol gap reversal
     NearZeroChangeQuietSqueeze,  // |change_pct| < 0.5 AND |gap_pct| < 0.5 AND |day_pct| < 1 AND rel_volume < 0.7 — chop-and-rest quiet bar
+    SilentInsideSqueeze,         // day_pct.abs() < 0.4 AND change_pct.abs() < 0.4 AND gap_pct.abs() < 0.4 AND rel_volume < 0.7 — true tri-quiet inside bar
+    HighVolNoMoveSqueeze,        // rel_volume >= 2 AND |change_pct| < 0.5 AND |day_pct| < 0.7 — heavy distribution-without-move bar
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -589,6 +591,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 1.0
                 && hit.rel_volume < 0.7
         }
+        Preset::SilentInsideSqueeze => {
+            hit.day_pct.abs() < 0.4
+                && hit.change_pct.abs() < 0.4
+                && hit.gap_pct.abs() < 0.4
+                && hit.rel_volume < 0.7
+        }
+        Preset::HighVolNoMoveSqueeze => {
+            hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.7
+        }
     }
 }
 
@@ -677,6 +690,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ColdDryUpSqueeze => "Cold Dry-Up Squeeze",
         Preset::HighVolGapFadeSqueeze => "High-Vol Gap-Fade Squeeze",
         Preset::NearZeroChangeQuietSqueeze => "Chop-And-Rest Quiet Squeeze",
+        Preset::SilentInsideSqueeze => "Silent Inside Squeeze",
+        Preset::HighVolNoMoveSqueeze => "Heavy-Vol No-Move Squeeze",
     }
 }
 

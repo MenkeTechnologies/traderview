@@ -213,6 +213,10 @@ function renderResult(r, mount) {
             <div class="card"><div class="label" data-i18n="view.csv_wizard.card.import_id">Import id</div>
                 <div class="value small"><code>${esc(r.import_id)}</code></div></div>
         </div>
+        <div class="chart-panel" style="margin-top:10px">
+            <h3 data-i18n="view.csv_wizard.h3.outcome_chart">Outcome breakdown</h3>
+            <div id="cw-chart" style="width:100%;height:240px"></div>
+        </div>
         ${r.failed_rows.length === 0 ? '' : `<table class="trades">
             <thead><tr><th data-i18n="view.csv_wizard.th.row">Row #</th><th data-i18n="view.csv_wizard.th.reason">Reason</th></tr></thead>
             <tbody>
@@ -224,4 +228,44 @@ function renderResult(r, mount) {
         </table>`}
     </div>`;
     try { applyUiI18n(el); } catch (_) {}
+    renderOutcomeChart(r);
+}
+
+function renderOutcomeChart(r) {
+    const el = document.getElementById('cw-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const cats = [
+        { key: 'inserted', color: '#7af0a8', value: Number(r.inserted) || 0 },
+        { key: 'skipped',  color: '#9aa0c8', value: Number(r.skipped_dedupe) || 0 },
+        { key: 'failed',   color: '#ff3860', value: (r.failed_rows || []).length },
+    ];
+    if (!cats.some(c => c.value > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.csv_wizard.empty_chart">${esc(t('view.csv_wizard.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = cats.map(c => t(`view.csv_wizard.chart.${c.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.csv_wizard.chart.outcome_idx') }];
+    const data = [xs];
+    cats.forEach((c, i) => {
+        const ys = xs.map((_, j) => j === i ? c.value : null);
+        series.push({
+            label: labels[i],
+            stroke: c.color, width: 0,
+            points: { show: true, size: 16, fill: c.color, stroke: c.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
