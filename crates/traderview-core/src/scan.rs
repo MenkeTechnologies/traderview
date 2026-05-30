@@ -640,6 +640,8 @@ pub enum Preset {
     InsideDayBigChangeBigVol,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 2 AND rel_volume >= 2 — narrow range + big change + hot vol (inside-day big move; gap-driven change but with massive participation at flat-after-gap level)
     LongCandleUpTrendDay,           // change_pct > 2 AND day_pct > 1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND hod_dist_pct.abs() < 0.5 — big green day + significant intraday + wide range + hot vol + HOD close (long candle up; broad trend day with HOD finish)
     LongCandleDownTrendDay,         // change_pct < -2 AND day_pct < -1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND lod_dist_pct.abs() < 0.5 — big red day + significant intraday + wide range + hot vol + LOD close (long candle down; broad trend day with LOD finish)
+    Year52HighWithRangeContraction, // year_high_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w high + tight range + flat change (structural pause at the highs; coiling at top before next leg)
+    Year52LowWithRangeContraction,  // year_low_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w low + tight range + flat change (structural pause at the lows; coiling at bottom before next leg)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3474,6 +3476,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::Year52HighWithRangeContraction => {
+            hit.year_high_pct < 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::Year52LowWithRangeContraction => {
+            hit.year_low_pct < 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -4004,6 +4016,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::InsideDayBigChangeBigVol => "Narrow Range + Big Change + Hot Vol (Inside-Day Gap Day on Heavy Participation)",
         Preset::LongCandleUpTrendDay => "Big Green Day + Intraday Up + Wide Range + HOD Close + Hot Vol (Long Candle Up Trend Day)",
         Preset::LongCandleDownTrendDay => "Big Red Day + Intraday Down + Wide Range + LOD Close + Hot Vol (Long Candle Down Trend Day)",
+        Preset::Year52HighWithRangeContraction => "Near 52w High + Tight Range + Flat Change (Coil at the Top)",
+        Preset::Year52LowWithRangeContraction => "Near 52w Low + Tight Range + Flat Change (Coil at the Bottom)",
     }
 }
 
