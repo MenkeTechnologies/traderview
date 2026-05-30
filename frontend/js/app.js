@@ -639,6 +639,16 @@ function bindTabs() {
         const el = document.getElementById('pa-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in live-scanner scope → submit configure form.
+    window.addEventListener('tv:live-scanner-connect', () => {
+        const form = document.getElementById('ls-config');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
+    // View-scoped: `v` in live-scanner scope → toggle voice-alert checkbox.
+    window.addEventListener('tv:live-scanner-toggle-voice', () => {
+        const el = document.getElementById('ls-voice');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

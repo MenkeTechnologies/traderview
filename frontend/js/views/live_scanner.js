@@ -23,8 +23,8 @@ export async function renderLiveScanner(mount, _state) {
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.live_scanner.title">// LIVE SCANNER · DayTradeDash replacement</span>
             <span class="status-dot" id="ls-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
-            <label class="halt-voice-toggle">
-                <input type="checkbox" id="ls-voice" ${voiceOn ? 'checked' : ''}>
+            <label class="halt-voice-toggle" data-tip="view.live_scanner.tip.voice">
+                <input type="checkbox" id="ls-voice" data-shortcut="live_scanner_toggle_voice" ${voiceOn ? 'checked' : ''}>
                 <span data-i18n="common.label.voice_alerts">voice alerts</span>
             </label>
         </h1>
@@ -34,13 +34,15 @@ export async function renderLiveScanner(mount, _state) {
             <form id="ls-config" class="inline-form">
                 <label><span data-i18n="view.live_scanner.label.api_key">Finnhub API key</span>
                     <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)"
-                           data-i18n-placeholder="view.live_scanner.placeholder.api_key" style="min-width:280px">
+                           data-i18n-placeholder="view.live_scanner.placeholder.api_key"
+                           data-tip="view.live_scanner.tip.api_key" style="min-width:280px">
                 </label>
                 <label><span data-i18n="view.live_scanner.label.symbols">Universe (comma-sep symbols)</span>
                     <input name="symbols" type="text" data-shortcut="focus_search" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..."
-                           data-i18n-placeholder="view.live_scanner.placeholder.symbols" style="min-width:320px">
+                           data-i18n-placeholder="view.live_scanner.placeholder.symbols"
+                           data-tip="view.live_scanner.tip.symbols" style="min-width:320px">
                 </label>
-                <button data-i18n="view.live_scanner.btn.connect" class="primary" type="submit">Connect</button>
+                <button data-i18n="view.live_scanner.btn.connect" data-tip="view.live_scanner.tip.connect" data-shortcut="live_scanner_connect" class="primary" type="submit">Connect</button>
             </form>
             <p data-i18n="view.live_scanner.hint.finnhub_s_free_websocket_gives_25_subscriptions_pe" class="muted small">
                 Finnhub's free WebSocket gives 25 subscriptions per connection.
