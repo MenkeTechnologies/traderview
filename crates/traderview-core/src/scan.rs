@@ -1054,6 +1054,8 @@ pub enum Preset {
     DryVolBigDownJustOffYearLowHotVol,         // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 — big down move (<-3%) + dry vol (<0.5) + just off 52w low (2-5%) (thin-tape rejection from shallow bounce: large losses in the immediate post-extreme zone on below-average participation; quick post-tag dip without institutional sell-in, fragile re-test candidate)
     UltraDeepBelowYearHighHotVol,              // year_high_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w high (>=50%) + hot vol (deep-value / distressed-equity territory: price has lost half or more of its 52w peak with elevated participation; either turnaround candidate or bankruptcy-watch depending on fundamentals)
     UltraDeepAboveYearLowHotVol,               // year_low_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w low (>=50%) + hot vol (multibagger territory: price has doubled or more off its 52w trough with elevated participation; momentum-leader candidate riding a multi-month trend with sustained institutional interest)
+    UltraDeepBelowYearHighCloseAtHodHotVol,    // year_high_pct >= 50 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + close pinned to HOD + green close + hot vol (turnaround momentum signal: distressed equity closes at the day's high on elevated participation; rare bullish-conviction tape in beaten-down territory worth a reversal-trade screen)
+    UltraDeepAboveYearLowCloseAtLodHotVol,     // year_low_pct >= 50 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + close pinned to LOD + red close + hot vol (topping signal: extended-trend leader closes at the day's low on elevated participation; rare bearish-conviction tape in stretched territory worth a top-fade trade screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6478,6 +6480,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::UltraDeepAboveYearLowHotVol => {
             hit.year_low_pct >= 50.0 && hit.rel_volume >= 1.5
         }
+        Preset::UltraDeepBelowYearHighCloseAtHodHotVol => {
+            hit.year_high_pct >= 50.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::UltraDeepAboveYearLowCloseAtLodHotVol => {
+            hit.year_low_pct >= 50.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7422,6 +7436,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigDownJustOffYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Just off 52w Low (2-5 %) (Thin-tape Rejection from Shallow Bounce: Large Losses in the Immediate Post-extreme Zone on Below-average Participation; Quick Post-tag Dip without Institutional Sell-in, Fragile Re-test Candidate)",
         Preset::UltraDeepBelowYearHighHotVol => "Ultra-deep Distance from 52w High (>=50 %) + Hot Vol (Deep-value / Distressed-equity Territory: Price Has Lost Half or More of Its 52w Peak with Elevated Participation; Either Turnaround Candidate or Bankruptcy-watch Depending on Fundamentals)",
         Preset::UltraDeepAboveYearLowHotVol => "Ultra-deep Distance from 52w Low (>=50 %) + Hot Vol (Multibagger Territory: Price Has Doubled or More off Its 52w Trough with Elevated Participation; Momentum-leader Candidate Riding a Multi-month Trend with Sustained Institutional Interest)",
+        Preset::UltraDeepBelowYearHighCloseAtHodHotVol => "Distressed Stock (>=50 % below 52w High) + Close Pinned to HOD + Green Close + Hot Vol (Turnaround Momentum Signal: Distressed Equity Closes at the Day's High on Elevated Participation; Rare Bullish-conviction Tape in Beaten-down Territory Worth a Reversal-trade Screen)",
+        Preset::UltraDeepAboveYearLowCloseAtLodHotVol => "Multibagger (>=50 % above 52w Low) + Close Pinned to LOD + Red Close + Hot Vol (Topping Signal: Extended-trend Leader Closes at the Day's Low on Elevated Participation; Rare Bearish-conviction Tape in Stretched Territory Worth a Top-fade Trade Screen)",
     }
 }
 
