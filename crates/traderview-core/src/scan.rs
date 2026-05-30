@@ -680,6 +680,8 @@ pub enum Preset {
     ExtremeVolGapUpReversal,         // rel_volume >= 5 AND gap_pct > 3 AND change_pct < 0 — extreme vol (5×+) + gap up >3 + finished red (extreme institutional reversal of overnight gap-up; max-conviction distribution)
     AtYearHighRangeExpansionDryVol,  // year_high_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w high + wide intraday range + dry vol (no-volume rally at all-time highs; distribution warning; wide range without participation = supply meeting thin demand)
     AtYearLowRangeExpansionDryVol,   // year_low_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w low + wide intraday range + dry vol (no-volume capitulation at multi-year lows; thin-tape bounces without conviction; unlikely to stick)
+    IntradayBigDayGapAgainstHotVol,  // day_pct.abs() > 3 AND gap_pct * day_pct < 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-against-day-direction + hot vol (institutional gap-against-trend reversal day; open faded, then reversed and ran hard against the gap on volume)
+    IntradayBigDayGapWithHotVol,     // day_pct.abs() > 3 AND gap_pct * day_pct > 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-with-day-direction + hot vol (textbook gap-and-go continuation: open kept running same direction as the gap on heavy participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3732,6 +3734,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
                 && hit.rel_volume < 0.7
         }
+        Preset::IntradayBigDayGapAgainstHotVol => {
+            hit.day_pct.abs() > 3.0
+                && hit.gap_pct * hit.day_pct < 0.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::IntradayBigDayGapWithHotVol => {
+            hit.day_pct.abs() > 3.0
+                && hit.gap_pct * hit.day_pct > 0.0
+                && hit.gap_pct.abs() > 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4302,6 +4316,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeVolGapUpReversal => "Extreme Vol (5×+) + Gap Up + Finished Red (Max-conviction Reversal of Overnight Gap-up; Institutional Distribution)",
         Preset::AtYearHighRangeExpansionDryVol => "At 52w High + Wide Range + Dry Vol (No-volume Rally Warning; Distribution at All-time Highs)",
         Preset::AtYearLowRangeExpansionDryVol => "At 52w Low + Wide Range + Dry Vol (Thin-tape Capitulation; Bounces Unlikely to Stick)",
+        Preset::IntradayBigDayGapAgainstHotVol => "Big Intraday Day + Gap Against Day + Hot Vol (Institutional Gap-against-trend Reversal)",
+        Preset::IntradayBigDayGapWithHotVol => "Big Intraday Day + Gap With Day + Hot Vol (Textbook Gap-and-go Continuation on Heavy Participation)",
     }
 }
 

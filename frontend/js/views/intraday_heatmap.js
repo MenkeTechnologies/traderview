@@ -50,6 +50,12 @@ export async function renderIntradayHeatmap(mount, _appState) {
             <div id="ih-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.intraday_heatmap.h2.activity_chart">Trade count per 15-min bucket (activity profile)</h2>
+            <div id="ih-activity-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.intraday_heatmap.hint.activity" class="muted small">When you actually trade vs where you make money. Opening drives, lunch lull, closing surge — overlay this against the P&L heatmap to see if your activity profile lines up with your profitability profile.</p>
+        </div>
+
         <div id="ih-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ih-demo').addEventListener('click', () => {
@@ -97,6 +103,7 @@ async function compute(tok) {
     renderSummary(res, trades);
     renderGrid(res);
     renderHourChart(res);
+    renderActivityChart(res);
     showToast(t('view.intraday_heatmap.toast.done', {
         trades: trades.length,
         buckets: (res.buckets || []).filter(b => Number(b.trade_count) > 0).length,
@@ -152,6 +159,49 @@ function renderHourChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderActivityChart(report) {
+    const el = document.getElementById('ih-activity-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = (report && report.buckets) || [];
+    if (!buckets.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.intraday_heatmap.empty_activity_chart">${esc(t('view.intraday_heatmap.empty_activity_chart'))}</div>`;
+        return;
+    }
+    const startH = state.sessionOnly ? 9  : 0;
+    const endH   = state.sessionOnly ? 16 : 24;
+    const { grid } = gridify(buckets);
+    const labels = [];
+    const ys = [];
+    for (let h = startH; h < endH; h++) {
+        for (let q = 0; q < 4; q++) {
+            const b = grid[h][q];
+            labels.push(h.toString().padStart(2, '0') + ':' + (q * 15).toString().padStart(2, '0'));
+            ys.push(b ? Number(b.trade_count) || 0 : 0);
+        }
+    }
+    if (!ys.some(v => v > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.intraday_heatmap.empty_activity_chart">${esc(t('view.intraday_heatmap.empty_activity_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.intraday_heatmap.chart.bucket') },
+            { label: t('view.intraday_heatmap.chart.trade_count'),
+              stroke: '#b86bff', width: 1.5, points: { show: true, size: 4 } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSummary(report, trades) {
