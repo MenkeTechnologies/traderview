@@ -7,7 +7,7 @@ import { test, expect } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { DEFAULT_SHORTCUTS } from '../js/_shortcuts.js';
-import { GLOBAL_ITEMS, EDITING_ITEMS, SYMBOL_ITEMS, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS } from '../js/_context_menu.js';
+import { GLOBAL_ITEMS, EDITING_ITEMS, SYMBOL_ITEMS, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS, TAG_CHIP_ITEMS } from '../js/_context_menu.js';
 
 function walk(dir) {
     const out = [];
@@ -51,7 +51,7 @@ test('every DEFAULT_SHORTCUTS actionKey has a window event handler', () => {
 test('every ctxmenu item actionKey has a window event handler', () => {
     const handlers = collectHandlers();
     const missing = [];
-    for (const it of [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...TRADE_ROW_ITEMS, ...WATCHLIST_ROW_ITEMS, ...POSITION_ROW_ITEMS, ...ALERT_RULE_ROW_ITEMS, ...STRATEGY_ALERT_ROW_ITEMS, ...WEBHOOK_ROW_ITEMS]) {
+    for (const it of [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...TRADE_ROW_ITEMS, ...WATCHLIST_ROW_ITEMS, ...POSITION_ROW_ITEMS, ...ALERT_RULE_ROW_ITEMS, ...STRATEGY_ALERT_ROW_ITEMS, ...WEBHOOK_ROW_ITEMS, ...TAG_CHIP_ITEMS]) {
         if (it.kind === 'separator' || !it.actionKey) continue;
         if (!handlers.has(it.actionKey)) {
             missing.push({ id: it.id, actionKey: it.actionKey });

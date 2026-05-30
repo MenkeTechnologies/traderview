@@ -17,7 +17,11 @@ export async function renderTags(mount) {
             </form>
         </div>
         <div class="tag-list">${tags.map(t => `
-            <span class="tag-chip" style="border-color:${esc(t.color)}">
+            <span class="tag-chip"
+                  data-context-scope="tag-chip"
+                  data-id="${esc(t.id)}"
+                  data-name="${esc(t.name)}"
+                  style="border-color:${esc(t.color)}">
                 ${esc(t.name)}
                 <button class="link" data-del="${t.id}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button>
             </span>

@@ -275,6 +275,34 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Tag-chip actions — read data-id + data-name from the span.
+    window.addEventListener('tv:tag-chip-copy', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const name = tgt && tgt.dataset && tgt.dataset.name;
+        if (!name) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(name).then(
+                () => showToast(t('toast.copied', { what: name }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:tag-chip-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.tag_chip_delete_confirm', { name }, { level: 'danger' })) return;
+            try {
+                await api.deleteTag(id);
+                showToast(t('toast.tag_deleted', { name }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Webhook-row actions — read data-id (and data-enabled for toggle) from tr.
     const idFromTr = (detail) => {
         const t = detail && detail.target;

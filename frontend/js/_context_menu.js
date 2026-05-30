@@ -157,6 +157,15 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Tag-chip context items. Right-click on a <span data-context-scope=
+// "tag-chip" data-id="X" data-name="..."> shows: Copy name / Delete.
+export const TAG_CHIP_ITEMS = [
+    { id: 'tag_chip_copy',   labelKey: 'ctxmenu.tag_chip_copy',
+      actionKey: 'tv:tag-chip-copy',   section: 'tag' },
+    { id: 'tag_chip_delete', labelKey: 'ctxmenu.tag_chip_delete',
+      actionKey: 'tv:tag-chip-delete', section: 'tag' },
+];
+
 // Webhook-row context items. Right-click on a <tr data-context-
 // scope="webhook-row" data-id="X" data-enabled="bool"> shows:
 // Test / Toggle enabled / Delete.
