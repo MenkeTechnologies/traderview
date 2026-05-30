@@ -600,6 +600,8 @@ pub enum Preset {
     RedCloseGreenIntraday,          // change_pct < 0 AND day_pct > 0 AND rel_volume >= 1.5 — red close vs prior + green intraday + hot vol (gap held negative despite intraday recovery; close-of-day mark-down)
     FullConvictionUpDay,            // gap_pct > 0 AND change_pct > 1 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned up + HOD close + hot vol (full-conviction up day; institutional commitment across session)
     FullConvictionDownDay,          // gap_pct < 0 AND change_pct < -1 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned down + LOD close + hot vol (full-conviction down day; institutional commitment across session)
+    YearLowProximityRallyAttempt,   // year_low_pct < 5 AND gap_pct >= 0 AND day_pct > 1 AND change_pct > 0.5 AND rel_volume >= 1 — close near 52w low but rallied intraday with green close + decent vol (rally attempt off the lows; potential trend reversal seedling)
+    YearHighProximityFailAttempt,   // year_high_pct < 5 AND gap_pct <= 0 AND day_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1 — close near 52w high but faded intraday with red close + decent vol (failed move at high; potential top forming)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3205,6 +3207,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::YearLowProximityRallyAttempt => {
+            hit.year_low_pct < 5.0
+                && hit.gap_pct >= 0.0
+                && hit.day_pct > 1.0
+                && hit.change_pct > 0.5
+                && hit.rel_volume >= 1.0
+        }
+        Preset::YearHighProximityFailAttempt => {
+            hit.year_high_pct < 5.0
+                && hit.gap_pct <= 0.0
+                && hit.day_pct < -1.0
+                && hit.change_pct < -0.5
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -3695,6 +3711,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RedCloseGreenIntraday => "Red Close + Green Intraday + Hot Vol (Gap Held Negative; Intraday Recovery)",
         Preset::FullConvictionUpDay => "Gap Up + Green Day + Intraday Up + HOD Close + Hot Vol (Full-Conviction Up Day)",
         Preset::FullConvictionDownDay => "Gap Down + Red Day + Intraday Down + LOD Close + Hot Vol (Full-Conviction Down Day)",
+        Preset::YearLowProximityRallyAttempt => "Near 52w Low + Intraday Rally + Green Close (Rally Attempt off Lows)",
+        Preset::YearHighProximityFailAttempt => "Near 52w High + Intraday Fail + Red Close (Failed Move at Highs)",
     }
 }
 

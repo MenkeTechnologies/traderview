@@ -482,6 +482,8 @@ const PRESETS = [
     { id: 'red_close_green_intraday', label: t('view.scanners.preset.red_close_green_intraday.label'), desc: t('view.scanners.preset.red_close_green_intraday.desc') },
     { id: 'full_conviction_up_day', label: t('view.scanners.preset.full_conviction_up_day.label'), desc: t('view.scanners.preset.full_conviction_up_day.desc') },
     { id: 'full_conviction_down_day', label: t('view.scanners.preset.full_conviction_down_day.label'), desc: t('view.scanners.preset.full_conviction_down_day.desc') },
+    { id: 'year_low_proximity_rally_attempt', label: t('view.scanners.preset.year_low_proximity_rally_attempt.label'), desc: t('view.scanners.preset.year_low_proximity_rally_attempt.desc') },
+    { id: 'year_high_proximity_fail_attempt', label: t('view.scanners.preset.year_high_proximity_fail_attempt.label'), desc: t('view.scanners.preset.year_high_proximity_fail_attempt.desc') },
 ];
 
 export async function renderScanners(mount) {

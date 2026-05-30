@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('expanding') };
 let chart = null;
+let rangeChart = null;
 
 export async function renderCvi(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderCvi(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cvi.h2.chart">CVI series</h2>
             <div id="cv-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.cvi.h2.range_chart">Per-bar range (high − low) — the underlying signal CVI smooths and differentiates</h2>
+            <div id="cv-range-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.ema_period, state.roc_period);
     renderSummary(local, true);
     renderChart(local);
+    renderRangeChart();
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.cvi.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderRangeChart();
     renderStats();
 }
 
@@ -169,6 +177,34 @@ function renderChart(cvi) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderRangeChart() {
+    const el = document.getElementById('cv-range-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars || state.bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cvi.empty_range_chart">${esc(t('view.cvi.empty_range_chart'))}</div>`;
+        return;
+    }
+    const xs = state.bars.map((_, i) => i);
+    const ranges = state.bars.map(b => {
+        const r = b.high - b.low;
+        return Number.isFinite(r) ? r : null;
+    });
+    if (rangeChart) { try { rangeChart.destroy(); } catch {} rangeChart = null; }
+    rangeChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.cvi.series.range'),
+              stroke: '#b86bff', width: 1.2,
+              fill: 'rgba(184,107,255,0.10)',
+              points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, ranges], el);
 }
 
 function renderStats() {
