@@ -17,6 +17,7 @@ import {
 } from '../_iv_rank_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { currentIv: 0.30, historyText: '' };
 
 export async function renderIvRank(mount, _appState) {
@@ -28,8 +29,8 @@ export async function renderIvRank(mount, _appState) {
             <h2 data-i18n="view.iv_rank.h2.current_implied_vol">Current implied vol</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.iv_rank.label.current_iv">Current IV (decimal; 0.25 = 25%)</span>
-                    <input id="iv-cur" type="number" step="any" min="0" value="${state.currentIv}"></label>
-                <button data-i18n="view.iv_rank.btn.compute" id="iv-run" class="primary" type="button">Compute</button>
+                    <input id="iv-cur" type="number" step="any" min="0" value="${state.currentIv}" data-tip="view.iv_rank.tip.current"></label>
+                <button data-i18n="view.iv_rank.btn.compute" data-tip="view.iv_rank.tip.compute" data-shortcut="iv_rank_compute" id="iv-run" class="primary" type="button">Compute</button>
             </div>
         </div>
 
@@ -37,10 +38,10 @@ export async function renderIvRank(mount, _appState) {
             <h2 data-i18n="view.iv_rank.h2.iv_history_trailing_252_trading_days">IV history (trailing ~252 trading days)</h2>
             <p data-i18n="view.iv_rank.hint.paste_one_iv_value_per_line_decimal_whitespace_com" class="muted">Paste one IV value per line (decimal). Whitespace, commas
                 and # comments are tolerated.</p>
-            <textarea id="iv-hist" rows="6" placeholder="0.22&#10;0.24&#10;0.21&#10;# comment&#10;0.26"></textarea>
+            <textarea id="iv-hist" rows="6" placeholder="0.22&#10;0.24&#10;0.21&#10;# comment&#10;0.26" data-tip="view.iv_rank.tip.history"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.iv_rank.btn.load_demo_252_days_w_earnings_spike" id="iv-demo" class="secondary" type="button">Load demo (252 days w/ earnings spike)</button>
-                <button data-i18n="view.iv_rank.btn.clear" id="iv-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.iv_rank.btn.load_demo_252_days_w_earnings_spike" data-tip="view.iv_rank.tip.demo" data-shortcut="iv_rank_demo" id="iv-demo" class="secondary" type="button">Load demo (252 days w/ earnings spike)</button>
+                <button data-i18n="view.iv_rank.btn.clear" data-tip="view.iv_rank.tip.clear" id="iv-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -93,17 +94,22 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(state.currentIv, history);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.optCalcIvRank(buildBody(state.currentIv, history));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderChart(history, res);
     renderGauges(res);
+    showToast(t('view.iv_rank.toast.done', {
+        rank: fmtRank(res.iv_rank),
+        pct: fmtRank(res.iv_percentile),
+    }), { level: 'success' });
 }
 
 function renderSummary(r) {
