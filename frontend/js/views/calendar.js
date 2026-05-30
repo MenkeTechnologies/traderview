@@ -46,9 +46,9 @@ export async function renderCalendar(mount, state) {
         return `<div class="cal-month">
             <h3>${monthName(mm)} ${yyyy}</h3>
             <div class="cal-grid">
-                <div class="cal-dow">S</div><div class="cal-dow">M</div><div class="cal-dow">T</div>
-                <div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div>
-                <div class="cal-dow">S</div>
+                <div class="cal-dow">${esc(t('common.dow.short.sun'))}</div><div class="cal-dow">${esc(t('common.dow.short.mon'))}</div><div class="cal-dow">${esc(t('common.dow.short.tue'))}</div>
+                <div class="cal-dow">${esc(t('common.dow.short.wed'))}</div><div class="cal-dow">${esc(t('common.dow.short.thu'))}</div><div class="cal-dow">${esc(t('common.dow.short.fri'))}</div>
+                <div class="cal-dow">${esc(t('common.dow.short.sat'))}</div>
                 ${cellsRow}
             </div>
         </div>`;
