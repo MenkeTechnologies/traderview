@@ -527,6 +527,11 @@
 
   "view.buying_power.h1.title":            "// BUYING POWER",
   "view.buying_power.h2.account":          "Account",
+  "view.buying_power.h2.sweep_chart":      "Buying-power sensitivity (max notional vs equity)",
+  "view.buying_power.empty_chart":         "Need positive equity to chart sensitivity.",
+  "view.buying_power.chart.equity":        "equity ($)",
+  "view.buying_power.chart.max_notional":  "max notional ($)",
+  "view.buying_power.chart.current":       "current equity",
   "view.buying_power.label.account_type":  "Account type",
   "view.buying_power.label.equity":        "Equity ($)",
   "view.buying_power.label.share_price":   "Share price ($)",

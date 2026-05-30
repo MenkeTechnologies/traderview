@@ -54,6 +54,11 @@ export async function renderBuyingPower(mount, _appState) {
 
         <div id="bp-summary" class="cards"></div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.buying_power.h2.sweep_chart">Buying-power sensitivity (max notional vs equity)</h2>
+            <div id="bp-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="bp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -97,6 +102,7 @@ async function compute(tok) {
         leverage: local.leverage, initial_requirement_pct: local.initial_requirement_pct,
         note: t(local.note_key),
     }, true);
+    renderSweepChart(local.leverage);
     let resp;
     try {
         resp = await api.calcBuyingPower(buildBody(state));
@@ -110,6 +116,53 @@ async function compute(tok) {
         max_notional: dec(resp.max_notional),
         max_shares:   dec(resp.max_shares),
     }, false);
+    renderSweepChart(dec(resp.leverage));
+}
+
+function renderSweepChart(leverage) {
+    const el = document.getElementById('bp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const eq = Number(state.equity);
+    if (!Number.isFinite(eq) || eq <= 0 || !Number.isFinite(leverage)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.buying_power.empty_chart">${esc(t('view.buying_power.empty_chart'))}</div>`;
+        return;
+    }
+    // Sweep equity from $1k up to 2× current equity, 40 points.
+    const steps = 40;
+    const eqMin = 1000;
+    const eqMax = Math.max(eq * 2, 50_000);
+    const xs = [];
+    const notional = [];
+    const cur = [];
+    for (let i = 0; i <= steps; i++) {
+        const e = eqMin + (eqMax - eqMin) * (i / steps);
+        xs.push(e);
+        notional.push(e * leverage);
+        cur.push(null);
+    }
+    // Mark current equity on the curve.
+    const curIdx = xs.findIndex(x => x >= eq);
+    if (curIdx >= 0) cur[curIdx] = eq * leverage;
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.buying_power.chart.equity') },
+            { label: t('view.buying_power.chart.max_notional'),
+              stroke: '#00e5ff', width: 1.5,
+              fill: 'rgba(0,229,255,0.10)',
+              points: { show: false } },
+            { label: t('view.buying_power.chart.current'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, notional, cur], el);
 }
 
 function renderSummary(report, pending) {
