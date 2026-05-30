@@ -56,6 +56,12 @@ export async function renderVwapSlippage(mount, _appState) {
                 magenta BELOW yellow at trade close; for SHORT entries you want it ABOVE.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.vwap_slippage.h2.volume_chart">Per-bar volume (the weight behind every VWAP point)</h2>
+            <div id="vw-vol-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vwap_slippage.hint.volume_chart" class="muted small">Trading size per bar across the trade window. Heavy bars dominate the VWAP benchmark — reveals which bars set the price you're being graded against. Orthogonal to the price overlay above.</p>
+        </div>
+
         <div id="vw-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('vw-demo').addEventListener('click', () => {
@@ -110,6 +116,7 @@ async function compute(tok) {
     }
     renderSummary(unwrapped.result, bars);
     renderChart(bars, decToNum(unwrapped.result.vwap), state.fillPrice);
+    renderVolChart(bars);
     showToast(t('view.vwap_slippage.toast.done', {
         bps: fmtBps(unwrapped.result.slippage_bps),
         beat: unwrapped.result.beat_vwap ? t('common.yes') : t('common.no'),
@@ -170,6 +177,35 @@ function renderChart(bars, vwap, fillPrice) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, typ, roll, vwapYs, fillYs], el);
+}
+
+function renderVolChart(bars) {
+    const el = document.getElementById('vw-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (bars || []).filter(b => Number.isFinite(Number(b.volume)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vwap_slippage.empty_vol_chart">${esc(t('view.vwap_slippage.empty_vol_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(b => Number(b.volume));
+    const xs = ys.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vwap_slippage.chart.bar_idx') },
+            { label: t('view.vwap_slippage.chart.volume'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function showErr(msg) {

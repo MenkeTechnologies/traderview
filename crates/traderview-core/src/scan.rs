@@ -844,6 +844,8 @@ pub enum Preset {
     BigRedBottomWickRejectHotVol,        // change_pct < -1 AND lod_dist_pct > 2 AND rel_volume >= 1.5 — red close + LOD far below (long lower wick) + hot vol (lower-wick rejection on a red day: sell-off bounced into the close but still finished red; demand tested with elevated participation; potential follow-through hesitation)
     DryVolGreenCloseAtHodTinyRange,      // change_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small green + closed at HOD + tight intraday range + dry vol (low-conviction grind-up day; small directional drift with no participation; weak-hands trend continuation candidate)
     DryVolRedCloseAtLodTinyRange,        // change_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small red + closed at LOD + tight intraday range + dry vol (low-conviction grind-down day; small directional drift with no participation; weak-hands trend continuation candidate)
+    Year52HighGapDownDryVolReclaim,      // year_high_pct < 3 AND year_high_pct >= -2 AND gap_pct < -1.5 AND change_pct > 0 AND rel_volume < 0.8 — near 52w high + opened with gap down + recovered to positive close + dry vol (gap reclaimed back into the breakout zone on light vol; weak-hands shaken out without participation flush; bullish continuation setup at the highs)
+    Year52LowGapUpDryVolReject,          // year_low_pct < 3 AND year_low_pct >= -2 AND gap_pct > 1.5 AND change_pct < 0 AND rel_volume < 0.8 — near 52w low + opened with gap up + sold back into red close + dry vol (gap rejected back into the breakdown zone on light vol; weak-hands trapped without participation flush; bearish continuation setup at the lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4897,6 +4899,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
                 && hit.rel_volume < 0.7
         }
+        Preset::Year52HighGapDownDryVolReclaim => {
+            hit.year_high_pct < 3.0
+                && hit.year_high_pct >= -2.0
+                && hit.gap_pct < -1.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::Year52LowGapUpDryVolReject => {
+            hit.year_low_pct < 3.0
+                && hit.year_low_pct >= -2.0
+                && hit.gap_pct > 1.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -5631,6 +5647,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedBottomWickRejectHotVol => "Red Close + LOD Far Below (Long Lower Wick) + Hot Vol (Lower-wick Rejection on a Red Day: Sell-off Bounced into the Close but Still Finished Red; Demand Tested with Elevated Participation; Potential Follow-through Hesitation)",
         Preset::DryVolGreenCloseAtHodTinyRange => "Small Green + Close at HOD + Tight Intraday Range + Dry Vol (Low-conviction Grind-up Day; Small Directional Drift with No Participation; Weak-hands Trend Continuation Candidate)",
         Preset::DryVolRedCloseAtLodTinyRange => "Small Red + Close at LOD + Tight Intraday Range + Dry Vol (Low-conviction Grind-down Day; Small Directional Drift with No Participation; Weak-hands Trend Continuation Candidate)",
+        Preset::Year52HighGapDownDryVolReclaim => "Near 52w High + Gap Down Opening + Recovered to Positive Close + Dry Vol (Gap Reclaimed Back into the Breakout Zone on Light Vol; Weak-hands Shaken Out without Participation Flush; Bullish Continuation Setup at the Highs)",
+        Preset::Year52LowGapUpDryVolReject => "Near 52w Low + Gap Up Opening + Sold Back into Red Close + Dry Vol (Gap Rejected Back into the Breakdown Zone on Light Vol; Weak-hands Trapped without Participation Flush; Bearish Continuation Setup at the Lows)",
     }
 }
 
