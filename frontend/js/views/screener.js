@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderScreener(mount) {
     const tok = currentViewToken();
@@ -14,17 +15,17 @@ export async function renderScreener(mount) {
         <div class="chart-panel">
             <form id="sc-form" class="inline-form">
                 <label><span data-i18n="view.screener.label.watchlist">Watchlist</span>
-                    <select name="watchlist_id">
+                    <select name="watchlist_id" data-tip="view.screener.tip.watchlist">
                         <option data-i18n="view.screener.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.screener.label.min_score">Min score</span>
-                    <input name="min_score" type="number" value="3"></label>
+                    <input name="min_score" type="number" value="3" data-tip="view.screener.tip.min_score"></label>
                 <label><span data-i18n="view.screener.label.max_score">Max score</span>
-                    <input name="max_score" type="number"></label>
+                    <input name="max_score" type="number" data-tip="view.screener.tip.max_score"></label>
                 <label><span data-i18n="view.screener.label.summary">Summary</span>
-                    <select name="summary">
+                    <select name="summary" data-tip="view.screener.tip.summary">
                         <option data-i18n="view.screener.opt.any" value="">any</option>
                         <option data-i18n="view.screener.opt.buy" value="buy">buy</option>
                         <option data-i18n="view.screener.opt.hold" value="hold">hold</option>
@@ -32,10 +33,10 @@ export async function renderScreener(mount) {
                     </select>
                 </label>
                 <label><span data-i18n="view.screener.label.history_days">History days</span>
-                    <input name="days" type="number" value="365"></label>
+                    <input name="days" type="number" value="365" data-tip="view.screener.tip.days"></label>
                 <label><span data-i18n="view.screener.label.limit">Limit</span>
-                    <input name="limit" type="number" value="50"></label>
-                <button data-i18n="view.screener.btn.run" class="primary" type="submit">Run</button>
+                    <input name="limit" type="number" value="50" data-tip="view.screener.tip.limit"></label>
+                <button data-i18n="view.screener.btn.run" data-tip="view.screener.tip.run" data-shortcut="screener_run" class="primary" type="submit">Run</button>
             </form>
         </div>
 
@@ -59,10 +60,14 @@ export async function renderScreener(mount) {
             const elNow = mount.querySelector('#sc-result');
             if (elNow) elNow.innerHTML = renderResult(r);
             renderScoreChart(r.hits);
+            showToast(t('view.screener.toast.done', {
+                hits: r.hits.length, universe: r.universe_size,
+            }), { level: r.hits.length > 0 ? 'success' : 'info' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#sc-result');
             if (elNow) elNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }

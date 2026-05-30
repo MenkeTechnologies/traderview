@@ -81,6 +81,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'hotkeys_focus_name',           keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hotkeys',           descKey: 'shortcut.hotkeys_focus_name',           actionKey: 'tv:hotkeys-focus-name' },
     { id: 'hotkeys_capture',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hotkeys',           descKey: 'shortcut.hotkeys_capture',              actionKey: 'tv:hotkeys-capture' },
     { id: 'paper_submit',                 keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'paper',             descKey: 'shortcut.paper_submit',                 actionKey: 'tv:paper-submit' },
+    { id: 'screener_run',                 keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'screener',          descKey: 'shortcut.screener_run',                 actionKey: 'tv:screener-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
