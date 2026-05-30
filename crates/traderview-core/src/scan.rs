@@ -278,6 +278,8 @@ pub enum Preset {
     Pct52wThirdFromLowSqueeze,   // year_low_pct 20 to 33 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w low
     HighRangeNoChangeSqueeze,    // hod_dist + lod_dist > 5 AND |change_pct| < 0.5 AND rel_volume >= 1 — wide range, zero net change on average volume
     LowRangeNoChangeSqueeze,     // hod_dist + lod_dist < 1 AND |change_pct| < 0.5 — very tight range with no net change
+    LowVolumeUpDaySqueeze,       // change_pct 1-3 AND rel_volume < 0.5 — modest up day on dry volume (no participation)
+    LowVolumeDownDaySqueeze,     // change_pct -3 to -1 AND rel_volume < 0.5 — modest down day on dry volume (no panic)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1097,6 +1099,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::LowVolumeUpDaySqueeze => {
+            hit.change_pct > 1.0
+                && hit.change_pct < 3.0
+                && hit.rel_volume < 0.5
+        }
+        Preset::LowVolumeDownDaySqueeze => {
+            hit.change_pct < -1.0
+                && hit.change_pct > -3.0
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -1265,6 +1277,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wThirdFromLowSqueeze => "Third-From-Low Squeeze",
         Preset::HighRangeNoChangeSqueeze => "High-Range No-Change Squeeze",
         Preset::LowRangeNoChangeSqueeze => "Low-Range No-Change Squeeze",
+        Preset::LowVolumeUpDaySqueeze => "Low-Volume Up-Day Squeeze",
+        Preset::LowVolumeDownDaySqueeze => "Low-Volume Down-Day Squeeze",
     }
 }
 

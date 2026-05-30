@@ -126,6 +126,10 @@ function renderRDist(body, dist, mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.reports.h2.r_multiple_distribution">R-Multiple Distribution</h2>
             <div id="r-chart"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.h2.r_chart">R-bin count (uPlot)</h2>
+            <div id="r-uplot" style="width:100%;height:240px"></div>
         </div>`;
     const chart = mount.querySelector('#r-chart');
     if (!chart) return;
@@ -135,6 +139,36 @@ function renderRDist(body, dist, mount) {
         dist.bins.map(b => b.count),
         { color: '#00e5ff' }
     );
+    renderRBinsChart(dist.bins);
+}
+
+function renderRBinsChart(bins) {
+    const el = document.getElementById('r-uplot');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!bins || !bins.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.reports.empty_chart">${esc(t('view.reports.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = bins.map(b => b.label);
+    const ys = bins.map(b => Number(b.count));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.reports.chart.bin_idx') },
+            { label: t('view.reports.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function streaksHtml(streaks) {
