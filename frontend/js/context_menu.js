@@ -57,6 +57,12 @@ function toastErr(msg) {
     showToast(t('toast.error.api', { err: msg }), { level: 'error' });
 }
 
+// `toastOk(key, params?)` — translate + show a success toast. Saves the
+// boilerplate t-wrap on every showToast call with level=success.
+function toastOk(key, params) {
+    showToast(t(key, params || {}), { level: 'success' });
+}
+
 export function installContextMenu() {
     if (_installed) return;
     _installed = true;
@@ -106,7 +112,7 @@ export function installContextMenu() {
         const state = loadState();
         const next = addBookmark(state, trimmed, vid);
         saveState(next);
-        showToast(t('toast.bookmark_added', { name: trimmed }), { level: 'success' });
+        toastOk('toast.bookmark_added', { name: trimmed });
         window.dispatchEvent(new CustomEvent('tv:favorites-changed'));
     });
     window.addEventListener('tv:edit-cut',        () => execEdit('cut'));
@@ -194,7 +200,7 @@ export function installContextMenu() {
             return;
         }
         setGlobalSymbol(sym);
-        showToast(t('toast.symbol_set_active', { sym }), { level: 'success' });
+        toastOk('toast.symbol_set_active', { sym });
     });
     window.addEventListener('tv:wl-row-charts',   wlNavTo('charts'));
     window.addEventListener('tv:wl-row-research', wlNavTo('research'));
@@ -210,7 +216,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.wl_row_remove_confirm', { sym }, { level: 'danger' })) return;
             try {
                 await api.removeWatchlistSym(wid, sym);
-                showToast(t('toast.wl_symbol_removed', { sym }), { level: 'success' });
+                toastOk('toast.wl_symbol_removed', { sym });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -235,7 +241,7 @@ export function installContextMenu() {
             return;
         }
         setGlobalSymbol(sym);
-        showToast(t('toast.symbol_set_active', { sym }), { level: 'success' });
+        toastOk('toast.symbol_set_active', { sym });
     });
     window.addEventListener('tv:pos-row-charts',   wlNavTo('charts'));
     window.addEventListener('tv:pos-row-research', wlNavTo('research'));
@@ -272,7 +278,7 @@ export function installContextMenu() {
         const dup = { ...rule, id: clone.id, name: clone.name };
         s = alertEngine.addRule(s, dup);
         alertEngine.saveState(s);
-        showToast(t('toast.ar_duplicated', { name: dup.name }), { level: 'success' });
+        toastOk('toast.ar_duplicated', { name: dup.name });
         refreshView();
     });
     window.addEventListener('tv:ar-row-delete', (e) => {
@@ -285,7 +291,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.ar_row_delete_confirm', { name }, { level: 'danger' })) return;
             const s = alertEngine.removeRule(s0, id);
             alertEngine.saveState(s);
-            showToast(t('toast.ar_deleted', { name }), { level: 'success' });
+            toastOk('toast.ar_deleted', { name });
             refreshView();
         })();
     });
@@ -318,7 +324,7 @@ export function installContextMenu() {
         if (!id) return;
         const next = dbStore.duplicateDashboard(dbStore.loadState(), id);
         dbStore.saveState(next);
-        showToast(t('toast.db_duplicated', { name }), { level: 'success' });
+        toastOk('toast.db_duplicated', { name });
         refreshView();
     });
     window.addEventListener('tv:db-side-delete', (e) => {
@@ -329,7 +335,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.db_side_delete_confirm', { name }, { level: 'danger' })) return;
             const next = dbStore.deleteDashboard(dbStore.loadState(), id);
             dbStore.saveState(next);
-            showToast(t('toast.db_deleted', { name }), { level: 'success' });
+            toastOk('toast.db_deleted', { name });
             refreshView();
         })();
     });
@@ -352,7 +358,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.board_row_delete_confirm', { name }, { level: 'danger' })) return;
             try {
                 await api.deleteDashboard(id);
-                showToast(t('toast.board_deleted', { name }), { level: 'success' });
+                toastOk('toast.board_deleted', { name });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -381,7 +387,7 @@ export function installContextMenu() {
         void (async () => {
             try {
                 const forked = await api.forkBacktestPreset(slug);
-                showToast(t('toast.bp_forked', { name: forked && forked.name ? forked.name : slug }), { level: 'success' });
+                toastOk('toast.bp_forked', { name: forked && forked.name ? forked.name : slug });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -401,7 +407,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.bp_row_delete_confirm', { name }, { level: 'danger' })) return;
             try {
                 await api.deleteBacktestPreset(id);
-                showToast(t('toast.bp_deleted', { name }), { level: 'success' });
+                toastOk('toast.bp_deleted', { name });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -432,7 +438,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.share_row_delete_confirm', {}, { level: 'danger' })) return;
             try {
                 await api.deleteShare(id);
-                showToast(t('toast.share_deleted'), { level: 'success' });
+                toastOk('toast.share_deleted');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -453,7 +459,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.plan_row_abandon_confirm', { sym }, { level: 'danger' })) return;
             try {
                 await api.abandonPlan(id);
-                showToast(t('toast.plan_abandoned', { sym }), { level: 'success' });
+                toastOk('toast.plan_abandoned', { sym });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -474,7 +480,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.acct_row_delete_confirm', { name }, { level: 'danger' })) return;
             try {
                 await api.deleteAccount(id);
-                showToast(t('toast.acct_deleted', { name }), { level: 'success' });
+                toastOk('toast.acct_deleted', { name });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -496,7 +502,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.ci_row_delete_confirm', { name }, { level: 'danger' })) return;
             try {
                 await api.deleteCustomIndicator(id);
-                showToast(t('toast.ci_deleted', { name }), { level: 'success' });
+                toastOk('toast.ci_deleted', { name });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -516,7 +522,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.hk_row_delete_confirm', {}, { level: 'danger' })) return;
             try {
                 await api.deleteHotkey(id);
-                showToast(t('toast.hk_deleted'), { level: 'success' });
+                toastOk('toast.hk_deleted');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -539,7 +545,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.je_delete_confirm', {}, { level: 'danger' })) return;
             try {
                 await api.deleteJournal(id);
-                showToast(t('toast.je_deleted'), { level: 'success' });
+                toastOk('toast.je_deleted');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -564,7 +570,7 @@ export function installContextMenu() {
             if (!await tConfirm('view.api_tokens.confirm.revoke', {}, { level: 'danger' })) return;
             try {
                 await api.revokeApiToken(id);
-                showToast(t('toast.tok_revoked'), { level: 'success' });
+                toastOk('toast.tok_revoked');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -585,7 +591,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.tag_chip_delete_confirm', { name }, { level: 'danger' })) return;
             try {
                 await api.deleteTag(id);
-                showToast(t('toast.tag_deleted', { name }), { level: 'success' });
+                toastOk('toast.tag_deleted', { name });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -603,7 +609,7 @@ export function installContextMenu() {
         void (async () => {
             try {
                 await api.testWebhook(id);
-                showToast(t('toast.wh_test_fired'), { level: 'success' });
+                toastOk('toast.wh_test_fired');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -632,7 +638,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.wh_row_delete_confirm', {}, { level: 'danger' })) return;
             try {
                 await api.deleteWebhook(id);
-                showToast(t('toast.wh_deleted'), { level: 'success' });
+                toastOk('toast.wh_deleted');
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -667,7 +673,7 @@ export function installContextMenu() {
             if (!await tConfirm('ctxmenu.sa_row_delete_confirm', {}, { level: 'danger' })) return;
             try {
                 await api.deleteStrategyAlert(id);
-                showToast(t('toast.sa_deleted', { id }), { level: 'success' });
+                toastOk('toast.sa_deleted', { id });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
@@ -684,7 +690,7 @@ export function installContextMenu() {
             if (!await tConfirm('view.trades.confirm.delete', {}, { level: 'danger' })) return;
             try {
                 await api.deleteTrade(id);
-                showToast(t('toast.trade_deleted', { id }), { level: 'success' });
+                toastOk('toast.trade_deleted', { id });
                 refreshView();
             } catch (err) {
                 toastErr(err.message);
