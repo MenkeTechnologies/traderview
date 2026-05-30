@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, validateInputs, buildBody, localEvaluate, dec,
@@ -23,23 +24,23 @@ export async function renderMarginCall(mount, _appState) {
             <h2 data-i18n="view.margin_call.h2.account">Account snapshot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.margin_call.label.lmv">Long market value ($)</span>
-                    <input id="mc-lmv" type="number" step="any" min="0" value="${state.long_market_value}"></label>
+                    <input id="mc-lmv" type="number" step="any" min="0" value="${state.long_market_value}" data-tip="view.margin_call.tip.lmv"></label>
                 <label><span data-i18n="view.margin_call.label.debt">Margin debt ($)</span>
-                    <input id="mc-debt" type="number" step="any" min="0" value="${state.margin_debt}"></label>
+                    <input id="mc-debt" type="number" step="any" min="0" value="${state.margin_debt}" data-tip="view.margin_call.tip.debt"></label>
                 <label><span data-i18n="view.margin_call.label.maint">Maintenance %  (decimal — 0.25 = 25%)</span>
-                    <input id="mc-mp" type="number" step="any" min="0" max="1" value="${state.maintenance_pct}"></label>
+                    <input id="mc-mp" type="number" step="any" min="0" max="1" value="${state.maintenance_pct}" data-tip="view.margin_call.tip.maint"></label>
                 <button data-i18n="view.margin_call.btn.evaluate" id="mc-run" class="primary"
-                        data-tip="view.margin_call.tip.evaluate" type="button">Evaluate</button>
+                        data-tip="view.margin_call.tip.evaluate" data-shortcut="margin_call_run" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.margin_call.btn.demo_cash"    id="mc-demo-cash"   class="secondary" type="button">Demo: fully cash (no debt)</button>
-                <button data-i18n="view.margin_call.btn.demo_std"     id="mc-demo-std"    class="secondary" type="button">Demo: standard ($20k cushion)</button>
-                <button data-i18n="view.margin_call.btn.demo_call"    id="mc-demo-call"   class="secondary" type="button">Demo: already in call</button>
-                <button data-i18n="view.margin_call.btn.demo_at"      id="mc-demo-at"     class="secondary" type="button">Demo: exactly at line ($0 cushion)</button>
-                <button data-i18n="view.margin_call.btn.demo_high"    id="mc-demo-high"   class="secondary" type="button">Demo: high maint (40% small-cap)</button>
-                <button data-i18n="view.margin_call.btn.demo_cashreq" id="mc-demo-cashreq" class="secondary" type="button">Demo: 100% maint + $1 debt</button>
-                <button data-i18n="view.margin_call.btn.demo_empty"   id="mc-demo-empty"  class="secondary" type="button">Demo: no positions</button>
-                <button data-i18n="view.margin_call.btn.demo_lever"   id="mc-demo-lever"  class="secondary" type="button">Demo: leveraged bull (500k/300k)</button>
+                <button data-i18n="view.margin_call.btn.demo_cash"    id="mc-demo-cash"   class="secondary" type="button" data-tip="view.margin_call.tip.demo_cash">Demo: fully cash (no debt)</button>
+                <button data-i18n="view.margin_call.btn.demo_std"     id="mc-demo-std"    class="secondary" type="button" data-tip="view.margin_call.tip.demo_std">Demo: standard ($20k cushion)</button>
+                <button data-i18n="view.margin_call.btn.demo_call"    id="mc-demo-call"   class="secondary" type="button" data-tip="view.margin_call.tip.demo_call">Demo: already in call</button>
+                <button data-i18n="view.margin_call.btn.demo_at"      id="mc-demo-at"     class="secondary" type="button" data-tip="view.margin_call.tip.demo_at">Demo: exactly at line ($0 cushion)</button>
+                <button data-i18n="view.margin_call.btn.demo_high"    id="mc-demo-high"   class="secondary" type="button" data-tip="view.margin_call.tip.demo_high">Demo: high maint (40% small-cap)</button>
+                <button data-i18n="view.margin_call.btn.demo_cashreq" id="mc-demo-cashreq" class="secondary" type="button" data-tip="view.margin_call.tip.demo_cashreq">Demo: 100% maint + $1 debt</button>
+                <button data-i18n="view.margin_call.btn.demo_empty"   id="mc-demo-empty"  class="secondary" type="button" data-tip="view.margin_call.tip.demo_empty">Demo: no positions</button>
+                <button data-i18n="view.margin_call.btn.demo_lever"   id="mc-demo-lever"  class="secondary" type="button" data-tip="view.margin_call.tip.demo_lever">Demo: leveraged bull (500k/300k)</button>
             </div>
             <p data-i18n="view.margin_call.hint.about" class="muted">Trigger LMV = debt / (1 − maintenance%). Cushion = LMV − trigger. Cushion = 0 is NOT yet in call (Rust uses strict &lt;). Reg-T retail standard is 25% maintenance; brokers raise for small-cap / volatile names.</p>
         </div>
@@ -88,7 +89,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.margin_call.toast.invalid'), { level: 'warning' }); return; }
     const local = localEvaluate(state);
     renderSummary(local, true);
     renderBar(local);
@@ -97,6 +98,7 @@ async function compute(tok) {
         resp = await api.calcMarginCall(buildBody(state));
     } catch (e) {
         showErr(`${t('view.margin_call.err.api')}: ${e.message || e}`);
+        showToast(t('view.margin_call.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -108,6 +110,13 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderBar(normalized);
     renderDropChart();
+    const cushion = Number(normalized.dollar_cushion) || 0;
+    if (cushion < 0) {
+        showToast(t('view.margin_call.toast.in_call', { gap: Math.round(-cushion).toLocaleString() }), { level: 'error' });
+    } else {
+        const level = cushion < 5000 ? 'warning' : 'success';
+        showToast(t('view.margin_call.toast.computed', { cushion: Math.round(cushion).toLocaleString() }), { level });
+    }
 }
 
 function renderDropChart() {
