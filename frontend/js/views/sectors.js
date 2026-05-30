@@ -42,13 +42,54 @@ export async function renderSectors(mount) {
                 <h2 data-i18n="view.sectors.h2.change_chart">Today's change % by sector</h2>
                 <div id="sec-chart" style="width:100%;height:240px"></div>
             </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.sectors.h2.rs_chart">RS vs SPY by sector (today's outperformance)</h2>
+                <div id="sec-rs-chart" style="width:100%;height:220px"></div>
+                <p data-i18n="view.sectors.hint.rs_chart" class="muted small">Each sector's change minus SPY's change. Orthogonal to absolute change: a +0.5% sector is RS-positive if SPY is −1%, RS-negative if SPY is +2%. Yellow dashed = SPY (zero outperformance).</p>
+            </div>
         `;
         renderChangeChart(rows);
+        renderRsChart(rows);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const secEl = mount.querySelector('#sec');
         if (secEl) secEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderRsChart(rows) {
+    const el = document.getElementById('sec-rs-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => r.rs_vs_spy != null && Number.isFinite(Number(r.rs_vs_spy)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.sectors.empty_rs_chart">${esc(t('view.sectors.empty_rs_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(r => r.sector);
+    const rs = valid.map(r => Number(r.rs_vs_spy));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.sectors.chart.sector_idx') },
+            { label: t('view.sectors.chart.rs_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.sectors.chart.spy_zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => (v > 0 ? '+' : '') + v.toFixed(2) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, rs, zero], el);
 }
 
 function renderChangeChart(rows) {

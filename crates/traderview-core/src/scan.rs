@@ -790,6 +790,8 @@ pub enum Preset {
     GapAndDropBigRedCloseAtLod,          // gap_pct < -2 AND change_pct < gap_pct AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + continued lower + closed at LOD + hot vol (gap-and-drop continuation; selling sustained through the close)
     GapUpFillReverseHotVol,              // gap_pct > 3 AND change_pct < 0 AND change_pct > -gap_pct AND rel_volume >= 1.5 — gap up + closed below open but above prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
     GapDownFillReverseHotVol,            // gap_pct < -3 AND change_pct > 0 AND change_pct < -gap_pct AND rel_volume >= 1.5 — gap down + closed above open but below prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
+    Year52HighSqueezeShort,              // year_high_pct < 0 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big green + extreme vol (short squeeze at the highs; trapped shorts forced to cover into resistance breakout)
+    Year52LowCapitulation,               // year_low_pct < 0 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big red + extreme vol (capitulation at the lows; forced selling at floor; trapped longs flushed)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4511,6 +4513,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -hit.gap_pct
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighSqueezeShort => {
+            hit.year_high_pct < 0.0
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::Year52LowCapitulation => {
+            hit.year_low_pct < 0.0
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 3.0
+        }
     }
 }
 
@@ -5191,6 +5203,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAndDropBigRedCloseAtLod => "Gap Down + Continued Lower + Close at LOD + Hot Vol (Gap-and-drop Continuation; Selling Sustained through the Close)",
         Preset::GapUpFillReverseHotVol => "Gap Up + Partial Fill Reversal + Hot Vol (Gap-fill in Progress from Above; Partial Reversion to Mean with Elevated Participation)",
         Preset::GapDownFillReverseHotVol => "Gap Down + Partial Fill Reversal + Hot Vol (Gap-fill in Progress from Below; Partial Reversion to Mean with Elevated Participation)",
+        Preset::Year52HighSqueezeShort => "New 52w High + Big Green + Extreme Vol (Short Squeeze at the Highs; Trapped Shorts Forced to Cover into Resistance Breakout)",
+        Preset::Year52LowCapitulation => "New 52w Low + Big Red + Extreme Vol (Capitulation at the Lows; Forced Selling at Floor; Trapped Longs Flushed)",
     }
 }
 

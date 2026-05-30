@@ -672,6 +672,8 @@ const PRESETS = [
     { id: 'gap_and_drop_big_red_close_at_lod', label: t('view.scanners.preset.gap_and_drop_big_red_close_at_lod.label'), desc: t('view.scanners.preset.gap_and_drop_big_red_close_at_lod.desc') },
     { id: 'gap_up_fill_reverse_hot_vol', label: t('view.scanners.preset.gap_up_fill_reverse_hot_vol.label'), desc: t('view.scanners.preset.gap_up_fill_reverse_hot_vol.desc') },
     { id: 'gap_down_fill_reverse_hot_vol', label: t('view.scanners.preset.gap_down_fill_reverse_hot_vol.label'), desc: t('view.scanners.preset.gap_down_fill_reverse_hot_vol.desc') },
+    { id: 'year52_high_squeeze_short', label: t('view.scanners.preset.year52_high_squeeze_short.label'), desc: t('view.scanners.preset.year52_high_squeeze_short.desc') },
+    { id: 'year52_low_capitulation', label: t('view.scanners.preset.year52_low_capitulation.label'), desc: t('view.scanners.preset.year52_low_capitulation.desc') },
 ];
 
 export async function renderScanners(mount) {
