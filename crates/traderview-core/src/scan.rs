@@ -780,6 +780,8 @@ pub enum Preset {
     Year52LowBigRedBreakdownHotVol,      // year_low_pct < 0 AND change_pct < -4 AND rel_volume >= 2 — breakdown to new 52w low + big red + hot vol (decisive breakdown from year support with institutional sponsorship; trend-following short signal)
     GapUpFailBigRedHotVol,               // gap_pct > 3 AND change_pct < -2 AND rel_volume >= 2 — gap up but closed red + hot vol (failed gap up; trapped longs; reversal short signal)
     GapDownReclaimBigGreenHotVol,        // gap_pct < -3 AND change_pct > 2 AND rel_volume >= 2 — gap down but closed green + hot vol (reclaimed gap down; trapped shorts; reversal long signal)
+    InsideRangeHotVolCoil,               // hod_dist_pct.abs() < 1 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range + hot vol (inside-range coil with absorption; pre-breakout compression with elevated participation)
+    OutsideRangeFlatCloseHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — wide intraday range + flat close + hot vol (outside-range whip; high participation but no commitment; institutional indecision with wide whipsaw)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4447,6 +4449,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::InsideRangeHotVolCoil => {
+            hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::OutsideRangeFlatCloseHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5117,6 +5129,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowBigRedBreakdownHotVol => "New 52w Low + Big Red + Hot Vol (Decisive Breakdown from Year Support with Institutional Sponsorship; Trend-following Short Signal)",
         Preset::GapUpFailBigRedHotVol => "Gap Up + Closed Red + Hot Vol (Failed Gap Up; Trapped Longs; Reversal Short Signal)",
         Preset::GapDownReclaimBigGreenHotVol => "Gap Down + Closed Green + Hot Vol (Reclaimed Gap Down; Trapped Shorts; Reversal Long Signal)",
+        Preset::InsideRangeHotVolCoil => "Tight Intraday Range + Hot Vol (Inside-range Coil with Absorption; Pre-breakout Compression with Elevated Participation)",
+        Preset::OutsideRangeFlatCloseHotVol => "Wide Intraday Range + Flat Close + Hot Vol (Outside-range Whip; High Participation but No Commitment; Institutional Indecision with Wide Whipsaw)",
     }
 }
 

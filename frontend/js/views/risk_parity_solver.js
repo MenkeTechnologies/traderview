@@ -63,6 +63,12 @@ export async function renderRiskParitySolver(mount, _appState) {
             <div id="rps-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.rp_solver.h2.rc_chart">Risk contribution share per asset (% of σ)</h2>
+            <div id="rps-rc-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.rp_solver.hint.rc_chart" class="muted small">Each asset's risk contribution as a fraction of total portfolio volatility. At ERC convergence every bar sits on the yellow 1/N reference. Bars above the line = risk-overweight; below = risk-underweight.</p>
+        </div>
+
         <div id="rps-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -128,6 +134,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable(resp);
     renderWeightsChart(resp);
+    renderRcChart(resp);
     const n = (resp.weights || []).length;
     const iter = resp.iterations | 0;
     const conv = !!resp.converged;
@@ -171,6 +178,42 @@ function renderWeightsChart(report) {
         ],
         legend: { show: true },
     }, [xs, rp, eqs], el);
+}
+
+function renderRcChart(report) {
+    const el = document.getElementById('rps-rc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !report.risk_contributions || !report.risk_contributions.length || !(report.portfolio_volatility > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rp_solver.empty_rc_chart">${esc(t('view.rp_solver.empty_rc_chart'))}</div>`;
+        return;
+    }
+    const n = report.risk_contributions.length;
+    const eq = 100 / n;
+    const labels = report.risk_contributions.map((_, i) => assetLabel(i));
+    const rcs = report.risk_contributions.map(rc => (Number(rc) / report.portfolio_volatility) * 100);
+    const eqs = labels.map(() => eq);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.rp_solver.chart.asset_idx') },
+            { label: t('view.rp_solver.chart.rc_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.rp_solver.chart.eq_rc'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, rcs, eqs], el);
 }
 
 function renderSummary(report, pending) {
