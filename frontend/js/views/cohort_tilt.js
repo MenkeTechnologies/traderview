@@ -12,6 +12,7 @@ import {
 } from '../_cohort_tilt_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { positions: makeDemoPositions('mixed') };
 
 export async function renderCohortTilt(mount, _appState) {
@@ -21,14 +22,14 @@ export async function renderCohortTilt(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.cohort_tilt.h2.cohort_positions">Cohort positions</span> <small class="muted"><span data-i18n="view.cohort_tilt.h2.cohort_positions_hint">(per line: </span><code>trader_id SYMBOL net_contracts</code><span data-i18n="view.cohort_tilt.h2.cohort_positions_hint2"> — signed: + long, - short, 0 flat)</span></small></h2>
-            <textarea id="ct-blob" rows="10" placeholder="L0 ES 3&#10;S0 ES -3&#10;a NQ 1">${esc(positionsToBlob(state.positions))}</textarea>
+            <textarea id="ct-blob" rows="10" placeholder="L0 ES 3&#10;S0 ES -3&#10;a NQ 1" data-tip="view.cohort_tilt.tip.blob">${esc(positionsToBlob(state.positions))}</textarea>
             <div class="inline-form">
-                <button data-i18n="view.cohort_tilt.btn.aggregate" id="ct-run" class="primary" type="button">Aggregate</button>
-                <button data-i18n="view.cohort_tilt.btn.demo_4_symbols_mixed_bias" id="ct-demo-mixed"  class="secondary" type="button">Demo: 4 symbols mixed bias</button>
-                <button data-i18n="view.cohort_tilt.btn.demo_strongly_long_es" id="ct-demo-long"   class="secondary" type="button">Demo: strongly long ES</button>
-                <button data-i18n="view.cohort_tilt.btn.demo_strongly_short_nq" id="ct-demo-short"  class="secondary" type="button">Demo: strongly short NQ</button>
-                <button data-i18n="view.cohort_tilt.btn.demo_all_flat_no_active" id="ct-demo-flat"   class="secondary" type="button">Demo: all flat (no active)</button>
-                <button data-i18n="view.cohort_tilt.btn.demo_same_trader_cross_symbol" id="ct-demo-cross"  class="secondary" type="button">Demo: same trader cross-symbol</button>
+                <button data-i18n="view.cohort_tilt.btn.aggregate" data-tip="view.cohort_tilt.tip.aggregate" data-shortcut="cohort_tilt_run" id="ct-run" class="primary" type="button">Aggregate</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_4_symbols_mixed_bias" data-tip="view.cohort_tilt.tip.demo_mixed" id="ct-demo-mixed"  class="secondary" type="button">Demo: 4 symbols mixed bias</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_strongly_long_es" data-tip="view.cohort_tilt.tip.demo_long" id="ct-demo-long"   class="secondary" type="button">Demo: strongly long ES</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_strongly_short_nq" data-tip="view.cohort_tilt.tip.demo_short" id="ct-demo-short"  class="secondary" type="button">Demo: strongly short NQ</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_all_flat_no_active" data-tip="view.cohort_tilt.tip.demo_flat" id="ct-demo-flat"   class="secondary" type="button">Demo: all flat (no active)</button>
+                <button data-i18n="view.cohort_tilt.btn.demo_same_trader_cross_symbol" data-tip="view.cohort_tilt.tip.demo_cross" id="ct-demo-cross"  class="secondary" type="button">Demo: same trader cross-symbol</button>
             </div>
             <p data-i18n="view.cohort_tilt.hint.bias_buckets_75_strongly_long_60_long_40_60_balanc" class="muted">Bias buckets: ≥75% strongly long, ≥60% long, 40–60% balanced, ≥25% short, &lt;25% strongly short. Symbols sorted by lopsidedness |long_ratio − 0.5| desc.</p>
         </div>
@@ -83,7 +84,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.positions);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     const local = localAggregate(state.positions);
     renderSummary(local, true);
     renderBars(local);
@@ -92,13 +93,16 @@ async function compute(tok) {
     try {
         resp = await api.cohortTilt(buildBody(state.positions));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderBars(resp);
     renderTable(resp);
     renderRatioChart(resp);
+    const syms = (resp && resp.by_symbol) ? resp.by_symbol.length : 0;
+    showToast(t('view.cohort_tilt.toast.done', { symbols: syms }), { level: 'success' });
 }
 
 function renderRatioChart(report) {

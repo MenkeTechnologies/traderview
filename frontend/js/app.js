@@ -486,6 +486,11 @@ function bindTabs() {
         const form = document.getElementById('ef-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `a` in cohort-tilt scope → click Aggregate.
+    window.addEventListener('tv:cohort-tilt-run', () => {
+        const el = document.getElementById('ct-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
