@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let widthChart = null;
 
 export async function renderAtrChannel(mount, _appState) {
     const tok = currentViewToken();
@@ -57,6 +58,11 @@ export async function renderAtrChannel(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.atrc.h2.chart">ATR Channel overlay</h2>
             <div id="ac-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.atrc.h2.width_chart">Channel width % per bar (volatility evolution)</h2>
+            <div id="ac-width-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -108,6 +114,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period, state.multiplier, state.use_ema);
     renderSummary(local, true);
     renderChart(local);
+    renderWidthChart(local);
     renderStats();
     let resp;
     try {
@@ -120,6 +127,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.atrc.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderWidthChart(resp);
     renderStats();
 }
 
@@ -195,6 +203,37 @@ function renderChart(report) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderWidthChart(report) {
+    const el = document.getElementById('ac-width-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(report.middle) || state.bars.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const widthPct = xs.map(i => {
+        const m = report.middle[i], u = report.upper[i], l = report.lower[i];
+        if (m == null || u == null || l == null || !(Math.abs(m) > 0)) return null;
+        return ((u - l) / Math.abs(m)) * 100;
+    });
+    const populated = widthPct.filter(v => v != null);
+    const mean = populated.length ? populated.reduce((s, v) => s + v, 0) / populated.length : 0;
+    const meanLine = xs.map(() => mean);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.atrc.series.width_pct'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.atrc.series.width_mean'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (widthChart) { try { widthChart.destroy(); } catch {} widthChart = null; }
+    widthChart = new window.uPlot(opts, [xs, widthPct, meanLine], el);
 }
 
 function renderStats() {

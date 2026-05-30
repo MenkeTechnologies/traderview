@@ -490,6 +490,8 @@ pub enum Preset {
     StrongHandsAtLows,              // year_low_pct < 2 AND change_pct > 0.5 AND day_pct > 0.3 AND rel_volume between 1 and 2 — at 52w low but green day on slightly elevated vol (early strength; strong hands)
     NarrowRangeHotVolSqueeze,       // hod_dist + lod_dist < 1 AND rel_volume >= 3 — narrow range + extreme vol (heavy absorption inside tight range; coiling under pressure)
     WideRangeDryVolDrift,           // hod_dist + lod_dist > 4 AND rel_volume < 0.5 AND change_pct.abs() < 1 — wide range + dry vol + flat change (low-participation swing; hidden fade)
+    LeadershipTrendDay,             // year_high_pct > -5 AND change_pct > 2 AND day_pct > 1 AND hod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w high + big up + green intraday + close near HOD on vol (leadership trend day)
+    WorstActorFlushDay,             // year_low_pct < 5 AND change_pct < -2 AND day_pct < -1 AND lod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w low + big down + red intraday + close near LOD on vol (worst-actor flush)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2451,6 +2453,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.change_pct.abs() < 1.0
         }
+        Preset::LeadershipTrendDay => {
+            hit.year_high_pct > -5.0
+                && hit.change_pct > 2.0
+                && hit.day_pct > 1.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::WorstActorFlushDay => {
+            hit.year_low_pct < 5.0
+                && hit.change_pct < -2.0
+                && hit.day_pct < -1.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2831,6 +2847,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StrongHandsAtLows => "Strong Hands at 52w Lows (Early Strength)",
         Preset::NarrowRangeHotVolSqueeze => "Narrow Range, Hot Vol (Absorption Coil)",
         Preset::WideRangeDryVolDrift => "Wide Range, Dry Vol, Flat Change (Low-Participation Drift)",
+        Preset::LeadershipTrendDay => "Leadership Trend Day (Near 52w High)",
+        Preset::WorstActorFlushDay => "Worst-Actor Flush Day (Near 52w Low)",
     }
 }
 

@@ -372,6 +372,8 @@ const PRESETS = [
     { id: 'strong_hands_at_lows', label: t('view.scanners.preset.strong_hands_at_lows.label'), desc: t('view.scanners.preset.strong_hands_at_lows.desc') },
     { id: 'narrow_range_hot_vol_squeeze', label: t('view.scanners.preset.narrow_range_hot_vol_squeeze.label'), desc: t('view.scanners.preset.narrow_range_hot_vol_squeeze.desc') },
     { id: 'wide_range_dry_vol_drift', label: t('view.scanners.preset.wide_range_dry_vol_drift.label'), desc: t('view.scanners.preset.wide_range_dry_vol_drift.desc') },
+    { id: 'leadership_trend_day', label: t('view.scanners.preset.leadership_trend_day.label'), desc: t('view.scanners.preset.leadership_trend_day.desc') },
+    { id: 'worst_actor_flush_day', label: t('view.scanners.preset.worst_actor_flush_day.label'), desc: t('view.scanners.preset.worst_actor_flush_day.desc') },
 ];
 
 export async function renderScanners(mount) {
