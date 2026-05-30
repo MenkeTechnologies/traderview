@@ -57,6 +57,12 @@ export async function renderThreeLineBreak(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.tlb.h2.move_chart">Per-line signed move (close − open)</h2>
+            <div id="tlb-move-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.tlb.hint.move_chart" class="muted small">Signed per-line magnitude. Reveals which lines represented strong trend pushes vs small qualifying-but-weak moves. Orthogonal to the absolute polyline above. Yellow dashed = zero.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.tlb.h2.table">Line table</h2>
             <div id="tlb-table"></div>
         </div>
@@ -101,6 +107,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.num_lines);
     renderSummary(local, true);
     renderChart(local);
+    renderMoveChart(local);
     renderTable(local);
     let resp;
     try {
@@ -113,6 +120,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderMoveChart(resp);
     renderTable(resp);
     const lines = Array.isArray(resp) ? resp.length : 0;
     const last = lines > 0 ? resp[lines - 1] : null;
@@ -176,6 +184,39 @@ function renderChart(lines) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderMoveChart(lines) {
+    const el = document.getElementById('tlb-move-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (lines || []).filter(l =>
+        Number.isFinite(Number(l.open)) && Number.isFinite(Number(l.close)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tlb.empty_move_chart">${esc(t('view.tlb.empty_move_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(l => Number(l.close) - Number(l.open));
+    const xs = ys.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tlb.chart.line_idx') },
+            { label: t('view.tlb.chart.move'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.tlb.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderTable(lines) {
