@@ -242,6 +242,8 @@ const PRESETS = [
     { id: 'gap_too_far_big_bounce', label: t('view.scanners.preset.gap_too_far_big_bounce.label'), desc: t('view.scanners.preset.gap_too_far_big_bounce.desc') },
     { id: 'chain_breakout_level', label: t('view.scanners.preset.chain_breakout_level.label'), desc: t('view.scanners.preset.chain_breakout_level.desc') },
     { id: 'chain_breakdown_level', label: t('view.scanners.preset.chain_breakdown_level.label'), desc: t('view.scanners.preset.chain_breakdown_level.desc') },
+    { id: 'pct52w_range_pos_top', label: t('view.scanners.preset.pct52w_range_pos_top.label'), desc: t('view.scanners.preset.pct52w_range_pos_top.desc') },
+    { id: 'pct52w_range_pos_bottom', label: t('view.scanners.preset.pct52w_range_pos_bottom.label'), desc: t('view.scanners.preset.pct52w_range_pos_bottom.desc') },
 ];
 
 export async function renderScanners(mount) {

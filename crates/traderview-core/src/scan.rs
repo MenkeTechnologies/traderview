@@ -360,6 +360,8 @@ pub enum Preset {
     GapTooFarBigBounce,          // gap_pct < -4 AND change_pct > gap_pct + 3 — gapped down but bounced >3% off the gap (over-extended bounce)
     ChainBreakoutLevel,          // hod_dist.abs() < 0.3 AND lod_dist.abs() > 2 AND change_pct > 1 — close at HOD with broad day-range; breakout above prior level
     ChainBreakdownLevel,         // lod_dist.abs() < 0.3 AND hod_dist.abs() > 2 AND change_pct < -1 — close at LOD with broad day-range; breakdown below prior level
+    Pct52wRangePosTop,           // year_high_pct > -20 AND year_low_pct > 30 — position in top half of 52w range (bullish positioning)
+    Pct52wRangePosBottom,        // year_high_pct < -50 AND year_low_pct < 30 — position in bottom half of 52w range (bearish positioning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1587,6 +1589,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() > 2.0
                 && hit.change_pct < -1.0
         }
+        Preset::Pct52wRangePosTop => {
+            hit.year_high_pct > -20.0 && hit.year_low_pct > 30.0
+        }
+        Preset::Pct52wRangePosBottom => {
+            hit.year_high_pct < -50.0 && hit.year_low_pct < 30.0
+        }
     }
 }
 
@@ -1837,6 +1845,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapTooFarBigBounce => "Gap-Too-Far Big Bounce",
         Preset::ChainBreakoutLevel => "Chain Breakout Level",
         Preset::ChainBreakdownLevel => "Chain Breakdown Level",
+        Preset::Pct52wRangePosTop => "52w Range Position: Top Half",
+        Preset::Pct52wRangePosBottom => "52w Range Position: Bottom Half",
     }
 }
 
