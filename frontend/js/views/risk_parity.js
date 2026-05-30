@@ -55,6 +55,11 @@ export async function renderRiskParity(mount, _appState) {
             <div id="rp-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_parity.h2.weights_chart">RP vs EW weight per asset</h2>
+            <div id="rp-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="rp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -94,6 +99,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderBars(local);
     renderTable(local);
+    renderWeightsChart(local);
     let resp;
     try {
         resp = await api.calcRiskParity(buildBody(state.assets));
@@ -105,6 +111,44 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderBars(resp);
     renderTable(resp);
+    renderWeightsChart(resp);
+}
+
+function renderWeightsChart(report) {
+    const el = document.getElementById('rp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report?.allocations || []).filter(a => Number.isFinite(Number(a.weight)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_parity.empty_chart">${esc(t('view.risk_parity.empty_chart'))}</div>`;
+        return;
+    }
+    const eq = equalWeightAllocation(state.assets);
+    const eqByVid = new Map(eq.map(a => [a.symbol, a.weight]));
+    rows.sort((a, b) => Number(b.weight) - Number(a.weight));
+    const labels = rows.map(a => a.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const rpY = rows.map(a => Number(a.weight) * 100);
+    const ewY = rows.map(a => Number(eqByVid.get(a.symbol) || 0) * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_parity.chart.symbol') },
+            { label: t('view.risk_parity.chart.rp_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.risk_parity.chart.ew_pct'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, rpY, ewY], el);
 }
 
 function renderSummary(report, pending) {

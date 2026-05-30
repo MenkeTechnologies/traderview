@@ -326,6 +326,8 @@ pub enum Preset {
     BounceInDowntrend,           // year_low_pct < 15 AND change_pct between 0 and 3 AND rel_volume < 1 — minor bounce in downtrend on light vol (textbook continuation short zone)
     DeepPullbackInUptrend,       // year_high_pct > -25 AND change_pct between -10 and -3 AND rel_volume >= 2 — deep pullback in uptrend on heavy vol (capitulation entry zone)
     DeepBounceInDowntrend,       // year_low_pct < 25 AND change_pct between 3 and 10 AND rel_volume >= 2 — deep bounce in downtrend on heavy vol (rip-and-reject entry zone)
+    TightAboveMidStrong,         // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct > 0 AND change_pct > 0.5 — tight range above mid (coiled spring; bullish bias)
+    TightBelowMidWeak,           // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct < 0 AND change_pct < -0.5 — tight range below mid (coiled spring; bearish bias)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1361,6 +1363,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 10.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::TightAboveMidStrong => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
+                && hit.day_pct > 0.0
+                && hit.change_pct > 0.5
+        }
+        Preset::TightBelowMidWeak => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
+                && hit.day_pct < 0.0
+                && hit.change_pct < -0.5
+        }
     }
 }
 
@@ -1577,6 +1589,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BounceInDowntrend => "Bounce In Downtrend",
         Preset::DeepPullbackInUptrend => "Deep Pullback In Uptrend",
         Preset::DeepBounceInDowntrend => "Deep Bounce In Downtrend",
+        Preset::TightAboveMidStrong => "Tight Above Mid, Strong",
+        Preset::TightBelowMidWeak => "Tight Below Mid, Weak",
     }
 }
 

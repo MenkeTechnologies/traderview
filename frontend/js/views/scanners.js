@@ -208,6 +208,8 @@ const PRESETS = [
     { id: 'bounce_in_downtrend', label: t('view.scanners.preset.bounce_in_downtrend.label'), desc: t('view.scanners.preset.bounce_in_downtrend.desc') },
     { id: 'deep_pullback_in_uptrend', label: t('view.scanners.preset.deep_pullback_in_uptrend.label'), desc: t('view.scanners.preset.deep_pullback_in_uptrend.desc') },
     { id: 'deep_bounce_in_downtrend', label: t('view.scanners.preset.deep_bounce_in_downtrend.label'), desc: t('view.scanners.preset.deep_bounce_in_downtrend.desc') },
+    { id: 'tight_above_mid_strong', label: t('view.scanners.preset.tight_above_mid_strong.label'), desc: t('view.scanners.preset.tight_above_mid_strong.desc') },
+    { id: 'tight_below_mid_weak', label: t('view.scanners.preset.tight_below_mid_weak.label'), desc: t('view.scanners.preset.tight_below_mid_weak.desc') },
 ];
 
 export async function renderScanners(mount) {
