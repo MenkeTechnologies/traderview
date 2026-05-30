@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_RESAMPLES, DEFAULT_SEED,
@@ -30,21 +31,23 @@ export async function renderBootstrapPnl(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.boot_pnl.label.resamples">Resamples</span>
-                    <input id="bp-resamples" type="number" step="1" min="100" value="${state.n_resamples}"></label>
+                    <input id="bp-resamples" type="number" step="1" min="100" value="${state.n_resamples}"
+                           data-tip="view.boot_pnl.tip.resamples"></label>
                 <label><span data-i18n="view.boot_pnl.label.seed">Seed</span>
-                    <input id="bp-seed" type="number" step="1" value="${state.seed}"></label>
+                    <input id="bp-seed" type="number" step="1" value="${state.seed}"
+                           data-tip="view.boot_pnl.tip.seed"></label>
                 <button data-i18n="view.boot_pnl.btn.compute" id="bp-run" class="primary"
-                        data-tip="view.boot_pnl.tip.compute" type="button">Resample</button>
+                        data-tip="view.boot_pnl.tip.compute" data-shortcut="bootstrap_pnl_run" type="button">Resample</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.boot_pnl.btn.demo_winning"  id="bp-demo-win"   class="secondary" type="button">Demo: winning strategy</button>
-                <button data-i18n="view.boot_pnl.btn.demo_losing"   id="bp-demo-loss"  class="secondary" type="button">Demo: losing strategy</button>
-                <button data-i18n="view.boot_pnl.btn.demo_hivar"    id="bp-demo-hi"    class="secondary" type="button">Demo: high variance</button>
-                <button data-i18n="view.boot_pnl.btn.demo_lovar"    id="bp-demo-lo"    class="secondary" type="button">Demo: low variance grid</button>
-                <button data-i18n="view.boot_pnl.btn.demo_winall"   id="bp-demo-wa"    class="secondary" type="button">Demo: all winners</button>
-                <button data-i18n="view.boot_pnl.btn.demo_lossall"  id="bp-demo-la"    class="secondary" type="button">Demo: all losers</button>
-                <button data-i18n="view.boot_pnl.btn.demo_lumpy"    id="bp-demo-lumpy" class="secondary" type="button">Demo: lumpy-tail (95% +$10, 5% −$500)</button>
-                <button data-i18n="view.boot_pnl.btn.demo_few"      id="bp-demo-few"   class="secondary" type="button">Demo: few trades (8)</button>
+                <button data-i18n="view.boot_pnl.btn.demo_winning"  id="bp-demo-win"   class="secondary" data-tip="view.boot_pnl.tip.demo_winning" type="button">Demo: winning strategy</button>
+                <button data-i18n="view.boot_pnl.btn.demo_losing"   id="bp-demo-loss"  class="secondary" data-tip="view.boot_pnl.tip.demo_losing"  type="button">Demo: losing strategy</button>
+                <button data-i18n="view.boot_pnl.btn.demo_hivar"    id="bp-demo-hi"    class="secondary" data-tip="view.boot_pnl.tip.demo_hivar"   type="button">Demo: high variance</button>
+                <button data-i18n="view.boot_pnl.btn.demo_lovar"    id="bp-demo-lo"    class="secondary" data-tip="view.boot_pnl.tip.demo_lovar"   type="button">Demo: low variance grid</button>
+                <button data-i18n="view.boot_pnl.btn.demo_winall"   id="bp-demo-wa"    class="secondary" data-tip="view.boot_pnl.tip.demo_winall"  type="button">Demo: all winners</button>
+                <button data-i18n="view.boot_pnl.btn.demo_lossall"  id="bp-demo-la"    class="secondary" data-tip="view.boot_pnl.tip.demo_lossall" type="button">Demo: all losers</button>
+                <button data-i18n="view.boot_pnl.btn.demo_lumpy"    id="bp-demo-lumpy" class="secondary" data-tip="view.boot_pnl.tip.demo_lumpy"   type="button">Demo: lumpy-tail (95% +$10, 5% −$500)</button>
+                <button data-i18n="view.boot_pnl.btn.demo_few"      id="bp-demo-few"   class="secondary" data-tip="view.boot_pnl.tip.demo_few"     type="button">Demo: few trades (8)</button>
             </div>
             <p data-i18n="view.boot_pnl.hint.about" class="muted">Resamples per-trade P&amp;L with replacement. Reports mean / median / 90% CI / 95% CI / Pr(total > 0). iid bootstrap is appropriate for trade-level data where trades are independent. For serially-dependent returns use block bootstrap.</p>
         </div>
@@ -96,6 +99,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.boot_pnl.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.boot_pnl.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -115,9 +119,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.boot_pnl.toast.invalid'), { level: 'warning' }); return; }
     const local = localBootstrap(state.trade_pnls, state.n_resamples, state.seed);
-    if (!local) { showErr(t('view.boot_pnl.err.degenerate')); return; }
+    if (!local) { showErr(t('view.boot_pnl.err.degenerate')); showToast(t('view.boot_pnl.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderCi(local);
     renderTable();
@@ -128,15 +132,17 @@ async function compute(tok) {
         resp = await api.anlyBootstrapPnl(buildBody(state));
     } catch (e) {
         showErr(`${t('view.boot_pnl.err.api')}: ${e.message || e}`);
+        showToast(t('view.boot_pnl.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.boot_pnl.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.boot_pnl.err.server_rejected')); showToast(t('view.boot_pnl.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderCi(resp);
     renderTable();
     renderEquityChart();
     renderSortedChart();
+    showToast(t('view.boot_pnl.toast.resampled'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
