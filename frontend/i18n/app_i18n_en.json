@@ -7078,6 +7078,8 @@
   "common.validate.must_be_array":         "{field} must be an array",
   "common.status.available":               "available",
   "common.status.not_available":           "NOT AVAILABLE",
+  "common.duplicate.slug":                 "{name} copy",
+  "common.duplicate.suffix":               "{name} (copy)",
   "view.bartlett.demo.tight":              "Tight",
   "view.bartlett.demo.loose":              "Loose",
   "view.bartlett.demo.calm":               "Calm",

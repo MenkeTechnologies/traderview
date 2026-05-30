@@ -1,4 +1,6 @@
 // Dashboards storage layer — pure, testable, localStorage-backed.
+
+import { t } from './i18n.js';
 //
 // Schema (key `tv-dashboards-v1`):
 // {
@@ -159,7 +161,7 @@ export function duplicateDashboard(state, id) {
     const d = state.dashboards[id];
     if (!d) return state;
     const existing = new Set(Object.keys(state.dashboards));
-    const slug = slugifyName(`${d.name} copy`, existing);
+    const slug = slugifyName(t('common.duplicate.slug', { name: d.name }), existing);
     const tiles = d.tiles.map(t => ({
         id: newTileId(new Set()),
         viewId: t.viewId,
@@ -170,7 +172,7 @@ export function duplicateDashboard(state, id) {
         active: slug,
         dashboards: {
             ...state.dashboards,
-            [slug]: { id: slug, name: `${d.name} (copy)`, tiles },
+            [slug]: { id: slug, name: t('common.duplicate.suffix', { name: d.name }), tiles },
         },
     };
 }
