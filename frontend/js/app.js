@@ -453,6 +453,16 @@ function bindTabs() {
         const el = document.getElementById('rb-targets');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `n` in strategy-alerts scope → focus rule name input.
+    window.addEventListener('tv:strategy-alerts-focus-name', () => {
+        const el = document.querySelector('#sa-form input[name="name"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
+    // View-scoped: `e` in strategy-alerts scope → trigger Evaluate now.
+    window.addEventListener('tv:strategy-alerts-evaluate-now', () => {
+        const el = document.getElementById('sa-eval-now');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `r` in live/trades/journal/watchlists/webull/charts
     // scopes — each refreshes the active view via hashchange.
     const refreshNow = () => window.dispatchEvent(new HashChangeEvent('hashchange'));

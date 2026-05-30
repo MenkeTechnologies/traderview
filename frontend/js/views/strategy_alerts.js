@@ -46,25 +46,27 @@ export async function renderStrategyAlerts(mount) {
         <div class="chart-panel">
             <form id="sa-form" class="inline-form">
                 <input name="name" placeholder="rule name" data-i18n-placeholder="view.strategy_alerts.placeholder.name"
+                       data-tip="view.strategy_alerts.tip.name" data-shortcut="strategy_alerts_focus_name"
                        required style="min-width:240px;">
                 <label><span data-i18n="view.strategy_alerts.label.template">Template</span>
-                    <select name="template">
+                    <select name="template" data-tip="view.strategy_alerts.tip.template">
                         <option data-i18n="view.strategy_alerts.opt.custom" value="">(custom)</option>
                         ${TEMPLATES.map(tpl => `<option value="${tpl.id}" data-i18n="view.strategy_alerts.template.${tpl.id}">${esc(t(`view.strategy_alerts.template.${tpl.id}`))}</option>`).join('')}
                     </select>
                 </label>
-                <button data-i18n="view.strategy_alerts.btn.create" class="primary" type="submit">Create</button>
+                <button data-i18n="view.strategy_alerts.btn.create" data-tip="view.strategy_alerts.tip.create" class="primary" type="submit">Create</button>
             </form>
             <textarea id="sa-ast" rows="10"
                 style="width:100%;font-family:'Share Tech Mono',monospace;font-size:11px;background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:8px;margin-top:8px;"
                 data-i18n-placeholder="view.strategy_alerts.placeholder.ast"
+                data-tip="view.strategy_alerts.tip.ast"
                 placeholder='AST JSON, e.g. {"kind":"leaf","symbol":"AAPL","metric":{"kind":"price"},"op":"gt","value":200}'></textarea>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.strategy_alerts.h2.active_rules">Active rules</h2>
             <div id="sa-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
-            <button data-i18n="view.strategy_alerts.btn.evaluate_now" id="sa-eval-now" class="btn">Evaluate now</button>
+            <button data-i18n="view.strategy_alerts.btn.evaluate_now" data-tip="view.strategy_alerts.tip.evaluate_now" data-shortcut="strategy_alerts_evaluate_now" id="sa-eval-now" class="btn">Evaluate now</button>
             <span id="sa-status" class="muted small" style="margin-left:8px;"></span>
         </div>
 
@@ -95,6 +97,7 @@ export async function renderStrategyAlerts(mount) {
             const astEl = mount.querySelector('#sa-ast');
             if (astEl) astEl.value = '';
             e.target.reset();
+            showToast(t('view.strategy_alerts.toast.rule_created', { name: fd.get('name').trim() }), { level: 'success' });
             await refresh(mount, tok);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
