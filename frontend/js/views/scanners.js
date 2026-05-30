@@ -370,6 +370,8 @@ const PRESETS = [
     { id: 'year_low_intraday_strong', label: t('view.scanners.preset.year_low_intraday_strong.label'), desc: t('view.scanners.preset.year_low_intraday_strong.desc') },
     { id: 'weak_hands_at_highs', label: t('view.scanners.preset.weak_hands_at_highs.label'), desc: t('view.scanners.preset.weak_hands_at_highs.desc') },
     { id: 'strong_hands_at_lows', label: t('view.scanners.preset.strong_hands_at_lows.label'), desc: t('view.scanners.preset.strong_hands_at_lows.desc') },
+    { id: 'narrow_range_hot_vol_squeeze', label: t('view.scanners.preset.narrow_range_hot_vol_squeeze.label'), desc: t('view.scanners.preset.narrow_range_hot_vol_squeeze.desc') },
+    { id: 'wide_range_dry_vol_drift', label: t('view.scanners.preset.wide_range_dry_vol_drift.label'), desc: t('view.scanners.preset.wide_range_dry_vol_drift.desc') },
 ];
 
 export async function renderScanners(mount) {

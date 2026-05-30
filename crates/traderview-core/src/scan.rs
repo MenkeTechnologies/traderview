@@ -487,7 +487,9 @@ pub enum Preset {
     YearHighIntradayWeak,          // year_high_pct > -1 AND day_pct < -1 AND rel_volume >= 1.5 — at 52w high but intraday weak (close < open) on hot vol (rejection from high; failed continuation)
     YearLowIntradayStrong,         // year_low_pct < 1 AND day_pct > 1 AND rel_volume >= 1.5 — at 52w low but intraday strong (close > open) on hot vol (reclaim from low; failed continuation down)
     WeakHandsAtHighs,              // year_high_pct > -2 AND change_pct < -0.5 AND day_pct < -0.3 AND rel_volume between 1 and 2 — at 52w high but red day on slightly elevated vol (early weakness; weak hands)
-    StrongHandsAtLows,             // year_low_pct < 2 AND change_pct > 0.5 AND day_pct > 0.3 AND rel_volume between 1 and 2 — at 52w low but green day on slightly elevated vol (early strength; strong hands)
+    StrongHandsAtLows,              // year_low_pct < 2 AND change_pct > 0.5 AND day_pct > 0.3 AND rel_volume between 1 and 2 — at 52w low but green day on slightly elevated vol (early strength; strong hands)
+    NarrowRangeHotVolSqueeze,       // hod_dist + lod_dist < 1 AND rel_volume >= 3 — narrow range + extreme vol (heavy absorption inside tight range; coiling under pressure)
+    WideRangeDryVolDrift,           // hod_dist + lod_dist > 4 AND rel_volume < 0.5 AND change_pct.abs() < 1 — wide range + dry vol + flat change (low-participation swing; hidden fade)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2440,6 +2442,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
                 && hit.rel_volume <= 2.0
         }
+        Preset::NarrowRangeHotVolSqueeze => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::WideRangeDryVolDrift => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume < 0.5
+                && hit.change_pct.abs() < 1.0
+        }
     }
 }
 
@@ -2818,6 +2829,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::YearLowIntradayStrong => "At 52w Low + Intraday Strong (Failed Continuation Down)",
         Preset::WeakHandsAtHighs => "Weak Hands at 52w Highs (Early Weakness)",
         Preset::StrongHandsAtLows => "Strong Hands at 52w Lows (Early Strength)",
+        Preset::NarrowRangeHotVolSqueeze => "Narrow Range, Hot Vol (Absorption Coil)",
+        Preset::WideRangeDryVolDrift => "Wide Range, Dry Vol, Flat Change (Low-Participation Drift)",
     }
 }
 

@@ -55,6 +55,11 @@ export async function renderAroon(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.aroon.h2.strength_chart">Trend strength (|oscillator|) vs thresholds</h2>
+            <div id="ar-strength-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.aroon.h2.table">Per-bar Aroon (tail — last 30)</h2>
             <div id="ar-table"></div>
         </div>
@@ -98,6 +103,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderStrengthChart(local);
     renderTable(local);
     let resp;
     try {
@@ -109,6 +115,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderStrengthChart(resp);
     renderTable(resp);
 }
 
@@ -170,6 +177,40 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, report.aroon_up, report.aroon_down, report.aroon_oscillator], el);
+}
+
+function renderStrengthChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ar-strength-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report.aroon_oscillator || report.aroon_oscillator.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.aroon.empty_strength">${esc(t('view.aroon.empty_strength'))}</div>`;
+        return;
+    }
+    const xs = report.aroon_oscillator.map((_, i) => i);
+    const strength = report.aroon_oscillator.map(v => (v == null || !Number.isFinite(v) ? null : Math.abs(v)));
+    const med = xs.map(() => 30);
+    const strong = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.aroon.series.bar') },
+            { label: t('view.aroon.chart.strength'),
+              stroke: '#7af0a8', width: 1.5,
+              points: { show: false } },
+            { label: t('view.aroon.chart.medium_30'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.aroon.chart.strong_50'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, strength, med, strong], el);
 }
 
 function renderTable(report) {
