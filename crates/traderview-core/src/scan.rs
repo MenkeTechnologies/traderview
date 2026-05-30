@@ -1092,6 +1092,8 @@ pub enum Preset {
     AsymmetricRangeNearHighFarLowGapUpHotVol,  // year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap up (>2%) + hot vol (catalyst-driven breakout to fresh highs: uptrend stock attempts catalyst-confirmed continuation through the 52w resistance level with elevated participation; trend-extension signal worth a breakout-trade screen)
     GapUpFlatDayHotVol,                        // gap_pct > 2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap up held through the regular session without intraday giveback or further follow-through; supports the gap without re-test, suggesting buyer accumulation at the gap level)
     GapDownFlatDayHotVol,                      // gap_pct < -2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap down held through the regular session without intraday recovery or further deterioration; supports the gap without re-test, suggesting seller distribution at the gap level)
+    GapUpBigDayHotVol,                         // gap_pct > 2 AND day_pct > 2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday up (>2%) + hot vol (double-momentum day: overnight gap up followed by intraday continuation higher with elevated participation; gap+intraday both aligned green = aggregate change_pct >4% from prior close with sustained buy pressure across both regular and after-hours sessions)
+    GapDownBigDayHotVol,                       // gap_pct < -2 AND day_pct < -2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday down (<-2%) + hot vol (double-momentum day: overnight gap down followed by intraday continuation lower with elevated participation; gap+intraday both aligned red = aggregate change_pct <-4% from prior close with sustained sell pressure across both regular and after-hours sessions)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6744,6 +6746,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::GapDownFlatDayHotVol => {
             hit.gap_pct < -2.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpBigDayHotVol => {
+            hit.gap_pct > 2.0 && hit.day_pct > 2.0 && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownBigDayHotVol => {
+            hit.gap_pct < -2.0 && hit.day_pct < -2.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7726,6 +7734,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AsymmetricRangeNearHighFarLowGapUpHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Gap Up (>2 %) + Hot Vol (Catalyst-driven Breakout to Fresh Highs: Uptrend Stock Attempts Catalyst-confirmed Continuation through the 52w Resistance Level with Elevated Participation; Trend-extension Signal Worth a Breakout-trade Screen)",
         Preset::GapUpFlatDayHotVol => "Gap Up (>2 %) + Flat-day Bar (|day_pct|<0.5 %) + Hot Vol (Gap-and-hold Institutional Signal: Overnight Gap up Held through the Regular Session without Intraday Giveback or Further Follow-through; Supports the Gap without Re-test, Suggesting Buyer Accumulation at the Gap Level)",
         Preset::GapDownFlatDayHotVol => "Gap Down (<-2 %) + Flat-day Bar (|day_pct|<0.5 %) + Hot Vol (Gap-and-hold Institutional Signal: Overnight Gap down Held through the Regular Session without Intraday Recovery or Further Deterioration; Supports the Gap without Re-test, Suggesting Seller Distribution at the Gap Level)",
+        Preset::GapUpBigDayHotVol => "Gap Up (>2 %) + Big Intraday Up (>2 %) + Hot Vol (Double-momentum Day: Overnight Gap up Followed by Intraday Continuation Higher with Elevated Participation; Gap+intraday Both Aligned Green = Aggregate Change_pct >4 % from Prior Close with Sustained Buy Pressure across Both Regular and After-hours Sessions)",
+        Preset::GapDownBigDayHotVol => "Gap Down (<-2 %) + Big Intraday Down (<-2 %) + Hot Vol (Double-momentum Day: Overnight Gap down Followed by Intraday Continuation Lower with Elevated Participation; Gap+intraday Both Aligned Red = Aggregate Change_pct <-4 % from Prior Close with Sustained Sell Pressure across Both Regular and After-hours Sessions)",
     }
 }
 
