@@ -1030,6 +1030,8 @@ const PRESETS = [
     { id: 'tight_intraday_range_hot_vol', label: t('view.scanners.preset.tight_intraday_range_hot_vol.label'), desc: t('view.scanners.preset.tight_intraday_range_hot_vol.desc') },
     { id: 'big_intraday_range_near_year_high_hot_vol', label: t('view.scanners.preset.big_intraday_range_near_year_high_hot_vol.label'), desc: t('view.scanners.preset.big_intraday_range_near_year_high_hot_vol.desc') },
     { id: 'big_intraday_range_near_year_low_hot_vol', label: t('view.scanners.preset.big_intraday_range_near_year_low_hot_vol.label'), desc: t('view.scanners.preset.big_intraday_range_near_year_low_hot_vol.desc') },
+    { id: 'big_intraday_range_confirmed_above_year_high_hot_vol', label: t('view.scanners.preset.big_intraday_range_confirmed_above_year_high_hot_vol.label'), desc: t('view.scanners.preset.big_intraday_range_confirmed_above_year_high_hot_vol.desc') },
+    { id: 'big_intraday_range_confirmed_below_year_low_hot_vol', label: t('view.scanners.preset.big_intraday_range_confirmed_below_year_low_hot_vol.label'), desc: t('view.scanners.preset.big_intraday_range_confirmed_below_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

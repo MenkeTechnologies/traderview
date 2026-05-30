@@ -1148,6 +1148,8 @@ pub enum Preset {
     TightIntradayRangeHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range (<1% high-low spread) + hot vol (intraday compression with elevated participation: regular session prints a much narrower than normal trading range despite hot vol; institutional positioning event where heavy hands trade without moving the tape; breakout-candidate worth a watch-list-add)
     BigIntradayRangeNearYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (volatility-expansion battle at the year peak: regular session prints a wide trading range right at the 52w high with elevated participation; bulls and bears fighting hard at the key resistance with no decisive winner from range alone)
     BigIntradayRangeNearYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (volatility-expansion battle at the year trough: regular session prints a wide trading range right at the 52w low with elevated participation; bulls and bears fighting hard at the key support with no decisive winner from range alone)
+    BigIntradayRangeConfirmedAboveYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (volatility-expansion battle in the validated-breakout zone: regular session prints a wide trading range right after price cleared the prior peak with elevated participation; post-breakout consolidation fight where bulls defend the breakout and bears test it)
+    BigIntradayRangeConfirmedBelowYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (volatility-expansion battle in the validated-breakdown zone: regular session prints a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown consolidation fight where bears defend the breakdown and bulls test it)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7064,6 +7066,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.year_low_pct < 2.0
         }
+        Preset::BigIntradayRangeConfirmedAboveYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::BigIntradayRangeConfirmedBelowYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -8102,6 +8116,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightIntradayRangeHotVol => "Tight Intraday Range (<1 % High-low Spread) + Hot Vol (Intraday Compression with Elevated Participation: Regular Session Prints a Much Narrower than Normal Trading Range Despite Hot Vol; Institutional Positioning Event Where Heavy Hands Trade without Moving the Tape; Breakout-candidate Worth a Watch-list-add)",
         Preset::BigIntradayRangeNearYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + At/near 52w High (<2 %) (Volatility-expansion Battle at the Year Peak: Regular Session Prints a Wide Trading Range Right at the 52w High with Elevated Participation; Bulls and Bears Fighting Hard at the Key Resistance with No Decisive Winner from Range Alone)",
         Preset::BigIntradayRangeNearYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + At/near 52w Low (<2 %) (Volatility-expansion Battle at the Year Trough: Regular Session Prints a Wide Trading Range Right at the 52w Low with Elevated Participation; Bulls and Bears Fighting Hard at the Key Support with No Decisive Winner from Range Alone)",
+        Preset::BigIntradayRangeConfirmedAboveYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Volatility-expansion Battle in the Validated-breakout Zone: Regular Session Prints a Wide Trading Range Right after Price Cleared the Prior Peak with Elevated Participation; Post-breakout Consolidation Fight Where Bulls Defend the Breakout and Bears Test It)",
+        Preset::BigIntradayRangeConfirmedBelowYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Volatility-expansion Battle in the Validated-breakdown Zone: Regular Session Prints a Wide Trading Range Right after Price Cleared the Prior Trough with Elevated Participation; Post-breakdown Consolidation Fight Where Bears Defend the Breakdown and Bulls Test It)",
     }
 }
 
