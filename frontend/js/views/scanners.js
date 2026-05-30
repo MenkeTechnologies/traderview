@@ -20,6 +20,8 @@ const PRESETS = [
     { id: 'coiling_squeeze',    label: t('view.scanners.preset.coiling_squeeze.label'),    desc: t('view.scanners.preset.coiling_squeeze.desc') },
     { id: 'mid_range_squeeze',  label: t('view.scanners.preset.mid_range_squeeze.label'),  desc: t('view.scanners.preset.mid_range_squeeze.desc') },
     { id: 'bracket_squeeze',    label: t('view.scanners.preset.bracket_squeeze.label'),    desc: t('view.scanners.preset.bracket_squeeze.desc') },
+    { id: 'doji_squeeze',       label: t('view.scanners.preset.doji_squeeze.label'),       desc: t('view.scanners.preset.doji_squeeze.desc') },
+    { id: 'gap_fill_squeeze',   label: t('view.scanners.preset.gap_fill_squeeze.label'),   desc: t('view.scanners.preset.gap_fill_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

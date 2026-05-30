@@ -138,6 +138,8 @@ pub enum Preset {
     CoilingSqueeze,     // change near zero (|change_pct| < 1) AND quiet volume (< 0.7×) AND narrow gap
     MidRangeSqueeze,    // far from both 52w extremes (year_high_pct < -10 AND year_low_pct > 10) AND quiet day
     BracketSqueeze,     // very tight day_pct (<0.5) AND narrow distance to HOD/LOD (<0.5) — coiled spring
+    DojiSqueeze,        // change_pct near zero AND tight day AND no gap — perfect equilibrium bar
+    GapFillSqueeze,     // gap opened ≥1% AND day_pct collapsed (<0.5) AND quiet volume — failed continuation
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -194,6 +196,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::DojiSqueeze => {
+            hit.change_pct.abs() < 0.2
+                && hit.day_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.3
+        }
+        Preset::GapFillSqueeze => {
+            hit.gap_pct.abs() >= 1.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume <= 0.8
+        }
     }
 }
 
@@ -222,6 +234,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CoilingSqueeze => "Coiling Squeeze",
         Preset::MidRangeSqueeze => "Mid-Range Squeeze",
         Preset::BracketSqueeze => "Bracket Squeeze",
+        Preset::DojiSqueeze => "Doji Squeeze",
+        Preset::GapFillSqueeze => "Gap-Fill Squeeze",
     }
 }
 
