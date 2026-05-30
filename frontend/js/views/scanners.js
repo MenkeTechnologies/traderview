@@ -116,6 +116,8 @@ const PRESETS = [
     { id: 'gap_aligns_change_squeeze',  label: t('view.scanners.preset.gap_aligns_change_squeeze.label'),  desc: t('view.scanners.preset.gap_aligns_change_squeeze.desc') },
     { id: 'unaffected_gap_squeeze',     label: t('view.scanners.preset.unaffected_gap_squeeze.label'),     desc: t('view.scanners.preset.unaffected_gap_squeeze.desc') },
     { id: 'stacked_closes_squeeze',     label: t('view.scanners.preset.stacked_closes_squeeze.label'),     desc: t('view.scanners.preset.stacked_closes_squeeze.desc') },
+    { id: 'pullback_to_mid_squeeze',    label: t('view.scanners.preset.pullback_to_mid_squeeze.label'),    desc: t('view.scanners.preset.pullback_to_mid_squeeze.desc') },
+    { id: 'bounce_from_mid_squeeze',    label: t('view.scanners.preset.bounce_from_mid_squeeze.label'),    desc: t('view.scanners.preset.bounce_from_mid_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

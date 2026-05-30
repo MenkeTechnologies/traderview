@@ -75,10 +75,46 @@ function render(r, mount) {
             ${distBars(r.mood_distribution)}
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.mood_analytics.h2.scatter_chart">Mood vs net P/L scatter</h2>
+            <div id="ma-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.mood_analytics.h2.sample_trades_latest_50">Sample trades (latest 50)</h2>
             ${sampleTable(r.pairs.slice(-50).reverse())}
         </div>
     `;
+    renderMoodScatter(r.pairs);
+}
+
+function renderMoodScatter(pairs) {
+    const el = document.getElementById('ma-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (pairs || []).filter(p =>
+        Number.isFinite(Number(p.mood)) && Number.isFinite(Number(p.net_pnl)));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mood_analytics.empty_chart">${esc(t('view.mood_analytics.empty_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => Number(a.mood) - Number(b.mood));
+    const xs = pts.map(p => Number(p.mood));
+    const ys = pts.map(p => Number(p.net_pnl));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: false, range: [-2.5, 2.5] }, y: { auto: true } },
+        series: [
+            { label: t('view.mood_analytics.chart.mood') },
+            { label: t('view.mood_analytics.chart.pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.mood_analytics.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function interpretCorr(c) {

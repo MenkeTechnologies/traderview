@@ -234,6 +234,8 @@ pub enum Preset {
     GapAlignsChangeSqueeze,      // gap_pct.signum() == change_pct.signum() AND (|gap| + |change|) < 1.5 AND day_pct.abs() < 0.5 — small aligned move
     UnaffectedGapSqueeze,        // |gap_pct| >= 0.3 AND |gap_pct| <= 1 AND day_pct.abs() < 0.3 AND |change_pct - gap_pct| < 0.3 — gap simply transferred without intraday motion
     StackedClosesSqueeze,        // hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND |day_pct| < 0.5 AND |change_pct| < 1 — close, HOD, LOD, open all stacked
+    PullbackToMidSqueeze,        // change_pct between -2 and -0.5 AND hod_dist.abs() > 1.5 AND year_high_pct >= -10 — orderly pullback from highs
+    BounceFromMidSqueeze,        // change_pct between 0.5 and 2 AND lod_dist.abs() > 1.5 AND year_low_pct <= 10 — orderly bounce from lows
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -824,6 +826,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.change_pct.abs() < 1.0
         }
+        Preset::PullbackToMidSqueeze => {
+            hit.change_pct <= -0.5
+                && hit.change_pct >= -2.0
+                && hit.hod_dist_pct.abs() > 1.5
+                && hit.year_high_pct >= -10.0
+        }
+        Preset::BounceFromMidSqueeze => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 2.0
+                && hit.lod_dist_pct.abs() > 1.5
+                && hit.year_low_pct <= 10.0
+        }
     }
 }
 
@@ -948,6 +962,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAlignsChangeSqueeze => "Gap-Aligns-Change Squeeze",
         Preset::UnaffectedGapSqueeze => "Unaffected-Gap Squeeze",
         Preset::StackedClosesSqueeze => "Stacked-Closes Squeeze",
+        Preset::PullbackToMidSqueeze => "Pullback-To-Mid Squeeze",
+        Preset::BounceFromMidSqueeze => "Bounce-From-Mid Squeeze",
     }
 }
 
