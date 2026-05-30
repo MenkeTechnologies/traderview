@@ -1070,6 +1070,8 @@ pub enum Preset {
     UltraDeepAboveYearLowHammerHotVol,         // year_low_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (trend-continuation hammer in multibagger territory: extended-trend leader probed lower intraday then buyers reclaimed entire move to close at the day's high on elevated participation; bull-trend continuation candidate confirming uptrend control)
     WideYearRangeHotVol,                       // year_high_pct >= 20 AND year_low_pct >= 20 AND rel_volume >= 1.5 — wide annual range (both year_*_pct >=20%) + hot vol (high-beta volatile-equity territory: stock has traveled significant distance from both prior peak and prior trough indicating large 52w range; volatility-screen candidate for momentum and mean-reversion strategies)
     NarrowYearRangeHotVol,                     // year_high_pct < 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — narrow annual range (both year_*_pct <5%) + hot vol (compressed range-bound territory: stock has stayed within ~10% band over 52w with elevated current participation; tightest possible coil at annual scale, breakout-candidate worth watching for direction commitment)
+    NarrowYearRangeCloseAtHodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — narrow annual range + close pinned to HOD + green close + hot vol (annual-coil breakout candidate: compressed range-bound stock attempts directional commitment higher, closes at the day's high with hot vol; highest-conviction breakout-from-coil signal at the annual scale)
+    NarrowYearRangeCloseAtLodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — narrow annual range + close pinned to LOD + red close + hot vol (annual-coil breakdown candidate: compressed range-bound stock attempts directional commitment lower, closes at the day's low with hot vol; highest-conviction breakdown-from-coil signal at the annual scale)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6594,6 +6596,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NarrowYearRangeHotVol => {
             hit.year_high_pct < 5.0 && hit.year_low_pct < 5.0 && hit.rel_volume >= 1.5
         }
+        Preset::NarrowYearRangeCloseAtHodHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::NarrowYearRangeCloseAtLodHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7554,6 +7570,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::UltraDeepAboveYearLowHammerHotVol => "Multibagger (>=50 % above 52w Low) + Long Lower Wick (>3 %) + Close Pinned to HOD + Green Close + Hot Vol (Trend-continuation Hammer in Multibagger Territory: Extended-trend Leader Probed Lower Intraday then Buyers Reclaimed Entire Move to Close at the Day's High on Elevated Participation; Bull-trend Continuation Candidate Confirming Uptrend Control)",
         Preset::WideYearRangeHotVol => "Wide Annual Range (both year_*_pct >=20 %) + Hot Vol (High-beta Volatile-equity Territory: Stock Has Traveled Significant Distance from Both Prior Peak and Prior Trough Indicating Large 52w Range; Volatility-screen Candidate for Momentum and Mean-reversion Strategies)",
         Preset::NarrowYearRangeHotVol => "Narrow Annual Range (both year_*_pct <5 %) + Hot Vol (Compressed Range-bound Territory: Stock Has Stayed within ~10 % Band over 52w with Elevated Current Participation; Tightest Possible Coil at Annual Scale, Breakout-candidate Worth Watching for Direction Commitment)",
+        Preset::NarrowYearRangeCloseAtHodHotVol => "Narrow Annual Range + Close Pinned to HOD + Green Close + Hot Vol (Annual-coil Breakout Candidate: Compressed Range-bound Stock Attempts Directional Commitment Higher, Closes at the Day's High with Hot Vol; Highest-conviction Breakout-from-coil Signal at the Annual Scale)",
+        Preset::NarrowYearRangeCloseAtLodHotVol => "Narrow Annual Range + Close Pinned to LOD + Red Close + Hot Vol (Annual-coil Breakdown Candidate: Compressed Range-bound Stock Attempts Directional Commitment Lower, Closes at the Day's Low with Hot Vol; Highest-conviction Breakdown-from-coil Signal at the Annual Scale)",
     }
 }
 
