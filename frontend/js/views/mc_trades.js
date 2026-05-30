@@ -65,6 +65,12 @@ export async function renderMcTrades(mount, _appState) {
             <p data-i18n="view.mc_trades.hint.histogram" class="muted">Histogram of ending equity across all curves. Cyan dot = start equity. Red = 5th percentile (downside). Yellow = median. Green = 95th percentile.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.mc_trades.h2.cdf_chart">Ending-equity CDF (cumulative % below value)</h2>
+            <div id="mct-cdf-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.mc_trades.hint.cdf" class="muted small">Cumulative share of curves with ending equity ≤ x. Cyan dashed = start equity (read off "% of paths losing money"). Easier than the histogram for tail-probability questions.</p>
+        </div>
+
         <div id="mct-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -114,6 +120,7 @@ async function compute(tok) {
     state.lastEnding = local.ending;
     renderSummary(local.report, true);
     renderChart(local.ending, local.report);
+    renderCdfChart(local.ending, local.report);
     let resp;
     try {
         resp = await api.calcMonteCarlo(buildBody(state.historical_r, state.cfg));
@@ -125,6 +132,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.lastEnding, resp);
+    renderCdfChart(state.lastEnding, resp);
     const pRuin = (Number(resp.probability_of_ruin) * 100).toFixed(2);
     const pProf = (Number(resp.probability_profitable) * 100).toFixed(1);
     const level = resp.probability_of_ruin > 0.02 ? 'warning' : 'success';
@@ -212,6 +220,47 @@ function renderChart(ending, report) {
         ],
         legend: { show: true },
     }, [h.centers, counts, ...dashSeries], el);
+}
+
+function renderCdfChart(ending, report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('mct-cdf-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!ending || ending.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mc_trades.empty_cdf_chart">${esc(t('view.mc_trades.empty_cdf_chart'))}</div>`;
+        return;
+    }
+    const sorted = ending.slice().sort((a, b) => a - b);
+    const n = sorted.length;
+    const xs = sorted;
+    const ys = sorted.map((_, i) => (i + 1) / n * 100);
+    const startLine = xs.map(() => null);
+    let bestI = 0, bestD = Infinity;
+    for (let i = 0; i < xs.length; i++) {
+        const d = Math.abs(xs[i] - Number(report.start_equity));
+        if (d < bestD) { bestD = d; bestI = i; }
+    }
+    if (Number.isFinite(Number(report.start_equity))) startLine[bestI] = ys[bestI];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('chart.series.equity_') },
+            { label: t('view.mc_trades.chart.cdf'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.mc_trades.chart.start_marker'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 32,
+              values: (_u, splits) => splits.map(v => fmtUSD(v, 0)) },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, startLine], el);
 }
 
 function card(label, value, cls = '') {

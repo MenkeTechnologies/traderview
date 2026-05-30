@@ -596,6 +596,8 @@ const PRESETS = [
     { id: 'below_avg_vol_big_change_red', label: t('view.scanners.preset.below_avg_vol_big_change_red.label'), desc: t('view.scanners.preset.below_avg_vol_big_change_red.desc') },
     { id: 'mid_range_full_expansion_hot_vol', label: t('view.scanners.preset.mid_range_full_expansion_hot_vol.label'), desc: t('view.scanners.preset.mid_range_full_expansion_hot_vol.desc') },
     { id: 'mid_range_compression_dry_vol', label: t('view.scanners.preset.mid_range_compression_dry_vol.label'), desc: t('view.scanners.preset.mid_range_compression_dry_vol.desc') },
+    { id: 'opening_range_hold_close_at_hod_green', label: t('view.scanners.preset.opening_range_hold_close_at_hod_green.label'), desc: t('view.scanners.preset.opening_range_hold_close_at_hod_green.desc') },
+    { id: 'opening_range_hold_close_at_lod_red', label: t('view.scanners.preset.opening_range_hold_close_at_lod_red.label'), desc: t('view.scanners.preset.opening_range_hold_close_at_lod_red.desc') },
 ];
 
 export async function renderScanners(mount) {
