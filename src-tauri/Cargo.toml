@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "TraderVue-style trading journal desktop app (Tauri v2 + embedded Postgres)"
+publish = false
 
 [lib]
 name = "traderview_desktop_lib"
