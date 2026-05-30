@@ -846,6 +846,8 @@ const PRESETS = [
     { id: 'marubozu_red_at_confirmed_breakdown', label: t('view.scanners.preset.marubozu_red_at_confirmed_breakdown.label'), desc: t('view.scanners.preset.marubozu_red_at_confirmed_breakdown.desc') },
     { id: 'marubozu_red_at_confirmed_breakout', label: t('view.scanners.preset.marubozu_red_at_confirmed_breakout.label'), desc: t('view.scanners.preset.marubozu_red_at_confirmed_breakout.desc') },
     { id: 'marubozu_green_at_confirmed_breakdown', label: t('view.scanners.preset.marubozu_green_at_confirmed_breakdown.label'), desc: t('view.scanners.preset.marubozu_green_at_confirmed_breakdown.desc') },
+    { id: 'triple_aligned_bull_big_conviction_day', label: t('view.scanners.preset.triple_aligned_bull_big_conviction_day.label'), desc: t('view.scanners.preset.triple_aligned_bull_big_conviction_day.desc') },
+    { id: 'triple_aligned_bear_big_conviction_day', label: t('view.scanners.preset.triple_aligned_bear_big_conviction_day.label'), desc: t('view.scanners.preset.triple_aligned_bear_big_conviction_day.desc') },
 ];
 
 export async function renderScanners(mount) {
