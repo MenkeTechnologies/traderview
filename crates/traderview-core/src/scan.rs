@@ -1102,6 +1102,8 @@ pub enum Preset {
     SmallGapBigDayDownNearYearLowHotVol,       // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + at/near 52w low (<2%) + hot vol (pure intraday-driven breakdown to 52w low: open is essentially flat to prior close then regular session prints a sustained sell-driven move to the year trough; cleanest possible breakdown signal with no overnight gap contribution muddying the cause)
     SmallGapBigDayUpConfirmedAboveYearHighHotVol,  // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + confirmed-breakout zone (1-3% past 52w high) + hot vol (pure intraday extension past validated breakout: regular session prints a sustained buy-driven move further past the already-cleared peak with no overnight repricing component; high-conviction intraday extension confirming breakout follow-through)
     SmallGapBigDayDownConfirmedBelowYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + confirmed-breakdown zone (1-3% past 52w low) + hot vol (pure intraday extension past validated breakdown: regular session prints a sustained sell-driven move further past the already-cleared trough with no overnight repricing component; high-conviction intraday extension confirming breakdown follow-through)
+    SmallGapBigDayUpDeepBelowYearHighHotVol,   // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + far below 52w high (>=20%) + hot vol (pure intraday recovery rally from depressed level: open is essentially flat to prior close then regular session prints a sustained buy-driven move deep in pullback territory; institutional-bid activation signal that contrasts with overnight catalyst noise)
+    SmallGapBigDayDownDeepAboveYearLowHotVol,  // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + far above 52w low (>=20%) + hot vol (pure intraday rejection from elevated level: open is essentially flat to prior close then regular session prints a sustained sell-driven move deep in advance territory; institutional-offer activation signal that contrasts with overnight catalyst noise)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6798,6 +6800,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::SmallGapBigDayUpDeepBelowYearHighHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.day_pct > 3.0
+                && hit.year_high_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::SmallGapBigDayDownDeepAboveYearLowHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.day_pct < -3.0
+                && hit.year_low_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7790,6 +7804,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallGapBigDayDownNearYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + At/near 52w Low (<2 %) + Hot Vol (Pure Intraday-driven Breakdown to 52w Low: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move to the Year Trough; Cleanest Possible Breakdown Signal with No Overnight Gap Contribution Muddying the Cause)",
         Preset::SmallGapBigDayUpConfirmedAboveYearHighHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Pure Intraday Extension past Validated Breakout: Regular Session Prints a Sustained Buy-driven Move Further past the Already-cleared Peak with No Overnight Repricing Component; High-conviction Intraday Extension Confirming Breakout Follow-through)",
         Preset::SmallGapBigDayDownConfirmedBelowYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Confirmed-breakdown Zone (1-3 % past 52w Low) + Hot Vol (Pure Intraday Extension past Validated Breakdown: Regular Session Prints a Sustained Sell-driven Move Further past the Already-cleared Trough with No Overnight Repricing Component; High-conviction Intraday Extension Confirming Breakdown Follow-through)",
+        Preset::SmallGapBigDayUpDeepBelowYearHighHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + Far below 52w High (>=20 %) + Hot Vol (Pure Intraday Recovery Rally from Depressed Level: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Buy-driven Move Deep in Pullback Territory; Institutional-bid Activation Signal that Contrasts with Overnight Catalyst Noise)",
+        Preset::SmallGapBigDayDownDeepAboveYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Far above 52w Low (>=20 %) + Hot Vol (Pure Intraday Rejection from Elevated Level: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move Deep in Advance Territory; Institutional-offer Activation Signal that Contrasts with Overnight Catalyst Noise)",
     }
 }
 
