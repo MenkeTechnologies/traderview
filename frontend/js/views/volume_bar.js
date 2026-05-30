@@ -57,6 +57,12 @@ export async function renderVolumeBar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.vol_bar.h2.ticks_chart">Per-bar tick count (prints aggregated within each fixed-volume window)</h2>
+            <div id="vb-ticks-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vol_bar.hint.ticks_chart" class="muted small">Number of trade prints each bar consumed before crossing the volume threshold. Mirror of the OHLC view: since every bar carries the same volume, low-tick bars are heavy-print-size moments (few big trades) and high-tick bars are light-print-size moments (lots of small trades). Orthogonal to the price chart above.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.vol_bar.h2.table">Bars (tail — last 30)</h2>
             <div id="vb-table"></div>
         </div>
@@ -101,6 +107,7 @@ async function compute(tok) {
     const local = localCompute(state.prints, state.volume_per_bar);
     renderSummary(local, true);
     renderChart(local);
+    renderTicksChart(local);
     renderTable(local);
     let resp;
     try {
@@ -113,6 +120,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderTicksChart(resp);
     renderTable(resp);
     const dropped = state.prints.reduce((s, p) => s + p.size, 0)
         - resp.reduce((s, b) => s + b.volume, 0);
@@ -187,6 +195,35 @@ function renderChart(bars) {
         ],
         legend: { show: true },
     }, [xs, closes, highs, lows], el);
+}
+
+function renderTicksChart(bars) {
+    const el = document.getElementById('vb-ticks-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (bars || []).filter(b => Number.isFinite(Number(b.tick_count)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol_bar.empty_ticks_chart">${esc(t('view.vol_bar.empty_ticks_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(b => Number(b.tick_count));
+    const xs = ys.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vol_bar.chart.bar_idx') },
+            { label: t('view.vol_bar.chart.ticks'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable(bars) {

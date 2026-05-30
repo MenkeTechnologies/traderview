@@ -842,6 +842,8 @@ pub enum Preset {
     Year52LowBreakdownHotVolNoExtreme,   // year_low_pct < 0 AND change_pct < -1.5 AND change_pct > -4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w low + modest red + moderate hot vol (controlled-conviction breakdown to new lows; institutional distribution without panic; sustainable trend continuation candidate)
     BigGreenTopWickRejectHotVol,         // change_pct > 1 AND hod_dist_pct < -2 AND rel_volume >= 1.5 — green close + HOD far above (long upper wick) + hot vol (upper-wick rejection on a green day: rally faded into the close but still finished green; supply tested with elevated participation; potential follow-through hesitation)
     BigRedBottomWickRejectHotVol,        // change_pct < -1 AND lod_dist_pct > 2 AND rel_volume >= 1.5 — red close + LOD far below (long lower wick) + hot vol (lower-wick rejection on a red day: sell-off bounced into the close but still finished red; demand tested with elevated participation; potential follow-through hesitation)
+    DryVolGreenCloseAtHodTinyRange,      // change_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small green + closed at HOD + tight intraday range + dry vol (low-conviction grind-up day; small directional drift with no participation; weak-hands trend continuation candidate)
+    DryVolRedCloseAtLodTinyRange,        // change_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small red + closed at LOD + tight intraday range + dry vol (low-conviction grind-down day; small directional drift with no participation; weak-hands trend continuation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4883,6 +4885,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct > 2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::DryVolGreenCloseAtHodTinyRange => {
+            hit.change_pct > 0.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::DryVolRedCloseAtLodTinyRange => {
+            hit.change_pct < -0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -5615,6 +5629,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowBreakdownHotVolNoExtreme => "New 52w Low + Modest Red + Moderate Hot Vol (Controlled-conviction Breakdown to New Lows; Institutional Distribution without Panic; Sustainable Trend Continuation Candidate)",
         Preset::BigGreenTopWickRejectHotVol => "Green Close + HOD Far Above (Long Upper Wick) + Hot Vol (Upper-wick Rejection on a Green Day: Rally Faded into the Close but Still Finished Green; Supply Tested with Elevated Participation; Potential Follow-through Hesitation)",
         Preset::BigRedBottomWickRejectHotVol => "Red Close + LOD Far Below (Long Lower Wick) + Hot Vol (Lower-wick Rejection on a Red Day: Sell-off Bounced into the Close but Still Finished Red; Demand Tested with Elevated Participation; Potential Follow-through Hesitation)",
+        Preset::DryVolGreenCloseAtHodTinyRange => "Small Green + Close at HOD + Tight Intraday Range + Dry Vol (Low-conviction Grind-up Day; Small Directional Drift with No Participation; Weak-hands Trend Continuation Candidate)",
+        Preset::DryVolRedCloseAtLodTinyRange => "Small Red + Close at LOD + Tight Intraday Range + Dry Vol (Low-conviction Grind-down Day; Small Directional Drift with No Participation; Weak-hands Trend Continuation Candidate)",
     }
 }
 
