@@ -40,6 +40,10 @@ export async function renderScreener(mount) {
         </div>
 
         <div id="sc-result"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.screener.h2.score_chart">Score per hit symbol</h2>
+            <div id="sc-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#sc-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -54,12 +58,48 @@ export async function renderScreener(mount) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#sc-result');
             if (elNow) elNow.innerHTML = renderResult(r);
+            renderScoreChart(r.hits);
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#sc-result');
             if (elNow) elNow.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
         }
     });
+}
+
+function renderScoreChart(hits) {
+    const el = document.getElementById('sc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (hits || []).filter(h => Number.isFinite(Number(h.score)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.screener.empty_chart">${esc(t('view.screener.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.score) - Number(a.score));
+    const labels = valid.map(h => h.symbol);
+    const ys = valid.map(h => Number(h.score));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.screener.chart.symbol_idx') },
+            { label: t('view.screener.chart.score'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.screener.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderResult(r) {

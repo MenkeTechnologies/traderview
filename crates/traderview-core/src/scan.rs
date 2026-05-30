@@ -280,6 +280,8 @@ pub enum Preset {
     LowRangeNoChangeSqueeze,     // hod_dist + lod_dist < 1 AND |change_pct| < 0.5 — very tight range with no net change
     LowVolumeUpDaySqueeze,       // change_pct 1-3 AND rel_volume < 0.5 — modest up day on dry volume (no participation)
     LowVolumeDownDaySqueeze,     // change_pct -3 to -1 AND rel_volume < 0.5 — modest down day on dry volume (no panic)
+    HighVolumeUpDayNoExtreme,    // change_pct 1-2 AND rel_volume >= 2 AND hod_dist.abs() > 0.5 — up day on heavy volume but didn't push HOD
+    HighVolumeDownDayNoExtreme,  // change_pct -2 to -1 AND rel_volume >= 2 AND lod_dist.abs() > 0.5 — down day on heavy volume but didn't push LOD
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1109,6 +1111,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > -3.0
                 && hit.rel_volume < 0.5
         }
+        Preset::HighVolumeUpDayNoExtreme => {
+            hit.change_pct >= 1.0
+                && hit.change_pct <= 2.0
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() > 0.5
+        }
+        Preset::HighVolumeDownDayNoExtreme => {
+            hit.change_pct <= -1.0
+                && hit.change_pct >= -2.0
+                && hit.rel_volume >= 2.0
+                && hit.lod_dist_pct.abs() > 0.5
+        }
     }
 }
 
@@ -1279,6 +1293,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowRangeNoChangeSqueeze => "Low-Range No-Change Squeeze",
         Preset::LowVolumeUpDaySqueeze => "Low-Volume Up-Day Squeeze",
         Preset::LowVolumeDownDaySqueeze => "Low-Volume Down-Day Squeeze",
+        Preset::HighVolumeUpDayNoExtreme => "Hi-Vol Up-Day No-HOD Squeeze",
+        Preset::HighVolumeDownDayNoExtreme => "Hi-Vol Down-Day No-LOD Squeeze",
     }
 }
 
