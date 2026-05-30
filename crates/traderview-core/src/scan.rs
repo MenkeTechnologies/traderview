@@ -434,6 +434,8 @@ pub enum Preset {
     SmallChangeOnVolMid,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at mid range on heavy vol (mid-range positioning shift)
     HotRollingVolGap,            // gap_pct.abs() > 1.5 AND change_pct.abs() > 1.5 AND rel_volume >= 2 — material gap + day move + heavy vol (institutional positioning + execution)
     SilentDriftGap,              // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — material gap but flat day on dry vol (silent overnight repositioning; no daytime conviction)
+    UpDayOnDryVolNear52wHigh,    // year_high_pct > -10 AND change_pct > 1 AND rel_volume < 0.7 — push near 52w high on dry vol (suspect breakout candidate)
+    DownDayOnDryVolNear52wLow,   // year_low_pct < 10 AND change_pct < -1 AND rel_volume < 0.7 — push near 52w low on dry vol (suspect breakdown candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2076,6 +2078,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume < 0.7
         }
+        Preset::UpDayOnDryVolNear52wHigh => {
+            hit.year_high_pct > -10.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::DownDayOnDryVolNear52wLow => {
+            hit.year_low_pct < 10.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -2400,6 +2412,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallChangeOnVolMid => "Small Move + Vol at Mid Range",
         Preset::HotRollingVolGap => "Hot-Vol Rolling Gap",
         Preset::SilentDriftGap => "Silent-Drift Gap",
+        Preset::UpDayOnDryVolNear52wHigh => "Up Day on Dry Vol Near 52w High",
+        Preset::DownDayOnDryVolNear52wLow => "Down Day on Dry Vol Near 52w Low",
     }
 }
 

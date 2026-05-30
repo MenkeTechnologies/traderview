@@ -78,6 +78,11 @@ export async function renderTaxLossHarvest(mount, _appState) {
             <div id="tlh-qty-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_loss_harvest.h2.summary_chart">Loss summary: total vs safe vs $3k cap</h2>
+            <div id="tlh-sum-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="tlh-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -132,6 +137,7 @@ async function compute(tok) {
     renderTable(local);
     renderLossesChart(local);
     renderQtyChart(local);
+    renderSummaryChart(local);
     let resp;
     try {
         resp = await api.calcTaxLossHarvest(buildBody(
@@ -156,6 +162,51 @@ async function compute(tok) {
     renderTable(normalized);
     renderLossesChart(normalized);
     renderQtyChart(normalized);
+    renderSummaryChart(normalized);
+}
+
+function renderSummaryChart(report) {
+    const el = document.getElementById('tlh-sum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const total = Number(report?.total_available_loss);
+    const safe = Number(report?.safe_harvest_loss);
+    if (!Number.isFinite(total) && !Number.isFinite(safe)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_loss_harvest.empty_sum_chart">${esc(t('view.tax_loss_harvest.empty_sum_chart'))}</div>`;
+        return;
+    }
+    const cap = 3000;
+    const labels = [
+        t('view.tax_loss_harvest.chart.total_loss'),
+        t('view.tax_loss_harvest.chart.safe_loss'),
+        t('view.tax_loss_harvest.chart.cap_3k'),
+    ];
+    const xs = [1, 2, 3];
+    const totalY = [Number.isFinite(total) ? total : null, null, null];
+    const safeY  = [null, Number.isFinite(safe) ? safe : null, null];
+    const capY   = [null, null, cap];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_loss_harvest.chart.bucket') },
+            { label: t('view.tax_loss_harvest.chart.total_loss'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.tax_loss_harvest.chart.safe_loss'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 18, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.tax_loss_harvest.chart.cap_3k'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 18, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, totalY, safeY, capY], el);
 }
 
 function renderQtyChart(report) {
