@@ -908,6 +908,8 @@ pub enum Preset {
     BreakdownZoneRangeExpansionHotVol,   // year_low_pct >= -3 AND year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakdown zone + wide intraday range + hot vol (volatility expansion right at the breakdown level: institutional fight day occurring as new low is being established with elevated participation)
     Year52HighFreshConsolidationDryVol,  // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close above prior 52w high + tight intraday range + flat close + dry vol (quiet acceptance of the new high: post-breakout consolidation without participation flush; move stalled but did not reverse)
     Year52LowFreshConsolidationDryVol,   // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close below prior 52w low + tight intraday range + flat close + dry vol (quiet acceptance of the new low: post-breakdown consolidation without participation flush; move stalled but did not reverse)
+    ModerateGapBullContinuationHotVol,   // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume >= 2 — moderate gap up + bull continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for blow-off but big enough for directional commitment with elevated participation)
+    ModerateGapBearContinuationHotVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume >= 2 — moderate gap down + bear continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for panic but big enough for directional commitment with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5329,6 +5331,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.8
         }
+        Preset::ModerateGapBullContinuationHotVol => {
+            hit.gap_pct >= 1.0
+                && hit.gap_pct <= 2.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::ModerateGapBearContinuationHotVol => {
+            hit.gap_pct >= -2.0
+                && hit.gap_pct <= -1.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6127,6 +6141,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BreakdownZoneRangeExpansionHotVol => "Fresh 52w Breakdown Zone + Wide Intraday Range + Hot Vol (Volatility Expansion Right at the Breakdown Level: Institutional Fight Day Occurring as New Low Is Being Established with Elevated Participation)",
         Preset::Year52HighFreshConsolidationDryVol => "Close above Prior 52w High + Tight Intraday Range + Flat Close + Dry Vol (Quiet Acceptance of the New High: Post-breakout Consolidation without Participation Flush; Move Stalled but Did Not Reverse)",
         Preset::Year52LowFreshConsolidationDryVol => "Close below Prior 52w Low + Tight Intraday Range + Flat Close + Dry Vol (Quiet Acceptance of the New Low: Post-breakdown Consolidation without Participation Flush; Move Stalled but Did Not Reverse)",
+        Preset::ModerateGapBullContinuationHotVol => "Moderate Gap Up + Bull Continuation + Hot Vol (Modest Gap Held + Extended Further during Regular Hours; the In-between Gap Regime Not Large Enough for Blow-off but Big Enough for Directional Commitment with Elevated Participation)",
+        Preset::ModerateGapBearContinuationHotVol => "Moderate Gap Down + Bear Continuation + Hot Vol (Modest Gap Held + Extended Further during Regular Hours; the In-between Gap Regime Not Large Enough for Panic but Big Enough for Directional Commitment with Elevated Participation)",
     }
 }
 
