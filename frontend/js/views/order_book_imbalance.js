@@ -62,6 +62,11 @@ export async function renderOrderBookImbalance(mount, _appState) {
             <div id="obi-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.order_book_imbalance.h2.depth_chart">Bid vs ask size per level</h2>
+            <div id="obi-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="obi-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -117,6 +122,36 @@ async function compute(tok) {
     renderSummary(res, bidSizes.length, askSizes.length);
     renderGauge(res);
     renderTable(bidSizes, askSizes, state.levels);
+    renderDepthChart(bidSizes, askSizes, state.levels);
+}
+
+function renderDepthChart(bidSizes, askSizes, levels) {
+    const el = document.getElementById('obi-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = alignLevels(bidSizes, askSizes, levels);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.order_book_imbalance.empty_chart">${esc(t('view.order_book_imbalance.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(r => r.level);
+    const bid = rows.map(r => Number(r.bid));
+    const ask = rows.map(r => Number(r.ask));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.order_book_imbalance.chart.level') },
+            { label: t('view.order_book_imbalance.chart.bid'),
+              stroke: '#00e5ff', width: 1.6,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.order_book_imbalance.chart.ask'),
+              stroke: '#ff3860', width: 1.6,
+              points: { show: true, size: 8, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, bid, ask], el);
 }
 
 function renderSummary(r, bidLevels, askLevels) {

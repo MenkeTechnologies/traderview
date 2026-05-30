@@ -264,6 +264,8 @@ pub enum Preset {
     TightWithSmallGapSqueeze,    // |gap_pct| < 0.5 AND |change_pct| between 0.3 and 0.8 AND |day_pct| < 0.4 — modest move on small gap, tight day
     BigVolWithTinyChangeSqueeze, // rel_volume >= 3 AND change_pct.abs() < 0.1 — heavy volume but virtually zero change
     QuietExpansionSqueeze,       // hod_dist + lod_dist 2-4 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 — modest range, no net move, quiet
+    InsideBarHighSqueeze,        // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_high_pct >= -2 — narrow inside bar at 52w high
+    InsideBarLowSqueeze,         // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_low_pct <= 2 — narrow inside bar at 52w low
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1011,6 +1013,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.2
                 && hit.rel_volume < 0.7
         }
+        Preset::InsideBarHighSqueeze => {
+            hit.hod_dist_pct.abs() < 1.5
+                && hit.lod_dist_pct.abs() < 1.5
+                && hit.year_high_pct >= -2.0
+        }
+        Preset::InsideBarLowSqueeze => {
+            hit.hod_dist_pct.abs() < 1.5
+                && hit.lod_dist_pct.abs() < 1.5
+                && hit.year_low_pct <= 2.0
+        }
     }
 }
 
@@ -1165,6 +1177,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightWithSmallGapSqueeze => "Tight With-Small-Gap Squeeze",
         Preset::BigVolWithTinyChangeSqueeze => "Big-Vol Tiny-Change Squeeze",
         Preset::QuietExpansionSqueeze => "Quiet-Expansion Squeeze",
+        Preset::InsideBarHighSqueeze => "Inside-Bar At 52w-High",
+        Preset::InsideBarLowSqueeze => "Inside-Bar At 52w-Low",
     }
 }
 
