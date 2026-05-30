@@ -168,6 +168,8 @@ const PRESETS = [
     { id: 'gap_down_reclaim_to_flat', label: t('view.scanners.preset.gap_down_reclaim_to_flat.label'), desc: t('view.scanners.preset.gap_down_reclaim_to_flat.desc') },
     { id: 'gap_up_held_green', label: t('view.scanners.preset.gap_up_held_green.label'), desc: t('view.scanners.preset.gap_up_held_green.desc') },
     { id: 'gap_down_held_red', label: t('view.scanners.preset.gap_down_held_red.label'), desc: t('view.scanners.preset.gap_down_held_red.desc') },
+    { id: 'gap_up_half_fade', label: t('view.scanners.preset.gap_up_half_fade.label'), desc: t('view.scanners.preset.gap_up_half_fade.desc') },
+    { id: 'gap_down_half_reclaim', label: t('view.scanners.preset.gap_down_half_reclaim.label'), desc: t('view.scanners.preset.gap_down_half_reclaim.desc') },
 ];
 
 export async function renderScanners(mount) {

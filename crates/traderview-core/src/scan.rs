@@ -286,6 +286,8 @@ pub enum Preset {
     GapDownReclaimToFlat,        // gap_pct < -2 AND change_pct.abs() < 0.5 — gapped down overnight but unchanged on the day (full reclaim)
     GapUpHeldGreen,              // gap_pct > 2 AND change_pct > gap_pct AND rel_volume >= 1 — gap held + extended on participation (continuation squeeze)
     GapDownHeldRed,              // gap_pct < -2 AND change_pct < gap_pct AND rel_volume >= 1 — gap-down extended lower on participation (continuation squeeze)
+    GapUpHalfFade,               // gap_pct > 2 AND change_pct between 0 and gap_pct*0.5 — gap-up faded to half its overnight move
+    GapDownHalfReclaim,          // gap_pct < -2 AND change_pct between gap_pct*0.5 and 0 — gap-down reclaimed half its overnight move
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1145,6 +1147,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < hit.gap_pct
                 && hit.rel_volume >= 1.0
         }
+        Preset::GapUpHalfFade => {
+            hit.gap_pct > 2.0
+                && hit.change_pct > 0.0
+                && hit.change_pct < hit.gap_pct * 0.5
+        }
+        Preset::GapDownHalfReclaim => {
+            hit.gap_pct < -2.0
+                && hit.change_pct < 0.0
+                && hit.change_pct > hit.gap_pct * 0.5
+        }
     }
 }
 
@@ -1321,6 +1333,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownReclaimToFlat => "Gap-Down Reclaim To Flat",
         Preset::GapUpHeldGreen => "Gap-Up Held + Extended",
         Preset::GapDownHeldRed => "Gap-Down Held + Extended",
+        Preset::GapUpHalfFade => "Gap-Up Half Fade",
+        Preset::GapDownHalfReclaim => "Gap-Down Half Reclaim",
     }
 }
 

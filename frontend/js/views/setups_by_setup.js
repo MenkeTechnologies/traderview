@@ -41,6 +41,11 @@ export async function renderSetupsBySetup(mount, _appState) {
             <div id="sbs-stats"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.setups_by_setup.h2.net_pnl_chart">Net P&L per setup</h2>
+            <div id="sbs-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="sbs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -80,6 +85,7 @@ async function compute(tok) {
     const local = localAnalyze(state.rows);
     renderSummary(local, true);
     renderStats(local, true);
+    renderNetPnlChart(local);
     let resp;
     try {
         resp = await api.setupsBySetup(buildBody(state.rows));
@@ -97,6 +103,7 @@ async function compute(tok) {
     }));
     renderSummary(normalized, false);
     renderStats(normalized, false);
+    renderNetPnlChart(normalized);
 }
 
 function renderSummary(stats, pending) {
@@ -146,6 +153,45 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderNetPnlChart(stats) {
+    const el = document.getElementById('sbs-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (stats || []).filter(s => Number.isFinite(Number(s.net_pnl)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.setups_by_setup.empty_chart">${esc(t('view.setups_by_setup.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.net_pnl) - Number(a.net_pnl));
+    const labels = rows.map(s => s.setup);
+    const xs = labels.map((_, i) => i + 1);
+    const winY  = rows.map(s => Number(s.net_pnl) >= 0 ? Number(s.net_pnl) : null);
+    const loseY = rows.map(s => Number(s.net_pnl) <  0 ? Number(s.net_pnl) : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.setups_by_setup.chart.setup') },
+            { label: t('view.setups_by_setup.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.setups_by_setup.chart.lose'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.setups_by_setup.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, winY, loseY, zero], el);
 }
 
 function renderStats(stats) {
