@@ -4,6 +4,7 @@ import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 const pct = (n) => n == null ? '—' : (n * 100).toFixed(2) + '%';
 const compact = (n) => {
@@ -25,22 +26,22 @@ export async function renderDarkpool(mount, _state, sym) {
             a conservative proxy for ATS + internalizer / dark-pool printing.</p>
 
         <form id="df" class="inline-form">
-            <input name="sym" data-shortcut="focus_search" placeholder="symbol (NVDA)" data-i18n-placeholder="view.darkpool.placeholder.symbol" style="text-transform:uppercase">
-            <button data-i18n="view.darkpool.btn.lookup" class="primary" type="submit">Lookup</button>
+            <input name="sym" data-shortcut="focus_search" data-tip="view.darkpool.tip.sym" placeholder="symbol (NVDA)" data-i18n-placeholder="view.darkpool.placeholder.symbol" style="text-transform:uppercase">
+            <button data-i18n="view.darkpool.btn.lookup" data-tip="view.darkpool.tip.lookup" class="primary" type="submit">Lookup</button>
         </form>
 
         <div class="chart-panel">
             <h2 data-i18n="view.darkpool.h2.watchlist_ranking_avg_off_exchange">Watchlist ranking (avg off-exchange %)</h2>
             <form id="rf" class="inline-form">
                 <label><span data-i18n="view.darkpool.label.universe">Universe</span>
-                    <select name="wl">
+                    <select name="wl" data-tip="view.darkpool.tip.universe">
                         <option data-i18n="view.darkpool.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.darkpool.label.days">Days</span>
-                    <input name="days" type="number" value="30" style="width:80px"></label>
-                <button data-i18n="view.darkpool.btn.rank" class="primary" type="submit">Rank</button>
+                    <input name="days" type="number" value="30" style="width:80px" data-tip="view.darkpool.tip.days"></label>
+                <button data-i18n="view.darkpool.btn.rank" data-tip="view.darkpool.tip.rank" data-shortcut="darkpool_rank" class="primary" type="submit">Rank</button>
             </form>
             <div id="dp-ranked"></div>
         </div>
@@ -67,10 +68,12 @@ export async function renderDarkpool(mount, _state, sym) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#dp-ranked');
             if (el2) renderRanked(el2, rows);
+            showToast(t('view.darkpool.toast.ranked', { count: rows.length, days }), { level: rows.length > 0 ? 'success' : 'info' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#dp-ranked');
             if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
@@ -176,6 +179,7 @@ async function renderSymbol(mount, sym) {
         if (!viewIsCurrent(tok)) return;
         const cardsEl = mount.querySelector('#dp-cards');
         if (cardsEl) cardsEl.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
+        showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
     }
     void fmt;
 }

@@ -619,6 +619,16 @@ function bindTabs() {
         const form = document.getElementById('risk-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `r` in darkpool scope — submit the rank form in list
+    // mode, else hashchange-refresh the symbol-detail page.
+    window.addEventListener('tv:darkpool-rank', () => {
+        const form = document.getElementById('rf');
+        if (form && typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+        }
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
