@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_SMOOTHING,
@@ -30,19 +31,20 @@ export async function renderBalanceOfPower(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bop.label.smoothing">Smoothing period</span>
-                    <input id="bp-smooth" type="number" step="1" min="1" value="${state.smoothing_period}"></label>
+                    <input id="bp-smooth" type="number" step="1" min="1" value="${state.smoothing_period}"
+                           data-tip="view.bop.tip.smoothing"></label>
                 <button data-i18n="view.bop.btn.compute" id="bp-run" class="primary"
-                        data-tip="view.bop.tip.compute" type="button">Compute BOP</button>
+                        data-tip="view.bop.tip.compute" data-shortcut="balance_of_power_run" type="button">Compute BOP</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bop.btn.demo_bull"     id="bp-demo-bull"   class="secondary" type="button">Demo: strong bull (marubozu)</button>
-                <button data-i18n="view.bop.btn.demo_bear"     id="bp-demo-bear"   class="secondary" type="button">Demo: strong bear (marubozu)</button>
-                <button data-i18n="view.bop.btn.demo_balanced" id="bp-demo-bal"    class="secondary" type="button">Demo: balanced doji</button>
-                <button data-i18n="view.bop.btn.demo_chop"     id="bp-demo-chop"   class="secondary" type="button">Demo: choppy noise</button>
-                <button data-i18n="view.bop.btn.demo_flip"     id="bp-demo-flip"   class="secondary" type="button">Demo: bull → bear flip</button>
-                <button data-i18n="view.bop.btn.demo_zero"     id="bp-demo-zero"   class="secondary" type="button">Demo: zero-range dojis</button>
-                <button data-i18n="view.bop.btn.demo_short"    id="bp-demo-short"  class="secondary" type="button">Demo: short smoothing (3)</button>
-                <button data-i18n="view.bop.btn.demo_nosmooth" id="bp-demo-ns"     class="secondary" type="button">Demo: no smoothing (1)</button>
+                <button data-i18n="view.bop.btn.demo_bull"     id="bp-demo-bull"   class="secondary" data-tip="view.bop.tip.demo_bull"     type="button">Demo: strong bull (marubozu)</button>
+                <button data-i18n="view.bop.btn.demo_bear"     id="bp-demo-bear"   class="secondary" data-tip="view.bop.tip.demo_bear"     type="button">Demo: strong bear (marubozu)</button>
+                <button data-i18n="view.bop.btn.demo_balanced" id="bp-demo-bal"    class="secondary" data-tip="view.bop.tip.demo_balanced" type="button">Demo: balanced doji</button>
+                <button data-i18n="view.bop.btn.demo_chop"     id="bp-demo-chop"   class="secondary" data-tip="view.bop.tip.demo_chop"     type="button">Demo: choppy noise</button>
+                <button data-i18n="view.bop.btn.demo_flip"     id="bp-demo-flip"   class="secondary" data-tip="view.bop.tip.demo_flip"     type="button">Demo: bull → bear flip</button>
+                <button data-i18n="view.bop.btn.demo_zero"     id="bp-demo-zero"   class="secondary" data-tip="view.bop.tip.demo_zero"     type="button">Demo: zero-range dojis</button>
+                <button data-i18n="view.bop.btn.demo_short"    id="bp-demo-short"  class="secondary" data-tip="view.bop.tip.demo_short"    type="button">Demo: short smoothing (3)</button>
+                <button data-i18n="view.bop.btn.demo_nosmooth" id="bp-demo-ns"     class="secondary" data-tip="view.bop.tip.demo_ns"       type="button">Demo: no smoothing (1)</button>
             </div>
             <p data-i18n="view.bop.hint.about" class="muted">BOP = (close − open) / (high − low) per bar. Clamped to [−1, +1]. Smoothed by SMA over smoothing_period bars. ≥ +0.5 = strong bull · ≤ −0.5 = strong bear · ±0.1 = balanced. Crossovers between raw and smoothed signal momentum shifts.</p>
         </div>
@@ -88,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bop.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bop.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -99,7 +102,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bop.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.smoothing_period);
     renderSummary(local, true);
     renderChart(local);
@@ -110,6 +113,7 @@ async function compute(tok) {
         resp = await api.anlyBalanceOfPower(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bop.err.api')}: ${e.message || e}`);
+        showToast(t('view.bop.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -117,6 +121,7 @@ async function compute(tok) {
     renderChart(resp);
     renderCumChart(resp);
     renderTable(resp);
+    showToast(t('view.bop.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
