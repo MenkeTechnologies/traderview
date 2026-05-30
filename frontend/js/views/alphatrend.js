@@ -15,6 +15,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let dirChart = null;
 
 export async function renderAlphatrend(mount, _appState) {
     const tok = currentViewToken();
@@ -54,6 +55,11 @@ export async function renderAlphatrend(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.atrend.h2.chart">AlphaTrend overlay</h2>
             <div id="at-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.atrend.h2.dir_chart">Direction per bar (+1 bull / −1 bear)</h2>
+            <div id="at-dir-chart" style="width:100%;height:160px"></div>
         </div>
 
         <div class="chart-panel">
@@ -103,6 +109,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period, state.multiplier);
     renderSummary(local, true);
     renderChart(local);
+    renderDirChart(local);
     renderStats();
     let resp;
     try {
@@ -115,6 +122,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.alpha)) { showErr(t('view.atrend.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderDirChart(resp);
     renderStats();
 }
 
@@ -189,6 +197,32 @@ function renderChart(report) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderDirChart(report) {
+    const el = document.getElementById('at-dir-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(report.direction) || state.bars.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const dir = report.direction.map(v => (v == null || !Number.isFinite(v) ? null : (v >= 0 ? 1 : -1)));
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 140,
+        scales: { x: { time: false }, y: { range: [-1.5, 1.5] } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.atrend.series.direction'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 4, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.atrend.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (dirChart) { try { dirChart.destroy(); } catch {} dirChart = null; }
+    dirChart = new window.uPlot(opts, [xs, dir, zero], el);
 }
 
 function renderStats() {

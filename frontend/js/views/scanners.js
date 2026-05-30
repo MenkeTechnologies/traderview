@@ -358,6 +358,8 @@ const PRESETS = [
     { id: 'orderly_trend_at_lows', label: t('view.scanners.preset.orderly_trend_at_lows.label'), desc: t('view.scanners.preset.orderly_trend_at_lows.desc') },
     { id: 'hot_vol_mid_range_churn', label: t('view.scanners.preset.hot_vol_mid_range_churn.label'), desc: t('view.scanners.preset.hot_vol_mid_range_churn.desc') },
     { id: 'dry_vol_at_extreme_close', label: t('view.scanners.preset.dry_vol_at_extreme_close.label'), desc: t('view.scanners.preset.dry_vol_at_extreme_close.desc') },
+    { id: 'day_change_mismatch', label: t('view.scanners.preset.day_change_mismatch.label'), desc: t('view.scanners.preset.day_change_mismatch.desc') },
+    { id: 'day_change_aligned_big', label: t('view.scanners.preset.day_change_aligned_big.label'), desc: t('view.scanners.preset.day_change_aligned_big.desc') },
 ];
 
 export async function renderScanners(mount) {

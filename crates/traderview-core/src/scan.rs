@@ -476,6 +476,8 @@ pub enum Preset {
     OrderlyTrendAtLows,            // change_pct < 0 AND day_pct < 0 AND year_low_pct < 1 AND rel_volume between 0.7 and 1.5 — at 52w low with red intraday + red day on normal vol (orderly downtrend at lows)
     HotVolMidRangeChurn,           // rel_volume >= 3 AND hod_dist.abs() > 0.5 AND lod_dist.abs() > 0.5 — hot vol but close not at HOD or LOD (mid-range churn; no commitment)
     DryVolAtExtremeClose,          // rel_volume < 0.4 AND (hod_dist.abs() < 0.3 OR lod_dist.abs() < 0.3) — dry vol but close at one extreme (unconfirmed extreme; thin tape edge)
+    DayChangeMismatch,             // change_pct * day_pct < 0 AND change_pct.abs() > 1 AND day_pct.abs() > 1 — change_pct and day_pct opposite signs both >1 (full intraday reversal vs overnight)
+    DayChangeAlignedBig,           // change_pct * day_pct > 0 AND change_pct.abs() > 3 AND day_pct.abs() > 3 AND rel_volume >= 1.5 — change_pct and day_pct same-sign big on hot vol (full trend day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2363,6 +2365,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume < 0.4
                 && (hit.hod_dist_pct.abs() < 0.3 || hit.lod_dist_pct.abs() < 0.3)
         }
+        Preset::DayChangeMismatch => {
+            hit.change_pct * hit.day_pct < 0.0
+                && hit.change_pct.abs() > 1.0
+                && hit.day_pct.abs() > 1.0
+        }
+        Preset::DayChangeAlignedBig => {
+            hit.change_pct * hit.day_pct > 0.0
+                && hit.change_pct.abs() > 3.0
+                && hit.day_pct.abs() > 3.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2729,6 +2742,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OrderlyTrendAtLows => "Orderly Trend at 52w Lows",
         Preset::HotVolMidRangeChurn => "Hot-Vol Mid-Range Churn (No Commitment)",
         Preset::DryVolAtExtremeClose => "Dry-Vol Close at Extreme (Unconfirmed Edge)",
+        Preset::DayChangeMismatch => "Day/Change Mismatch (Full Intraday Reversal)",
+        Preset::DayChangeAlignedBig => "Day/Change Aligned Big, Hot Vol (Full Trend Day)",
     }
 }
 
