@@ -1098,6 +1098,8 @@ pub enum Preset {
     GapDownBigDayUpHotVol,                     // gap_pct < -2 AND day_pct > 2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday up (>2%) + hot vol (gap-absorb pressure: overnight gap down met with intraday buying that reclaims the gap by 2%+; counter-trend intraday pressure on a negative gap that may or may not flip the close to green depending on gap size; suggests active buyers stepping in at the gap level)
     SmallGapBigDayUpHotVol,                    // gap_pct.abs() < 0.5 AND day_pct > 3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + hot vol (clean intraday-led rally: open is essentially flat to prior close, then regular session prints a sustained buy-driven move higher; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
     SmallGapBigDayDownHotVol,                  // gap_pct.abs() < 0.5 AND day_pct < -3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + hot vol (clean intraday-led decline: open is essentially flat to prior close, then regular session prints a sustained sell-driven move lower; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
+    SmallGapBigDayUpNearYearHighHotVol,        // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + at/near 52w high (<2%) + hot vol (pure intraday-driven breakout to 52w high: open is essentially flat to prior close then regular session prints a sustained buy-driven move to the year peak; cleanest possible breakout signal with no overnight gap contribution muddying the cause)
+    SmallGapBigDayDownNearYearLowHotVol,       // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + at/near 52w low (<2%) + hot vol (pure intraday-driven breakdown to 52w low: open is essentially flat to prior close then regular session prints a sustained sell-driven move to the year trough; cleanest possible breakdown signal with no overnight gap contribution muddying the cause)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6768,6 +6770,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::SmallGapBigDayDownHotVol => {
             hit.gap_pct.abs() < 0.5 && hit.day_pct < -3.0 && hit.rel_volume >= 1.5
         }
+        Preset::SmallGapBigDayUpNearYearHighHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.day_pct > 3.0
+                && hit.year_high_pct < 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::SmallGapBigDayDownNearYearLowHotVol => {
+            hit.gap_pct.abs() < 0.5
+                && hit.day_pct < -3.0
+                && hit.year_low_pct < 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7756,6 +7770,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownBigDayUpHotVol => "Gap Down (<-2 %) + Big Intraday Up (>2 %) + Hot Vol (Gap-absorb Pressure: Overnight Gap down Met with Intraday Buying that Reclaims the Gap by 2 %+; Counter-trend Intraday Pressure on a Negative Gap that May or May Not Flip the Close to Green Depending on Gap Size; Suggests Active Buyers Stepping in at the Gap Level)",
         Preset::SmallGapBigDayUpHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + Hot Vol (Clean Intraday-led Rally: Open Is Essentially Flat to Prior Close, Then Regular Session Prints a Sustained Buy-driven Move Higher; Intraday Momentum Signal Isolated from Overnight Repricing or After-hours Catalyst Noise)",
         Preset::SmallGapBigDayDownHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + Hot Vol (Clean Intraday-led Decline: Open Is Essentially Flat to Prior Close, Then Regular Session Prints a Sustained Sell-driven Move Lower; Intraday Momentum Signal Isolated from Overnight Repricing or After-hours Catalyst Noise)",
+        Preset::SmallGapBigDayUpNearYearHighHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Up (>3 %) + At/near 52w High (<2 %) + Hot Vol (Pure Intraday-driven Breakout to 52w High: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Buy-driven Move to the Year Peak; Cleanest Possible Breakout Signal with No Overnight Gap Contribution Muddying the Cause)",
+        Preset::SmallGapBigDayDownNearYearLowHotVol => "Small Gap (|gap|<0.5 %) + Big Intraday Down (<-3 %) + At/near 52w Low (<2 %) + Hot Vol (Pure Intraday-driven Breakdown to 52w Low: Open Is Essentially Flat to Prior Close then Regular Session Prints a Sustained Sell-driven Move to the Year Trough; Cleanest Possible Breakdown Signal with No Overnight Gap Contribution Muddying the Cause)",
     }
 }
 

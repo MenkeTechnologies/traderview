@@ -980,6 +980,8 @@ const PRESETS = [
     { id: 'gap_down_big_day_up_hot_vol', label: t('view.scanners.preset.gap_down_big_day_up_hot_vol.label'), desc: t('view.scanners.preset.gap_down_big_day_up_hot_vol.desc') },
     { id: 'small_gap_big_day_up_hot_vol', label: t('view.scanners.preset.small_gap_big_day_up_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_day_up_hot_vol.desc') },
     { id: 'small_gap_big_day_down_hot_vol', label: t('view.scanners.preset.small_gap_big_day_down_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_day_down_hot_vol.desc') },
+    { id: 'small_gap_big_day_up_near_year_high_hot_vol', label: t('view.scanners.preset.small_gap_big_day_up_near_year_high_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_day_up_near_year_high_hot_vol.desc') },
+    { id: 'small_gap_big_day_down_near_year_low_hot_vol', label: t('view.scanners.preset.small_gap_big_day_down_near_year_low_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_day_down_near_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
