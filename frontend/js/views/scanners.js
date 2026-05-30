@@ -236,6 +236,8 @@ const PRESETS = [
     { id: 'pct52w_range_breakout_triggered', label: t('view.scanners.preset.pct52w_range_breakout_triggered.label'), desc: t('view.scanners.preset.pct52w_range_breakout_triggered.desc') },
     { id: 'pct52w_range_breakdown_triggered', label: t('view.scanners.preset.pct52w_range_breakdown_triggered.label'), desc: t('view.scanners.preset.pct52w_range_breakdown_triggered.desc') },
     { id: 'pct52w_tight_coil', label: t('view.scanners.preset.pct52w_tight_coil.label'), desc: t('view.scanners.preset.pct52w_tight_coil.desc') },
+    { id: 'symmetric_triangle', label: t('view.scanners.preset.symmetric_triangle.label'), desc: t('view.scanners.preset.symmetric_triangle.desc') },
+    { id: 'narrowing_range_on_flat', label: t('view.scanners.preset.narrowing_range_on_flat.label'), desc: t('view.scanners.preset.narrowing_range_on_flat.desc') },
 ];
 
 export async function renderScanners(mount) {

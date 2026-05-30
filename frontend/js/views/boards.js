@@ -90,7 +90,13 @@ async function renderList(mount) {
                     </tbody>
                 </table>`}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.boards.h2.widgets_chart">Widgets per board</h2>
+            <div id="b-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+    renderWidgetsChart(boards);
     mount.querySelector('#b-new').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -111,6 +117,39 @@ async function renderList(mount) {
             } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
     });
+}
+
+function renderWidgetsChart(boards) {
+    const el = document.getElementById('b-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (boards || [])
+        .map(b => ({ name: b.name, n: Array.isArray(b.layout) ? b.layout.length : 0 }))
+        .filter(r => Number.isFinite(r.n));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.boards.empty_chart">${esc(t('view.boards.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.n - a.n);
+    const labels = rows.map(r => r.name);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.n);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.boards.chart.board') },
+            { label: t('view.boards.chart.widgets'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 // ---------------------------------------------------------------------------

@@ -354,6 +354,8 @@ pub enum Preset {
     Pct52wRangeBreakoutTriggered, // year_high_pct >= 0 AND change_pct > 2 AND rel_volume >= 2 — broke above 52w high range on heavy vol (range-breakout trigger)
     Pct52wRangeBreakdownTriggered, // year_low_pct <= 0 AND change_pct < -2 AND rel_volume >= 2 — broke below 52w low range on heavy vol (range-breakdown trigger)
     Pct52wTightCoil,             // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND hod_dist + lod_dist < 2 — coiled mid-high zone on tight range (decision-zone setup)
+    SymmetricTriangle,           // hod_dist + lod_dist < 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.3 — balanced tight range with average vol (symmetric triangle wait)
+    NarrowingRangeOnFlat,        // hod_dist between 0.5 and 2 AND lod_dist between 0.5 and 2 AND change_pct.abs() < 0.3 — both wicks small, no net move (narrowing-range setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1550,6 +1552,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 10.0
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
         }
+        Preset::SymmetricTriangle => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 3.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
+        Preset::NarrowingRangeOnFlat => {
+            let h = hit.hod_dist_pct.abs();
+            let l = hit.lod_dist_pct.abs();
+            h >= 0.5 && h <= 2.0
+                && l >= 0.5 && l <= 2.0
+                && hit.change_pct.abs() < 0.3
+        }
     }
 }
 
@@ -1794,6 +1809,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wRangeBreakoutTriggered => "52w Range Breakout Triggered",
         Preset::Pct52wRangeBreakdownTriggered => "52w Range Breakdown Triggered",
         Preset::Pct52wTightCoil => "52w Tight Coil",
+        Preset::SymmetricTriangle => "Symmetric Triangle",
+        Preset::NarrowingRangeOnFlat => "Narrowing Range on Flat",
     }
 }
 
