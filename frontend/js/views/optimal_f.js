@@ -19,6 +19,7 @@ import {
 } from '../_optimal_f_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_TEXT = `# Paste trade P/Ls (one per token, signed: positive = win, negative = loss).
 # Demo: 20 simulated trades with ~55% win rate, win:loss ratio ~ 1.5:1.
 500   -300   450   -280   600   -310   520   -270   480   -290
@@ -36,9 +37,10 @@ export async function renderOptimalF(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.optimal_f.h2.trade_p_l_series">Trade P/L series</h2>
             <textarea id="of-text" rows="8"
+                data-tip="view.optimal_f.tip.pnls"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
             <div class="inline-form" style="margin-top:8px">
-                <button data-i18n="view.optimal_f.btn.compute" id="of-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.optimal_f.btn.compute" data-tip="view.optimal_f.tip.compute" data-shortcut="optimal_f_compute" id="of-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.optimal_f.hint.optimal_f_the_fraction_of_capital_to_risk_per_trad" class="muted">
                 Optimal-f = the fraction of capital to risk per trade that maximizes
@@ -79,7 +81,7 @@ async function compute(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const err = validateInputs(parsed.value);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     state.lastReturns = parsed.value;
 
@@ -88,13 +90,18 @@ async function compute(mount, tok) {
         res = await api.calcOptimalF(buildBody(parsed.value));
         if (!res) throw new Error(t('view.optimal_f.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(parsed.value, res);
     renderChart(parsed.value, res);
+    showToast(t('view.optimal_f.toast.done', {
+        f: fmtPctF(res.optimal_f),
+        twr: fmtMultiple(res.twr_at_optimal),
+    }), { level: 'success' });
 }
 
 function renderSummary(returns, res) {
