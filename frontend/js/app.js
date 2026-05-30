@@ -796,6 +796,11 @@ function bindTabs() {
         const el = document.getElementById('mc-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in vix-term-structure scope → click Analyze.
+    window.addEventListener('tv:vix-term-structure-run', () => {
+        const el = document.getElementById('vix-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

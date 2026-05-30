@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, TENORS, TENOR_DAYS,
@@ -26,20 +27,20 @@ export async function renderVixTermStructure(mount, _appState) {
             <div class="inline-form">
                 ${TENORS.map(k => `
                     <label><span data-i18n="view.vix_term_structure.label.${k}">${k.toUpperCase()}</span>
-                        <input id="vix-${k}" type="number" step="any" min="0" value="${state[k]}"></label>
+                        <input id="vix-${k}" type="number" step="any" min="0" value="${state[k]}" data-tip="view.vix_term_structure.tip.${k}"></label>
                 `).join('')}
                 <button data-i18n="view.vix_term_structure.btn.analyze" id="vix-run" class="primary"
-                        data-tip="view.vix_term_structure.tip.analyze" type="button">Analyze</button>
+                        data-tip="view.vix_term_structure.tip.analyze" data-shortcut="vix_term_structure_run" type="button">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.vix_term_structure.btn.demo_steep"    id="vix-demo-steep"   class="secondary" type="button">Demo: steep contango</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_normal"   id="vix-demo-normal"  class="secondary" type="button">Demo: normal contango</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_flat"     id="vix-demo-flat"    class="secondary" type="button">Demo: flat</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_backward" id="vix-demo-back"    class="secondary" type="button">Demo: backwardation</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_severe"   id="vix-demo-severe"  class="secondary" type="button">Demo: severe backwardation</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_covid"    id="vix-demo-covid"   class="secondary" type="button">Demo: COVID spike (Mar 2020)</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_gfc"      id="vix-demo-gfc"     class="secondary" type="button">Demo: GFC bear (Oct 2008)</button>
-                <button data-i18n="view.vix_term_structure.btn.demo_lowvol"   id="vix-demo-lowvol"  class="secondary" type="button">Demo: low-vol regime</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_steep"    id="vix-demo-steep"   class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_steep">Demo: steep contango</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_normal"   id="vix-demo-normal"  class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_normal">Demo: normal contango</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_flat"     id="vix-demo-flat"    class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_flat">Demo: flat</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_backward" id="vix-demo-back"    class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_back">Demo: backwardation</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_severe"   id="vix-demo-severe"  class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_severe">Demo: severe backwardation</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_covid"    id="vix-demo-covid"   class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_covid">Demo: COVID spike (Mar 2020)</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_gfc"      id="vix-demo-gfc"     class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_gfc">Demo: GFC bear (Oct 2008)</button>
+                <button data-i18n="view.vix_term_structure.btn.demo_lowvol"   id="vix-demo-lowvol"  class="secondary" type="button" data-tip="view.vix_term_structure.tip.demo_lowvol">Demo: low-vol regime</button>
             </div>
             <p data-i18n="view.vix_term_structure.hint.about" class="muted">VIX/VIX3M ratio &lt; 0.80 steep contango · &lt; 1.00 contango · &lt; 1.05 flat · &lt; 1.20 backwardation · ≥ 1.20 severe. Slope = sum of consecutive-tenor diffs. Boundaries are strict &lt;; e.g. ratio = 1.05 exactly → backwardation.</p>
         </div>
@@ -84,7 +85,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.vix_term_structure.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state);
     renderSummary(local, true);
     renderChart();
@@ -94,12 +95,18 @@ async function compute(tok) {
         resp = await api.calcVixTermStructure(buildBody(state));
     } catch (e) {
         showErr(`${t('view.vix_term_structure.err.api')}: ${e.message || e}`);
+        showToast(t('view.vix_term_structure.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart();
     renderContrib();
+    const st = String(resp.state || '');
+    const ratio = Number(resp.vix_to_vix3m_ratio || 0).toFixed(3);
+    const level = (st === 'backwardation' || st === 'severe-backwardation') ? 'warning'
+        : (st === 'steep-contango' || st === 'normal-contango') ? 'success' : 'info';
+    showToast(t('view.vix_term_structure.toast.analyzed', { state: st, ratio }), { level });
 }
 
 function renderSummary(report, pending) {
