@@ -784,6 +784,8 @@ const PRESETS = [
     { id: 'confirmed_breakdown_below_year_low', label: t('view.scanners.preset.confirmed_breakdown_below_year_low.label'), desc: t('view.scanners.preset.confirmed_breakdown_below_year_low.desc') },
     { id: 'upper_wick_flat_close_hot_vol', label: t('view.scanners.preset.upper_wick_flat_close_hot_vol.label'), desc: t('view.scanners.preset.upper_wick_flat_close_hot_vol.desc') },
     { id: 'lower_wick_flat_close_hot_vol', label: t('view.scanners.preset.lower_wick_flat_close_hot_vol.label'), desc: t('view.scanners.preset.lower_wick_flat_close_hot_vol.desc') },
+    { id: 'partial_gap_up_hold_hot_vol', label: t('view.scanners.preset.partial_gap_up_hold_hot_vol.label'), desc: t('view.scanners.preset.partial_gap_up_hold_hot_vol.desc') },
+    { id: 'partial_gap_down_hold_hot_vol', label: t('view.scanners.preset.partial_gap_down_hold_hot_vol.label'), desc: t('view.scanners.preset.partial_gap_down_hold_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -902,6 +902,8 @@ pub enum Preset {
     ConfirmedBreakdownBelowYearLow,      // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -1 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + red + hot vol (solid confirmed breakdown: clearly past support but not yet panicked; trend-establishment zone for new lows)
     UpperWickFlatCloseHotVol,            // hod_dist_pct < -3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long upper wick + flat net close + no overnight gap + hot vol (pure supply test: intraday rally rejected back to roughly the open with elevated participation; neither bull nor bear net but ceiling tested)
     LowerWickFlatCloseHotVol,            // lod_dist_pct > 3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long lower wick + flat net close + no overnight gap + hot vol (pure demand test: intraday sell-off bounced back to roughly the open with elevated participation; neither bull nor bear net but floor tested)
+    PartialGapUpHoldHotVol,              // gap_pct > 2 AND day_pct < -0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap up + intraday sold from open + still closed green + hot vol (partial gap-up fade: overnight thrust partially eroded intraday but the gap held the prior close; tested but not flushed)
+    PartialGapDownHoldHotVol,            // gap_pct < -2 AND day_pct > 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap down + intraday recovered from open + still closed red + hot vol (partial gap-down fade: overnight thrust partially recovered intraday but the gap held below the prior close; tested but not reclaimed)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5287,6 +5289,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::PartialGapUpHoldHotVol => {
+            hit.gap_pct > 2.0
+                && hit.day_pct < -0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::PartialGapDownHoldHotVol => {
+            hit.gap_pct < -2.0
+                && hit.day_pct > 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6079,6 +6093,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ConfirmedBreakdownBelowYearLow => "1-3 % below Prior 52w Low + Red + Hot Vol (Solid Confirmed Breakdown: Clearly Past Support but Not Yet Panicked; Trend-establishment Zone for New Lows)",
         Preset::UpperWickFlatCloseHotVol => "Long Upper Wick + Flat Net Close + No Overnight Gap + Hot Vol (Pure Supply Test: Intraday Rally Rejected Back to Roughly the Open with Elevated Participation; Neither Bull nor Bear Net but Ceiling Tested)",
         Preset::LowerWickFlatCloseHotVol => "Long Lower Wick + Flat Net Close + No Overnight Gap + Hot Vol (Pure Demand Test: Intraday Sell-off Bounced Back to Roughly the Open with Elevated Participation; Neither Bull nor Bear Net but Floor Tested)",
+        Preset::PartialGapUpHoldHotVol => "Gap Up + Intraday Sold from Open + Still Closed Green + Hot Vol (Partial Gap-up Fade: Overnight Thrust Partially Eroded Intraday but the Gap Held the Prior Close; Tested but Not Flushed)",
+        Preset::PartialGapDownHoldHotVol => "Gap Down + Intraday Recovered from Open + Still Closed Red + Hot Vol (Partial Gap-down Fade: Overnight Thrust Partially Recovered Intraday but the Gap Held below the Prior Close; Tested but Not Reclaimed)",
     }
 }
 
