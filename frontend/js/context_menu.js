@@ -201,11 +201,10 @@ export function installContextMenu() {
             }
         })();
     });
-    // Position-row actions — read data-symbol (and data-id for trade
-    // detail nav). Same shape as wlNavTo / wlSymbolFrom; reuses them.
+    // Position-row actions — read data-symbol via symbolFromTarget,
+    // data-id via dataFromTarget. Reuses wlNavTo for the 3 nav handlers.
     window.addEventListener('tv:pos-row-view-trade', (e) => {
-        const target = e.detail && e.detail.target;
-        const id = target && target.dataset && target.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) {
             toastErr(t('toast.err.no_trade'));
             return;
@@ -620,8 +619,7 @@ export function installContextMenu() {
     });
     // Strategy-alert-row actions — read data-id from the tr, call API.
     window.addEventListener('tv:sa-row-toggle', (e) => {
-        const target = e.detail && e.detail.target;
-        const id = target && target.dataset && target.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         void (async () => {
             try {
@@ -639,8 +637,7 @@ export function installContextMenu() {
         })();
     });
     window.addEventListener('tv:sa-row-delete', (e) => {
-        const target = e.detail && e.detail.target;
-        const id = target && target.dataset && target.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         void (async () => {
             if (!await tConfirm('ctxmenu.sa_row_delete_confirm', {}, { level: 'danger' })) return;
