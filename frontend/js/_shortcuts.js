@@ -242,6 +242,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'acf_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'acf',               descKey: 'shortcut.acf_run',                      actionKey: 'tv:acf-run' },
     { id: 'active_share_run',             keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'active-share',      descKey: 'shortcut.active_share_run',             actionKey: 'tv:active-share-run' },
     { id: 'ad_oscillator_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'ad-oscillator',     descKey: 'shortcut.ad_oscillator_run',            actionKey: 'tv:ad-oscillator-run' },
+    { id: 'adf_test_run',                 keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'adf',               descKey: 'shortcut.adf_test_run',                 actionKey: 'tv:adf-test-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

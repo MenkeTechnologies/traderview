@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_LAGS, CRIT_1PCT, CRIT_5PCT, CRIT_10PCT,
@@ -30,19 +31,20 @@ export async function renderAdfTest(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.adf.label.lags">Augmentation lags (p)</span>
-                    <input id="adf-lags" type="number" step="1" min="0" value="${state.lags}"></label>
+                    <input id="adf-lags" type="number" step="1" min="0" value="${state.lags}"
+                           data-tip="view.adf.tip.lags"></label>
                 <button data-i18n="view.adf.btn.compute" id="adf-run" class="primary"
-                        data-tip="view.adf.tip.compute" type="button">Run ADF</button>
+                        data-tip="view.adf.tip.compute" data-shortcut="adf_test_run" type="button">Run ADF</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.adf.btn.demo_walk"     id="adf-demo-walk"   class="secondary" type="button">Demo: random walk (unit root)</button>
-                <button data-i18n="view.adf.btn.demo_mr_strong" id="adf-demo-mrs"   class="secondary" type="button">Demo: strong mean-rev (φ=0.3)</button>
-                <button data-i18n="view.adf.btn.demo_mr_weak"  id="adf-demo-mrw"    class="secondary" type="button">Demo: weak mean-rev (φ=0.85)</button>
-                <button data-i18n="view.adf.btn.demo_trend"    id="adf-demo-trend"  class="secondary" type="button">Demo: trend (drift+noise)</button>
-                <button data-i18n="view.adf.btn.demo_noise"    id="adf-demo-noise"  class="secondary" type="button">Demo: pure noise</button>
-                <button data-i18n="view.adf.btn.demo_lags"     id="adf-demo-lags"   class="secondary" type="button">Demo: same series, lags=5</button>
-                <button data-i18n="view.adf.btn.demo_short"    id="adf-demo-short"  class="secondary" type="button">Demo: short series (lags=0)</button>
-                <button data-i18n="view.adf.btn.demo_flat"     id="adf-demo-flat"   class="secondary" type="button">Demo: flat (degenerate)</button>
+                <button data-i18n="view.adf.btn.demo_walk"     id="adf-demo-walk"   class="secondary" data-tip="view.adf.tip.demo_walk"     type="button">Demo: random walk (unit root)</button>
+                <button data-i18n="view.adf.btn.demo_mr_strong" id="adf-demo-mrs"   class="secondary" data-tip="view.adf.tip.demo_mr_strong" type="button">Demo: strong mean-rev (φ=0.3)</button>
+                <button data-i18n="view.adf.btn.demo_mr_weak"  id="adf-demo-mrw"    class="secondary" data-tip="view.adf.tip.demo_mr_weak"  type="button">Demo: weak mean-rev (φ=0.85)</button>
+                <button data-i18n="view.adf.btn.demo_trend"    id="adf-demo-trend"  class="secondary" data-tip="view.adf.tip.demo_trend"    type="button">Demo: trend (drift+noise)</button>
+                <button data-i18n="view.adf.btn.demo_noise"    id="adf-demo-noise"  class="secondary" data-tip="view.adf.tip.demo_noise"    type="button">Demo: pure noise</button>
+                <button data-i18n="view.adf.btn.demo_lags"     id="adf-demo-lags"   class="secondary" data-tip="view.adf.tip.demo_lags"     type="button">Demo: same series, lags=5</button>
+                <button data-i18n="view.adf.btn.demo_short"    id="adf-demo-short"  class="secondary" data-tip="view.adf.tip.demo_short"    type="button">Demo: short series (lags=0)</button>
+                <button data-i18n="view.adf.btn.demo_flat"     id="adf-demo-flat"   class="secondary" data-tip="view.adf.tip.demo_flat"     type="button">Demo: flat (degenerate)</button>
             </div>
             <p data-i18n="view.adf.hint.about" class="muted">Δy_t = α + γ·y_{t-1} + Σφ·Δy_{t-i} + ε. H₀: unit root (non-stationary). Reject when t-stat &lt; critical (1% = −3.43, 5% = −2.86, 10% = −2.57). More-negative = more stationary.</p>
         </div>
@@ -88,6 +90,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.adf.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.adf.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -99,9 +102,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.adf.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.series, state.lags);
-    if (!local) { showErr(t('view.adf.err.degenerate')); return; }
+    if (!local) { showErr(t('view.adf.err.degenerate')); showToast(t('view.adf.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart();
     renderRollChart();
@@ -111,14 +114,16 @@ async function compute(tok) {
         resp = await api.anlyAdfTest(buildBody(state));
     } catch (e) {
         showErr(`${t('view.adf.err.api')}: ${e.message || e}`);
+        showToast(t('view.adf.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.adf.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.adf.err.server_rejected')); showToast(t('view.adf.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart();
     renderRollChart();
     renderThresholds(resp);
+    showToast(t('view.adf.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

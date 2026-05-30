@@ -961,6 +961,11 @@ function bindTabs() {
         const el = document.getElementById('ao-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in adf scope → click Run ADF.
+    window.addEventListener('tv:adf-test-run', () => {
+        const el = document.getElementById('adf-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
