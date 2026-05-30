@@ -173,8 +173,48 @@ function render(r, mount) {
             <h2 data-i18n="view.rebalance.h2.all_positions_current_vs_target">All positions — current vs target</h2>
             ${positionsTable(p.rows)}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.rebalance.h2.drift_chart">Drift % per position</h2>
+            <div id="rb-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
+    renderDriftChart(p.rows);
+}
+
+function renderDriftChart(rows) {
+    const el = document.getElementById('rb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(r.drift_pct));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rebalance.empty_chart">${esc(t('view.rebalance.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(r => r.symbol);
+    const drift = valid.map(r => r.drift_pct * 100);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.rebalance.chart.symbol_idx') },
+            { label: t('view.rebalance.chart.drift_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.rebalance.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, drift, zero], el);
 }
 
 function tradeTable(trades) {
