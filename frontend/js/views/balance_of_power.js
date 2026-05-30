@@ -55,6 +55,11 @@ export async function renderBalanceOfPower(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.bop.h2.cum_chart">Cumulative BOP (accumulated dominance)</h2>
+            <div id="bp-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.bop.h2.table">Per-bar BOP (tail — last 30)</h2>
             <div id="bp-table"></div>
         </div>
@@ -98,6 +103,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.smoothing_period);
     renderSummary(local, true);
     renderChart(local);
+    renderCumChart(local);
     renderTable(local);
     let resp;
     try {
@@ -109,6 +115,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCumChart(resp);
     renderTable(resp);
 }
 
@@ -171,6 +178,42 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, report.raw_bop, report.smoothed_bop], el);
+}
+
+function renderCumChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bp-cum-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report.raw_bop || report.raw_bop.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bop.empty_cum">${esc(t('view.bop.empty_cum'))}</div>`;
+        return;
+    }
+    const xs = report.raw_bop.map((_, i) => i);
+    const cum = [];
+    let acc = 0;
+    for (const v of report.raw_bop) {
+        if (v == null || !Number.isFinite(v)) { cum.push(null); continue; }
+        acc += v;
+        cum.push(acc);
+    }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.bop.chart.cum_bop'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.bop.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderTable(report) {

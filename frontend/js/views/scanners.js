@@ -380,6 +380,8 @@ const PRESETS = [
     { id: 'big_down_mid_range_close', label: t('view.scanners.preset.big_down_mid_range_close.label'), desc: t('view.scanners.preset.big_down_mid_range_close.desc') },
     { id: 'hod_close_hot_vol_flat', label: t('view.scanners.preset.hod_close_hot_vol_flat.label'), desc: t('view.scanners.preset.hod_close_hot_vol_flat.desc') },
     { id: 'lod_close_hot_vol_flat', label: t('view.scanners.preset.lod_close_hot_vol_flat.label'), desc: t('view.scanners.preset.lod_close_hot_vol_flat.desc') },
+    { id: 'rising_wedge_coil', label: t('view.scanners.preset.rising_wedge_coil.label'), desc: t('view.scanners.preset.rising_wedge_coil.desc') },
+    { id: 'falling_wedge_coil', label: t('view.scanners.preset.falling_wedge_coil.label'), desc: t('view.scanners.preset.falling_wedge_coil.desc') },
 ];
 
 export async function renderScanners(mount) {

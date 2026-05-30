@@ -498,6 +498,8 @@ pub enum Preset {
     BigDownMidRangeClose,           // change_pct < -3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big down move but close mid-range on vol (failed flush; basing action)
     HodCloseHotVolFlat,             // hod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at HOD on hot vol but flat change (absorption at highs; climax buy candidate)
     LodCloseHotVolFlat,             // lod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at LOD on hot vol but flat change (absorption at lows; climax sell candidate)
+    RisingWedgeCoil,                // hod_dist + lod_dist < 2 AND change_pct > 0 AND day_pct > 0 AND rel_volume < 0.8 — narrow range + green change + green intraday + dry vol (rising wedge consolidation)
+    FallingWedgeCoil,               // hod_dist + lod_dist < 2 AND change_pct < 0 AND day_pct < 0 AND rel_volume < 0.8 — narrow range + red change + red intraday + dry vol (falling wedge consolidation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2505,6 +2507,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::RisingWedgeCoil => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+                && hit.change_pct > 0.0
+                && hit.day_pct > 0.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::FallingWedgeCoil => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+                && hit.change_pct < 0.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -2893,6 +2907,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigDownMidRangeClose => "Big Down + Mid-Range Close (Basing Action)",
         Preset::HodCloseHotVolFlat => "HOD Close + Hot Vol + Flat Change (Absorption High)",
         Preset::LodCloseHotVolFlat => "LOD Close + Hot Vol + Flat Change (Absorption Low)",
+        Preset::RisingWedgeCoil => "Rising Wedge Coil (Narrow Range, Green, Dry Vol)",
+        Preset::FallingWedgeCoil => "Falling Wedge Coil (Narrow Range, Red, Dry Vol)",
     }
 }
 
