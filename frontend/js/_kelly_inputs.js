@@ -141,7 +141,7 @@ export function parsePnlBlob(text) {
     const pnls = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { pnls, errors: [{ line: 0, message: 'expected string input' }] };
+        return { pnls, errors: [{ line: 0, message: t('common.parse.input_must_be_string') }] };
     }
     const cleaned = text.replace(/#[^\n]*/g, ' ');
     const tokens = cleaned.split(/[\s,]+/).map(t => t.trim()).filter(Boolean);

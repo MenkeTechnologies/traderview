@@ -16,13 +16,15 @@
 //   * nonNegative: when true, negative values are reported as errors.
 //     Used by the volume-curve parser (negative volume is meaningless).
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 export function parseFloatBlob(text, opts = {}) {
     const value = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { value, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { value, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

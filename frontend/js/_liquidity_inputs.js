@@ -15,7 +15,7 @@ export function parseTradeLines(text) {
     const trades = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { trades, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { trades, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -51,7 +51,7 @@ export function parseAdvLines(text) {
     const adv = {};
     const errors = [];
     if (typeof text !== 'string') {
-        return { adv, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { adv, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

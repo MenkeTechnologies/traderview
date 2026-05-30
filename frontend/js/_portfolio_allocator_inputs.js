@@ -20,7 +20,7 @@ export function parseMatrix(text) {
     const value = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { value, errors: [{ line_no: 0, message: 'input not a string', raw: '' }] };
+        return { value, errors: [{ line_no: 0, message: t('common.parse.input_must_be_string'), raw: '' }] };
     }
     const lines = text.split(/\r?\n/);
     let width = null;

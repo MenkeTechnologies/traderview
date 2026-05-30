@@ -15,7 +15,7 @@ export function parsePositions(text) {
     const positions = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { positions, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { positions, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -53,7 +53,7 @@ export function parseEvents(text) {
     const events = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { events, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { events, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

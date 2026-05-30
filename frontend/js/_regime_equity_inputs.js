@@ -17,7 +17,7 @@ export const DEFAULT_CONFIG = {
 export function parseEquityBlob(s) {
     const errors = [];
     if (typeof s !== 'string') {
-        return { equity: [], errors: [{ line: 0, message: 'expected string input' }] };
+        return { equity: [], errors: [{ line: 0, message: t('common.parse.input_must_be_string') }] };
     }
     const tokens = s.split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
     const equity = [];

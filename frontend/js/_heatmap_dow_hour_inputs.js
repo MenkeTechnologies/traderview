@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // Day-of-week × hour-of-day P&L heatmap helpers.
 //
 // Backend body: { trades: Trade[] }. Trade is the full backend struct
@@ -21,7 +22,7 @@ export function parseTradeBlob(text) {
     const rows = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { rows, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { rows, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

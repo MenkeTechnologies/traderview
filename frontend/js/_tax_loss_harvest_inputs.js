@@ -22,7 +22,7 @@ export function parseLoserBlob(text) {
     const losers = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { losers, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { losers, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -55,7 +55,7 @@ export function parseRecentBuyBlob(text) {
     const buys = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { buys, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { buys, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

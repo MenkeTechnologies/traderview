@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // Currency-exposure aggregator helpers.
 //
 // Backend body: { positions: ForeignPosition[], home_currency: string,
@@ -18,7 +19,7 @@ export function parsePositionBlob(text) {
     const positions = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { positions, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { positions, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
@@ -51,7 +52,7 @@ export function parseFxBlob(text) {
     const fx = {};
     const errors = [];
     if (typeof text !== 'string') {
-        return { fx, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { fx, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {

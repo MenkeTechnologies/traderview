@@ -15,7 +15,7 @@ export function parseTickBlob(text) {
     const ticks = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { ticks, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { ticks, errors: [{ line_no: 0, raw: '', message: t('common.parse.input_must_be_string') }] };
     }
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
