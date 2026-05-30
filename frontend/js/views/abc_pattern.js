@@ -70,6 +70,11 @@ export async function renderAbcPattern(mount, _appState) {
             <div id="abc-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.abc.h2.bcret_chart">B retrace vs C extension (per event)</h2>
+            <div id="abc-bcret-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="abc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -113,6 +118,7 @@ async function compute(tok) {
     renderEvents(local);
     renderStats();
     renderSwingChart();
+    renderBcRetChart(local);
     let resp;
     try {
         resp = await api.anlyAbcPattern(buildBody(state));
@@ -125,6 +131,7 @@ async function compute(tok) {
     renderEvents(resp);
     renderStats();
     renderSwingChart();
+    renderBcRetChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -247,6 +254,50 @@ function renderSwingChart() {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderBcRetChart(report) {
+    const el = document.getElementById('abc-bcret-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const events = report && Array.isArray(report.events) ? report.events : [];
+    const pts = events
+        .filter(e => Number.isFinite(e.b_retrace_pct) && Number.isFinite(e.c_extension_ratio))
+        .map(e => ({ b: e.b_retrace_pct, c: e.c_extension_ratio, bias: e.bias }));
+    if (pts.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.abc.empty_bcret_chart">${esc(t('view.abc.empty_bcret_chart'))}</div>`;
+        return;
+    }
+    const xs = pts.map(p => p.b);
+    const bullYs = pts.map(p => p.bias === 'bullish' ? p.c : null);
+    const bearYs = pts.map(p => p.bias !== 'bullish' ? p.c : null);
+    const minB = Number(state.min_b_retrace);
+    const maxB = Number(state.max_b_retrace);
+    const minC = Number(state.min_c_extension);
+    const minBYs = pts.map(() => minC);
+    const maxBYs = pts.map(() => minC);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.abc.chart.bret') },
+            { label: t('view.abc.chart.cext_bull'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 8, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.abc.chart.cext_bear'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 8, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.abc.chart.min_c'),
+              stroke: '#ffd84a', width: 1, dash: [4, 4], points: { show: false } },
+            { label: t('view.abc.chart.max_b'),
+              stroke: '#ffd84a', width: 1, dash: [2, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, bullYs, bearYs, minBYs, maxBYs.map(() => maxB)], el);
 }
 
 function card(label, value, cls = '') {

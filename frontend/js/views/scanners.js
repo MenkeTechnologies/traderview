@@ -332,6 +332,8 @@ const PRESETS = [
     { id: 'small_gap_big_move_hot_vol', label: t('view.scanners.preset.small_gap_big_move_hot_vol.label'), desc: t('view.scanners.preset.small_gap_big_move_hot_vol.desc') },
     { id: 'no_vol_trend_up', label: t('view.scanners.preset.no_vol_trend_up.label'), desc: t('view.scanners.preset.no_vol_trend_up.desc') },
     { id: 'no_vol_trend_down', label: t('view.scanners.preset.no_vol_trend_down.label'), desc: t('view.scanners.preset.no_vol_trend_down.desc') },
+    { id: 'churn_at_top_dry_vol', label: t('view.scanners.preset.churn_at_top_dry_vol.label'), desc: t('view.scanners.preset.churn_at_top_dry_vol.desc') },
+    { id: 'churn_at_bottom_dry_vol', label: t('view.scanners.preset.churn_at_bottom_dry_vol.label'), desc: t('view.scanners.preset.churn_at_bottom_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

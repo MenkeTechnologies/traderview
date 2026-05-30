@@ -450,6 +450,8 @@ pub enum Preset {
     SmallGapBigMoveHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat gap + big day on heavy vol (intraday-driven trend; no overnight positioning)
     NoVolTrendUp,                // change_pct > 1 AND day_pct > 0 AND rel_volume < 0.4 AND hod_dist.abs() < 0.5 — up close on extreme dry vol (trend without participation; vacuum risk)
     NoVolTrendDown,              // change_pct < -1 AND day_pct < 0 AND rel_volume < 0.4 AND lod_dist.abs() < 0.5 — down close on extreme dry vol (trend without participation; vacuum risk)
+    ChurnAtTopDryVol,            // year_high_pct > -3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w high on dry vol (consolidation at highs; bullish setup)
+    ChurnAtBottomDryVol,         // year_low_pct < 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w low on dry vol (consolidation at lows; potential capitulation done)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2188,6 +2190,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.4
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::ChurnAtTopDryVol => {
+            hit.year_high_pct > -3.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.6
+        }
+        Preset::ChurnAtBottomDryVol => {
+            hit.year_low_pct < 3.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.6
+        }
     }
 }
 
@@ -2528,6 +2540,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallGapBigMoveHotVol => "Small Gap + Big Day, Hot Vol",
         Preset::NoVolTrendUp => "No-Vol Up Trend (Vacuum)",
         Preset::NoVolTrendDown => "No-Vol Down Trend (Vacuum)",
+        Preset::ChurnAtTopDryVol => "Churn at 52w High, Dry Vol",
+        Preset::ChurnAtBottomDryVol => "Churn at 52w Low, Dry Vol",
     }
 }
 
