@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderWebhooks(mount) {
@@ -81,7 +82,7 @@ export async function renderWebhooks(mount) {
         b.addEventListener('click', async () => {
             await api.testWebhook(b.dataset.test);
             if (!viewIsCurrent(tok)) return;
-            alert(t('view.webhooks.alert.test_fired'));
+            showToast(t('view.webhooks.alert.test_fired'), { level: 'success' });
             renderWebhooks(mount);
         }));
     mount.querySelectorAll('[data-tog]').forEach(b =>

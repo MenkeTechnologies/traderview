@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { fmtDateTime, md, esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderJournalView(mount, _state, dayOrGeneral) {
@@ -79,7 +80,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
-            alert(t('view.journal.alert.no_template'));
+            showToast(t('view.journal.alert.no_template'), { level: 'warning' });
         }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>

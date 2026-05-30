@@ -5,6 +5,7 @@ import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { fmt } from '../util.js';
 import { buildProposedTrade, splitViolations } from '../_risk_gate_adapter.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderNewTrade(mount, state) {
     const tok = currentViewToken();
@@ -127,9 +128,9 @@ export async function renderNewTrade(mount, state) {
             if (decision) {
                 const { blocks, warnings } = splitViolations(decision);
                 if (blocks.length) {
-                    alert(t('view.new_trade.alert.risk_blocked', {
+                    showToast(t('view.new_trade.alert.risk_blocked', {
                         blocks: blocks.map(b => `[${b.rule}] ${b.message}`).join('\n\n'),
-                    }));
+                    }), { level: 'warning' });
                     return;
                 }
                 if (warnings.length) {
@@ -151,7 +152,7 @@ export async function renderNewTrade(mount, state) {
                 `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T` +
                 `${pad(now.getHours())}:${pad(now.getMinutes())}`;
             syncOption();
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
 
     async function refresh() {

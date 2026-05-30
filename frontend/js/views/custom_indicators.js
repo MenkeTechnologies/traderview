@@ -5,6 +5,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 const KINDS = [
     { id: 'sma',       label: 'SMA',       params: { period: 20 } },
@@ -121,7 +122,7 @@ async function refresh(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.custom_indicators.confirm.delete_preset'))) return;
                 try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(t('common.error', { err: e.message })); }
+                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             }));
     } catch (e) {
         if (!viewIsCurrent(tok)) return;

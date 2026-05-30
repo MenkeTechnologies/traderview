@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtMoney, fmtDateTime, fmtSecs, makeFilter, pnlClass } from '../util.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 let currentFilter = {};
 
@@ -47,10 +48,10 @@ export async function renderTradesView(mount, state) {
     mount.querySelector('#close-exp-btn').addEventListener('click', async () => {
         const n = await api.closeExpiredOptions(state.accountId);
         if (!viewIsCurrent(tok)) return;
-        alert(t('view.trades.alert.closed_expired', {
+        showToast(t('view.trades.alert.closed_expired', {
             n,
             label: t(n === 1 ? 'view.trades.label.trade_singular' : 'view.trades.label.trade_plural'),
-        }));
+        }), { level: 'error' });
         await refresh();
     });
 
@@ -60,17 +61,17 @@ export async function renderTradesView(mount, state) {
         if (!action) return;
         const ids = Array.from(mount.querySelectorAll('.trade-row input:checked'))
             .map(c => c.value);
-        if (!ids.length) { alert(t('view.trades.alert.select_first')); return; }
+        if (!ids.length) { showToast(t('view.trades.alert.select_first'), { level: 'error' }); return; }
         try {
             const extras = await collectActionExtras(action);
             if (!viewIsCurrent(tok)) return;
             if (extras === null) return; // cancelled
             const r = await api.bulkTrades(ids, action, extras);
             if (!viewIsCurrent(tok)) return;
-            alert(t('view.trades.alert.bulk_done', { action, affected: r.affected }));
+            showToast(t('view.trades.alert.bulk_done', { action, affected: r.affected }), { level: 'error' });
             await refresh();
         } catch (e) {
-            alert(t('view.trades.alert.error', { msg: e.message }));
+            showToast(t('view.trades.alert.error', { msg: e.message }), { level: 'error' });
         }
     });
 
@@ -78,11 +79,11 @@ export async function renderTradesView(mount, state) {
         if (action === 'add_tag' || action === 'remove_tag') {
             const tags = await api.tags();
             if (!viewIsCurrent(tok)) return null;
-            if (!tags.length) { alert(t('view.trades.alert.no_tags')); return null; }
+            if (!tags.length) { showToast(t('view.trades.alert.no_tags'), { level: 'error' }); return null; }
             const name = prompt(t('view.trades.prompt.tag_name', { names: tags.map(x => x.name).join(', ') }));
             if (!name) return null;
             const tag = tags.find(x => x.name.toLowerCase() === name.toLowerCase());
-            if (!tag) { alert(t('view.trades.alert.no_tag_named', { name })); return null; }
+            if (!tag) { showToast(t('view.trades.alert.no_tag_named', { name }), { level: 'error' }); return null; }
             return { tag_id: tag.id };
         }
         if (action === 'set_risk') {

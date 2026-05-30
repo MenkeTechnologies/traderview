@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
@@ -67,7 +68,7 @@ function renderPicker(trades, mount, tok) {
             const id = cb.dataset.id;
             if (cb.checked) {
                 if (selectedIds.length >= 4) {
-                    alert(t('view.trade_compare.alert.max_four'));
+                    showToast(t('view.trade_compare.alert.max_four'), { level: 'error' });
                     cb.checked = false; return;
                 }
                 selectedIds.push(id);

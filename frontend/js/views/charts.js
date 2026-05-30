@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { ohlcChart } from '../charts.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a', '#ffd24a'];
@@ -98,7 +99,7 @@ export async function renderCharts(mount, _state, symbol = '') {
             if (!viewIsCurrent(tok)) return;
             ds.drawings = [];
             drawAll(ds);
-        } catch (e) { alert(t('common.error', { err: e.message })); }
+        } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
     });
 
     mount.querySelector('#drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
@@ -285,7 +286,7 @@ async function persistAndAdd(ds, draft) {
         if (!viewIsCurrent(ds.tok)) return;
         ds.drawings.push(saved);
         drawAll(ds);
-    } catch (e) { alert(t('common.error', { err: e.message })); }
+    } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
 }
 
 function drawAll(ds, opts = {}) {
@@ -438,7 +439,7 @@ function appendDeleteBtn(svg, ds, d, x, y) {
             if (!viewIsCurrent(ds.tok)) return;
             ds.drawings = ds.drawings.filter(x => x.id !== d.id);
             drawAll(ds);
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     svg.appendChild(g);
 }

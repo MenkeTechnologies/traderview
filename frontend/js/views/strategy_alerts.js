@@ -8,6 +8,7 @@ import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 let wsUnsub = null;
 
@@ -83,7 +84,7 @@ export async function renderStrategyAlerts(mount) {
         const fd = new FormData(e.target);
         let ast;
         try { ast = JSON.parse(mount.querySelector('#sa-ast').value); }
-        catch (err) { alert(t('view.strategy_alerts.alert.ast_invalid', { msg: err.message })); return; }
+        catch (err) { showToast(t('view.strategy_alerts.alert.ast_invalid', { msg: err.message }), { level: 'error' }); return; }
         try {
             await api.createStrategyAlert({
                 name: fd.get('name').trim(),
@@ -94,7 +95,7 @@ export async function renderStrategyAlerts(mount) {
             if (astEl) astEl.value = '';
             e.target.reset();
             await refresh(mount, tok);
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelector('#sa-eval-now').addEventListener('click', async () => {
         const status = mount.querySelector('#sa-status');
@@ -173,7 +174,7 @@ function renderRules(rules, mount, tok) {
                 if (!viewIsCurrent(tok)) return;
                 await refresh(mount, tok);
             }
-            catch (e) { alert(t('common.error', { err: e.message })); }
+            catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         }));
     el.querySelectorAll('.sa-toggle').forEach(b =>
         b.addEventListener('click', async () => {
@@ -187,7 +188,7 @@ function renderRules(rules, mount, tok) {
                 });
                 if (!viewIsCurrent(tok)) return;
                 await refresh(mount, tok);
-            } catch (e) { alert(t('common.error', { err: e.message })); }
+            } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         }));
 }
 

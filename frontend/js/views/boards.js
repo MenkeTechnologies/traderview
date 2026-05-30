@@ -14,6 +14,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const WIDGET_KINDS = [
@@ -93,13 +94,13 @@ async function renderList(mount) {
         try {
             const b = await api.createDashboard({ name: fd.get('name').trim(), layout: [] });
             window.location.hash = `boards/${b.id}`;
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelectorAll('.b-del').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!confirm(t('view.boards.confirm.delete'))) return;
             try { await api.deleteDashboard(btn.dataset.id); if (viewIsCurrent(tok)) renderList(mount); }
-            catch (e) { alert(t('common.error', { err: e.message })); }
+            catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
     });
 }

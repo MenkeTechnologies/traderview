@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { fmt, fmtDateTime, esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderImportView(mount, state) {
     const tok = currentViewToken();
@@ -64,7 +65,7 @@ export async function renderImportView(mount, state) {
 
     mount.querySelector('#go').addEventListener('click', async () => {
         const f = fileInput.files[0];
-        if (!f) { alert(t('view.import.alert.pick_a_file')); return; }
+        if (!f) { showToast(t('view.import.alert.pick_a_file'), { level: 'warning' }); return; }
         const src = mount.querySelector('#source').value;
         try {
             const r = await api.upload(state.accountId, src, f);

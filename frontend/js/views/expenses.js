@@ -11,6 +11,7 @@
 
 import { api, ApiError } from '../api.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const state = {
@@ -231,7 +232,7 @@ function drawTable() {
             try {
                 await api.updateExpenseTransaction(tx, { category_code: code });
             } catch (e) {
-                alert(t('view.expenses.alert.update_failed', { err: e.message }));
+                showToast(t('view.expenses.alert.update_failed', { err: e.message }), { level: 'error' });
             }
         });
     });
@@ -245,7 +246,7 @@ function drawTable() {
                 btn.textContent = next ? t('view.expenses.btn.biz') : t('view.expenses.btn.pers');
                 btn.classList.toggle('biz-on', next);
                 btn.classList.toggle('biz-off', !next);
-            } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
+            } catch (e) { showToast(t('view.expenses.alert.update_failed', { err: e.message }), { level: 'error' }); }
         });
     });
     host.querySelectorAll('button.tx-xfer').forEach(btn => {
@@ -257,7 +258,7 @@ function drawTable() {
                 btn.dataset.xfer = String(next);
                 btn.textContent = next ? t('view.expenses.btn.xfer') : '—';
                 btn.classList.toggle('biz-on', next);
-            } catch (e) { alert(t('view.expenses.alert.update_failed', { err: e.message })); }
+            } catch (e) { showToast(t('view.expenses.alert.update_failed', { err: e.message }), { level: 'error' }); }
         });
     });
 }
@@ -267,7 +268,7 @@ async function createAccountFlow() {
     if (!name) return;
     const kind = prompt(t('view.expenses.prompt.kind'), 'credit_card');
     if (!['bank', 'credit_card', 'marketplace'].includes(kind)) {
-        alert(t('view.expenses.alert.invalid_kind'));
+        showToast(t('view.expenses.alert.invalid_kind'), { level: 'error' });
         return;
     }
     const source = prompt(t('view.expenses.prompt.source'), 'chase');
@@ -283,7 +284,7 @@ async function createAccountFlow() {
         if (sel) sel.value = acct.id;
         await refresh();
     } catch (e) {
-        alert(t('view.expenses.alert.create_failed', { err: e.message }));
+        showToast(t('view.expenses.alert.create_failed', { err: e.message }), { level: 'error' });
     }
 }
 
@@ -292,7 +293,7 @@ async function handleUpload(ev) {
     ev.target.value = '';
     if (!file) return;
     if (!state.currentAccountId) {
-        alert(t('view.expenses.alert.pick_account'));
+        showToast(t('view.expenses.alert.pick_account'), { level: 'warning' });
         return;
     }
     const source = state.mount.querySelector('#exp-source').value;
@@ -398,7 +399,7 @@ async function openRulesModal() {
         btn.onclick = async () => {
             if (!confirm(t('view.expenses.confirm.delete_rule'))) return;
             try { await api.deleteExpenseRule(btn.dataset.id); }
-            catch (e) { alert(t('view.expenses.alert.delete_failed', { err: e.message })); return; }
+            catch (e) { showToast(t('view.expenses.alert.delete_failed', { err: e.message }), { level: 'error' }); return; }
             if (!viewIsCurrent(state.tok)) return;
             openRulesModal();
         };
@@ -418,7 +419,7 @@ async function openRulesModal() {
             if (!viewIsCurrent(state.tok)) return;
             await refresh();
             openRulesModal();
-        } catch (e) { alert(t('view.expenses.alert.create_failed', { err: e.message })); }
+        } catch (e) { showToast(t('view.expenses.alert.create_failed', { err: e.message }), { level: 'error' }); }
     });
 }
 
@@ -556,7 +557,7 @@ async function openReceiptMatchModal(meta) {
                 const s = state.mount.querySelector('#exp-status');
                 if (s) s.textContent = t('view.expenses.status.receipt_attached');
                 await refresh();
-            } catch (e) { alert(t('view.expenses.alert.attach_failed', { err: e.message })); }
+            } catch (e) { showToast(t('view.expenses.alert.attach_failed', { err: e.message }), { level: 'error' }); }
         };
     });
 }
@@ -698,7 +699,7 @@ async function openReceiptsModal() {
                 const meta = await api.receiptMeta(btn.dataset.id);
                 if (!viewIsCurrent(state.tok)) return;
                 openReceiptMatchModal(meta);
-            } catch (e) { alert(t('view.expenses.alert.open_failed', { err: e.message })); }
+            } catch (e) { showToast(t('view.expenses.alert.open_failed', { err: e.message }), { level: 'error' }); }
         };
     });
 }

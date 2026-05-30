@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const MOOD_OPTS = [
@@ -170,7 +171,7 @@ async function openModal(tradeId, symbol, rMult, accountId, mount, tok) {
             if (!viewIsCurrent(tok)) return;
             close();
             await refresh(accountId, mount, tok);
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
 }
 

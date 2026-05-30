@@ -8,6 +8,7 @@
 import { api, wsUrl } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const states = new Map(); // symbol → SymbolState
@@ -71,9 +72,9 @@ export async function renderLiveScanner(mount, _state) {
             const r = await api.configureLiveTicks({ api_key, symbols });
             if (!viewIsCurrent(viewTok)) return;
             connectWs(mount, viewTok);
-            alert(t('view.live_scanner.alert.subscribed', { n: r.subscribed, hasKey: r.has_key }));
+            showToast(t('view.live_scanner.alert.subscribed', { n: r.subscribed, hasKey: r.has_key }), { level: 'success' });
         } catch (err) {
-            alert(t('view.live_scanner.alert.configure_failed', { err: err.message }));
+            showToast(t('view.live_scanner.alert.configure_failed', { err: err.message }), { level: 'error' });
         }
     });
 

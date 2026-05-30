@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 const PACE_COLOR = {
     on_track:      '#7af0a8',
@@ -129,7 +130,7 @@ async function refresh(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.goals.confirm.delete'))) return;
                 try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(t('common.error', { err: e.message })); }
+                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
     } catch (e) {

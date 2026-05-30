@@ -3,6 +3,7 @@ import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
 import { renderAiAnalyze } from './journal_ai.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const dtLocal = (iso) => {
@@ -237,7 +238,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
         if (tpl && tpl.body_md) {
             ta.value = (ta.value ? ta.value + '\n\n' : '') + tpl.body_md;
         } else {
-            alert(t('view.trade_detail.alert.no_template'));
+            showToast(t('view.trade_detail.alert.no_template'), { level: 'warning' });
         }
     });
     mount.querySelectorAll('[data-del-journal]').forEach(b =>
@@ -263,7 +264,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 await api.updateExecution(eid, body);
                 if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
-            } catch (err) { alert(t('view.trade_detail.alert.save_failed', { msg: err.message })); }
+            } catch (err) { showToast(t('view.trade_detail.alert.save_failed', { msg: err.message }), { level: 'error' }); }
         }));
     mount.querySelectorAll('[data-del-ex]').forEach(b =>
         b.addEventListener('click', async () => {
@@ -299,7 +300,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                 await api.addExecutionToTrade(tradeId, body);
                 if (!viewIsCurrent(tok)) return;
                 renderTradeDetail(mount, state, tradeId);
-            } catch (err) { alert(t('view.trade_detail.alert.add_failed', { msg: err.message })); }
+            } catch (err) { showToast(t('view.trade_detail.alert.add_failed', { msg: err.message }), { level: 'error' }); }
         });
     }
 

@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderBacktestPresets(mount, _state, slug = '') {
     if (slug) return renderPresetDetail(mount, slug);
@@ -50,7 +51,7 @@ async function renderBrowse(mount) {
         const fd = new FormData(e.target);
         let preset;
         try { preset = JSON.parse(mount.querySelector('#bp-json').value); }
-        catch (err) { alert(t('view.backtest_presets.alert.json_invalid', { err: err.message })); return; }
+        catch (err) { showToast(t('view.backtest_presets.alert.json_invalid', { err: err.message }), { level: 'error' }); return; }
         try {
             await api.createBacktestPreset({
                 name: fd.get('name').trim(),
@@ -63,7 +64,7 @@ async function renderBrowse(mount) {
             const ta = mount.querySelector('#bp-json');
             if (ta) ta.value = '';
             await refresh(mount, tok);
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     await refresh(mount, tok);
 }
@@ -131,7 +132,7 @@ function wireRowButtons(scope, mine, mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.backtest_presets.confirm.delete'))) return;
                 try { await api.deleteBacktestPreset(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { alert(t('common.error', { err: e.message })); }
+                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
     } else {
@@ -139,9 +140,9 @@ function wireRowButtons(scope, mine, mount, tok) {
             b.addEventListener('click', async () => {
                 try {
                     const forked = await api.forkBacktestPreset(b.dataset.slug);
-                    alert(t('view.backtest_presets.alert.forked', { name: forked.name }));
+                    showToast(t('view.backtest_presets.alert.forked', { name: forked.name }), { level: 'error' });
                     if (viewIsCurrent(tok)) await refresh(mount, tok);
-                } catch (e) { alert(t('common.error', { err: e.message })); }
+                } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
     }
@@ -178,9 +179,9 @@ async function renderPresetDetail(mount, slug) {
         if (btn) btn.addEventListener('click', async () => {
             try {
                 const f = await api.forkBacktestPreset(slug);
-                alert(t('view.backtest_presets.alert.forked', { name: f.name }));
+                showToast(t('view.backtest_presets.alert.forked', { name: f.name }), { level: 'error' });
                 window.location.hash = `backtest-presets/${f.slug}`;
-            } catch (e) { alert(t('common.error', { err: e.message })); }
+            } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
         });
     } catch (e) {
         if (!viewIsCurrent(tok)) return;

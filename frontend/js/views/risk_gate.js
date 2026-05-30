@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 const RULE_TYPES = [
     { id: 'max_loss_per_trade_pct',       get label() { return t('view.risk_gate.rule.max_loss_per_trade_pct'); },     fields: [['pct', 'number', '1.0']] },
@@ -191,9 +192,9 @@ export async function renderRiskGate(mount, state) {
             try {
                 const r = await api.installRiskPreset(preset);
                 if (!viewIsCurrent(tok)) return;
-                alert(t('view.risk_gate.alert.installed', { n: r.inserted }));
+                showToast(t('view.risk_gate.alert.installed', { n: r.inserted }), { level: 'success' });
                 await reloadRules(mount, tok);
-            } catch (e) { alert(t('view.risk_gate.alert.install_failed', { err: e.message })); }
+            } catch (e) { showToast(t('view.risk_gate.alert.install_failed', { err: e.message }), { level: 'error' }); }
         });
     });
 
@@ -234,7 +235,7 @@ export async function renderRiskGate(mount, state) {
             if (!viewIsCurrent(tok)) return;
             await refreshKillState();
             await reloadRules(mount, tok);
-        } catch (e) { alert(t('view.risk_gate.alert.kill_switch_failed', { err: e.message })); }
+        } catch (e) { showToast(t('view.risk_gate.alert.kill_switch_failed', { err: e.message }), { level: 'error' }); }
     });
     await refreshKillState();
 
@@ -268,7 +269,7 @@ export async function renderRiskGate(mount, state) {
             await api.createRiskRule(body);
             if (!viewIsCurrent(tok)) return;
             await reloadRules(mount, tok);
-        } catch (err) { alert(t('view.risk_gate.alert.create_failed', { err: err.message })); }
+        } catch (err) { showToast(t('view.risk_gate.alert.create_failed', { err: err.message }), { level: 'error' }); }
     });
 
     // Dry-run evaluate.
@@ -327,13 +328,13 @@ async function reloadRules(mount, tok) {
         tb.querySelectorAll('[data-toggle]').forEach(cb => {
             cb.addEventListener('change', async () => {
                 try { await api.toggleRiskRule(cb.dataset.toggle, cb.checked); }
-                catch (e) { alert(t('view.risk_gate.alert.toggle_failed', { err: e.message })); cb.checked = !cb.checked; }
+                catch (e) { showToast(t('view.risk_gate.alert.toggle_failed', { err: e.message }), { level: 'error' }); cb.checked = !cb.checked; }
             });
         });
         tb.querySelectorAll('[data-del]').forEach(b => {
             b.addEventListener('click', async () => {
                 try { await api.deleteRiskRule(b.dataset.del); }
-                catch (e) { alert(t('view.risk_gate.alert.delete_failed', { err: e.message })); return; }
+                catch (e) { showToast(t('view.risk_gate.alert.delete_failed', { err: e.message }), { level: 'error' }); return; }
                 if (viewIsCurrent(tok)) await reloadRules(mount, tok);
             });
         });

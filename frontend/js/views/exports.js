@@ -5,6 +5,7 @@ import { apiFetchBlob } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderExports(mount, state) {
     const tok = currentViewToken();
@@ -106,7 +107,7 @@ export async function renderExports(mount, state) {
                     await openBlobInNewTab(path);
                 }
             } catch (e) {
-                alert(t('common.error', { err: e.message }));
+                showToast(t('common.error', { err: e.message }), { level: 'error' });
             } finally {
                 if (viewIsCurrent(tok)) {
                     btn.textContent = orig;

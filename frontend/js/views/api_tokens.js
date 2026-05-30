@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export async function renderDeveloper(mount) {
@@ -130,17 +131,17 @@ async function loadList(mount, tok) {
             b.addEventListener('click', async () => {
                 if (!confirm(t('view.api_tokens.confirm.revoke'))) return;
                 try { await api.revokeApiToken(b.dataset.id); if (viewIsCurrent(tok)) await loadList(mount, tok); }
-                catch (e) { alert(t('common.error', { err: e.message })); }
+                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
         el2.querySelectorAll('.rate-input').forEach(input => {
             input.addEventListener('change', async () => {
                 const v = Number(input.value);
                 if (!Number.isFinite(v) || v < 1 || v > 10000) {
-                    alert(t('view.api_tokens.alert.rate_range')); return;
+                    showToast(t('view.api_tokens.alert.rate_range'), { level: 'warning' }); return;
                 }
                 try { await api.setApiTokenRateLimit(input.dataset.id, v); }
-                catch (e) { alert(t('common.error', { err: e.message })); if (viewIsCurrent(tok)) await loadList(mount, tok); }
+                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); if (viewIsCurrent(tok)) await loadList(mount, tok); }
             });
         });
     } catch (e) {

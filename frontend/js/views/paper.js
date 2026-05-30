@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderPaper(mount) {
     const tok = currentViewToken();
@@ -139,9 +140,9 @@ export async function renderPaper(mount) {
         try {
             const o = await api.paperSubmit(acct.id, body);
             if (!viewIsCurrent(tok)) return;
-            if (o.status === 'rejected') alert(t('view.paper.alert.order_rejected', { reason: o.reject_reason || t('common.empty.unknown') }));
+            if (o.status === 'rejected') showToast(t('view.paper.alert.order_rejected', { reason: o.reject_reason || t('common.empty.unknown') }), { level: 'error' });
             renderPaper(mount);
-        } catch (err) { alert(t('common.error', { err: err.message })); }
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelector('#reset').addEventListener('click', async () => {
         if (!confirm(t('view.paper.confirm.reset'))) return;

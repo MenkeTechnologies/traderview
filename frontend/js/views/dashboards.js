@@ -14,6 +14,7 @@ import * as store from '../_dashboards_storage.js';
 import * as favs from '../_favorites_storage.js';
 import { TILES } from './launcher.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 // Re-export so the rest of the app can mount the same renderers in
 // other contexts later (e.g., browser extensions, popups).
@@ -159,7 +160,7 @@ function renderSidebar() {
         if (!text) return;
         const next = store.importState(text);
         if (!next) {
-            window.alert(t('view.dashboards.alert.import_failed'));
+            showToast(t('view.dashboards.alert.import_failed'), { level: 'error' });
             return;
         }
         if (!window.confirm(t('view.dashboards.confirm.import_replace'))) return;
