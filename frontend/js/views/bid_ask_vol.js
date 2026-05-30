@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, MIN_PERIOD, MAX_PERIOD,
@@ -32,19 +33,20 @@ export async function renderBidAskVol(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bavr.label.period">Period</span>
-                    <input id="bv-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="bv-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.bavr.tip.period"></label>
                 <button data-i18n="view.bavr.btn.compute" id="bv-run" class="primary"
-                        data-tip="view.bavr.tip.compute" type="button">Compute</button>
+                        data-tip="view.bavr.tip.compute" data-shortcut="bid_ask_vol_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bavr.btn.demo_bal"   id="bv-d1" class="secondary" type="button">Demo: balanced</button>
-                <button data-i18n="view.bavr.btn.demo_buy"   id="bv-d2" class="secondary" type="button">Demo: buy pressure</button>
-                <button data-i18n="view.bavr.btn.demo_sell"  id="bv-d3" class="secondary" type="button">Demo: sell pressure</button>
-                <button data-i18n="view.bavr.btn.demo_shft_buy"  id="bv-d4" class="secondary" type="button">Demo: shifting to buy</button>
-                <button data-i18n="view.bavr.btn.demo_shft_sell" id="bv-d5" class="secondary" type="button">Demo: shifting to sell</button>
-                <button data-i18n="view.bavr.btn.demo_hbuy"  id="bv-d6" class="secondary" type="button">Demo: heavy buy</button>
-                <button data-i18n="view.bavr.btn.demo_hsell" id="bv-d7" class="secondary" type="button">Demo: heavy sell</button>
-                <button data-i18n="view.bavr.btn.demo_short" id="bv-d8" class="secondary" type="button">Demo: short period (10)</button>
+                <button data-i18n="view.bavr.btn.demo_bal"       id="bv-d1" class="secondary" data-tip="view.bavr.tip.demo_bal"       type="button">Demo: balanced</button>
+                <button data-i18n="view.bavr.btn.demo_buy"       id="bv-d2" class="secondary" data-tip="view.bavr.tip.demo_buy"       type="button">Demo: buy pressure</button>
+                <button data-i18n="view.bavr.btn.demo_sell"      id="bv-d3" class="secondary" data-tip="view.bavr.tip.demo_sell"      type="button">Demo: sell pressure</button>
+                <button data-i18n="view.bavr.btn.demo_shft_buy"  id="bv-d4" class="secondary" data-tip="view.bavr.tip.demo_shft_buy"  type="button">Demo: shifting to buy</button>
+                <button data-i18n="view.bavr.btn.demo_shft_sell" id="bv-d5" class="secondary" data-tip="view.bavr.tip.demo_shft_sell" type="button">Demo: shifting to sell</button>
+                <button data-i18n="view.bavr.btn.demo_hbuy"      id="bv-d6" class="secondary" data-tip="view.bavr.tip.demo_hbuy"      type="button">Demo: heavy buy</button>
+                <button data-i18n="view.bavr.btn.demo_hsell"     id="bv-d7" class="secondary" data-tip="view.bavr.tip.demo_hsell"     type="button">Demo: heavy sell</button>
+                <button data-i18n="view.bavr.btn.demo_short"     id="bv-d8" class="secondary" data-tip="view.bavr.tip.demo_short"     type="button">Demo: short period (10)</button>
             </div>
             <p data-i18n="view.bavr.hint.about" class="muted">Rolling Σ bid / Σ ask over `period` bars (Lee-Ready classified trades). > 1.5 → sell pressure (sellers hitting bids). < 0.67 → buy pressure (buyers lifting offers). ≈ 1.0 balanced. Default period=60.</p>
         </div>
@@ -90,6 +92,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bavr.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bavr.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -101,7 +104,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bavr.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
@@ -112,14 +115,16 @@ async function compute(tok) {
         resp = await api.anlyBidAskVolumeRatio(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bavr.err.api')}: ${e.message || e}`);
+        showToast(t('view.bavr.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.bavr.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.bavr.err.server_rejected')); showToast(t('view.bavr.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderFlowChart();
     renderStats();
+    showToast(t('view.bavr.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(ratios, pending) {
