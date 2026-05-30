@@ -13,6 +13,7 @@ import {
 } from '../_setups_by_setup_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { rows: makeDemoRows('mixed') };
 
 export async function renderSetupsBySetup(mount, _appState) {
@@ -22,14 +23,14 @@ export async function renderSetupsBySetup(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.setups_by_setup.h2.trades">Trades (per line:</span> <code>setup net_pnl [risk_amount]</code><span data-i18n="view.setups_by_setup.h2.trades_suffix">; "-" = untagged)</span></h2>
-            <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded" data-i18n-placeholder="view.setups_by_setup.placeholder.blob">${esc(rowsToBlob(state.rows))}</textarea>
+            <textarea id="sbs-blob" rows="10" placeholder="orb 500 100&#10;abcd -150 100&#10;- 999 100   # untagged, excluded" data-i18n-placeholder="view.setups_by_setup.placeholder.blob" data-tip="view.setups_by_setup.tip.blob">${esc(rowsToBlob(state.rows))}</textarea>
             <div class="inline-form">
-                <button data-i18n="view.setups_by_setup.btn.analyze" id="sbs-run" class="primary" type="button">Analyze</button>
-                <button data-i18n="view.setups_by_setup.btn.demo_3_setups_mixed" id="sbs-demo-mixed"    class="secondary" type="button">Demo: 3 setups mixed</button>
-                <button data-i18n="view.setups_by_setup.btn.demo_single_winner" id="sbs-demo-winner"   class="secondary" type="button">Demo: single winner</button>
-                <button data-i18n="view.setups_by_setup.btn.demo_single_loser" id="sbs-demo-loser"    class="secondary" type="button">Demo: single loser</button>
-                <button data-i18n="view.setups_by_setup.btn.demo_with_untagged" id="sbs-demo-untag"    class="secondary" type="button">Demo: with untagged</button>
-                <button data-i18n="view.setups_by_setup.btn.demo_all_scratches" id="sbs-demo-scratch"  class="secondary" type="button">Demo: all scratches</button>
+                <button data-i18n="view.setups_by_setup.btn.analyze" id="sbs-run" class="primary" type="button" data-tip="view.setups_by_setup.tip.run" data-shortcut="setups_by_setup_run">Analyze</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_3_setups_mixed" id="sbs-demo-mixed"    class="secondary" type="button" data-tip="view.setups_by_setup.tip.demo_mixed">Demo: 3 setups mixed</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_single_winner" id="sbs-demo-winner"   class="secondary" type="button" data-tip="view.setups_by_setup.tip.demo_winner">Demo: single winner</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_single_loser" id="sbs-demo-loser"    class="secondary" type="button" data-tip="view.setups_by_setup.tip.demo_loser">Demo: single loser</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_with_untagged" id="sbs-demo-untag"    class="secondary" type="button" data-tip="view.setups_by_setup.tip.demo_untag">Demo: with untagged</button>
+                <button data-i18n="view.setups_by_setup.btn.demo_all_scratches" id="sbs-demo-scratch"  class="secondary" type="button" data-tip="view.setups_by_setup.tip.demo_scratch">Demo: all scratches</button>
             </div>
             <p data-i18n="view.setups_by_setup.hint.risk_amount_enables_r_multiple_net_p_l_0_win_0_los" class="muted">Risk amount enables R-multiple. Net P&L &gt; 0 = win, &lt; 0 = loss, == 0 = scratch. Untagged trades ("-") are sent to the backend but excluded from any setup bucket — matches backend "no setup tag → not in the catalog".</p>
         </div>
@@ -82,6 +83,7 @@ function readInputs() {
     const parsed = parseSetupTradeBlob(document.getElementById('sbs-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.setups_by_setup.toast.parse_error'), { level: 'warning' });
         return;
     }
     hideErr();
@@ -91,7 +93,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.rows);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.setups_by_setup.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state.rows);
     renderSummary(local, true);
     renderStats(local, true);
@@ -102,7 +104,9 @@ async function compute(tok) {
     try {
         resp = await api.setupsBySetup(buildBody(state.rows));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.setups_by_setup.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     // Backend returns Decimals as strings — coerce to numbers.
@@ -118,6 +122,7 @@ async function compute(tok) {
     renderNetPnlChart(normalized);
     renderWlrChart(normalized);
     renderPfChart(normalized);
+    showToast(t('view.setups_by_setup.toast.analyzed', { n: normalized.length }), { level: 'success' });
 }
 
 function renderPfChart(stats) {
