@@ -14,6 +14,7 @@ import {
 } from '../_kelly_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     winRate: 0.60,
     payoffRatio: 2.0,
@@ -30,10 +31,10 @@ export async function renderKelly(mount, _appState) {
             <h2 data-i18n="view.kelly.h2.static_kelly">Static Kelly</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.kelly.label.win_rate">Win rate (0–1)</span>
-                    <input id="kl-wr" type="number" step="any" min="0" max="1" value="${state.winRate}"></label>
+                    <input id="kl-wr" type="number" step="any" min="0" max="1" value="${state.winRate}" data-tip="view.kelly.tip.win_rate"></label>
                 <label><span data-i18n="view.kelly.label.payoff_ratio">Payoff ratio (avg win / avg loss)</span>
-                    <input id="kl-payoff" type="number" step="any" min="0" value="${state.payoffRatio}"></label>
-                <button data-i18n="view.kelly.btn.compute_static" id="kl-run-static" class="primary" type="button">Compute static</button>
+                    <input id="kl-payoff" type="number" step="any" min="0" value="${state.payoffRatio}" data-tip="view.kelly.tip.payoff"></label>
+                <button data-i18n="view.kelly.btn.compute_static" data-tip="view.kelly.tip.run_static" data-shortcut="kelly_compute_static" id="kl-run-static" class="primary" type="button">Compute static</button>
             </div>
             <div class="inline-form">
                 <button data-i18n="view.kelly.btn.demo_60_wr_2_1" id="kl-demo-positive"  class="secondary" type="button">Demo: 60% wr × 2:1</button>
@@ -51,9 +52,9 @@ export async function renderKelly(mount, _appState) {
             <textarea id="kl-pnls" rows="5" placeholder="200&#10;-100&#10;200&#10;-100&#10;...">${esc(pnlsToBlob(state.pnls))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.kelly.label.window">Window (last N trades)</span>
-                    <input id="kl-win" type="number" step="1" min="1" value="${state.window}"></label>
-                <button data-i18n="view.kelly.btn.compute_dynamic" id="kl-run-dyn" class="primary" type="button">Compute dynamic</button>
-                <button data-i18n="view.kelly.btn.derive_static_wr_payoff_from_these_pnls" id="kl-import-static" class="secondary" type="button">Derive static (wr / payoff) from these PnLs</button>
+                    <input id="kl-win" type="number" step="1" min="1" value="${state.window}" data-tip="view.kelly.tip.window"></label>
+                <button data-i18n="view.kelly.btn.compute_dynamic" data-tip="view.kelly.tip.run_dyn" data-shortcut="kelly_compute_dynamic" id="kl-run-dyn" class="primary" type="button">Compute dynamic</button>
+                <button data-i18n="view.kelly.btn.derive_static_wr_payoff_from_these_pnls" data-tip="view.kelly.tip.derive_static" id="kl-import-static" class="secondary" type="button">Derive static (wr / payoff) from these PnLs</button>
             </div>
             <div class="inline-form">
                 <button data-i18n="view.kelly.btn.demo_pnls_positive_edge" id="kl-demo-pos-pnl"  class="secondary" type="button">Demo PnLs: positive edge</button>
@@ -146,7 +147,7 @@ function readDynamic() {
 
 async function computeStatic(tok) {
     const err = validateStaticInputs(state.winRate, state.payoffRatio);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     hideErr();
     const local = localComputeStatic(state.winRate, state.payoffRatio);
     renderStatic(local, true);
@@ -154,7 +155,8 @@ async function computeStatic(tok) {
     try {
         resp = await api.calcKelly(buildStaticBody(state.winRate, state.payoffRatio));
     } catch (e) {
-        showErr(t('view.kelly.error.api_static', { msg: e.message || e })); return;
+        const msg = t('view.kelly.error.api_static', { msg: e.message || e });
+        showErr(msg); showToast(msg, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderStatic(resp, false);
@@ -162,7 +164,7 @@ async function computeStatic(tok) {
 
 async function computeDynamic(tok) {
     const err = validateDynamicInputs(state.pnls, state.window);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     hideErr();
     const local = localComputeDynamic(state.pnls, state.window);
     renderDynamic(local, true);
@@ -172,7 +174,8 @@ async function computeDynamic(tok) {
     try {
         resp = await api.calcDynamicKelly(buildDynamicBody(state.pnls, state.window));
     } catch (e) {
-        showErr(t('view.kelly.error.api_dynamic', { msg: e.message || e })); return;
+        const msg = t('view.kelly.error.api_dynamic', { msg: e.message || e });
+        showErr(msg); showToast(msg, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderDynamic(resp, false);
