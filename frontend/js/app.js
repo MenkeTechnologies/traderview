@@ -488,6 +488,11 @@ function bindTabs() {
         const form = document.getElementById('tok-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `r` in backtest scope → submit backtest form (Run).
+    window.addEventListener('tv:backtest-run', () => {
+        const form = document.getElementById('bt-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

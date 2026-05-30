@@ -4,6 +4,7 @@ import { equityChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 const PRESETS = [
     { id: 'sma_cross', label: t('chart.series.sma_crossover'),
@@ -24,18 +25,18 @@ export async function renderBacktest(mount) {
 
         <div class="chart-panel">
             <form id="bt-form" class="inline-form">
-                <input name="symbol" data-shortcut="focus_search" placeholder="symbol (AAPL)" data-i18n-placeholder="view.backtest.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
-                <select name="preset" id="ps">
+                <input name="symbol" data-shortcut="focus_search" data-tip="view.backtest.tip.symbol" placeholder="symbol (AAPL)" data-i18n-placeholder="view.backtest.placeholder.symbol" value="SPY" required style="text-transform:uppercase">
+                <select name="preset" id="ps" data-tip="view.backtest.tip.preset">
                     ${PRESETS.map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join('')}
                 </select>
                 <span id="param-slot"></span>
                 <label><span data-i18n="view.backtest.label.days">Days</span>
-                    <input name="days" type="number" value="730" style="width:90px"></label>
+                    <input name="days" type="number" value="730" style="width:90px" data-tip="view.backtest.tip.days"></label>
                 <label><span data-i18n="view.backtest.label.capital">Capital</span>
-                    <input name="capital" type="number" value="10000" style="width:110px"></label>
+                    <input name="capital" type="number" value="10000" style="width:110px" data-tip="view.backtest.tip.capital"></label>
                 <label><span data-i18n="view.backtest.label.fee_trade">Fee/trade</span>
-                    <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
-                <button data-i18n="view.backtest.btn.run" class="primary" type="submit">Run</button>
+                    <input name="fee" type="number" step="any" value="1" style="width:80px" data-tip="view.backtest.tip.fee"></label>
+                <button data-i18n="view.backtest.btn.run" data-tip="view.backtest.tip.run" data-shortcut="backtest_run" class="primary" type="submit">Run</button>
             </form>
         </div>
 
@@ -82,19 +83,25 @@ export async function renderBacktest(mount) {
             el2.innerHTML = render(r);
             try { applyUiI18n(el2); } catch (_) {}
             const eqMount = mount.querySelector('#bt-eq');
-            if (!eqMount) return;
-            // Adapt to equityChart's expected shape.
-            const points = r.equity.map(p => ({
-                day: p.time.slice(0, 10),
-                cum_net_pnl: p.equity - body.initial_capital,
-                drawdown: (p.drawdown_pct / 100) * body.initial_capital,
-            }));
-            equityChart(eqMount, points, { height: 320 });
+            if (eqMount) {
+                // Adapt to equityChart's expected shape.
+                const points = r.equity.map(p => ({
+                    day: p.time.slice(0, 10),
+                    cum_net_pnl: p.equity - body.initial_capital,
+                    drawdown: (p.drawdown_pct / 100) * body.initial_capital,
+                }));
+                equityChart(eqMount, points, { height: 320 });
+            }
             renderTradePnlChart(r.trades);
+            showToast(t('view.backtest.toast.done', {
+                ret: (r.summary.total_return_pct >= 0 ? '+' : '') + r.summary.total_return_pct.toFixed(2),
+                trades: r.summary.trades,
+            }), { level: r.summary.total_return_pct >= 0 ? 'success' : 'warning' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#bt-result');
             if (el2) el2.innerHTML = `<p class="boot">${esc(err.message)}</p>`;
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
@@ -109,13 +116,13 @@ function render(r) {
             <div class="card"><div class="label" data-i18n="view.backtest.card.final_equity">Final equity</div><div class="value">$${fmt(s.final_equity)}</div></div>
             <div class="card"><div class="label" data-i18n="view.backtest.card.trades">Trades</div><div class="value">${s.trades}</div></div>
             <div class="card"><div class="label" data-i18n="view.backtest.card.win_rate">Win rate</div><div class="value">${(s.win_rate*100).toFixed(1)}%</div></div>
-            <div class="card"><div class="label" data-i18n="view.backtest.card.profit_factor">Profit factor</div><div class="value">${s.profit_factor.toFixed(2)}</div></div>
+            <div class="card" data-tip="view.backtest.tip.profit_factor"><div class="label" data-i18n="view.backtest.card.profit_factor">Profit factor</div><div class="value">${s.profit_factor.toFixed(2)}</div></div>
             <div class="card"><div class="label" data-i18n="view.backtest.card.avg_win">Avg win</div><div class="value pos">$${fmt(s.avg_win)}</div></div>
             <div class="card"><div class="label" data-i18n="view.backtest.card.avg_loss">Avg loss</div><div class="value neg">$${fmt(s.avg_loss)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.backtest.card.max_dd">Max DD</div><div class="value neg">${s.max_drawdown_pct.toFixed(2)}%</div></div>
-            <div class="card"><div class="label" data-i18n="view.backtest.card.sharpe_daily">Sharpe (daily)</div><div class="value">${s.sharpe_daily.toFixed(3)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.backtest.card.sharpe_ann">Sharpe (ann.)</div><div class="value">${(s.sharpe_daily * Math.sqrt(252)).toFixed(2)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.backtest.card.pct_in_market">% time in market</div><div class="value">${s.bars_in_market_pct.toFixed(0)}%</div></div>
+            <div class="card" data-tip="view.backtest.tip.max_dd"><div class="label" data-i18n="view.backtest.card.max_dd">Max DD</div><div class="value neg">${s.max_drawdown_pct.toFixed(2)}%</div></div>
+            <div class="card" data-tip="view.backtest.tip.sharpe_daily"><div class="label" data-i18n="view.backtest.card.sharpe_daily">Sharpe (daily)</div><div class="value">${s.sharpe_daily.toFixed(3)}</div></div>
+            <div class="card" data-tip="view.backtest.tip.sharpe_ann"><div class="label" data-i18n="view.backtest.card.sharpe_ann">Sharpe (ann.)</div><div class="value">${(s.sharpe_daily * Math.sqrt(252)).toFixed(2)}</div></div>
+            <div class="card" data-tip="view.backtest.tip.pct_in_market"><div class="label" data-i18n="view.backtest.card.pct_in_market">% time in market</div><div class="value">${s.bars_in_market_pct.toFixed(0)}%</div></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.backtest.h2.equity_curve">Equity curve</h2>
