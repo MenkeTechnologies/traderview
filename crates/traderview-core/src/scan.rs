@@ -1078,6 +1078,8 @@ pub enum Preset {
     NarrowYearRangeBigDownHotVol,              // year_high_pct < 5 AND year_low_pct < 5 AND change_pct < -3 AND rel_volume >= 2 — narrow annual range + big down move (<-3%) + hot vol (>=2) (intraday-led coil release lower: compressed range-bound stock prints first volatility expansion in 52w with doubled participation; regime-shift candidate from tight range to trending lower)
     WideYearRangeCloseAtHodHotVol,             // year_high_pct >= 20 AND year_low_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — wide annual range + close pinned to HOD + green close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's high on elevated participation; momentum-continuation signal where intraday strength aligns with the wider price-action regime)
     WideYearRangeCloseAtLodHotVol,             // year_high_pct >= 20 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — wide annual range + close pinned to LOD + red close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's low on elevated participation; momentum-continuation signal where intraday weakness aligns with the wider price-action regime)
+    WideYearRangeGapUpHotVol,                  // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — wide annual range + gap up (>2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps up on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
+    WideYearRangeGapDownHotVol,                // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — wide annual range + gap down (<-2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps down on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6654,6 +6656,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::WideYearRangeGapUpHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.year_low_pct >= 20.0
+                && hit.gap_pct > 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::WideYearRangeGapDownHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.year_low_pct >= 20.0
+                && hit.gap_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7622,6 +7636,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowYearRangeBigDownHotVol => "Narrow Annual Range + Big Down Move (<-3 %) + Hot Vol (>=2) (Intraday-led Coil Release Lower: Compressed Range-bound Stock Prints First Volatility Expansion in 52w with Doubled Participation; Regime-shift Candidate from Tight Range to Trending Lower)",
         Preset::WideYearRangeCloseAtHodHotVol => "Wide Annual Range + Close Pinned to HOD + Green Close + Hot Vol (Strong-conviction Tape in High-beta Name: Volatile Stock with Large 52w Range Closes at the Day's High on Elevated Participation; Momentum-continuation Signal Where Intraday Strength Aligns with the Wider Price-action Regime)",
         Preset::WideYearRangeCloseAtLodHotVol => "Wide Annual Range + Close Pinned to LOD + Red Close + Hot Vol (Strong-conviction Tape in High-beta Name: Volatile Stock with Large 52w Range Closes at the Day's Low on Elevated Participation; Momentum-continuation Signal Where Intraday Weakness Aligns with the Wider Price-action Regime)",
+        Preset::WideYearRangeGapUpHotVol => "Wide Annual Range + Gap Up (>2 %) + Hot Vol (Catalyst-event in High-beta Name: Volatile Stock with Large 52w Range Gaps up on News/earnings with Elevated Participation; Mean-reversion-from-gap Candidate or Trend-continuation Depending on Intraday Follow-through)",
+        Preset::WideYearRangeGapDownHotVol => "Wide Annual Range + Gap Down (<-2 %) + Hot Vol (Catalyst-event in High-beta Name: Volatile Stock with Large 52w Range Gaps down on News/earnings with Elevated Participation; Mean-reversion-from-gap Candidate or Trend-continuation Depending on Intraday Follow-through)",
     }
 }
 
