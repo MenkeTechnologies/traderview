@@ -1088,6 +1088,8 @@ pub enum Preset {
     AsymmetricRangeNearHighFarLowCloseAtLodHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + close pinned to LOD + red close + hot vol (distribution-top candidate: uptrend stock rejects the resistance test at the 52w high and closes at the day's low on elevated participation; potential top-formation signal worth a top-fade trade screen)
     AsymmetricRangeNearLowFarHighGapUpHotVol,  // year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap up (>2%) + hot vol (relief-rally catalyst at the 52w low: downtrend stock attempts catalyst-driven turn off the year trough with elevated participation; potential turnaround-thesis signal worth a bounce-trade screen)
     AsymmetricRangeNearHighFarLowGapDownHotVol,// year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap down (<-2%) + hot vol (pullback-catalyst at the 52w high: uptrend stock attempts catalyst-driven reversal off the year peak with elevated participation; potential top-warning signal worth a top-fade trade screen)
+    AsymmetricRangeNearLowFarHighGapDownHotVol,// year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap down (<-2%) + hot vol (catalyst-driven breakdown to fresh lows: downtrend stock attempts catalyst-confirmed continuation through the 52w support level with elevated participation; trend-extension signal worth a breakdown-trade screen)
+    AsymmetricRangeNearHighFarLowGapUpHotVol,  // year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap up (>2%) + hot vol (catalyst-driven breakout to fresh highs: uptrend stock attempts catalyst-confirmed continuation through the 52w resistance level with elevated participation; trend-extension signal worth a breakout-trade screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6722,6 +6724,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < -2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::AsymmetricRangeNearLowFarHighGapDownHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.year_low_pct < 5.0
+                && hit.gap_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::AsymmetricRangeNearHighFarLowGapUpHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct >= 20.0
+                && hit.gap_pct > 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7700,6 +7714,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AsymmetricRangeNearHighFarLowCloseAtLodHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Close Pinned to LOD + Red Close + Hot Vol (Distribution-top Candidate: Uptrend Stock Rejects the Resistance Test at the 52w High and Closes at the Day's Low on Elevated Participation; Potential Top-formation Signal Worth a Top-fade Trade Screen)",
         Preset::AsymmetricRangeNearLowFarHighGapUpHotVol => "Persistent-downtrend Stock (Near Low + Far below High) + Gap Up (>2 %) + Hot Vol (Relief-rally Catalyst at the 52w Low: Downtrend Stock Attempts Catalyst-driven Turn off the Year Trough with Elevated Participation; Potential Turnaround-thesis Signal Worth a Bounce-trade Screen)",
         Preset::AsymmetricRangeNearHighFarLowGapDownHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Gap Down (<-2 %) + Hot Vol (Pullback-catalyst at the 52w High: Uptrend Stock Attempts Catalyst-driven Reversal off the Year Peak with Elevated Participation; Potential Top-warning Signal Worth a Top-fade Trade Screen)",
+        Preset::AsymmetricRangeNearLowFarHighGapDownHotVol => "Persistent-downtrend Stock (Near Low + Far below High) + Gap Down (<-2 %) + Hot Vol (Catalyst-driven Breakdown to Fresh Lows: Downtrend Stock Attempts Catalyst-confirmed Continuation through the 52w Support Level with Elevated Participation; Trend-extension Signal Worth a Breakdown-trade Screen)",
+        Preset::AsymmetricRangeNearHighFarLowGapUpHotVol => "Persistent-uptrend Stock (Near High + Far above Low) + Gap Up (>2 %) + Hot Vol (Catalyst-driven Breakout to Fresh Highs: Uptrend Stock Attempts Catalyst-confirmed Continuation through the 52w Resistance Level with Elevated Participation; Trend-extension Signal Worth a Breakout-trade Screen)",
     }
 }
 

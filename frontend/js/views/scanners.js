@@ -970,6 +970,8 @@ const PRESETS = [
     { id: 'asymmetric_range_near_high_far_low_close_at_lod_hot_vol', label: t('view.scanners.preset.asymmetric_range_near_high_far_low_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.asymmetric_range_near_high_far_low_close_at_lod_hot_vol.desc') },
     { id: 'asymmetric_range_near_low_far_high_gap_up_hot_vol', label: t('view.scanners.preset.asymmetric_range_near_low_far_high_gap_up_hot_vol.label'), desc: t('view.scanners.preset.asymmetric_range_near_low_far_high_gap_up_hot_vol.desc') },
     { id: 'asymmetric_range_near_high_far_low_gap_down_hot_vol', label: t('view.scanners.preset.asymmetric_range_near_high_far_low_gap_down_hot_vol.label'), desc: t('view.scanners.preset.asymmetric_range_near_high_far_low_gap_down_hot_vol.desc') },
+    { id: 'asymmetric_range_near_low_far_high_gap_down_hot_vol', label: t('view.scanners.preset.asymmetric_range_near_low_far_high_gap_down_hot_vol.label'), desc: t('view.scanners.preset.asymmetric_range_near_low_far_high_gap_down_hot_vol.desc') },
+    { id: 'asymmetric_range_near_high_far_low_gap_up_hot_vol', label: t('view.scanners.preset.asymmetric_range_near_high_far_low_gap_up_hot_vol.label'), desc: t('view.scanners.preset.asymmetric_range_near_high_far_low_gap_up_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
