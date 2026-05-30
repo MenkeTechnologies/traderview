@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('accumulation') };
 let chart = null;
+let adlChart = null;
 
 export async function renderChaikinOsc(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderChaikinOsc(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.chosc.h2.chart">Chaikin Oscillator</h2>
             <div id="co-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.chosc.h2.adl_chart">Cumulative ADL (accumulation/distribution line — the integrand)</h2>
+            <div id="co-adl-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.fast, state.slow);
     renderSummary(local, true);
     renderChart(local);
+    renderAdlChart();
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.chosc.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderAdlChart();
     renderStats();
 }
 
@@ -170,6 +178,41 @@ function renderChart(co) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderAdlChart() {
+    const el = document.getElementById('co-adl-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars || state.bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.chosc.empty_adl_chart">${esc(t('view.chosc.empty_adl_chart'))}</div>`;
+        return;
+    }
+    const xs = state.bars.map((_, i) => i);
+    const adl = [];
+    let acc = 0;
+    for (const b of state.bars) {
+        const range = b.high - b.low;
+        const mfm = range > 0 ? ((b.close - b.low) - (b.high - b.close)) / range : 0;
+        acc += mfm * b.volume;
+        adl.push(acc);
+    }
+    const zero = xs.map(() => 0);
+    if (adlChart) { try { adlChart.destroy(); } catch {} adlChart = null; }
+    adlChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.chosc.series.adl'),
+              stroke: '#00e5ff', width: 1.5,
+              fill: 'rgba(0,229,255,0.10)',
+              points: { show: false } },
+            { label: t('view.chosc.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, adl, zero], el);
 }
 
 function renderStats() {

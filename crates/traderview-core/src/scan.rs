@@ -556,6 +556,8 @@ pub enum Preset {
     GapAndFadeWeakClose,            // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 — gap up + reversed below flat + closing at LOD (gap fade / failed breakout)
     InsideDayDryVolCoiled,          // hod_dist + lod_dist < 1.5 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 AND gap_pct.abs() < 0.3 — narrow range + flat + dry vol + no gap (inside-day coil; pre-expansion drift)
     OutsideDayHotVolExpansion,      // hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.8 — wide range + significant move + hot vol (outside-day expansion / volatility breakout)
+    MidRangeDryVolNoConviction,     // 1 <= hod_dist <= 3 AND 1 <= lod_dist <= 3 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 — closed mid-range + flat day + dry vol (indecision; no conviction either way)
+    LowOfYearHotVolPanic,           // year_low_pct < 1 AND rel_volume >= 2 AND change_pct < -2 — close near 52w low + hot vol + red day (capitulation panic candle)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2905,6 +2907,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 2.0
                 && hit.rel_volume >= 1.8
         }
+        Preset::MidRangeDryVolNoConviction => {
+            hit.hod_dist_pct.abs() >= 1.0
+                && hit.hod_dist_pct.abs() <= 3.0
+                && hit.lod_dist_pct.abs() >= 1.0
+                && hit.lod_dist_pct.abs() <= 3.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+        }
+        Preset::LowOfYearHotVolPanic => {
+            hit.year_low_pct < 1.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct < -2.0
+        }
     }
 }
 
@@ -3351,6 +3366,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAndFadeWeakClose => "Gap-and-Fade + Weak Close at LOD (Failed Breakout)",
         Preset::InsideDayDryVolCoiled => "Inside Day + Dry Vol Coil (Pre-expansion Drift)",
         Preset::OutsideDayHotVolExpansion => "Outside Day + Hot Vol Expansion (Volatility Breakout)",
+        Preset::MidRangeDryVolNoConviction => "Mid-range Close + Flat Day + Dry Vol (No Conviction)",
+        Preset::LowOfYearHotVolPanic => "52w Low + Hot Vol + Red Day (Capitulation Panic)",
     }
 }
 

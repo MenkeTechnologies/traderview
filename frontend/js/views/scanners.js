@@ -438,6 +438,8 @@ const PRESETS = [
     { id: 'gap_and_fade_weak_close', label: t('view.scanners.preset.gap_and_fade_weak_close.label'), desc: t('view.scanners.preset.gap_and_fade_weak_close.desc') },
     { id: 'inside_day_dry_vol_coiled', label: t('view.scanners.preset.inside_day_dry_vol_coiled.label'), desc: t('view.scanners.preset.inside_day_dry_vol_coiled.desc') },
     { id: 'outside_day_hot_vol_expansion', label: t('view.scanners.preset.outside_day_hot_vol_expansion.label'), desc: t('view.scanners.preset.outside_day_hot_vol_expansion.desc') },
+    { id: 'mid_range_dry_vol_no_conviction', label: t('view.scanners.preset.mid_range_dry_vol_no_conviction.label'), desc: t('view.scanners.preset.mid_range_dry_vol_no_conviction.desc') },
+    { id: 'low_of_year_hot_vol_panic', label: t('view.scanners.preset.low_of_year_hot_vol_panic.label'), desc: t('view.scanners.preset.low_of_year_hot_vol_panic.desc') },
 ];
 
 export async function renderScanners(mount) {
