@@ -836,6 +836,8 @@ const PRESETS = [
     { id: 'shooting_star_at_deep_pullback_continuation', label: t('view.scanners.preset.shooting_star_at_deep_pullback_continuation.label'), desc: t('view.scanners.preset.shooting_star_at_deep_pullback_continuation.desc') },
     { id: 'hammer_at_deep_premium_continuation', label: t('view.scanners.preset.hammer_at_deep_premium_continuation.label'), desc: t('view.scanners.preset.hammer_at_deep_premium_continuation.desc') },
     { id: 'shooting_star_at_deep_discount_continuation', label: t('view.scanners.preset.shooting_star_at_deep_discount_continuation.label'), desc: t('view.scanners.preset.shooting_star_at_deep_discount_continuation.desc') },
+    { id: 'both_long_wicks_hot_vol', label: t('view.scanners.preset.both_long_wicks_hot_vol.label'), desc: t('view.scanners.preset.both_long_wicks_hot_vol.desc') },
+    { id: 'both_short_wicks_tiny_change_hot_vol', label: t('view.scanners.preset.both_short_wicks_tiny_change_hot_vol.label'), desc: t('view.scanners.preset.both_short_wicks_tiny_change_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -954,6 +954,8 @@ pub enum Preset {
     ShootingStarAtDeepPullbackContinuation, // year_high_pct >= 10 AND year_high_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in the pullback zone: intraday rip sold without retesting the ceiling; decline momentum confirmation deep into the pullback)
     HammerAtDeepPremiumContinuation,     // year_low_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in a runaway name: intraday plunge reclaimed deep in the extended advance; trend-resilience signal far from the floor)
     ShootingStarAtDeepDiscountContinuation, // year_high_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in a beaten-down name: intraday rip sold deep in the extended decline; trend-weakness signal far from the ceiling)
+    BothLongWicksHotVol,                 // hod_dist_pct.abs() > 2 AND lod_dist_pct > 2 AND rel_volume >= 2 — long upper wick + long lower wick + hot vol (two-sided exploration day with elevated participation: both supply and demand tested at extremes; high-rotation indecision day with full intraday whipsaw range)
+    BothShortWicksTinyChangeHotVol,      // hod_dist_pct.abs() < 0.5 AND lod_dist_pct < 0.5 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — short upper wick + short lower wick + flat close + hot vol (compressed-cylinder day: close pinned with no wick exploration on either side; pre-breakout coil with elevated absorption at a specific price)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5695,6 +5697,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BothLongWicksHotVol => {
+            hit.hod_dist_pct.abs() > 2.0
+                && hit.lod_dist_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BothShortWicksTinyChangeHotVol => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct < 0.5
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6539,6 +6552,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarAtDeepPullbackContinuation => "Deep Pullback Zone (10-30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in the Pullback Zone: Intraday Rip Sold without Retesting the Ceiling; Decline Momentum Confirmation Deep into the Pullback)",
         Preset::HammerAtDeepPremiumContinuation => "Deep Premium Zone (>=30 % above 52w Low) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Bull-continuation Hammer in a Runaway Name: Intraday Plunge Reclaimed Deep in the Extended Advance; Trend-resilience Signal Far from the Floor)",
         Preset::ShootingStarAtDeepDiscountContinuation => "Deep Discount Zone (>=30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in a Beaten-down Name: Intraday Rip Sold Deep in the Extended Decline; Trend-weakness Signal Far from the Ceiling)",
+        Preset::BothLongWicksHotVol => "Long Upper Wick + Long Lower Wick + Hot Vol (Two-sided Exploration Day with Elevated Participation: Both Supply and Demand Tested at Extremes; High-rotation Indecision Day with Full Intraday Whipsaw Range)",
+        Preset::BothShortWicksTinyChangeHotVol => "Short Upper Wick + Short Lower Wick + Flat Close + Hot Vol (Compressed-cylinder Day: Close Pinned with No Wick Exploration on Either Side; Pre-breakout Coil with Elevated Absorption at a Specific Price)",
     }
 }
 
