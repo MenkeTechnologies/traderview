@@ -610,6 +610,8 @@ pub enum Preset {
     DryVolGapDownReclaim,           // gap_pct < -1 AND change_pct > 0 AND rel_volume < 0.7 — gap down + recovered to green + dry vol (gap-down reclaim without panic vol; orderly absorption of overnight pessimism)
     InstitutionalChurnDay,          // rel_volume >= 3 AND change_pct.abs() < 0.3 — very hot vol + flat net change (3x avg vol with no directional outcome; institutional rebalance / churn day)
     ExtremeTailEvent,               // rel_volume >= 3 AND change_pct.abs() > 5 — very hot vol + huge change (extreme tail event; major news / earnings / squeeze)
+    Year52HighRetestStrongClose,    // year_high_pct < 5 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w high + green close at HOD + hot vol (retest of 52w high with strong close confirming the level)
+    Year52LowRetestWeakClose,       // year_low_pct < 5 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w low + red close at LOD + hot vol (retest of 52w low with weak close confirming the level)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3269,6 +3271,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume >= 3.0
                 && hit.change_pct.abs() > 5.0
         }
+        Preset::Year52HighRetestStrongClose => {
+            hit.year_high_pct < 5.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::Year52LowRetestWeakClose => {
+            hit.year_low_pct < 5.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3769,6 +3783,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolGapDownReclaim => "Gap Down + Reclaimed Positive + Dry Vol (Orderly Gap-down Absorption)",
         Preset::InstitutionalChurnDay => "Very Hot Vol + Flat Change (Institutional Rebalance / Churn Day)",
         Preset::ExtremeTailEvent => "Very Hot Vol + Huge Change (Extreme Tail Event / Major News)",
+        Preset::Year52HighRetestStrongClose => "Near 52w High + HOD Close + Hot Vol (52w-High Retest Confirmed)",
+        Preset::Year52LowRetestWeakClose => "Near 52w Low + LOD Close + Hot Vol (52w-Low Retest Confirmed)",
     }
 }
 

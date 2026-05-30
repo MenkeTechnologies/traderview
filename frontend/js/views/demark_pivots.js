@@ -72,6 +72,11 @@ export async function renderDemarkPivots(mount, _appState) {
                 level frames the day's trade setup.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.demark_pivots.h2.distance_chart">Signed distance from spot to each level (R1 / pivot / S1)</h2>
+            <div id="dp-distance-chart" style="height:220px"></div>
+        </div>
+
         <div id="dp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -123,6 +128,7 @@ async function compute(tok) {
     renderSummary(levels);
     renderXInfo();
     renderChart(levels);
+    renderDistanceChart(levels);
     const bias = tradeBias(state.spotNow, levels);
     showToast(t('view.demark_pivots.toast.computed', { pivot: fmtN(levels.pivot), bias: bias.label }), { level: 'success' });
 }
@@ -194,6 +200,41 @@ function renderChart(levels) {
         axes: [{ stroke: '#aab', size: 24 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },
     }, [xs, ohlc, r1Ys, pvYs, s1Ys, spotYs], el);
+}
+
+function renderDistanceChart(levels) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('dp-distance-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const spot = Number(state.spotNow);
+    if (!Number.isFinite(spot) || !Number.isFinite(levels.pivot)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.demark_pivots.empty_distance_chart">${esc(t('view.demark_pivots.empty_distance_chart'))}</div>`;
+        return;
+    }
+    const labels = ['R1', 'pivot', 'S1'];
+    const values = [levels.r1, levels.pivot, levels.s1];
+    const distances = values.map(v => spot - v);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.demark_pivots.chart.level_idx') },
+            { label: t('view.demark_pivots.chart.spot_minus_level'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.demark_pivots.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, distances, zero], el);
 }
 
 function showErr(msg) {
