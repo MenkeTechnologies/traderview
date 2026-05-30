@@ -368,6 +368,8 @@ pub enum Preset {
     AvgRangeAvgVolNeutral,       // hod_dist + lod_dist between 2 and 4 AND change_pct.abs() < 0.5 AND rel_volume between 0.8 and 1.2 — average range/vol with no net move (no-edge day)
     FailedBreakoutHighReclaim,   // year_high_pct > -1 AND hod_dist.abs() > 1 AND change_pct < -1 AND rel_volume >= 1.5 — touched/exceeded 52w high then closed -1% lower on heavy vol (failed breakout)
     FailedBreakdownLowReclaim,   // year_low_pct < 1 AND lod_dist.abs() > 1 AND change_pct > 1 AND rel_volume >= 1.5 — touched/exceeded 52w low then closed +1% higher on heavy vol (failed breakdown)
+    HotVolHotGap,                // gap_pct.abs() > 2 AND rel_volume >= 2 — heavy-volume gap day (institutional positioning before open)
+    DryVolDryGap,                // gap_pct.abs() < 0.5 AND rel_volume < 0.5 — flat gap on dry volume (no overnight positioning; no day participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1634,6 +1636,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HotVolHotGap => {
+            hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 2.0
+        }
+        Preset::DryVolDryGap => {
+            hit.gap_pct.abs() < 0.5 && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -1892,6 +1900,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AvgRangeAvgVolNeutral => "Avg-Range Avg-Vol Neutral",
         Preset::FailedBreakoutHighReclaim => "Failed 52w-High Breakout",
         Preset::FailedBreakdownLowReclaim => "Failed 52w-Low Breakdown",
+        Preset::HotVolHotGap => "Hot Vol + Hot Gap",
+        Preset::DryVolDryGap => "Dry Vol + Dry Gap",
     }
 }
 

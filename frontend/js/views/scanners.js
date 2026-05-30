@@ -250,6 +250,8 @@ const PRESETS = [
     { id: 'avg_range_avg_vol_neutral', label: t('view.scanners.preset.avg_range_avg_vol_neutral.label'), desc: t('view.scanners.preset.avg_range_avg_vol_neutral.desc') },
     { id: 'failed_breakout_high_reclaim', label: t('view.scanners.preset.failed_breakout_high_reclaim.label'), desc: t('view.scanners.preset.failed_breakout_high_reclaim.desc') },
     { id: 'failed_breakdown_low_reclaim', label: t('view.scanners.preset.failed_breakdown_low_reclaim.label'), desc: t('view.scanners.preset.failed_breakdown_low_reclaim.desc') },
+    { id: 'hot_vol_hot_gap', label: t('view.scanners.preset.hot_vol_hot_gap.label'), desc: t('view.scanners.preset.hot_vol_hot_gap.desc') },
+    { id: 'dry_vol_dry_gap', label: t('view.scanners.preset.dry_vol_dry_gap.label'), desc: t('view.scanners.preset.dry_vol_dry_gap.desc') },
 ];
 
 export async function renderScanners(mount) {
