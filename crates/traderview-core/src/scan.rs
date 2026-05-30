@@ -1156,6 +1156,8 @@ pub enum Preset {
     BigIntradayRangeMidYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (volatility-expansion battle in mid-cycle recovery zone: regular session prints a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
     BigIntradayRangeJustOffYearHighHotVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (volatility-expansion battle just off the year peak: regular session prints a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test fight where bulls attempt the high again and bears defend it)
     BigIntradayRangeJustOffYearLowHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (volatility-expansion battle just off the year trough: regular session prints a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test fight where bears attempt the low again and bulls defend it)
+    TightIntradayRangeNearYearHighHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional compression at the year peak: regular session prints a tight trading range right at the 52w high with elevated participation; coiled-spring breakout setup where heavy hands position without moving the tape and the next directional break carries weight)
+    TightIntradayRangeNearYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional compression at the year trough: regular session prints a tight trading range right at the 52w low with elevated participation; coiled-spring breakdown-or-bottom setup where heavy hands position without moving the tape and the next directional break carries weight)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7118,6 +7120,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::TightIntradayRangeNearYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct < 2.0
+        }
+        Preset::TightIntradayRangeNearYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -8164,6 +8176,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigIntradayRangeMidYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Mid-range from Low (5-20 %) (Volatility-expansion Battle in Mid-cycle Recovery Zone: Regular Session Prints a Wide Trading Range in the Proper Consolidation Range above the Prior Trough with Elevated Participation; Mid-cycle Indecision-resolution Fight Requiring Close-position Confirmation)",
         Preset::BigIntradayRangeJustOffYearHighHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Just off 52w High (2-5 %) (Volatility-expansion Battle Just off the Year Peak: Regular Session Prints a Wide Trading Range Immediately after a Shallow Pullback from the 52w High with Elevated Participation; Post-tag Re-test Fight Where Bulls Attempt the High Again and Bears Defend It)",
         Preset::BigIntradayRangeJustOffYearLowHotVol => "Wide Intraday Range (>8 %) + Hot Vol + Just off 52w Low (2-5 %) (Volatility-expansion Battle Just off the Year Trough: Regular Session Prints a Wide Trading Range Immediately after a Shallow Bounce from the 52w Low with Elevated Participation; Post-tag Re-test Fight Where Bears Attempt the Low Again and Bulls Defend It)",
+        Preset::TightIntradayRangeNearYearHighHotVol => "Tight Intraday Range (<1 %) + Hot Vol + At/near 52w High (<2 %) (Institutional Compression at the Year Peak: Regular Session Prints a Tight Trading Range Right at the 52w High with Elevated Participation; Coiled-spring Breakout Setup Where Heavy Hands Position without Moving the Tape and the Next Directional Break Carries Weight)",
+        Preset::TightIntradayRangeNearYearLowHotVol => "Tight Intraday Range (<1 %) + Hot Vol + At/near 52w Low (<2 %) (Institutional Compression at the Year Trough: Regular Session Prints a Tight Trading Range Right at the 52w Low with Elevated Participation; Coiled-spring Breakdown-or-bottom Setup Where Heavy Hands Position without Moving the Tape and the Next Directional Break Carries Weight)",
     }
 }
 
