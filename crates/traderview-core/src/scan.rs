@@ -782,6 +782,8 @@ pub enum Preset {
     GapDownReclaimBigGreenHotVol,        // gap_pct < -3 AND change_pct > 2 AND rel_volume >= 2 — gap down but closed green + hot vol (reclaimed gap down; trapped shorts; reversal long signal)
     InsideRangeHotVolCoil,               // hod_dist_pct.abs() < 1 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range + hot vol (inside-range coil with absorption; pre-breakout compression with elevated participation)
     OutsideRangeFlatCloseHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — wide intraday range + flat close + hot vol (outside-range whip; high participation but no commitment; institutional indecision with wide whipsaw)
+    CloseAtHodTinyLodHotVol,             // hod_dist_pct.abs() < 0.3 AND lod_dist_pct > 4 AND rel_volume >= 1.5 — closed pinned to HOD + LOD far below + hot vol (full intraday range claim; momentum buy ramp into the close with elevated participation)
+    CloseAtLodTinyHodHotVol,             // lod_dist_pct.abs() < 0.3 AND hod_dist_pct < -4 AND rel_volume >= 1.5 — closed pinned to LOD + HOD far above + hot vol (full intraday range collapse; momentum sell ramp into the close with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4459,6 +4461,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::CloseAtHodTinyLodHotVol => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct > 4.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseAtLodTinyHodHotVol => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.hod_dist_pct < -4.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5131,6 +5143,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownReclaimBigGreenHotVol => "Gap Down + Closed Green + Hot Vol (Reclaimed Gap Down; Trapped Shorts; Reversal Long Signal)",
         Preset::InsideRangeHotVolCoil => "Tight Intraday Range + Hot Vol (Inside-range Coil with Absorption; Pre-breakout Compression with Elevated Participation)",
         Preset::OutsideRangeFlatCloseHotVol => "Wide Intraday Range + Flat Close + Hot Vol (Outside-range Whip; High Participation but No Commitment; Institutional Indecision with Wide Whipsaw)",
+        Preset::CloseAtHodTinyLodHotVol => "Close Pinned to HOD + LOD Far Below + Hot Vol (Full Intraday Range Claim; Momentum Buy Ramp into the Close with Elevated Participation)",
+        Preset::CloseAtLodTinyHodHotVol => "Close Pinned to LOD + HOD Far Above + Hot Vol (Full Intraday Range Collapse; Momentum Sell Ramp into the Close with Elevated Participation)",
     }
 }
 

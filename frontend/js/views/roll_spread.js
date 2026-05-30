@@ -57,6 +57,12 @@ export async function renderRollSpread(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.roll.h2.hist_chart">Spread distribution (histogram across the series)</h2>
+            <div id="rs-hist-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.roll.hint.hist" class="muted small">20-bucket histogram of populated per-bar spread values in $. Reveals whether liquidity stays tight (unimodal narrow), regime-switches (bimodal), or has fat tails (occasional liquidity holes) — orthogonal to the rolling time series above.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.roll.h2.table">Per-bar spread (tail — last 30 bars)</h2>
             <div id="rs-table"></div>
         </div>
@@ -101,6 +107,7 @@ async function compute(tok) {
     const local = localCompute(state.prices, state.window);
     renderSummary(local, true);
     renderChart(local);
+    renderHistChart(local);
     renderTable(local);
     let resp;
     try {
@@ -113,6 +120,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderHistChart(resp);
     renderTable(resp);
     const s = summarize(resp);
     const lastPrice = state.prices.length > 0 ? state.prices[state.prices.length - 1] : NaN;
@@ -179,6 +187,50 @@ function renderChart(series) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderHistChart(series) {
+    const el = document.getElementById('rs-hist-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (series || []).filter(v => Number.isFinite(Number(v)));
+    if (valid.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.roll.empty_hist">${esc(t('view.roll.empty_hist'))}</div>`;
+        return;
+    }
+    let mn = Infinity, mx = -Infinity;
+    for (const v of valid) { if (v < mn) mn = v; if (v > mx) mx = v; }
+    if (!(mx > mn)) { mx = mn + 1e-9; }
+    const buckets = 20;
+    const w = (mx - mn) / buckets;
+    const counts = new Array(buckets).fill(0);
+    for (const v of valid) {
+        let b = Math.floor((v - mn) / w);
+        if (b >= buckets) b = buckets - 1;
+        if (b < 0) b = 0;
+        counts[b] += 1;
+    }
+    const centers = counts.map((_, i) => mn + (i + 0.5) * w);
+    const xs = centers.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.roll.chart.bucket_idx') },
+            { label: t('view.roll.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => {
+                  const c = centers[Math.round(v) - 1];
+                  return Number.isFinite(c) ? c.toFixed(4) : '';
+              }) },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function renderTable(series) {
