@@ -2,20 +2,21 @@ import { api } from '../api.js';
 import { esc, fmtDate, fmtDateTime, fmtMoney, pnlClass } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderSearch(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.search.h1.search" class="view-title">// SEARCH</h1>
         <form id="search-form" class="inline-form" style="margin-bottom:14px">
-            <input name="q" data-shortcut="focus_search" placeholder="symbol, journal text, forum post…" data-i18n-placeholder="view.search.placeholder.q" autofocus required style="min-width:300px">
-            <select name="scope">
+            <input name="q" data-shortcut="focus_search" data-tip="view.search.tip.q" placeholder="symbol, journal text, forum post…" data-i18n-placeholder="view.search.placeholder.q" autofocus required style="min-width:300px">
+            <select name="scope" data-tip="view.search.tip.scope">
                 <option data-i18n="view.search.opt.all" value="all">all</option>
                 <option data-i18n="view.search.opt.trades" value="trades">trades</option>
                 <option data-i18n="view.search.opt.journal" value="journal">journal</option>
                 <option data-i18n="view.search.opt.forum" value="forum">forum</option>
             </select>
-            <button data-i18n="view.search.btn.search" class="primary" type="submit">Search</button>
+            <button data-i18n="view.search.btn.search" data-tip="view.search.tip.search" class="primary" type="submit">Search</button>
         </form>
         <div id="search-results"></div>
         <div class="chart-panel">
@@ -37,10 +38,13 @@ export async function renderSearch(mount) {
             const elNow = mount.querySelector('#search-results');
             if (elNow) elNow.innerHTML = renderHits(r);
             renderHitsChart(r);
+            const total = (r.trades || []).length + (r.journal || []).length + (r.forum || []).length;
+            showToast(t('view.search.toast.done', { total, query: q }), { level: total > 0 ? 'success' : 'info' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const elNow = mount.querySelector('#search-results');
             if (elNow) elNow.innerHTML = `<p class="boot">${err.message}</p>`;
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }
