@@ -21,6 +21,7 @@ import {
 } from '../_dtw_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_A = `# Series A — sine wave starting at index 0
 ${synthSine(60, 0).join('\n')}
 `;
@@ -60,18 +61,20 @@ export async function renderDtw(mount, _appState) {
                 <div>
                     <h3 data-i18n="view.dtw.h3.series_a">Series A</h3>
                     <textarea id="dt-a" rows="10"
+                        data-tip="view.dtw.tip.a"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.textA)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.dtw.h3.series_b">Series B</h3>
                     <textarea id="dt-b" rows="10"
+                        data-tip="view.dtw.tip.b"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.textB)}</textarea>
                 </div>
             </div>
             <div class="inline-form" style="margin-top:8px">
                 <label><span data-i18n="view.dtw.label.band_radius">Band radius (0 = unconstrained)</span>
-                    <input id="dt-band" type="number" step="1" min="0" value="${state.bandRadius}"></label>
-                <button data-i18n="view.dtw.btn.warp" id="dt-run" class="primary" type="button">Warp</button>
+                    <input id="dt-band" type="number" step="1" min="0" value="${state.bandRadius}" data-tip="view.dtw.tip.band"></label>
+                <button data-i18n="view.dtw.btn.warp" data-tip="view.dtw.tip.warp" data-shortcut="dtw_warp" id="dt-run" class="primary" type="button">Warp</button>
             </div>
             <p data-i18n="view.dtw.hint.sakoe_chiba_band_constrains_the_warping_path_so_i_" class="muted">
                 Sakoe-Chiba band constrains the warping path so |i−j| ≤ radius. Set 0 to
@@ -119,14 +122,15 @@ async function warp(mount, tok) {
     if (errors.length) renderParseErrors(errors);
 
     const err = validateInputs(parsedA.value, parsedB.value, state.bandRadius);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyDynamicTimeWarping(buildBody(parsedA.value, parsedB.value, state.bandRadius));
         if (!res) throw new Error(t('view.dtw.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -134,6 +138,10 @@ async function warp(mount, tok) {
     renderSummary(parsedA.value, parsedB.value, res);
     renderOverlay(parsedA.value, parsedB.value);
     renderPath(parsedA.value.length, parsedB.value.length, res);
+    showToast(t('view.dtw.toast.done', {
+        distance: res.distance != null ? res.distance.toFixed(4) : '—',
+        path_len: res.path != null ? res.path.length : 0,
+    }), { level: 'success' });
 }
 
 function renderSummary(a, b, res) {
