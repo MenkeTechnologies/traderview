@@ -123,8 +123,14 @@ async function renderReplay(mount, tradeId, tok) {
             <h2 data-i18n="view.tape_replay.h2.vol_chart">Bar volume (green=up bar / red=down bar)</h2>
             <div id="tr-vol-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tape_replay.h2.range_chart">Bar range (high − low)</h2>
+            <div id="tr-range-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderVolChart(data);
+    renderRangeChart(data);
 
     const $ = (id) => mount.querySelector('#' + id);
     $('tr-play').addEventListener('click', () => {
@@ -286,6 +292,31 @@ function renderChart(data, state, mount) {
     if (pos && cursorTime) {
         pos.textContent = t('view.tape_replay.status.bar', { i: state.idx + 1, n: bars.length, when: new Date(cursorTime).toLocaleString() });
     }
+}
+
+function renderRangeChart(data) {
+    const el = document.getElementById('tr-range-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bars = (data?.bars || []).filter(b => Number.isFinite(Number(b.high)) && Number.isFinite(Number(b.low)));
+    if (bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tape_replay.empty_range_chart">${esc(t('view.tape_replay.empty_range_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i + 1);
+    const ys = bars.map(b => Number(b.high) - Number(b.low));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tape_replay.chart.bar') },
+            { label: t('view.tape_replay.chart.range'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 8, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderVolChart(data) {

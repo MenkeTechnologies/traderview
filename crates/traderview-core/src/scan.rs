@@ -432,6 +432,8 @@ pub enum Preset {
     PriceFlatVolHotAboveMid,     // hod_dist + lod_dist < 2 AND day_pct > 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + above-mid + heavy vol (silent accumulation distribution)
     PriceFlatVolHotBelowMid,     // hod_dist + lod_dist < 2 AND day_pct < 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + below-mid + heavy vol (silent distribution)
     SmallChangeOnVolMid,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at mid range on heavy vol (mid-range positioning shift)
+    HotRollingVolGap,            // gap_pct.abs() > 1.5 AND change_pct.abs() > 1.5 AND rel_volume >= 2 — material gap + day move + heavy vol (institutional positioning + execution)
+    SilentDriftGap,              // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — material gap but flat day on dry vol (silent overnight repositioning; no daytime conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2064,6 +2066,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() <= 1.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::HotRollingVolGap => {
+            hit.gap_pct.abs() > 1.5
+                && hit.change_pct.abs() > 1.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::SilentDriftGap => {
+            hit.gap_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -2386,6 +2398,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PriceFlatVolHotAboveMid => "Silent Hot-Vol Above Mid",
         Preset::PriceFlatVolHotBelowMid => "Silent Hot-Vol Below Mid",
         Preset::SmallChangeOnVolMid => "Small Move + Vol at Mid Range",
+        Preset::HotRollingVolGap => "Hot-Vol Rolling Gap",
+        Preset::SilentDriftGap => "Silent-Drift Gap",
     }
 }
 

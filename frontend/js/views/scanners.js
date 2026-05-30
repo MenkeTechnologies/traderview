@@ -314,6 +314,8 @@ const PRESETS = [
     { id: 'price_flat_vol_hot_above_mid', label: t('view.scanners.preset.price_flat_vol_hot_above_mid.label'), desc: t('view.scanners.preset.price_flat_vol_hot_above_mid.desc') },
     { id: 'price_flat_vol_hot_below_mid', label: t('view.scanners.preset.price_flat_vol_hot_below_mid.label'), desc: t('view.scanners.preset.price_flat_vol_hot_below_mid.desc') },
     { id: 'small_change_on_vol_mid', label: t('view.scanners.preset.small_change_on_vol_mid.label'), desc: t('view.scanners.preset.small_change_on_vol_mid.desc') },
+    { id: 'hot_rolling_vol_gap', label: t('view.scanners.preset.hot_rolling_vol_gap.label'), desc: t('view.scanners.preset.hot_rolling_vol_gap.desc') },
+    { id: 'silent_drift_gap', label: t('view.scanners.preset.silent_drift_gap.label'), desc: t('view.scanners.preset.silent_drift_gap.desc') },
 ];
 
 export async function renderScanners(mount) {
