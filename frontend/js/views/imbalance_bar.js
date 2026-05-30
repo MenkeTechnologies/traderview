@@ -54,6 +54,12 @@ export async function renderImbalanceBar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.imb_bar.h2.cum_imb_chart">Cumulative signed imbalance per bar (bar-grain OBV)</h2>
+            <div id="ib-cum-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.imb_bar.hint.cum_imb" class="muted">Running Σ of signed imbalance bar-by-bar. Persistent buying drives a monotonic up-curve; persistent selling drives down; alternating flow wiggles around zero. Bar-grain analogue of OBV / cumulative delta.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.imb_bar.h2.table">Bars (tail — last 30)</h2>
             <div id="ib-table"></div>
         </div>
@@ -97,6 +103,7 @@ async function compute(tok) {
     const local = localCompute(state.prints, state.imbalance_threshold);
     renderSummary(local, true);
     renderChart(local);
+    renderCumChart(local);
     renderTable(local);
     let resp;
     try {
@@ -108,6 +115,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCumChart(resp);
     renderTable(resp);
 }
 
@@ -169,6 +177,39 @@ function renderChart(bars) {
         ],
         legend: { show: true },
     }, [xs, imbs, closes], el);
+}
+
+function renderCumChart(bars) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ib-cum-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!bars || bars.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.imb_bar.empty_cum">${esc(t('view.imb_bar.empty_cum'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i + 1);
+    const cum = [];
+    let acc = 0;
+    for (const b of bars) { acc += Number(b.imbalance) || 0; cum.push(acc); }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.imb_bar.chart.cum_imb'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.imb_bar.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderTable(bars) {

@@ -674,6 +674,8 @@ pub enum Preset {
     CompressedYearRangeRegimeBreak,  // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — within 5% of BOTH 52w extremes (compressed regime) BUT big change + hot vol (sudden break of a long-compressed 52w sideways range; regime-level breakout/breakdown candidate)
     IntradayClimaxTopFade,           // hod_dist_pct.abs() > 4 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — far from HOD + closed at LOD + finished red + hot vol (intraday climax-top fade: pumped early then sold all day to finish red at the lows on volume)
     IntradayClimaxBottomReclaim,     // lod_dist_pct.abs() > 4 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — far from LOD + closed at HOD + finished green + hot vol (intraday climax-bottom reclaim: panicked early then bid up all day to finish green at the highs on volume)
+    BigChangeDryVolWideRange,        // change_pct.abs() > 3 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — big change + dry vol + wide intraday range (low-conviction trend day with thin tape; volatile but uncrowded; potentially manipulated or fake breakout)
+    BigChangeDryVolFromGap,          // change_pct.abs() > 3 AND rel_volume < 0.7 AND gap_pct.abs() > 2 — big change + dry vol + significant gap (overnight repricing held with minimal intraday participation; pure pre-market re-rating absorbed without daytime confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3696,6 +3698,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigChangeDryVolWideRange => {
+            hit.change_pct.abs() > 3.0
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+        }
+        Preset::BigChangeDryVolFromGap => {
+            hit.change_pct.abs() > 3.0
+                && hit.rel_volume < 0.7
+                && hit.gap_pct.abs() > 2.0
+        }
     }
 }
 
@@ -4260,6 +4272,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CompressedYearRangeRegimeBreak => "Compressed 52w Range + Big Change + Hot Vol (Sudden Break of Long-compressed Sideways Range; Regime-level Breakout/Breakdown)",
         Preset::IntradayClimaxTopFade => "Intraday Climax-top Fade + Hot Vol (Pumped Early, Sold All Day; Closed Red at LOD on Volume)",
         Preset::IntradayClimaxBottomReclaim => "Intraday Climax-bottom Reclaim + Hot Vol (Panicked Early, Bid Up All Day; Closed Green at HOD on Volume)",
+        Preset::BigChangeDryVolWideRange => "Big Change + Dry Vol + Wide Range (Low-conviction Trend Day with Thin Tape; Volatile but Uncrowded)",
+        Preset::BigChangeDryVolFromGap => "Big Change + Dry Vol + Significant Gap (Pre-market Re-rating Absorbed without Daytime Confirmation)",
     }
 }
 
