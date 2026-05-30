@@ -79,6 +79,11 @@ export async function renderGreeksProfile(mount, _appState) {
 
         <div id="gp-grid" class="gp-grid"></div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.greeks_profile.h2.normalized_chart">All greeks normalized to ±1 — relative shape comparison</h2>
+            <div id="gp-normalized-chart" style="width:100%;height:280px"></div>
+        </div>
+
         <div id="gp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -129,6 +134,7 @@ async function compute(mount, tok) {
     const series = splitMetricSeries(res.points);
     renderSummary(res, series);
     renderGrid(series, res);
+    renderNormalizedChart(series, res);
     showToast(t('view.greeks_profile.toast.done', {
         kind: state.params.kind,
         n: state.params.n_points,
@@ -197,6 +203,48 @@ function drawMini(elId, xs, ys, stroke, atmSpot) {
         ],
         legend: { show: false },
     }, [xs, ys, atmYs], el);
+}
+
+function renderNormalizedChart(series, res) {
+    const el = document.getElementById('gp-normalized-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const xs = series.spots;
+    if (!Array.isArray(xs) || xs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.greeks_profile.empty_normalized_chart">${esc(t('view.greeks_profile.empty_normalized_chart'))}</div>`;
+        return;
+    }
+    const normalize = (ys) => {
+        const m = Math.max(...ys.map(v => Math.abs(Number(v) || 0)));
+        return m > 0 ? ys.map(v => Number(v) / m) : ys.map(() => 0);
+    };
+    const data = [xs];
+    const seriesDef = [{ label: t('chart.series.spot') }];
+    for (const m of METRICS) {
+        data.push(normalize(series[m]));
+        seriesDef.push({
+            label: t(`view.greeks_profile.series.${m}`),
+            stroke: METRIC_COLORS[m], width: 1.4,
+            points: { show: false },
+        });
+    }
+    const atmSpot = (res.points[res.atm_index] || {}).spot;
+    const halfWidth = xs.length > 1 ? (xs[1] - xs[0]) / 2 : 0;
+    const atmMarker = xs.map(s =>
+        Number.isFinite(atmSpot) && Math.abs(s - atmSpot) <= halfWidth ? 0 : null);
+    data.push(atmMarker);
+    seriesDef.push({
+        label: t('view.greeks_profile.series.atm_marker'),
+        stroke: '#fff', width: 0,
+        points: { show: true, size: 12, fill: '#fff', stroke: '#fff' },
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 260,
+        scales: { x: {}, y: { range: [-1.05, 1.05] } },
+        series: seriesDef,
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
+    }, data, el);
 }
 
 function showErr(msg) {

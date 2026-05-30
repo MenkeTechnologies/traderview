@@ -540,6 +540,8 @@ const PRESETS = [
     { id: 'year_high_sharp_distribution', label: t('view.scanners.preset.year_high_sharp_distribution.label'), desc: t('view.scanners.preset.year_high_sharp_distribution.desc') },
     { id: 'large_change_on_normal_vol', label: t('view.scanners.preset.large_change_on_normal_vol.label'), desc: t('view.scanners.preset.large_change_on_normal_vol.desc') },
     { id: 'massive_intraday_without_gap', label: t('view.scanners.preset.massive_intraday_without_gap.label'), desc: t('view.scanners.preset.massive_intraday_without_gap.desc') },
+    { id: 'mid_year_both_sides_tagged', label: t('view.scanners.preset.mid_year_both_sides_tagged.label'), desc: t('view.scanners.preset.mid_year_both_sides_tagged.desc') },
+    { id: 'extreme_silent_range', label: t('view.scanners.preset.extreme_silent_range.label'), desc: t('view.scanners.preset.extreme_silent_range.desc') },
 ];
 
 export async function renderScanners(mount) {
