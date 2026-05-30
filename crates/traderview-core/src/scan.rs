@@ -1012,6 +1012,8 @@ pub enum Preset {
     GapDownCloseAtLodJustOffYearLowHotVol,     // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + just off 52w low (2-5%) + red close + hot vol (post-bounce re-assertion of breakdown momentum: gap down after shallow bounce held all session and closed at the day's low on elevated participation; aligned-axis continuation candidate immediately back toward the prior trough)
     GapUpCloseAtHodMidYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + mid-range from high (5-20%) + green close + hot vol (mid-cycle recovery momentum: gap up well into the consolidation zone held all session and closed at the day's high on elevated participation; aligned-axis push back toward the prior peak from a proper pullback)
     GapDownCloseAtLodMidYearLowHotVol,         // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + mid-range from low (5-20%) + red close + hot vol (mid-cycle reversal momentum: gap down well into the consolidation zone held all session and closed at the day's low on elevated participation; aligned-axis push back toward the prior trough from a proper recovery)
+    GapUpCloseAtLodNearYearHighHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct < 2 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + at/near 52w high (<2%) + red close + hot vol (distribution-top signal at the 52w high: gap up attempt at the year peak completely absorbed and pushed below the open on elevated participation; high-conviction failed-breakout at the worst possible location for bulls)
+    GapDownCloseAtHodNearYearLowHotVol,        // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + at/near 52w low (<2%) + green close + hot vol (accumulation-bottom signal at the 52w low: gap down attempt at the year trough completely absorbed and pushed above the open on elevated participation; high-conviction failed-breakdown at the worst possible location for bears)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6156,6 +6158,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpCloseAtLodNearYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.year_high_pct < 2.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownCloseAtHodNearYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.year_low_pct < 2.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7058,6 +7074,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownCloseAtLodJustOffYearLowHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Just off 52w Low (2-5 %) + Red Close + Hot Vol (Post-bounce Re-assertion of Breakdown Momentum: Gap down after Shallow Bounce Held All Session and Closed at the Day's Low on Elevated Participation; Aligned-axis Continuation Candidate Immediately Back toward the Prior Trough)",
         Preset::GapUpCloseAtHodMidYearHighHotVol => "Gap Up (>2 %) + Close Pinned to HOD + Mid-range from High (5-20 %) + Green Close + Hot Vol (Mid-cycle Recovery Momentum: Gap up Well into the Consolidation Zone Held All Session and Closed at the Day's High on Elevated Participation; Aligned-axis Push back toward the Prior Peak from a Proper Pullback)",
         Preset::GapDownCloseAtLodMidYearLowHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Mid-range from Low (5-20 %) + Red Close + Hot Vol (Mid-cycle Reversal Momentum: Gap down Well into the Consolidation Zone Held All Session and Closed at the Day's Low on Elevated Participation; Aligned-axis Push back toward the Prior Trough from a Proper Recovery)",
+        Preset::GapUpCloseAtLodNearYearHighHotVol => "Gap Up (>2 %) Faded Completely to LOD + At/near 52w High (<2 %) + Red Close + Hot Vol (Distribution-top Signal at the 52w High: Gap up Attempt at the Year Peak Completely Absorbed and Pushed below the Open on Elevated Participation; High-conviction Failed-breakout at the Worst Possible Location for Bulls)",
+        Preset::GapDownCloseAtHodNearYearLowHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + At/near 52w Low (<2 %) + Green Close + Hot Vol (Accumulation-bottom Signal at the 52w Low: Gap down Attempt at the Year Trough Completely Absorbed and Pushed above the Open on Elevated Participation; High-conviction Failed-breakdown at the Worst Possible Location for Bears)",
     }
 }
 
