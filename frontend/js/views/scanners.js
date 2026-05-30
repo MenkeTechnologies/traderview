@@ -214,6 +214,8 @@ const PRESETS = [
     { id: 'hot_vol_no_move_at_low', label: t('view.scanners.preset.hot_vol_no_move_at_low.label'), desc: t('view.scanners.preset.hot_vol_no_move_at_low.desc') },
     { id: 'big_up_gap_inside_day', label: t('view.scanners.preset.big_up_gap_inside_day.label'), desc: t('view.scanners.preset.big_up_gap_inside_day.desc') },
     { id: 'big_down_gap_inside_day', label: t('view.scanners.preset.big_down_gap_inside_day.label'), desc: t('view.scanners.preset.big_down_gap_inside_day.desc') },
+    { id: 'steady_up_dry_vol', label: t('view.scanners.preset.steady_up_dry_vol.label'), desc: t('view.scanners.preset.steady_up_dry_vol.desc') },
+    { id: 'steady_down_dry_vol', label: t('view.scanners.preset.steady_down_dry_vol.label'), desc: t('view.scanners.preset.steady_down_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

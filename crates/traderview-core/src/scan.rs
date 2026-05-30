@@ -332,6 +332,8 @@ pub enum Preset {
     HotVolNoMoveAtLow,           // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w low with no net move (accumulation candidate)
     BigUpGapInsideDay,           // gap_pct > 3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between 1 and 3 — big gap-up but contained inside-day (consolidation after thrust)
     BigDownGapInsideDay,         // gap_pct < -3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between -3 and -1 — big gap-down but contained inside-day (consolidation after thrust)
+    SteadyUpDryVol,              // change_pct between 0.5 and 2 AND day_pct > 0 AND rel_volume < 0.7 — steady-up day on light volume (low-conviction drift up)
+    SteadyDownDryVol,            // change_pct between -2 and -0.5 AND day_pct < 0 AND rel_volume < 0.7 — steady-down day on light volume (low-conviction drift down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1401,6 +1403,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct <= -1.0
                 && hit.change_pct >= -3.0
         }
+        Preset::SteadyUpDryVol => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 2.0
+                && hit.day_pct > 0.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::SteadyDownDryVol => {
+            hit.change_pct <= -0.5
+                && hit.change_pct >= -2.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -1623,6 +1637,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolNoMoveAtLow => "Hot Vol, No Move at 52w Low",
         Preset::BigUpGapInsideDay => "Big Up-Gap, Inside Day",
         Preset::BigDownGapInsideDay => "Big Down-Gap, Inside Day",
+        Preset::SteadyUpDryVol => "Steady Up, Dry Vol",
+        Preset::SteadyDownDryVol => "Steady Down, Dry Vol",
     }
 }
 

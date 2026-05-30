@@ -57,6 +57,11 @@ export async function renderRrButterfly(mount, _appState) {
 
         <div id="rr-summary" class="cards"></div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.rr_butterfly.h2.smile_chart">25-delta smile (σ_25P → σ_ATM → σ_25C)</h2>
+            <div id="rr-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="rr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -139,12 +144,45 @@ async function compute(mount, tok) {
             bf: res.butterfly,
             skew_zscore: res.skew_zscore,
         }, /*fromBackend=*/true);
+        renderSmileChart(state.params.sigma_25_put, res.atm, state.params.sigma_25_call);
     } else {
         renderReconstructSummary({
             sigma_25_call: res.sigma_25_call,
             sigma_25_put: res.sigma_25_put,
         }, /*fromBackend=*/true);
+        renderSmileChart(res.sigma_25_put, state.params.atm, res.sigma_25_call);
     }
+}
+
+function renderSmileChart(sigPut, sigAtm, sigCall) {
+    const el = document.getElementById('rr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const put = Number(sigPut);
+    const atm = Number(sigAtm);
+    const call = Number(sigCall);
+    if (![put, atm, call].every(Number.isFinite)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rr_butterfly.empty_chart">${esc(t('view.rr_butterfly.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = [-25, 0, 25];
+    const ys = [put * 100, atm * 100, call * 100];
+    const atmRef = xs.map(() => atm * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.rr_butterfly.chart.delta') },
+            { label: t('view.rr_butterfly.chart.sigma'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.rr_butterfly.chart.atm_ref'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, atmRef], el);
 }
 
 function renderDecomposeSummary(d, fromBackend) {
