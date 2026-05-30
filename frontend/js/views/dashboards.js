@@ -192,7 +192,7 @@ function renderFavsSection() {
     const fState = favs.loadState();
     if (!fState.favorites.length && !fState.bookmarks.length) {
         wrap.innerHTML = `
-            <div class="db-sidebar-head">★ FAVORITES</div>
+            <div class="db-sidebar-head">${esc(t('view.dashboards.sidebar.favorites_empty'))}</div>
             <p data-i18n="view.dashboards.hint.no_favorites_yet_click_on_any_launcher_tile_to_fav" class="muted" style="font-size:11px">
                 No favorites yet. Click ★ on any launcher tile to favorite it.
                 Add this favorite view as a tile here with one click.

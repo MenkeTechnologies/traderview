@@ -7046,6 +7046,7 @@
   "view.optimal_f.empty.need_losing_trade":"Need at least one losing trade to compute the TWR curve.",
   "view.dashboards.sidebar.head":          "DASHBOARDS",
   "view.dashboards.sidebar.favorites":      "★ FAVORITES ({count})",
+  "view.dashboards.sidebar.favorites_empty": "★ FAVORITES",
   "view.dashboards.sidebar.bookmarks":      "🔖 BOOKMARKS ({count})",
   "view.optimal_f.sub.twr_at_optimal":     "TWR @ optimal",
   "view.optimal_f.sub.conservative_default":"conservative default",
