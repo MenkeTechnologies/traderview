@@ -49,6 +49,10 @@ export async function renderScreener(mount) {
             <h2 data-i18n="view.screener.h2.rsi_chart">RSI(14) per hit symbol</h2>
             <div id="sc-rsi-chart" style="width:100%;height:220px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.screener.h2.macd_chart">MACD histogram per hit symbol</h2>
+            <div id="sc-macd-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#sc-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -65,6 +69,7 @@ export async function renderScreener(mount) {
             if (elNow) elNow.innerHTML = renderResult(r);
             renderScoreChart(r.hits);
             renderRsiChart(r.hits);
+            renderMacdChart(r.hits);
             showToast(t('view.screener.toast.done', {
                 hits: r.hits.length, universe: r.universe_size,
             }), { level: r.hits.length > 0 ? 'success' : 'info' });
@@ -75,6 +80,45 @@ export async function renderScreener(mount) {
             showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
+}
+
+function renderMacdChart(hits) {
+    const el = document.getElementById('sc-macd-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (hits || []).filter(h => Number.isFinite(Number(h.macd_hist)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.screener.empty_macd_chart">${esc(t('view.screener.empty_macd_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.score) - Number(a.score));
+    const labels = rows.map(h => h.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const posY = rows.map(h => Number(h.macd_hist) >= 0 ? Number(h.macd_hist) : null);
+    const negY = rows.map(h => Number(h.macd_hist) <  0 ? Number(h.macd_hist) : null);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.screener.chart.symbol_idx') },
+            { label: t('view.screener.chart.macd_up'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.screener.chart.macd_down'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 10, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.screener.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, posY, negY, zero], el);
 }
 
 function renderRsiChart(hits) {

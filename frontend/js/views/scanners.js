@@ -266,6 +266,8 @@ const PRESETS = [
     { id: 'lod_fail_after_push', label: t('view.scanners.preset.lod_fail_after_push.label'), desc: t('view.scanners.preset.lod_fail_after_push.desc') },
     { id: 'hod_reclaim_from_flat_gap', label: t('view.scanners.preset.hod_reclaim_from_flat_gap.label'), desc: t('view.scanners.preset.hod_reclaim_from_flat_gap.desc') },
     { id: 'lod_fail_from_flat_gap', label: t('view.scanners.preset.lod_fail_from_flat_gap.label'), desc: t('view.scanners.preset.lod_fail_from_flat_gap.desc') },
+    { id: 'pct52w_top_boundary_reject', label: t('view.scanners.preset.pct52w_top_boundary_reject.label'), desc: t('view.scanners.preset.pct52w_top_boundary_reject.desc') },
+    { id: 'pct52w_bottom_boundary_reject', label: t('view.scanners.preset.pct52w_bottom_boundary_reject.label'), desc: t('view.scanners.preset.pct52w_bottom_boundary_reject.desc') },
 ];
 
 export async function renderScanners(mount) {
