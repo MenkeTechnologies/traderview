@@ -104,6 +104,12 @@ export async function renderSeriesSmoother(mount, _appState) {
             <div id="ss-chart" style="width:100%;height:380px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.series_smoother.h2.residuals_chart">Per-smoother residuals (smoothed − raw)</h2>
+            <div id="ss-residuals-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.series_smoother.hint.residuals" class="muted small">Each smoother's signed residual against raw at every index. Reveals where a smoother lags, overshoots, or runs biased — orthogonal to the absolute overlay above. Yellow dashed = zero (perfect fit).</p>
+        </div>
+
         <div id="ss-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -173,6 +179,7 @@ async function run(mount, tok) {
 
     renderSummary(summaries);
     renderChart(xs, series, smoothed);
+    renderResidualsChart(xs, series, smoothed);
     const ok = summaries.filter(s => s.status === 'ok').length;
     const failed = summaries.filter(s => s.status !== 'ok').length;
     showToast(t('view.series_smoother.toast.done', { n: series.length, ok, failed }), {
@@ -251,6 +258,47 @@ function renderChart(xs, raw, smoothed) {
         scales: { x: {}, y: {} },
         series,
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+    }, data, el);
+}
+
+function renderResidualsChart(xs, raw, smoothed) {
+    const el = document.getElementById('ss-residuals-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const ids = Object.keys(SMOOTHER_META).filter(id => smoothed[id]);
+    if (ids.length < 1 || !raw || !raw.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.series_smoother.empty_residuals">${esc(t('view.series_smoother.empty_residuals'))}</div>`;
+        return;
+    }
+    const series = [
+        { label: t('view.series_smoother.series.idx') },
+    ];
+    const data = [xs];
+    for (const id of ids) {
+        const lk = `view.series_smoother.method.${id}.label`;
+        const lv = t(lk);
+        series.push({
+            label: ((lv && lv !== lk) ? lv : SMOOTHER_META[id].label) + ' − raw',
+            stroke: SMOOTHER_META[id].color,
+            width: 1.5,
+            points: { show: false },
+        });
+        data.push(smoothed[id].map((v, i) => {
+            const r = Number(raw[i]);
+            return Number.isFinite(Number(v)) && Number.isFinite(r) ? Number(v) - r : null;
+        }));
+    }
+    series.push({
+        label: t('view.series_smoother.residuals.zero'),
+        stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false },
+    });
+    data.push(xs.map(() => 0));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
     }, data, el);
 }
 

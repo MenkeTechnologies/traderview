@@ -794,6 +794,8 @@ pub enum Preset {
     Year52LowCapitulation,               // year_low_pct < 0 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big red + extreme vol (capitulation at the lows; forced selling at floor; trapped longs flushed)
     DragonflyDojiHotVol,                 // change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + LOD far below + close near HOD + hot vol (dragonfly doji recovery; intraday plunge fully reclaimed by close with elevated participation)
     GravestoneDojiHotVol,                // change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + HOD far above + close near LOD + hot vol (gravestone doji rejection; intraday rip fully sold by close with elevated participation)
+    HammerReversalHotVol,                // change_pct > 1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — green close + LOD far below + close near HOD + hot vol (hammer reversal; intraday plunge reclaimed + green finish; reversal long signal with elevated participation)
+    ShootingStarReversalHotVol,          // change_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — red close + HOD far above + close near LOD + hot vol (shooting star reversal; intraday rip sold + red finish; reversal short signal with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4537,6 +4539,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HammerReversalHotVol => {
+            hit.change_pct > 1.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarReversalHotVol => {
+            hit.change_pct < -1.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5221,6 +5235,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowCapitulation => "New 52w Low + Big Red + Extreme Vol (Capitulation at the Lows; Forced Selling at Floor; Trapped Longs Flushed)",
         Preset::DragonflyDojiHotVol => "Flat Close + LOD Far Below + Close Near HOD + Hot Vol (Dragonfly Doji Recovery; Intraday Plunge Fully Reclaimed by Close with Elevated Participation)",
         Preset::GravestoneDojiHotVol => "Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji Rejection; Intraday Rip Fully Sold by Close with Elevated Participation)",
+        Preset::HammerReversalHotVol => "Green Close + LOD Far Below + Close Near HOD + Hot Vol (Hammer Reversal; Intraday Plunge Reclaimed + Green Finish; Reversal Long Signal with Elevated Participation)",
+        Preset::ShootingStarReversalHotVol => "Red Close + HOD Far Above + Close Near LOD + Hot Vol (Shooting Star Reversal; Intraday Rip Sold + Red Finish; Reversal Short Signal with Elevated Participation)",
     }
 }
 

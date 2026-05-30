@@ -676,6 +676,8 @@ const PRESETS = [
     { id: 'year52_low_capitulation', label: t('view.scanners.preset.year52_low_capitulation.label'), desc: t('view.scanners.preset.year52_low_capitulation.desc') },
     { id: 'dragonfly_doji_hot_vol', label: t('view.scanners.preset.dragonfly_doji_hot_vol.label'), desc: t('view.scanners.preset.dragonfly_doji_hot_vol.desc') },
     { id: 'gravestone_doji_hot_vol', label: t('view.scanners.preset.gravestone_doji_hot_vol.label'), desc: t('view.scanners.preset.gravestone_doji_hot_vol.desc') },
+    { id: 'hammer_reversal_hot_vol', label: t('view.scanners.preset.hammer_reversal_hot_vol.label'), desc: t('view.scanners.preset.hammer_reversal_hot_vol.desc') },
+    { id: 'shooting_star_reversal_hot_vol', label: t('view.scanners.preset.shooting_star_reversal_hot_vol.label'), desc: t('view.scanners.preset.shooting_star_reversal_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
