@@ -666,6 +666,8 @@ pub enum Preset {
     GapUpClosedNearLODHotVol,        // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + closed red + closing tick near LOD + hot vol (full fade with finish weakness on the lows; sellers stay in control into close)
     Year52HighGapUpHotVolBigChange,  // year_high_pct < 1 AND gap_pct > 1 AND rel_volume >= 2 AND change_pct > 1 — within 1% of 52w high + gap up + hot vol + finished up (near-high breakout attempt with sustained demand at multi-year highs)
     Year52LowGapDownHotVolBigDrop,   // year_low_pct < 1 AND gap_pct < -1 AND rel_volume >= 2 AND change_pct < -1 — within 1% of 52w low + gap down + hot vol + finished down (breakdown capitulation day at multi-year lows)
+    WideRangeFlatCloseHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide intraday range + flat close + hot vol (tug-of-war battle with heavy participation; bulls and bears trade aggressively, neither wins)
+    BigGapNarrowIntradayHotVol,      // gap_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — huge gap + tight intraday range + hot vol (gap holds; no follow-through movement either direction; participants accept the new gap level on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3642,6 +3644,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct < -1.0
         }
+        Preset::WideRangeFlatCloseHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapNarrowIntradayHotVol => {
+            hit.gap_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4198,6 +4210,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapUpClosedNearLODHotVol => "Gap Up + Closed Red + Near LOD + Hot Vol (Full Fade Closing on the Lows)",
         Preset::Year52HighGapUpHotVolBigChange => "Within 1% of 52w High + Gap Up + Hot Vol + Finished Up (Near-high Breakout Attempt with Sustained Demand)",
         Preset::Year52LowGapDownHotVolBigDrop => "Within 1% of 52w Low + Gap Down + Hot Vol + Finished Down (Breakdown Capitulation at Multi-year Lows)",
+        Preset::WideRangeFlatCloseHotVol => "Wide Range + Flat Close + Hot Vol (Tug-of-war Battle with Heavy Participation; No Winner)",
+        Preset::BigGapNarrowIntradayHotVol => "Huge Gap + Tight Intraday Range + Hot Vol (Gap Accepted on Volume; No Follow-through)",
     }
 }
 

@@ -14,6 +14,11 @@ export async function renderHeatmap(mount) {
             <h2 data-i18n="view.heatmap.h2.sector_chart">Avg sector change %</h2>
             <div id="hm-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.heatmap.h2.dispersion_chart">Intra-sector dispersion (stddev of constituent change %)</h2>
+            <div id="hm-dispersion-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.heatmap.hint.dispersion" class="muted small">Low dispersion = sector moves in unison (macro/sector rotation). High dispersion = sector is being torn apart by single-name stories (idiosyncratic divergence).</p>
+        </div>
     `;
     try {
         const r = await api.heatmap();
@@ -65,6 +70,44 @@ function renderTiles(r, mount) {
     const el = mount.querySelector('#hm');
     if (el) el.innerHTML = html || '<p data-i18n="view.heatmap.hint.no_quotes_cached_yet_refresh_in_a_minute" class="muted">No quotes cached yet — refresh in a minute.</p>';
     renderSectorChart(sectors);
+    renderDispersionChart(sectors);
+}
+
+function renderDispersionChart(sectors) {
+    const el = document.getElementById('hm-dispersion-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!sectors || !sectors.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.heatmap.empty_dispersion_chart">${esc(t('view.heatmap.empty_dispersion_chart'))}</div>`;
+        return;
+    }
+    const stats = sectors.map(([sector, tiles]) => {
+        const vals = tiles.map(ti => Number(ti.change_pct)).filter(Number.isFinite);
+        if (vals.length < 2) return { sector, sd: 0 };
+        const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
+        const variance = vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length;
+        return { sector, sd: Math.sqrt(variance) };
+    }).filter(s => Number.isFinite(s.sd))
+       .sort((a, b) => b.sd - a.sd);
+    const labels = stats.map(s => s.sector);
+    const ys = stats.map(s => s.sd);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.heatmap.chart.sector_idx') },
+            { label: t('view.heatmap.chart.stddev_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSectorChart(sectors) {
