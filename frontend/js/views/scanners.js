@@ -402,6 +402,8 @@ const PRESETS = [
     { id: 'tight_range_at_year_low', label: t('view.scanners.preset.tight_range_at_year_low.label'), desc: t('view.scanners.preset.tight_range_at_year_low.desc') },
     { id: 'balanced_mid_wick_hot_vol', label: t('view.scanners.preset.balanced_mid_wick_hot_vol.label'), desc: t('view.scanners.preset.balanced_mid_wick_hot_vol.desc') },
     { id: 'balanced_mid_wick_dry_vol', label: t('view.scanners.preset.balanced_mid_wick_dry_vol.label'), desc: t('view.scanners.preset.balanced_mid_wick_dry_vol.desc') },
+    { id: 'gap_up_hod_close_controlled', label: t('view.scanners.preset.gap_up_hod_close_controlled.label'), desc: t('view.scanners.preset.gap_up_hod_close_controlled.desc') },
+    { id: 'gap_down_lod_close_controlled', label: t('view.scanners.preset.gap_down_lod_close_controlled.label'), desc: t('view.scanners.preset.gap_down_lod_close_controlled.desc') },
 ];
 
 export async function renderScanners(mount) {

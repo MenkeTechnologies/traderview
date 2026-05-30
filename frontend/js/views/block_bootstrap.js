@@ -75,6 +75,11 @@ export async function renderBlockBootstrap(mount, _appState) {
             <div id="bb-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.block_boot.h2.cum_chart">Cumulative sum (running equity / drawdown structure)</h2>
+            <div id="bb-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="bb-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('bb-stat').value = state.statistic;
@@ -129,6 +134,7 @@ async function compute(tok) {
     renderCi(local);
     renderTable();
     renderSeriesChart();
+    renderCumChart();
     let resp;
     try {
         resp = await api.anlyBlockBootstrap(buildBody(state));
@@ -142,6 +148,7 @@ async function compute(tok) {
     renderCi(resp);
     renderTable();
     renderSeriesChart();
+    renderCumChart();
 }
 
 function renderSummary(report, pending) {
@@ -250,6 +257,44 @@ function renderSeriesChart() {
         ],
         legend: { show: true },
     }, [xs, data, zero], el);
+}
+
+function renderCumChart() {
+    const el = document.getElementById('bb-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const data = Array.isArray(state.data) ? state.data.filter(Number.isFinite) : [];
+    if (data.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.block_boot.empty_cum">${esc(t('view.block_boot.empty_cum'))}</div>`;
+        return;
+    }
+    const xs = data.map((_, i) => i + 1);
+    let acc = 0;
+    let peak = -Infinity;
+    const cum = new Array(data.length);
+    const drawdown = new Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+        acc += data[i];
+        cum[i] = acc;
+        if (acc > peak) peak = acc;
+        drawdown[i] = acc - peak;
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.block_boot.chart.obs_idx') },
+            { label: t('view.block_boot.chart.cum'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.block_boot.chart.dd'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, drawdown], el);
 }
 
 function card(label, value, cls = '') {

@@ -520,6 +520,8 @@ pub enum Preset {
     TightRangeAtYearLow,            // hod_dist + lod_dist < 1 AND year_low_pct < 3 AND rel_volume between 0.7 and 1.3 — tight range at 52w low on normal vol (basing at the bottom; potential reversal)
     BalancedMidWickHotVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume >= 1.5 — balanced wicks in middle on hot vol (mid-range churn with participation)
     BalancedMidWickDryVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume < 0.6 — balanced wicks in middle on dry vol (sleepy mid-range)
+    GapUpHodCloseControlled,        // gap_pct > 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 0 AND rel_volume between 0.7 and 1.5 — gap up + close at HOD + green close + normal vol (gap-and-hold; controlled trend)
+    GapDownLodCloseControlled,      // gap_pct < -0.5 AND lod_dist.abs() < 0.5 AND change_pct < 0 AND rel_volume between 0.7 and 1.5 — gap down + close at LOD + red close + normal vol (gap-and-hold; controlled decline)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2655,6 +2657,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() <= 1.5
                 && hit.rel_volume < 0.6
         }
+        Preset::GapUpHodCloseControlled => {
+            hit.gap_pct > 0.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.5
+        }
+        Preset::GapDownLodCloseControlled => {
+            hit.gap_pct < -0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.5
+        }
     }
 }
 
@@ -3065,6 +3081,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightRangeAtYearLow => "Tight Range at 52w Low (Potential Reversal)",
         Preset::BalancedMidWickHotVol => "Balanced Mid-Wick, Hot Vol (Mid-Range Churn)",
         Preset::BalancedMidWickDryVol => "Balanced Mid-Wick, Dry Vol (Sleepy Mid-Range)",
+        Preset::GapUpHodCloseControlled => "Gap Up + HOD Close + Normal Vol (Controlled Trend Up)",
+        Preset::GapDownLodCloseControlled => "Gap Down + LOD Close + Normal Vol (Controlled Decline)",
     }
 }
 
