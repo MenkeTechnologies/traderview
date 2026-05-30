@@ -778,6 +778,8 @@ pub enum Preset {
     Year52LowAccumulationChurn,          // year_low_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w low + flat close + hot vol (accumulation at the lows; heavy churn without movement; institutional bottom-fishing at the floor)
     Year52HighBigGreenBreakoutHotVol,    // year_high_pct < 0 AND change_pct > 4 AND rel_volume >= 2 — breakout to new 52w high + big green + hot vol (decisive breakout from year resistance with institutional sponsorship; trend-following long signal)
     Year52LowBigRedBreakdownHotVol,      // year_low_pct < 0 AND change_pct < -4 AND rel_volume >= 2 — breakdown to new 52w low + big red + hot vol (decisive breakdown from year support with institutional sponsorship; trend-following short signal)
+    GapUpFailBigRedHotVol,               // gap_pct > 3 AND change_pct < -2 AND rel_volume >= 2 — gap up but closed red + hot vol (failed gap up; trapped longs; reversal short signal)
+    GapDownReclaimBigGreenHotVol,        // gap_pct < -3 AND change_pct > 2 AND rel_volume >= 2 — gap down but closed green + hot vol (reclaimed gap down; trapped shorts; reversal long signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4435,6 +4437,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -4.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::GapUpFailBigRedHotVol => {
+            hit.gap_pct > 3.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapDownReclaimBigGreenHotVol => {
+            hit.gap_pct < -3.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5103,6 +5115,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowAccumulationChurn => "Near 52w Low + Flat Close + Hot Vol (Accumulation at the Lows; Heavy Churn Without Movement; Institutional Bottom-fishing at the Floor)",
         Preset::Year52HighBigGreenBreakoutHotVol => "New 52w High + Big Green + Hot Vol (Decisive Breakout from Year Resistance with Institutional Sponsorship; Trend-following Long Signal)",
         Preset::Year52LowBigRedBreakdownHotVol => "New 52w Low + Big Red + Hot Vol (Decisive Breakdown from Year Support with Institutional Sponsorship; Trend-following Short Signal)",
+        Preset::GapUpFailBigRedHotVol => "Gap Up + Closed Red + Hot Vol (Failed Gap Up; Trapped Longs; Reversal Short Signal)",
+        Preset::GapDownReclaimBigGreenHotVol => "Gap Down + Closed Green + Hot Vol (Reclaimed Gap Down; Trapped Shorts; Reversal Long Signal)",
     }
 }
 

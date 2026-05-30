@@ -660,6 +660,8 @@ const PRESETS = [
     { id: 'year52_low_accumulation_churn', label: t('view.scanners.preset.year52_low_accumulation_churn.label'), desc: t('view.scanners.preset.year52_low_accumulation_churn.desc') },
     { id: 'year52_high_big_green_breakout_hot_vol', label: t('view.scanners.preset.year52_high_big_green_breakout_hot_vol.label'), desc: t('view.scanners.preset.year52_high_big_green_breakout_hot_vol.desc') },
     { id: 'year52_low_big_red_breakdown_hot_vol', label: t('view.scanners.preset.year52_low_big_red_breakdown_hot_vol.label'), desc: t('view.scanners.preset.year52_low_big_red_breakdown_hot_vol.desc') },
+    { id: 'gap_up_fail_big_red_hot_vol', label: t('view.scanners.preset.gap_up_fail_big_red_hot_vol.label'), desc: t('view.scanners.preset.gap_up_fail_big_red_hot_vol.desc') },
+    { id: 'gap_down_reclaim_big_green_hot_vol', label: t('view.scanners.preset.gap_down_reclaim_big_green_hot_vol.label'), desc: t('view.scanners.preset.gap_down_reclaim_big_green_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

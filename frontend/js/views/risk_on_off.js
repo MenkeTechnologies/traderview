@@ -61,6 +61,12 @@ export async function renderRiskOnOff(mount, _appState) {
             <div id="ro-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_on_off.h2.noise_multiple_chart">Signal magnitude in noise-floor multiples</h2>
+            <div id="ro-noise-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.risk_on_off.hint.noise_multiple" class="muted small">Each signal's raw value divided by its noise floor (0.1% for SPY/Gold/DXY, 1bp for yields), keeping the sign. ±1 = at the floor; ±10 = ten×the floor. Reveals whether the regime is screaming or barely past the noise threshold.</p>
+        </div>
+
         <div id="ro-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -141,6 +147,7 @@ function renderBreakdown() {
     const wrap = document.getElementById('ro-breakdown');
     const sigs = signalBreakdown(state);
     renderContributionChart(sigs);
+    renderNoiseMultipleChart(sigs);
     wrap.innerHTML = `
         <table class="lq-table">
             <thead><tr>
@@ -196,6 +203,44 @@ function renderContributionChart(sigs) {
             { stroke: '#aab', size: 28,
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
+}
+
+function renderNoiseMultipleChart(sigs) {
+    const el = document.getElementById('ro-noise-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (sigs || []).filter(s => Number.isFinite(Number(s.value)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_on_off.empty_noise_chart">${esc(t('view.risk_on_off.empty_noise_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(s => s.name);
+    const ys = valid.map(s => {
+        const floor = s.name === 'yields' ? 1.0 : 0.1;
+        return Number(s.value) / floor;
+    });
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_on_off.chart.signal_idx') },
+            { label: t('view.risk_on_off.chart.noise_mult'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.risk_on_off.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => (v > 0 ? '+' : '') + v.toFixed(1) + '×') },
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
