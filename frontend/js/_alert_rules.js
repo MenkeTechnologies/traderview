@@ -1,6 +1,9 @@
 // Custom alert rules engine — multi-rule, multi-type alerts with
 // per-rule sound + TTS configuration.
 //
+
+import { t } from './i18n.js';
+//
 // Schema (key `tv-alert-rules-v1`):
 //   { version: 1, rules: [
 //       { id, name, type, enabled, sound, tts_template,
@@ -289,19 +292,19 @@ export function renderTemplate(template, vars) {
 export function fallbackMessage(rule, tick, extra) {
     switch (rule.type) {
         case 'squeeze':
-            return `${tick.symbol} squeezing, up ${((extra.price_change_pct || 0) * 100).toFixed(1)} percent on ${(extra.volume_mult || 0).toFixed(1)} times volume`;
+            return t('view.alert_rules.msg.squeeze', { symbol: tick.symbol, pct: ((extra.price_change_pct || 0) * 100).toFixed(1), mult: (extra.volume_mult || 0).toFixed(1) });
         case 'price_above':
-            return `${tick.symbol} crossed above ${(extra.threshold || 0).toFixed(2)}`;
+            return t('view.alert_rules.msg.price_above', { symbol: tick.symbol, threshold: (extra.threshold || 0).toFixed(2) });
         case 'price_below':
-            return `${tick.symbol} broke below ${(extra.threshold || 0).toFixed(2)}`;
+            return t('view.alert_rules.msg.price_below', { symbol: tick.symbol, threshold: (extra.threshold || 0).toFixed(2) });
         case 'pct_change': {
-            const dir = (extra.price_change_pct || 0) >= 0 ? 'up' : 'down';
-            return `${tick.symbol} ${dir} ${Math.abs((extra.price_change_pct || 0) * 100).toFixed(1)} percent`;
+            const dir = t((extra.price_change_pct || 0) >= 0 ? 'view.alert_rules.msg.pct_dir_up' : 'view.alert_rules.msg.pct_dir_down');
+            return t('view.alert_rules.msg.pct_change', { symbol: tick.symbol, dir, pct: Math.abs((extra.price_change_pct || 0) * 100).toFixed(1) });
         }
         case 'volume_spike':
-            return `${tick.symbol} volume spike, ${(extra.volume_mult || 0).toFixed(1)} times average`;
+            return t('view.alert_rules.msg.volume_spike', { symbol: tick.symbol, mult: (extra.volume_mult || 0).toFixed(1) });
         default:
-            return `${tick.symbol} alert`;
+            return t('view.alert_rules.msg.default', { symbol: tick.symbol });
     }
 }
 
