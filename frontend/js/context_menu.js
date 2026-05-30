@@ -40,8 +40,8 @@ export function installContextMenu() {
         const url = window.location.href;
         if (navigator.clipboard && navigator.clipboard.writeText) {
             void navigator.clipboard.writeText(url).then(
-                () => showToast(t('toast.copied', { what: 'URL' }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: 'clipboard denied' }), { level: 'error' }),
+                () => showToast(t('toast.copied', { what: t('toast.what.url') }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
             );
         }
     });
@@ -58,20 +58,20 @@ export function installContextMenu() {
     window.addEventListener('tv:copy-view-id', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: 'no view' }), { level: 'error' });
+            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
             return;
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             void navigator.clipboard.writeText(vid).then(
                 () => showToast(t('toast.copied', { what: vid }), { level: 'success' }),
-                () => showToast(t('toast.error.api', { err: 'clipboard denied' }), { level: 'error' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
             );
         }
     });
     window.addEventListener('tv:add-bookmark', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: 'no view' }), { level: 'error' });
+            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
             return;
         }
         const name = (typeof window.prompt === 'function')
@@ -95,7 +95,7 @@ export function installContextMenu() {
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: 'no view' }), { level: 'error' });
+            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
             return;
         }
         const state = loadState();
