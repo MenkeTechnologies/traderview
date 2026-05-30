@@ -664,6 +664,8 @@ pub enum Preset {
     BigGapBigVolBigChange,           // gap_pct.abs() > 2 AND rel_volume >= 2 AND change_pct.abs() > 2 — big gap + big vol + big change (catalyst day; news-driven gap with sustained intraday activity)
     GapDownClosedNearHODHotVol,      // gap_pct < -1 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + finished green + closing tick near HOD + hot vol (V-shape reclaim closing on the highs; strong end-of-day demand)
     GapUpClosedNearLODHotVol,        // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + closed red + closing tick near LOD + hot vol (full fade with finish weakness on the lows; sellers stay in control into close)
+    Year52HighGapUpHotVolBigChange,  // year_high_pct < 1 AND gap_pct > 1 AND rel_volume >= 2 AND change_pct > 1 — within 1% of 52w high + gap up + hot vol + finished up (near-high breakout attempt with sustained demand at multi-year highs)
+    Year52LowGapDownHotVolBigDrop,   // year_low_pct < 1 AND gap_pct < -1 AND rel_volume >= 2 AND change_pct < -1 — within 1% of 52w low + gap down + hot vol + finished down (breakdown capitulation day at multi-year lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3628,6 +3630,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighGapUpHotVolBigChange => {
+            hit.year_high_pct < 1.0
+                && hit.gap_pct > 1.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct > 1.0
+        }
+        Preset::Year52LowGapDownHotVolBigDrop => {
+            hit.year_low_pct < 1.0
+                && hit.gap_pct < -1.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -4182,6 +4196,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapBigVolBigChange => "Big Gap + Big Vol + Big Change (Catalyst Day; News-driven with Sustained Activity)",
         Preset::GapDownClosedNearHODHotVol => "Gap Down + Closed Green + Near HOD + Hot Vol (V-shape Reclaim Closing on the Highs)",
         Preset::GapUpClosedNearLODHotVol => "Gap Up + Closed Red + Near LOD + Hot Vol (Full Fade Closing on the Lows)",
+        Preset::Year52HighGapUpHotVolBigChange => "Within 1% of 52w High + Gap Up + Hot Vol + Finished Up (Near-high Breakout Attempt with Sustained Demand)",
+        Preset::Year52LowGapDownHotVolBigDrop => "Within 1% of 52w Low + Gap Down + Hot Vol + Finished Down (Breakdown Capitulation at Multi-year Lows)",
     }
 }
 

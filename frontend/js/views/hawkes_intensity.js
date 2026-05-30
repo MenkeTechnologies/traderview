@@ -65,6 +65,12 @@ export async function renderHawkesIntensity(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.hawkes.h2.inter_arrival_chart">Sorted inter-arrival gaps (smallest → largest)</h2>
+            <div id="hk-inter-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.hawkes.hint.inter_arrival" class="muted">Sorted gaps between consecutive events. Pure Poisson with rate μ ≈ exponential distribution; Hawkes clustering bunches small gaps on the left. Yellow dashed line = expected mean gap 1/μ.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.hawkes.h2.table">Per-query intensities (tail — last 30)</h2>
             <div id="hk-table"></div>
         </div>
@@ -116,6 +122,7 @@ async function compute(tok) {
     const local = localCompute(state.event_times, state.query_times, state.params);
     renderSummary(local, true);
     renderChart(local);
+    renderInterArrivalChart();
     renderTable(local);
     let resp;
     try {
@@ -133,6 +140,7 @@ async function compute(tok) {
     }
     renderSummary(resp, false);
     renderChart(resp);
+    renderInterArrivalChart();
     renderTable(resp);
     const ratio = clusteringRatio(state.params);
     const ratioStr = Number.isFinite(ratio) ? ratio.toFixed(3) : '—';
@@ -195,6 +203,38 @@ function renderChart(report) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },
     }, [xs, ys, marker], el);
+}
+
+function renderInterArrivalChart() {
+    const el = document.getElementById('hk-inter-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const ev = state.event_times;
+    if (!Array.isArray(ev) || ev.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hawkes.empty_inter">${esc(t('view.hawkes.empty_inter'))}</div>`;
+        return;
+    }
+    const gaps = [];
+    for (let i = 1; i < ev.length; i++) gaps.push(ev[i] - ev[i - 1]);
+    gaps.sort((a, b) => a - b);
+    const xs = gaps.map((_, i) => i + 1);
+    const mu = state.params.baseline_mu;
+    const expected = Number.isFinite(mu) && mu > 0 ? xs.map(() => 1 / mu) : xs.map(() => null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.idx') },
+            { label: t('view.hawkes.series.gap'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 6, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.hawkes.series.expected_gap'),
+              stroke: '#ffd84a', width: 1, dash: [6, 4],
+              points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, gaps, expected], el);
 }
 
 function renderTable(report) {
