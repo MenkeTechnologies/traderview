@@ -69,12 +69,18 @@ function render(r, mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.discipline.h2.rule_chart">Per-rule pass rate — which discipline rule is breaking most</h2>
+            <div id="d-rule-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2>${esc(t('view.discipline.h2.latest_rules', { count: r.rule_evals.length }))}</h2>
             ${ruleTable(r.rule_evals.slice(-50).reverse())}
         </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
     renderDisciplineChart(r);
+    renderRuleChart(r);
 }
 
 function renderDisciplineChart(r) {
@@ -105,6 +111,45 @@ function renderDisciplineChart(r) {
             { label: t('view.discipline.chart.threshold'),
               stroke: '#7af0a8', width: 1.0, dash: [4, 4],
               points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, threshold], el);
+}
+
+function renderRuleChart(r) {
+    const el = document.getElementById('d-rule-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rb = r.rule_breakdown || {};
+    const rules = [
+        { key: 'stop_set', pct: Number(rb.stop_set_rate) },
+        { key: 'stop_honored', pct: Number(rb.stop_honored_rate) },
+        { key: 'qty_within', pct: Number(rb.qty_within_rate) },
+        { key: 'direction_match', pct: Number(rb.direction_match_rate) },
+    ].filter(x => Number.isFinite(x.pct));
+    if (rules.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.discipline.empty_rule_chart">${esc(t('view.discipline.empty_rule_chart'))}</div>`;
+        return;
+    }
+    const labels = rules.map(x => t(`view.discipline.rule.${x.key}`));
+    const ys = rules.map(x => x.pct);
+    const xs = labels.map((_, i) => i + 1);
+    const threshold = xs.map(() => 80);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        series: [
+            { label: t('view.discipline.chart.rule_idx') },
+            { label: t('view.discipline.chart.pass_rate'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.discipline.chart.threshold'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
         ],
         axes: [
             { stroke: '#aab', size: 28,

@@ -614,6 +614,8 @@ pub enum Preset {
     Year52LowRetestWeakClose,       // year_low_pct < 5 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w low + red close at LOD + hot vol (retest of 52w low with weak close confirming the level)
     DivergentGapVsIntraday,         // gap_pct * day_pct < 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday point opposite directions, both meaningful (clear overnight-vs-intraday divergence; market disagreed with the gap)
     CongruentGapAndIntradaySameDir, // gap_pct * day_pct > 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday same-direction, both meaningful (gap extended by intraday; same-direction follow-through)
+    DeepMidRangeQuietSiesta,        // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — deeply mid-52w-range + very quiet vol + flat change (structurally calm asset siesta; total disinterest)
+    DeepMidRangeActiveOutlier,      // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume >= 2 AND change_pct.abs() > 1 — deeply mid-52w-range + hot vol + meaningful change (mid-range action; out-of-character active day; potential trend genesis)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3295,6 +3297,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 0.5
                 && hit.day_pct.abs() > 0.5
         }
+        Preset::DeepMidRangeQuietSiesta => {
+            hit.year_high_pct > 30.0
+                && hit.year_low_pct > 30.0
+                && hit.rel_volume < 0.5
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::DeepMidRangeActiveOutlier => {
+            hit.year_high_pct > 30.0
+                && hit.year_low_pct > 30.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() > 1.0
+        }
     }
 }
 
@@ -3799,6 +3813,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowRetestWeakClose => "Near 52w Low + LOD Close + Hot Vol (52w-Low Retest Confirmed)",
         Preset::DivergentGapVsIntraday => "Gap vs Intraday Opposite Directions (Market Disagreed with Gap)",
         Preset::CongruentGapAndIntradaySameDir => "Gap and Intraday Same Direction (Gap Extended by Intraday)",
+        Preset::DeepMidRangeQuietSiesta => "Deep Mid-52w-Range + Quiet Vol + Flat Change (Calm Asset Siesta)",
+        Preset::DeepMidRangeActiveOutlier => "Deep Mid-52w-Range + Hot Vol + Meaningful Change (Trend Genesis Day)",
     }
 }
 
