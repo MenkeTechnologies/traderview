@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, validateInputs, buildBody, localEvaluate,
@@ -25,25 +26,25 @@ export async function renderRiskOnOff(mount, _appState) {
             <h2 data-i18n="view.risk_on_off.h2.snapshot">Cross-asset snapshot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.risk_on_off.label.spy">SPY change %  (decimal — 0.01 = +1%)</span>
-                    <input id="ro-spy" type="number" step="any" value="${state.spy_change_pct}"></label>
+                    <input id="ro-spy" type="number" step="any" value="${state.spy_change_pct}" data-tip="view.risk_on_off.tip.spy"></label>
                 <label><span data-i18n="view.risk_on_off.label.gold">Gold change %</span>
-                    <input id="ro-gold" type="number" step="any" value="${state.gold_change_pct}"></label>
+                    <input id="ro-gold" type="number" step="any" value="${state.gold_change_pct}" data-tip="view.risk_on_off.tip.gold"></label>
                 <label><span data-i18n="view.risk_on_off.label.dxy">DXY change %</span>
-                    <input id="ro-dxy" type="number" step="any" value="${state.dxy_change_pct}"></label>
+                    <input id="ro-dxy" type="number" step="any" value="${state.dxy_change_pct}" data-tip="view.risk_on_off.tip.dxy"></label>
                 <label><span data-i18n="view.risk_on_off.label.yields">10Y yield Δbps</span>
-                    <input id="ro-yld" type="number" step="any" value="${state.ten_year_yield_bps_change}"></label>
+                    <input id="ro-yld" type="number" step="any" value="${state.ten_year_yield_bps_change}" data-tip="view.risk_on_off.tip.yields"></label>
                 <button data-i18n="view.risk_on_off.btn.evaluate" id="ro-run" class="primary"
-                        data-tip="view.risk_on_off.tip.evaluate" type="button">Evaluate</button>
+                        data-tip="view.risk_on_off.tip.evaluate" data-shortcut="risk_on_off_run" type="button">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.risk_on_off.btn.demo_full_on"   id="ro-demo-on"      class="secondary" type="button">Demo: FULL risk-ON</button>
-                <button data-i18n="view.risk_on_off.btn.demo_full_off"  id="ro-demo-off"     class="secondary" type="button">Demo: FULL risk-OFF</button>
-                <button data-i18n="view.risk_on_off.btn.demo_maj_off"   id="ro-demo-majoff"  class="secondary" type="button">Demo: majority off</button>
-                <button data-i18n="view.risk_on_off.btn.demo_mixed"     id="ro-demo-mix"     class="secondary" type="button">Demo: mixed → neutral</button>
-                <button data-i18n="view.risk_on_off.btn.demo_flat"      id="ro-demo-flat"    class="secondary" type="button">Demo: flat tape</button>
-                <button data-i18n="view.risk_on_off.btn.demo_minority"  id="ro-demo-min"     class="secondary" type="button">Demo: 1 signal (still neutral)</button>
-                <button data-i18n="view.risk_on_off.btn.demo_noisy"     id="ro-demo-noisy"   class="secondary" type="button">Demo: noisy SPY (still ON)</button>
-                <button data-i18n="view.risk_on_off.btn.demo_bond"      id="ro-demo-bond"    class="secondary" type="button">Demo: bond rally (off)</button>
+                <button data-i18n="view.risk_on_off.btn.demo_full_on"   id="ro-demo-on"      class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_on">Demo: FULL risk-ON</button>
+                <button data-i18n="view.risk_on_off.btn.demo_full_off"  id="ro-demo-off"     class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_off">Demo: FULL risk-OFF</button>
+                <button data-i18n="view.risk_on_off.btn.demo_maj_off"   id="ro-demo-majoff"  class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_majoff">Demo: majority off</button>
+                <button data-i18n="view.risk_on_off.btn.demo_mixed"     id="ro-demo-mix"     class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_mix">Demo: mixed → neutral</button>
+                <button data-i18n="view.risk_on_off.btn.demo_flat"      id="ro-demo-flat"    class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_flat">Demo: flat tape</button>
+                <button data-i18n="view.risk_on_off.btn.demo_minority"  id="ro-demo-min"     class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_min">Demo: 1 signal (still neutral)</button>
+                <button data-i18n="view.risk_on_off.btn.demo_noisy"     id="ro-demo-noisy"   class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_noisy">Demo: noisy SPY (still ON)</button>
+                <button data-i18n="view.risk_on_off.btn.demo_bond"      id="ro-demo-bond"    class="secondary" type="button" data-tip="view.risk_on_off.tip.demo_bond">Demo: bond rally (off)</button>
             </div>
             <p data-i18n="view.risk_on_off.hint.about" class="muted">Heuristic regime: SPY direction +1, Gold inverse +1, DXY inverse +1, Yields +1 (positive correlation). Score ≥ +2 = ON; ≤ -2 = OFF; else neutral. Noise floor 0.1% / ±1bp.</p>
         </div>
@@ -93,7 +94,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.risk_on_off.toast.invalid'), { level: 'warning' }); return; }
     const local = localEvaluate(state);
     renderSummary(local, true);
     renderBreakdown();
@@ -102,11 +103,15 @@ async function compute(tok) {
         resp = await api.calcRiskOnOff(buildBody(state));
     } catch (e) {
         showErr(`${t('view.risk_on_off.err.api')}: ${e.message || e}`);
+        showToast(t('view.risk_on_off.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderBreakdown();
+    const regime = String(resp.regime || '');
+    const level = regime === 'risk-off' ? 'warning' : regime === 'risk-on' ? 'success' : 'info';
+    showToast(t('view.risk_on_off.toast.evaluated', { regime, score: resp.score }), { level });
 }
 
 function renderSummary(report, pending) {
