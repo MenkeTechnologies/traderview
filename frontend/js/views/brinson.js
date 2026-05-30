@@ -54,6 +54,11 @@ export async function renderBrinson(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.brinson.h2.cum_chart">Cumulative total effect (A + S + I) per sector</h2>
+            <div id="br-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.brinson.h2.table">Per-sector decomposition</h2>
             <div id="br-table"></div>
         </div>
@@ -95,6 +100,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.brinson.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart(local);
+    renderCumChart(local);
     renderTable(local);
     let resp;
     try {
@@ -107,6 +113,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.brinson.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderCumChart(resp);
     renderTable(resp);
 }
 
@@ -181,6 +188,44 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, allocs, sels, inters], el);
+}
+
+function renderCumChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('br-cum-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const rows = report.per_sector.map((eff, i) => enrichSector(state.inputs[i], eff));
+    if (rows.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.brinson.empty_cum">${esc(t('view.brinson.empty_cum'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.total_effect - a.total_effect);
+    const xs = rows.map((_, i) => i);
+    let acc = 0;
+    const cum = rows.map(r => { acc += r.total_effect * 10_000; return acc; });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: {} },
+        series: [
+            { label: t('chart.series.rank') },
+            { label: t('view.brinson.chart.cum_bps'),
+              stroke: '#7af0a8', width: 1.5, points: { show: true, size: 5 } },
+            { label: t('view.brinson.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => {
+                  const i = Math.trunc(v);
+                  return i >= 0 && i < rows.length ? rows[i].sector : '';
+              }) },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + ' bps') },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderTable(report) {

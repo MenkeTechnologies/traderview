@@ -420,6 +420,8 @@ const PRESETS = [
     { id: 'pct52w_mid_lower_hot_vol_up', label: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.label'), desc: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.desc') },
     { id: 'orderly_mid_range_rally', label: t('view.scanners.preset.orderly_mid_range_rally.label'), desc: t('view.scanners.preset.orderly_mid_range_rally.desc') },
     { id: 'orderly_mid_range_pullback', label: t('view.scanners.preset.orderly_mid_range_pullback.label'), desc: t('view.scanners.preset.orderly_mid_range_pullback.desc') },
+    { id: 'strong_breakout_day', label: t('view.scanners.preset.strong_breakout_day.label'), desc: t('view.scanners.preset.strong_breakout_day.desc') },
+    { id: 'strong_breakdown_day', label: t('view.scanners.preset.strong_breakdown_day.label'), desc: t('view.scanners.preset.strong_breakdown_day.desc') },
 ];
 
 export async function renderScanners(mount) {

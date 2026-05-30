@@ -538,6 +538,8 @@ pub enum Preset {
     Pct52wMidLowerHotVolUp,         // year_low_pct between 10 and 30 AND change_pct > 3 AND rel_volume >= 2 — mid-lower 52w + big up + hot vol (rally in downtrend)
     OrderlyMidRangeRally,           // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct > 1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + up move + normal vol (orderly rally in middle)
     OrderlyMidRangePullback,        // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct < -1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + down move + normal vol (orderly pullback in middle)
+    StrongBreakoutDay,              // year_high_pct > -5 AND gap_pct > 2 AND change_pct > 2 AND rel_volume >= 2 — near 52w high + gap up + green close + hot vol (strong breakout day)
+    StrongBreakdownDay,             // year_low_pct < 5 AND gap_pct < -2 AND change_pct < -2 AND rel_volume >= 2 — near 52w low + gap down + red close + hot vol (strong breakdown day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2789,6 +2791,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.8
                 && hit.rel_volume <= 1.5
         }
+        Preset::StrongBreakoutDay => {
+            hit.year_high_pct > -5.0
+                && hit.gap_pct > 2.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::StrongBreakdownDay => {
+            hit.year_low_pct < 5.0
+                && hit.gap_pct < -2.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -3217,6 +3231,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wMidLowerHotVolUp => "Mid-Lower 52w + Big Up + Hot Vol (Downtrend Rally)",
         Preset::OrderlyMidRangeRally => "Orderly Mid-Range Rally (Symmetric 52w, Normal Vol)",
         Preset::OrderlyMidRangePullback => "Orderly Mid-Range Pullback (Symmetric 52w, Normal Vol)",
+        Preset::StrongBreakoutDay => "Strong Breakout Day (Near 52w High, Big Gap & Change)",
+        Preset::StrongBreakdownDay => "Strong Breakdown Day (Near 52w Low, Big Gap & Change)",
     }
 }
 
