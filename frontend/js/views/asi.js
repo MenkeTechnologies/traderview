@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_LIMIT_MOVE,
@@ -32,19 +33,20 @@ export async function renderAsi(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.asi.label.limit_move">Limit move</span>
-                    <input id="as-limit" type="number" step="0.5" min="0.0001" value="${state.limit_move}"></label>
+                    <input id="as-limit" type="number" step="0.5" min="0.0001" value="${state.limit_move}"
+                           data-tip="view.asi.tip.limit_move"></label>
                 <button data-i18n="view.asi.btn.compute" id="as-run" class="primary"
-                        data-tip="view.asi.tip.compute" type="button">Compute</button>
+                        data-tip="view.asi.tip.compute" data-shortcut="asi_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.asi.btn.demo_up"      id="as-d1" class="secondary" type="button">Demo: uptrend</button>
-                <button data-i18n="view.asi.btn.demo_down"    id="as-d2" class="secondary" type="button">Demo: downtrend</button>
-                <button data-i18n="view.asi.btn.demo_side"    id="as-d3" class="secondary" type="button">Demo: sideways</button>
-                <button data-i18n="view.asi.btn.demo_rev_up"  id="as-d4" class="secondary" type="button">Demo: reversal up</button>
-                <button data-i18n="view.asi.btn.demo_rev_dn"  id="as-d5" class="secondary" type="button">Demo: reversal down</button>
-                <button data-i18n="view.asi.btn.demo_wide"    id="as-d6" class="secondary" type="button">Demo: wide bars</button>
-                <button data-i18n="view.asi.btn.demo_tight"   id="as-d7" class="secondary" type="button">Demo: tight limit (1)</button>
-                <button data-i18n="view.asi.btn.demo_doji"    id="as-d8" class="secondary" type="button">Demo: doji-only</button>
+                <button data-i18n="view.asi.btn.demo_up"      id="as-d1" class="secondary" data-tip="view.asi.tip.demo_up"     type="button">Demo: uptrend</button>
+                <button data-i18n="view.asi.btn.demo_down"    id="as-d2" class="secondary" data-tip="view.asi.tip.demo_down"   type="button">Demo: downtrend</button>
+                <button data-i18n="view.asi.btn.demo_side"    id="as-d3" class="secondary" data-tip="view.asi.tip.demo_side"   type="button">Demo: sideways</button>
+                <button data-i18n="view.asi.btn.demo_rev_up"  id="as-d4" class="secondary" data-tip="view.asi.tip.demo_rev_up" type="button">Demo: reversal up</button>
+                <button data-i18n="view.asi.btn.demo_rev_dn"  id="as-d5" class="secondary" data-tip="view.asi.tip.demo_rev_dn" type="button">Demo: reversal down</button>
+                <button data-i18n="view.asi.btn.demo_wide"    id="as-d6" class="secondary" data-tip="view.asi.tip.demo_wide"   type="button">Demo: wide bars</button>
+                <button data-i18n="view.asi.btn.demo_tight"   id="as-d7" class="secondary" data-tip="view.asi.tip.demo_tight"  type="button">Demo: tight limit (1)</button>
+                <button data-i18n="view.asi.btn.demo_doji"    id="as-d8" class="secondary" data-tip="view.asi.tip.demo_doji"   type="button">Demo: doji-only</button>
             </div>
             <p data-i18n="view.asi.hint.about" class="muted">Wilder's cumulative Swing Index: quantifies "real" price moves with OHLC + prior bar reference. ASI breakouts of prior extremes confirm genuine trend changes. limit_move is the market's max allowed per-bar move (Wilder used futures limits; ~10% of prior close for equities).</p>
         </div>
@@ -90,6 +92,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.asi.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.asi.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -101,7 +104,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.asi.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.limit_move);
     renderSummary(local, true);
     renderChart(local);
@@ -112,14 +115,16 @@ async function compute(tok) {
         resp = await api.anlyAccumulationSwingIndex(buildBody(state));
     } catch (e) {
         showErr(`${t('view.asi.err.api')}: ${e.message || e}`);
+        showToast(t('view.asi.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.asi.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.asi.err.server_rejected')); showToast(t('view.asi.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderSiChart(resp);
     renderStats();
+    showToast(t('view.asi.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(asi, pending) {
