@@ -238,6 +238,8 @@ pub enum Preset {
     BounceFromMidSqueeze,        // change_pct between 0.5 and 2 AND lod_dist.abs() > 1.5 AND year_low_pct <= 10 — orderly bounce from lows
     NarrowGapHotCloseSqueeze,    // |gap_pct| < 0.2 AND year_high_pct >= -2 AND day_pct.abs() < 0.5 — no-gap close at 52w high
     NarrowGapColdCloseSqueeze,   // |gap_pct| < 0.2 AND year_low_pct <= 2 AND day_pct.abs() < 0.5 — no-gap close at 52w low
+    AbsorptionUpSqueeze,         // change_pct 0.5-2 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy buying absorbed without breakout
+    AbsorptionDownSqueeze,       // change_pct -2 to -0.5 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy selling absorbed without breakdown
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -850,6 +852,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 2.0
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::AbsorptionUpSqueeze => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 2.0
+                && hit.rel_volume >= 2.0
+                && hit.day_pct.abs() < 1.0
+        }
+        Preset::AbsorptionDownSqueeze => {
+            hit.change_pct <= -0.5
+                && hit.change_pct >= -2.0
+                && hit.rel_volume >= 2.0
+                && hit.day_pct.abs() < 1.0
+        }
     }
 }
 
@@ -978,6 +992,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BounceFromMidSqueeze => "Bounce-From-Mid Squeeze",
         Preset::NarrowGapHotCloseSqueeze => "Narrow-Gap Hot-Close Squeeze",
         Preset::NarrowGapColdCloseSqueeze => "Narrow-Gap Cold-Close Squeeze",
+        Preset::AbsorptionUpSqueeze => "Absorption-Up Squeeze",
+        Preset::AbsorptionDownSqueeze => "Absorption-Down Squeeze",
     }
 }
 

@@ -109,6 +109,11 @@ export async function renderPaper(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.unrealized_chart">Unrealized P&L per open position</h2>
+            <div id="paper-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.order_history">Order history</h2>
             ${orders.length ? `<table class="trades">
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
@@ -126,6 +131,8 @@ export async function renderPaper(mount) {
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_orders_yet" class="muted">No orders yet.</p>'}
         </div>
     `;
+
+    renderUnrealizedChart(positions, quotes);
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -151,4 +158,44 @@ export async function renderPaper(mount) {
         if (!viewIsCurrent(tok)) return;
         renderPaper(mount);
     });
+}
+
+function renderUnrealizedChart(positions, quotes) {
+    const el = document.getElementById('paper-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (positions || []).map(p => {
+        const q = quotes[p.symbol];
+        if (!q) return null;
+        const u = (Number(q.price) - Number(p.avg_price)) * Number(p.qty);
+        return Number.isFinite(u) ? { symbol: p.symbol, u } : null;
+    }).filter(Boolean);
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.paper.empty_chart">${esc(t('view.paper.empty_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => b.u - a.u);
+    const labels = pts.map(p => p.symbol);
+    const ys = pts.map(p => p.u);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.paper.chart.symbol_idx') },
+            { label: t('view.paper.chart.unrealized'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.paper.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
