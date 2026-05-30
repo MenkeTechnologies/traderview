@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('walking-up') };
 let chart = null;
+let zoneChart = null;
 
 export async function renderBbPercentB(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderBbPercentB(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bbpb.h2.chart">%B series</h2>
             <div id="pb-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bbpb.h2.zone_chart">Zone classification per bar (+1 / 0 / −1)</h2>
+            <div id="pb-zone-chart" style="width:100%;height:200px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.period, state.n_stdev);
     renderSummary(local, true);
     renderChart(local);
+    renderZoneChart(local);
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.bbpb.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderZoneChart(resp);
     renderStats();
 }
 
@@ -170,6 +178,37 @@ function renderChart(pb) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderZoneChart(pb) {
+    const el = document.getElementById('pb-zone-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(pb) || pb.length === 0) { el.innerHTML = ''; return; }
+    const xs = pb.map((_, i) => i);
+    const zone = pb.map(v => {
+        if (v == null || !Number.isFinite(v)) return null;
+        if (v >= 0.8) return 1;
+        if (v <= 0.2) return -1;
+        return 0;
+    });
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 180,
+        scales: { x: { time: false }, y: { range: [-1.5, 1.5] } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.bbpb.series.zone'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 5, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.bbpb.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (zoneChart) { try { zoneChart.destroy(); } catch {} zoneChart = null; }
+    zoneChart = new window.uPlot(opts, [xs, zone, zero], el);
 }
 
 function renderStats() {

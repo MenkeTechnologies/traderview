@@ -502,6 +502,8 @@ pub enum Preset {
     FallingWedgeCoil,               // hod_dist + lod_dist < 2 AND change_pct < 0 AND day_pct < 0 AND rel_volume < 0.8 — narrow range + red change + red intraday + dry vol (falling wedge consolidation)
     BigGapAndExtend,                // gap_pct.abs() > 3 AND change_pct * gap_pct > 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday extends beyond gap on vol (gap-and-extend)
     BigGapAndReverse,               // gap_pct.abs() > 3 AND change_pct * gap_pct < 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday reverses + close past prior close on vol (full gap fade and reverse)
+    EfficientMoverHotVol,           // rel_volume >= 1.5 AND change_pct.abs() >= rel_volume * 1.5 — change-per-vol elevated (efficient mover; clean trend day)
+    InefficientChurnHotVol,         // rel_volume >= 2 AND change_pct.abs() < rel_volume * 0.3 — hot vol but tiny change relative to vol (inefficient churn; failed trend or absorption)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2533,6 +2535,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > hit.gap_pct.abs()
                 && hit.rel_volume >= 1.5
         }
+        Preset::EfficientMoverHotVol => {
+            hit.rel_volume >= 1.5
+                && hit.change_pct.abs() >= hit.rel_volume * 1.5
+        }
+        Preset::InefficientChurnHotVol => {
+            hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < hit.rel_volume * 0.3
+        }
     }
 }
 
@@ -2925,6 +2935,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FallingWedgeCoil => "Falling Wedge Coil (Narrow Range, Red, Dry Vol)",
         Preset::BigGapAndExtend => "Big Gap + Intraday Extends Beyond (Trend Continuation)",
         Preset::BigGapAndReverse => "Big Gap + Intraday Reverses Past Prior (Full Reverse)",
+        Preset::EfficientMoverHotVol => "Efficient Mover (|change| ≥ 1.5×rel_vol, Clean Trend)",
+        Preset::InefficientChurnHotVol => "Inefficient Churn (|change| < 0.3×rel_vol, Absorption)",
     }
 }
 
