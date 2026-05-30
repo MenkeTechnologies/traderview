@@ -69,6 +69,11 @@ export async function renderBondDuration(mount, _appState) {
             <p data-i18n="view.bond_duration.hint.sensitivity" class="muted">Linear approximation only — for large yield moves convexity dominates. Good enough for ±100 bps shocks on intermediate paper.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.bond_duration.h2.cf_chart">Cash flows over time</h2>
+            <div id="bd-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="bd-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -124,6 +129,7 @@ async function compute(tok) {
     const local = localCompute(state.cash_flows, state.ytm, state.compounding_per_year);
     renderSummary(local, true);
     renderSensitivity(local);
+    renderCfChart();
     let resp;
     try {
         resp = await api.calcBondDuration(buildBody(
@@ -135,6 +141,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderSensitivity(resp);
+    renderCfChart();
 }
 
 function renderSummary(report, pending) {
@@ -189,6 +196,38 @@ function renderSensitivity(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderCfChart() {
+    const el = document.getElementById('bd-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const cfs = Array.isArray(state.cash_flows) ? state.cash_flows : [];
+    const finite = cfs.filter(cf => Number.isFinite(cf.time_years) && Number.isFinite(cf.amount));
+    if (finite.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bond_duration.empty_chart">${esc(t('view.bond_duration.empty_chart'))}</div>`;
+        return;
+    }
+    // Sort by time_years for monotonic x-axis.
+    const sorted = [...finite].sort((a, b) => a.time_years - b.time_years);
+    const xs = sorted.map(cf => cf.time_years);
+    const ys = sorted.map(cf => cf.amount);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.bond_duration.chart.years') },
+            { label: t('view.bond_duration.chart.cf_amount'),
+              stroke: '#00e5ff', width: 1.0,
+              fill: 'rgba(0,229,255,0.10)',
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function card(label, value, cls = '') {
