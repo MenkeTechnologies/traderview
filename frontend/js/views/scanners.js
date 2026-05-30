@@ -342,6 +342,8 @@ const PRESETS = [
     { id: 'organic_down_day_close_at_lod', label: t('view.scanners.preset.organic_down_day_close_at_lod.label'), desc: t('view.scanners.preset.organic_down_day_close_at_lod.desc') },
     { id: 'strong_day_dry_vol_up', label: t('view.scanners.preset.strong_day_dry_vol_up.label'), desc: t('view.scanners.preset.strong_day_dry_vol_up.desc') },
     { id: 'strong_day_dry_vol_down', label: t('view.scanners.preset.strong_day_dry_vol_down.label'), desc: t('view.scanners.preset.strong_day_dry_vol_down.desc') },
+    { id: 'tight_coil_at_mid_range', label: t('view.scanners.preset.tight_coil_at_mid_range.label'), desc: t('view.scanners.preset.tight_coil_at_mid_range.desc') },
+    { id: 'wide_outside_range_dry_vol', label: t('view.scanners.preset.wide_outside_range_dry_vol.label'), desc: t('view.scanners.preset.wide_outside_range_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

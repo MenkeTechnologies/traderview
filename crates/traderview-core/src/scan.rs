@@ -460,6 +460,8 @@ pub enum Preset {
     OrganicDownDayCloseAtLod,    // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.3 AND day_pct < -2 AND rel_volume between 0.7 and 1.3 — flat open + close at LOD + weak day on avg vol (organic down-day)
     StrongDayDryVolUp,           // change_pct > 3 AND day_pct > 2 AND rel_volume < 0.5 — strong up day on dry vol (no participation; suspect-quality rally)
     StrongDayDryVolDown,         // change_pct < -3 AND day_pct < -2 AND rel_volume < 0.5 — strong down day on dry vol (no participation; suspect-quality flush)
+    TightCoilAtMidRange,         // hod_dist 0.5-1.5 AND lod_dist 0.5-1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — tight coil at center of intraday range on dry vol (pre-breakout setup)
+    WideOutsideRangeDryVol,      // hod_dist + lod_dist > 6 AND rel_volume < 0.6 — wide outside range on dry vol (one-sided liquidation; no follow-through)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2252,6 +2254,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -2.0
                 && hit.rel_volume < 0.5
         }
+        Preset::TightCoilAtMidRange => {
+            hit.hod_dist_pct.abs() >= 0.5
+                && hit.hod_dist_pct.abs() <= 1.5
+                && hit.lod_dist_pct.abs() >= 0.5
+                && hit.lod_dist_pct.abs() <= 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+        }
+        Preset::WideOutsideRangeDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.rel_volume < 0.6
+        }
     }
 }
 
@@ -2602,6 +2616,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OrganicDownDayCloseAtLod => "Organic Down Day, Close at LOD",
         Preset::StrongDayDryVolUp => "Strong Up Day, Dry Vol (Suspect Rally)",
         Preset::StrongDayDryVolDown => "Strong Down Day, Dry Vol (Suspect Flush)",
+        Preset::TightCoilAtMidRange => "Tight Coil at Mid-Range, Dry Vol",
+        Preset::WideOutsideRangeDryVol => "Wide Outside Range, Dry Vol (One-Sided Liquidation)",
     }
 }
 

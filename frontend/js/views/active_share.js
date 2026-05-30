@@ -53,6 +53,11 @@ export async function renderActiveShare(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.act_share.h2.weights_chart">Portfolio vs benchmark weights per name</h2>
+            <div id="as-w-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.act_share.h2.table">Per-name breakdown</h2>
             <div id="as-table"></div>
         </div>
@@ -94,6 +99,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.act_share.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderWeightsChart();
     renderTable();
     let resp;
     try {
@@ -106,6 +112,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.act_share.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderWeightsChart();
     renderTable();
 }
 
@@ -169,6 +176,45 @@ function renderChart() {
         ],
         legend: { show: true },
     }, [xs, diffsPct], el);
+}
+
+function renderWeightsChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('as-w-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const enriched = state.weights.map(enrich);
+    if (enriched.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.act_share.empty_w_chart">${esc(t('view.act_share.empty_w_chart'))}</div>`;
+        return;
+    }
+    enriched.sort((a, b) => b.portfolio_weight - a.portfolio_weight);
+    const xs = enriched.map((_, i) => i);
+    const port = enriched.map(r => r.portfolio_weight * 100);
+    const bench = enriched.map(r => r.benchmark_weight * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.rank') },
+            { label: t('view.act_share.chart.port_w'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 9, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.act_share.chart.bench_w'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 7, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => {
+                  const i = Math.trunc(v);
+                  return i >= 0 && i < enriched.length ? enriched[i].symbol : '';
+              }) },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, port, bench], el);
 }
 
 function renderTable() {
