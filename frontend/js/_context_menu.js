@@ -157,6 +157,16 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Custom-indicator-row context items. Right-click on a <tr data-
+// context-scope="custom-indicator-row" data-id="X" data-name="Y"
+// data-definition="<json>"> shows: Copy JSON definition / Delete.
+export const CUSTOM_INDICATOR_ROW_ITEMS = [
+    { id: 'ci_row_copy_def', labelKey: 'ctxmenu.ci_row_copy_def',
+      actionKey: 'tv:ci-row-copy-def', section: 'indicator' },
+    { id: 'ci_row_delete',   labelKey: 'ctxmenu.ci_row_delete',
+      actionKey: 'tv:ci-row-delete',   section: 'indicator' },
+];
+
 // Hotkey-row context items. Right-click on a <tr data-context-scope=
 // "hotkey-row" data-id="X" data-combo="ctrl+shift+J"> shows: Copy
 // combo / Delete. Delete uses tConfirm to replace the silent inline
@@ -277,6 +287,7 @@ export const ALL_SCOPED_ITEMS = [
     ['position-row',           POSITION_ROW_ITEMS],
     ['alert-rule-row',         ALERT_RULE_ROW_ITEMS],
     ['hotkey-row',             HOTKEY_ROW_ITEMS],
+    ['custom-indicator-row',   CUSTOM_INDICATOR_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

@@ -275,6 +275,35 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Custom-indicator-row actions — read data-id / data-name / data-definition.
+    window.addEventListener('tv:ci-row-copy-def', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const def = tgt && tgt.dataset && tgt.dataset.definition;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || '';
+        if (!def) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(def).then(
+                () => showToast(t('toast.copied', { what: name || 'definition' }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:ci-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.ci_row_delete_confirm', { name }, { level: 'danger' })) return;
+            try {
+                await api.deleteCustomIndicator(id);
+                showToast(t('toast.ci_deleted', { name }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Hotkey-row actions — read data-id / data-combo.
     window.addEventListener('tv:hk-row-copy-combo', (e) => {
         const tgt = e.detail && e.detail.target;

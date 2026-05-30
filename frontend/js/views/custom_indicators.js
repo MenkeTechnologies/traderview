@@ -111,7 +111,10 @@ async function refresh(mount, tok) {
         el2.innerHTML = `<table class="trades">
             <thead><tr><th data-i18n="view.custom_indicators.th.name">Name</th><th data-i18n="view.custom_indicators.th.definition">Definition</th><th data-i18n="view.custom_indicators.th.color">Color</th><th data-i18n="view.custom_indicators.th.default">Default</th><th></th></tr></thead>
             <tbody>
-            ${rows.map(r => `<tr>
+            ${rows.map(r => `<tr data-context-scope="custom-indicator-row"
+                                  data-id="${esc(r.id)}"
+                                  data-name="${esc(r.name)}"
+                                  data-definition="${esc(JSON.stringify(r.definition))}">
                 <td>${esc(r.name)}</td>
                 <td class="small"><code>${esc(JSON.stringify(r.definition))}</code></td>
                 <td><span style="display:inline-block;width:16px;height:16px;background:${esc(r.color)};border-radius:2px;border:1px solid var(--border);"></span></td>
