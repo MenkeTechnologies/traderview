@@ -818,6 +818,8 @@ pub enum Preset {
     GapFadeBearDayPctOpposite,           // gap_pct > 2 AND day_pct < -3 AND change_pct < 0 AND rel_volume >= 1.5 — gap up + closed down from open + net red + hot vol (full gap-up fade rejection: opened higher, sold off intraday and closed below prior close; trapped overnight longs flushed during regular hours)
     DayPctBigGreenChangeFlat,            // day_pct > 4 AND change_pct.abs() < 0.5 AND gap_pct < -3 AND rel_volume >= 1.5 — big intraday drive up + flat net close + big overnight gap down + hot vol (full gap-down recovery: opened way below prior close, rallied hard intraday and finished flat for the session; intraday short-cover squeeze fully unwound the overnight drop)
     DayPctBigRedChangeFlat,              // day_pct < -4 AND change_pct.abs() < 0.5 AND gap_pct > 3 AND rel_volume >= 1.5 — big intraday drive down + flat net close + big overnight gap up + hot vol (full gap-up rejection: opened way above prior close, sold off intraday and finished flat for the session; intraday long-liquidation fully unwound the overnight pop)
+    Year52HighBreakoutOpenDriveHotVol,   // year_high_pct < 0 AND day_pct > 3 AND change_pct > 4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w high + big intraday drive from open + no overnight gap + hot vol (intraday breakout to new 52w high built entirely in regular hours with no overnight aid; pure conviction breakout day)
+    Year52LowBreakdownOpenDriveHotVol,   // year_low_pct < 0 AND day_pct < -3 AND change_pct < -4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w low + big intraday drive from open + no overnight gap + hot vol (intraday breakdown to new 52w low built entirely in regular hours with no overnight aid; pure conviction breakdown day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4703,6 +4705,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct > 3.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighBreakoutOpenDriveHotVol => {
+            hit.year_high_pct < 0.0
+                && hit.day_pct > 3.0
+                && hit.change_pct > 4.0
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowBreakdownOpenDriveHotVol => {
+            hit.year_low_pct < 0.0
+                && hit.day_pct < -3.0
+                && hit.change_pct < -4.0
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5411,6 +5427,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapFadeBearDayPctOpposite => "Gap Up + Closed Down from Open + Net Red + Hot Vol (Full Gap-up Fade Rejection: Opened Higher, Sold off Intraday and Closed below Prior Close; Trapped Overnight Longs Flushed during Regular Hours)",
         Preset::DayPctBigGreenChangeFlat => "Big Intraday Drive Up + Flat Net Close + Big Overnight Gap Down + Hot Vol (Full Gap-down Recovery: Opened Way below Prior Close, Rallied Hard Intraday and Finished Flat for the Session; Intraday Short-cover Squeeze Fully Unwound the Overnight Drop)",
         Preset::DayPctBigRedChangeFlat => "Big Intraday Drive Down + Flat Net Close + Big Overnight Gap Up + Hot Vol (Full Gap-up Rejection: Opened Way above Prior Close, Sold off Intraday and Finished Flat for the Session; Intraday Long-liquidation Fully Unwound the Overnight Pop)",
+        Preset::Year52HighBreakoutOpenDriveHotVol => "New 52w High + Big Intraday Drive from Open + No Overnight Gap + Hot Vol (Intraday Breakout to New 52w High Built Entirely in Regular Hours with No Overnight Aid; Pure Conviction Breakout Day)",
+        Preset::Year52LowBreakdownOpenDriveHotVol => "New 52w Low + Big Intraday Drive from Open + No Overnight Gap + Hot Vol (Intraday Breakdown to New 52w Low Built Entirely in Regular Hours with No Overnight Aid; Pure Conviction Breakdown Day)",
     }
 }
 

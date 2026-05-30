@@ -30,6 +30,11 @@ export async function renderTradeReviews(mount, state) {
             <h2 data-i18n="view.trade_reviews.h2.setup_chart">Reviews by setup tag</h2>
             <div id="tr-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_reviews.h2.mood_chart">Mood-at-exit distribution across recent reviews</h2>
+            <div id="tr-mood-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.trade_reviews.hint.mood_chart" class="muted small">Count of reviews per mood value (awful → great). Orthogonal to setup-tag distribution: reveals the emotional pattern of recent reviewed trades, independent of which setups they were.</p>
+        </div>
     `;
     await refresh(acct.id, mount, tok);
 }
@@ -46,6 +51,7 @@ async function refresh(accountId, mount, tok) {
         renderInbox(needed, accountId, mount, tok);
         renderHistory(history, mount);
         renderSetupChart(history);
+        renderMoodChart(history);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const inbox = mount.querySelector('#tr-inbox');
@@ -210,6 +216,37 @@ function renderHistory(rows, mount) {
             </tbody>
         </table>
     </div>`;
+}
+
+function renderMoodChart(rows) {
+    const el = document.getElementById('tr-mood-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.mood_at_exit)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_reviews.empty_mood_chart">${esc(t('view.trade_reviews.empty_mood_chart'))}</div>`;
+        return;
+    }
+    const labels = MOOD_OPTS.map(([, k]) => moodLabel(k));
+    const ys = MOOD_OPTS.map(([v]) =>
+        valid.filter(r => Number(r.mood_at_exit) === v).length);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_reviews.chart.mood_idx') },
+            { label: t('view.trade_reviews.chart.count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSetupChart(rows) {
