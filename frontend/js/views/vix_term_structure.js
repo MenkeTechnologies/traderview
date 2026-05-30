@@ -58,6 +58,12 @@ export async function renderVixTermStructure(mount, _appState) {
             <div id="vix-contrib"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.vix_term_structure.h2.premium_chart">% premium/discount vs VIX front-month</h2>
+            <div id="vix-premium-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vix_term_structure.hint.premium_chart" class="muted small">Each tenor's IV as a percentage premium or discount to the VIX front month. Reveals curve shape independent of absolute level — useful when comparing low-vol vs high-vol regimes. Yellow dashed = VIX front (zero premium).</p>
+        </div>
+
         <div id="vix-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -89,6 +95,7 @@ async function compute(tok) {
     const local = localAnalyze(state);
     renderSummary(local, true);
     renderChart();
+    renderPremiumChart();
     renderContrib();
     let resp;
     try {
@@ -101,6 +108,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart();
+    renderPremiumChart();
     renderContrib();
     const st = String(resp.state || '');
     const ratio = Number(resp.vix_to_vix3m_ratio || 0).toFixed(3);
@@ -161,6 +169,44 @@ function renderChart() {
         ],
         legend: { show: false },
     }, [xs, ys], el);
+}
+
+function renderPremiumChart() {
+    const el = document.getElementById('vix-premium-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const front = Number(state.vix);
+    if (!Number.isFinite(front) || front <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vix_term_structure.empty_premium_chart">${esc(t('view.vix_term_structure.empty_premium_chart'))}</div>`;
+        return;
+    }
+    const labels = TENORS.map(k => k.toUpperCase());
+    const xs = TENORS.map(k => TENOR_DAYS[k]);
+    const ys = TENORS.map(k => {
+        const v = Number(state[k]);
+        return Number.isFinite(v) ? ((v - front) / front) * 100 : null;
+    });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vix_term_structure.chart.tenor_days') },
+            { label: t('view.vix_term_structure.chart.premium_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.vix_term_structure.chart.front_zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => Math.round(v) + 'd') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => (v > 0 ? '+' : '') + v.toFixed(1) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
+    void labels;
 }
 
 function renderContrib() {
