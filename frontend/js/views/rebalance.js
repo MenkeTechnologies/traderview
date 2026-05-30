@@ -185,9 +185,50 @@ function render(r, mount) {
             <h2 data-i18n="view.rebalance.h2.drift_chart">Drift % per position</h2>
             <div id="rb-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.rebalance.h2.trade_value_chart">Absolute trade $ value per position (signed)</h2>
+            <div id="rb-trade-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.rebalance.hint.trade_value" class="muted small">Signed dollar amount to trade per symbol. Positive = buy, negative = sell. Reveals absolute dollar magnitude of the rebalance independent of drift %.</p>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
     renderDriftChart(p.rows);
+    renderTradeValueChart(p.rows);
+}
+
+function renderTradeValueChart(rows) {
+    const el = document.getElementById('rb-trade-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.target_value)) && Number.isFinite(Number(r.current_value)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rebalance.empty_trade_chart">${esc(t('view.rebalance.empty_trade_chart'))}</div>`;
+        return;
+    }
+    const sorted = valid.slice().sort((a, b) => Math.abs(Number(b.target_value) - Number(b.current_value)) - Math.abs(Number(a.target_value) - Number(a.current_value)));
+    const labels = sorted.map(r => r.symbol);
+    const ys = sorted.map(r => Number(r.target_value) - Number(r.current_value));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.rebalance.chart.symbol_idx') },
+            { label: t('view.rebalance.chart.trade_value'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.rebalance.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderDriftChart(rows) {

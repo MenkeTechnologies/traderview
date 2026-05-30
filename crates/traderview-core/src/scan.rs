@@ -764,6 +764,8 @@ pub enum Preset {
     ExtremeGapBigContinuationHotVol,     // gap_pct.abs() > 5 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 2 — extreme gap + change EXCEEDS gap + hot vol (extreme gap that EXTENDED on volume; max-momentum continuation; >100% gap extension)
     BigGreenBigGapDryVol,                // change_pct > 5 AND gap_pct > 3 AND rel_volume < 0.8 — big green + big gap up + below-avg vol (huge gap-up that held without participation; suspect rally; possibly fake breakout or stealth squeeze in thin tape)
     BigRedBigGapDownDryVol,              // change_pct < -5 AND gap_pct < -3 AND rel_volume < 0.8 — big red + big gap down + below-avg vol (huge gap-down that held without participation; suspect breakdown; possibly forced-selling in thin tape or low-conviction capitulation)
+    SmoothBigGreenNormalVol,             // change_pct > 3 AND rel_volume in [1, 1.5] AND hod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big green + normal vol (1-1.5×) + close at HOD + no gap (orderly trend day; not parabolic, but conviction; sweet-spot entry signal)
+    SmoothBigRedNormalVol,               // change_pct < -3 AND rel_volume in [1, 1.5] AND lod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big red + normal vol + close at LOD + no gap (orderly down day; not panic, but conviction; sweet-spot entry for shorts)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4338,6 +4340,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < -3.0
                 && hit.rel_volume < 0.8
         }
+        Preset::SmoothBigGreenNormalVol => {
+            hit.change_pct > 3.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.5
+        }
+        Preset::SmoothBigRedNormalVol => {
+            hit.change_pct < -3.0
+                && hit.rel_volume >= 1.0
+                && hit.rel_volume <= 1.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.5
+        }
     }
 }
 
@@ -4992,6 +5008,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeGapBigContinuationHotVol => "Extreme Gap (>5%) + Change Exceeds Gap + Hot Vol (Max-momentum Continuation; >100% Gap Extension on Volume)",
         Preset::BigGreenBigGapDryVol => "Big Green + Big Gap Up + Dry Vol (Huge Gap Held Without Participation; Suspect Rally; Fake Breakout or Stealth Squeeze in Thin Tape)",
         Preset::BigRedBigGapDownDryVol => "Big Red + Big Gap Down + Dry Vol (Huge Gap Held Without Participation; Suspect Breakdown; Forced-selling or Low-conviction Capitulation in Thin Tape)",
+        Preset::SmoothBigGreenNormalVol => "Big Green + Normal Vol (1-1.5×) + Close at HOD + No Gap (Orderly Trend Day; Not Parabolic But Conviction; Sweet-spot Long)",
+        Preset::SmoothBigRedNormalVol => "Big Red + Normal Vol + Close at LOD + No Gap (Orderly Down Day; Not Panic But Conviction; Sweet-spot Short)",
     }
 }
 
