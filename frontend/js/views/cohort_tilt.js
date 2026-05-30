@@ -46,6 +46,11 @@ export async function renderCohortTilt(mount, _appState) {
             <div id="ct-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cohort_tilt.h2.ratio_chart">Long ratio by symbol (0=all short, 0.5=balanced, 1=all long)</h2>
+            <div id="ct-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ct-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -93,6 +98,41 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderBars(resp);
     renderTable(resp);
+    renderRatioChart(resp);
+}
+
+function renderRatioChart(report) {
+    const el = document.getElementById('ct-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report && report.by_symbol) ? report.by_symbol.filter(s => Number.isFinite(Number(s.long_ratio))) : [];
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cohort_tilt.empty_chart">${esc(t('view.cohort_tilt.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(s => s.symbol);
+    const ys = rows.map(s => Number(s.long_ratio));
+    const xs = labels.map((_, i) => i + 1);
+    const mid = xs.map(() => 0.5);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: false, range: [0, 1] } },
+        series: [
+            { label: t('view.cohort_tilt.chart.symbol_idx') },
+            { label: t('view.cohort_tilt.chart.long_ratio'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.cohort_tilt.chart.balanced'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, mid], el);
 }
 
 function renderSummary(report, pending) {

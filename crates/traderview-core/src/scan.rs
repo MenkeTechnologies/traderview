@@ -166,6 +166,8 @@ pub enum Preset {
     SilentBreakdownSetup,   // lod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_low_pct <= 5  — quiet edge of multi-month support
     GapDownNoFollowSqueeze, // gap_pct <= -1 AND change_pct >= -0.5 AND day_pct.abs() < 0.5 — gap down failing to extend
     GapUpNoFollowSqueeze,   // gap_pct >=  1 AND change_pct <=  0.5 AND day_pct.abs() < 0.5 — gap up failing to extend
+    UnchVolDryUpSqueeze,    // |change| < 0.1 AND rel_volume < 0.5 — unchanged on dried-up volume
+    NarrowAfterTrendSqueeze,// |day_pct| < 0.5 AND |change| >= 5 — narrow day after a big prior move
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -372,6 +374,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct <= 0.5
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::UnchVolDryUpSqueeze => {
+            hit.change_pct.abs() < 0.1 && hit.rel_volume < 0.5
+        }
+        Preset::NarrowAfterTrendSqueeze => {
+            hit.day_pct.abs() < 0.5 && hit.change_pct.abs() >= 5.0
+        }
     }
 }
 
@@ -428,6 +436,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SilentBreakdownSetup => "Silent Breakdown Setup",
         Preset::GapDownNoFollowSqueeze => "Gap-Down No-Follow Squeeze",
         Preset::GapUpNoFollowSqueeze => "Gap-Up No-Follow Squeeze",
+        Preset::UnchVolDryUpSqueeze => "Unch-Vol Dry-Up Squeeze",
+        Preset::NarrowAfterTrendSqueeze => "Narrow-After-Trend Squeeze",
     }
 }
 
