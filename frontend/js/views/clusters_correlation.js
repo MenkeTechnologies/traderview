@@ -51,6 +51,11 @@ export async function renderClustersCorrelation(mount, _appState) {
             <div id="cc-clusters"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.clusters_correlation.h2.net_exposure_chart">Net exposure per cluster</h2>
+            <div id="cc-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="cc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -96,6 +101,7 @@ async function compute(tok) {
     const local = localCluster(state.positions, state.correlations, state.threshold);
     renderSummary(local, true);
     renderClusters(local);
+    renderExposureChart(local);
     let resp;
     try {
         resp = await api.clustersCorrelation(buildBody(state.positions, state.correlations, state.threshold));
@@ -105,6 +111,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderClusters(resp);
+    renderExposureChart(resp);
 }
 
 function renderSummary(clusters, pending) {
@@ -170,6 +177,39 @@ function renderClusters(clusters) {
             </tbody>
         </table>
     `;
+}
+
+function renderExposureChart(clusters) {
+    const el = document.getElementById('cc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(clusters) || clusters.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.clusters_correlation.empty_chart">${esc(t('view.clusters_correlation.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = clusters.map((_, i) => i + 1);
+    const net = clusters.map(c => Number.isFinite(c.net_exposure) ? c.net_exposure : null);
+    const labels = clusters.map((_, i) => `c${i}`);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.clusters_correlation.chart.cluster_idx') },
+            { label: t('view.clusters_correlation.chart.net_exposure'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.clusters_correlation.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, net, zero], el);
 }
 
 function showErr(msg) {
