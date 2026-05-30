@@ -9629,6 +9629,7 @@
   "view.goals.h2.create_goal": "Create goal",
   "view.goals.btn.create": "Create",
   "view.goals.btn.delete": "Delete",
+  "view.goals.h2.all_accounts_suffix": " · all accounts",
   "view.goals.hint.no_goals_yet_create_one_above": "No goals yet — create one above.",
   "view.goals.opt.monthly": "monthly",
   "view.goals.opt.quarterly": "quarterly",

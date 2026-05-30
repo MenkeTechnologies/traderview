@@ -163,7 +163,7 @@ function card(p) {
     const targetPnl = g.target_pnl != null ? Number(g.target_pnl) : null;
     const targetWin = g.target_win_rate ? g.target_win_rate * 100 : null;
     const targetDD  = g.target_max_drawdown_pct ?? null;
-    const acct = g.account_id ? '' : ' · all accounts';
+    const acct = g.account_id ? '' : t('view.goals.h2.all_accounts_suffix');
     return `<div class="chart-panel" style="margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
             <h2 style="margin:0;">${esc(g.name)} <span class="muted small">${esc(g.period)} · ${g.start_date} → ${g.end_date}${acct}</span></h2>
