@@ -155,9 +155,9 @@ function renderFindings(f) {
     };
     return `
         <p style="font-size:14px;"><strong>${esc(f.summary || '')}</strong></p>
-        ${list('Mistakes', f.mistakes, 'neg')}
-        ${list('Risk gaps', f.risk_gaps, 'neg')}
-        ${list('Suggestions', f.suggestions)}
-        ${list('Rule changes', f.rule_changes, 'pos')}
+        ${list(t('view.journal_ai.list.mistakes'), f.mistakes, 'neg')}
+        ${list(t('view.journal_ai.list.risk_gaps'), f.risk_gaps, 'neg')}
+        ${list(t('view.journal_ai.list.suggestions'), f.suggestions)}
+        ${list(t('view.journal_ai.list.rule_changes'), f.rule_changes, 'pos')}
     `;
 }
