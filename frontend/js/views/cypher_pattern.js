@@ -18,6 +18,7 @@ import {
 } from '../_cypher_pattern_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { pivotText: '', tolerance: 0.05 };
 
 export async function renderCypherPattern(mount, _appState) {
@@ -30,13 +31,13 @@ export async function renderCypherPattern(mount, _appState) {
             <p class="muted" data-i18n-html="view.cypher_pattern.help">Paste <code>index price H|L</code> per line. Pivots must
                 alternate high/low. Demo loads a 5-pivot bullish Cypher with tolerance 0.10
                 (the more permissive setting most retail screeners use).</p>
-            <textarea id="cy-pivots" rows="6" placeholder="0 100 L&#10;10 130 H&#10;20 115 L&#10;30 134.08 H&#10;40 106.42 L"></textarea>
+            <textarea id="cy-pivots" rows="6" placeholder="0 100 L&#10;10 130 H&#10;20 115 L&#10;30 134.08 H&#10;40 106.42 L" data-tip="view.cypher_pattern.tip.pivots"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.cypher_pattern.label.tolerance">Tolerance (typical 0.03-0.10)</span>
-                    <input id="cy-tol" type="number" step="any" min="0" max="0.5" value="${state.tolerance}"></label>
-                <button data-i18n="view.cypher_pattern.btn.load_demo_5_pivot_bullish_cypher_tol_0_10" id="cy-demo" class="secondary" type="button">Load demo (5-pivot bullish Cypher, tol=0.10)</button>
-                <button data-i18n="view.cypher_pattern.btn.clear" id="cy-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.cypher_pattern.btn.detect" id="cy-run" class="primary" type="button">Detect</button>
+                    <input id="cy-tol" type="number" step="any" min="0" max="0.5" value="${state.tolerance}" data-tip="view.cypher_pattern.tip.tolerance"></label>
+                <button data-i18n="view.cypher_pattern.btn.load_demo_5_pivot_bullish_cypher_tol_0_10" id="cy-demo" class="secondary" type="button" data-tip="view.cypher_pattern.tip.demo" data-shortcut="cypher_pattern_demo">Load demo (5-pivot bullish Cypher, tol=0.10)</button>
+                <button data-i18n="view.cypher_pattern.btn.clear" id="cy-clear" class="secondary" type="button" data-tip="view.cypher_pattern.tip.clear">Clear</button>
+                <button data-i18n="view.cypher_pattern.btn.detect" id="cy-run" class="primary" type="button" data-tip="view.cypher_pattern.tip.run" data-shortcut="cypher_pattern_run">Detect</button>
             </div>
         </div>
 
@@ -62,9 +63,11 @@ export async function renderCypherPattern(mount, _appState) {
         document.getElementById('cy-pivots').value =
             p.map(x => `${x.index} ${x.price} ${x.is_high ? 'H' : 'L'}`).join('\n');
         document.getElementById('cy-tol').value = DEMO_TOLERANCE;
+        showToast(t('view.cypher_pattern.toast.demo_loaded', { n: p.length }), { level: 'info' });
     });
     document.getElementById('cy-clear').addEventListener('click', () => {
         document.getElementById('cy-pivots').value = '';
+        showToast(t('view.cypher_pattern.toast.cleared'), { level: 'info' });
     });
     document.getElementById('cy-run').addEventListener('click', () => {
         readInputs();
@@ -88,20 +91,25 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.cypher_pattern.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (pivots.length === 0) return;
     }
     const err = validateInputs(pivots, state.tolerance);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.cypher_pattern.toast.invalid'), { level: 'warning' }); return; }
     let matches;
     try {
         matches = await api.anlyCypherPattern(buildBody(pivots, state.tolerance));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.cypher_pattern.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(matches || [], pivots);
     renderChart(pivots, matches || []);
     renderMatches(matches || []);
+    const n = (matches || []).length;
+    showToast(t('view.cypher_pattern.toast.detected', { n, pivots: pivots.length }), { level: n > 0 ? 'success' : 'info' });
 }
 
 function renderSummary(matches, pivots) {

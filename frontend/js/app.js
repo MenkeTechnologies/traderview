@@ -641,6 +641,16 @@ function bindTabs() {
         const el = document.getElementById('dp-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in cypher-pattern scope → click Detect.
+    window.addEventListener('tv:cypher-pattern-run', () => {
+        const el = document.getElementById('cy-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in cypher-pattern scope → click Load demo.
+    window.addEventListener('tv:cypher-pattern-demo', () => {
+        const el = document.getElementById('cy-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
