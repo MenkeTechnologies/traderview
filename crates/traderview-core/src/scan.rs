@@ -400,6 +400,8 @@ pub enum Preset {
     SilentUpThrustNear52wHigh,   // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w high on dry vol (silent upthrust waiting)
     GapStrongDayOpenPivot,       // gap_pct >= 1 AND gap_pct <= 3 AND change_pct > 4 AND rel_volume >= 2 — small-to-medium gap + strong day on heavy vol (gap held + accelerated)
     GapWeakDayOpenPivot,         // gap_pct <= -1 AND gap_pct >= -3 AND change_pct < -4 AND rel_volume >= 2 — small-to-medium gap-down + weak day on heavy vol (gap held + accelerated)
+    ConvictionBreakoutCombo,     // year_high_pct >= 0 AND hod_dist.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2.5 — 52w-high broken + closed at HOD + strong day + heavy vol (highest-conviction breakout)
+    ConvictionBreakdownCombo,    // year_low_pct <= 0 AND lod_dist.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2.5 — 52w-low broken + closed at LOD + weak day + heavy vol (highest-conviction breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1840,6 +1842,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -4.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::ConvictionBreakoutCombo => {
+            hit.year_high_pct >= 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.5
+        }
+        Preset::ConvictionBreakdownCombo => {
+            hit.year_low_pct <= 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.5
+        }
     }
 }
 
@@ -2130,6 +2144,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SilentUpThrustNear52wHigh => "Silent Upthrust Near 52w High",
         Preset::GapStrongDayOpenPivot => "Gap + Strong Day Pivot",
         Preset::GapWeakDayOpenPivot => "Gap + Weak Day Pivot",
+        Preset::ConvictionBreakoutCombo => "Highest-Conviction Breakout",
+        Preset::ConvictionBreakdownCombo => "Highest-Conviction Breakdown",
     }
 }
 

@@ -61,6 +61,11 @@ export async function renderWebhooks(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.webhooks.h2.status_chart">Last status distribution (success / 4xx / 5xx / pending)</h2>
+            <div id="wh-status-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.provider_payloads">Provider payloads</h2>
             <details>
                 <summary data-i18n="view.webhooks.summary.discord">Discord embed</summary>
@@ -78,6 +83,7 @@ export async function renderWebhooks(mount) {
     `;
     renderFiresChart(rows);
     renderKindChart(rows);
+    renderStatusChart(rows);
     mount.querySelector('#wf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -109,6 +115,61 @@ export async function renderWebhooks(mount) {
             if (!viewIsCurrent(tok)) return;
             renderWebhooks(mount);
         }));
+}
+
+function renderStatusChart(rows) {
+    const el = document.getElementById('wh-status-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    let ok = 0, clientErr = 0, serverErr = 0, pending = 0;
+    for (const w of rows || []) {
+        const code = parseInt(String(w.last_status || '').replace(/[^0-9]/g, ''), 10);
+        if (!Number.isFinite(code)) pending++;
+        else if (code >= 200 && code < 300) ok++;
+        else if (code >= 400 && code < 500) clientErr++;
+        else if (code >= 500 && code < 600) serverErr++;
+        else pending++;
+    }
+    if (ok + clientErr + serverErr + pending < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.webhooks.empty_status_chart">${esc(t('view.webhooks.empty_status_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.webhooks.chart.ok'),
+        t('view.webhooks.chart.client_err'),
+        t('view.webhooks.chart.server_err'),
+        t('view.webhooks.chart.pending'),
+    ];
+    const xs = labels.map((_, i) => i + 1);
+    const ok2 = [ok,  null, null, null];
+    const ce  = [null, clientErr, null, null];
+    const se  = [null, null, serverErr, null];
+    const pe  = [null, null, null, pending];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.webhooks.chart.bucket') },
+            { label: t('view.webhooks.chart.ok'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 18, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.webhooks.chart.client_err'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 18, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.webhooks.chart.server_err'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.webhooks.chart.pending'),
+              stroke: '#aab',    width: 0,
+              points: { show: true, size: 18, fill: '#aab',    stroke: '#aab'    } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ok2, ce, se, pe], el);
 }
 
 function renderKindChart(rows) {
