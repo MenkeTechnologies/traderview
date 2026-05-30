@@ -240,6 +240,8 @@ pub enum Preset {
     NarrowGapColdCloseSqueeze,   // |gap_pct| < 0.2 AND year_low_pct <= 2 AND day_pct.abs() < 0.5 — no-gap close at 52w low
     AbsorptionUpSqueeze,         // change_pct 0.5-2 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy buying absorbed without breakout
     AbsorptionDownSqueeze,       // change_pct -2 to -0.5 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy selling absorbed without breakdown
+    StallAtMidSqueeze,           // year_high_pct -40 to -60 (mid of 52w range) AND |change_pct| < 0.5 AND rel_volume < 0.8 — deep mid-range stall
+    NoCloseDecisionSqueeze,      // hod_dist & lod_dist 0.4-0.6 AND day_pct.abs() < 0.3 — close exactly equidistant from extremes
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -864,6 +866,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.day_pct.abs() < 1.0
         }
+        Preset::StallAtMidSqueeze => {
+            hit.year_high_pct <= -40.0
+                && hit.year_high_pct >= -60.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
+        Preset::NoCloseDecisionSqueeze => {
+            hit.hod_dist_pct.abs() >= 0.4
+                && hit.hod_dist_pct.abs() <= 0.6
+                && hit.lod_dist_pct.abs() >= 0.4
+                && hit.lod_dist_pct.abs() <= 0.6
+                && hit.day_pct.abs() < 0.3
+        }
     }
 }
 
@@ -994,6 +1009,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowGapColdCloseSqueeze => "Narrow-Gap Cold-Close Squeeze",
         Preset::AbsorptionUpSqueeze => "Absorption-Up Squeeze",
         Preset::AbsorptionDownSqueeze => "Absorption-Down Squeeze",
+        Preset::StallAtMidSqueeze => "Stall-At-Mid Squeeze",
+        Preset::NoCloseDecisionSqueeze => "No-Close-Decision Squeeze",
     }
 }
 

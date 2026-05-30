@@ -54,7 +54,13 @@ export async function renderPlans(mount, state) {
             }).join('') || `<tr><td colspan="10" class="muted">${esc(t('view.plans.empty'))}</td></tr>`}
             </tbody>
         </table>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.plans.h2.rr_chart">R:R per plan (sorted desc)</h2>
+            <div id="plans-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderRrChart(plans);
     mount.querySelector('#plan-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -79,4 +85,43 @@ export async function renderPlans(mount, state) {
             if (!viewIsCurrent(tok)) return;
             renderPlans(mount, state);
         }));
+}
+
+function renderRrChart(plans) {
+    const el = document.getElementById('plans-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (plans || []).map(p => {
+        const risk = p.stop_loss ? Math.abs(Number(p.intended_entry) - Number(p.stop_loss)) : null;
+        const reward = p.initial_target ? Math.abs(Number(p.initial_target) - Number(p.intended_entry)) : null;
+        if (!Number.isFinite(risk) || !Number.isFinite(reward) || risk <= 0) return null;
+        return { symbol: p.symbol, rr: reward / risk };
+    }).filter(Boolean).sort((a, b) => b.rr - a.rr).slice(0, 30);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.plans.empty_chart">${esc(t('view.plans.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.symbol);
+    const ys = rows.map(r => r.rr);
+    const xs = labels.map((_, i) => i + 1);
+    const target = xs.map(() => 2);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.plans.chart.plan_idx') },
+            { label: t('view.plans.chart.rr'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.plans.chart.target'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, target], el);
 }
