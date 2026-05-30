@@ -952,6 +952,8 @@ pub enum Preset {
     ShootingStarAtMidYearLowRange,       // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long upper wick + close near LOD + red close + hot vol (selling pressure tested in the bounce zone: intraday rip sold back toward the prior trough; bear-continuation shooting star signaling bounce exhaustion)
     HammerAtDeepBounceContinuation,      // year_low_pct >= 10 AND year_low_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in the rebuild zone: intraday plunge reclaimed without retesting the floor; recovery momentum confirmation deep into the bounce)
     ShootingStarAtDeepPullbackContinuation, // year_high_pct >= 10 AND year_high_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in the pullback zone: intraday rip sold without retesting the ceiling; decline momentum confirmation deep into the pullback)
+    HammerAtDeepPremiumContinuation,     // year_low_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in a runaway name: intraday plunge reclaimed deep in the extended advance; trend-resilience signal far from the floor)
+    ShootingStarAtDeepDiscountContinuation, // year_high_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in a beaten-down name: intraday rip sold deep in the extended decline; trend-weakness signal far from the ceiling)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5679,6 +5681,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HammerAtDeepPremiumContinuation => {
+            hit.year_low_pct >= 30.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtDeepDiscountContinuation => {
+            hit.year_high_pct >= 30.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6521,6 +6537,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarAtMidYearLowRange => "Mid-range from Low (5-20 % above 52w Low) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Tested in the Bounce Zone: Intraday Rip Sold Back toward the Prior Trough; Bear-continuation Shooting Star Signaling Bounce Exhaustion)",
         Preset::HammerAtDeepBounceContinuation => "Deep Bounce Zone (10-30 % above 52w Low) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Bull-continuation Hammer in the Rebuild Zone: Intraday Plunge Reclaimed without Retesting the Floor; Recovery Momentum Confirmation Deep into the Bounce)",
         Preset::ShootingStarAtDeepPullbackContinuation => "Deep Pullback Zone (10-30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in the Pullback Zone: Intraday Rip Sold without Retesting the Ceiling; Decline Momentum Confirmation Deep into the Pullback)",
+        Preset::HammerAtDeepPremiumContinuation => "Deep Premium Zone (>=30 % above 52w Low) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Bull-continuation Hammer in a Runaway Name: Intraday Plunge Reclaimed Deep in the Extended Advance; Trend-resilience Signal Far from the Floor)",
+        Preset::ShootingStarAtDeepDiscountContinuation => "Deep Discount Zone (>=30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in a Beaten-down Name: Intraday Rip Sold Deep in the Extended Decline; Trend-weakness Signal Far from the Ceiling)",
     }
 }
 
