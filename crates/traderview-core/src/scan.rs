@@ -994,6 +994,8 @@ pub enum Preset {
     GapDownCloseAtLodHotVol,                   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + red close + hot vol (strongest possible bearish gap: gap down held without bounce and price closed at the day's low on elevated participation; sustained selling through the bell with no dip-buying)
     GapUpCloseAtLodHotVol,                     // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + red close + hot vol (bull-trap reversal: sellers absorbed the entire gap and pushed below the open on elevated participation; classic gap-and-reverse failed-breakout pattern)
     GapDownCloseAtHodHotVol,                   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + green close + hot vol (bear-trap reversal: buyers absorbed the entire gap and pushed above the open on elevated participation; classic gap-and-reverse failed-breakdown pattern)
+    GapUpMidpointCloseHotVol,                  // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-up follow-through: gap held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff inside the gap day with no directional resolution)
+    GapDownMidpointCloseHotVol,                // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-down follow-through: gap held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff inside the gap day with no directional resolution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6010,6 +6012,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpMidpointCloseHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownMidpointCloseHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6894,6 +6910,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownCloseAtLodHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Red Close + Hot Vol (Strongest Possible Bearish Gap: Gap down Held without Bounce and Price Closed at the Day's Low on Elevated Participation; Sustained Selling through the Bell with No Dip-buying)",
         Preset::GapUpCloseAtLodHotVol => "Gap Up (>2 %) Faded Completely to LOD + Red Close + Hot Vol (Bull-trap Reversal: Sellers Absorbed the Entire Gap and Pushed below the Open on Elevated Participation; Classic Gap-and-reverse Failed-breakout Pattern)",
         Preset::GapDownCloseAtHodHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Green Close + Hot Vol (Bear-trap Reversal: Buyers Absorbed the Entire Gap and Pushed above the Open on Elevated Participation; Classic Gap-and-reverse Failed-breakdown Pattern)",
+        Preset::GapUpMidpointCloseHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Gap-up Follow-through: Gap Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff Inside the Gap Day with No Directional Resolution)",
+        Preset::GapDownMidpointCloseHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Gap-down Follow-through: Gap Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff Inside the Gap Day with No Directional Resolution)",
     }
 }
 
