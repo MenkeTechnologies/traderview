@@ -78,6 +78,11 @@ export async function renderDividendCalendar(mount, _appState) {
             <div id="dc-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.dividend_calendar.h2.yield_chart">Dividend yield by symbol</h2>
+            <div id="dc-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="dc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -148,6 +153,7 @@ async function runFetch(mount, tok) {
     state.lastRows = valid;
     renderSummary(symbols.length, valid);
     renderTable(valid);
+    renderYieldChart(valid);
 }
 
 // Bounded-concurrency mapper. Returns results in original-input order.
@@ -232,6 +238,37 @@ function renderTable(rows) {
             </tr></thead>
             <tbody>${rowHtml}</tbody>
         </table>`;
+}
+
+function renderYieldChart(rows) {
+    const el = document.getElementById('dc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const withYield = (rows || []).filter(r => Number.isFinite(r.yield));
+    if (withYield.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dividend_calendar.empty_chart">${esc(t('view.dividend_calendar.empty_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...withYield].sort((a, b) => b.yield - a.yield);
+    const labels = sorted.map(r => r.symbol);
+    const yields = sorted.map(r => r.yield * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dividend_calendar.chart.symbol_idx') },
+            { label: t('view.dividend_calendar.chart.yield_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, yields], el);
 }
 
 function showErr(msg) {
