@@ -5566,6 +5566,7 @@
   "view.monte_carlo.badge.high_ruin":     "HIGH RUIN",
   "view.tape_replay.note.placeholder": "Drop note at current cursor",
   "view.risk_gate.alert.installed": "Installed {n} rules.",
+  "view.risk_gate.error.no_account": "No account selected. Pick one in the topbar account strip.",
   "view.risk_gate.alert.install_failed": "Install failed: {err}",
   "view.risk_gate.alert.kill_switch_failed": "Kill switch toggle failed: {err}",
   "view.risk_gate.alert.create_failed": "Create failed: {err}",

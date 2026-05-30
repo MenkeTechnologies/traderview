@@ -276,7 +276,7 @@ export async function renderRiskGate(mount, state) {
         e.preventDefault();
         if (!accountId) {
             mount.querySelector('#rg-eval-out').textContent =
-                'No account selected. Pick one in the topbar account strip.';
+                t('view.risk_gate.error.no_account');
             return;
         }
         const fd = new FormData(e.target);
