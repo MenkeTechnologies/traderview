@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePrintsBlob, printsToBlob, validateInputs, buildBody, localCompute,
@@ -30,19 +31,20 @@ export async function renderVolumeBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.vol_bar.label.volume">Volume per bar</span>
-                    <input id="vb-target" type="number" step="any" min="0" value="${state.volume_per_bar}"></label>
+                    <input id="vb-target" type="number" step="any" min="0" value="${state.volume_per_bar}"
+                           data-tip="view.vol_bar.tip.volume"></label>
                 <button data-i18n="view.vol_bar.btn.compute" id="vb-run" class="primary"
-                        data-tip="view.vol_bar.tip.compute" type="button">Build bars</button>
+                        data-tip="view.vol_bar.tip.compute" data-shortcut="volume_bar_run" type="button">Build bars</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.vol_bar.btn.demo_up"      id="vb-demo-up"      class="secondary" type="button">Demo: uptrend (large vol)</button>
-                <button data-i18n="view.vol_bar.btn.demo_down"    id="vb-demo-down"    class="secondary" type="button">Demo: downtrend (large vol)</button>
-                <button data-i18n="view.vol_bar.btn.demo_flat"    id="vb-demo-flat"    class="secondary" type="button">Demo: flat volume</button>
-                <button data-i18n="view.vol_bar.btn.demo_spiky"   id="vb-demo-spiky"   class="secondary" type="button">Demo: spiky volume</button>
-                <button data-i18n="view.vol_bar.btn.demo_tiny"    id="vb-demo-tiny"    class="secondary" type="button">Demo: tiny target (50)</button>
-                <button data-i18n="view.vol_bar.btn.demo_huge"    id="vb-demo-huge"    class="secondary" type="button">Demo: huge target (5000)</button>
-                <button data-i18n="view.vol_bar.btn.demo_partial" id="vb-demo-partial" class="secondary" type="button">Demo: partial trail (dropped)</button>
-                <button data-i18n="view.vol_bar.btn.demo_noisy"   id="vb-demo-noisy"   class="secondary" type="button">Demo: noisy walk (200 prints)</button>
+                <button data-i18n="view.vol_bar.btn.demo_up"      id="vb-demo-up"      class="secondary" data-tip="view.vol_bar.tip.demo_up"      type="button">Demo: uptrend (large vol)</button>
+                <button data-i18n="view.vol_bar.btn.demo_down"    id="vb-demo-down"    class="secondary" data-tip="view.vol_bar.tip.demo_down"    type="button">Demo: downtrend (large vol)</button>
+                <button data-i18n="view.vol_bar.btn.demo_flat"    id="vb-demo-flat"    class="secondary" data-tip="view.vol_bar.tip.demo_flat"    type="button">Demo: flat volume</button>
+                <button data-i18n="view.vol_bar.btn.demo_spiky"   id="vb-demo-spiky"   class="secondary" data-tip="view.vol_bar.tip.demo_spiky"   type="button">Demo: spiky volume</button>
+                <button data-i18n="view.vol_bar.btn.demo_tiny"    id="vb-demo-tiny"    class="secondary" data-tip="view.vol_bar.tip.demo_tiny"    type="button">Demo: tiny target (50)</button>
+                <button data-i18n="view.vol_bar.btn.demo_huge"    id="vb-demo-huge"    class="secondary" data-tip="view.vol_bar.tip.demo_huge"    type="button">Demo: huge target (5000)</button>
+                <button data-i18n="view.vol_bar.btn.demo_partial" id="vb-demo-partial" class="secondary" data-tip="view.vol_bar.tip.demo_partial" type="button">Demo: partial trail (dropped)</button>
+                <button data-i18n="view.vol_bar.btn.demo_noisy"   id="vb-demo-noisy"   class="secondary" data-tip="view.vol_bar.tip.demo_noisy"   type="button">Demo: noisy walk (200 prints)</button>
             </div>
             <p data-i18n="view.vol_bar.hint.about" class="muted">Each bar accumulates prints until cumulative volume ≥ volume_per_bar, then closes. Time is ignored. Useful in futures where calendar bars contain wildly different volumes (open vs lunch lull). Trailing partial bars are not emitted.</p>
         </div>
@@ -83,6 +85,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.vol_bar.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.vol_bar.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -94,7 +97,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.vol_bar.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.prints, state.volume_per_bar);
     renderSummary(local, true);
     renderChart(local);
@@ -104,12 +107,20 @@ async function compute(tok) {
         resp = await api.chartsVolumeBar(buildBody(state));
     } catch (e) {
         showErr(`${t('view.vol_bar.err.api')}: ${e.message || e}`);
+        showToast(t('view.vol_bar.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const dropped = state.prints.reduce((s, p) => s + p.size, 0)
+        - resp.reduce((s, b) => s + b.volume, 0);
+    if (dropped > 0) {
+        showToast(t('view.vol_bar.toast.built_partial'), { level: 'warning' });
+    } else {
+        showToast(t('view.vol_bar.toast.built'), { level: 'success' });
+    }
 }
 
 function renderSummary(bars, pending) {
