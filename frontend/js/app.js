@@ -700,6 +700,11 @@ function bindTabs() {
         const el = document.getElementById('fx-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in greeks-profile scope → click Compute.
+    window.addEventListener('tv:greeks-profile-compute', () => {
+        const el = document.getElementById('gp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

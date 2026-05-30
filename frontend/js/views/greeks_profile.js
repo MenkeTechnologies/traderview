@@ -17,6 +17,7 @@ import {
 } from '../_greeks_profile_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_PARAMS = {
     kind: 'call',
     strike: 100,
@@ -46,26 +47,26 @@ export async function renderGreeksProfile(mount, _appState) {
             <h2 data-i18n="view.greeks_profile.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.greeks_profile.label.kind">Kind</span>
-                    <select id="gp-kind">
+                    <select id="gp-kind" data-tip="view.greeks_profile.tip.kind">
                         <option data-i18n="view.greeks_profile.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.greeks_profile.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label><span data-i18n="view.greeks_profile.label.strike">Strike</span> <input id="gp-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label><span data-i18n="view.greeks_profile.label.t">T (years)</span> <input id="gp-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
-                <label><span data-i18n="view.greeks_profile.label.r">Rate r</span> <input id="gp-r" type="number" step="any" value="${state.params.risk_free}"></label>
-                <label><span data-i18n="view.greeks_profile.label.q">Dividend q</span> <input id="gp-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
-                <label><span data-i18n="view.greeks_profile.label.sigma">σ</span> <input id="gp-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                <label><span data-i18n="view.greeks_profile.label.strike">Strike</span> <input id="gp-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.greeks_profile.tip.strike"></label>
+                <label><span data-i18n="view.greeks_profile.label.t">T (years)</span> <input id="gp-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}" data-tip="view.greeks_profile.tip.t"></label>
+                <label><span data-i18n="view.greeks_profile.label.r">Rate r</span> <input id="gp-r" type="number" step="any" value="${state.params.risk_free}" data-tip="view.greeks_profile.tip.r"></label>
+                <label><span data-i18n="view.greeks_profile.label.q">Dividend q</span> <input id="gp-q" type="number" step="any" min="0" value="${state.params.dividend_yield}" data-tip="view.greeks_profile.tip.q"></label>
+                <label><span data-i18n="view.greeks_profile.label.sigma">σ</span> <input id="gp-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.greeks_profile.tip.sigma"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.greeks_profile.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
-                <label><span data-i18n="view.greeks_profile.label.low">Low</span> <input id="gp-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
-                <label><span data-i18n="view.greeks_profile.label.high">High</span> <input id="gp-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
-                <label><span data-i18n="view.greeks_profile.label.points">Points</span> <input id="gp-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
-                <button data-i18n="view.greeks_profile.btn.50_from_strike" id="gp-defaults" class="secondary" type="button">±50% from strike</button>
-                <button data-i18n="view.greeks_profile.btn.compute" id="gp-run" class="primary" type="button">Compute</button>
+                <label><span data-i18n="view.greeks_profile.label.low">Low</span> <input id="gp-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}" data-tip="view.greeks_profile.tip.low"></label>
+                <label><span data-i18n="view.greeks_profile.label.high">High</span> <input id="gp-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}" data-tip="view.greeks_profile.tip.high"></label>
+                <label><span data-i18n="view.greeks_profile.label.points">Points</span> <input id="gp-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}" data-tip="view.greeks_profile.tip.points"></label>
+                <button data-i18n="view.greeks_profile.btn.50_from_strike" data-tip="view.greeks_profile.tip.defaults" id="gp-defaults" class="secondary" type="button">±50% from strike</button>
+                <button data-i18n="view.greeks_profile.btn.compute" data-tip="view.greeks_profile.tip.compute" data-shortcut="greeks_profile_compute" id="gp-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.greeks_profile.hint.each_greek_plotted_as_a_function_of_spot_across_th" class="muted">
                 Each greek plotted as a function of spot across the chosen grid. ATM marker
@@ -112,14 +113,15 @@ function readInputs() {
 async function compute(mount, tok) {
     hideErr();
     const err = validateParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.optsGreeksProfile(buildBody(state.params));
         if (!res) throw new Error(t('view.greeks_profile.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -127,6 +129,10 @@ async function compute(mount, tok) {
     const series = splitMetricSeries(res.points);
     renderSummary(res, series);
     renderGrid(series, res);
+    showToast(t('view.greeks_profile.toast.done', {
+        kind: state.params.kind,
+        n: state.params.n_points,
+    }), { level: 'success' });
 }
 
 function renderSummary(res, series) {
