@@ -922,6 +922,8 @@ pub enum Preset {
     IntradayBullDriveAtYear52Low,        // year_low_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w low + big intraday drive UP + hot vol (intraday-led bullish recovery at the breakdown zone: buying pressure through regular hours lifted the price off the lows with elevated participation; failed-breakdown candidate)
     IntradayBullDriveBelowYearHigh,      // year_high_pct >= 0 AND year_high_pct < 5 AND day_pct > 3 AND rel_volume >= 2 — within 5% below 52w high + big intraday drive up + hot vol (pre-breakout intraday surge: approaching resistance with regular-hours momentum and elevated participation; breakout-setup candidate)
     IntradayBearDriveAboveYearLow,       // year_low_pct >= 0 AND year_low_pct < 5 AND day_pct < -3 AND rel_volume >= 2 — within 5% above 52w low + big intraday drive down + hot vol (pre-breakdown intraday plunge: approaching support with regular-hours momentum and elevated participation; breakdown-setup candidate)
+    HammerAtYear52Low,                   // year_low_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w low + long lower wick + close near HOD + green close + hot vol (classic hammer reversal at the breakdown floor: intraday plunge reclaimed with green finish and elevated participation; high-probability bottom-fishing signal)
+    ShootingStarAtYear52High,            // year_high_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w high + long upper wick + close near LOD + red close + hot vol (classic shooting star reversal at the breakout ceiling: intraday rip sold with red finish and elevated participation; high-probability topping signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5423,6 +5425,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::HammerAtYear52Low => {
+            hit.year_low_pct < 2.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtYear52High => {
+            hit.year_high_pct < 2.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6235,6 +6251,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayBullDriveAtYear52Low => "At 52w Low + Big Intraday Drive Up + Hot Vol (Intraday-led Bullish Recovery at the Breakdown Zone: Buying Pressure through Regular Hours Lifted the Price off the Lows with Elevated Participation; Failed-breakdown Candidate)",
         Preset::IntradayBullDriveBelowYearHigh => "Within 5% below 52w High + Big Intraday Drive Up + Hot Vol (Pre-breakout Intraday Surge: Approaching Resistance with Regular-hours Momentum and Elevated Participation; Breakout-setup Candidate)",
         Preset::IntradayBearDriveAboveYearLow => "Within 5% above 52w Low + Big Intraday Drive Down + Hot Vol (Pre-breakdown Intraday Plunge: Approaching Support with Regular-hours Momentum and Elevated Participation; Breakdown-setup Candidate)",
+        Preset::HammerAtYear52Low => "At 52w Low + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Classic Hammer Reversal at the Breakdown Floor: Intraday Plunge Reclaimed with Green Finish and Elevated Participation; High-probability Bottom-fishing Signal)",
+        Preset::ShootingStarAtYear52High => "At 52w High + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Classic Shooting Star Reversal at the Breakout Ceiling: Intraday Rip Sold with Red Finish and Elevated Participation; High-probability Topping Signal)",
     }
 }
 
