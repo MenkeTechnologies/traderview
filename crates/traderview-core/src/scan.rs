@@ -546,6 +546,8 @@ pub enum Preset {
     WeakCloseAtLodHotVol,           // lod_dist.abs() < 0.3 AND day_pct < -1 AND rel_volume >= 2 — close at LOD + red intraday + hot vol (weak close; sellers in control)
     Pct52wHighDryVolFlat,           // year_high_pct > -3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w high on dry vol with no move (forgotten leadership; consolidation at highs)
     Pct52wLowDryVolFlat,            // year_low_pct < 3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w low on dry vol with no move (forgotten weakness; basing at lows)
+    OvernightReversalRepositioning, // change_pct * gap_pct < 0 AND change_pct.abs() > 0.5 AND gap_pct.abs() > 0.5 AND day_pct.abs() < 0.5 — gap and change opposite + flat intraday (overnight repositioning; reversal of overnight bias)
+    OrganicIntradayTrendDay,        // gap_pct.abs() < 0.3 AND change_pct.abs() > 2 AND day_pct.abs() > 1 AND rel_volume between 0.7 and 1.3 — no gap + significant change + clear intraday on normal vol (organic intraday trend day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2839,6 +2841,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::OvernightReversalRepositioning => {
+            hit.change_pct * hit.gap_pct < 0.0
+                && hit.change_pct.abs() > 0.5
+                && hit.gap_pct.abs() > 0.5
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::OrganicIntradayTrendDay => {
+            hit.gap_pct.abs() < 0.3
+                && hit.change_pct.abs() > 2.0
+                && hit.day_pct.abs() > 1.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
     }
 }
 
@@ -3275,6 +3290,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WeakCloseAtLodHotVol => "Weak Close at LOD + Red Intraday + Hot Vol",
         Preset::Pct52wHighDryVolFlat => "Near 52w High, Dry Vol, Flat (Forgotten Leadership)",
         Preset::Pct52wLowDryVolFlat => "Near 52w Low, Dry Vol, Flat (Forgotten Weakness)",
+        Preset::OvernightReversalRepositioning => "Overnight Reversal Repositioning (Gap ↔ Change Sign Flip, Flat Day)",
+        Preset::OrganicIntradayTrendDay => "Organic Intraday Trend Day (No Gap, Big Change, Normal Vol)",
     }
 }
 
