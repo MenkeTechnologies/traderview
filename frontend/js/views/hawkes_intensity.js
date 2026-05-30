@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseTimesBlob, validateInputs, buildBody, localCompute, makeQueryGrid,
@@ -31,27 +32,27 @@ export async function renderHawkesIntensity(mount, _appState) {
             <h2 data-i18n="view.hawkes.h2.params">Parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.hawkes.label.mu">μ (baseline)</span>
-                    <input id="hk-mu" type="number" step="any" min="0" value="${state.params.baseline_mu}"></label>
+                    <input id="hk-mu" type="number" step="any" min="0" value="${state.params.baseline_mu}" data-tip="view.hawkes.tip.mu"></label>
                 <label><span data-i18n="view.hawkes.label.alpha">α (excitation)</span>
-                    <input id="hk-alpha" type="number" step="any" min="0" value="${state.params.excitation_alpha}"></label>
+                    <input id="hk-alpha" type="number" step="any" min="0" value="${state.params.excitation_alpha}" data-tip="view.hawkes.tip.alpha"></label>
                 <label><span data-i18n="view.hawkes.label.beta">β (decay)</span>
-                    <input id="hk-beta" type="number" step="any" min="0.001" value="${state.params.decay_beta}"></label>
+                    <input id="hk-beta" type="number" step="any" min="0.001" value="${state.params.decay_beta}" data-tip="view.hawkes.tip.beta"></label>
                 <label class="inline-check">
-                    <input id="hk-auto" type="checkbox" ${autoGrid ? 'checked' : ''}>
+                    <input id="hk-auto" type="checkbox" ${autoGrid ? 'checked' : ''} data-tip="view.hawkes.tip.auto_grid">
                     <span data-i18n="view.hawkes.label.auto_grid">Auto query grid</span>
                 </label>
                 <button data-i18n="view.hawkes.btn.compute" id="hk-run" class="primary"
-                        data-tip="view.hawkes.tip.compute" type="button">Compute λ(t)</button>
+                        data-tip="view.hawkes.tip.compute" data-shortcut="hawkes_run" type="button">Compute λ(t)</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.hawkes.btn.demo_poisson"  id="hk-demo-poisson"  class="secondary" type="button">Demo: Poisson baseline</button>
-                <button data-i18n="view.hawkes.btn.demo_cluster"  id="hk-demo-cluster"  class="secondary" type="button">Demo: cluster burst</button>
-                <button data-i18n="view.hawkes.btn.demo_news"     id="hk-demo-news"     class="secondary" type="button">Demo: news burst (earnings)</button>
-                <button data-i18n="view.hawkes.btn.demo_critical" id="hk-demo-critical" class="secondary" type="button">Demo: critical (α/β=0.95)</button>
-                <button data-i18n="view.hawkes.btn.demo_explosive" id="hk-demo-exp"     class="secondary" type="button">Demo: explosive (α>β)</button>
-                <button data-i18n="view.hawkes.btn.demo_long"     id="hk-demo-long"     class="secondary" type="button">Demo: long decay (persistent)</button>
-                <button data-i18n="view.hawkes.btn.demo_fast"     id="hk-demo-fast"     class="secondary" type="button">Demo: fast decay (spike+fade)</button>
-                <button data-i18n="view.hawkes.btn.demo_none"     id="hk-demo-none"     class="secondary" type="button">Demo: no events (flat μ)</button>
+                <button data-i18n="view.hawkes.btn.demo_poisson"  id="hk-demo-poisson"  class="secondary" type="button" data-tip="view.hawkes.tip.demo_poisson">Demo: Poisson baseline</button>
+                <button data-i18n="view.hawkes.btn.demo_cluster"  id="hk-demo-cluster"  class="secondary" type="button" data-tip="view.hawkes.tip.demo_cluster">Demo: cluster burst</button>
+                <button data-i18n="view.hawkes.btn.demo_news"     id="hk-demo-news"     class="secondary" type="button" data-tip="view.hawkes.tip.demo_news">Demo: news burst (earnings)</button>
+                <button data-i18n="view.hawkes.btn.demo_critical" id="hk-demo-critical" class="secondary" type="button" data-tip="view.hawkes.tip.demo_critical">Demo: critical (α/β=0.95)</button>
+                <button data-i18n="view.hawkes.btn.demo_explosive" id="hk-demo-exp"     class="secondary" type="button" data-tip="view.hawkes.tip.demo_exp">Demo: explosive (α>β)</button>
+                <button data-i18n="view.hawkes.btn.demo_long"     id="hk-demo-long"     class="secondary" type="button" data-tip="view.hawkes.tip.demo_long">Demo: long decay (persistent)</button>
+                <button data-i18n="view.hawkes.btn.demo_fast"     id="hk-demo-fast"     class="secondary" type="button" data-tip="view.hawkes.tip.demo_fast">Demo: fast decay (spike+fade)</button>
+                <button data-i18n="view.hawkes.btn.demo_none"     id="hk-demo-none"     class="secondary" type="button" data-tip="view.hawkes.tip.demo_none">Demo: no events (flat μ)</button>
             </div>
             <p data-i18n="view.hawkes.hint.about" class="muted">λ(t) = μ + Σ α·exp(−β(t − t_i)). Branching ratio α/β: stable &lt; 1, critical near 1, explosive ≥ 1. Used in HFT trade-clustering, news-cascade modeling.</p>
         </div>
@@ -96,6 +97,7 @@ function readInputs() {
     if (ev.errors.length) {
         showErr(`${t('view.hawkes.err.parse_prefix')}: `
             + ev.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.hawkes.toast.parse_error', { n: ev.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -110,7 +112,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.hawkes.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.event_times, state.query_times, state.params);
     renderSummary(local, true);
     renderChart(local);
@@ -120,16 +122,22 @@ async function compute(tok) {
         resp = await api.microHawkesIntensity(buildBody(state));
     } catch (e) {
         showErr(`${t('view.hawkes.err.api')}: ${e.message || e}`);
+        showToast(t('view.hawkes.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     if (!resp) {
         showErr(t('view.hawkes.err.server_rejected'));
+        showToast(t('view.hawkes.toast.rejected'), { level: 'error' });
         return;
     }
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const ratio = clusteringRatio(state.params);
+    const ratioStr = Number.isFinite(ratio) ? ratio.toFixed(3) : '—';
+    const level = ratio >= 1 ? 'error' : ratio >= 0.9 ? 'warning' : 'success';
+    showToast(t('view.hawkes.toast.computed', { stable: resp.is_stable ? 'stable' : 'EXPLOSIVE', ratio: ratioStr }), { level });
 }
 
 function renderSummary(report, pending) {
