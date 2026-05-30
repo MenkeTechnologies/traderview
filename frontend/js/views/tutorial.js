@@ -221,9 +221,16 @@ export async function renderTutorial(mount, _state) {
             <h2 data-i18n="view.tutorial.h2.coverage_chart">Coverage: items per section</h2>
             <div id="tut-chart" style="width:100%;height:200px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tutorial.h2.density_chart">Section prose density (visible character count)</h2>
+            <div id="tut-density-chart" style="width:100%;height:200px"></div>
+            <p data-i18n="view.tutorial.hint.density_chart" class="muted small">Visible (HTML-stripped) characters per section. Orthogonal to discrete item count: reveals dense-prose sections (long expository paragraphs) vs sparse sections (mostly bullet/link lists).</p>
+        </div>
     `;
 
     renderCoverageChart();
+    renderDensityChart();
 
     // Tile-jump buttons inside the body — every <button data-go="X"> navigates.
     mount.querySelectorAll('button[data-go]').forEach(b => {
@@ -250,6 +257,40 @@ export async function renderTutorial(mount, _state) {
         });
         q.focus();
     }
+}
+
+function renderDensityChart() {
+    const el = document.getElementById('tut-density-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = SECTIONS.map(s => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = s.body;
+        return { id: s.id, chars: (tmp.textContent || '').trim().length };
+    });
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tutorial.empty_density_chart">${esc(t('view.tutorial.empty_density_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.id);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.chars);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tutorial.chart.section') },
+            { label: t('view.tutorial.chart.chars'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderCoverageChart() {

@@ -822,6 +822,8 @@ pub enum Preset {
     Year52LowBreakdownOpenDriveHotVol,   // year_low_pct < 0 AND day_pct < -3 AND change_pct < -4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w low + big intraday drive from open + no overnight gap + hot vol (intraday breakdown to new 52w low built entirely in regular hours with no overnight aid; pure conviction breakdown day)
     Year52HighGapAndGoExtremeVol,        // year_high_pct < 0 AND gap_pct > 3 AND day_pct > 2 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big gap up + intraday continuation + extreme vol (gap-and-go breakout at new highs with overnight gap held and extended during regular hours; max-conviction trend acceleration)
     Year52LowGapAndDropExtremeVol,       // year_low_pct < 0 AND gap_pct < -3 AND day_pct < -2 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big gap down + intraday continuation + extreme vol (gap-and-drop breakdown at new lows with overnight gap held and extended during regular hours; max-conviction trend acceleration)
+    Year52HighFailedBreakoutFade,        // year_high_pct >= 0 AND year_high_pct < 3 AND gap_pct > 1 AND day_pct < -1 AND change_pct < 0 AND rel_volume >= 2 — close just below 52w high + gap up + intraday sold from open + red close + hot vol (failed breakout at the highs: ran into resistance, gap rejected and faded all session; trapped breakout buyers flushed during the session)
+    Year52LowFailedBreakdownReclaim,     // year_low_pct >= 0 AND year_low_pct < 3 AND gap_pct < -1 AND day_pct > 1 AND change_pct > 0 AND rel_volume >= 2 — close just above 52w low + gap down + intraday recovered from open + green close + hot vol (failed breakdown at the lows: bounced off support, gap reclaimed and rallied all session; trapped breakdown shorts squeezed during the session)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4735,6 +4737,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 3.0
         }
+        Preset::Year52HighFailedBreakoutFade => {
+            hit.year_high_pct >= 0.0
+                && hit.year_high_pct < 3.0
+                && hit.gap_pct > 1.0
+                && hit.day_pct < -1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowFailedBreakdownReclaim => {
+            hit.year_low_pct >= 0.0
+                && hit.year_low_pct < 3.0
+                && hit.gap_pct < -1.0
+                && hit.day_pct > 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5447,6 +5465,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowBreakdownOpenDriveHotVol => "New 52w Low + Big Intraday Drive from Open + No Overnight Gap + Hot Vol (Intraday Breakdown to New 52w Low Built Entirely in Regular Hours with No Overnight Aid; Pure Conviction Breakdown Day)",
         Preset::Year52HighGapAndGoExtremeVol => "New 52w High + Big Gap Up + Intraday Continuation + Extreme Vol (Gap-and-go Breakout at New Highs with Overnight Gap Held and Extended during Regular Hours; Max-conviction Trend Acceleration)",
         Preset::Year52LowGapAndDropExtremeVol => "New 52w Low + Big Gap Down + Intraday Continuation + Extreme Vol (Gap-and-drop Breakdown at New Lows with Overnight Gap Held and Extended during Regular Hours; Max-conviction Trend Acceleration)",
+        Preset::Year52HighFailedBreakoutFade => "Close Just below 52w High + Gap Up + Intraday Sold from Open + Red Close + Hot Vol (Failed Breakout at the Highs: Ran into Resistance, Gap Rejected and Faded All Session; Trapped Breakout Buyers Flushed during the Session)",
+        Preset::Year52LowFailedBreakdownReclaim => "Close Just above 52w Low + Gap Down + Intraday Recovered from Open + Green Close + Hot Vol (Failed Breakdown at the Lows: Bounced off Support, Gap Reclaimed and Rallied All Session; Trapped Breakdown Shorts Squeezed during the Session)",
     }
 }
 
