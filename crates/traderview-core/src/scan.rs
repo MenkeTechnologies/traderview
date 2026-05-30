@@ -268,6 +268,8 @@ pub enum Preset {
     InsideBarLowSqueeze,         // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_low_pct <= 2 — narrow inside bar at 52w low
     FlatGapInsideRangeSqueeze,   // gap_pct.abs() < 0.1 AND hod_dist + lod_dist < 2 — no gap and very narrow intraday range
     Pct52wEdgeDryUp,             // (year_high_pct >= -2 OR year_low_pct <= 2) AND rel_volume < 0.3 — at 52w extreme with extremely dried-up volume
+    NarrowCenterSqueeze,         // hod_dist between 0.5 and 1 AND lod_dist between 0.5 and 1 AND day_pct.abs() < 0.5 — close centered in a slim range
+    LopsidedQuietSqueeze,        // hod_dist.abs() < 0.5 OR lod_dist.abs() < 0.5 (close pinned to one side) AND rel_volume < 0.5 AND |day_pct| < 0.5 — extreme-pin with quiet vol
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1033,6 +1035,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             (hit.year_high_pct >= -2.0 || hit.year_low_pct <= 2.0)
                 && hit.rel_volume < 0.3
         }
+        Preset::NarrowCenterSqueeze => {
+            hit.hod_dist_pct.abs() >= 0.5
+                && hit.hod_dist_pct.abs() <= 1.0
+                && hit.lod_dist_pct.abs() >= 0.5
+                && hit.lod_dist_pct.abs() <= 1.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::LopsidedQuietSqueeze => {
+            (hit.hod_dist_pct.abs() < 0.5 || hit.lod_dist_pct.abs() < 0.5)
+                && hit.rel_volume < 0.5
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1191,6 +1205,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::InsideBarLowSqueeze => "Inside-Bar At 52w-Low",
         Preset::FlatGapInsideRangeSqueeze => "Flat-Gap Inside-Range Squeeze",
         Preset::Pct52wEdgeDryUp => "52w-Edge Dry-Up Squeeze",
+        Preset::NarrowCenterSqueeze => "Narrow-Center Squeeze",
+        Preset::LopsidedQuietSqueeze => "Lopsided Quiet Squeeze",
     }
 }
 

@@ -46,6 +46,11 @@ export async function renderPerSymbolSlippage(mount, _appState) {
                 or stop trading the name.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.per_symbol_slippage.h2.mean_chart">Mean slippage (bps) per symbol</h2>
+            <div id="ps-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ps-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ps-demo').addEventListener('click', () => {
@@ -90,6 +95,42 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, records);
     renderTable(report);
+    renderMeanChart(report);
+}
+
+function renderMeanChart(report) {
+    const el = document.getElementById('ps-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (report || []).filter(r => Number.isFinite(Number(r.mean_bps)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.per_symbol_slippage.empty_chart">${esc(t('view.per_symbol_slippage.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(a.mean_bps) - Number(b.mean_bps));
+    const labels = valid.map(r => r.symbol);
+    const ys = valid.map(r => Number(r.mean_bps));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.per_symbol_slippage.chart.symbol_idx') },
+            { label: t('view.per_symbol_slippage.chart.mean_bps'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.per_symbol_slippage.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSummary(report, records) {
