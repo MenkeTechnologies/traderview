@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_K, MIN_PERIOD, MAX_PERIOD,
@@ -32,21 +33,23 @@ export async function renderBbw(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bbw.label.period">Period</span>
-                    <input id="bw-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="bw-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.bbw.tip.period"></label>
                 <label><span data-i18n="view.bbw.label.k">k (σ)</span>
-                    <input id="bw-k" type="number" step="0.1" min="0" value="${state.k}"></label>
+                    <input id="bw-k" type="number" step="0.1" min="0" value="${state.k}"
+                           data-tip="view.bbw.tip.k"></label>
                 <button data-i18n="view.bbw.btn.compute" id="bw-run" class="primary"
-                        data-tip="view.bbw.tip.compute" type="button">Compute</button>
+                        data-tip="view.bbw.tip.compute" data-shortcut="bbw_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bbw.btn.demo_norm"   id="bw-d1" class="secondary" type="button">Demo: normal trend</button>
-                <button data-i18n="view.bbw.btn.demo_sqzbrk" id="bw-d2" class="secondary" type="button">Demo: squeeze → break</button>
-                <button data-i18n="view.bbw.btn.demo_expctr" id="bw-d3" class="secondary" type="button">Demo: expansion → contract</button>
-                <button data-i18n="view.bbw.btn.demo_trup"   id="bw-d4" class="secondary" type="button">Demo: trending up</button>
-                <button data-i18n="view.bbw.btn.demo_trdn"   id="bw-d5" class="secondary" type="button">Demo: trending down</button>
-                <button data-i18n="view.bbw.btn.demo_walk"   id="bw-d6" class="secondary" type="button">Demo: walking bands</button>
-                <button data-i18n="view.bbw.btn.demo_wide"   id="bw-d7" class="secondary" type="button">Demo: wide bands (k=3)</button>
-                <button data-i18n="view.bbw.btn.demo_flat"   id="bw-d8" class="secondary" type="button">Demo: flat (sd=0)</button>
+                <button data-i18n="view.bbw.btn.demo_norm"   id="bw-d1" class="secondary" data-tip="view.bbw.tip.demo_norm"   type="button">Demo: normal trend</button>
+                <button data-i18n="view.bbw.btn.demo_sqzbrk" id="bw-d2" class="secondary" data-tip="view.bbw.tip.demo_sqzbrk" type="button">Demo: squeeze → break</button>
+                <button data-i18n="view.bbw.btn.demo_expctr" id="bw-d3" class="secondary" data-tip="view.bbw.tip.demo_expctr" type="button">Demo: expansion → contract</button>
+                <button data-i18n="view.bbw.btn.demo_trup"   id="bw-d4" class="secondary" data-tip="view.bbw.tip.demo_trup"   type="button">Demo: trending up</button>
+                <button data-i18n="view.bbw.btn.demo_trdn"   id="bw-d5" class="secondary" data-tip="view.bbw.tip.demo_trdn"   type="button">Demo: trending down</button>
+                <button data-i18n="view.bbw.btn.demo_walk"   id="bw-d6" class="secondary" data-tip="view.bbw.tip.demo_walk"   type="button">Demo: walking bands</button>
+                <button data-i18n="view.bbw.btn.demo_wide"   id="bw-d7" class="secondary" data-tip="view.bbw.tip.demo_wide"   type="button">Demo: wide bands (k=3)</button>
+                <button data-i18n="view.bbw.btn.demo_flat"   id="bw-d8" class="secondary" data-tip="view.bbw.tip.demo_flat"   type="button">Demo: flat (sd=0)</button>
             </div>
             <p data-i18n="view.bbw.hint.about" class="muted">Bollinger Bands: middle = SMA(close, period); upper = middle + k·σ; lower = middle − k·σ. BBW = (upper−lower)/middle measures volatility regime. %B = (close−lower)/(upper−lower) positions price within the bands (>1 above upper, <0 below lower). Defaults: 20 / 2.0.</p>
         </div>
@@ -93,6 +96,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bbw.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bbw.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -106,7 +110,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bbw.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.period, state.k);
     renderSummary(local, true);
     renderChartBands(local);
@@ -117,14 +121,16 @@ async function compute(tok) {
         resp = await api.anlyBollingerBandWidth(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bbw.err.api')}: ${e.message || e}`);
+        showToast(t('view.bbw.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.bbw.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.bbw.err.server_rejected')); showToast(t('view.bbw.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChartBands(resp);
     renderChartBbw(resp);
     renderStats();
+    showToast(t('view.bbw.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
