@@ -128,6 +128,8 @@ const PRESETS = [
     { id: 'subpoint_move_squeeze',      label: t('view.scanners.preset.subpoint_move_squeeze.label'),      desc: t('view.scanners.preset.subpoint_move_squeeze.desc') },
     { id: 'no_vol_no_move_squeeze',     label: t('view.scanners.preset.no_vol_no_move_squeeze.label'),     desc: t('view.scanners.preset.no_vol_no_move_squeeze.desc') },
     { id: 'vol_without_change_squeeze', label: t('view.scanners.preset.vol_without_change_squeeze.label'), desc: t('view.scanners.preset.vol_without_change_squeeze.desc') },
+    { id: 'tick_inside_open_squeeze',   label: t('view.scanners.preset.tick_inside_open_squeeze.label'),   desc: t('view.scanners.preset.tick_inside_open_squeeze.desc') },
+    { id: 'pct52w_exact_half_squeeze',  label: t('view.scanners.preset.pct52w_exact_half_squeeze.label'),  desc: t('view.scanners.preset.pct52w_exact_half_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -246,6 +246,8 @@ pub enum Preset {
     SubpointMoveSqueeze,         // |change_pct| < 0.05 AND |day_pct| < 0.05 — essentially zero net move
     NoVolNoMoveSqueeze,          // rel_volume < 0.3 AND change_pct.abs() < 0.3 AND day_pct.abs() < 0.3 — both vol and price asleep
     VolWithoutChangeSqueeze,     // rel_volume >= 1.5 AND change_pct.abs() < 0.2 AND day_pct.abs() < 0.5 — vol arrives but price doesn't move
+    TickInsideOpenSqueeze,       // |day_pct| < 0.15 AND |change_pct| < 0.5 AND |gap_pct| < 0.3 — closing within a tick of open
+    Pct52wExactHalfSqueeze,      // year_high_pct -55 to -45 AND year_low_pct 45 to 55 AND |change_pct| < 0.5 — sitting at exact 52w midpoint
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -902,6 +904,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.2
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::TickInsideOpenSqueeze => {
+            hit.day_pct.abs() < 0.15
+                && hit.change_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.3
+        }
+        Preset::Pct52wExactHalfSqueeze => {
+            hit.year_high_pct <= -45.0
+                && hit.year_high_pct >= -55.0
+                && hit.year_low_pct >= 45.0
+                && hit.year_low_pct <= 55.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1038,6 +1052,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SubpointMoveSqueeze => "Sub-Point Move Squeeze",
         Preset::NoVolNoMoveSqueeze => "No-Vol No-Move Squeeze",
         Preset::VolWithoutChangeSqueeze => "Vol-Without-Change Squeeze",
+        Preset::TickInsideOpenSqueeze => "Tick-Inside-Open Squeeze",
+        Preset::Pct52wExactHalfSqueeze => "52w Exact-Half Squeeze",
     }
 }
 
