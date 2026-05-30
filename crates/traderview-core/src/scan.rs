@@ -1126,6 +1126,8 @@ pub enum Preset {
     QuintupledVolDownHotVol,                   // rel_volume >= 5 AND change_pct < -3 — quintupled vol (>=5) + big down move (<-3%) (extreme participation event with bear-direction: vol is 5x its average and price prints a significant down move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
     QuintupledVolUpNearYearHighHotVol,         // rel_volume >= 5 AND change_pct > 3 AND year_high_pct < 2 — quintupled vol (>=5) + big up move (>3%) + at/near 52w high (<2%) (once-per-quarter breakout event at the year peak: vol is 5x its average, price prints a significant up move and reaches the 52w high simultaneously; highest-conviction breakout-at-extreme signal worth a tier-1 alert)
     QuintupledVolDownNearYearLowHotVol,        // rel_volume >= 5 AND change_pct < -3 AND year_low_pct < 2 — quintupled vol (>=5) + big down move (<-3%) + at/near 52w low (<2%) (once-per-quarter breakdown event at the year trough: vol is 5x its average, price prints a significant down move and reaches the 52w low simultaneously; highest-conviction breakdown-at-extreme signal worth a tier-1 alert)
+    QuintupledVolUpDeepBelowYearHighHotVol,    // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 20 — quintupled vol (>=5) + big up move (>3%) + far below 52w high (>=20%) (extreme catalyst recovery from deep pullback: vol is 5x average and price prints a significant up move while still well below the prior peak; turnaround-catalyst at the highest possible tier worth a regime-change alert)
+    QuintupledVolDownDeepAboveYearLowHotVol,   // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 20 — quintupled vol (>=5) + big down move (<-3%) + far above 52w low (>=20%) (extreme catalyst rejection from deep advance: vol is 5x average and price prints a significant down move while still well above the prior trough; top-fade catalyst at the highest possible tier worth a regime-change alert)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6934,6 +6936,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::QuintupledVolDownNearYearLowHotVol => {
             hit.rel_volume >= 5.0 && hit.change_pct < -3.0 && hit.year_low_pct < 2.0
         }
+        Preset::QuintupledVolUpDeepBelowYearHighHotVol => {
+            hit.rel_volume >= 5.0 && hit.change_pct > 3.0 && hit.year_high_pct >= 20.0
+        }
+        Preset::QuintupledVolDownDeepAboveYearLowHotVol => {
+            hit.rel_volume >= 5.0 && hit.change_pct < -3.0 && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -7950,6 +7958,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolDownHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) (Extreme Participation Event with Bear-direction: Vol Is 5x Its Average and Price Prints a Significant Down Move; Rare News/earnings/catalyst Day at the Highest Possible Conviction Tier, Typically a Once-per-quarter Occurrence per Name)",
         Preset::QuintupledVolUpNearYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + At/near 52w High (<2 %) (Once-per-quarter Breakout Event at the Year Peak: Vol Is 5x Its Average, Price Prints a Significant Up Move and Reaches the 52w High Simultaneously; Highest-conviction Breakout-at-extreme Signal Worth a Tier-1 Alert)",
         Preset::QuintupledVolDownNearYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + At/near 52w Low (<2 %) (Once-per-quarter Breakdown Event at the Year Trough: Vol Is 5x Its Average, Price Prints a Significant Down Move and Reaches the 52w Low Simultaneously; Highest-conviction Breakdown-at-extreme Signal Worth a Tier-1 Alert)",
+        Preset::QuintupledVolUpDeepBelowYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + Far below 52w High (>=20 %) (Extreme Catalyst Recovery from Deep Pullback: Vol Is 5x Average and Price Prints a Significant Up Move While Still Well below the Prior Peak; Turnaround-catalyst at the Highest Possible Tier Worth a Regime-change Alert)",
+        Preset::QuintupledVolDownDeepAboveYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Far above 52w Low (>=20 %) (Extreme Catalyst Rejection from Deep Advance: Vol Is 5x Average and Price Prints a Significant Down Move While Still Well above the Prior Trough; Top-fade Catalyst at the Highest Possible Tier Worth a Regime-change Alert)",
     }
 }
 
