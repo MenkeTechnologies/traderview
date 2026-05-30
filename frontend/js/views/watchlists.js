@@ -53,6 +53,11 @@ export async function renderWatchlists(mount) {
             <h2 data-i18n="view.watchlists.h2.change_chart">Change % per symbol</h2>
             <div id="wl-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.watchlists.h2.volume_chart">Volume per symbol</h2>
+            <div id="wl-vol-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
 
     mount.querySelectorAll('[data-wl]').forEach(b =>
@@ -140,6 +145,7 @@ export async function renderWatchlists(mount) {
                 }).join('')}</tbody>
             </table>`;
         renderChangeChart(data.symbols, byKey);
+        renderVolumeChart(data.symbols, byKey);
         elNow.querySelectorAll('[data-rm]').forEach(b =>
             b.addEventListener('click', async () => {
                 await api.removeWatchlistSym(wid, b.dataset.rm);
@@ -148,6 +154,43 @@ export async function renderWatchlists(mount) {
             }));
     }
     void go;
+}
+
+function renderVolumeChart(symbols, byKey) {
+    const el = document.getElementById('wl-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (symbols || [])
+        .map(sym => ({ sym, v: Number(byKey.get(sym)?.volume), ch: Number(byKey.get(sym)?.change_pct) }))
+        .filter(r => Number.isFinite(r.v) && r.v > 0);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.watchlists.empty_vol_chart">${esc(t('view.watchlists.empty_vol_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.v - a.v);
+    const labels = rows.map(r => r.sym);
+    const xs = labels.map((_, i) => i + 1);
+    const upY   = rows.map(r => Number.isFinite(r.ch) && r.ch >= 0 ? r.v : null);
+    const downY = rows.map(r => Number.isFinite(r.ch) && r.ch <  0 ? r.v : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.watchlists.chart.symbol') },
+            { label: t('view.watchlists.chart.vol_up'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.watchlists.chart.vol_down'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, upY, downY], el);
 }
 
 function renderChangeChart(symbols, byKey) {

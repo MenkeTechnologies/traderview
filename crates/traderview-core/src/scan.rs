@@ -366,6 +366,8 @@ pub enum Preset {
     HighRangeHighVolWeak,        // hod_dist + lod_dist > 4 AND change_pct < -3 AND rel_volume >= 1.5 — wide-range weak day on heavy vol (initiative selling day)
     LowRangeLowVolNeutral,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — quiet, tight, flat day (balance / observation day)
     AvgRangeAvgVolNeutral,       // hod_dist + lod_dist between 2 and 4 AND change_pct.abs() < 0.5 AND rel_volume between 0.8 and 1.2 — average range/vol with no net move (no-edge day)
+    FailedBreakoutHighReclaim,   // year_high_pct > -1 AND hod_dist.abs() > 1 AND change_pct < -1 AND rel_volume >= 1.5 — touched/exceeded 52w high then closed -1% lower on heavy vol (failed breakout)
+    FailedBreakdownLowReclaim,   // year_low_pct < 1 AND lod_dist.abs() > 1 AND change_pct > 1 AND rel_volume >= 1.5 — touched/exceeded 52w low then closed +1% higher on heavy vol (failed breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1620,6 +1622,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 0.8 && hit.rel_volume <= 1.2
         }
+        Preset::FailedBreakoutHighReclaim => {
+            hit.year_high_pct > -1.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::FailedBreakdownLowReclaim => {
+            hit.year_low_pct < 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -1876,6 +1890,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HighRangeHighVolWeak => "Hi-Range Hi-Vol Weak Day",
         Preset::LowRangeLowVolNeutral => "Lo-Range Lo-Vol Neutral",
         Preset::AvgRangeAvgVolNeutral => "Avg-Range Avg-Vol Neutral",
+        Preset::FailedBreakoutHighReclaim => "Failed 52w-High Breakout",
+        Preset::FailedBreakdownLowReclaim => "Failed 52w-Low Breakdown",
     }
 }
 
