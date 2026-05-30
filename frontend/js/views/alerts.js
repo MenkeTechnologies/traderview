@@ -3,6 +3,8 @@ import { esc, fmtDateTime } from '../util.js';
 import { playSound, speak } from '../alert_engine.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 const TRIGGERS = [
     'price_above', 'price_below',
@@ -25,18 +27,18 @@ export async function renderAlerts(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.alerts.h2.new_alert">New alert</h2>
             <form id="alert-form" class="inline-form">
-                <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
-                <select name="trigger">
+                <input name="symbol" data-shortcut="focus_search" data-tip="view.alerts.tip.symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
+                <select name="trigger" data-tip="view.alerts.tip.trigger">
                     ${TRIGGERS.map(trig => `<option value="${trig}" data-i18n="view.alerts.trigger.${trig}">${esc(trig)}</option>`).join('')}
                 </select>
-                <input name="threshold" type="number" step="any" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold">
-                <select name="sound">
+                <input name="threshold" type="number" step="any" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold" data-tip="view.alerts.tip.threshold">
+                <select name="sound" data-tip="view.alerts.tip.sound">
                     ${SOUNDS.map(s => `<option value="${s}" data-i18n="view.alerts.sound.${s}">${esc(s)}</option>`).join('')}
                 </select>
-                <input name="voice_text" placeholder="voice message (optional)" data-i18n-placeholder="view.alerts.placeholder.voice">
-                <button data-i18n="view.alerts.btn.create" class="primary" type="submit">Create</button>
-                <button data-i18n="view.alerts.btn.test_bell" type="button" class="link" id="test-bell">test bell</button>
-                <button data-i18n="view.alerts.btn.test_voice" type="button" class="link" id="test-voice">test voice</button>
+                <input name="voice_text" placeholder="voice message (optional)" data-i18n-placeholder="view.alerts.placeholder.voice" data-tip="view.alerts.tip.voice_text">
+                <button data-i18n="view.alerts.btn.create" data-tip="view.alerts.tip.create" class="primary" type="submit">Create</button>
+                <button data-i18n="view.alerts.btn.test_bell" data-tip="view.alerts.tip.test_bell" type="button" class="link" id="test-bell">test bell</button>
+                <button data-i18n="view.alerts.btn.test_voice" data-tip="view.alerts.tip.test_voice" type="button" class="link" id="test-voice">test voice</button>
             </form>
         </div>
 
@@ -72,30 +74,48 @@ export async function renderAlerts(mount) {
     mount.querySelector('#alert-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.createAlert({
-            symbol: fd.get('symbol').trim().toUpperCase(),
-            trigger: fd.get('trigger'),
-            threshold: fd.get('threshold') ? Number(fd.get('threshold')) : null,
-            sound: fd.get('sound'),
-            voice_text: fd.get('voice_text') || null,
-        });
-        if (!viewIsCurrent(tok)) return;
-        renderAlerts(mount);
+        const symbol = String(fd.get('symbol') || '').trim().toUpperCase();
+        try {
+            await api.createAlert({
+                symbol,
+                trigger: fd.get('trigger'),
+                threshold: fd.get('threshold') ? Number(fd.get('threshold')) : null,
+                sound: fd.get('sound'),
+                voice_text: fd.get('voice_text') || null,
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.alerts.toast.created', { symbol }), { level: 'success' });
+            renderAlerts(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
     mount.querySelector('#test-bell').addEventListener('click', () => playSound('bell'));
     mount.querySelector('#test-voice').addEventListener('click', () =>
         speak(t('view.alerts.test_voice_phrase')));
     mount.querySelectorAll('[data-tog]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.toggleAlert(b.dataset.tog, b.dataset.en !== 'true');
-            if (!viewIsCurrent(tok)) return;
-            renderAlerts(mount);
+            const willEnable = b.dataset.en !== 'true';
+            try {
+                await api.toggleAlert(b.dataset.tog, willEnable);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t(willEnable ? 'view.alerts.toast.enabled' : 'view.alerts.toast.disabled'), { level: 'success' });
+                renderAlerts(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         }));
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteAlert(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderAlerts(mount);
+            if (!await tConfirm('view.alerts.confirm.delete', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteAlert(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.alerts.toast.deleted'), { level: 'success' });
+                renderAlerts(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         }));
 }
 
