@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseObsBlob, obsToBlob, validateInputs, buildBody, localAnalyze,
@@ -29,17 +30,17 @@ export async function renderEffectiveSpread(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.eff_spread.btn.compute" id="es-run" class="primary"
-                        data-tip="view.eff_spread.tip.compute" type="button">Analyze</button>
+                        data-tip="view.eff_spread.tip.compute" data-shortcut="effective_spread_run" type="button">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.eff_spread.btn.demo_at_quote"   id="es-demo-atq"     class="secondary" type="button">Demo: at-quote trades</button>
-                <button data-i18n="view.eff_spread.btn.demo_improve"    id="es-demo-imp"     class="secondary" type="button">Demo: price improvement</button>
-                <button data-i18n="view.eff_spread.btn.demo_adverse"    id="es-demo-adv"     class="secondary" type="button">Demo: adverse selection (informed flow)</button>
-                <button data-i18n="view.eff_spread.btn.demo_lp_wins"    id="es-demo-lpw"     class="secondary" type="button">Demo: LP wins (uninformed)</button>
-                <button data-i18n="view.eff_spread.btn.demo_trade_thru" id="es-demo-tt"      class="secondary" type="button">Demo: trade-through</button>
-                <button data-i18n="view.eff_spread.btn.demo_mixed"      id="es-demo-mix"     class="secondary" type="button">Demo: mixed quality</button>
-                <button data-i18n="view.eff_spread.btn.demo_tight"      id="es-demo-tight"   class="secondary" type="button">Demo: penny-spread market</button>
-                <button data-i18n="view.eff_spread.btn.demo_wide"       id="es-demo-wide"    class="secondary" type="button">Demo: wide-spread (50¢)</button>
+                <button data-i18n="view.eff_spread.btn.demo_at_quote"   id="es-demo-atq"     class="secondary" type="button" data-tip="view.eff_spread.tip.demo_atq">Demo: at-quote trades</button>
+                <button data-i18n="view.eff_spread.btn.demo_improve"    id="es-demo-imp"     class="secondary" type="button" data-tip="view.eff_spread.tip.demo_imp">Demo: price improvement</button>
+                <button data-i18n="view.eff_spread.btn.demo_adverse"    id="es-demo-adv"     class="secondary" type="button" data-tip="view.eff_spread.tip.demo_adv">Demo: adverse selection (informed flow)</button>
+                <button data-i18n="view.eff_spread.btn.demo_lp_wins"    id="es-demo-lpw"     class="secondary" type="button" data-tip="view.eff_spread.tip.demo_lpw">Demo: LP wins (uninformed)</button>
+                <button data-i18n="view.eff_spread.btn.demo_trade_thru" id="es-demo-tt"      class="secondary" type="button" data-tip="view.eff_spread.tip.demo_tt">Demo: trade-through</button>
+                <button data-i18n="view.eff_spread.btn.demo_mixed"      id="es-demo-mix"     class="secondary" type="button" data-tip="view.eff_spread.tip.demo_mix">Demo: mixed quality</button>
+                <button data-i18n="view.eff_spread.btn.demo_tight"      id="es-demo-tight"   class="secondary" type="button" data-tip="view.eff_spread.tip.demo_tight">Demo: penny-spread market</button>
+                <button data-i18n="view.eff_spread.btn.demo_wide"       id="es-demo-wide"    class="secondary" type="button" data-tip="view.eff_spread.tip.demo_wide">Demo: wide-spread (50¢)</button>
             </div>
             <p data-i18n="view.eff_spread.hint.about" class="muted">effective = 2·D·(trade − mid). realized = 2·D·(trade − mid_delayed). impact = effective − realized. eff/quoted ratio: &lt;1 = price improvement, &gt;1 = trade-through. D=+1 buy, −1 sell.</p>
         </div>
@@ -79,6 +80,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.eff_spread.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.eff_spread.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -88,9 +90,13 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.eff_spread.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state.observations);
-    if (!local) { showErr(t('view.eff_spread.err.degenerate')); return; }
+    if (!local) {
+        showErr(t('view.eff_spread.err.degenerate'));
+        showToast(t('view.eff_spread.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(local, true);
     renderTable();
     renderSpreadChart();
@@ -99,13 +105,30 @@ async function compute(tok) {
         resp = await api.microEffectiveSpread(buildBody(state));
     } catch (e) {
         showErr(`${t('view.eff_spread.err.api')}: ${e.message || e}`);
+        showToast(t('view.eff_spread.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.eff_spread.err.server_rejected')); return; }
+    if (!resp) {
+        showErr(t('view.eff_spread.err.server_rejected'));
+        showToast(t('view.eff_spread.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(resp, false);
     renderTable();
     renderSpreadChart();
+    const refPrice = state.observations.length > 0 ? state.observations[0].current_mid : NaN;
+    const effBps = Number.isFinite(refPrice) && refPrice > 0
+        ? (Number(resp.avg_effective_spread) / refPrice) * 10000
+        : NaN;
+    const effBpsStr = Number.isFinite(effBps) ? effBps.toFixed(2) : '—';
+    const realized = Number(resp.avg_realized_spread) || 0;
+    const level = realized < 0 ? 'warning' : 'success';
+    showToast(t('view.eff_spread.toast.analyzed', {
+        n: resp.n_observations | 0,
+        eff: effBpsStr,
+        realized: realized.toFixed(4),
+    }), { level });
 }
 
 function renderSummary(report, pending) {
