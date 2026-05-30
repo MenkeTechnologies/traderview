@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseAssetsBlob, assetsToBlob, parseMarketBlob, marketToBlob,
@@ -36,17 +37,17 @@ export async function renderBetaShrink(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.beta_shrink.btn.compute" id="bs-run" class="primary"
-                        data-tip="view.beta_shrink.tip.compute" type="button">Shrink</button>
+                        data-tip="view.beta_shrink.tip.compute" data-shortcut="beta_shrink_run" type="button">Shrink</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.beta_shrink.btn.demo_mixed"  id="bs-d1" class="secondary" type="button">Demo: mixed betas</button>
-                <button data-i18n="view.beta_shrink.btn.demo_tight"  id="bs-d2" class="secondary" type="button">Demo: tight vs noisy</button>
-                <button data-i18n="view.beta_shrink.btn.demo_sim"    id="bs-d3" class="secondary" type="button">Demo: all near 1.0</button>
-                <button data-i18n="view.beta_shrink.btn.demo_sector" id="bs-d4" class="secondary" type="button">Demo: sector mix</button>
-                <button data-i18n="view.beta_shrink.btn.demo_inv"    id="bs-d5" class="secondary" type="button">Demo: inverse ETFs</button>
-                <button data-i18n="view.beta_shrink.btn.demo_short"  id="bs-d6" class="secondary" type="button">Demo: short series (n=10)</button>
-                <button data-i18n="view.beta_shrink.btn.demo_mismatch" id="bs-d7" class="secondary" type="button">Demo: length mismatch</button>
-                <button data-i18n="view.beta_shrink.btn.demo_single" id="bs-d8" class="secondary" type="button">Demo: single asset</button>
+                <button data-i18n="view.beta_shrink.btn.demo_mixed"    id="bs-d1" class="secondary" data-tip="view.beta_shrink.tip.demo_mixed"    type="button">Demo: mixed betas</button>
+                <button data-i18n="view.beta_shrink.btn.demo_tight"    id="bs-d2" class="secondary" data-tip="view.beta_shrink.tip.demo_tight"    type="button">Demo: tight vs noisy</button>
+                <button data-i18n="view.beta_shrink.btn.demo_sim"      id="bs-d3" class="secondary" data-tip="view.beta_shrink.tip.demo_sim"      type="button">Demo: all near 1.0</button>
+                <button data-i18n="view.beta_shrink.btn.demo_sector"   id="bs-d4" class="secondary" data-tip="view.beta_shrink.tip.demo_sector"   type="button">Demo: sector mix</button>
+                <button data-i18n="view.beta_shrink.btn.demo_inv"      id="bs-d5" class="secondary" data-tip="view.beta_shrink.tip.demo_inv"      type="button">Demo: inverse ETFs</button>
+                <button data-i18n="view.beta_shrink.btn.demo_short"    id="bs-d6" class="secondary" data-tip="view.beta_shrink.tip.demo_short"    type="button">Demo: short series (n=10)</button>
+                <button data-i18n="view.beta_shrink.btn.demo_mismatch" id="bs-d7" class="secondary" data-tip="view.beta_shrink.tip.demo_mismatch" type="button">Demo: length mismatch</button>
+                <button data-i18n="view.beta_shrink.btn.demo_single"   id="bs-d8" class="secondary" data-tip="view.beta_shrink.tip.demo_single"   type="button">Demo: single asset</button>
             </div>
             <p data-i18n="view.beta_shrink.hint.about" class="muted">Vasicek (1973) Bayes-optimal shrinkage: β̂ = w·β_OLS + (1−w)·β̄, w = σ²_cs/(σ²_cs + se²_OLS). Pulls noisy estimates toward cross-sectional mean β̄. High-se assets get strong shrinkage; tight-fit assets stay near OLS. Reduces estimation error vs raw OLS beta.</p>
         </div>
@@ -94,6 +95,7 @@ function readInputs() {
     if (errs.length) {
         showErr(`${t('view.beta_shrink.err.parse_prefix')}: `
             + errs.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.beta_shrink.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -104,9 +106,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.beta_shrink.toast.invalid'), { level: 'warning' }); return; }
     const local = localShrink(state.assets, state.market_returns);
-    if (!local) { showErr(t('view.beta_shrink.err.degenerate')); return; }
+    if (!local) { showErr(t('view.beta_shrink.err.degenerate')); showToast(t('view.beta_shrink.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderTable(local);
     renderBetaChart(local);
@@ -116,14 +118,16 @@ async function compute(tok) {
         resp = await api.anlyBetaShrinkage(buildBody(state));
     } catch (e) {
         showErr(`${t('view.beta_shrink.err.api')}: ${e.message || e}`);
+        showToast(t('view.beta_shrink.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.beta_shrink.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.beta_shrink.err.server_rejected')); showToast(t('view.beta_shrink.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderTable(resp);
     renderBetaChart(resp);
     renderWeightChart(resp);
+    showToast(t('view.beta_shrink.toast.shrunk'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

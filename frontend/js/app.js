@@ -1056,6 +1056,11 @@ function bindTabs() {
         const el = document.getElementById('bd-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in beta-shrinkage scope → click Shrink.
+    window.addEventListener('tv:beta-shrink-run', () => {
+        const el = document.getElementById('bs-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
