@@ -6,6 +6,8 @@
 // Naive risk parity: w_i ∝ 1/σ_i, normalize → Σw = 1. Each asset's
 // risk_contribution = weight × vol = 1 / Σ(1/σ) — constant across assets.
 
+import { t } from './i18n.js';
+
 const TOKEN_DELIM = /[\s,]+/;
 
 // Per line: "<symbol> <vol>"; vol > 0; %-suffix supported (auto / 100).
@@ -13,7 +15,7 @@ export function parseAssetBlob(text) {
     const assets = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { assets, errors: [{ line_no: 0, raw: '', message: 'input not a string' }] };
+        return { assets, errors: [{ line_no: 0, raw: '', message: t('view.risk_parity.parse.input_not_string') }] };
     }
     const lines = text.split(/\r?\n/);
     const seen = new Set();
@@ -24,7 +26,7 @@ export function parseAssetBlob(text) {
         if (!s) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 2) {
-            errors.push({ line_no: i + 1, raw, message: `expected 2 tokens (symbol vol), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.risk_parity.parse.token_count', { n: parts.length }) });
             continue;
         }
         const sym = parts[0].toUpperCase();
@@ -33,11 +35,11 @@ export function parseAssetBlob(text) {
         if (volStr.endsWith('%')) { volStr = volStr.slice(0, -1); div = 100; }
         const vol = Number(volStr) / div;
         if (!Number.isFinite(vol) || vol < 0) {
-            errors.push({ line_no: i + 1, raw, message: 'vol must be finite ≥ 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.risk_parity.parse.vol_invalid') });
             continue;
         }
         if (seen.has(sym)) {
-            errors.push({ line_no: i + 1, raw, message: `duplicate symbol ${sym}` });
+            errors.push({ line_no: i + 1, raw, message: t('view.risk_parity.parse.duplicate_symbol', { sym }) });
             continue;
         }
         seen.add(sym);
@@ -52,7 +54,7 @@ function stripComment(raw) {
 }
 
 export function validateInputs(assets) {
-    if (!Array.isArray(assets) || assets.length === 0) return 'need ≥ 1 asset';
+    if (!Array.isArray(assets) || assets.length === 0) return t('view.risk_parity.validate.assets_min');
     return null;
 }
 

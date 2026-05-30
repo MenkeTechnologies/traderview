@@ -308,6 +308,11 @@
   "topbar.aria.shortcuts":    "Open keyboard shortcuts",
 
   "view.risk_parity.h1.title":          "// RISK PARITY",
+  "view.risk_parity.parse.input_not_string": "input not a string",
+  "view.risk_parity.parse.token_count":      "expected 2 tokens (symbol vol), got {n}",
+  "view.risk_parity.parse.vol_invalid":      "vol must be finite ≥ 0",
+  "view.risk_parity.parse.duplicate_symbol": "duplicate symbol {sym}",
+  "view.risk_parity.validate.assets_min":    "need ≥ 1 asset",
   "view.risk_parity.h2.assets":         "Assets",
   "view.risk_parity.h2.assets_hint":    "(per line: SYMBOL vol; %-suffix OK)",
   "view.risk_parity.h2.weights":        "Risk-parity vs equal-weight",
