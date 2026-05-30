@@ -65,6 +65,12 @@ export async function renderOptimalF(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.optimal_f.h2.return_dist_chart">Per-trade return distribution</h2>
+            <div id="of-dist-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.optimal_f.hint.return_dist" class="muted small">Histogram of trade P/Ls feeding into the optimal-f computation. Reveals the edge shape — symmetric, skewed, fat-tailed, multimodal. Yellow dashed = zero (break-even).</p>
+        </div>
+
         <div id="of-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -98,6 +104,7 @@ async function compute(mount, tok) {
 
     renderSummary(parsed.value, res);
     renderChart(parsed.value, res);
+    renderReturnDistChart(parsed.value);
     showToast(t('view.optimal_f.toast.done', {
         f: fmtPctF(res.optimal_f),
         twr: fmtMultiple(res.twr_at_optimal),
@@ -181,6 +188,42 @@ function renderChart(returns, res) {
             { stroke: '#aab' },
         ],
     }, [xs, ys, optimalMarker, halfMarker, quarterMarker], el);
+}
+
+function renderReturnDistChart(returns) {
+    const el = document.getElementById('of-dist-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(returns) || returns.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.optimal_f.empty_dist_chart">${esc(t('view.optimal_f.empty_dist_chart'))}</div>`;
+        return;
+    }
+    const min = Math.min(...returns);
+    const max = Math.max(...returns);
+    const span = max - min || 1;
+    const bins = Math.min(20, Math.max(5, Math.ceil(Math.sqrt(returns.length))));
+    const counts = new Array(bins).fill(0);
+    for (const r of returns) {
+        const idx = Math.min(bins - 1, Math.max(0, Math.floor((r - min) / span * bins)));
+        counts[idx] += 1;
+    }
+    const xs = Array.from({ length: bins }, (_, i) => min + (i + 0.5) * (span / bins));
+    const zeroLine = xs.map(x => Math.abs(x) < (span / bins / 2) ? Math.max(...counts) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.optimal_f.chart.return_bin') },
+            { label: t('view.optimal_f.chart.frequency'),
+              stroke: '#b86bff', width: 1.5,
+              fill: '#b86bff33', points: { show: true, size: 5 } },
+            { label: t('view.optimal_f.chart.zero'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 10, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 }],
+        legend: { show: true },
+    }, [xs, counts, zeroLine], el);
 }
 
 function renderParseErrors(errors) {

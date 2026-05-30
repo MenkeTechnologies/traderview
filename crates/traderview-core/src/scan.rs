@@ -734,6 +734,8 @@ pub enum Preset {
     MidRangeSelloffHotVol,               // year_high_pct > 10 AND year_low_pct > 10 AND change_pct < -3 AND rel_volume >= 2 — sold off well from 52w highs + still above lows + big red + hot vol (sustained selloff in mid-52w; not at either extreme; mid-range bearish move with conviction)
     IntermediateGreenStrongClose,        // change_pct in [3, 7] AND rel_volume in [1.5, 3] AND hod_dist_pct.abs() < 1 — meaningful green (3-7%) + decent vol (1.5-3×) + close near HOD (intermediate gain on intermediate vol with strong finish; sweet spot between organic and parabolic; momentum without exhaustion)
     IntermediateRedWeakClose,            // change_pct in [-7, -3] AND rel_volume in [1.5, 3] AND lod_dist_pct.abs() < 1 — meaningful red (-3 to -7%) + decent vol (1.5-3×) + close near LOD (intermediate drop with weak finish; sweet spot between organic and crash; weakness without panic)
+    MaxVolatilityEventHotVol,            // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big gap + big change + wide intraday range + hot vol (max-volatility event day; gap caught attention, intraday explored wide range, hot vol confirmed; catalyst-driven volatility expansion)
+    MaxRangeFakeOutDryVol,               // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 1 — big gap + big change + wide intraday range + DRY vol (max-range fake-out; wide intraday with thin tape suggests stop-runs without true conviction; algorithmic noise on illiquid name)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4129,6 +4131,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 3.0
                 && hit.lod_dist_pct.abs() < 1.0
         }
+        Preset::MaxVolatilityEventHotVol => {
+            hit.gap_pct.abs() > 2.0
+                && hit.change_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MaxRangeFakeOutDryVol => {
+            hit.gap_pct.abs() > 2.0
+                && hit.change_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume < 1.0
+        }
     }
 }
 
@@ -4753,6 +4767,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidRangeSelloffHotVol => "Mid 52w + Big Red + Hot Vol (Sustained Selloff Off Highs; Not At Either Extreme; Mid-range Bearish)",
         Preset::IntermediateGreenStrongClose => "Meaningful Green (3-7%) + Decent Vol (1.5-3×) + Close Near HOD (Intermediate Momentum; Sweet Spot Between Organic and Parabolic)",
         Preset::IntermediateRedWeakClose => "Meaningful Red (-3 to -7%) + Decent Vol (1.5-3×) + Close Near LOD (Intermediate Weakness; Sweet Spot Between Organic and Crash)",
+        Preset::MaxVolatilityEventHotVol => "Big Gap + Big Change + Wide Range + Hot Vol (Max-volatility Event Day; Catalyst-driven Volatility Expansion)",
+        Preset::MaxRangeFakeOutDryVol => "Big Gap + Big Change + Wide Range + Dry Vol (Max-range Fake-out; Stop-runs Without True Conviction; Algorithmic Noise on Illiquid Name)",
     }
 }
 
