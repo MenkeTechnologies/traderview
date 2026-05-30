@@ -202,6 +202,8 @@ pub enum Preset {
     HighVolNoMoveSqueeze,        // rel_volume >= 2 AND |change_pct| < 0.5 AND |day_pct| < 0.7 — heavy distribution-without-move bar
     ChangeButLodNearbySqueeze,   // change_pct >= 1 AND lod_dist.abs() < 1 — up day but close is back near LOD (failed)
     ChangeButHodNearbySqueeze,   // change_pct <= -1 AND hod_dist.abs() < 1 — down day but close is back near HOD (bullish reversal)
+    GapAndCloseAtHodSqueeze,     // gap >= 0.5 AND hod_dist.abs() < 0.5 AND day_pct >= 0 — gap up + close at HOD (consolidation high)
+    GapAndCloseAtLodSqueeze,     // gap <= -0.5 AND lod_dist.abs() < 0.5 AND day_pct <= 0 — gap down + close at LOD (consolidation low)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -610,6 +612,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::ChangeButHodNearbySqueeze => {
             hit.change_pct <= -1.0 && hit.hod_dist_pct.abs() < 1.0
         }
+        Preset::GapAndCloseAtHodSqueeze => {
+            hit.gap_pct >= 0.5
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.day_pct >= 0.0
+        }
+        Preset::GapAndCloseAtLodSqueeze => {
+            hit.gap_pct <= -0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.day_pct <= 0.0
+        }
     }
 }
 
@@ -702,6 +714,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HighVolNoMoveSqueeze => "Heavy-Vol No-Move Squeeze",
         Preset::ChangeButLodNearbySqueeze => "Up-Day-Failed Squeeze",
         Preset::ChangeButHodNearbySqueeze => "Down-Day-Reversed Squeeze",
+        Preset::GapAndCloseAtHodSqueeze => "Gap-Up Hold-HOD Squeeze",
+        Preset::GapAndCloseAtLodSqueeze => "Gap-Down Hold-LOD Squeeze",
     }
 }
 
