@@ -29,14 +29,17 @@ function walk(dir) {
 }
 
 function findTCalls(src) {
-    // Match t('key', ...) or tr('key', ...) — only static string literals.
-    // Note: this only handles direct-quoted forms, not ternaries (t(cond ? 'a' : 'b'))
-    // because those have variable position. False negatives are acceptable;
-    // false positives are not.
+    // Match t('key'), tr('key'), translateOrFallback(translate, 'key', ...),
+    // lookup(translate, 'key', ...) — only static string literals.
+    // Ternaries (t(cond ? 'a' : 'b')) are intentionally NOT matched; false
+    // negatives are acceptable, false positives are not.
     const out = [];
-    const re = /\b(?:t|tr)\(\s*(['"])([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)\1/gi;
+    const tRe = /\b(?:t|tr)\(\s*(['"])([a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+)\1/gi;
     let m;
-    while ((m = re.exec(src)) !== null) out.push(m[2]);
+    while ((m = tRe.exec(src)) !== null) out.push(m[2]);
+    // Wrappers: translateOrFallback / lookup — second argument is the key.
+    const wrapRe = /\b(?:translateOrFallback|lookup)\(\s*\w+\s*,\s*(['"])([a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+)\1/gi;
+    while ((m = wrapRe.exec(src)) !== null) out.push(m[2]);
     return out;
 }
 
