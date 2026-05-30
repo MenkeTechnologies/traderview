@@ -668,6 +668,8 @@ pub enum Preset {
     Year52LowGapDownHotVolBigDrop,   // year_low_pct < 1 AND gap_pct < -1 AND rel_volume >= 2 AND change_pct < -1 — within 1% of 52w low + gap down + hot vol + finished down (breakdown capitulation day at multi-year lows)
     WideRangeFlatCloseHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide intraday range + flat close + hot vol (tug-of-war battle with heavy participation; bulls and bears trade aggressively, neither wins)
     BigGapNarrowIntradayHotVol,      // gap_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — huge gap + tight intraday range + hot vol (gap holds; no follow-through movement either direction; participants accept the new gap level on volume)
+    Year52HighDryVolNarrowRange,     // year_high_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w high + dry vol + narrow range + flat (silent compression at multi-year highs; coiled spring before next leg or rejection)
+    Year52LowDryVolNarrowRange,      // year_low_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w low + dry vol + narrow range + flat (silent compression at multi-year lows; capitulation exhaustion or coiled bounce setup)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3654,6 +3656,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::Year52HighDryVolNarrowRange => {
+            hit.year_high_pct < 2.0
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.3
+        }
+        Preset::Year52LowDryVolNarrowRange => {
+            hit.year_low_pct < 2.0
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.3
+        }
     }
 }
 
@@ -4212,6 +4226,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowGapDownHotVolBigDrop => "Within 1% of 52w Low + Gap Down + Hot Vol + Finished Down (Breakdown Capitulation at Multi-year Lows)",
         Preset::WideRangeFlatCloseHotVol => "Wide Range + Flat Close + Hot Vol (Tug-of-war Battle with Heavy Participation; No Winner)",
         Preset::BigGapNarrowIntradayHotVol => "Huge Gap + Tight Intraday Range + Hot Vol (Gap Accepted on Volume; No Follow-through)",
+        Preset::Year52HighDryVolNarrowRange => "Near 52w High + Dry Vol + Narrow Range + Flat (Silent Compression at Multi-year Highs; Coiled Spring)",
+        Preset::Year52LowDryVolNarrowRange => "Near 52w Low + Dry Vol + Narrow Range + Flat (Silent Compression at Multi-year Lows; Coiled Bounce Setup)",
     }
 }
 

@@ -55,6 +55,12 @@ export async function renderHeatmapDowHour(mount, _appState) {
             <div id="hh-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.heatmap_dow_hour.h2.dow_chart">Aggregate P&L per day of week (across all hours)</h2>
+            <div id="hh-dow-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.heatmap_dow_hour.hint.dow_chart" class="muted small">Sum of net P&L per weekday. Reveals which calendar days are systematically profitable vs lossy independent of intraday timing.</p>
+        </div>
+
         <div id="hh-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -111,6 +117,7 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderGrid(normalized);
     renderHourChart(normalized);
+    renderDowChart(normalized);
     const total = Number(normalized.total_pnl) || 0;
     const trades = normalized.total_trades | 0;
     const level = total >= 0 ? 'success' : 'warning';
@@ -154,6 +161,46 @@ function renderHourChart(report) {
         ],
         legend: { show: true },
     }, [xs, hourly, zero], el);
+}
+
+function renderDowChart(report) {
+    const el = document.getElementById('hh-dow-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !report.cells || report.total_trades === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.heatmap_dow_hour.empty_dow_chart">${esc(t('view.heatmap_dow_hour.empty_dow_chart'))}</div>`;
+        return;
+    }
+    const dows = new Array(7).fill(0);
+    for (let d = 0; d < 7; d++) {
+        const row = report.cells[d] || [];
+        for (let h = 0; h < 24; h++) {
+            const c = row[h];
+            if (c && c.trades > 0) dows[d] += dec(c.net_pnl);
+        }
+    }
+    const labels = DOW_LABELS.map(d => t('common.dow.' + d.toLowerCase()));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.heatmap_dow_hour.chart.dow') },
+            { label: t('view.heatmap_dow_hour.chart.pnl'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.heatmap_dow_hour.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, dows, zero], el);
 }
 
 function renderSummary(report, pending) {
