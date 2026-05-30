@@ -115,7 +115,8 @@ function renderCalendarMatrix(events, days, mount) {
                         const timing = (ev.timing || 'unknown');
                         const tag = timing === 'amc' ? '🌙' : timing === 'bmo' ? '☀' : '·';
                         const est = ev.eps_estimate != null ? t('view.earnings_cal.row.eps_estimate', { value: Number(ev.eps_estimate).toFixed(2) }) : '';
-                        return `<div style="font-size:11px;padding:2px 0;">
+                        return `<div style="font-size:11px;padding:2px 0;"
+                                     data-context-scope="symbol-row" data-symbol="${esc(ev.symbol)}">
                             <strong>${esc(ev.symbol)}</strong> ${tag}
                             <span class="muted">${esc(est)}</span>
                         </div>`;
@@ -173,7 +174,7 @@ function renderSurpriseTable(events, mount) {
             const sp = ev.surprise_pct;
             const r1 = ev.reaction_1d_pct;
             const r5 = ev.reaction_5d_pct;
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(ev.symbol)}">
                 <td>${esc(ev.symbol)}</td>
                 <td class="small">${ev.earnings_date}</td>
                 <td>${ev.eps_estimate != null ? Number(ev.eps_estimate).toFixed(2) : '—'}</td>

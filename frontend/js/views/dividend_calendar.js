@@ -212,7 +212,7 @@ function renderTable(rows) {
 
     const rowHtml = visible.map(r => {
         const days = r.ex_date ? daysBetween(now, r.ex_date) : null;
-        return `<tr>
+        return `<tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
             <td>${esc(r.symbol)}</td>
             <td>${esc(fmtDate(r.ex_date))}</td>
             <td class="dc-days">${days == null ? '—' : days + 'd'}</td>
