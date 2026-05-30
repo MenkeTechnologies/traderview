@@ -317,6 +317,7 @@ export async function renderLauncher(mount, _state) {
                    placeholder="filter tiles…  (Esc to clear)"
                    data-i18n-placeholder="view.launcher.search_placeholder"
                    data-tip="view.launcher.search_tip"
+                   data-shortcut="focus_search"
                    autocomplete="off">
         </h1>
         <div id="launcher-grid"></div>

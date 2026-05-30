@@ -21,6 +21,7 @@ export async function renderKeyboardShortcuts(mount, _appState) {
                 <input id="ks-filter" type="text" autocomplete="off" spellcheck="false"
                        data-i18n-placeholder="view.keyboard_shortcuts.placeholder"
                        placeholder="Filter shortcuts…"
+                       data-shortcut="focus_search"
                        value="${esc(_query)}"
                        style="flex:1 0 200px">
             </div>
