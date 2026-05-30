@@ -96,6 +96,12 @@ export async function renderVarCalculator(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.var_calculator.h2.ecdf_chart">Empirical CDF of returns with α level</h2>
+            <div id="vc-ecdf-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.var_calculator.hint.ecdf_chart" class="muted small">Sorted returns vs cumulative fraction. The α = (1 − confidence) horizontal reference (yellow dashed) crosses the curve at −VaR_HS — visualizes left-tail thickness orthogonally to the binned histogram above.</p>
+        </div>
+
         <div id="vc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -150,6 +156,7 @@ async function compute(mount, tok) {
 
     renderSummary(hs, fhs, cf);
     renderChart(parsed.value, hs, fhs, cf);
+    renderEcdfChart(parsed.value, state.confidence);
     showToast(t('view.var_calculator.toast.done', {
         n: parsed.value.length,
         var: hs?.var != null ? formatLoss(hs.var) : '—',
@@ -239,6 +246,40 @@ function renderChart(returns, hs, fhs, cf) {
             values: (_, ticks) => ticks.map(t => `${(t * 100).toFixed(2)}%`),
         }, { stroke: '#aab' }],
     }, [xs, counts, hsLine, fhsLine, cfLine], el);
+}
+
+function renderEcdfChart(returns, confidence) {
+    const el = document.getElementById('vc-ecdf-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const arr = (returns || []).filter(v => Number.isFinite(Number(v)));
+    if (arr.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.var_calculator.empty_ecdf_chart">${esc(t('view.var_calculator.empty_ecdf_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...arr].sort((a, b) => Number(a) - Number(b));
+    const xs = sorted.map(v => Number(v));
+    const ys = sorted.map((_, i) => (i + 1) / sorted.length);
+    const alpha = Number.isFinite(Number(confidence)) ? 1 - Number(confidence) : 0.05;
+    const alphaLine = xs.map(() => alpha);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { range: [0, 1] } },
+        series: [
+            { label: t('view.var_calculator.chart.return') },
+            { label: t('view.var_calculator.chart.ecdf'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.var_calculator.chart.alpha'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab',
+              values: (_, ticks) => ticks.map(v => (v * 100).toFixed(2) + '%') },
+            { stroke: '#aab',
+              values: (_, ticks) => ticks.map(v => v.toFixed(2)) },
+        ],
+        legend: { show: true },
+    }, [xs, ys, alphaLine], el);
 }
 
 function renderParseErrors(errors) {
