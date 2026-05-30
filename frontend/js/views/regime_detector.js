@@ -19,6 +19,7 @@ import {
 } from '../_regime_detector_inputs.js';
 
 import { t, applyUiI18n } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_RETURNS = `# Daily returns (decimal). One per token.
 # Demo: 200 calm bars then 100 high-vol bars (regime change at index 200).
 ${synthRegimeDemo().join('\n')}
@@ -56,8 +57,8 @@ export async function renderRegimeDetector(mount, _appState) {
             <h2 data-i18n="view.regime_detector.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.regime_detector.label.bars_per_year">Bars per year (annualization)</span>
-                    <input id="rd-bpy" type="number" step="1" min="1" value="${state.barsPerYear}"></label>
-                <button data-i18n="view.regime_detector.btn.detect" id="rd-run" class="primary" type="button">Detect</button>
+                    <input id="rd-bpy" type="number" step="1" min="1" value="${state.barsPerYear}" data-tip="view.regime_detector.tip.bpy"></label>
+                <button data-i18n="view.regime_detector.btn.detect" data-tip="view.regime_detector.tip.detect" data-shortcut="regime_detector_run" id="rd-run" class="primary" type="button">Detect</button>
             </div>
             <p data-i18n="view.regime_detector.hint.2_state_markov_switching_via_hamilton_kim_filter_b" class="muted">
                 2-state Markov-switching via Hamilton-Kim filter + Baum-Welch EM. State 1 is
@@ -66,6 +67,7 @@ export async function renderRegimeDetector(mount, _appState) {
             </p>
             <h3 data-i18n="view.regime_detector.h3.return_series">Return series</h3>
             <textarea id="rd-text" rows="10"
+                data-tip="view.regime_detector.tip.returns"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
 
@@ -103,9 +105,10 @@ async function detect(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const err = validateReturns(parsed.value);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     if (!Number.isFinite(state.barsPerYear) || state.barsPerYear < 1) {
-        showErr(t('view.regime_detector.err.bars_per_year_must_be_1')); return;
+        const m = t('view.regime_detector.err.bars_per_year_must_be_1');
+        showErr(m); showToast(m, { level: 'warning' }); return;
     }
 
     let res;
@@ -113,13 +116,19 @@ async function detect(mount, tok) {
         res = await api.anlyMarkovSwitching2State({ returns: parsed.value });
         if (!res) throw new Error(t('view.regime_detector.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(res);
     renderChart(parsed.value, res.prob_state1);
+    const highFrac = highVolBarFraction(res.prob_state1, 0.5);
+    showToast(t('view.regime_detector.toast.done', {
+        n: parsed.value.length,
+        high_pct: (highFrac * 100).toFixed(0),
+    }), { level: 'success' });
 }
 
 function renderSummary(res) {
