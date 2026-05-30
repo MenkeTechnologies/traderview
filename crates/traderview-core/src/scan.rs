@@ -1000,6 +1000,8 @@ pub enum Preset {
     BigGapDownCloseAtLodHotVol,                // gap_pct < -5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2 — large gap down (<-5%) + close pinned to LOD + big red close + hot vol (institutional-conviction gap-down with no dip-buying: large gap held all session and closed at the day's low on doubled participation; earnings-disappointment / news-driven sustained selling through the bell)
     BigGapUpCloseAtLodHotVol,                  // gap_pct > 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — large gap up (>5%) completely faded to LOD + red close + hot vol (institutional bull-trap reversal: dramatic earnings-reaction gap fully absorbed and pushed below the open on doubled participation; high-conviction failed-breakout signal rare enough to mark a regime-shift candidate)
     BigGapDownCloseAtHodHotVol,                // gap_pct < -5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — large gap down (<-5%) completely absorbed to HOD + green close + hot vol (institutional bear-trap reversal: dramatic capitulation gap fully absorbed and pushed above the open on doubled participation; high-conviction failed-breakdown signal rare enough to mark a regime-shift candidate)
+    BigGapUpMidpointCloseHotVol,               // gap_pct > 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap up (>5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional reaction: large gap held but neither extended to a HOD close nor failed to a LOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
+    BigGapDownMidpointCloseHotVol,             // gap_pct < -5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap down (<-5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional capitulation: large gap held but neither extended to a LOD close nor absorbed to a HOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6054,6 +6056,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGapUpMidpointCloseHotVol => {
+            hit.gap_pct > 5.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapDownMidpointCloseHotVol => {
+            hit.gap_pct < -5.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6944,6 +6960,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapDownCloseAtLodHotVol => "Large Gap Down (<-5 %) + Close Pinned to LOD + Big Red Close + Hot Vol (Institutional-conviction Gap-down with No Dip-buying: Large Gap Held All Session and Closed at the Day's Low on Doubled Participation; Earnings-disappointment / News-driven Sustained Selling through the Bell)",
         Preset::BigGapUpCloseAtLodHotVol => "Large Gap Up (>5 %) Completely Faded to LOD + Red Close + Hot Vol (Institutional Bull-trap Reversal: Dramatic Earnings-reaction Gap Fully Absorbed and Pushed below the Open on Doubled Participation; High-conviction Failed-breakout Signal Rare Enough to Mark a Regime-shift Candidate)",
         Preset::BigGapDownCloseAtHodHotVol => "Large Gap Down (<-5 %) Completely Absorbed to HOD + Green Close + Hot Vol (Institutional Bear-trap Reversal: Dramatic Capitulation Gap Fully Absorbed and Pushed above the Open on Doubled Participation; High-conviction Failed-breakdown Signal Rare Enough to Mark a Regime-shift Candidate)",
+        Preset::BigGapUpMidpointCloseHotVol => "Large Gap Up (>5 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Institutional Reaction: Large Gap Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Doubled Participation; High-stakes Standoff after an Earnings/news Gap with No Directional Resolution)",
+        Preset::BigGapDownMidpointCloseHotVol => "Large Gap Down (<-5 %) + Midpoint Close between HOD and LOD + Hot Vol (Inconclusive Institutional Capitulation: Large Gap Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Doubled Participation; High-stakes Standoff after an Earnings/news Gap with No Directional Resolution)",
     }
 }
 
