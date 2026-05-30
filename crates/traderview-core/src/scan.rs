@@ -1026,6 +1026,8 @@ pub enum Preset {
     GapDownMidpointCloseNearYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + at/near 52w low (<2%) + hot vol (inconclusive breakdown-day reaction: gap down at the year trough held but neither extended nor absorbed into the close on elevated participation; standoff at the 52w low with the next breakdown still undecided)
     GapUpMidpointCloseConfirmedAboveYearHighHotVol,  // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (uncertain follow-through after validated breakout: gap up in the already-cleared zone held but neither extended nor failed into the close on elevated participation; post-breakout stall warning that the extension is losing conviction)
     GapDownMidpointCloseConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + confirmed-breakdown zone (1-3% past 52w low) + hot vol (uncertain follow-through after validated breakdown: gap down in the already-cleared zone held but neither extended nor absorbed into the close on elevated participation; post-breakdown stall warning that the extension is losing conviction)
+    GapUpMidpointCloseDeepBelowYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + far below 52w high (>=20%) + hot vol (inconclusive bounce attempt deep in pullback territory: gap up well below the prior peak held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff after extended decline with no directional commitment from the bounce)
+    GapDownMidpointCloseDeepAboveYearLowHotVol,// gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + far above 52w low (>=20%) + hot vol (inconclusive pullback attempt deep in advance territory: gap down well above the prior trough held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff after extended advance with no directional commitment from the pullback)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6280,6 +6282,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpMidpointCloseDeepBelowYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownMidpointCloseDeepAboveYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7196,6 +7214,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownMidpointCloseNearYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + At/near 52w Low (<2 %) + Hot Vol (Inconclusive Breakdown-day Reaction: Gap down at the Year Trough Held but Neither Extended nor Absorbed into the Close on Elevated Participation; Standoff at the 52w Low with the Next Breakdown Still Undecided)",
         Preset::GapUpMidpointCloseConfirmedAboveYearHighHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Uncertain Follow-through after Validated Breakout: Gap up in the Already-cleared Zone Held but Neither Extended nor Failed into the Close on Elevated Participation; Post-breakout Stall Warning that the Extension Is Losing Conviction)",
         Preset::GapDownMidpointCloseConfirmedBelowYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Confirmed-breakdown Zone (1-3 % past 52w Low) + Hot Vol (Uncertain Follow-through after Validated Breakdown: Gap down in the Already-cleared Zone Held but Neither Extended nor Absorbed into the Close on Elevated Participation; Post-breakdown Stall Warning that the Extension Is Losing Conviction)",
+        Preset::GapUpMidpointCloseDeepBelowYearHighHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Far below 52w High (>=20 %) + Hot Vol (Inconclusive Bounce Attempt Deep in Pullback Territory: Gap up Well below the Prior Peak Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff after Extended Decline with No Directional Commitment from the Bounce)",
+        Preset::GapDownMidpointCloseDeepAboveYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Far above 52w Low (>=20 %) + Hot Vol (Inconclusive Pullback Attempt Deep in Advance Territory: Gap down Well above the Prior Trough Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff after Extended Advance with No Directional Commitment from the Pullback)",
     }
 }
 
