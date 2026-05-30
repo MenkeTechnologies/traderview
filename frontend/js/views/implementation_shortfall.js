@@ -86,6 +86,12 @@ export async function renderImplementationShortfall(mount, _appState) {
             <div id="is-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.implementation_shortfall.h2.component_bps_chart">Cost components (bps of intended notional)</h2>
+            <div id="is-bps-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.implementation_shortfall.hint.bps_chart" class="muted small">Same components normalized as basis points of intended notional (qty × decision_mid). Order-size-invariant; lets you compare today's slice against any historical execution on a level field.</p>
+        </div>
+
         <div id="is-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -129,6 +135,7 @@ async function compute(tok) {
     renderSummary(res);
     renderBars(res);
     renderComponentChart(res);
+    renderComponentBpsChart(res);
     document.getElementById('is-note').textContent = res.note || '—';
     showToast(t('view.implementation_shortfall.toast.analyzed', { bps: (res.total_bps ?? 0).toFixed(2) }), { level: 'success' });
 }
@@ -154,6 +161,42 @@ function renderComponentChart(report) {
             { label: t('view.implementation_shortfall.chart.cost'),
               stroke: '#00e5ff', width: 0,
               points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.implementation_shortfall.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
+}
+
+function renderComponentBpsChart(report) {
+    const el = document.getElementById('is-bps-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const items = decompose(report);
+    const notional = (Number(state.params.intended_qty) || 0)
+                   * (Number(state.params.decision_mid) || 0);
+    if (!items.length || notional <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.implementation_shortfall.empty_bps_chart">${esc(t('view.implementation_shortfall.empty_bps_chart'))}</div>`;
+        return;
+    }
+    const labels = items.map(it => it.label);
+    const ys = items.map(it => Number(it.value) / notional * 10_000);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.implementation_shortfall.chart.component_idx') },
+            { label: t('view.implementation_shortfall.chart.cost_bps'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 16, fill: '#b86bff', stroke: '#b86bff' } },
             { label: t('view.implementation_shortfall.chart.zero'),
               stroke: '#ffd84a', width: 1.0, dash: [4, 4],
               points: { show: false } },

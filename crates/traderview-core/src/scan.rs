@@ -676,6 +676,8 @@ pub enum Preset {
     IntradayClimaxBottomReclaim,     // lod_dist_pct.abs() > 4 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — far from LOD + closed at HOD + finished green + hot vol (intraday climax-bottom reclaim: panicked early then bid up all day to finish green at the highs on volume)
     BigChangeDryVolWideRange,        // change_pct.abs() > 3 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — big change + dry vol + wide intraday range (low-conviction trend day with thin tape; volatile but uncrowded; potentially manipulated or fake breakout)
     BigChangeDryVolFromGap,          // change_pct.abs() > 3 AND rel_volume < 0.7 AND gap_pct.abs() > 2 — big change + dry vol + significant gap (overnight repricing held with minimal intraday participation; pure pre-market re-rating absorbed without daytime confirmation)
+    ExtremeVolGapDownReversal,       // rel_volume >= 5 AND gap_pct < -3 AND change_pct > 0 — extreme vol (5×+) + gap down >3 + finished green (extreme institutional reversal of overnight gap-down; max-conviction reclaim)
+    ExtremeVolGapUpReversal,         // rel_volume >= 5 AND gap_pct > 3 AND change_pct < 0 — extreme vol (5×+) + gap up >3 + finished red (extreme institutional reversal of overnight gap-up; max-conviction distribution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3708,6 +3710,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.gap_pct.abs() > 2.0
         }
+        Preset::ExtremeVolGapDownReversal => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct < -3.0
+                && hit.change_pct > 0.0
+        }
+        Preset::ExtremeVolGapUpReversal => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct > 3.0
+                && hit.change_pct < 0.0
+        }
     }
 }
 
@@ -4274,6 +4286,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayClimaxBottomReclaim => "Intraday Climax-bottom Reclaim + Hot Vol (Panicked Early, Bid Up All Day; Closed Green at HOD on Volume)",
         Preset::BigChangeDryVolWideRange => "Big Change + Dry Vol + Wide Range (Low-conviction Trend Day with Thin Tape; Volatile but Uncrowded)",
         Preset::BigChangeDryVolFromGap => "Big Change + Dry Vol + Significant Gap (Pre-market Re-rating Absorbed without Daytime Confirmation)",
+        Preset::ExtremeVolGapDownReversal => "Extreme Vol (5×+) + Gap Down + Finished Green (Max-conviction Reversal of Overnight Gap-down)",
+        Preset::ExtremeVolGapUpReversal => "Extreme Vol (5×+) + Gap Up + Finished Red (Max-conviction Reversal of Overnight Gap-up; Institutional Distribution)",
     }
 }
 
