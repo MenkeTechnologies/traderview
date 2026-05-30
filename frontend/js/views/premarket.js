@@ -73,7 +73,7 @@ function card(c) {
         else if (c.atr_multiple >= 1.0) magCls = 'warn';
     }
     const rng = (c.day_high != null && c.day_low != null)
-        ? `<div class="muted small">range ${fmt(c.day_low)} – ${fmt(c.day_high)}</div>`
+        ? `<div class="muted small">${esc(t('common.range_label', { low: fmt(c.day_low), high: fmt(c.day_high) }))}</div>`
         : '';
     const ms = c.market_state ? `<div class="muted small">${esc(c.market_state.toLowerCase())}</div>` : '';
     return `<div class="card">

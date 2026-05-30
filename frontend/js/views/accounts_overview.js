@@ -92,7 +92,7 @@ function accountTable(accounts) {
             <td>${a.open_positions_count}
                 <div class="small muted">$${fmt(a.open_notional)}</div></td>
             <td class="${cls(a.open_unrealized_pnl)}">$${fmt(a.open_unrealized_pnl)}
-                <div class="small muted ${cls(a.open_day_pnl)}">day ${a.open_day_pnl >= 0 ? '+' : ''}$${fmt(a.open_day_pnl)}</div></td>
+                <div class="small muted ${cls(a.open_day_pnl)}">${esc(t('view.accounts_overview.row.day_pnl', { sign: a.open_day_pnl >= 0 ? '+' : '', amount: fmt(a.open_day_pnl) }))}</div></td>
         </tr>`).join('')}
         </tbody></table>`;
 }
