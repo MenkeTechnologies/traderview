@@ -542,6 +542,8 @@ pub enum Preset {
     StrongBreakdownDay,             // year_low_pct < 5 AND gap_pct < -2 AND change_pct < -2 AND rel_volume >= 2 — near 52w low + gap down + red close + hot vol (strong breakdown day)
     VolSpikeBigGapBigChange,        // rel_volume >= 3 AND gap_pct.abs() > 3 AND change_pct.abs() > 3 — extreme vol + big gap + big change (institutional gap-on-news)
     VolSpikeTinyGapBigChange,       // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — extreme vol + flat gap + big change (mid-session catalyst; intraday-only news)
+    StrongCloseAtHodHotVol,         // hod_dist.abs() < 0.3 AND day_pct > 1 AND rel_volume >= 2 — close at HOD + green intraday + hot vol (strong close; buyers in control)
+    WeakCloseAtLodHotVol,           // lod_dist.abs() < 0.3 AND day_pct < -1 AND rel_volume >= 2 — close at LOD + red intraday + hot vol (weak close; sellers in control)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2815,6 +2817,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
                 && hit.change_pct.abs() > 3.0
         }
+        Preset::StrongCloseAtHodHotVol => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::WeakCloseAtLodHotVol => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -3247,6 +3259,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StrongBreakdownDay => "Strong Breakdown Day (Near 52w Low, Big Gap & Change)",
         Preset::VolSpikeBigGapBigChange => "Vol Spike + Big Gap + Big Change (Institutional Gap-On-News)",
         Preset::VolSpikeTinyGapBigChange => "Vol Spike + Flat Gap + Big Change (Intraday Catalyst)",
+        Preset::StrongCloseAtHodHotVol => "Strong Close at HOD + Green Intraday + Hot Vol",
+        Preset::WeakCloseAtLodHotVol => "Weak Close at LOD + Red Intraday + Hot Vol",
     }
 }
 

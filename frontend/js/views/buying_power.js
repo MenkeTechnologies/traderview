@@ -60,6 +60,11 @@ export async function renderBuyingPower(mount, _appState) {
             <div id="bp-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.buying_power.h2.share_chart">Max shares vs share price (current equity)</h2>
+            <div id="bp-share-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="bp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -104,6 +109,7 @@ async function compute(tok) {
         note: t(local.note_key),
     }, true);
     renderSweepChart(local.leverage);
+    renderShareChart(local.leverage);
     let resp;
     try {
         resp = await api.calcBuyingPower(buildBody(state));
@@ -119,6 +125,7 @@ async function compute(tok) {
         max_shares:   dec(resp.max_shares),
     }, false);
     renderSweepChart(dec(resp.leverage));
+    renderShareChart(dec(resp.leverage));
     const lev = Number(dec(resp.leverage)) || 0;
     const bp = Math.round(Number(dec(resp.max_notional)) || 0);
     const level = lev >= 4 ? 'warning' : 'success';
@@ -169,6 +176,51 @@ function renderSweepChart(leverage) {
         ],
         legend: { show: true },
     }, [xs, notional, cur], el);
+}
+
+function renderShareChart(leverage) {
+    const el = document.getElementById('bp-share-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const eq = Number(state.equity);
+    const lev = Number(leverage);
+    if (!Number.isFinite(eq) || eq <= 0 || !Number.isFinite(lev) || lev <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.buying_power.empty_share_chart">${esc(t('view.buying_power.empty_share_chart'))}</div>`;
+        return;
+    }
+    const steps = 40;
+    const pxMin = 1;
+    const pxMax = Math.max(state.share_price * 3, 200);
+    const xs = [];
+    const shares = [];
+    const cur = [];
+    for (let i = 0; i <= steps; i++) {
+        const p = pxMin + (pxMax - pxMin) * (i / steps);
+        xs.push(p);
+        shares.push(p > 0 ? (eq * lev) / p : 0);
+        cur.push(null);
+    }
+    const curIdx = xs.findIndex(x => x >= state.share_price);
+    if (curIdx >= 0 && state.share_price > 0) cur[curIdx] = (eq * lev) / state.share_price;
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.buying_power.chart.share_price') },
+            { label: t('view.buying_power.chart.max_shares'),
+              stroke: '#7af0a8', width: 1.5,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: false } },
+            { label: t('view.buying_power.chart.current'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, shares, cur], el);
 }
 
 function renderSummary(report, pending) {
