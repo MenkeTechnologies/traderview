@@ -38,6 +38,8 @@ const PRESETS = [
     { id: 'dry_up_squeeze',            label: t('view.scanners.preset.dry_up_squeeze.label'),            desc: t('view.scanners.preset.dry_up_squeeze.desc') },
     { id: 'upper_range_squeeze',       label: t('view.scanners.preset.upper_range_squeeze.label'),       desc: t('view.scanners.preset.upper_range_squeeze.desc') },
     { id: 'lower_range_squeeze',       label: t('view.scanners.preset.lower_range_squeeze.label'),       desc: t('view.scanners.preset.lower_range_squeeze.desc') },
+    { id: 'gap_reversal_squeeze',      label: t('view.scanners.preset.gap_reversal_squeeze.label'),      desc: t('view.scanners.preset.gap_reversal_squeeze.desc') },
+    { id: 'pct52w_mid_squeeze',        label: t('view.scanners.preset.pct52w_mid_squeeze.label'),        desc: t('view.scanners.preset.pct52w_mid_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

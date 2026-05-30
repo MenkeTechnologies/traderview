@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 let timer = null;
 
@@ -17,6 +17,10 @@ export async function renderBreadth(mount) {
 
         <div id="bcomp" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         <div id="binds"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.breadth.h2.indicator_chart">Indicator % change snapshot</h2>
+            <div id="b-chart" style="width:100%;height:240px"></div>
+        </div>
         <div class="chart-panel">
             <h2 data-i18n="view.breadth.h2.regime_guide">Regime guide</h2>
             <table class="trades">
@@ -94,4 +98,39 @@ function renderIndicators(s, mount) {
             }).join('')}
         </div>
     `;
+    renderIndicatorChart(inds);
+}
+
+function renderIndicatorChart(inds) {
+    const el = document.getElementById('b-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (inds || []).filter(i => Number.isFinite(Number(i.change_pct)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.breadth.empty_chart">${esc(t('view.breadth.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(i => i.symbol);
+    const ys = valid.map(i => Number(i.change_pct));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.breadth.chart.indicator_idx') },
+            { label: t('view.breadth.chart.change_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.breadth.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }

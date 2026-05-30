@@ -156,6 +156,8 @@ pub enum Preset {
     DryUpSqueeze,           // rel_volume < 0.4 AND |change| < 1.5 AND |gap| < 0.5 — supply/demand exhaustion
     UpperRangeSqueeze,      // close in upper third (lod_dist > 2× hod_dist) AND tight day AND quiet
     LowerRangeSqueeze,      // close in lower third (hod_dist > 2× lod_dist) AND tight day AND quiet
+    GapReversalSqueeze,     // gap and change opposite signs AND |day_pct| < 0.5 AND quiet — fade trapped
+    Pct52wMidSqueeze,       // year_high_pct between -15 and -5 AND year_low_pct between 5 and 15 AND tight day — true mid-range coiling
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -305,6 +307,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.9
                 && hit.lod_dist_pct.abs() < 1.0
         }
+        Preset::GapReversalSqueeze => {
+            hit.gap_pct.signum() != hit.change_pct.signum()
+                && hit.gap_pct.abs() >= 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::Pct52wMidSqueeze => {
+            hit.year_high_pct <= -5.0
+                && hit.year_high_pct >= -15.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 15.0
+                && hit.day_pct.abs() < 1.0
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -351,6 +367,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryUpSqueeze => "Dry-Up Squeeze",
         Preset::UpperRangeSqueeze => "Upper-Range Squeeze",
         Preset::LowerRangeSqueeze => "Lower-Range Squeeze",
+        Preset::GapReversalSqueeze => "Gap-Reversal Squeeze",
+        Preset::Pct52wMidSqueeze => "52w-Mid Squeeze",
     }
 }
 
