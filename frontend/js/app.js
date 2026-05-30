@@ -651,6 +651,16 @@ function bindTabs() {
         const el = document.getElementById('cy-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `b` in footprint scope → click Build footprint.
+    window.addEventListener('tv:footprint-run', () => {
+        const el = document.getElementById('fp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in footprint scope → click Load demo.
+    window.addEventListener('tv:footprint-demo', () => {
+        const el = document.getElementById('fp-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

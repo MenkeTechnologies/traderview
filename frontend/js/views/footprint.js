@@ -13,6 +13,7 @@ import {
 } from '../_footprint_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { tickText: '', tickSize: 0.05 };
 
 export async function renderFootprint(mount, _appState) {
@@ -23,13 +24,13 @@ export async function renderFootprint(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.footprint.h2.classified_tick_stream">Classified tick stream</h2>
             <p class="muted" data-i18n="view.footprint.hint.ticks">One tick per line: bar_id price volume side where side ∈ {buy, sell, uncertain}. Demo loads 4 bars with engineered patterns: balanced churn → absorption at low → drive up → rejection at high.</p>
-            <textarea id="fp-ticks" rows="8" placeholder="0 100.00 50 buy&#10;0 100.00 50 sell&#10;..."></textarea>
+            <textarea id="fp-ticks" rows="8" placeholder="0 100.00 50 buy&#10;0 100.00 50 sell&#10;..." data-tip="view.footprint.tip.ticks"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.footprint.label.tick_size">Tick size (price quantization)</span>
-                    <input id="fp-ts" type="number" step="any" min="0" value="${state.tickSize}"></label>
-                <button data-i18n="view.footprint.btn.load_demo_4_bars_4_patterns" id="fp-demo" class="secondary" type="button">Load demo (4 bars, 4 patterns)</button>
-                <button data-i18n="view.footprint.btn.clear" id="fp-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.footprint.btn.build_footprint" id="fp-run" class="primary" type="button">Build footprint</button>
+                    <input id="fp-ts" type="number" step="any" min="0" value="${state.tickSize}" data-tip="view.footprint.tip.tick_size"></label>
+                <button data-i18n="view.footprint.btn.load_demo_4_bars_4_patterns" id="fp-demo" class="secondary" type="button" data-tip="view.footprint.tip.demo" data-shortcut="footprint_demo">Load demo (4 bars, 4 patterns)</button>
+                <button data-i18n="view.footprint.btn.clear" id="fp-clear" class="secondary" type="button" data-tip="view.footprint.tip.clear">Clear</button>
+                <button data-i18n="view.footprint.btn.build_footprint" id="fp-run" class="primary" type="button" data-tip="view.footprint.tip.run" data-shortcut="footprint_run">Build footprint</button>
             </div>
         </div>
 
@@ -55,12 +56,14 @@ export async function renderFootprint(mount, _appState) {
         <div id="fp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('fp-demo').addEventListener('click', () => {
-        const t = makeDemoTicks();
+        const demoTicks = makeDemoTicks();
         document.getElementById('fp-ticks').value =
-            t.map(x => `${x.bar_id} ${x.price} ${x.classified.volume} ${x.classified.side}`).join('\n');
+            demoTicks.map(x => `${x.bar_id} ${x.price} ${x.classified.volume} ${x.classified.side}`).join('\n');
+        showToast(t('view.footprint.toast.demo_loaded', { n: demoTicks.length }), { level: 'info' });
     });
     document.getElementById('fp-clear').addEventListener('click', () => {
         document.getElementById('fp-ticks').value = '';
+        showToast(t('view.footprint.toast.cleared'), { level: 'info' });
     });
     document.getElementById('fp-run').addEventListener('click', () => {
         readInputs();
@@ -84,21 +87,26 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.footprint.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (ticks.length === 0) return;
     }
     const err = validateInputs(ticks, state.tickSize);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.footprint.toast.invalid'), { level: 'warning' }); return; }
     let report;
     try {
         report = await api.microFootprint(buildBody(ticks, state.tickSize));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.footprint.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderGrid(report);
     renderHotspots(report);
     renderDeltaChart(report);
+    const bars = (report && report.bars) ? report.bars.length : 0;
+    showToast(t('view.footprint.toast.built', { bars, ticks: ticks.length }), { level: 'success' });
 }
 
 function renderDeltaChart(report) {
