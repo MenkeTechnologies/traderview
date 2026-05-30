@@ -219,7 +219,7 @@ function renderCharts(series, m, profile, motif, discords) {
 function renderParseErrors(errors) {
     const el = document.getElementById('pd-parse-errors');
     el.innerHTML = errors.slice(0, 20).map(e =>
-        `<div>line ${e.line_no}: ${esc(e.message)} <span class="muted">→ <code>${esc(e.raw || '')}</code></span></div>`
+        `<div>${esc(t('common.parse_error_line', { line: e.line_no, msg: e.message }))} <span class="muted">→ <code>${esc(e.raw || '')}</code></span></div>`
     ).join('');
     if (errors.length > 20) {
         el.innerHTML += `<div class="muted">${esc(t("common.plus_n_more", { n: errors.length - 20 }))}</div>`;

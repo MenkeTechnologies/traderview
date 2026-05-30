@@ -214,7 +214,7 @@ function renderBarChart(elId, labels, values, opts = {}) {
 function renderParseErrors(errors) {
     const el = document.getElementById('pa-parse-errors');
     el.innerHTML = errors.map(e =>
-        `<div>line ${e.line_no}: ${esc(e.message)} <span class="muted">→ <code>${esc(e.raw || '')}</code></span></div>`
+        `<div>${esc(t('common.parse_error_line', { line: e.line_no, msg: e.message }))} <span class="muted">→ <code>${esc(e.raw || '')}</code></span></div>`
     ).join('');
     el.style.display = 'block';
 }

@@ -7093,6 +7093,7 @@
   "common.trimmed":                        "trimmed",
   "common.distance":                       "distance",
   "common.none":                           "none",
+  "common.parse_error_line":               "line {line}: {msg}",
   "common.computing":                      "computing…",
   "common.loading_view":                   "loading {view}…",
   "common.connecting":                     "connecting…",
