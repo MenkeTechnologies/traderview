@@ -1068,6 +1068,8 @@ pub enum Preset {
     UltraDeepAboveYearLowShootingStarHotVol,   // year_low_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (exhaustion-reversal shooting star in multibagger territory: extended-trend leader probed higher then gave back the entire move to close at the day's low on elevated participation; classic exhaustion-day pattern at extended advance worth a top-fade trade screen)
     UltraDeepBelowYearHighShootingStarHotVol,  // year_high_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (failed-bounce shooting star in distressed territory: beaten-down equity probed higher intraday then sellers reclaimed entire move to close at the day's low on elevated participation; bear-trend continuation candidate confirming downtrend control)
     UltraDeepAboveYearLowHammerHotVol,         // year_low_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (trend-continuation hammer in multibagger territory: extended-trend leader probed lower intraday then buyers reclaimed entire move to close at the day's high on elevated participation; bull-trend continuation candidate confirming uptrend control)
+    WideYearRangeHotVol,                       // year_high_pct >= 20 AND year_low_pct >= 20 AND rel_volume >= 1.5 — wide annual range (both year_*_pct >=20%) + hot vol (high-beta volatile-equity territory: stock has traveled significant distance from both prior peak and prior trough indicating large 52w range; volatility-screen candidate for momentum and mean-reversion strategies)
+    NarrowYearRangeHotVol,                     // year_high_pct < 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — narrow annual range (both year_*_pct <5%) + hot vol (compressed range-bound territory: stock has stayed within ~10% band over 52w with elevated current participation; tightest possible coil at annual scale, breakout-candidate worth watching for direction commitment)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6586,6 +6588,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::WideYearRangeHotVol => {
+            hit.year_high_pct >= 20.0 && hit.year_low_pct >= 20.0 && hit.rel_volume >= 1.5
+        }
+        Preset::NarrowYearRangeHotVol => {
+            hit.year_high_pct < 5.0 && hit.year_low_pct < 5.0 && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7544,6 +7552,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::UltraDeepAboveYearLowShootingStarHotVol => "Multibagger (>=50 % above 52w Low) + Long Upper Wick (>3 %) + Close Pinned to LOD + Red Close + Hot Vol (Exhaustion-reversal Shooting Star in Multibagger Territory: Extended-trend Leader Probed Higher then Gave Back the Entire Move to Close at the Day's Low on Elevated Participation; Classic Exhaustion-day Pattern at Extended Advance Worth a Top-fade Trade Screen)",
         Preset::UltraDeepBelowYearHighShootingStarHotVol => "Distressed Stock (>=50 % below 52w High) + Long Upper Wick (>3 %) + Close Pinned to LOD + Red Close + Hot Vol (Failed-bounce Shooting Star in Distressed Territory: Beaten-down Equity Probed Higher Intraday then Sellers Reclaimed Entire Move to Close at the Day's Low on Elevated Participation; Bear-trend Continuation Candidate Confirming Downtrend Control)",
         Preset::UltraDeepAboveYearLowHammerHotVol => "Multibagger (>=50 % above 52w Low) + Long Lower Wick (>3 %) + Close Pinned to HOD + Green Close + Hot Vol (Trend-continuation Hammer in Multibagger Territory: Extended-trend Leader Probed Lower Intraday then Buyers Reclaimed Entire Move to Close at the Day's High on Elevated Participation; Bull-trend Continuation Candidate Confirming Uptrend Control)",
+        Preset::WideYearRangeHotVol => "Wide Annual Range (both year_*_pct >=20 %) + Hot Vol (High-beta Volatile-equity Territory: Stock Has Traveled Significant Distance from Both Prior Peak and Prior Trough Indicating Large 52w Range; Volatility-screen Candidate for Momentum and Mean-reversion Strategies)",
+        Preset::NarrowYearRangeHotVol => "Narrow Annual Range (both year_*_pct <5 %) + Hot Vol (Compressed Range-bound Territory: Stock Has Stayed within ~10 % Band over 52w with Elevated Current Participation; Tightest Possible Coil at Annual Scale, Breakout-candidate Worth Watching for Direction Commitment)",
     }
 }
 
