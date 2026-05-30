@@ -504,6 +504,8 @@ pub enum Preset {
     BigGapAndReverse,               // gap_pct.abs() > 3 AND change_pct * gap_pct < 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday reverses + close past prior close on vol (full gap fade and reverse)
     EfficientMoverHotVol,           // rel_volume >= 1.5 AND change_pct.abs() >= rel_volume * 1.5 — change-per-vol elevated (efficient mover; clean trend day)
     InefficientChurnHotVol,         // rel_volume >= 2 AND change_pct.abs() < rel_volume * 0.3 — hot vol but tiny change relative to vol (inefficient churn; failed trend or absorption)
+    GapUpAtMidRange,                // gap_pct > 1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap up while in middle of 52w range on vol (breakout from consolidation)
+    GapDownAtMidRange,              // gap_pct < -1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap down while in middle of 52w range on vol (breakdown from consolidation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2543,6 +2545,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume >= 2.0
                 && hit.change_pct.abs() < hit.rel_volume * 0.3
         }
+        Preset::GapUpAtMidRange => {
+            hit.gap_pct > 1.0
+                && hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.year_low_pct <= 50.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownAtMidRange => {
+            hit.gap_pct < -1.0
+                && hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.year_low_pct <= 50.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2937,6 +2955,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapAndReverse => "Big Gap + Intraday Reverses Past Prior (Full Reverse)",
         Preset::EfficientMoverHotVol => "Efficient Mover (|change| ≥ 1.5×rel_vol, Clean Trend)",
         Preset::InefficientChurnHotVol => "Inefficient Churn (|change| < 0.3×rel_vol, Absorption)",
+        Preset::GapUpAtMidRange => "Gap Up at 52w Mid-Range (Consolidation Breakout)",
+        Preset::GapDownAtMidRange => "Gap Down at 52w Mid-Range (Consolidation Breakdown)",
     }
 }
 

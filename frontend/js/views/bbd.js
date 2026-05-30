@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('oscillating') };
 let chart = null;
+let kissChart = null;
 
 export async function renderBbd(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderBbd(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bbd.h2.chart">BBD series</h2>
             <div id="bd-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bbd.h2.kiss_chart">Close + band-kiss markers (BBD &lt; 0.05)</h2>
+            <div id="bd-kiss-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.period, state.n_stdev);
     renderSummary(local, true);
     renderChart(local);
+    renderKissChart(local);
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.bbd.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderKissChart(resp);
     renderStats();
 }
 
@@ -169,6 +177,44 @@ function renderChart(bbd) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderKissChart(bbd) {
+    const el = document.getElementById('bd-kiss-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(bbd) || state.closes.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.closes.map((_, i) => i);
+    const closes = state.closes.map(v => Number.isFinite(v) ? v : null);
+    const kiss = state.closes.map((c, i) => {
+        const v = bbd[i];
+        if (v == null || !Number.isFinite(v) || !(v < 0.05)) return null;
+        return c;
+    });
+    const breakout = state.closes.map((c, i) => {
+        const v = bbd[i];
+        if (v == null || !Number.isFinite(v) || !(v > 0.5)) return null;
+        return c;
+    });
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.bbd.series.close'),
+              stroke: '#888', width: 1.0, points: { show: false } },
+            { label: t('view.bbd.series.kiss'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 9, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.bbd.series.breakout'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 9, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (kissChart) { try { kissChart.destroy(); } catch {} kissChart = null; }
+    kissChart = new window.uPlot(opts, [xs, closes, kiss, breakout], el);
 }
 
 function renderStats() {

@@ -386,6 +386,8 @@ const PRESETS = [
     { id: 'big_gap_and_reverse', label: t('view.scanners.preset.big_gap_and_reverse.label'), desc: t('view.scanners.preset.big_gap_and_reverse.desc') },
     { id: 'efficient_mover_hot_vol', label: t('view.scanners.preset.efficient_mover_hot_vol.label'), desc: t('view.scanners.preset.efficient_mover_hot_vol.desc') },
     { id: 'inefficient_churn_hot_vol', label: t('view.scanners.preset.inefficient_churn_hot_vol.label'), desc: t('view.scanners.preset.inefficient_churn_hot_vol.desc') },
+    { id: 'gap_up_at_mid_range', label: t('view.scanners.preset.gap_up_at_mid_range.label'), desc: t('view.scanners.preset.gap_up_at_mid_range.desc') },
+    { id: 'gap_down_at_mid_range', label: t('view.scanners.preset.gap_down_at_mid_range.label'), desc: t('view.scanners.preset.gap_down_at_mid_range.desc') },
 ];
 
 export async function renderScanners(mount) {
