@@ -252,6 +252,8 @@ pub enum Preset {
     WideHodNarrowLodSqueeze,     // hod_dist.abs() >= 2 AND lod_dist.abs() < 0.5 AND change_pct < 0 — high failed, close pinned to low
     NarrowHodWideLodSqueeze,     // hod_dist.abs() < 0.5 AND lod_dist.abs() >= 2 AND change_pct > 0 — low failed, close pinned to high
     PerfectBalanceSqueeze,       // |hod_dist - lod_dist| < 0.1 AND |change_pct| < 0.3 — mathematically balanced bar
+    LowVolHotZoneSqueeze,        // year_high_pct >= -5 AND rel_volume < 0.4 — at 52w high zone with very low vol (institutions absent)
+    LowVolColdZoneSqueeze,       // year_low_pct <= 5 AND rel_volume < 0.4 — at 52w low zone with very low vol (no panic, no buying)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -937,6 +939,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.1
                 && hit.change_pct.abs() < 0.3
         }
+        Preset::LowVolHotZoneSqueeze => {
+            hit.year_high_pct >= -5.0 && hit.rel_volume < 0.4
+        }
+        Preset::LowVolColdZoneSqueeze => {
+            hit.year_low_pct <= 5.0 && hit.rel_volume < 0.4
+        }
     }
 }
 
@@ -1079,6 +1087,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WideHodNarrowLodSqueeze => "Wide-HOD Narrow-LOD Squeeze",
         Preset::NarrowHodWideLodSqueeze => "Narrow-HOD Wide-LOD Squeeze",
         Preset::PerfectBalanceSqueeze => "Perfect-Balance Squeeze",
+        Preset::LowVolHotZoneSqueeze => "Low-Vol Hot-Zone Squeeze",
+        Preset::LowVolColdZoneSqueeze => "Low-Vol Cold-Zone Squeeze",
     }
 }
 

@@ -134,6 +134,8 @@ const PRESETS = [
     { id: 'wide_hod_narrow_lod_squeeze', label: t('view.scanners.preset.wide_hod_narrow_lod_squeeze.label'), desc: t('view.scanners.preset.wide_hod_narrow_lod_squeeze.desc') },
     { id: 'narrow_hod_wide_lod_squeeze', label: t('view.scanners.preset.narrow_hod_wide_lod_squeeze.label'), desc: t('view.scanners.preset.narrow_hod_wide_lod_squeeze.desc') },
     { id: 'perfect_balance_squeeze',    label: t('view.scanners.preset.perfect_balance_squeeze.label'),    desc: t('view.scanners.preset.perfect_balance_squeeze.desc') },
+    { id: 'low_vol_hot_zone_squeeze',   label: t('view.scanners.preset.low_vol_hot_zone_squeeze.label'),   desc: t('view.scanners.preset.low_vol_hot_zone_squeeze.desc') },
+    { id: 'low_vol_cold_zone_squeeze',  label: t('view.scanners.preset.low_vol_cold_zone_squeeze.label'),  desc: t('view.scanners.preset.low_vol_cold_zone_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
