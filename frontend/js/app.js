@@ -561,6 +561,16 @@ function bindTabs() {
         const el = document.getElementById('ot-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `b` in market-profile scope → click Build TPO.
+    window.addEventListener('tv:market-profile-run', () => {
+        const el = document.getElementById('mp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `d` in market-profile scope → click Load demo.
+    window.addEventListener('tv:market-profile-demo', () => {
+        const el = document.getElementById('mp-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

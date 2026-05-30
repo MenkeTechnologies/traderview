@@ -16,6 +16,7 @@ import {
 } from '../_market_profile_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { brackets: '', tickSize: 0.5 };
 
 export async function renderMarketProfile(mount, _appState) {
@@ -26,13 +27,13 @@ export async function renderMarketProfile(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.market_profile.h2.brackets_one_per_time_period_typically_30_min_rth_">Brackets (one per time period — typically 30-min RTH brackets)</h2>
             <p class="muted" data-i18n="view.market_profile.hint.format">One line per bracket: bracket_index high low. Each bracket prints one letter (A, B, C, …) at every quantized price level it traded through. Demo loads a 13-bracket A-M session shaped like a typical normal-day profile.</p>
-            <textarea id="mp-brackets" rows="8" placeholder="0 102.5 101.0&#10;1 101.5 100.0&#10;..."></textarea>
+            <textarea id="mp-brackets" rows="8" placeholder="0 102.5 101.0&#10;1 101.5 100.0&#10;..." data-tip="view.market_profile.tip.brackets"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.market_profile.label.tick_size">Tick size</span>
-                    <input id="mp-tick" type="number" step="any" min="0" value="${state.tickSize}"></label>
-                <button data-i18n="view.market_profile.btn.load_demo_13_bracket_normal_day" id="mp-demo" class="secondary" type="button">Load demo (13-bracket normal day)</button>
-                <button data-i18n="view.market_profile.btn.clear" id="mp-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.market_profile.btn.build_tpo" id="mp-run" class="primary" type="button">Build TPO</button>
+                    <input id="mp-tick" type="number" step="any" min="0" value="${state.tickSize}" data-tip="view.market_profile.tip.tick"></label>
+                <button data-i18n="view.market_profile.btn.load_demo_13_bracket_normal_day" id="mp-demo" class="secondary" type="button" data-tip="view.market_profile.tip.demo" data-shortcut="market_profile_demo">Load demo (13-bracket normal day)</button>
+                <button data-i18n="view.market_profile.btn.clear" id="mp-clear" class="secondary" type="button" data-tip="view.market_profile.tip.clear">Clear</button>
+                <button data-i18n="view.market_profile.btn.build_tpo" id="mp-run" class="primary" type="button" data-tip="view.market_profile.tip.run" data-shortcut="market_profile_run">Build TPO</button>
             </div>
         </div>
 
@@ -58,9 +59,11 @@ export async function renderMarketProfile(mount, _appState) {
         const b = makeDemoBrackets();
         document.getElementById('mp-brackets').value =
             b.map(x => `${x.bracket_index} ${x.high} ${x.low}`).join('\n');
+        showToast(t('view.market_profile.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('mp-clear').addEventListener('click', () => {
         document.getElementById('mp-brackets').value = '';
+        showToast(t('view.market_profile.toast.cleared'), { level: 'info' });
     });
     document.getElementById('mp-run').addEventListener('click', () => {
         readInputs();
@@ -84,20 +87,25 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.market_profile.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (brackets.length === 0) return;
     }
     const err = validateInputs(brackets, state.tickSize);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.market_profile.toast.invalid'), { level: 'warning' }); return; }
     let report;
     try {
         report = await api.microMarketProfile(buildBody(brackets, state.tickSize));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.market_profile.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderTpo(report);
     renderTpoChart(report);
+    const lvls = Array.isArray(report?.levels) ? report.levels.length : 0;
+    showToast(t('view.market_profile.toast.built', { brackets: brackets.length, levels: lvls }), { level: 'success' });
 }
 
 function renderTpoChart(report) {
