@@ -49,6 +49,16 @@ function refreshView() {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
+// `dataFromTarget(detail, key)` — read a single `data-<key>` attribute
+// from the right-clicked scope element passed via CustomEvent.detail.
+// Returns null when the chain is broken. Replaces the
+// `const tgt = e.detail && e.detail.target; const x = tgt && tgt.dataset && tgt.dataset.X`
+// idiom that recurs in every row-context handler.
+function dataFromTarget(detail, key) {
+    const target = detail && detail.target;
+    return (target && target.dataset && target.dataset[key]) || null;
+}
+
 export function installContextMenu() {
     if (_installed) return;
     _installed = true;
@@ -279,16 +289,14 @@ export function installContextMenu() {
     // handler mutates the dashboards-storage state and dispatches
     // hashchange so the view re-renders from store.loadState().
     window.addEventListener('tv:db-side-pick', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         const next = dbStore.setActive(dbStore.loadState(), id);
         dbStore.saveState(next);
         refreshView();
     });
     window.addEventListener('tv:db-side-rename', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const cur = (tgt && tgt.dataset && tgt.dataset.name) || '';
         if (!id) return;
         void (async () => {
@@ -301,8 +309,7 @@ export function installContextMenu() {
         })();
     });
     window.addEventListener('tv:db-side-duplicate', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         const next = dbStore.duplicateDashboard(dbStore.loadState(), id);
@@ -311,8 +318,7 @@ export function installContextMenu() {
         refreshView();
     });
     window.addEventListener('tv:db-side-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         void (async () => {
@@ -325,20 +331,17 @@ export function installContextMenu() {
     });
     // Board-row actions — read data-id / data-name.
     window.addEventListener('tv:board-row-open', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         window.location.hash = `boards/${id}`;
     });
     window.addEventListener('tv:board-row-copy-id', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         clipboardWrite(id, id);
     });
     window.addEventListener('tv:board-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         void (async () => {
@@ -354,20 +357,17 @@ export function installContextMenu() {
     });
     // Backtest-preset-row actions — read data-id / data-slug / data-name / data-mine.
     window.addEventListener('tv:bp-row-copy-slug', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const slug = dataFromTarget(e.detail, 'slug');
         if (!slug) return;
         clipboardWrite(slug, slug);
     });
     window.addEventListener('tv:bp-row-open', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const slug = dataFromTarget(e.detail, 'slug');
         if (!slug) return;
         window.location.hash = `backtest-presets/${slug}`;
     });
     window.addEventListener('tv:bp-row-fork', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const slug = dataFromTarget(e.detail, 'slug');
         const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
         if (!slug) return;
         if (isMine) {
@@ -385,8 +385,7 @@ export function installContextMenu() {
         })();
     });
     window.addEventListener('tv:bp-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
         if (!id) return;
@@ -407,21 +406,18 @@ export function installContextMenu() {
     });
     // Share-row actions — read data-id / data-slug / data-mine.
     window.addEventListener('tv:share-row-copy-url', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const slug = dataFromTarget(e.detail, 'slug');
         if (!slug) return;
         const url = `${window.location.origin}${window.location.pathname}#shared/${slug}`;
         clipboardWrite(url, t('toast.what.url'));
     });
     window.addEventListener('tv:share-row-open', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        const slug = dataFromTarget(e.detail, 'slug');
         if (!slug) return;
         window.location.hash = `shared/${slug}`;
     });
     window.addEventListener('tv:share-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
         if (!id) return;
         if (!isMine) {
@@ -441,14 +437,12 @@ export function installContextMenu() {
     });
     // Plan-row actions — read data-id / data-symbol.
     window.addEventListener('tv:plan-row-copy-symbol', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const sym = tgt && tgt.dataset && tgt.dataset.symbol;
+        const sym = dataFromTarget(e.detail, 'symbol');
         if (!sym) return;
         clipboardWrite(sym, sym);
     });
     window.addEventListener('tv:plan-row-abandon', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const sym = (tgt && tgt.dataset && tgt.dataset.symbol) || '';
         if (!id) return;
         void (async () => {
@@ -464,14 +458,12 @@ export function installContextMenu() {
     });
     // Account-row actions — read data-id / data-name.
     window.addEventListener('tv:acct-row-copy-id', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         clipboardWrite(id, id);
     });
     window.addEventListener('tv:acct-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         void (async () => {
@@ -487,15 +479,13 @@ export function installContextMenu() {
     });
     // Custom-indicator-row actions — read data-id / data-name / data-definition.
     window.addEventListener('tv:ci-row-copy-def', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const def = tgt && tgt.dataset && tgt.dataset.definition;
+        const def = dataFromTarget(e.detail, 'definition');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || '';
         if (!def) return;
         clipboardWrite(def, name || 'definition');
     });
     window.addEventListener('tv:ci-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         void (async () => {
@@ -511,14 +501,12 @@ export function installContextMenu() {
     });
     // Hotkey-row actions — read data-id / data-combo.
     window.addEventListener('tv:hk-row-copy-combo', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const combo = tgt && tgt.dataset && tgt.dataset.combo;
+        const combo = dataFromTarget(e.detail, 'combo');
         if (!combo) return;
         clipboardWrite(combo, combo);
     });
     window.addEventListener('tv:hk-row-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         void (async () => {
             if (!await tConfirm('ctxmenu.hk_row_delete_confirm', {}, { level: 'danger' })) return;
@@ -533,8 +521,7 @@ export function installContextMenu() {
     });
     // Journal-entry actions — read data-id (and data-trade-id for nav).
     window.addEventListener('tv:je-view-trade', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const tradeId = tgt && tgt.dataset && tgt.dataset.tradeId;
+        const tradeId = dataFromTarget(e.detail, 'tradeId');
         if (!tradeId) {
             showToast(t('toast.je_no_trade_linked'), { level: 'warning' });
             return;
@@ -542,8 +529,7 @@ export function installContextMenu() {
         window.location.hash = `trade/${tradeId}`;
     });
     window.addEventListener('tv:je-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) return;
         void (async () => {
             if (!await tConfirm('ctxmenu.je_delete_confirm', {}, { level: 'danger' })) return;
@@ -558,14 +544,12 @@ export function installContextMenu() {
     });
     // API-token-row actions — read data-id / data-prefix / data-revoked.
     window.addEventListener('tv:tok-row-copy-prefix', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const prefix = tgt && tgt.dataset && tgt.dataset.prefix;
+        const prefix = dataFromTarget(e.detail, 'prefix');
         if (!prefix) return;
         clipboardWrite(prefix, prefix);
     });
     window.addEventListener('tv:tok-row-revoke', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const alreadyRevoked = tgt && tgt.dataset && tgt.dataset.revoked === 'true';
         if (!id) return;
         if (alreadyRevoked) {
@@ -585,14 +569,12 @@ export function installContextMenu() {
     });
     // Tag-chip actions — read data-id + data-name from the span.
     window.addEventListener('tv:tag-chip-copy', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const name = tgt && tgt.dataset && tgt.dataset.name;
+        const name = dataFromTarget(e.detail, 'name');
         if (!name) return;
         clipboardWrite(name, name);
     });
     window.addEventListener('tv:tag-chip-delete', (e) => {
-        const tgt = e.detail && e.detail.target;
-        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const id = dataFromTarget(e.detail, 'id');
         const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
         if (!id) return;
         void (async () => {
