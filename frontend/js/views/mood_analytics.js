@@ -81,11 +81,52 @@ function render(r, mount) {
             <div id="ma-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.mood_analytics.h2.win_rate_chart">Win rate by mood bucket</h2>
+            <div id="ma-wr-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.mood_analytics.hint.win_rate" class="muted small">Per-mood win rate (frequency view, not magnitude). Compare against avg P/L bars to see whether mood drives win frequency, win size, or both.</p>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.mood_analytics.h2.sample_trades_latest_50">Sample trades (latest 50)</h2>
             ${sampleTable(r.pairs.slice(-50).reverse())}
         </div>
     `;
     renderMoodScatter(r.pairs);
+    renderWinRateChart(r.stats);
+}
+
+function renderWinRateChart(stats) {
+    const el = document.getElementById('ma-wr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const present = (stats || []).filter(s => Number.isFinite(Number(s.win_rate)));
+    if (present.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mood_analytics.empty_wr_chart">${esc(t('view.mood_analytics.empty_wr_chart'))}</div>`;
+        return;
+    }
+    present.sort((a, b) => Number(a.mood) - Number(b.mood));
+    const labels = present.map(s => moodLabel(s.mood));
+    const ys = present.map(s => Number(s.win_rate) * 100);
+    const xs = labels.map((_, i) => i + 1);
+    const fifty = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.mood_analytics.chart.mood') },
+            { label: t('view.mood_analytics.chart.win_rate'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.mood_analytics.chart.fifty_pct'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, fifty], el);
 }
 
 function renderMoodScatter(pairs) {

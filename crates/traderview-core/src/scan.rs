@@ -722,6 +722,8 @@ pub enum Preset {
     Year52LowSustainedWeaknessHotVol,  // year_low_pct < 5 AND day_pct < -1 AND change_pct < -1 AND rel_volume >= 2 — near 52w low + red intraday + red close + hot vol (sustained weakness confirmation at the lows; intraday-and-daily both confirm; high-conviction breakdown candidate)
     BigGreenWithModestGapDecentVol,    // change_pct > 3 AND gap_pct between 0.5 and 1.5 AND rel_volume >= 1.5 — meaningful gain >3 + modest gap (0.5-1.5%) + decent vol (gap-assisted rally; overnight bias kicked off the day but intraday extended substantially on volume)
     BigRedWithModestGapDownDecentVol,  // change_pct < -3 AND gap_pct between -1.5 and -0.5 AND rel_volume >= 1.5 — meaningful drop <-3 + modest gap down (-0.5 to -1.5%) + decent vol (gap-assisted decline; overnight bias kicked off the day but intraday extended substantially on volume)
+    CompoundConfirmedBigGreen,         // change_pct > 3 AND day_pct > 1 AND gap_pct > 0.5 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big green close + green intraday + positive gap + close near HOD + decent vol (every signal aligned bullish; full conviction up day; max-confirmation long candidate)
+    CompoundConfirmedBigRed,           // change_pct < -3 AND day_pct < -1 AND gap_pct < -0.5 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big red close + red intraday + negative gap + close near LOD + decent vol (every signal aligned bearish; full conviction down day; max-confirmation short candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4023,6 +4025,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct <= -0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::CompoundConfirmedBigGreen => {
+            hit.change_pct > 3.0
+                && hit.day_pct > 1.0
+                && hit.gap_pct > 0.5
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CompoundConfirmedBigRed => {
+            hit.change_pct < -3.0
+                && hit.day_pct < -1.0
+                && hit.gap_pct < -0.5
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4635,6 +4651,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowSustainedWeaknessHotVol => "Near 52w Low + Red Intraday + Red Close + Hot Vol (Sustained Weakness Confirmation; Intraday-and-Daily Both Down; Breakdown Candidate)",
         Preset::BigGreenWithModestGapDecentVol => "Big Green + Modest Gap Up + Decent Vol (Gap-assisted Rally; Overnight Bias Kicked Off the Day, Intraday Extended)",
         Preset::BigRedWithModestGapDownDecentVol => "Big Red + Modest Gap Down + Decent Vol (Gap-assisted Decline; Overnight Bias Kicked Off the Day, Intraday Extended)",
+        Preset::CompoundConfirmedBigGreen => "Big Green + Green Intraday + Positive Gap + Close Near HOD + Decent Vol (Every Signal Aligned Bullish; Max-confirmation Long Candidate)",
+        Preset::CompoundConfirmedBigRed => "Big Red + Red Intraday + Negative Gap + Close Near LOD + Decent Vol (Every Signal Aligned Bearish; Max-confirmation Short Candidate)",
     }
 }
 
