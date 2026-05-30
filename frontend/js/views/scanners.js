@@ -542,6 +542,8 @@ const PRESETS = [
     { id: 'massive_intraday_without_gap', label: t('view.scanners.preset.massive_intraday_without_gap.label'), desc: t('view.scanners.preset.massive_intraday_without_gap.desc') },
     { id: 'mid_year_both_sides_tagged', label: t('view.scanners.preset.mid_year_both_sides_tagged.label'), desc: t('view.scanners.preset.mid_year_both_sides_tagged.desc') },
     { id: 'extreme_silent_range', label: t('view.scanners.preset.extreme_silent_range.label'), desc: t('view.scanners.preset.extreme_silent_range.desc') },
+    { id: 'multi_axis_dry_day', label: t('view.scanners.preset.multi_axis_dry_day.label'), desc: t('view.scanners.preset.multi_axis_dry_day.desc') },
+    { id: 'big_gap_big_vol_big_change', label: t('view.scanners.preset.big_gap_big_vol_big_change.label'), desc: t('view.scanners.preset.big_gap_big_vol_big_change.desc') },
 ];
 
 export async function renderScanners(mount) {

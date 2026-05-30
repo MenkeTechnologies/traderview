@@ -660,6 +660,8 @@ pub enum Preset {
     MassiveIntradayWithoutGap,       // gap_pct.abs() < 0.1 AND day_pct.abs() > 3 AND rel_volume >= 2 — basically no gap + massive intraday + hot vol (huge intraday move with zero overnight bias; pure intraday discovery)
     MidYearBothSidesTagged,          // year_high_pct > 10 AND year_low_pct > 10 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1 — well within 52w + both extremes visited + decent vol (mid-range double-test day; structurally undecided)
     ExtremeSilentRange,              // (year_high_pct < 5 OR year_low_pct < 5) AND hod_dist + lod_dist < 0.8 AND rel_volume < 1 — at 52w extreme + very tight range + dry vol (silence at extreme; pre-reversal exhaustion signal)
+    MultiAxisDryDay,                 // change_pct.abs() < 0.5 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 AND gap_pct.abs() < 0.3 — flat change + dry vol + narrow range + small gap (quiet day across multiple axes; near-silent maintenance)
+    BigGapBigVolBigChange,           // gap_pct.abs() > 2 AND rel_volume >= 2 AND change_pct.abs() > 2 — big gap + big vol + big change (catalyst day; news-driven gap with sustained intraday activity)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3601,6 +3603,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 0.8
                 && hit.rel_volume < 1.0
         }
+        Preset::MultiAxisDryDay => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.gap_pct.abs() < 0.3
+        }
+        Preset::BigGapBigVolBigChange => {
+            hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() > 2.0
+        }
     }
 }
 
@@ -4151,6 +4164,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MassiveIntradayWithoutGap => "No Gap + Massive Intraday + Hot Vol (Pure Intraday Discovery; Zero Overnight Bias)",
         Preset::MidYearBothSidesTagged => "Mid-52w + Both Extremes Visited + Decent Vol (Mid-range Double-test Day)",
         Preset::ExtremeSilentRange => "At 52w Extreme + Tight Range + Dry Vol (Silence at Extreme; Pre-reversal Exhaustion)",
+        Preset::MultiAxisDryDay => "Flat Change + Dry Vol + Narrow Range + Small Gap (Quiet Multi-axis Maintenance Day)",
+        Preset::BigGapBigVolBigChange => "Big Gap + Big Vol + Big Change (Catalyst Day; News-driven with Sustained Activity)",
     }
 }
 

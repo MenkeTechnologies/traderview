@@ -64,6 +64,11 @@ export async function renderHaReversal(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.ha_reversal.h2.body_chart">Per-bar HA body ratio (|close − open| / range) — strong-flip threshold</h2>
+            <div id="ha-body-chart" style="height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.ha_reversal.h2.event_log">Event log</h2>
             <div id="ha-events"></div>
         </div>
@@ -123,6 +128,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars);
     renderChart(bars, report);
+    renderBodyChart(bars);
     renderEvents(report);
     const flips = (report.events || []).length;
     showToast(t('view.ha_reversal.toast.detected', { flips, bars: bars.length }), { level: 'success' });
@@ -181,6 +187,45 @@ function renderChart(bars, report) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, rawClose, haClose, up, dn], el);
+}
+
+function renderBodyChart(bars) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ha-body-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!bars || bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.ha_reversal.empty_body_chart">${esc(t('view.ha_reversal.empty_body_chart'))}</div>`;
+        return;
+    }
+    const haBars = computeHeikinAshi(bars);
+    const xs = haBars.map((_, i) => i);
+    const body = haBars.map(b => {
+        const range = b.high - b.low;
+        if (!(range > 0)) return null;
+        const r = Math.abs(b.close - b.open) / range;
+        return Number.isFinite(r) ? r : null;
+    });
+    const threshold = xs.map(() => Number(state.config.min_body_ratio));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [0, 1.05] } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.ha_reversal.chart.body_ratio'),
+              stroke: '#b86bff', width: 1.2,
+              fill: 'rgba(184,107,255,0.10)',
+              points: { show: false } },
+            { label: t('view.ha_reversal.chart.strong_threshold'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, body, threshold], el);
 }
 
 function renderEvents(report) {
