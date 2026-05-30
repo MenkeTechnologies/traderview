@@ -19,6 +19,7 @@ import {
 } from '../_cov_denoiser_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_COV = `# Sample covariance matrix (symmetric, N×N). Whitespace or comma
 # separator. # comments OK.
 # Demo: 8 assets with one strong factor + small idiosyncratic noise.
@@ -46,11 +47,12 @@ export async function renderCovDenoiser(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cov_denoiser.h2.inputs">Inputs</h2>
             <textarea id="cd-cov" rows="11"
-                style="width:100%;font-family:monospace;font-size:13px">${esc(state.covText)}</textarea>
+                style="width:100%;font-family:monospace;font-size:13px"
+                data-tip="view.cov_denoiser.tip.cov">${esc(state.covText)}</textarea>
             <div class="inline-form" style="margin-top:8px">
                 <label><span data-i18n="view.cov_denoiser.label.t">T (observations used to estimate the cov)</span>
-                    <input id="cd-t" type="number" step="1" min="1" value="${state.numObservations}"></label>
-                <button data-i18n="view.cov_denoiser.btn.denoise" id="cd-run" class="primary" type="button">Denoise</button>
+                    <input id="cd-t" type="number" step="1" min="1" value="${state.numObservations}" data-tip="view.cov_denoiser.tip.t"></label>
+                <button data-i18n="view.cov_denoiser.btn.denoise" id="cd-run" class="primary" type="button" data-tip="view.cov_denoiser.tip.run" data-shortcut="cov_denoiser_run">Denoise</button>
             </div>
             <p data-i18n="view.cov_denoiser.hint.marchenko_pastur_clipping_eigenvalues_inside_the_n" class="muted">
                 Marchenko-Pastur clipping: eigenvalues inside the noise bulk are flattened
@@ -94,10 +96,13 @@ export async function renderCovDenoiser(mount, _appState) {
 async function denoise(mount, tok) {
     hideErrs();
     const parsed = parseCovariance(state.covText);
-    if (parsed.errors.length) renderParseErrors(parsed.errors);
+    if (parsed.errors.length) {
+        renderParseErrors(parsed.errors);
+        showToast(t('view.cov_denoiser.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
+    }
 
     const err = validateInputs(parsed.value, state.numObservations);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.cov_denoiser.toast.invalid'), { level: 'warning' }); return; }
 
     let res;
     try {
@@ -107,6 +112,7 @@ async function denoise(mount, tok) {
         if (!res) throw new Error(t('view.cov_denoiser.error.null'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.cov_denoiser.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -114,6 +120,7 @@ async function denoise(mount, tok) {
     renderSummary(parsed.value, res);
     renderEigenChart(parsed.value, res);
     renderCleanedMatrix(parsed.value, res);
+    showToast(t('view.cov_denoiser.toast.denoised', { signal: res.signal_count, bulk: res.bulk_count }), { level: 'success' });
 }
 
 function renderSummary(originalCov, res) {

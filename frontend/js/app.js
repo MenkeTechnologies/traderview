@@ -526,6 +526,11 @@ function bindTabs() {
         const el = document.getElementById('rr-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in cov-denoiser scope → click Denoise.
+    window.addEventListener('tv:cov-denoiser-run', () => {
+        const el = document.getElementById('cd-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
