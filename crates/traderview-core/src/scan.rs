@@ -144,6 +144,8 @@ pub enum Preset {
     PreBreakoutSqueeze, // near 52w high (year_high_pct ≥ -3) AND very tight day_pct AND low rel_volume
     PreBreakdownSqueeze,// near 52w low (year_low_pct ≤ 3) AND very tight day_pct AND low rel_volume
     SymmetricSqueeze,   // identical HOD/LOD distances AND change near zero AND gap near zero AND quiet
+    OpenCloseSqueeze,   // |day_pct| < 0.3 (close near open) AND quiet vol — open/close almost equal
+    TightHodSqueeze,    // pressed to HOD (<0.3%) but change < 1% AND quiet vol — wound spring at high
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -232,6 +234,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
                 && hit.rel_volume < 0.8
         }
+        Preset::OpenCloseSqueeze => {
+            hit.day_pct.abs() < 0.3 && hit.rel_volume < 0.8
+        }
+        Preset::TightHodSqueeze => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -266,6 +276,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PreBreakoutSqueeze => "Pre-Breakout Squeeze",
         Preset::PreBreakdownSqueeze => "Pre-Breakdown Squeeze",
         Preset::SymmetricSqueeze => "Symmetric Squeeze",
+        Preset::OpenCloseSqueeze => "Open=Close Squeeze",
+        Preset::TightHodSqueeze => "Tight-HOD Squeeze",
     }
 }
 

@@ -26,6 +26,8 @@ const PRESETS = [
     { id: 'pre_breakout_squeeze', label: t('view.scanners.preset.pre_breakout_squeeze.label'), desc: t('view.scanners.preset.pre_breakout_squeeze.desc') },
     { id: 'pre_breakdown_squeeze', label: t('view.scanners.preset.pre_breakdown_squeeze.label'), desc: t('view.scanners.preset.pre_breakdown_squeeze.desc') },
     { id: 'symmetric_squeeze',    label: t('view.scanners.preset.symmetric_squeeze.label'),    desc: t('view.scanners.preset.symmetric_squeeze.desc') },
+    { id: 'open_close_squeeze',   label: t('view.scanners.preset.open_close_squeeze.label'),   desc: t('view.scanners.preset.open_close_squeeze.desc') },
+    { id: 'tight_hod_squeeze',    label: t('view.scanners.preset.tight_hod_squeeze.label'),    desc: t('view.scanners.preset.tight_hod_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

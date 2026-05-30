@@ -60,8 +60,13 @@ function renderEvents(evs, mount) {
         arr.push(e);
         groups.set(day, arr);
     }
-    const html = Array.from(groups.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
+    const sortedDays = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    const chartHtml = `
+        <div class="chart-panel">
+            <h2 data-i18n="view.economy.h2.density">Events per day (high-importance overlay)</h2>
+            <div id="ec-chart" style="width:100%;height:240px"></div>
+        </div>`;
+    const html = sortedDays
         .map(([day, items]) => `
             <div class="chart-panel">
                 <h2>${esc(t('view.economy.h2.day', { day, dayName: dayName(day) }))}</h2>
@@ -78,7 +83,40 @@ function renderEvents(evs, mount) {
                         </tr>`).join('')}</tbody>
                 </table>
             </div>`).join('');
-    ecEl.innerHTML = html;
+    ecEl.innerHTML = chartHtml + html;
+    renderDensityChart(sortedDays);
+}
+
+function renderDensityChart(sortedDays) {
+    const el = document.getElementById('ec-chart');
+    if (!el || !window.uPlot || !sortedDays || sortedDays.length < 1) {
+        if (el) el.innerHTML = `<div class="muted" data-i18n="view.economy.empty_chart">${esc(t('view.economy.empty_chart'))}</div>`;
+        return;
+    }
+    el.innerHTML = '';
+    const labels = sortedDays.map(([d]) => d.slice(5));
+    const total = sortedDays.map(([, items]) => items.length);
+    const high = sortedDays.map(([, items]) => items.filter(e => e.importance === 'high').length);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.economy.chart.day_idx') },
+            { label: t('view.economy.chart.total'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.economy.chart.high'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 8, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, total, high], el);
 }
 
 function dayName(iso) {
