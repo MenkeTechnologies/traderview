@@ -388,6 +388,8 @@ pub enum Preset {
     Pct52wBottomBoundaryReject,  // year_low_pct between 0 and 1 AND change_pct > 0.5 — touched 52w low boundary but closed higher (rejection from bottom boundary)
     Pct52wTopBoundaryAccept,     // year_high_pct between -1 and 0 AND change_pct > 0.5 — touched 52w high boundary and closed higher (acceptance above prior high)
     Pct52wBottomBoundaryAccept,  // year_low_pct between 0 and 1 AND change_pct < -0.5 — touched 52w low boundary and closed lower (acceptance below prior low)
+    UpFromBottomSpring,          // year_low_pct < 10 AND change_pct > 5 AND rel_volume >= 2 — strong rally up from the 52w lows on heavy vol (spring reversal)
+    DownFromTopUpthrust,         // year_high_pct > -10 AND change_pct < -5 AND rel_volume >= 2 — strong sell-off from the 52w highs on heavy vol (upthrust reversal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1758,6 +1760,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 1.0
                 && hit.change_pct < -0.5
         }
+        Preset::UpFromBottomSpring => {
+            hit.year_low_pct < 10.0
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DownFromTopUpthrust => {
+            hit.year_high_pct > -10.0
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2036,6 +2048,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wBottomBoundaryReject => "52w-Low Boundary Reject",
         Preset::Pct52wTopBoundaryAccept => "52w-High Boundary Accept",
         Preset::Pct52wBottomBoundaryAccept => "52w-Low Boundary Accept",
+        Preset::UpFromBottomSpring => "Up-From-Bottom Spring",
+        Preset::DownFromTopUpthrust => "Down-From-Top Upthrust",
     }
 }
 

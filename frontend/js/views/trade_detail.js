@@ -14,6 +14,54 @@ const dtLocal = (iso) => {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+function renderExcursionChart(trade) {
+    const el = document.getElementById('td-exc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const mfe = Number(trade.mfe);
+    const mae = Number(trade.mae);
+    const net = Number(trade.net_pnl);
+    if (![mfe, mae, net].some(Number.isFinite)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_detail.empty_exc_chart">${esc(t('view.trade_detail.empty_exc_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.trade_detail.chart.mae'),
+        t('view.trade_detail.chart.net_pnl'),
+        t('view.trade_detail.chart.mfe'),
+    ];
+    const xs = [1, 2, 3];
+    const maeY = [Number.isFinite(mae) ? mae : null, null, null];
+    const netY = [null, Number.isFinite(net) ? net : null, null];
+    const mfeY = [null, null, Number.isFinite(mfe) ? mfe : null];
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_detail.chart.bucket') },
+            { label: t('view.trade_detail.chart.mae'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.trade_detail.chart.net_pnl'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 18, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.trade_detail.chart.mfe'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 18, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.trade_detail.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, maeY, netY, mfeY, zero], el);
+}
+
 function renderExecChart(executions) {
     const el = document.getElementById('td-exec-chart');
     if (!el || !window.uPlot) return;
@@ -86,6 +134,11 @@ export async function renderTradeDetail(mount, state, tradeId) {
         <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.exec_chart">Execution prices (chronological)</h2>
             <div id="td-exec-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_detail.h2.excursion_chart">MFE vs MAE vs Net P&L</h2>
+            <div id="td-exc-chart" style="width:100%;height:200px"></div>
         </div>
 
         <div class="panel-grid">
@@ -218,6 +271,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
     const chartWrap = mount.querySelector('#chart-wrap');
     if (chartWrap) ohlcChart(chartWrap, bars.bars || [], marks, { height: 360 });
     renderExecChart(executions);
+    renderExcursionChart(trade);
 
     // Tag add
     const allTags = await api.tags();
