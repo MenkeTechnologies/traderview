@@ -122,7 +122,7 @@ export function makeDeterministicUuid(n) {
 
 export function validateInputs(rows) {
     if (!Array.isArray(rows) || rows.length === 0)
-        return 'need ≥ 1 trade row';
+        return t('view.setups_by_setup.validate.rows_min');
     return null;
 }
 

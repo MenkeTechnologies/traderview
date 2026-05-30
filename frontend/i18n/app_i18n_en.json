@@ -10614,6 +10614,7 @@
   "view.settings.th.default_2": "Default",
   "view.settings.th.created": "Created",
   "view.setups_by_setup.h1.setups_ranked_by_pandl": "// SETUPS — RANKED BY P&amp;L",
+  "view.setups_by_setup.validate.rows_min": "need ≥ 1 trade row",
   "view.setups_by_setup.h2.per_setup_leaderboard": "Per-setup leaderboard",
   "view.setups_by_setup.btn.analyze": "Analyze",
   "view.setups_by_setup.btn.demo_3_setups_mixed": "Demo: 3 setups mixed",
