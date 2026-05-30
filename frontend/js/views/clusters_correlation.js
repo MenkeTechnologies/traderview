@@ -14,6 +14,7 @@ import {
 } from '../_clusters_correlation_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     positions: makeDemoPositions('mega-cap-tech'),
     correlations: makeDemoCorrelations('mega-cap-tech'),
@@ -27,19 +28,19 @@ export async function renderClustersCorrelation(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.clusters_correlation.h2.positions">Positions</span> <small class="muted"><span data-i18n="view.clusters_correlation.h2.positions_hint">(per line: </span><code>SYMBOL notional</code><span data-i18n="view.clusters_correlation.h2.positions_hint2">, neg = short)</span></small></h2>
-            <textarea id="cc-pos" rows="5" placeholder="AAPL 20000&#10;MSFT 15000">${esc(positionsToBlob(state.positions))}</textarea>
+            <textarea id="cc-pos" rows="5" placeholder="AAPL 20000&#10;MSFT 15000" data-tip="view.clusters_correlation.tip.positions">${esc(positionsToBlob(state.positions))}</textarea>
             <h2><span data-i18n="view.clusters_correlation.h2.correlations">Correlations</span> <small class="muted"><span data-i18n="view.clusters_correlation.h2.correlations_hint">(per line: </span><code>A B corr</code><span data-i18n="view.clusters_correlation.h2.correlations_hint2">, order doesn't matter)</span></small></h2>
-            <textarea id="cc-corr" rows="6" placeholder="AAPL MSFT 0.85">${esc(correlationsToBlob(state.correlations))}</textarea>
+            <textarea id="cc-corr" rows="6" placeholder="AAPL MSFT 0.85" data-tip="view.clusters_correlation.tip.correlations">${esc(correlationsToBlob(state.correlations))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.clusters_correlation.label.threshold">Threshold |ρ|</span>
-                    <input id="cc-thr" type="number" step="any" min="0" max="1" value="${state.threshold}"></label>
-                <button data-i18n="view.clusters_correlation.btn.cluster" id="cc-run" class="primary" type="button">Cluster</button>
+                    <input id="cc-thr" type="number" step="any" min="0" max="1" value="${state.threshold}" data-tip="view.clusters_correlation.tip.threshold"></label>
+                <button data-i18n="view.clusters_correlation.btn.cluster" id="cc-run" class="primary" type="button" data-tip="view.clusters_correlation.tip.run" data-shortcut="clusters_correlation_run">Cluster</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.clusters_correlation.btn.demo_mega_cap_tech_cluster" id="cc-demo-tech"     class="secondary" type="button">Demo: mega-cap-tech cluster</button>
-                <button data-i18n="view.clusters_correlation.btn.demo_inverse_pair_qqq_sqqq" id="cc-demo-inverse"  class="secondary" type="button">Demo: inverse pair (QQQ/SQQQ)</button>
-                <button data-i18n="view.clusters_correlation.btn.demo_a_b_c_transitive_chain" id="cc-demo-chain"    class="secondary" type="button">Demo: A-B-C transitive chain</button>
-                <button data-i18n="view.clusters_correlation.btn.demo_all_singletons" id="cc-demo-diverse"  class="secondary" type="button">Demo: all singletons</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_mega_cap_tech_cluster" id="cc-demo-tech"     class="secondary" type="button" data-tip="view.clusters_correlation.tip.demo_tech">Demo: mega-cap-tech cluster</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_inverse_pair_qqq_sqqq" id="cc-demo-inverse"  class="secondary" type="button" data-tip="view.clusters_correlation.tip.demo_inverse">Demo: inverse pair (QQQ/SQQQ)</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_a_b_c_transitive_chain" id="cc-demo-chain"    class="secondary" type="button" data-tip="view.clusters_correlation.tip.demo_chain">Demo: A-B-C transitive chain</button>
+                <button data-i18n="view.clusters_correlation.btn.demo_all_singletons" id="cc-demo-diverse"  class="secondary" type="button" data-tip="view.clusters_correlation.tip.demo_diverse">Demo: all singletons</button>
             </div>
             <p data-i18n="view.clusters_correlation.hint.positions_cluster_if_there_s_a_chain_of_pairs_each" class="muted">Positions cluster if there's a chain of pairs each with |ρ| ≥ threshold. Threshold is inclusive (≥). Missing pairs default to ρ = 0.</p>
         </div>
@@ -87,7 +88,11 @@ function readInputs() {
     const pCorr = parseCorrelationBlob(document.getElementById('cc-corr').value);
     const errs = [...pPos.errors.map(e => `pos[${e.line_no}] ${e.message}`),
                   ...pCorr.errors.map(e => `corr[${e.line_no}] ${e.message}`)];
-    if (errs.length) { showErr(errs.slice(0, 4).join('; ')); return; }
+    if (errs.length) {
+        showErr(errs.slice(0, 4).join('; '));
+        showToast(t('view.clusters_correlation.toast.parse_error', { n: errs.length }), { level: 'warning' });
+        return;
+    }
     hideErr();
     state.positions    = pPos.positions;
     state.correlations = pCorr.correlations;
@@ -97,7 +102,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.positions, state.correlations, state.threshold);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.clusters_correlation.toast.invalid'), { level: 'warning' }); return; }
     const local = localCluster(state.positions, state.correlations, state.threshold);
     renderSummary(local, true);
     renderClusters(local);
@@ -106,12 +111,17 @@ async function compute(tok) {
     try {
         resp = await api.clustersCorrelation(buildBody(state.positions, state.correlations, state.threshold));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.clusters_correlation.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderClusters(resp);
     renderExposureChart(resp);
+    const s = summarize(resp);
+    const level = s.topPct >= 0.5 ? 'warning' : 'success';
+    showToast(t('view.clusters_correlation.toast.clustered', { n: s.nClusters, top: (s.topPct * 100).toFixed(0) }), { level });
 }
 
 function renderSummary(clusters, pending) {

@@ -731,6 +731,11 @@ function bindTabs() {
         const el = document.getElementById('cl-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in clusters-correlation scope → click Cluster.
+    window.addEventListener('tv:clusters-correlation-run', () => {
+        const el = document.getElementById('cc-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
