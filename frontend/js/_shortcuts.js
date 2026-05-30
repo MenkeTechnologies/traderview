@@ -164,6 +164,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'open_type_run',                keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'open-type',         descKey: 'shortcut.open_type_run',                actionKey: 'tv:open-type-run' },
     { id: 'market_profile_run',           keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'market-profile',    descKey: 'shortcut.market_profile_run',           actionKey: 'tv:market-profile-run' },
     { id: 'market_profile_demo',          keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'market-profile',    descKey: 'shortcut.market_profile_demo',          actionKey: 'tv:market-profile-demo' },
+    { id: 'pyramid_run',                  keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'pyramid',           descKey: 'shortcut.pyramid_run',                  actionKey: 'tv:pyramid-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

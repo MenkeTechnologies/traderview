@@ -16,6 +16,7 @@ import {
 } from '../_pyramid_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     kind: 'pyramid_up', side: 'long',
     initialQty: 100, initialEntry: 100,
@@ -31,32 +32,32 @@ export async function renderPyramid(mount, _appState) {
             <h2 data-i18n="view.pyramid.h2.strategy">Strategy</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.pyramid.label.kind">Kind</span>
-                    <select id="py-kind">
+                    <select id="py-kind" data-tip="view.pyramid.tip.kind">
                         <option data-i18n="view.pyramid.opt.pyramid_up_add_to_winners" value="pyramid_up" ${state.kind === 'pyramid_up' ? 'selected' : ''}>Pyramid Up (add to winners)</option>
                         <option data-i18n="view.pyramid.opt.scale_in_avg_down_up_against" value="scale_in"   ${state.kind === 'scale_in'   ? 'selected' : ''}>Scale In (avg down / up against)</option>
                     </select></label>
                 <label><span data-i18n="view.pyramid.label.side">Side</span>
-                    <select id="py-side">
+                    <select id="py-side" data-tip="view.pyramid.tip.side">
                         <option data-i18n="view.pyramid.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.pyramid.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.pyramid.label.initial_qty">Initial qty</span>
-                    <input id="py-iq" type="number" step="any" min="0" value="${state.initialQty}"></label>
+                    <input id="py-iq" type="number" step="any" min="0" value="${state.initialQty}" data-tip="view.pyramid.tip.initial_qty"></label>
                 <label><span data-i18n="view.pyramid.label.initial_entry">Initial entry $</span>
-                    <input id="py-ie" type="number" step="any" min="0" value="${state.initialEntry}"></label>
+                    <input id="py-ie" type="number" step="any" min="0" value="${state.initialEntry}" data-tip="view.pyramid.tip.initial_entry"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.pyramid.h2.tranche_ladder">Tranche ladder</h2>
             <p class="muted" data-i18n="view.pyramid.hint.format">One tranche per line: trigger_price qty. Pyramid-Up: tranches must move INTO profit. Scale-In: tranches must move AGAINST you within your planned ladder. Misordered tranches are flagged by both the local pre-flight and the backend.</p>
-            <textarea id="py-tranches" rows="5" placeholder="105 75&#10;110 50&#10;115 25"></textarea>
+            <textarea id="py-tranches" rows="5" placeholder="105 75&#10;110 50&#10;115 25" data-tip="view.pyramid.tip.tranches"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.pyramid.btn.demo_pyramid_up_long" id="py-demo-pu-long"  class="secondary" type="button">Demo: Pyramid Up Long</button>
-                <button data-i18n="view.pyramid.btn.demo_pyramid_up_short" id="py-demo-pu-short" class="secondary" type="button">Demo: Pyramid Up Short</button>
-                <button data-i18n="view.pyramid.btn.demo_scale_in_long" id="py-demo-si-long"  class="secondary" type="button">Demo: Scale In Long</button>
-                <button data-i18n="view.pyramid.btn.demo_scale_in_short" id="py-demo-si-short" class="secondary" type="button">Demo: Scale In Short</button>
-                <button data-i18n="view.pyramid.btn.build_plan" id="py-run" class="primary" type="button">Build plan</button>
+                <button data-i18n="view.pyramid.btn.demo_pyramid_up_long" id="py-demo-pu-long"  class="secondary" type="button" data-tip="view.pyramid.tip.demo_pu_long">Demo: Pyramid Up Long</button>
+                <button data-i18n="view.pyramid.btn.demo_pyramid_up_short" id="py-demo-pu-short" class="secondary" type="button" data-tip="view.pyramid.tip.demo_pu_short">Demo: Pyramid Up Short</button>
+                <button data-i18n="view.pyramid.btn.demo_scale_in_long" id="py-demo-si-long"  class="secondary" type="button" data-tip="view.pyramid.tip.demo_si_long">Demo: Scale In Long</button>
+                <button data-i18n="view.pyramid.btn.demo_scale_in_short" id="py-demo-si-short" class="secondary" type="button" data-tip="view.pyramid.tip.demo_si_short">Demo: Scale In Short</button>
+                <button data-i18n="view.pyramid.btn.build_plan" id="py-run" class="primary" type="button" data-tip="view.pyramid.tip.run" data-shortcut="pyramid_run">Build plan</button>
             </div>
         </div>
 
@@ -120,6 +121,7 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.pyramid.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (tranches.length === 0) return;
     }
     const input = {
@@ -128,25 +130,30 @@ async function compute(tok) {
         tranches,
     };
     const vErr = validateInputs(input);
-    if (vErr) { showErr(vErr); return; }
+    if (vErr) { showErr(vErr); showToast(t('view.pyramid.toast.invalid'), { level: 'warning' }); return; }
 
     // Local pre-flight: warn before round-trip if misordered.
     if (directionMisordered(state.kind, state.side, state.initialEntry, tranches)) {
         const el = document.getElementById('py-misorder');
         el.innerHTML = t('view.pyramid.preflight.misorder_html', { kind: state.kind.replace('_', '-'), side: state.side });
         el.style.display = 'block';
+        showToast(t('view.pyramid.toast.misorder'), { level: 'warning' });
     }
 
     let report;
     try {
         report = await api.discPyramidPlan(buildBody(input));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.pyramid.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderTable(report);
     renderChart(report);
+    const states = (report.states || []).length;
+    showToast(t('view.pyramid.toast.built', { states }), { level: report.plan_misordered ? 'warning' : 'success' });
 }
 
 function renderSummary(r) {

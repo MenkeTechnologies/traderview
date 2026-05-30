@@ -571,6 +571,11 @@ function bindTabs() {
         const el = document.getElementById('mp-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `b` in pyramid scope → click Build plan.
+    window.addEventListener('tv:pyramid-run', () => {
+        const el = document.getElementById('py-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
