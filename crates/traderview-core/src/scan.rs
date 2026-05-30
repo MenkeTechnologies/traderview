@@ -950,6 +950,8 @@ pub enum Preset {
     ShootingStarAtYear52Low,             // year_low_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w low + long upper wick + close near LOD + red close + hot vol (selling pressure persists at the breakdown floor: intraday rip sold back to the lows; continuation-of-trend weakness signal at the bottom)
     HammerAtMidYearHighRange,            // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed in the pullback zone: intraday plunge bought back toward the prior peak; bull-continuation hammer signaling pullback exhaustion)
     ShootingStarAtMidYearLowRange,       // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long upper wick + close near LOD + red close + hot vol (selling pressure tested in the bounce zone: intraday rip sold back toward the prior trough; bear-continuation shooting star signaling bounce exhaustion)
+    HammerAtDeepBounceContinuation,      // year_low_pct >= 10 AND year_low_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in the rebuild zone: intraday plunge reclaimed without retesting the floor; recovery momentum confirmation deep into the bounce)
+    ShootingStarAtDeepPullbackContinuation, // year_high_pct >= 10 AND year_high_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in the pullback zone: intraday rip sold without retesting the ceiling; decline momentum confirmation deep into the pullback)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5661,6 +5663,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HammerAtDeepBounceContinuation => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct < 30.0
+                && hit.lod_dist_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ShootingStarAtDeepPullbackContinuation => {
+            hit.year_high_pct >= 10.0
+                && hit.year_high_pct < 30.0
+                && hit.hod_dist_pct < -3.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6501,6 +6519,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarAtYear52Low => "At 52w Low + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Persists at the Breakdown Floor: Intraday Rip Sold Back to the Lows; Continuation-of-trend Weakness Signal at the Bottom)",
         Preset::HammerAtMidYearHighRange => "Mid-range from High (5-20 % below 52w High) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Buying Pressure Tested but Reclaimed in the Pullback Zone: Intraday Plunge Bought Back toward the Prior Peak; Bull-continuation Hammer Signaling Pullback Exhaustion)",
         Preset::ShootingStarAtMidYearLowRange => "Mid-range from Low (5-20 % above 52w Low) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Selling Pressure Tested in the Bounce Zone: Intraday Rip Sold Back toward the Prior Trough; Bear-continuation Shooting Star Signaling Bounce Exhaustion)",
+        Preset::HammerAtDeepBounceContinuation => "Deep Bounce Zone (10-30 % above 52w Low) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Bull-continuation Hammer in the Rebuild Zone: Intraday Plunge Reclaimed without Retesting the Floor; Recovery Momentum Confirmation Deep into the Bounce)",
+        Preset::ShootingStarAtDeepPullbackContinuation => "Deep Pullback Zone (10-30 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Bear-continuation Shooting Star in the Pullback Zone: Intraday Rip Sold without Retesting the Ceiling; Decline Momentum Confirmation Deep into the Pullback)",
     }
 }
 
