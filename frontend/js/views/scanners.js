@@ -948,6 +948,8 @@ const PRESETS = [
     { id: 'ultra_deep_above_year_low_gap_down_midpoint_hot_vol', label: t('view.scanners.preset.ultra_deep_above_year_low_gap_down_midpoint_hot_vol.label'), desc: t('view.scanners.preset.ultra_deep_above_year_low_gap_down_midpoint_hot_vol.desc') },
     { id: 'ultra_deep_below_year_high_hammer_hot_vol', label: t('view.scanners.preset.ultra_deep_below_year_high_hammer_hot_vol.label'), desc: t('view.scanners.preset.ultra_deep_below_year_high_hammer_hot_vol.desc') },
     { id: 'ultra_deep_above_year_low_shooting_star_hot_vol', label: t('view.scanners.preset.ultra_deep_above_year_low_shooting_star_hot_vol.label'), desc: t('view.scanners.preset.ultra_deep_above_year_low_shooting_star_hot_vol.desc') },
+    { id: 'ultra_deep_below_year_high_shooting_star_hot_vol', label: t('view.scanners.preset.ultra_deep_below_year_high_shooting_star_hot_vol.label'), desc: t('view.scanners.preset.ultra_deep_below_year_high_shooting_star_hot_vol.desc') },
+    { id: 'ultra_deep_above_year_low_hammer_hot_vol', label: t('view.scanners.preset.ultra_deep_above_year_low_hammer_hot_vol.label'), desc: t('view.scanners.preset.ultra_deep_above_year_low_hammer_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
