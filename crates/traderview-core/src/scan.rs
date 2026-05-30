@@ -262,6 +262,8 @@ pub enum Preset {
     PostCrashSqueeze,            // change_pct <= -3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a crash
     PostSpikeStabilizeSqueeze,   // change_pct >= 3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a spike
     TightWithSmallGapSqueeze,    // |gap_pct| < 0.5 AND |change_pct| between 0.3 and 0.8 AND |day_pct| < 0.4 — modest move on small gap, tight day
+    BigVolWithTinyChangeSqueeze, // rel_volume >= 3 AND change_pct.abs() < 0.1 — heavy volume but virtually zero change
+    QuietExpansionSqueeze,       // hod_dist + lod_dist 2-4 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 — modest range, no net move, quiet
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -999,6 +1001,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() <= 0.8
                 && hit.day_pct.abs() < 0.4
         }
+        Preset::BigVolWithTinyChangeSqueeze => {
+            hit.rel_volume >= 3.0 && hit.change_pct.abs() < 0.1
+        }
+        Preset::QuietExpansionSqueeze => {
+            let span = hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs();
+            span >= 2.0
+                && span <= 4.0
+                && hit.change_pct.abs() < 0.2
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -1151,6 +1163,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PostCrashSqueeze => "Post-Crash Stabilize Squeeze",
         Preset::PostSpikeStabilizeSqueeze => "Post-Spike Stabilize Squeeze",
         Preset::TightWithSmallGapSqueeze => "Tight With-Small-Gap Squeeze",
+        Preset::BigVolWithTinyChangeSqueeze => "Big-Vol Tiny-Change Squeeze",
+        Preset::QuietExpansionSqueeze => "Quiet-Expansion Squeeze",
     }
 }
 

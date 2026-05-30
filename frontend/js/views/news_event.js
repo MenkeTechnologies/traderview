@@ -49,6 +49,11 @@ export async function renderNewsEvent(mount, _appState) {
                 If multiple events affect a position, the highest-impact one wins.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.news_event.h2.trim_chart">Trim % per symbol</h2>
+            <div id="ne-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ne-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ne-demo').addEventListener('click', () => {
@@ -103,6 +108,42 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, positions, events);
     renderActions(report);
+    renderTrimChart(report);
+}
+
+function renderTrimChart(report) {
+    const el = document.getElementById('ne-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const actions = ((report && report.actions) || [])
+        .filter(a => Number(a.current_qty) > 0 && Number.isFinite(Number(a.trim_amount)));
+    if (actions.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.news_event.empty_chart">${esc(t('view.news_event.empty_chart'))}</div>`;
+        return;
+    }
+    const rows = actions.map(a => ({
+        symbol: a.symbol,
+        pct: (Number(a.trim_amount) / Number(a.current_qty)) * 100,
+    })).sort((a, b) => b.pct - a.pct);
+    const labels = rows.map(r => r.symbol);
+    const ys = rows.map(r => r.pct);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        series: [
+            { label: t('view.news_event.chart.symbol_idx') },
+            { label: t('view.news_event.chart.trim_pct'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSummary(report, positions, events) {

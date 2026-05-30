@@ -144,6 +144,8 @@ const PRESETS = [
     { id: 'post_crash_squeeze',         label: t('view.scanners.preset.post_crash_squeeze.label'),         desc: t('view.scanners.preset.post_crash_squeeze.desc') },
     { id: 'post_spike_stabilize_squeeze', label: t('view.scanners.preset.post_spike_stabilize_squeeze.label'), desc: t('view.scanners.preset.post_spike_stabilize_squeeze.desc') },
     { id: 'tight_with_small_gap_squeeze', label: t('view.scanners.preset.tight_with_small_gap_squeeze.label'), desc: t('view.scanners.preset.tight_with_small_gap_squeeze.desc') },
+    { id: 'big_vol_tiny_change_squeeze', label: t('view.scanners.preset.big_vol_tiny_change_squeeze.label'), desc: t('view.scanners.preset.big_vol_tiny_change_squeeze.desc') },
+    { id: 'quiet_expansion_squeeze',    label: t('view.scanners.preset.quiet_expansion_squeeze.label'),    desc: t('view.scanners.preset.quiet_expansion_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
