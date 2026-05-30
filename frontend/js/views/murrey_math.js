@@ -15,6 +15,7 @@ import {
 } from '../_murrey_math_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { barText: '', lookback: 64 };
 
 export async function renderMurreyMath(mount, _appState) {
@@ -27,13 +28,13 @@ export async function renderMurreyMath(mount, _appState) {
             <p class="muted" data-i18n-html="view.murrey_math.help">Paste <code>high low close</code> per line. Murrey
                 auto-detects the octave by rounding the lookback range to a
                 power-of-2 base. Demo loads 80 bars in a ~10-point oscillating range.</p>
-            <textarea id="mm-bars" rows="6" placeholder="100.6 99.4 100.0&#10;100.8 99.6 100.2&#10;..."></textarea>
+            <textarea id="mm-bars" rows="6" placeholder="100.6 99.4 100.0&#10;100.8 99.6 100.2&#10;..." data-tip="view.murrey_math.tip.bars"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.murrey_math.label.lookback">Lookback bars</span>
-                    <input id="mm-lb" type="number" step="1" min="1" value="${state.lookback}"></label>
-                <button data-i18n="view.murrey_math.btn.load_demo_80_bars_10_pt_range" id="mm-demo" class="secondary" type="button">Load demo (80 bars, ~10-pt range)</button>
-                <button data-i18n="view.murrey_math.btn.clear" id="mm-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.murrey_math.btn.compute_levels" id="mm-run" class="primary" type="button">Compute levels</button>
+                    <input id="mm-lb" type="number" step="1" min="1" value="${state.lookback}" data-tip="view.murrey_math.tip.lookback"></label>
+                <button data-i18n="view.murrey_math.btn.load_demo_80_bars_10_pt_range" id="mm-demo" class="secondary" type="button" data-tip="view.murrey_math.tip.demo" data-shortcut="murrey_math_demo">Load demo (80 bars, ~10-pt range)</button>
+                <button data-i18n="view.murrey_math.btn.clear" id="mm-clear" class="secondary" type="button" data-tip="view.murrey_math.tip.clear">Clear</button>
+                <button data-i18n="view.murrey_math.btn.compute_levels" id="mm-run" class="primary" type="button" data-tip="view.murrey_math.tip.run" data-shortcut="murrey_math_run">Compute levels</button>
             </div>
         </div>
 
@@ -61,9 +62,11 @@ export async function renderMurreyMath(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('mm-bars').value =
             b.map(x => `${x.high} ${x.low} ${x.close}`).join('\n');
+        showToast(t('view.murrey_math.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('mm-clear').addEventListener('click', () => {
         document.getElementById('mm-bars').value = '';
+        showToast(t('view.murrey_math.toast.cleared'), { level: 'info' });
     });
     document.getElementById('mm-run').addEventListener('click', () => {
         readInputs();
@@ -87,21 +90,30 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.murrey_math.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length === 0) return;
     }
     const err = validateInputs(bars, state.lookback);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.murrey_math.toast.invalid'), { level: 'warning' }); return; }
     let res;
     try {
         res = await api.anlyMurreyMath(buildBody(bars, state.lookback));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.murrey_math.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!res) { showErr(t('view.murrey_math.err.backend_returned_null_likely_degenerate_price_rang')); return; }
+    if (!res) {
+        showErr(t('view.murrey_math.err.backend_returned_null_likely_degenerate_price_rang'));
+        showToast(t('view.murrey_math.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(res, bars);
     renderChart(bars, res);
     renderTable(res);
+    const nearest = res.nearest_level ? res.nearest_level[0] : '—';
+    showToast(t('view.murrey_math.toast.computed', { levels: (res.levels || []).length, nearest }), { level: 'success' });
 }
 
 function renderSummary(r, bars) {

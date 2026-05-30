@@ -626,6 +626,16 @@ function bindTabs() {
         const el = document.getElementById('dm-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in murrey-math scope → click Compute.
+    window.addEventListener('tv:murrey-math-run', () => {
+        const el = document.getElementById('mm-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in murrey-math scope → click Load demo.
+    window.addEventListener('tv:murrey-math-demo', () => {
+        const el = document.getElementById('mm-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
