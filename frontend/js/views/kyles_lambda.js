@@ -57,6 +57,12 @@ export async function renderKylesLambda(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.kyles_lambda.h2.scatter_chart">Δp vs signed_volume (raw OLS input)</h2>
+            <div id="kl-scatter-chart" style="width:100%;height:280px"></div>
+            <p data-i18n="view.kyles_lambda.hint.scatter" class="muted small">The raw data Kyle's OLS is fit on. Tight line ≈ high R² = trustworthy λ. Cloud = low R² = noisy estimate. Orange dashed = overall-mean λ fit line through origin.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.kyles_lambda.h2.table">Per-bar λ (tail — last 30 bars)</h2>
             <div id="kl-table"></div>
         </div>
@@ -106,6 +112,7 @@ async function compute(tok) {
     const local = localCompute(state.price_changes, state.signed_volumes, state.window);
     renderSummary(local, true);
     renderChart(local);
+    renderScatterChart(local);
     renderTable(local);
     let resp;
     try {
@@ -118,6 +125,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderScatterChart(resp);
     renderTable(resp);
     const s = summarize(resp);
     const lam = Number(s.last_lambda);
@@ -176,6 +184,42 @@ function renderChart(series) {
         ],
         legend: { show: true },
     }, [xs, ys], el);
+}
+
+function renderScatterChart(series) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('kl-scatter-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const pcs = state.price_changes || [];
+    const svs = state.signed_volumes || [];
+    if (!pcs.length || pcs.length !== svs.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.kyles_lambda.empty_scatter_chart">${esc(t('view.kyles_lambda.empty_scatter_chart'))}</div>`;
+        return;
+    }
+    const s = summarize(series);
+    const slope = Number.isFinite(Number(s.mean)) ? Number(s.mean) : 0;
+    const minV = Math.min(...svs);
+    const maxV = Math.max(...svs);
+    // Use sorted signed_volumes as x for the chart (uPlot needs sorted x).
+    const indices = svs.map((_, i) => i).sort((a, b) => svs[a] - svs[b]);
+    const xs = indices.map(i => svs[i]);
+    const ys = indices.map(i => pcs[i]);
+    const fitYs = xs.map(x => slope * x);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 260,
+        scales: { x: { range: [minV, maxV] }, y: { auto: true } },
+        series: [
+            { label: t('view.kyles_lambda.chart.signed_volume') },
+            { label: t('view.kyles_lambda.chart.price_change'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 6, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.kyles_lambda.chart.mean_fit'),
+              stroke: '#ff9f1a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, ys, fitYs], el);
 }
 
 function renderTable(series) {

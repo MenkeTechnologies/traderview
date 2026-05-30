@@ -696,6 +696,8 @@ pub enum Preset {
     BigRedLowVolWeakClose,           // change_pct < -3 AND rel_volume < 1 AND lod_dist_pct.abs() > 1 — meaningful drop + dry vol + close not near LOD (fake-breakdown warning; down-move on weak participation closing off the lows; reversion candidate)
     GappingNearYearLowExtremeVol,    // year_low_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w low + significant gap + extreme vol (4×+) (high-intensity event at the floor; earnings/news catalyst at multi-year lows; max-event-driven reversal or capitulation candidate)
     GappingNearYearHighExtremeVol,   // year_high_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w high + significant gap + extreme vol (4×+) (high-intensity event at the highs; catalyst at the top; max-event-driven blow-off or distribution candidate)
+    BothSidesTaggedDryVolFlat,       // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — both extremes well-distant from close + flat change + dry vol (thin-tape both-side raid that closed flat; algorithmic stop-hunt at low participation; possible spoof/wash on illiquid name)
+    BothSidesTaggedBigChangeHotVol,  // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 — both extremes well-distant + big change + hot vol (full-range exploration ending decisively on volume; trend day that swept both sides first before resolving)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3839,6 +3841,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 2.0
                 && hit.rel_volume >= 4.0
         }
+        Preset::BothSidesTaggedDryVolFlat => {
+            hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.7
+        }
+        Preset::BothSidesTaggedBigChangeHotVol => {
+            hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4425,6 +4439,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedLowVolWeakClose => "Big Red + Dry Vol + Close Off Lows (Fake-Breakdown Warning; Down-Move on Weak Participation; Reversion Candidate)",
         Preset::GappingNearYearLowExtremeVol => "Near 52w Low + Significant Gap + Extreme Vol (4×+) (Event-driven Catalyst at the Floor; Reversal or Capitulation Candidate)",
         Preset::GappingNearYearHighExtremeVol => "Near 52w High + Significant Gap + Extreme Vol (4×+) (Event-driven Catalyst at the Top; Blow-off or Distribution Candidate)",
+        Preset::BothSidesTaggedDryVolFlat => "Both Extremes Tagged + Flat Close + Dry Vol (Thin-tape Stop-hunt; Possible Spoof/Wash on Illiquid Name)",
+        Preset::BothSidesTaggedBigChangeHotVol => "Both Extremes Tagged + Big Change + Hot Vol (Full-range Exploration Ending Decisively; Trend Day After Sweeping Both Sides)",
     }
 }
 
