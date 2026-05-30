@@ -725,6 +725,11 @@ function bindTabs() {
         const el = document.getElementById('dt-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in hurst scope → click Estimate.
+    window.addEventListener('tv:hurst-estimate', () => {
+        const el = document.getElementById('hu-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

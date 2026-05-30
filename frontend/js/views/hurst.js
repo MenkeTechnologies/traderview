@@ -16,6 +16,7 @@ import {
 } from '../_hurst_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_RETURNS = `# Paste a return series. One value per token.
 # Demo: 500 random-walk returns (should give H ≈ 0.5).
 ${synthRandomWalk(500).join('\n')}
@@ -54,15 +55,17 @@ export async function renderHurst(mount, _appState) {
                 <div>
                     <h3 data-i18n="view.hurst.h3.return_series">Return series</h3>
                     <textarea id="hu-returns" rows="11"
+                        data-tip="view.hurst.tip.returns"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.returnsText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.hurst.h3.chunk_sizes_r_s_regression_points">Chunk sizes (R/S regression points)</h3>
                     <textarea id="hu-chunks" rows="11"
+                        data-tip="view.hurst.tip.chunks"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.chunkText)}</textarea>
                 </div>
             </div>
-            <button data-i18n="view.hurst.btn.estimate" id="hu-run" class="primary" type="button" style="margin-top:8px">Estimate</button>
+            <button data-i18n="view.hurst.btn.estimate" data-tip="view.hurst.tip.estimate" data-shortcut="hurst_estimate" id="hu-run" class="primary" type="button" style="margin-top:8px">Estimate</button>
             <p data-i18n="view.hurst.hint.the_r_s_log_log_regression_slope_is_the_hurst_expo" class="muted">
                 The R/S log-log regression slope is the Hurst exponent. H &lt; 0.5 =
                 anti-persistent (mean-reverting), H ≈ 0.5 = random walk, H &gt; 0.5 =
@@ -104,20 +107,26 @@ async function estimate(mount, tok) {
     if (errors.length) renderParseErrors(errors);
 
     const err = validateInputs(retParsed.value, chunkParsed.value);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyHurstExponent(buildBody(retParsed.value, chunkParsed.value));
         if (!res) throw new Error(t('view.hurst.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(res);
     renderChart(res);
+    showToast(t('view.hurst.toast.done', {
+        h: res.hurst.toFixed(4),
+        regime: t(regimeLabelKey(res.hurst)),
+        r2: res.r_squared.toFixed(3),
+    }), { level: res.r_squared >= 0.80 ? 'success' : 'warning' });
 }
 
 function renderSummary(res) {
