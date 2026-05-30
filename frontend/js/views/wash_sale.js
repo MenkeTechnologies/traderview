@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseClosingBlob, parseOpeningBlob, validateInputs, buildBody,
@@ -41,15 +42,15 @@ export async function renderWashSale(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.wash_sale.btn.detect" id="ws-run" class="primary"
-                        data-tip="view.wash_sale.tip.detect" type="button">Detect</button>
+                        data-tip="view.wash_sale.tip.detect" data-shortcut="wash_sale_run" type="button">Detect</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.wash_sale.btn.demo_classic"  id="ws-demo-classic"  class="secondary" type="button">Demo: classic trap (+14d buyback)</button>
-                <button data-i18n="view.wash_sale.btn.demo_winning"  id="ws-demo-win"      class="secondary" type="button">Demo: winning trade (no flag)</button>
-                <button data-i18n="view.wash_sale.btn.demo_outside"  id="ws-demo-outside"  class="secondary" type="button">Demo: outside window (+34d)</button>
-                <button data-i18n="view.wash_sale.btn.demo_partial"  id="ws-demo-partial"  class="secondary" type="button">Demo: partial replacement (30 / 100)</button>
-                <button data-i18n="view.wash_sale.btn.demo_multi"    id="ws-demo-multi"    class="secondary" type="button">Demo: multiple buybacks</button>
-                <button data-i18n="view.wash_sale.btn.demo_mixed"    id="ws-demo-mixed"    class="secondary" type="button">Demo: mixed portfolio</button>
+                <button data-i18n="view.wash_sale.btn.demo_classic"  id="ws-demo-classic"  class="secondary" type="button" data-tip="view.wash_sale.tip.demo_classic">Demo: classic trap (+14d buyback)</button>
+                <button data-i18n="view.wash_sale.btn.demo_winning"  id="ws-demo-win"      class="secondary" type="button" data-tip="view.wash_sale.tip.demo_win">Demo: winning trade (no flag)</button>
+                <button data-i18n="view.wash_sale.btn.demo_outside"  id="ws-demo-outside"  class="secondary" type="button" data-tip="view.wash_sale.tip.demo_outside">Demo: outside window (+34d)</button>
+                <button data-i18n="view.wash_sale.btn.demo_partial"  id="ws-demo-partial"  class="secondary" type="button" data-tip="view.wash_sale.tip.demo_partial">Demo: partial replacement (30 / 100)</button>
+                <button data-i18n="view.wash_sale.btn.demo_multi"    id="ws-demo-multi"    class="secondary" type="button" data-tip="view.wash_sale.tip.demo_multi">Demo: multiple buybacks</button>
+                <button data-i18n="view.wash_sale.btn.demo_mixed"    id="ws-demo-mixed"    class="secondary" type="button" data-tip="view.wash_sale.tip.demo_mixed">Demo: mixed portfolio</button>
             </div>
             <p data-i18n="view.wash_sale.hint.about" class="muted">±30-day bidirectional window. Boundary 30 days exactly = INSIDE. Disallowed loss = loss × min(replacement_qty, close_qty) / close_qty. Symbol match only — substantially-identical (options / ETFs / share classes) is out of scope.</p>
         </div>
@@ -104,7 +105,11 @@ function readInputs() {
         ...pc.errors.map(e => `close[${e.line_no}] ${e.message}`),
         ...po.errors.map(e => `open[${e.line_no}] ${e.message}`),
     ];
-    if (errs.length) { showErr(errs.slice(0, 4).join('; ')); return; }
+    if (errs.length) {
+        showErr(errs.slice(0, 4).join('; '));
+        showToast(t('view.wash_sale.toast.parse_error', { n: errs.length }), { level: 'warning' });
+        return;
+    }
     hideErr();
     state.closings = pc.rows;
     state.openings = po.rows;
@@ -113,7 +118,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.closings, state.openings);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.wash_sale.toast.invalid'), { level: 'warning' }); return; }
     const localHits = localDetectHits(state.closings, state.openings);
     const localTotal = localTotalDisallowed(localHits);
     renderSummary({ hits: localHits, total_disallowed: localTotal }, true);
@@ -125,6 +130,7 @@ async function compute(tok) {
         resp = await api.calcWashSale(buildBody(state.closings, state.openings));
     } catch (e) {
         showErr(`${t('view.wash_sale.err.api')}: ${e.message || e}`);
+        showToast(t('view.wash_sale.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -140,6 +146,10 @@ async function compute(tok) {
     renderTable(normalized.hits);
     renderHitsChart(normalized.hits);
     renderDaysChart(normalized.hits);
+    const hits = (normalized.hits || []).length;
+    const total = Math.round(Number(normalized.total_disallowed) || 0);
+    const level = hits > 0 ? 'warning' : 'success';
+    showToast(t('view.wash_sale.toast.detected', { hits, total: total.toLocaleString() }), { level });
 }
 
 function renderDaysChart(hits) {

@@ -206,6 +206,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'risk_on_off_run',              keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-on-off',       descKey: 'shortcut.risk_on_off_run',              actionKey: 'tv:risk-on-off-run' },
     { id: 'risk_reward_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-reward',       descKey: 'shortcut.risk_reward_run',              actionKey: 'tv:risk-reward-run' },
     { id: 'tax_loss_harvest_run',         keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'tax-loss-harvest',  descKey: 'shortcut.tax_loss_harvest_run',         actionKey: 'tv:tax-loss-harvest-run' },
+    { id: 'wash_sale_run',                keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'wash-sale',         descKey: 'shortcut.wash_sale_run',                actionKey: 'tv:wash-sale-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
