@@ -79,17 +79,17 @@ export function parseFlowBlob(blob) {
         if (!raw || raw.startsWith('#')) continue;
         const toks = raw.split(/\s+/);
         if (toks.length !== 2) {
-            out.errors.push({ line_no: i + 1, message: 'expected 2 tokens (price_change signed_volume)' });
+            out.errors.push({ line_no: i + 1, message: t('view.kyles_lambda.parse.expected_2_tokens') });
             continue;
         }
         const pc = Number(toks[0]);
         const sv = Number(toks[1]);
         if (!Number.isFinite(pc)) {
-            out.errors.push({ line_no: i + 1, message: 'price_change not finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.kyles_lambda.parse.price_change_finite') });
             continue;
         }
         if (!Number.isFinite(sv)) {
-            out.errors.push({ line_no: i + 1, message: 'signed_volume not finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.kyles_lambda.parse.signed_volume_finite') });
             continue;
         }
         out.price_changes.push(pc);

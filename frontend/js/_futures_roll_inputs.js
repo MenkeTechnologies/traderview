@@ -40,11 +40,11 @@ export function parsePositionBlob(text) {
         const contracts = Number(parts[1]);
         const expiration = parts[2];
         if (!Number.isInteger(contracts) || contracts === 0) {
-            errors.push({ line_no: i + 1, raw, message: 'contracts must be non-zero integer (+ long / - short)' });
+            errors.push({ line_no: i + 1, raw, message: t('view.futures_roll.parse.contracts_non_zero') });
             continue;
         }
         if (!isValidDate(expiration)) {
-            errors.push({ line_no: i + 1, raw, message: 'expiration must be YYYY-MM-DD' });
+            errors.push({ line_no: i + 1, raw, message: t('view.futures_roll.parse.expiration_iso') });
             continue;
         }
         positions.push({ symbol, contracts, expiration });

@@ -93,7 +93,7 @@ export function parseObsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 5) {
-            out.errors.push({ line_no: i + 1, message: 'expected 5 tokens (trade current_mid delayed_mid quoted_spread direction)' });
+            out.errors.push({ line_no: i + 1, message: t('view.effective_spread.parse.expected_5_tokens') });
             continue;
         }
         const trade_price = Number(toks[0]);
@@ -106,7 +106,7 @@ export function parseObsBlob(blob) {
             continue;
         }
         if (!DIRECTIONS.includes(direction)) {
-            out.errors.push({ line_no: i + 1, message: 'direction must be buy or sell' });
+            out.errors.push({ line_no: i + 1, message: t('view.effective_spread.parse.direction_buy_sell') });
             continue;
         }
         out.observations.push({ trade_price, current_mid, delayed_mid, quoted_spread, direction });

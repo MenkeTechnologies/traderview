@@ -139,7 +139,7 @@ export function parsePortfolioBlob(blob) {
     }
     const sections = blob.split(/\n\s*\n/).map(s => s.trim()).filter(s => s.length > 0);
     if (sections.length < 2) {
-        out.errors.push({ line_no: 0, message: 'expected 2 sections separated by a blank line (weights, then covariance matrix)' });
+        out.errors.push({ line_no: 0, message: t('view.marginal_var.parse.expected_2_sections') });
         return out;
     }
     // Weights section.
@@ -156,7 +156,7 @@ export function parsePortfolioBlob(blob) {
             label = toks[0];
             weight = Number(toks[1]);
         } else {
-            out.errors.push({ line_no: i + 1, message: 'weight row needs 1 or 2 tokens' });
+            out.errors.push({ line_no: i + 1, message: t('view.marginal_var.parse.weight_row_tokens') });
             continue;
         }
         if (!Number.isFinite(weight)) {
@@ -173,7 +173,7 @@ export function parsePortfolioBlob(blob) {
         if (!raw) continue;
         const cells = raw.split(/[\s,]+/).filter(t => t.length > 0).map(Number);
         if (cells.some(v => !Number.isFinite(v))) {
-            out.errors.push({ line_no: i + 1, message: 'non-finite cell in matrix' });
+            out.errors.push({ line_no: i + 1, message: t('view.marginal_var.parse.non_finite_cell') });
             continue;
         }
         out.covariance.push(cells);

@@ -32,7 +32,7 @@ export function parsePositionBlob(text) {
         const sym = parts[0].toUpperCase();
         const notional = Number(parts[1]);
         if (!Number.isFinite(notional)) {
-            errors.push({ line_no: i + 1, raw, message: 'notional must be finite number' });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_correlation.parse.notional_finite') });
             continue;
         }
         if (seen.has(sym)) {
@@ -67,7 +67,7 @@ export function parseCorrelationBlob(text) {
         const b = parts[1].toUpperCase();
         const corr = Number(parts[2]);
         if (!Number.isFinite(corr) || corr < -1 || corr > 1) {
-            errors.push({ line_no: i + 1, raw, message: 'corr must be in [-1, 1]' });
+            errors.push({ line_no: i + 1, raw, message: t('view.clusters_correlation.parse.corr_range') });
             continue;
         }
         correlations.push({ a, b, corr });

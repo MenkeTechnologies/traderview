@@ -35,11 +35,11 @@ export function parsePositionBlob(text) {
         const ccy = parts[1].toUpperCase();
         const n   = Number(parts[2]);
         if (!Number.isFinite(n)) {
-            errors.push({ line_no: i + 1, raw, message: 'notional must be finite' });
+            errors.push({ line_no: i + 1, raw, message: t('view.currency_exposure.parse.notional_finite') });
             continue;
         }
         if (!/^[A-Z]{2,5}$/.test(ccy)) {
-            errors.push({ line_no: i + 1, raw, message: 'currency must be 2-5 alpha chars (e.g. USD, EUR, GBP, JPY)' });
+            errors.push({ line_no: i + 1, raw, message: t('view.currency_exposure.parse.currency_alpha') });
             continue;
         }
         positions.push({ symbol: sym, currency: ccy, notional_native: n });
@@ -67,7 +67,7 @@ export function parseFxBlob(text) {
         const ccy = parts[0].toUpperCase();
         const rate = Number(parts[1]);
         if (!Number.isFinite(rate) || rate <= 0) {
-            errors.push({ line_no: i + 1, raw, message: 'rate must be > 0' });
+            errors.push({ line_no: i + 1, raw, message: t('view.currency_exposure.parse.rate_positive') });
             continue;
         }
         fx[ccy] = rate;

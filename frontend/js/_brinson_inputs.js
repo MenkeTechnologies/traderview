@@ -106,7 +106,7 @@ export function parseInputsBlob(blob) {
         if (!raw) continue;
         const toks = raw.split(/[\s,]+/).filter(t => t.length > 0);
         if (toks.length !== 5) {
-            out.errors.push({ line_no: i + 1, message: 'expected 5 tokens (sector port_w bench_w port_r bench_r)' });
+            out.errors.push({ line_no: i + 1, message: t('view.brinson.parse.expected_5_tokens') });
             continue;
         }
         const sector = toks[0];
@@ -123,7 +123,7 @@ export function parseInputsBlob(blob) {
             continue;
         }
         if (!Number.isFinite(pr) || !Number.isFinite(br)) {
-            out.errors.push({ line_no: i + 1, message: 'returns must be finite' });
+            out.errors.push({ line_no: i + 1, message: t('view.brinson.parse.returns_finite') });
             continue;
         }
         out.inputs.push({

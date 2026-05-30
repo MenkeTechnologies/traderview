@@ -39,12 +39,12 @@ export function parseLoserBlob(text) {
         const cost = Number(parts[2]);
         const price = Number(parts[3]);
         if (![qty, cost, price].every(Number.isFinite)) {
-            errors.push({ line_no: i + 1, raw, message: 'tokens must be finite numbers' });
+            errors.push({ line_no: i + 1, raw, message: t('view.tax_loss_harvest.parse.tokens_finite') });
             continue;
         }
         if (qty <= 0)   { errors.push({ line_no: i + 1, raw, message: t('common.parse.qty_must_be_positive') });   continue; }
-        if (cost <= 0)  { errors.push({ line_no: i + 1, raw, message: 'avg_cost must be > 0' });  continue; }
-        if (price < 0)  { errors.push({ line_no: i + 1, raw, message: 'current_price must be ≥ 0' }); continue; }
+        if (cost <= 0)  { errors.push({ line_no: i + 1, raw, message: t('view.tax_loss_harvest.parse.avg_cost_positive') });  continue; }
+        if (price < 0)  { errors.push({ line_no: i + 1, raw, message: t('view.tax_loss_harvest.parse.current_price_non_neg') }); continue; }
         losers.push({ symbol: sym, qty, avg_cost: cost, current_price: price });
     }
     return { losers, errors };
@@ -70,7 +70,7 @@ export function parseRecentBuyBlob(text) {
         const sym = parts[0].toUpperCase();
         const date = parts[1];
         if (!isValidDate(date)) {
-            errors.push({ line_no: i + 1, raw, message: 'executed_at must be YYYY-MM-DD' });
+            errors.push({ line_no: i + 1, raw, message: t('view.tax_loss_harvest.parse.executed_at_iso') });
             continue;
         }
         buys.push({ symbol: sym, executed_at: date });

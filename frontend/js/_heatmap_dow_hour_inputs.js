@@ -47,16 +47,16 @@ export function parseTradeBlob(text) {
             continue;
         }
         if (!isValidDate(dateStr)) {
-            errors.push({ line_no: i + 1, raw, message: 'date must be YYYY-MM-DD' });
+            errors.push({ line_no: i + 1, raw, message: t('view.heatmap_dow_hour.parse.date_iso') });
             continue;
         }
         if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
-            errors.push({ line_no: i + 1, raw, message: 'hour must be integer 0..23' });
+            errors.push({ line_no: i + 1, raw, message: t('view.heatmap_dow_hour.parse.hour_range') });
             continue;
         }
         const net_pnl = Number(pnlStr);
         if (!Number.isFinite(net_pnl)) {
-            errors.push({ line_no: i + 1, raw, message: 'net_pnl must be finite' });
+            errors.push({ line_no: i + 1, raw, message: t('view.heatmap_dow_hour.parse.net_pnl_finite') });
             continue;
         }
         rows.push({ date: dateStr, hour, net_pnl });
