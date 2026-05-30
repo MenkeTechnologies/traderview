@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderTags(mount) {
     const tok = currentViewToken();
@@ -16,17 +17,23 @@ export async function renderTags(mount) {
                 <button data-i18n="view.tags.btn.create" class="primary" type="submit">Create</button>
             </form>
         </div>
-        <div class="tag-list">${tags.map(t => `
+        <div class="tag-list">${tags.map(tag => `
             <span class="tag-chip"
                   data-context-scope="tag-chip"
-                  data-id="${esc(t.id)}"
-                  data-name="${esc(t.name)}"
-                  style="border-color:${esc(t.color)}">
-                ${esc(t.name)}
-                <button class="link" data-del="${t.id}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button>
+                  data-id="${esc(tag.id)}"
+                  data-name="${esc(tag.name)}"
+                  style="border-color:${esc(tag.color)}">
+                ${esc(tag.name)}
+                <button class="link" data-del="${tag.id}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button>
             </span>
         `).join('') || '<p data-i18n="view.tags.hint.no_tags_yet" class="muted">No tags yet.</p>'}</div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tags.h2.length_chart">Tag name length per tag</h2>
+            <div id="tag-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+    renderTagsChart(tags);
     mount.querySelector('#tag-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -40,4 +47,34 @@ export async function renderTags(mount) {
             if (!viewIsCurrent(tok)) return;
             renderTags(mount);
         }));
+}
+
+function renderTagsChart(tags) {
+    const el = document.getElementById('tag-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (tags || []).filter(tag => tag && tag.name);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tags.empty_chart">${esc(t('view.tags.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(tag => tag.name);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(tag => String(tag.name).length);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tags.chart.tag') },
+            { label: t('view.tags.chart.len'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

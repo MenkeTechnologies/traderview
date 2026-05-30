@@ -358,6 +358,8 @@ pub enum Preset {
     NarrowingRangeOnFlat,        // hod_dist between 0.5 and 2 AND lod_dist between 0.5 and 2 AND change_pct.abs() < 0.3 — both wicks small, no net move (narrowing-range setup)
     GapTooFarBigPullback,        // gap_pct > 4 AND change_pct < gap_pct - 3 — gapped up but pulled back >3% from the gap (over-extended fade)
     GapTooFarBigBounce,          // gap_pct < -4 AND change_pct > gap_pct + 3 — gapped down but bounced >3% off the gap (over-extended bounce)
+    ChainBreakoutLevel,          // hod_dist.abs() < 0.3 AND lod_dist.abs() > 2 AND change_pct > 1 — close at HOD with broad day-range; breakout above prior level
+    ChainBreakdownLevel,         // lod_dist.abs() < 0.3 AND hod_dist.abs() > 2 AND change_pct < -1 — close at LOD with broad day-range; breakdown below prior level
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1575,6 +1577,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.gap_pct < -4.0
                 && hit.change_pct > hit.gap_pct + 3.0
         }
+        Preset::ChainBreakoutLevel => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct.abs() > 2.0
+                && hit.change_pct > 1.0
+        }
+        Preset::ChainBreakdownLevel => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() > 2.0
+                && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -1823,6 +1835,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowingRangeOnFlat => "Narrowing Range on Flat",
         Preset::GapTooFarBigPullback => "Gap-Too-Far Big Pullback",
         Preset::GapTooFarBigBounce => "Gap-Too-Far Big Bounce",
+        Preset::ChainBreakoutLevel => "Chain Breakout Level",
+        Preset::ChainBreakdownLevel => "Chain Breakdown Level",
     }
 }
 

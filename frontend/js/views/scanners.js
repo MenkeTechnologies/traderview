@@ -240,6 +240,8 @@ const PRESETS = [
     { id: 'narrowing_range_on_flat', label: t('view.scanners.preset.narrowing_range_on_flat.label'), desc: t('view.scanners.preset.narrowing_range_on_flat.desc') },
     { id: 'gap_too_far_big_pullback', label: t('view.scanners.preset.gap_too_far_big_pullback.label'), desc: t('view.scanners.preset.gap_too_far_big_pullback.desc') },
     { id: 'gap_too_far_big_bounce', label: t('view.scanners.preset.gap_too_far_big_bounce.label'), desc: t('view.scanners.preset.gap_too_far_big_bounce.desc') },
+    { id: 'chain_breakout_level', label: t('view.scanners.preset.chain_breakout_level.label'), desc: t('view.scanners.preset.chain_breakout_level.desc') },
+    { id: 'chain_breakdown_level', label: t('view.scanners.preset.chain_breakdown_level.label'), desc: t('view.scanners.preset.chain_breakdown_level.desc') },
 ];
 
 export async function renderScanners(mount) {
