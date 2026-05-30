@@ -742,6 +742,8 @@ pub enum Preset {
     BrokeBelow52wLowHotVol,              // year_low_pct < 0 AND change_pct < -1 AND rel_volume >= 2 — closed BELOW prior 52w low + red + hot vol (true new-low breakdown with volume confirmation; institutional capitulation at a multi-year extreme)
     ChangeIntradayDisagreeBothTagged,    // change_pct * day_pct < 0 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — change/day signs disagree + both extremes visited + decent vol (full schizophrenic day; gap dominates close direction but intraday went opposite and explored both sides; institutional repositioning vs retail)
     ChangeIntradayDisagreeFlatRange,     // change_pct * day_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — change/day signs disagree + tight intraday + decent vol (gap-vs-intraday sign disagreement but intraday compressed; overnight news held even as intraday tried to fade in narrow range)
+    BigGapHugeVolHalfFade,               // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() < gap_pct.abs() * 0.5 — big gap + extreme vol (3×+) + change < half the gap (gap absorbed substantially even on extreme volume; institutional offloading at gap level; >50% gap fade with conviction)
+    BigGapHugeVolFullExtension,          // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() > gap_pct.abs() * 1.5 — big gap + extreme vol (3×+) + change > 1.5× the gap (gap extended substantially on extreme volume; institutional commitment beyond the gap; momentum continuation on max participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4182,6 +4184,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigGapHugeVolHalfFade => {
+            hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 3.0
+                && hit.change_pct.abs() < hit.gap_pct.abs() * 0.5
+        }
+        Preset::BigGapHugeVolFullExtension => {
+            hit.gap_pct.abs() > 2.0
+                && hit.rel_volume >= 3.0
+                && hit.change_pct.abs() > hit.gap_pct.abs() * 1.5
+        }
     }
 }
 
@@ -4814,6 +4826,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BrokeBelow52wLowHotVol => "Closed Below Prior 52w Low + Red + Hot Vol (True New-low Breakdown with Volume Confirmation)",
         Preset::ChangeIntradayDisagreeBothTagged => "Change/Day Signs Disagree + Both Extremes Tagged + Decent Vol (Schizophrenic Day; Gap vs Intraday Opposition with Full-range Exploration)",
         Preset::ChangeIntradayDisagreeFlatRange => "Change/Day Signs Disagree + Tight Intraday + Decent Vol (Overnight News Held While Intraday Tried to Fade in Narrow Range)",
+        Preset::BigGapHugeVolHalfFade => "Big Gap + Extreme Vol (3×+) + Change < Half Gap (Institutional Offloading at Gap Level; >50% Gap Fade on Conviction)",
+        Preset::BigGapHugeVolFullExtension => "Big Gap + Extreme Vol (3×+) + Change > 1.5× Gap (Institutional Commitment Beyond the Gap; Momentum Continuation on Max Participation)",
     }
 }
 

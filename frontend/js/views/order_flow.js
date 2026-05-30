@@ -54,6 +54,12 @@ export async function renderOrderFlow(mount, _appState) {
                 Smooth-rising net = sustained accumulation. Steep drop = distribution.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.order_flow.h2.rolling_imb_chart">Rolling 20-tick imbalance ratio</h2>
+            <div id="of-roll-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.order_flow.hint.rolling_imb" class="muted small">Per-tick rolling (buy − sell) / (buy + sell) over a 20-tick window. Yellow dashed = neutral. Reveals when pressure shifts regime — accumulation cluster → distribution wave.</p>
+        </div>
+
         <div id="of-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -106,6 +112,7 @@ async function compute(tok) {
     renderSummary(aggregate, classified);
     renderGauge(aggregate);
     renderFlowChart(classified);
+    renderRollingImbChart(classified);
     showToast(t('view.order_flow.toast.done', {
         ticks: ticks.length,
         imbalance: fmtImbalance(aggregate.imbalance_ratio),
@@ -184,6 +191,47 @@ function renderFlowChart(classified) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, buy, sell, net], el);
+}
+
+function renderRollingImbChart(classified) {
+    const el = document.getElementById('of-roll-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const ticks = classified || [];
+    const win = 20;
+    if (ticks.length < win + 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.order_flow.empty_roll_chart">${esc(t('view.order_flow.empty_roll_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ratios = [];
+    for (let i = win - 1; i < ticks.length; i++) {
+        let buy = 0, sell = 0;
+        for (let k = i - win + 1; k <= i; k++) {
+            const c = ticks[k];
+            if (!c) continue;
+            const v = Number(c.volume) || 0;
+            if (c.side === 'buy') buy += v;
+            else if (c.side === 'sell') sell += v;
+        }
+        const tot = buy + sell;
+        xs.push(i + 1);
+        ratios.push(tot > 0 ? (buy - sell) / tot : 0);
+    }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [-1.05, 1.05] } },
+        series: [
+            { label: t('chart.series.tick_num') },
+            { label: t('view.order_flow.chart.rolling_imb'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.order_flow.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, ratios, zero], el);
 }
 
 function showErr(msg) {
