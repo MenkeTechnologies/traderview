@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_EMA_PERIOD, DEFAULT_MAX_WINDOW, DEFAULT_LOW, DEFAULT_HIGH,
@@ -30,25 +31,29 @@ export async function renderBreadthThrust(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.breadth.label.ema">EMA period</span>
-                    <input id="bt-ema" type="number" step="1" min="2" value="${state.ema_period}"></label>
+                    <input id="bt-ema" type="number" step="1" min="2" value="${state.ema_period}"
+                           data-tip="view.breadth.tip.ema"></label>
                 <label><span data-i18n="view.breadth.label.window">Max window bars</span>
-                    <input id="bt-window" type="number" step="1" min="2" value="${state.max_window_bars}"></label>
+                    <input id="bt-window" type="number" step="1" min="2" value="${state.max_window_bars}"
+                           data-tip="view.breadth.tip.window"></label>
                 <label><span data-i18n="view.breadth.label.low">Low threshold</span>
-                    <input id="bt-low" type="number" step="any" min="0" max="1" value="${state.low_threshold}"></label>
+                    <input id="bt-low" type="number" step="any" min="0" max="1" value="${state.low_threshold}"
+                           data-tip="view.breadth.tip.low"></label>
                 <label><span data-i18n="view.breadth.label.high">High threshold</span>
-                    <input id="bt-high" type="number" step="any" min="0" max="1" value="${state.high_threshold}"></label>
+                    <input id="bt-high" type="number" step="any" min="0" max="1" value="${state.high_threshold}"
+                           data-tip="view.breadth.tip.high"></label>
                 <button data-i18n="view.breadth.btn.compute" id="bt-run" class="primary"
-                        data-tip="view.breadth.tip.compute" type="button">Detect thrust</button>
+                        data-tip="view.breadth.tip.compute" data-shortcut="breadth_thrust_run" type="button">Detect thrust</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.breadth.btn.demo_classic"  id="bt-demo-classic"  class="secondary" type="button">Demo: classic thrust</button>
-                <button data-i18n="view.breadth.btn.demo_flat"     id="bt-demo-flat"     class="secondary" type="button">Demo: flat balanced</button>
-                <button data-i18n="view.breadth.btn.demo_slow"     id="bt-demo-slow"     class="secondary" type="button">Demo: slow recovery (no thrust)</button>
-                <button data-i18n="view.breadth.btn.demo_multi"    id="bt-demo-multi"    class="secondary" type="button">Demo: 2 thrusts in series</button>
-                <button data-i18n="view.breadth.btn.demo_washout"  id="bt-demo-washout"  class="secondary" type="button">Demo: deep washout</button>
-                <button data-i18n="view.breadth.btn.demo_noisy"    id="bt-demo-noisy"    class="secondary" type="button">Demo: noisy walk</button>
-                <button data-i18n="view.breadth.btn.demo_tight"    id="bt-demo-tight"    class="secondary" type="button">Demo: tight window (3 bars)</button>
-                <button data-i18n="view.breadth.btn.demo_custom"   id="bt-demo-custom"   class="secondary" type="button">Demo: looser thresholds (0.45/0.55)</button>
+                <button data-i18n="view.breadth.btn.demo_classic" id="bt-demo-classic" class="secondary" data-tip="view.breadth.tip.demo_classic" type="button">Demo: classic thrust</button>
+                <button data-i18n="view.breadth.btn.demo_flat"    id="bt-demo-flat"    class="secondary" data-tip="view.breadth.tip.demo_flat"    type="button">Demo: flat balanced</button>
+                <button data-i18n="view.breadth.btn.demo_slow"    id="bt-demo-slow"    class="secondary" data-tip="view.breadth.tip.demo_slow"    type="button">Demo: slow recovery (no thrust)</button>
+                <button data-i18n="view.breadth.btn.demo_multi"   id="bt-demo-multi"   class="secondary" data-tip="view.breadth.tip.demo_multi"   type="button">Demo: 2 thrusts in series</button>
+                <button data-i18n="view.breadth.btn.demo_washout" id="bt-demo-washout" class="secondary" data-tip="view.breadth.tip.demo_washout" type="button">Demo: deep washout</button>
+                <button data-i18n="view.breadth.btn.demo_noisy"   id="bt-demo-noisy"   class="secondary" data-tip="view.breadth.tip.demo_noisy"   type="button">Demo: noisy walk</button>
+                <button data-i18n="view.breadth.btn.demo_tight"   id="bt-demo-tight"   class="secondary" data-tip="view.breadth.tip.demo_tight"   type="button">Demo: tight window (3 bars)</button>
+                <button data-i18n="view.breadth.btn.demo_custom"  id="bt-demo-custom"  class="secondary" data-tip="view.breadth.tip.demo_custom"  type="button">Demo: looser thresholds (0.45/0.55)</button>
             </div>
             <p data-i18n="view.breadth.hint.about" class="muted">ratio_t = adv/(adv+dec). EMA over ema_period bars. Thrust triggers when EMA went from below low_threshold to above high_threshold within max_window_bars. Zweig defaults: 10 / 10 / 0.40 / 0.615.</p>
         </div>
@@ -97,6 +102,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.breadth.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.breadth.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -114,7 +120,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.breadth.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.breadth, state.ema_period, state.max_window_bars,
         state.low_threshold, state.high_threshold);
     renderSummary(local, true);
@@ -126,6 +132,7 @@ async function compute(tok) {
         resp = await api.anlyBreadthThrust(buildBody(state));
     } catch (e) {
         showErr(`${t('view.breadth.err.api')}: ${e.message || e}`);
+        showToast(t('view.breadth.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -133,6 +140,11 @@ async function compute(tok) {
     renderChart(resp);
     renderCumChart();
     renderTable(resp);
+    if (resp && resp.thrust_triggered) {
+        showToast(t('view.breadth.toast.thrust'), { level: 'success' });
+    } else {
+        showToast(t('view.breadth.toast.computed'), { level: 'info' });
+    }
 }
 
 function renderSummary(report, pending) {

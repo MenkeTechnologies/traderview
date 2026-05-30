@@ -272,6 +272,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bootstrap_pnl_run',            keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bootstrap-pnl',     descKey: 'shortcut.bootstrap_pnl_run',            actionKey: 'tv:bootstrap-pnl-run' },
     { id: 'bollinger_squeeze_run',        keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bb-squeeze',        descKey: 'shortcut.bollinger_squeeze_run',        actionKey: 'tv:bollinger-squeeze-run' },
     { id: 'bp_test_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breusch-pagan',     descKey: 'shortcut.bp_test_run',                  actionKey: 'tv:bp-test-run' },
+    { id: 'breadth_thrust_run',           keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breadth-thrust',    descKey: 'shortcut.breadth_thrust_run',           actionKey: 'tv:breadth-thrust-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
