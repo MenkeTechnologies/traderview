@@ -16,6 +16,7 @@ import {
     buildSmootherPayloads, theilSenFittedY,
     defaultOptions, validateOptions,
 } from '../_series_smoother_inputs.js';
+import { showToast } from '../toast.js';
 
 const DEFAULT_TEXT = `# Paste a price OR return series — one value per token.
 # Whitespace, comma, or newline separated. # comments skipped.
@@ -61,6 +62,7 @@ export async function renderSeriesSmoother(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.series_smoother.h2.series">Series</h2>
             <textarea id="ss-text" rows="8"
+                data-tip="view.series_smoother.tip.series"
                 style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
         </div>
 
@@ -90,7 +92,7 @@ export async function renderSeriesSmoother(mount, _appState) {
                     <label>${esc(t('view.series_smoother.param.degree'))} <input type="number" step="1" min="1" max="10" value="${state.opts.poly_degree}" data-opt="poly_degree"></label>
                 </div>
             </div>
-            <button data-i18n="view.series_smoother.btn.smooth" id="ss-run" class="primary" type="button" style="margin-top:10px">Smooth</button>
+            <button data-i18n="view.series_smoother.btn.smooth" data-tip="view.series_smoother.tip.smooth" data-shortcut="series_smoother_run" id="ss-run" class="primary" type="button" style="margin-top:10px">Smooth</button>
         </div>
 
         <div id="ss-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -134,9 +136,9 @@ async function run(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const seriesErr = validateSeries(parsed.value);
-    if (seriesErr) { showErr(seriesErr); return; }
+    if (seriesErr) { showErr(seriesErr); showToast(seriesErr, { level: 'warning' }); return; }
     const optsErr = validateOptions(state.opts);
-    if (optsErr) { showErr(optsErr); return; }
+    if (optsErr) { showErr(optsErr); showToast(optsErr, { level: 'warning' }); return; }
 
     const series = parsed.value;
     const xs = indexAxis(series.length);
@@ -149,7 +151,8 @@ async function run(mount, tok) {
     try {
         results = await Promise.all(requests);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -170,6 +173,11 @@ async function run(mount, tok) {
 
     renderSummary(summaries);
     renderChart(xs, series, smoothed);
+    const ok = summaries.filter(s => s.status === 'ok').length;
+    const failed = summaries.filter(s => s.status !== 'ok').length;
+    showToast(t('view.series_smoother.toast.done', { n: series.length, ok, failed }), {
+        level: failed > 0 ? 'warning' : 'success',
+    });
 }
 
 async function callSmoother(id, body) {

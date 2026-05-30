@@ -103,6 +103,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'pair_trade_analyze',           keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'pair-trade-calc',   descKey: 'shortcut.pair_trade_analyze',           actionKey: 'tv:pair-trade-analyze' },
     { id: 'vol_smile_fit',                keys: { key: 'f', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vol-smile',         descKey: 'shortcut.vol_smile_fit',                actionKey: 'tv:vol-smile-fit' },
     { id: 'option_payoff_recalc',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'option-payoff',     descKey: 'shortcut.option_payoff_recalc',         actionKey: 'tv:option-payoff-recalc' },
+    { id: 'series_smoother_run',          keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'series-smoother',   descKey: 'shortcut.series_smoother_run',          actionKey: 'tv:series-smoother-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
