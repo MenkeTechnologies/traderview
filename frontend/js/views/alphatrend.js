@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_MULTIPLIER, MIN_PERIOD, MAX_PERIOD,
@@ -31,21 +32,23 @@ export async function renderAlphatrend(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.atrend.label.period">Period</span>
-                    <input id="at-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="at-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.atrend.tip.period"></label>
                 <label><span data-i18n="view.atrend.label.mult">Multiplier</span>
-                    <input id="at-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"></label>
+                    <input id="at-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"
+                           data-tip="view.atrend.tip.mult"></label>
                 <button data-i18n="view.atrend.btn.compute" id="at-run" class="primary"
-                        data-tip="view.atrend.tip.compute" type="button">Compute</button>
+                        data-tip="view.atrend.tip.compute" data-shortcut="alphatrend_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.atrend.btn.demo_up"     id="at-d1" class="secondary" type="button">Demo: uptrend</button>
-                <button data-i18n="view.atrend.btn.demo_down"   id="at-d2" class="secondary" type="button">Demo: downtrend</button>
-                <button data-i18n="view.atrend.btn.demo_rev_up" id="at-d3" class="secondary" type="button">Demo: reversal-up</button>
-                <button data-i18n="view.atrend.btn.demo_rev_dn" id="at-d4" class="secondary" type="button">Demo: reversal-down</button>
-                <button data-i18n="view.atrend.btn.demo_side"   id="at-d5" class="secondary" type="button">Demo: sideways</button>
-                <button data-i18n="view.atrend.btn.demo_vol"    id="at-d6" class="secondary" type="button">Demo: volatile</button>
-                <button data-i18n="view.atrend.btn.demo_hi_m"   id="at-d7" class="secondary" type="button">Demo: mult 3.0</button>
-                <button data-i18n="view.atrend.btn.demo_lo_m"   id="at-d8" class="secondary" type="button">Demo: mult 0.3</button>
+                <button data-i18n="view.atrend.btn.demo_up"     id="at-d1" class="secondary" data-tip="view.atrend.tip.demo_up"     type="button">Demo: uptrend</button>
+                <button data-i18n="view.atrend.btn.demo_down"   id="at-d2" class="secondary" data-tip="view.atrend.tip.demo_down"   type="button">Demo: downtrend</button>
+                <button data-i18n="view.atrend.btn.demo_rev_up" id="at-d3" class="secondary" data-tip="view.atrend.tip.demo_rev_up" type="button">Demo: reversal-up</button>
+                <button data-i18n="view.atrend.btn.demo_rev_dn" id="at-d4" class="secondary" data-tip="view.atrend.tip.demo_rev_dn" type="button">Demo: reversal-down</button>
+                <button data-i18n="view.atrend.btn.demo_side"   id="at-d5" class="secondary" data-tip="view.atrend.tip.demo_side"   type="button">Demo: sideways</button>
+                <button data-i18n="view.atrend.btn.demo_vol"    id="at-d6" class="secondary" data-tip="view.atrend.tip.demo_vol"    type="button">Demo: volatile</button>
+                <button data-i18n="view.atrend.btn.demo_hi_m"   id="at-d7" class="secondary" data-tip="view.atrend.tip.demo_hi_m"   type="button">Demo: mult 3.0</button>
+                <button data-i18n="view.atrend.btn.demo_lo_m"   id="at-d8" class="secondary" data-tip="view.atrend.tip.demo_lo_m"   type="button">Demo: mult 0.3</button>
             </div>
             <p data-i18n="view.atrend.hint.about" class="muted">Trailing trend line built from ATR (SMA-of-TR) ratcheted up while RSI ≥ 50 and ratcheted down when RSI &lt; 50. Multiplier widens/tightens the trail. Defaults: period=14, mult=1.0. Companion to Supertrend, Parabolic SAR, Chandelier Exit.</p>
         </div>
@@ -92,6 +95,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.atrend.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.atrend.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -105,7 +109,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.atrend.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period, state.multiplier);
     renderSummary(local, true);
     renderChart(local);
@@ -116,14 +120,16 @@ async function compute(tok) {
         resp = await api.anlyAlphatrend(buildBody(state));
     } catch (e) {
         showErr(`${t('view.atrend.err.api')}: ${e.message || e}`);
+        showToast(t('view.atrend.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.alpha)) { showErr(t('view.atrend.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.alpha)) { showErr(t('view.atrend.err.server_rejected')); showToast(t('view.atrend.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderDirChart(resp);
     renderStats();
+    showToast(t('view.atrend.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
