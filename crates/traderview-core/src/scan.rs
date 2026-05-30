@@ -766,6 +766,8 @@ pub enum Preset {
     BigRedBigGapDownDryVol,              // change_pct < -5 AND gap_pct < -3 AND rel_volume < 0.8 — big red + big gap down + below-avg vol (huge gap-down that held without participation; suspect breakdown; possibly forced-selling in thin tape or low-conviction capitulation)
     SmoothBigGreenNormalVol,             // change_pct > 3 AND rel_volume in [1, 1.5] AND hod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big green + normal vol (1-1.5×) + close at HOD + no gap (orderly trend day; not parabolic, but conviction; sweet-spot entry signal)
     SmoothBigRedNormalVol,               // change_pct < -3 AND rel_volume in [1, 1.5] AND lod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big red + normal vol + close at LOD + no gap (orderly down day; not panic, but conviction; sweet-spot entry for shorts)
+    BigDayPctFlatChangeHotVol,           // day_pct.abs() > 2 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday move + flat close + decent vol (gap absorbed all intraday move on volume; full round-trip with participation; gap-and-fade pattern)
+    BigDayPctBigChangeAlignedHotVol,     // day_pct.abs() > 2 AND change_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 1.5 — big intraday + big change + same sign + decent vol (max-aligned trend day; both gap and intraday push same way through big move on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4354,6 +4356,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.gap_pct.abs() < 0.5
         }
+        Preset::BigDayPctFlatChangeHotVol => {
+            hit.day_pct.abs() > 2.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigDayPctBigChangeAlignedHotVol => {
+            hit.day_pct.abs() > 2.0
+                && hit.change_pct.abs() > 4.0
+                && hit.change_pct * hit.day_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5010,6 +5023,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedBigGapDownDryVol => "Big Red + Big Gap Down + Dry Vol (Huge Gap Held Without Participation; Suspect Breakdown; Forced-selling or Low-conviction Capitulation in Thin Tape)",
         Preset::SmoothBigGreenNormalVol => "Big Green + Normal Vol (1-1.5×) + Close at HOD + No Gap (Orderly Trend Day; Not Parabolic But Conviction; Sweet-spot Long)",
         Preset::SmoothBigRedNormalVol => "Big Red + Normal Vol + Close at LOD + No Gap (Orderly Down Day; Not Panic But Conviction; Sweet-spot Short)",
+        Preset::BigDayPctFlatChangeHotVol => "Big Intraday Move + Flat Close + Decent Vol (Gap Absorbed All Intraday Move on Volume; Full Round-trip Gap-and-fade)",
+        Preset::BigDayPctBigChangeAlignedHotVol => "Big Intraday + Big Change + Same Sign + Decent Vol (Max-aligned Trend Day; Gap and Intraday Push Same Way Through Big Move)",
     }
 }
 

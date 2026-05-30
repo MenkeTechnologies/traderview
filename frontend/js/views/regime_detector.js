@@ -84,6 +84,12 @@ export async function renderRegimeDetector(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.regime_detector.h2.realized_vol_chart">Rolling 20-bar realized volatility (|return| mean)</h2>
+            <div id="rd-vol-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.regime_detector.hint.realized_vol" class="muted small">Rolling 20-bar mean of |return| — model-free realized vol. Compare against the P(state=1) chart above to see how realized vol shifts BEFORE the Markov filter classifies it.</p>
+        </div>
+
         <div id="rd-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -124,6 +130,7 @@ async function detect(mount, tok) {
 
     renderSummary(res);
     renderChart(parsed.value, res.prob_state1);
+    renderRealizedVolChart(parsed.value);
     const highFrac = highVolBarFraction(res.prob_state1, 0.5);
     showToast(t('view.regime_detector.toast.done', {
         n: parsed.value.length,
@@ -229,6 +236,37 @@ function renderChart(returns, probState1) {
               values: (_, ticks) => ticks.map(t => t.toFixed(2)) },
         ],
     }, [xs, returns, probState1], el);
+}
+
+function renderRealizedVolChart(returns) {
+    const el = document.getElementById('rd-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const win = 20;
+    if (!Array.isArray(returns) || returns.length < win + 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.regime_detector.empty_vol_chart">${esc(t('view.regime_detector.empty_vol_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ys = [];
+    for (let i = win - 1; i < returns.length; i++) {
+        let s = 0;
+        for (let k = i - win + 1; k <= i; k++) s += Math.abs(returns[k]);
+        xs.push(i);
+        ys.push(s / win);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.regime_detector.chart.realized_vol'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50,
+            values: (_u, splits) => splits.map(v => (v * 100).toFixed(2) + '%') }],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderParseErrors(errors) {
