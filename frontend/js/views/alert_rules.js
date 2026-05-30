@@ -19,8 +19,8 @@ export async function renderAlertRules(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.alert_rules.h2.audio_capability">Audio capability</h2>
             <div class="cards">
-                ${card(tr('view.alert_rules.card.web_audio'),   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
-                ${card(tr('view.alert_rules.card.speech_tts'), caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
+                ${card(tr('view.alert_rules.card.web_audio'),   tr(caps.audio ? 'common.status.available' : 'common.status.not_available'), caps.audio ? 'pos' : 'neg')}
+                ${card(tr('view.alert_rules.card.speech_tts'), tr(caps.tts   ? 'common.status.available' : 'common.status.not_available'), caps.tts   ? 'pos' : 'neg')}
                 ${card(tr('view.alert_rules.card.rules_saved'),  String(state.rules.length), state.rules.length ? 'pos' : '')}
                 ${card(tr('view.alert_rules.card.enabled'),      String(state.rules.filter(r => r.enabled).length))}
             </div>

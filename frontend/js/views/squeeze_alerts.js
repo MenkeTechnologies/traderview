@@ -27,8 +27,8 @@ export async function renderSqueezeAlerts(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.squeeze_alerts.h2.audio_capability">Audio capability</h2>
             <div class="cards">
-                ${card(t('view.squeeze_alerts.card.web_audio'),   caps.audio ? 'available' : 'NOT AVAILABLE', caps.audio ? 'pos' : 'neg')}
-                ${card(t('view.squeeze_alerts.card.speech_tts'), caps.tts   ? 'available' : 'NOT AVAILABLE', caps.tts   ? 'pos' : 'neg')}
+                ${card(t('view.squeeze_alerts.card.web_audio'),   t(caps.audio ? 'common.status.available' : 'common.status.not_available'), caps.audio ? 'pos' : 'neg')}
+                ${card(t('view.squeeze_alerts.card.speech_tts'), t(caps.tts   ? 'common.status.available' : 'common.status.not_available'), caps.tts   ? 'pos' : 'neg')}
             </div>
             <div class="inline-form" style="margin-top:8px">
                 <button data-i18n="view.squeeze_alerts.btn.test_bell" id="sq-test-bell"  class="secondary" type="button" ${!caps.audio ? 'disabled' : ''}>🔔 Test bell</button>
