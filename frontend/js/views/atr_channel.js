@@ -7,11 +7,11 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
-    DEFAULT_PERIOD, DEFAULT_MULTIPLIER, DEFAULT_USE_EMA, MIN_PERIOD, MAX_PERIOD,
+    DEFAULT_PERIOD, DEFAULT_MULTIPLIER, MIN_PERIOD, MAX_PERIOD,
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     positionBadge, trendBadge, widthBadge, summarizeBars,
     makeDemoInput,
-    fmtPrice, fmtPriceSigned, fmtPct, fmtInt,
+    fmtPrice, fmtPct, fmtInt,
 } from '../_atr_channel_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };

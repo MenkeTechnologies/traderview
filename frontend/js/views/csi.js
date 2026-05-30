@@ -11,7 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     strengthBadge, trendBadge, crossBadge, summarizeBars,
     makeDemoInput,
-    fmtRatio, fmtPrice, fmtPct, fmtInt,
+    fmtRatio, fmtPrice, fmtInt,
 } from '../_csi_inputs.js';
 
 let state = { ...makeDemoInput('mixed') };

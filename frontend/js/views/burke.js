@@ -11,7 +11,7 @@ import {
     parseEquityBlob, equityToBlob, validateInputs, buildBody, localCompute,
     drawdownEpisodes, ratioBadge, ddBadge, excessBadge, summarizeEquity,
     makeDemoInput,
-    fmtRatio, fmtRatioSigned, fmtPct, fmtPctSigned, fmtPrice, fmtInt,
+    fmtRatio, fmtPct, fmtPctSigned, fmtPrice, fmtInt,
 } from '../_burke_inputs.js';
 
 let state = { ...makeDemoInput('steady-growth') };

@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     squeezeBadge, percentBBadge, widthTrendBadge, summarizeCloses,
     makeDemoInput,
-    fmtPrice, fmtNum, fmtPct, fmtInt,
+    fmtPrice, fmtNum, fmtInt,
 } from '../_bbw_inputs.js';
 
 let state = { ...makeDemoInput('normal') };

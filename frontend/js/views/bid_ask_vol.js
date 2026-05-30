@@ -11,7 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     flowBadge, trendBadge, imbalanceBadge, summarizeBars,
     makeDemoInput,
-    fmtNum, fmtRatio, fmtPct, fmtInt,
+    fmtNum, fmtRatio, fmtInt,
 } from '../_bid_ask_vol_inputs.js';
 
 let state = { ...makeDemoInput('balanced') };

@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     momentumBadge, trendBadge, crossBadge, summarizeCloses,
     makeDemoInput,
-    fmtNum, fmtNumSigned, fmtPrice, fmtInt,
+    fmtNumSigned, fmtPrice, fmtInt,
 } from '../_csm_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };

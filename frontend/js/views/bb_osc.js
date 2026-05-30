@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     pbBadge, bwBadge, pbTrendBadge, summarizeCloses,
     makeDemoInput,
-    fmtPrice, fmtNum, fmtPct, fmtInt,
+    fmtPrice, fmtNum, fmtInt,
 } from '../_bb_osc_inputs.js';
 
 let state = { ...makeDemoInput('normal-trend') };

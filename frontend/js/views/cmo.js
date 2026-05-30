@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     zoneBadge, crossBadge, trendBadge, summarizeCloses,
     makeDemoInput,
-    fmtNum, fmtNumSigned, fmtPrice, fmtInt,
+    fmtNumSigned, fmtPrice, fmtInt,
 } from '../_cmo_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };

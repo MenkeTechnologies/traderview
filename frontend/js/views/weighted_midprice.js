@@ -9,7 +9,7 @@ import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseQuotesBlob, quotesToBlob, validateInputs, buildBody,
-    localCompute, localSeries, summarize, imbalanceBadge,
+    localSeries, summarize, imbalanceBadge,
     makeDemoInput,
     fmtUSD, fmtUSDSigned, fmtBps, fmtImb, fmtInt,
 } from '../_weighted_midprice_inputs.js';

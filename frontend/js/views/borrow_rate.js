@@ -11,7 +11,7 @@ import {
     parseRatesBlob, ratesToBlob, validateInputs, buildBody, localCompute,
     stressBadge, trendBadge, escalationBadge, stressDistribution, summarizeRates,
     makeDemoInput,
-    fmtPct, fmtPctSigned, fmtNum, fmtInt,
+    fmtPct, fmtPctSigned, fmtInt,
 } from '../_borrow_rate_inputs.js';
 
 let state = { ...makeDemoInput('normal') };

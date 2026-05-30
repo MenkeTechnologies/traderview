@@ -18,8 +18,7 @@ import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     validateInputs, buildBody, decompose, costSignClass,
-    fillKind, fmtUSD, fmtBps, fmtPct, COMPONENT_KEYS,
-} from '../_implementation_shortfall_inputs.js';
+    fillKind, fmtUSD, fmtBps, fmtPct, } from '../_implementation_shortfall_inputs.js';
 
 import { t } from '../i18n.js';
 const DEFAULTS = {

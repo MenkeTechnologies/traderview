@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     strengthBadge, crossBadge, changeBadge, summarizeCloses,
     makeDemoInput,
-    fmtNum, fmtNumSigned, fmtPrice, fmtInt,
+    fmtNumSigned, fmtPrice, fmtInt,
 } from '../_cti_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };

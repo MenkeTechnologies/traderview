@@ -10,8 +10,7 @@ import {
     parseInputBlob, inputToBlob, validateInputs, buildBody, localCompute,
     zoneBadge, ruleBadge, widthBadge, nearestLevelInfo,
     makeDemoInput,
-    fmtPrice, fmtPriceSigned, fmtPct, fmtInt,
-} from '../_camarilla_inputs.js';
+    fmtPrice, fmtPriceSigned, fmtPct, } from '../_camarilla_inputs.js';
 
 let state = { ...makeDemoInput('standard-range') };
 

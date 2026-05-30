@@ -11,7 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     trendBadge, breakoutBadge, biasBadge, summarizeBars,
     makeDemoInput,
-    fmtNum, fmtSigned, fmtPrice, fmtInt,
+    fmtSigned, fmtPrice, fmtInt,
 } from '../_asi_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };

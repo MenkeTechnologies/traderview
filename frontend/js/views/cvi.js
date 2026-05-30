@@ -11,7 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     regimeBadge, crossBadge, trendBadge, summarizeBars,
     makeDemoInput,
-    fmtPct, fmtPctSigned, fmtPrice, fmtInt,
+    fmtPctSigned, fmtPrice, fmtInt,
 } from '../_cvi_inputs.js';
 
 let state = { ...makeDemoInput('expanding') };

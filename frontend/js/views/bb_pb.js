@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     zoneBadge, crossBadge, trendBadge, summarizeCloses,
     makeDemoInput,
-    fmtPrice, fmtPb, fmtPct, fmtInt,
+    fmtPrice, fmtPb, fmtInt,
 } from '../_bb_pb_inputs.js';
 
 let state = { ...makeDemoInput('walking-up') };

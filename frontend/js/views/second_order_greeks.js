@@ -15,8 +15,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
-    buildBody, validateParams, computeGrid, computePoint,
-    METRICS, fmtN, defaultSpotGrid, nearestAtmIndex,
+    buildBody, validateParams, computeGrid, METRICS, fmtN, defaultSpotGrid, nearestAtmIndex,
 } from '../_second_order_greeks_inputs.js';
 
 import { t } from '../i18n.js';

@@ -11,7 +11,7 @@ import {
     parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     positionBadge, trendBadge, kissBadge, summarizeCloses,
     makeDemoInput,
-    fmtPrice, fmtNum, fmtPct, fmtInt,
+    fmtPrice, fmtNum, fmtInt,
 } from '../_bbd_inputs.js';
 
 let state = { ...makeDemoInput('oscillating') };

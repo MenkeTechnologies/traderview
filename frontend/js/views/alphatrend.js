@@ -11,8 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     dirBadge, trendBadge, positionBadge, summarizeBars,
     makeDemoInput,
-    fmtPrice, fmtPriceSigned, fmtPct, fmtInt, fmtDir,
-} from '../_alphatrend_inputs.js';
+    fmtPrice, fmtPriceSigned, fmtPct, fmtInt, } from '../_alphatrend_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;

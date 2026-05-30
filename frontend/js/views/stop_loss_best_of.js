@@ -7,7 +7,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseTradeBlob, validateInputs, buildBody,
     methodBadge, describeCandidate, bestByTotal, bestByAvg,
-    defaultCandidates, makeDemoTrades, fmtN, fmtSigned,
+    defaultCandidates, makeDemoTrades, fmtSigned,
 } from '../_stop_loss_best_of_inputs.js';
 
 import { t } from '../i18n.js';

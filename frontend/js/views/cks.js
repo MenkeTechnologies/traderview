@@ -11,7 +11,7 @@ import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     regimeBadge, widthBadge, longTrendBadge, shortTrendBadge, summarizeBars,
     makeDemoInput,
-    fmtPrice, fmtPriceSigned, fmtPct, fmtInt,
+    fmtPrice, fmtPriceSigned, fmtInt,
 } from '../_cks_inputs.js';
 
 let state = { ...makeDemoInput('uptrend') };
