@@ -71,3 +71,58 @@ test('Infinity and NaN are rejected as non-numeric', () => {
     expect(r.value).toEqual([1, 2]);
     expect(r.errors.length).toBe(2);
 });
+
+// ── edge cases ─────────────────────────────────────────────────────
+
+test('CRLF line endings handled identically to LF', () => {
+    expect(parseFloatBlob('1\r\n2\r\n3').value).toEqual([1, 2, 3]);
+});
+
+test('comment lines with leading whitespace before # are still skipped', () => {
+    expect(parseFloatBlob('  # leading-space comment\n1').value).toEqual([1]);
+});
+
+test('inline # is NOT treated as comment (only line-leading #)', () => {
+    // The check is `stripped.startsWith("#")`. Comments mid-line are parsed
+    // as tokens — `#bad` would be a non-numeric token.
+    const r = parseFloatBlob('1 #inline 2');
+    expect(r.value).toEqual([1, 2]);
+    expect(r.errors.length).toBe(1);
+    expect(r.errors[0].message).toMatch(/#inline/);
+});
+
+test('mixed delimiters on one line: comma, space, tab', () => {
+    expect(parseFloatBlob('1,2\t3 4').value).toEqual([1, 2, 3, 4]);
+});
+
+test('trailing delimiter (comma) does not produce a blank-token error', () => {
+    // filter(Boolean) drops the empty trailing chunk after trim.
+    expect(parseFloatBlob('1, 2,').value).toEqual([1, 2]);
+});
+
+test('line number reflects the source LINE, not the value index', () => {
+    const r = parseFloatBlob('# c1\n# c2\nbad');
+    expect(r.errors[0].line_no).toBe(3);
+});
+
+test('hex and octal literals: 0x10 is accepted by Number(), 0o7 too', () => {
+    // Pins JS semantics for Number(): hex/octal/binary string parsing.
+    expect(parseFloatBlob('0x10').value).toEqual([16]);
+    expect(parseFloatBlob('0o7').value).toEqual([7]);
+});
+
+test('nonNegative option does NOT reject NaN tokens (caught earlier as non-numeric)', () => {
+    const r = parseFloatBlob('NaN\n-1', { nonNegative: true });
+    expect(r.value).toEqual([]);
+    expect(r.errors.length).toBe(2);
+    expect(r.errors[0].message).toMatch(/non-numeric/);
+    expect(r.errors[1].message).toMatch(/negative/);
+});
+
+test('options object is optional — undefined opts behaves as defaults', () => {
+    expect(parseFloatBlob('1 2 3', undefined).value).toEqual([1, 2, 3]);
+});
+
+test('purely-whitespace input returns empty value + empty errors', () => {
+    expect(parseFloatBlob('   \n\t\n  ')).toEqual({ value: [], errors: [] });
+});
