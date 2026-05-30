@@ -73,11 +73,54 @@ function renderSurface(s, out, mount) {
             <h2 data-i18n="view.vol_surface.h2.skew_chart">Front-month skew: calls vs puts (interactive)</h2>
             <div id="vs-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol_surface.h2.avg_iv_chart">Average IV across the moneyness slice per expiration</h2>
+            <div id="vs-avg-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.vol_surface.hint.avg_iv_chart" class="muted small">Mean of every non-null IV in each expiration's moneyness row, plotted vs days-to-expiry. Orthogonal to the ATM term structure: includes wings + ATM, so it tracks the whole-row level — not just the centerpoint. Useful for spotting smile-shape shifts the ATM curve misses.</p>
+        </div>
     `;
     renderHeatmap(s, mount);
     renderTermSvg(s, mount);
     renderSkewSvg(s, mount);
     renderSkewUplot(s);
+    renderAvgIvChart(s);
+}
+
+function renderAvgIvChart(s) {
+    const el = document.getElementById('vs-avg-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (s.expirations || [])
+        .map(r => {
+            const ivs = (r.iv_by_moneyness || []).filter(v => Number.isFinite(Number(v)));
+            const avg = ivs.length ? ivs.reduce((a, b) => a + Number(b), 0) / ivs.length : null;
+            return { dte: Number(r.days_to_expiry), avg };
+        })
+        .filter(r => Number.isFinite(r.dte) && r.avg != null)
+        .sort((a, b) => a.dte - b.dte);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol_surface.empty_avg_chart">${esc(t('view.vol_surface.empty_avg_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(r => r.dte);
+    const ys = rows.map(r => r.avg * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.vol_surface.chart.dte_days') },
+            { label: t('view.vol_surface.chart.avg_iv_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => Math.round(v) + 'd') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSkewUplot(s) {

@@ -838,6 +838,8 @@ pub enum Preset {
     Year52LowRetestBounceHotVol,         // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 2 AND change_pct < 5 AND rel_volume >= 2 — bounced 3-10 % off 52w low + meaningful green + hot vol (high-conviction bounce toward retest of recent lows; institutional bottom-fishing with elevated participation; potential continuation setup)
     HotVolBigChangeDayPctOpposite,       // change_pct.abs() > 3 AND day_pct * change_pct < 0 AND day_pct.abs() > 1 AND rel_volume >= 2 — big net move + intraday move in opposite direction + hot vol (intraday reversal fading the prior-close direction: gap dominated the net change, but regular hours pushed back the other way with elevated participation)
     HotVolBigChangeDayPctAligned,        // change_pct.abs() > 3 AND day_pct.abs() > 3 AND day_pct * change_pct > 0 AND rel_volume >= 2 — big net move + intraday move aligned with same direction + hot vol (full-conviction directional day: both overnight + regular hours pushed the same direction with elevated participation; two-leg trend confirmation)
+    Year52HighBreakoutHotVolNoExtreme,   // year_high_pct < 0 AND change_pct > 1.5 AND change_pct < 4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w high + modest green + moderate hot vol (controlled-conviction breakout to new highs; institutional accumulation without exhaustion; sustainable trend continuation candidate)
+    Year52LowBreakdownHotVolNoExtreme,   // year_low_pct < 0 AND change_pct < -1.5 AND change_pct > -4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w low + modest red + moderate hot vol (controlled-conviction breakdown to new lows; institutional distribution without panic; sustainable trend continuation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4855,6 +4857,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct * hit.change_pct > 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighBreakoutHotVolNoExtreme => {
+            hit.year_high_pct < 0.0
+                && hit.change_pct > 1.5
+                && hit.change_pct < 4.0
+                && hit.rel_volume >= 1.5
+                && hit.rel_volume < 3.0
+        }
+        Preset::Year52LowBreakdownHotVolNoExtreme => {
+            hit.year_low_pct < 0.0
+                && hit.change_pct < -1.5
+                && hit.change_pct > -4.0
+                && hit.rel_volume >= 1.5
+                && hit.rel_volume < 3.0
+        }
     }
 }
 
@@ -5583,6 +5599,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowRetestBounceHotVol => "Bounced 3-10 % off 52w Low + Meaningful Green + Hot Vol (High-conviction Bounce toward Retest of Recent Lows; Institutional Bottom-fishing with Elevated Participation; Potential Continuation Setup)",
         Preset::HotVolBigChangeDayPctOpposite => "Big Net Move + Intraday Move in Opposite Direction + Hot Vol (Intraday Reversal Fading the Prior-close Direction: Gap Dominated the Net Change, but Regular Hours Pushed Back the Other Way with Elevated Participation)",
         Preset::HotVolBigChangeDayPctAligned => "Big Net Move + Intraday Move Aligned with Same Direction + Hot Vol (Full-conviction Directional Day: Both Overnight + Regular Hours Pushed the Same Direction with Elevated Participation; Two-leg Trend Confirmation)",
+        Preset::Year52HighBreakoutHotVolNoExtreme => "New 52w High + Modest Green + Moderate Hot Vol (Controlled-conviction Breakout to New Highs; Institutional Accumulation without Exhaustion; Sustainable Trend Continuation Candidate)",
+        Preset::Year52LowBreakdownHotVolNoExtreme => "New 52w Low + Modest Red + Moderate Hot Vol (Controlled-conviction Breakdown to New Lows; Institutional Distribution without Panic; Sustainable Trend Continuation Candidate)",
     }
 }
 
