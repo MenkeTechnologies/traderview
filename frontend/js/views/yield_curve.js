@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     TENORS, TENOR_YEARS, TENOR_LABELS, DEFAULT_INPUTS,
@@ -26,20 +27,20 @@ export async function renderYieldCurve(mount, _appState) {
             <div class="inline-form">
                 ${TENORS.map(k => `
                     <label><span data-i18n="view.yield_curve.label.${k}">${TENOR_LABELS[k]}</span>
-                        <input id="yc-${k}" type="number" step="any" value="${state[k]}"></label>
+                        <input id="yc-${k}" type="number" step="any" value="${state[k]}" data-tip="view.yield_curve.tip.${k}"></label>
                 `).join('')}
                 <button data-i18n="view.yield_curve.btn.classify" id="yc-run" class="primary"
-                        data-tip="view.yield_curve.tip.classify" type="button">Classify</button>
+                        data-tip="view.yield_curve.tip.classify" data-shortcut="yield_curve_run" type="button">Classify</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.yield_curve.btn.demo_normal"   id="yc-demo-normal"  class="secondary" type="button">Demo: normal</button>
-                <button data-i18n="view.yield_curve.btn.demo_inverted" id="yc-demo-inv"     class="secondary" type="button">Demo: inverted</button>
-                <button data-i18n="view.yield_curve.btn.demo_flat"     id="yc-demo-flat"    class="secondary" type="button">Demo: flat</button>
-                <button data-i18n="view.yield_curve.btn.demo_humped"   id="yc-demo-humped"  class="secondary" type="button">Demo: humped</button>
-                <button data-i18n="view.yield_curve.btn.demo_noisy"    id="yc-demo-noisy"   class="secondary" type="button">Demo: noisy-normal (30Y dip)</button>
-                <button data-i18n="view.yield_curve.btn.demo_2024"     id="yc-demo-2024"    class="secondary" type="button">Demo: UST end-2024 (inverted)</button>
-                <button data-i18n="view.yield_curve.btn.demo_2020"     id="yc-demo-2020"    class="secondary" type="button">Demo: COVID ZIRP (2020)</button>
-                <button data-i18n="view.yield_curve.btn.demo_gfc"      id="yc-demo-gfc"     class="secondary" type="button">Demo: late 2008 (post-GFC)</button>
+                <button data-i18n="view.yield_curve.btn.demo_normal"   id="yc-demo-normal"  class="secondary" type="button" data-tip="view.yield_curve.tip.demo_normal">Demo: normal</button>
+                <button data-i18n="view.yield_curve.btn.demo_inverted" id="yc-demo-inv"     class="secondary" type="button" data-tip="view.yield_curve.tip.demo_inv">Demo: inverted</button>
+                <button data-i18n="view.yield_curve.btn.demo_flat"     id="yc-demo-flat"    class="secondary" type="button" data-tip="view.yield_curve.tip.demo_flat">Demo: flat</button>
+                <button data-i18n="view.yield_curve.btn.demo_humped"   id="yc-demo-humped"  class="secondary" type="button" data-tip="view.yield_curve.tip.demo_humped">Demo: humped</button>
+                <button data-i18n="view.yield_curve.btn.demo_noisy"    id="yc-demo-noisy"   class="secondary" type="button" data-tip="view.yield_curve.tip.demo_noisy">Demo: noisy-normal (30Y dip)</button>
+                <button data-i18n="view.yield_curve.btn.demo_2024"     id="yc-demo-2024"    class="secondary" type="button" data-tip="view.yield_curve.tip.demo_2024">Demo: UST end-2024 (inverted)</button>
+                <button data-i18n="view.yield_curve.btn.demo_2020"     id="yc-demo-2020"    class="secondary" type="button" data-tip="view.yield_curve.tip.demo_2020">Demo: COVID ZIRP (2020)</button>
+                <button data-i18n="view.yield_curve.btn.demo_gfc"      id="yc-demo-gfc"     class="secondary" type="button" data-tip="view.yield_curve.tip.demo_gfc">Demo: late 2008 (post-GFC)</button>
             </div>
             <p data-i18n="view.yield_curve.hint.about" class="muted">Priority: 2Y/10Y inversion → INVERTED (recession). Else humped (5Y peak) → HUMPED. Else all-spreads &lt; 25 bps → FLAT. Else mostly non-decreasing → NORMAL. Otherwise → FLAT (mixed).</p>
         </div>
@@ -84,7 +85,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.yield_curve.toast.invalid'), { level: 'warning' }); return; }
     const local = localClassify(state);
     renderSummary(local, true);
     renderChart();
@@ -94,12 +95,17 @@ async function compute(tok) {
         resp = await api.calcYieldCurve(buildBody(state));
     } catch (e) {
         showErr(`${t('view.yield_curve.err.api')}: ${e.message || e}`);
+        showToast(t('view.yield_curve.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart();
     renderSpreads();
+    const shape = String(resp.shape || '');
+    const spread = Number(resp.spread_10y_2y_bps || 0).toFixed(0);
+    const level = shape === 'inverted' ? 'warning' : shape === 'normal' ? 'success' : 'info';
+    showToast(t('view.yield_curve.toast.classified', { shape, spread }), { level });
 }
 
 function renderSummary(report, pending) {

@@ -214,6 +214,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bond_duration_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bond-duration',     descKey: 'shortcut.bond_duration_run',            actionKey: 'tv:bond-duration-run' },
     { id: 'bond_duration_build',          keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bond-duration',     descKey: 'shortcut.bond_duration_build',          actionKey: 'tv:bond-duration-build' },
     { id: 'carry_score_run',              keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'carry-score',       descKey: 'shortcut.carry_score_run',              actionKey: 'tv:carry-score-run' },
+    { id: 'yield_curve_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'yield-curve',       descKey: 'shortcut.yield_curve_run',              actionKey: 'tv:yield-curve-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
