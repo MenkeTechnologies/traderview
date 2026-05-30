@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_BB_PERIOD, DEFAULT_N_STDEV, DEFAULT_LOOKBACK,
@@ -33,23 +34,26 @@ export async function renderBbwp(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bbwp.label.bb_period">BB period</span>
-                    <input id="bp-period" type="number" step="1" min="${MIN_BB_PERIOD}" max="${MAX_BB_PERIOD}" value="${state.bb_period}"></label>
+                    <input id="bp-period" type="number" step="1" min="${MIN_BB_PERIOD}" max="${MAX_BB_PERIOD}" value="${state.bb_period}"
+                           data-tip="view.bbwp.tip.bb_period"></label>
                 <label><span data-i18n="view.bbwp.label.n_stdev">n_stdev</span>
-                    <input id="bp-stdev" type="number" step="0.1" min="0.1" value="${state.n_stdev}"></label>
+                    <input id="bp-stdev" type="number" step="0.1" min="0.1" value="${state.n_stdev}"
+                           data-tip="view.bbwp.tip.n_stdev"></label>
                 <label><span data-i18n="view.bbwp.label.lookback">Lookback</span>
-                    <input id="bp-lookback" type="number" step="1" min="${MIN_LOOKBACK}" max="${MAX_LOOKBACK}" value="${state.lookback}"></label>
+                    <input id="bp-lookback" type="number" step="1" min="${MIN_LOOKBACK}" max="${MAX_LOOKBACK}" value="${state.lookback}"
+                           data-tip="view.bbwp.tip.lookback"></label>
                 <button data-i18n="view.bbwp.btn.compute" id="bp-run" class="primary"
-                        data-tip="view.bbwp.tip.compute" type="button">Compute</button>
+                        data-tip="view.bbwp.tip.compute" data-shortcut="bbwp_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bbwp.btn.demo_rise"  id="bp-d1" class="secondary" type="button">Demo: rising vol</button>
-                <button data-i18n="view.bbwp.btn.demo_sqz"   id="bp-d2" class="secondary" type="button">Demo: squeeze at end</button>
-                <button data-i18n="view.bbwp.btn.demo_osc"   id="bp-d3" class="secondary" type="button">Demo: vol cycles</button>
-                <button data-i18n="view.bbwp.btn.demo_steady" id="bp-d4" class="secondary" type="button">Demo: steady walk</button>
-                <button data-i18n="view.bbwp.btn.demo_flat"  id="bp-d5" class="secondary" type="button">Demo: flat market</button>
-                <button data-i18n="view.bbwp.btn.demo_short" id="bp-d6" class="secondary" type="button">Demo: short lookback (60)</button>
-                <button data-i18n="view.bbwp.btn.demo_kshigh" id="bp-d7" class="secondary" type="button">Demo: n_stdev = 3</button>
-                <button data-i18n="view.bbwp.btn.demo_spike" id="bp-d8" class="secondary" type="button">Demo: spike → mean revert</button>
+                <button data-i18n="view.bbwp.btn.demo_rise"   id="bp-d1" class="secondary" data-tip="view.bbwp.tip.demo_rise"   type="button">Demo: rising vol</button>
+                <button data-i18n="view.bbwp.btn.demo_sqz"    id="bp-d2" class="secondary" data-tip="view.bbwp.tip.demo_sqz"    type="button">Demo: squeeze at end</button>
+                <button data-i18n="view.bbwp.btn.demo_osc"    id="bp-d3" class="secondary" data-tip="view.bbwp.tip.demo_osc"    type="button">Demo: vol cycles</button>
+                <button data-i18n="view.bbwp.btn.demo_steady" id="bp-d4" class="secondary" data-tip="view.bbwp.tip.demo_steady" type="button">Demo: steady walk</button>
+                <button data-i18n="view.bbwp.btn.demo_flat"   id="bp-d5" class="secondary" data-tip="view.bbwp.tip.demo_flat"   type="button">Demo: flat market</button>
+                <button data-i18n="view.bbwp.btn.demo_short"  id="bp-d6" class="secondary" data-tip="view.bbwp.tip.demo_short"  type="button">Demo: short lookback (60)</button>
+                <button data-i18n="view.bbwp.btn.demo_kshigh" id="bp-d7" class="secondary" data-tip="view.bbwp.tip.demo_kshigh" type="button">Demo: n_stdev = 3</button>
+                <button data-i18n="view.bbwp.btn.demo_spike"  id="bp-d8" class="secondary" data-tip="view.bbwp.tip.demo_spike"  type="button">Demo: spike → mean revert</button>
             </div>
             <p data-i18n="view.bbwp.hint.about" class="muted">BBWP = percent rank of BBW within the rolling lookback window. Range [0, 100]. < 10 = compression/squeeze (energy building); > 90 = expansion (vol top). Defaults: BB period=20, n_stdev=2.0, lookback=252.</p>
         </div>
@@ -97,6 +101,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bbwp.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bbwp.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -112,7 +117,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bbwp.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.bb_period, state.n_stdev, state.lookback);
     renderSummary(local, true);
     renderChart(local);
@@ -123,14 +128,16 @@ async function compute(tok) {
         resp = await api.anlyBollingerBandwidthPercentile(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bbwp.err.api')}: ${e.message || e}`);
+        showToast(t('view.bbwp.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.bbwp.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.bbwp.err.server_rejected')); showToast(t('view.bbwp.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderRegimeChart(resp);
     renderStats();
+    showToast(t('view.bbwp.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(bbwp, pending) {
