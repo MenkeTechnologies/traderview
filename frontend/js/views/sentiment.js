@@ -60,6 +60,12 @@ export async function renderSentiment(mount, _state, symbol) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.sentiment.h2.mention_chart">Top mention volume by symbol</h2>
+            <div id="sent-mention-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.sentiment.hint.mention_chart" class="muted small">Raw mention count per symbol for the top 30 most-mentioned in this window. Orthogonal to sentiment Δ: reveals which names have the heaviest chatter regardless of direction.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.sentiment.h2.live_feed">Live feed</h2>
             <div id="feed"></div>
         </div>
@@ -127,6 +133,40 @@ async function refresh(mount, tok) {
     if (volEl) volEl.innerHTML = volumeTable(byVol);
     if (feedEl) feedEl.innerHTML = feedTable(feed);
     renderDeltaChart(ranked);
+    renderMentionChart(ranked);
+}
+
+function renderMentionChart(ranked) {
+    const el = document.getElementById('sent-mention-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = [...(ranked || [])]
+        .filter(r => Number.isFinite(Number(r.mention_count)))
+        .sort((a, b) => Number(b.mention_count) - Number(a.mention_count))
+        .slice(0, 30);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.sentiment.empty_mention_chart">${esc(t('view.sentiment.empty_mention_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.symbol);
+    const counts = top.map(r => Number(r.mention_count));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.sentiment.chart.symbol_idx') },
+            { label: t('view.sentiment.chart.mentions'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, counts], el);
 }
 
 function renderDeltaChart(ranked) {
