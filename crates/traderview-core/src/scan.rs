@@ -732,6 +732,8 @@ pub enum Preset {
     FlatOpenTrendDownModerate,           // gap_pct.abs() < 0.3 AND change_pct in [-3, -1] AND day_pct < -1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate red + red intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend down; mid-magnitude organic move; conviction without spike)
     MidRangeRecoveryRallyHotVol,         // year_high_pct > 10 AND year_low_pct > 10 AND change_pct > 3 AND rel_volume >= 2 — recovered well off 52w lows + still below highs + big green + hot vol (sustained recovery rally in mid-52w; not at either extreme; mid-range bullish move with conviction)
     MidRangeSelloffHotVol,               // year_high_pct > 10 AND year_low_pct > 10 AND change_pct < -3 AND rel_volume >= 2 — sold off well from 52w highs + still above lows + big red + hot vol (sustained selloff in mid-52w; not at either extreme; mid-range bearish move with conviction)
+    IntermediateGreenStrongClose,        // change_pct in [3, 7] AND rel_volume in [1.5, 3] AND hod_dist_pct.abs() < 1 — meaningful green (3-7%) + decent vol (1.5-3×) + close near HOD (intermediate gain on intermediate vol with strong finish; sweet spot between organic and parabolic; momentum without exhaustion)
+    IntermediateRedWeakClose,            // change_pct in [-7, -3] AND rel_volume in [1.5, 3] AND lod_dist_pct.abs() < 1 — meaningful red (-3 to -7%) + decent vol (1.5-3×) + close near LOD (intermediate drop with weak finish; sweet spot between organic and crash; weakness without panic)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4113,6 +4115,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::IntermediateGreenStrongClose => {
+            hit.change_pct >= 3.0
+                && hit.change_pct <= 7.0
+                && hit.rel_volume >= 1.5
+                && hit.rel_volume <= 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+        }
+        Preset::IntermediateRedWeakClose => {
+            hit.change_pct >= -7.0
+                && hit.change_pct <= -3.0
+                && hit.rel_volume >= 1.5
+                && hit.rel_volume <= 3.0
+                && hit.lod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -4735,6 +4751,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FlatOpenTrendDownModerate => "Flat Open + Moderate Red + Red Intraday + Same-sign + Normal-elevated Vol (No Overnight Bias + Clean Intraday Trend Down; Conviction Without Spike)",
         Preset::MidRangeRecoveryRallyHotVol => "Mid 52w + Big Green + Hot Vol (Sustained Recovery Rally Off Lows; Not At Either Extreme; Mid-range Bullish)",
         Preset::MidRangeSelloffHotVol => "Mid 52w + Big Red + Hot Vol (Sustained Selloff Off Highs; Not At Either Extreme; Mid-range Bearish)",
+        Preset::IntermediateGreenStrongClose => "Meaningful Green (3-7%) + Decent Vol (1.5-3×) + Close Near HOD (Intermediate Momentum; Sweet Spot Between Organic and Parabolic)",
+        Preset::IntermediateRedWeakClose => "Meaningful Red (-3 to -7%) + Decent Vol (1.5-3×) + Close Near LOD (Intermediate Weakness; Sweet Spot Between Organic and Crash)",
     }
 }
 

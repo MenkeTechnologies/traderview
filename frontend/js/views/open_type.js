@@ -61,6 +61,12 @@ export async function renderOpenType(mount, _appState) {
                 Distance + direction visually reveals the verdict.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.open_type.h2.distance_chart">Signed distance from open price to each reference</h2>
+            <div id="ot-dist-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.open_type.hint.distance" class="muted small">Positive = level above open; negative = level below. Yellow dashed = zero (open). Reveals which references are closest and how the open sits in context (above VAH? below prior low?).</p>
+        </div>
+
         <div id="ot-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -118,6 +124,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderChart(state.params);
+    renderDistanceChart(state.params);
     const badge = typeBadge(res.open_type);
     showToast(t('view.open_type.toast.classified', { label: badge.label }), { level: 'success' });
 }
@@ -175,6 +182,48 @@ function renderChart(p) {
         legend: { show: true },
     }, [xs, ph, pl, vah, val, orh, orl, openMark, closMark], el);
     void fmtN;
+}
+
+function renderDistanceChart(p) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ot-dist-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const refs = [
+        ['prior_high', p.prior_day_high],
+        ['vah',        p.prior_day_vah],
+        ['or_high',    p.opening_range_high],
+        ['or_close',   p.opening_range_close],
+        ['or_low',     p.opening_range_low],
+        ['val',        p.prior_day_val],
+        ['prior_low',  p.prior_day_low],
+    ].filter(([, v]) => Number.isFinite(Number(v)));
+    if (refs.length < 1 || !Number.isFinite(Number(p.open_price))) {
+        el.innerHTML = `<div class="muted" data-i18n="view.open_type.empty_distance_chart">${esc(t('view.open_type.empty_distance_chart'))}</div>`;
+        return;
+    }
+    const labels = refs.map(([k]) => t(`view.open_type.ref.${k}`));
+    const ys = refs.map(([, v]) => Number(v) - Number(p.open_price));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.open_type.chart.reference') },
+            { label: t('view.open_type.chart.distance'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.open_type.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function showErr(msg) {

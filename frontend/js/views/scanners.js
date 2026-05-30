@@ -614,6 +614,8 @@ const PRESETS = [
     { id: 'flat_open_trend_down_moderate', label: t('view.scanners.preset.flat_open_trend_down_moderate.label'), desc: t('view.scanners.preset.flat_open_trend_down_moderate.desc') },
     { id: 'mid_range_recovery_rally_hot_vol', label: t('view.scanners.preset.mid_range_recovery_rally_hot_vol.label'), desc: t('view.scanners.preset.mid_range_recovery_rally_hot_vol.desc') },
     { id: 'mid_range_selloff_hot_vol', label: t('view.scanners.preset.mid_range_selloff_hot_vol.label'), desc: t('view.scanners.preset.mid_range_selloff_hot_vol.desc') },
+    { id: 'intermediate_green_strong_close', label: t('view.scanners.preset.intermediate_green_strong_close.label'), desc: t('view.scanners.preset.intermediate_green_strong_close.desc') },
+    { id: 'intermediate_red_weak_close', label: t('view.scanners.preset.intermediate_red_weak_close.label'), desc: t('view.scanners.preset.intermediate_red_weak_close.desc') },
 ];
 
 export async function renderScanners(mount) {
