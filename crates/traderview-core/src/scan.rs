@@ -1032,6 +1032,8 @@ pub enum Preset {
     GapDownMidpointCloseMidYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + mid-range from low (5-20%) + hot vol (inconclusive pullback in mid-cycle recovery: gap down in the proper consolidation zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff at mid-range with no directional commitment back toward the prior trough)
     GapUpMidpointCloseJustOffYearHighHotVol,   // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + just off 52w high (2-5%) + hot vol (inconclusive bounce just off the year peak: gap up in the post-extreme zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff in the immediate post-tag zone with the recovery still undecided)
     GapDownMidpointCloseJustOffYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + just off 52w low (2-5%) + hot vol (inconclusive pullback just off the year trough: gap down in the post-extreme zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff in the immediate post-tag zone with the rejection still undecided)
+    HotVolFlatCloseNearYearHighHotVol,         // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w high (<2%) (institutional churn at the 52w high: doubled participation with no net price impact at the year peak; potential distribution-into-strength signal where smart money exchanges hands without moving the tape)
+    HotVolFlatCloseNearYearLowHotVol,          // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w low (<2%) (institutional churn at the 52w low: doubled participation with no net price impact at the year trough; potential accumulation-into-weakness signal where smart money exchanges hands without moving the tape)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6338,6 +6340,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 5.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HotVolFlatCloseNearYearHighHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::HotVolFlatCloseNearYearLowHotVol => {
+            hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -7260,6 +7272,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownMidpointCloseMidYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Mid-range from Low (5-20 %) + Hot Vol (Inconclusive Pullback in Mid-cycle Recovery: Gap down in the Proper Consolidation Zone Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff at Mid-range with No Directional Commitment back toward the Prior Trough)",
         Preset::GapUpMidpointCloseJustOffYearHighHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Just off 52w High (2-5 %) + Hot Vol (Inconclusive Bounce Just off the Year Peak: Gap up in the Post-extreme Zone Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff in the Immediate Post-tag Zone with the Recovery Still Undecided)",
         Preset::GapDownMidpointCloseJustOffYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Just off 52w Low (2-5 %) + Hot Vol (Inconclusive Pullback Just off the Year Trough: Gap down in the Post-extreme Zone Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff in the Immediate Post-tag Zone with the Rejection Still Undecided)",
+        Preset::HotVolFlatCloseNearYearHighHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + At/near 52w High (<2 %) (Institutional Churn at the 52w High: Doubled Participation with No Net Price Impact at the Year Peak; Potential Distribution-into-strength Signal Where Smart Money Exchanges Hands without Moving the Tape)",
+        Preset::HotVolFlatCloseNearYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + At/near 52w Low (<2 %) (Institutional Churn at the 52w Low: Doubled Participation with No Net Price Impact at the Year Trough; Potential Accumulation-into-weakness Signal Where Smart Money Exchanges Hands without Moving the Tape)",
     }
 }
 
