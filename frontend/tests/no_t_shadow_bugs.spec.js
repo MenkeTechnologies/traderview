@@ -31,42 +31,70 @@ function walk(dir) {
     return out;
 }
 
+// Detect both `const t = ...` shadows AND function params named `t`.
+// For each shadow declaration, scan forward until brace depth drops
+// below the depth at the shadow — that's when the shadow scope closes.
 function findBugs(path) {
     const src = readFileSync(path, 'utf8');
-    // Must import bare t (not aliased as tr).
     if (!/^import\s*\{[^}]*\bt\b[^}]*\}\s*from\s*['"](?:\.\.?\/)*i18n\.js['"]/m.test(src)) return [];
     if (/\bt as tr\b/.test(src)) return [];
 
     const lines = src.split('\n');
     const bugs = [];
-    // For each shadow line, check the next N lines for a t('...') call.
-    // We stop scanning when brace depth at the call goes BELOW the depth
-    // at the shadow declaration (= shadow scope closed).
+
+    // Pre-compute cumulative brace depth at the start of each line.
+    const startDepth = new Array(lines.length + 1).fill(0);
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        if (!/(?:const|let)\s+t\s*=/.test(line)) continue;
-        // Compute brace-depth delta from start of file to start of this line.
-        let depthAtShadow = 0;
-        for (let j = 0; j < i; j++) {
-            depthAtShadow += (lines[j].match(/{/g) || []).length;
-            depthAtShadow -= (lines[j].match(/}/g) || []).length;
-        }
-        // Scan forward up to 80 lines for a t('...') call at depth >= depthAtShadow.
-        let depth = depthAtShadow + ((line.match(/{/g) || []).length) - ((line.match(/}/g) || []).length);
-        for (let k = i + 1; k < Math.min(lines.length, i + 80); k++) {
+        const opens = (lines[i].match(/{/g) || []).length;
+        const closes = (lines[i].match(/}/g) || []).length;
+        startDepth[i + 1] = startDepth[i] + opens - closes;
+    }
+
+    function scanForward(shadowLineIdx, kind) {
+        // The shadow's scope = the innermost open block. Find the depth
+        // at the END of the shadow line (after its own braces). The
+        // shadow remains in scope until depth drops to (this END depth - 1).
+        const shadowEndDepth = startDepth[shadowLineIdx + 1];
+        // The shadow's enclosing scope is one less than shadowEndDepth
+        // when the shadow itself opens a new block (function decl, arrow).
+        // For a plain const/let we use shadowEndDepth as the "stay >=" bar.
+        const minDepth = kind === 'param' ? shadowEndDepth : shadowEndDepth;
+        for (let k = shadowLineIdx + 1; k < Math.min(lines.length, shadowLineIdx + 120); k++) {
+            // Depth at the END of line k.
+            const endDepth = startDepth[k + 1];
+            if (endDepth < minDepth) break;
             const l = lines[k];
-            depth += (l.match(/{/g) || []).length;
-            depth -= (l.match(/}/g) || []).length;
-            if (depth < depthAtShadow) break;  // shadow scope closed
-            // Look for t('...') NOT preceded by an identifier character.
-            const m = l.match(/[^a-zA-Z_$0-9.]t\(['"]/);
-            // Also accept t( at line start.
-            const isCall = m || /^t\(['"]/.test(l.trimStart());
+            // t('...') NOT preceded by an identifier character.
+            const isCall = /[^a-zA-Z_$0-9.]t\(['"]/.test(l) || /^t\(['"]/.test(l.trimStart());
             if (isCall) {
-                bugs.push({ file: path, shadowLine: i + 1, callLine: k + 1, snippet: l.trim().slice(0, 100) });
-                break;  // one bug per shadow is enough
+                bugs.push({
+                    file: path,
+                    shadowLine: shadowLineIdx + 1,
+                    callLine: k + 1,
+                    snippet: l.trim().slice(0, 100),
+                });
+                break;  // one bug per shadow
             }
         }
+    }
+
+    // 1. `const|let t = ...` shadows.
+    for (let i = 0; i < lines.length; i++) {
+        if (/(?:const|let)\s+t\s*=/.test(lines[i])) scanForward(i, 'const');
+    }
+    // 2. Function PARAMS named `t`. Match `function name(... t ...) {`
+    //    and `(... t ...) => {` — ONLY block-bodied (skip expression
+    //    arrows whose scope is one expression and can't shadow line-far
+    //    i18n calls).
+    for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        const fnDecl = l.match(/function\s+\w+\s*\(([^)]*)\)\s*\{/);
+        const arrow = l.match(/(?:^|[,=({])\s*\(([^)]*)\)\s*=>\s*\{/);
+        const params = fnDecl ? fnDecl[1] : (arrow ? arrow[1] : null);
+        if (!params) continue;
+        const names = params.split(',').map(p => p.split('=')[0].trim().split(':')[0].trim());
+        if (!names.includes('t')) continue;
+        scanForward(i, 'param');
     }
     return bugs;
 }
