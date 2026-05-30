@@ -1048,6 +1048,8 @@ pub enum Preset {
     DryVolBigDownConfirmedBelowYearLowHotVol,  // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — big down move (<-3%) + dry vol (<0.5) + confirmed-breakdown zone (1-3% past 52w low) (thin-tape extension after validated breakdown: momentum continues on below-average participation past the prior trough; volume-unconfirmed extension prone to mean-reversion)
     DryVolBigUpDeepBelowYearHighHotVol,        // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 20 — big up move (>3%) + dry vol (<0.5) + far below 52w high (>=20%) (unconvincing recovery rally: large gains deep in the pullback territory on below-average participation; sympathy/short-cover bounce lacking institutional buy-in, fragile if vol returns)
     DryVolBigDownDeepAboveYearLowHotVol,       // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 20 — big down move (<-3%) + dry vol (<0.5) + far above 52w low (>=20%) (unconvincing pullback: large losses deep in the advance territory on below-average participation; sympathy/long-unwind dip lacking institutional sell-in, fragile if vol returns)
+    DryVolBigUpMidYearHighHotVol,              // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 — big up move (>3%) + dry vol (<0.5) + mid-range from high (5-20%) (low-quality bounce in mid-cycle pullback: large gains in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to fade)
+    DryVolBigDownMidYearLowHotVol,             // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 — big down move (<-3%) + dry vol (<0.5) + mid-range from low (5-20%) (low-quality pullback in mid-cycle recovery: large losses in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to bounce)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6442,6 +6444,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.year_low_pct >= 20.0
         }
+        Preset::DryVolBigUpMidYearHighHotVol => {
+            hit.change_pct > 3.0
+                && hit.rel_volume < 0.5
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::DryVolBigDownMidYearLowHotVol => {
+            hit.change_pct < -3.0
+                && hit.rel_volume < 0.5
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -7380,6 +7394,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigDownConfirmedBelowYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Thin-tape Extension after Validated Breakdown: Momentum Continues on Below-average Participation past the Prior Trough; Volume-unconfirmed Extension Prone to Mean-reversion)",
         Preset::DryVolBigUpDeepBelowYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Far below 52w High (>=20 %) (Unconvincing Recovery Rally: Large Gains Deep in the Pullback Territory on Below-average Participation; Sympathy/short-cover Bounce Lacking Institutional Buy-in, Fragile if Vol Returns)",
         Preset::DryVolBigDownDeepAboveYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Far above 52w Low (>=20 %) (Unconvincing Pullback: Large Losses Deep in the Advance Territory on Below-average Participation; Sympathy/long-unwind Dip Lacking Institutional Sell-in, Fragile if Vol Returns)",
+        Preset::DryVolBigUpMidYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Mid-range from High (5-20 %) (Low-quality Bounce in Mid-cycle Pullback: Large Gains in the Proper Consolidation Zone on Below-average Participation; Sympathy Move Lacking Institutional Follow-through, Prone to Fade)",
+        Preset::DryVolBigDownMidYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Mid-range from Low (5-20 %) (Low-quality Pullback in Mid-cycle Recovery: Large Losses in the Proper Consolidation Zone on Below-average Participation; Sympathy Move Lacking Institutional Follow-through, Prone to Bounce)",
     }
 }
 

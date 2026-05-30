@@ -930,6 +930,8 @@ const PRESETS = [
     { id: 'dry_vol_big_down_confirmed_below_year_low_hot_vol', label: t('view.scanners.preset.dry_vol_big_down_confirmed_below_year_low_hot_vol.label'), desc: t('view.scanners.preset.dry_vol_big_down_confirmed_below_year_low_hot_vol.desc') },
     { id: 'dry_vol_big_up_deep_below_year_high_hot_vol', label: t('view.scanners.preset.dry_vol_big_up_deep_below_year_high_hot_vol.label'), desc: t('view.scanners.preset.dry_vol_big_up_deep_below_year_high_hot_vol.desc') },
     { id: 'dry_vol_big_down_deep_above_year_low_hot_vol', label: t('view.scanners.preset.dry_vol_big_down_deep_above_year_low_hot_vol.label'), desc: t('view.scanners.preset.dry_vol_big_down_deep_above_year_low_hot_vol.desc') },
+    { id: 'dry_vol_big_up_mid_year_high_hot_vol', label: t('view.scanners.preset.dry_vol_big_up_mid_year_high_hot_vol.label'), desc: t('view.scanners.preset.dry_vol_big_up_mid_year_high_hot_vol.desc') },
+    { id: 'dry_vol_big_down_mid_year_low_hot_vol', label: t('view.scanners.preset.dry_vol_big_down_mid_year_low_hot_vol.label'), desc: t('view.scanners.preset.dry_vol_big_down_mid_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
