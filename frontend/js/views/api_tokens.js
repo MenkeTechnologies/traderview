@@ -55,6 +55,11 @@ export async function renderDeveloper(mount) {
             <h2 data-i18n="view.api_tokens.h2.usage_chart">Token uses (top 20)</h2>
             <div id="tok-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.api_tokens.h2.rate_chart">Tokens by rate limit (per minute)</h2>
+            <div id="tok-rate-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
 
     mount.querySelector('#tok-form').addEventListener('submit', async (e) => {
@@ -166,11 +171,43 @@ async function loadList(mount, tok) {
             });
         });
         renderUsageChart(rows);
+        renderRateChart(rows);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el2 = mount.querySelector('#tok-list');
         if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderRateChart(rows) {
+    const el = document.getElementById('tok-rate-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const active = (rows || []).filter(r => !r.revoked_at);
+    if (active.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.api_tokens.empty_rate_chart">${esc(t('view.api_tokens.empty_rate_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...active].sort((a, b) => Number(b.rate_limit_per_min) - Number(a.rate_limit_per_min));
+    const labels = sorted.map(r => r.name);
+    const ys = sorted.map(r => Number(r.rate_limit_per_min));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.api_tokens.chart.token_idx') },
+            { label: t('view.api_tokens.chart.rate'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderUsageChart(rows) {

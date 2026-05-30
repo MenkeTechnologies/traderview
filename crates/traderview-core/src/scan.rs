@@ -484,6 +484,8 @@ pub enum Preset {
     Pct52wHighHotVolDown,          // year_high_pct > -10 AND change_pct < -3 AND rel_volume >= 2 — near 52w high + big down move + hot vol (distribution / topping candidate)
     GapHeldNoExtension,            // gap_pct.abs() > 1 AND day_pct.abs() < 0.3 AND rel_volume between 0.7 and 1.5 — gap (up or down) + close ≈ open + avg vol (held the gap, no extension)
     GapPartialFade,                // gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() < gap_pct.abs()/2 AND rel_volume >= 1.2 — gap kept direction but faded > half its move (partial fade)
+    YearHighIntradayWeak,          // year_high_pct > -1 AND day_pct < -1 AND rel_volume >= 1.5 — at 52w high but intraday weak (close < open) on hot vol (rejection from high; failed continuation)
+    YearLowIntradayStrong,         // year_low_pct < 1 AND day_pct > 1 AND rel_volume >= 1.5 — at 52w low but intraday strong (close > open) on hot vol (reclaim from low; failed continuation down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2412,6 +2414,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < hit.gap_pct.abs() / 2.0
                 && hit.rel_volume >= 1.2
         }
+        Preset::YearHighIntradayWeak => {
+            hit.year_high_pct > -1.0
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::YearLowIntradayStrong => {
+            hit.year_low_pct < 1.0
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2786,6 +2798,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wHighHotVolDown => "Near 52w High + Hot Vol Down (Distribution/Topping)",
         Preset::GapHeldNoExtension => "Gap Held, No Intraday Extension",
         Preset::GapPartialFade => "Gap Partial Fade (>50%, Held Direction)",
+        Preset::YearHighIntradayWeak => "At 52w High + Intraday Weak (Failed Continuation Up)",
+        Preset::YearLowIntradayStrong => "At 52w Low + Intraday Strong (Failed Continuation Down)",
     }
 }
 
