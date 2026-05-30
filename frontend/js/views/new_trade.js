@@ -64,6 +64,11 @@ export async function renderNewTrade(mount, state) {
             <h2 data-i18n="view.new_trade.h2.exec_chart">Recent execution prices (chronological)</h2>
             <div id="nt-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.new_trade.h2.qty_chart">Execution quantities (chronological)</h2>
+            <div id="nt-qty-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
 
     // Default executed_at to now (local time).
@@ -184,8 +189,40 @@ export async function renderNewTrade(mount, state) {
         const btn = mount.querySelector('#open-trades');
         if (btn) btn.addEventListener('click', () => go('trades'));
         renderExecChart(execs);
+        renderQtyChart(execs);
     }
     refresh();
+}
+
+function renderQtyChart(execs) {
+    const el = document.getElementById('nt-qty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (execs || [])
+        .filter(e => Number.isFinite(Number(e.qty)))
+        .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.new_trade.empty_qty_chart">${esc(t('view.new_trade.empty_qty_chart'))}</div>`;
+        return;
+    }
+    const xs = valid.map((_, i) => i + 1);
+    const buys  = valid.map(e => (e.side === 'buy' || e.side === 'cover') ? Number(e.qty) : null);
+    const sells = valid.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.qty) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.new_trade.chart.exec_idx') },
+            { label: t('view.new_trade.chart.buy_qty'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.new_trade.chart.sell_qty'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, buys, sells], el);
 }
 
 function renderExecChart(execs) {
