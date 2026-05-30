@@ -27,22 +27,22 @@ export async function renderCommissionOptimizer(mount, _appState) {
         <div class="chart-panel" data-context-scope="commission-optimizer">
             <h2 data-i18n="view.commission_optimizer.h2.executions">Executions
                 <small data-i18n="view.commission_optimizer.h2.executions_hint" class="muted">(per line: qty notional actual_fee)</small></h2>
-            <textarea id="co-execs" rows="6" placeholder="100 5000 1.00&#10;200 8000 1.00&#10;...">${esc(execsToBlob(state.executions))}</textarea>
+            <textarea id="co-execs" rows="6" placeholder="100 5000 1.00&#10;200 8000 1.00&#10;..." data-tip="view.commission_optimizer.tip.execs">${esc(execsToBlob(state.executions))}</textarea>
 
             <h2 data-i18n="view.commission_optimizer.h2.tiers">Tiers (JSON)
                 <small data-i18n="view.commission_optimizer.label.tiers_hint" class="muted">JSON array of {name, per_trade_flat, per_share, per_dollar, min_per_trade, max_per_trade}</small></h2>
-            <textarea id="co-tiers" rows="6">${esc(tiersToJson(state.tiers))}</textarea>
+            <textarea id="co-tiers" rows="6" data-tip="view.commission_optimizer.tip.tiers">${esc(tiersToJson(state.tiers))}</textarea>
 
             <div class="inline-form">
-                <button data-i18n="view.commission_optimizer.btn.evaluate" id="co-run" class="primary" type="button">Evaluate</button>
-                <button data-i18n="view.commission_optimizer.btn.reset_tiers" id="co-reset" class="secondary" type="button">Reset to default tiers (IBKR / Lightspeed / Webull)</button>
+                <button data-i18n="view.commission_optimizer.btn.evaluate" id="co-run" class="primary" type="button" data-tip="view.commission_optimizer.tip.run" data-shortcut="commission_optimizer_run">Evaluate</button>
+                <button data-i18n="view.commission_optimizer.btn.reset_tiers" id="co-reset" class="secondary" type="button" data-tip="view.commission_optimizer.tip.reset">Reset to default tiers (IBKR / Lightspeed / Webull)</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.commission_optimizer.btn.demo_active"  id="co-demo-active"  class="secondary" type="button">Demo: active retail</button>
-                <button data-i18n="view.commission_optimizer.btn.demo_scalper" id="co-demo-scalper" class="secondary" type="button">Demo: heavy scalper</button>
-                <button data-i18n="view.commission_optimizer.btn.demo_options" id="co-demo-options" class="secondary" type="button">Demo: light options</button>
-                <button data-i18n="view.commission_optimizer.btn.demo_webull"  id="co-demo-webull"  class="secondary" type="button">Demo: already on Webull</button>
-                <button data-i18n="view.commission_optimizer.btn.demo_blocks"  id="co-demo-blocks"  class="secondary" type="button">Demo: big blocks</button>
+                <button data-i18n="view.commission_optimizer.btn.demo_active"  id="co-demo-active"  class="secondary" type="button" data-tip="view.commission_optimizer.tip.demo_active">Demo: active retail</button>
+                <button data-i18n="view.commission_optimizer.btn.demo_scalper" id="co-demo-scalper" class="secondary" type="button" data-tip="view.commission_optimizer.tip.demo_scalper">Demo: heavy scalper</button>
+                <button data-i18n="view.commission_optimizer.btn.demo_options" id="co-demo-options" class="secondary" type="button" data-tip="view.commission_optimizer.tip.demo_options">Demo: light options</button>
+                <button data-i18n="view.commission_optimizer.btn.demo_webull"  id="co-demo-webull"  class="secondary" type="button" data-tip="view.commission_optimizer.tip.demo_webull">Demo: already on Webull</button>
+                <button data-i18n="view.commission_optimizer.btn.demo_blocks"  id="co-demo-blocks"  class="secondary" type="button" data-tip="view.commission_optimizer.tip.demo_blocks">Demo: big blocks</button>
             </div>
             <p data-i18n="view.commission_optimizer.hint.about" class="muted">Compares your actual commission spend against alternative tier pricing on your real execution profile. Annual savings = best alternative × 12.</p>
         </div>
@@ -86,6 +86,7 @@ function tiersToJson(tiers) {
 function loadDemo(kind) {
     state.executions = makeDemoExecutions(kind);
     document.getElementById('co-execs').value = execsToBlob(state.executions);
+    showToast(t('view.commission_optimizer.toast.demo_loaded', { kind, n: state.executions.length }), { level: 'info' });
 }
 
 function readInputs() {
@@ -93,6 +94,7 @@ function readInputs() {
     if (parsed.errors.length) {
         showErr(`${t('view.commission_optimizer.err.parse_prefix')}: `
             + parsed.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.commission_optimizer.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     state.executions = parsed.executions;
@@ -107,6 +109,7 @@ function readInputs() {
         state.tiers = tiers;
     } catch (e) {
         showErr(`${t('view.commission_optimizer.err.tiers_json')}: ${e.message}`);
+        showToast(t('view.commission_optimizer.toast.tiers_json'), { level: 'warning' });
         return;
     }
     hideErr();
@@ -114,7 +117,7 @@ function readInputs() {
 
 async function compute(tok) {
     const err = validateInputs(state.executions, state.tiers);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.commission_optimizer.toast.invalid'), { level: 'warning' }); return; }
     hideErr();
     const local = localEvaluate(state.executions, state.tiers);
     renderSummary(local, true);
@@ -125,6 +128,7 @@ async function compute(tok) {
         resp = await api.calcCommissionOptimizer(buildBody(state.executions, state.tiers));
     } catch (e) {
         showErr(`${t('view.commission_optimizer.err.api')}: ${e.message || e}`);
+        showToast(t('view.commission_optimizer.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -145,6 +149,9 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized);
     renderFeeChart(normalized);
+    const annual = Math.round(Number(normalized.projected_annual_savings) || 0);
+    const best = normalized.best_alternative || '—';
+    showToast(t('view.commission_optimizer.toast.evaluated', { best, save: annual.toLocaleString() }), { level: annual > 0 ? 'success' : 'info' });
 }
 
 function renderSummary(report, pending) {
