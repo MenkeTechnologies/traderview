@@ -13,6 +13,7 @@ import {
 } from '../_goal_tracker_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { params: makeDemoData('on-pace') };
 
 export async function renderGoalTracker(mount, _appState) {
@@ -24,33 +25,33 @@ export async function renderGoalTracker(mount, _appState) {
             <h2 data-i18n="view.goal_tracker.h2.period_goals">Period goals</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.goal_tracker.label.start_eq">Period start ($)</span>
-                    <input id="gt-eq0" type="number" step="any" min="0" value="${state.params.period_start_equity}"></label>
+                    <input id="gt-eq0" type="number" step="any" min="0" value="${state.params.period_start_equity}" data-tip="view.goal_tracker.tip.start_eq"></label>
                 <label><span data-i18n="view.goal_tracker.label.target_return">Target return (decimal — 0.30 = 30%)</span>
-                    <input id="gt-tgt" type="number" step="any" value="${state.params.target_pct_return}"></label>
+                    <input id="gt-tgt" type="number" step="any" value="${state.params.target_pct_return}" data-tip="view.goal_tracker.tip.target_return"></label>
                 <label><span data-i18n="view.goal_tracker.label.max_dd">Max DD (decimal — 0.10 = 10%)</span>
-                    <input id="gt-dd" type="number" step="any" min="0" max="1" value="${state.params.max_dd_pct}"></label>
+                    <input id="gt-dd" type="number" step="any" min="0" max="1" value="${state.params.max_dd_pct}" data-tip="view.goal_tracker.tip.max_dd"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.goal_tracker.label.period_start">Period start (YYYY-MM-DD)</span>
-                    <input id="gt-ps" type="text" value="${esc(state.params.period_start)}"></label>
+                    <input id="gt-ps" type="text" value="${esc(state.params.period_start)}" data-tip="view.goal_tracker.tip.period_start"></label>
                 <label><span data-i18n="view.goal_tracker.label.period_end">Period end (YYYY-MM-DD)</span>
-                    <input id="gt-pe" type="text" value="${esc(state.params.period_end)}"></label>
+                    <input id="gt-pe" type="text" value="${esc(state.params.period_end)}" data-tip="view.goal_tracker.tip.period_end"></label>
                 <label><span data-i18n="view.goal_tracker.label.today">Today (YYYY-MM-DD)</span>
-                    <input id="gt-today" type="text" value="${esc(state.params.today)}"></label>
-                <button data-i18n="view.goal_tracker.btn.today_now" id="gt-today-now" class="secondary" type="button">today = now</button>
+                    <input id="gt-today" type="text" value="${esc(state.params.today)}" data-tip="view.goal_tracker.tip.today"></label>
+                <button data-i18n="view.goal_tracker.btn.today_now" id="gt-today-now" class="secondary" type="button" data-tip="view.goal_tracker.tip.today_now">today = now</button>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.goal_tracker.h2.equity_history">Equity history</h2>
-            <textarea id="gt-eq" rows="5" placeholder="100000&#10;105000&#10;110000">${state.params.equity.join('\n')}</textarea>
+            <textarea id="gt-eq" rows="5" placeholder="100000&#10;105000&#10;110000" data-tip="view.goal_tracker.tip.equity">${state.params.equity.join('\n')}</textarea>
             <div class="inline-form">
-                <button data-i18n="view.goal_tracker.btn.demo_ahead" id="gt-demo-ahead"  class="secondary" type="button">Demo: AHEAD</button>
-                <button data-i18n="view.goal_tracker.btn.demo_on_pace" id="gt-demo-onpace" class="secondary" type="button">Demo: ON PACE</button>
-                <button data-i18n="view.goal_tracker.btn.demo_behind" id="gt-demo-behind" class="secondary" type="button">Demo: BEHIND</button>
-                <button data-i18n="view.goal_tracker.btn.demo_kill_switch" id="gt-demo-kill"   class="secondary" type="button">Demo: KILL SWITCH</button>
-                <button data-i18n="view.goal_tracker.btn.demo_out_of_period" id="gt-demo-out"    class="secondary" type="button">Demo: OUT-OF-PERIOD</button>
-                <button data-i18n="view.goal_tracker.btn.evaluate" id="gt-run" class="primary" type="button">Evaluate</button>
+                <button data-i18n="view.goal_tracker.btn.demo_ahead" id="gt-demo-ahead"  class="secondary" type="button" data-tip="view.goal_tracker.tip.demo_ahead">Demo: AHEAD</button>
+                <button data-i18n="view.goal_tracker.btn.demo_on_pace" id="gt-demo-onpace" class="secondary" type="button" data-tip="view.goal_tracker.tip.demo_onpace">Demo: ON PACE</button>
+                <button data-i18n="view.goal_tracker.btn.demo_behind" id="gt-demo-behind" class="secondary" type="button" data-tip="view.goal_tracker.tip.demo_behind">Demo: BEHIND</button>
+                <button data-i18n="view.goal_tracker.btn.demo_kill_switch" id="gt-demo-kill"   class="secondary" type="button" data-tip="view.goal_tracker.tip.demo_kill">Demo: KILL SWITCH</button>
+                <button data-i18n="view.goal_tracker.btn.demo_out_of_period" id="gt-demo-out"    class="secondary" type="button" data-tip="view.goal_tracker.tip.demo_out">Demo: OUT-OF-PERIOD</button>
+                <button data-i18n="view.goal_tracker.btn.evaluate" id="gt-run" class="primary" type="button" data-tip="view.goal_tracker.tip.run" data-shortcut="goal_tracker_run">Evaluate</button>
             </div>
         </div>
 
@@ -110,10 +111,11 @@ async function compute(tok) {
     hideErr();
     if (state.parseErrors && state.parseErrors.length && state.params.equity.length === 0) {
         showErr(t('view.goal_tracker.error.parse', { n: state.parseErrors.length, first: state.parseErrors[0].message }));
+        showToast(t('view.goal_tracker.toast.parse_error', { n: state.parseErrors.length }), { level: 'warning' });
         return;
     }
     const err = validateInputs(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.goal_tracker.toast.invalid'), { level: 'warning' }); return; }
 
     const local = localEvaluate(state.params);
     renderSummary(local, true);
@@ -124,11 +126,16 @@ async function compute(tok) {
     try {
         resp = await api.discGoalTracker(buildBody(state.params));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.goal_tracker.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderProgress(resp);
+    const pace = String(resp.on_pace || '').toUpperCase();
+    const level = resp.kill_switch_breached ? 'error' : (pace === 'BEHIND' ? 'warning' : 'success');
+    showToast(t('view.goal_tracker.toast.evaluated', { pace, pct: (Number(resp.pct_of_target) * 100).toFixed(1) }), { level });
 }
 
 function renderSummary(r, pending) {

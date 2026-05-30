@@ -696,6 +696,11 @@ function bindTabs() {
         const el = document.getElementById('dt-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in goal-tracker scope → click Evaluate.
+    window.addEventListener('tv:goal-tracker-run', () => {
+        const el = document.getElementById('gt-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
