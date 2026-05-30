@@ -632,6 +632,8 @@ const PRESETS = [
     { id: 'cold_vol_big_change_wide_range', label: t('view.scanners.preset.cold_vol_big_change_wide_range.label'), desc: t('view.scanners.preset.cold_vol_big_change_wide_range.desc') },
     { id: 'micro_pin_tiny_range_hot_vol', label: t('view.scanners.preset.micro_pin_tiny_range_hot_vol.label'), desc: t('view.scanners.preset.micro_pin_tiny_range_hot_vol.desc') },
     { id: 'micro_pin_tiny_range_dry_vol', label: t('view.scanners.preset.micro_pin_tiny_range_dry_vol.label'), desc: t('view.scanners.preset.micro_pin_tiny_range_dry_vol.desc') },
+    { id: 'full_range_52w_at_high_side', label: t('view.scanners.preset.full_range_52w_at_high_side.label'), desc: t('view.scanners.preset.full_range_52w_at_high_side.desc') },
+    { id: 'full_range_52w_at_low_side', label: t('view.scanners.preset.full_range_52w_at_low_side.label'), desc: t('view.scanners.preset.full_range_52w_at_low_side.desc') },
 ];
 
 export async function renderScanners(mount) {

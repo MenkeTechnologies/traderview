@@ -59,8 +59,15 @@ export async function renderPlans(mount, state) {
             <h2 data-i18n="view.plans.h2.rr_chart">R:R per plan (sorted desc)</h2>
             <div id="plans-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.plans.h2.risk_chart">Stop distance per plan (sorted widest first)</h2>
+            <div id="plans-risk-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.plans.hint.risk_chart" class="muted small">|entry − stop| per share. Wide stops mean smaller position for a fixed risk budget; tight stops mean larger. Critical for sizing decisions across the plan set.</p>
+        </div>
     `;
     renderRrChart(plans);
+    renderRiskChart(plans);
     mount.querySelector('#plan-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -124,4 +131,38 @@ function renderRrChart(plans) {
         ],
         legend: { show: true },
     }, [xs, ys, target], el);
+}
+
+function renderRiskChart(plans) {
+    const el = document.getElementById('plans-risk-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (plans || []).map(p => {
+        if (!p.stop_loss) return null;
+        const risk = Math.abs(Number(p.intended_entry) - Number(p.stop_loss));
+        return Number.isFinite(risk) && risk > 0 ? { symbol: p.symbol, risk } : null;
+    }).filter(Boolean).sort((a, b) => b.risk - a.risk).slice(0, 30);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.plans.empty_risk_chart">${esc(t('view.plans.empty_risk_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.symbol);
+    const ys = rows.map(r => r.risk);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.plans.chart.plan_idx') },
+            { label: t('view.plans.chart.stop_dist'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

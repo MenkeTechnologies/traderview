@@ -750,6 +750,8 @@ pub enum Preset {
     ColdVolBigChangeWideRange,           // rel_volume < 0.5 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — very dry vol + big change + wide range (max-thin-tape exception; nobody traded but price moved a lot through wide range — algorithmic noise / illiquid stop-runs)
     MicroPinTinyRangeHotVol,             // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume >= 2 — close pinned at exactly HOD AND LOD (effectively zero intraday range) + hot vol (extreme pin; heavy participation at a single price; possible OPEX pin or institutional volume crossed at one tick)
     MicroPinTinyRangeDryVol,             // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume < 0.5 — close pinned at exactly HOD AND LOD + DRY vol (dead day; nothing happened at all; market truly absent; possibly halted or extremely illiquid)
+    FullRange52wAtHighSide,              // year_high_pct < 2 AND year_low_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w high + >50% above 52w low + decent vol (stock has doubled+ from 52w low and is at the highs; max-uptrend + at decision point for breakout/exhaustion)
+    FullRange52wAtLowSide,               // year_low_pct < 2 AND year_high_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w low + >50% below 52w high + decent vol (stock has dropped 50%+ from 52w high and is at the lows; max-downtrend + at decision point for capitulation/reversal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4235,6 +4237,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.1
                 && hit.rel_volume < 0.5
         }
+        Preset::FullRange52wAtHighSide => {
+            hit.year_high_pct < 2.0
+                && hit.year_low_pct > 50.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::FullRange52wAtLowSide => {
+            hit.year_low_pct < 2.0
+                && hit.year_high_pct > 50.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4875,6 +4887,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ColdVolBigChangeWideRange => "Very Dry Vol + Big Change + Wide Range (Max Thin-tape Exception; Algorithmic Noise / Illiquid Stop-runs Without Real Conviction)",
         Preset::MicroPinTinyRangeHotVol => "Close Pinned at HOD=LOD + Hot Vol (Extreme Pin; Heavy Volume Crossed at One Price; Possible OPEX Pin / Block Cross)",
         Preset::MicroPinTinyRangeDryVol => "Close Pinned at HOD=LOD + Dry Vol (Dead Day; Market Truly Absent; Possibly Halted or Extremely Illiquid)",
+        Preset::FullRange52wAtHighSide => "Near 52w High + >50% Above 52w Low + Decent Vol (Stock Has Doubled+ From the Floor; Max-uptrend at Decision Point)",
+        Preset::FullRange52wAtLowSide => "Near 52w Low + >50% Below 52w High + Decent Vol (Stock Has Dropped 50%+ From the Ceiling; Max-downtrend at Decision Point)",
     }
 }
 
