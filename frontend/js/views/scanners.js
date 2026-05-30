@@ -10,10 +10,10 @@ const PRESETS = [
     { id: 'low_float_runners', label: t('chart.series.lowfloat_runners'),  desc: '≥ 10% move + 5× rel-volume' },
     { id: 'high_of_day',       label: t('chart.series.high_of_day'),        desc: 'within 0.5% of session high' },
     { id: 'volume_surge',      label: t('chart.series.volume_surge'),       desc: '≥ 3× 20-day avg volume' },
-    { id: 'breakout',          label: 'Breakout',           desc: 'at session high + green day' },
-    { id: 'breakdown',         label: 'Breakdown',          desc: '≤ −5% on the day' },
-    { id: 'pct52w_high',       label: '52w Highs',          desc: 'within 1% of 52-week high' },
-    { id: 'pct52w_low',        label: '52w Lows',           desc: 'within 1% of 52-week low' },
+    { id: 'breakout',          label: t('view.scanners.preset.breakout.label'),     desc: t('view.scanners.preset.breakout.desc') },
+    { id: 'breakdown',         label: t('view.scanners.preset.breakdown.label'),    desc: t('view.scanners.preset.breakdown.desc') },
+    { id: 'pct52w_high',       label: t('view.scanners.preset.pct52w_high.label'),  desc: t('view.scanners.preset.pct52w_high.desc') },
+    { id: 'pct52w_low',        label: t('view.scanners.preset.pct52w_low.label'),   desc: t('view.scanners.preset.pct52w_low.desc') },
     { id: 'oversold_bounce',   label: t('chart.series.oversold_bounce'),    desc: 'green day off oversold base' },
 ];
 

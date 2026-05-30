@@ -17,11 +17,11 @@ import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const WIDGET_KINDS = [
-    { kind: 'quote',      label: 'Quote',        defaults: { symbol: 'SPY' },     w: 3, h: 2 },
+    { kind: 'quote',      label: t('view.boards.widget.quote.label'),     defaults: { symbol: 'SPY' },     w: 3, h: 2 },
     { kind: 'mini_chart', label: t('chart.series.mini_chart'),   defaults: { symbol: 'SPY' },     w: 6, h: 3 },
     { kind: 'breadth',    label: t('chart.series.breadth_pulse'),defaults: {},                    w: 4, h: 2 },
-    { kind: 'vix',        label: 'VIX',          defaults: {},                    w: 3, h: 2 },
-    { kind: 'watchlist',  label: 'Watchlist',    defaults: { limit: 10 },         w: 4, h: 4 },
+    { kind: 'vix',        label: t('view.boards.widget.vix.label'),       defaults: {},                    w: 3, h: 2 },
+    { kind: 'watchlist',  label: t('view.boards.widget.watchlist.label'), defaults: { limit: 10 },         w: 4, h: 4 },
     { kind: 'alerts',     label: t('chart.series.alerts_feed'),  defaults: { limit: 10 },         w: 6, h: 4 },
     { kind: 'fear_greed', label: t('chart.series.fear_greed'), defaults: {},                    w: 3, h: 2 },
     { kind: 'news',       label: t('chart.series.news_symbol'),defaults: { symbol: 'SPY', limit: 6 }, w: 6, h: 4 },
