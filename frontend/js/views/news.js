@@ -35,6 +35,11 @@ export async function renderNews(mount) {
             </form>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.news.h2.sentiment_chart">Sentiment by item (most recent first)</h2>
+            <div id="n-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="n-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     mount.querySelector('#n-form').addEventListener('submit', async (e) => {
@@ -108,6 +113,36 @@ async function refresh(mount, tok) {
 function renderList(el, items) {
     if (!items.length) { el.innerHTML = '<p data-i18n="view.news.hint.no_items" class="muted small">no items</p>'; return; }
     el.innerHTML = items.map(n => row(n)).join('');
+    renderSentimentChart(items);
+}
+
+function renderSentimentChart(items) {
+    const el = document.getElementById('n-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const scored = (items || []).filter(n => Number.isFinite(Number(n.sentiment)));
+    if (scored.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.news.empty_chart">${esc(t('view.news.empty_chart'))}</div>`;
+        return;
+    }
+    const ys = scored.map(n => Number(n.sentiment));
+    const xs = ys.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.news.chart.item_idx') },
+            { label: t('view.news.chart.sentiment'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.news.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function sentimentBar(s) {
