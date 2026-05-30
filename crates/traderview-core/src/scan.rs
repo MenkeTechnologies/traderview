@@ -272,6 +272,8 @@ pub enum Preset {
     LopsidedQuietSqueeze,        // hod_dist.abs() < 0.5 OR lod_dist.abs() < 0.5 (close pinned to one side) AND rel_volume < 0.5 AND |day_pct| < 0.5 — extreme-pin with quiet vol
     SilentLeaderSqueeze,         // year_high_pct >= -3 AND year_low_pct >= 50 AND |day_pct| < 0.5 — leader at top of 52w range, taking a quiet day
     SilentLaggardSqueeze,        // year_low_pct <= 3 AND year_high_pct <= -50 AND |day_pct| < 0.5 — laggard at bottom of 52w range, taking a quiet day
+    NearVwapQuietSqueeze,        // |day_pct| < 0.3 AND |change_pct| < 0.3 AND rel_volume < 0.8 — close near VWAP-ish (open) on quiet vol
+    BarelyMovingMidSqueeze,      // year_high_pct -50 to -30 AND |day_pct| < 0.3 AND rel_volume < 0.8 — quiet stall in middle of 52w range
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1059,6 +1061,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct <= -50.0
                 && hit.day_pct.abs() < 0.5
         }
+        Preset::NearVwapQuietSqueeze => {
+            hit.day_pct.abs() < 0.3
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.8
+        }
+        Preset::BarelyMovingMidSqueeze => {
+            hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -30.0
+                && hit.day_pct.abs() < 0.3
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -1221,6 +1234,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LopsidedQuietSqueeze => "Lopsided Quiet Squeeze",
         Preset::SilentLeaderSqueeze => "Silent-Leader Squeeze",
         Preset::SilentLaggardSqueeze => "Silent-Laggard Squeeze",
+        Preset::NearVwapQuietSqueeze => "Near-VWAP Quiet Squeeze",
+        Preset::BarelyMovingMidSqueeze => "Barely-Moving Mid-Range Squeeze",
     }
 }
 

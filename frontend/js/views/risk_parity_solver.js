@@ -57,6 +57,11 @@ export async function renderRiskParitySolver(mount, _appState) {
             <div id="rps-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.rp_solver.h2.weights_chart">RP weight vs 1/N per asset</h2>
+            <div id="rps-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="rps-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -111,6 +116,42 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.rp_solver.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderTable(resp);
+    renderWeightsChart(resp);
+}
+
+function renderWeightsChart(report) {
+    const el = document.getElementById('rps-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !report.weights || !report.weights.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.rp_solver.empty_chart">${esc(t('view.rp_solver.empty_chart'))}</div>`;
+        return;
+    }
+    const n = report.weights.length;
+    const eq = 1 / n;
+    const labels = report.weights.map((_, i) => assetLabel(i));
+    const rp = report.weights.map(w => Number(w) * 100);
+    const eqs = labels.map(() => eq * 100);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.rp_solver.chart.asset_idx') },
+            { label: t('view.rp_solver.chart.rp_weight'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.rp_solver.chart.eq_weight'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, rp, eqs], el);
 }
 
 function renderSummary(report, pending) {
