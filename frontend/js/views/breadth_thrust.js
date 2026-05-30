@@ -61,6 +61,11 @@ export async function renderBreadthThrust(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.breadth.h2.cum_chart">Cumulative advance − decline (A-D line)</h2>
+            <div id="bt-cum-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.breadth.h2.table">Per-bar breadth (tail — last 30)</h2>
             <div id="bt-table"></div>
         </div>
@@ -114,6 +119,7 @@ async function compute(tok) {
         state.low_threshold, state.high_threshold);
     renderSummary(local, true);
     renderChart(local);
+    renderCumChart();
     renderTable(local);
     let resp;
     try {
@@ -125,6 +131,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderCumChart();
     renderTable(resp);
 }
 
@@ -197,6 +204,38 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, report.ratio, report.ema_ratio, lows, highs, markers], el);
+}
+
+function renderCumChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bt-cum-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const breadth = state.breadth || [];
+    if (breadth.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.breadth.empty_cum">${esc(t('view.breadth.empty_cum'))}</div>`;
+        return;
+    }
+    const xs = breadth.map((_, i) => i);
+    let acc = 0;
+    const cum = breadth.map(b => { acc += (b.advancing - b.declining); return acc; });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.breadth.chart.ad_cum'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.breadth.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderTable(report) {

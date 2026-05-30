@@ -534,6 +534,8 @@ pub enum Preset {
     AllDirectionsAlignedHotVolDown, // rel_volume >= 3 AND change_pct < 0 AND day_pct < 0 AND gap_pct < 0 — extreme vol + all down directions (full directional bear bar; conviction short)
     IntradayRecoveryFromGapDown,    // year_high_pct between -30 and -10 AND day_pct > 1 AND gap_pct < -0.5 AND rel_volume >= 1.5 — mid-range from top + green intraday + gap-down + hot vol (intraday recovery from gap-down)
     IntradayRejectionFromGapUp,     // year_low_pct between 10 and 30 AND day_pct < -1 AND gap_pct > 0.5 AND rel_volume >= 1.5 — mid-range from bottom + red intraday + gap-up + hot vol (intraday rejection from gap-up)
+    Pct52wMidUpperHotVolDown,       // year_high_pct between -30 and -10 AND change_pct < -3 AND rel_volume >= 2 — mid-upper 52w + big down + hot vol (correction in uptrend)
+    Pct52wMidLowerHotVolUp,         // year_low_pct between 10 and 30 AND change_pct > 3 AND rel_volume >= 2 — mid-lower 52w + big up + hot vol (rally in downtrend)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2755,6 +2757,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct > 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::Pct52wMidUpperHotVolDown => {
+            hit.year_high_pct >= -30.0
+                && hit.year_high_pct <= -10.0
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wMidLowerHotVolUp => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct <= 30.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -3179,6 +3193,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::AllDirectionsAlignedHotVolDown => "All Down + Hot Vol (Full Conviction Bear Bar)",
         Preset::IntradayRecoveryFromGapDown => "Intraday Recovery from Gap-Down (Mid-Upper 52w)",
         Preset::IntradayRejectionFromGapUp => "Intraday Rejection from Gap-Up (Mid-Lower 52w)",
+        Preset::Pct52wMidUpperHotVolDown => "Mid-Upper 52w + Big Down + Hot Vol (Uptrend Correction)",
+        Preset::Pct52wMidLowerHotVolUp => "Mid-Lower 52w + Big Up + Hot Vol (Downtrend Rally)",
     }
 }
 

@@ -416,6 +416,8 @@ const PRESETS = [
     { id: 'all_directions_aligned_hot_vol_down', label: t('view.scanners.preset.all_directions_aligned_hot_vol_down.label'), desc: t('view.scanners.preset.all_directions_aligned_hot_vol_down.desc') },
     { id: 'intraday_recovery_from_gap_down', label: t('view.scanners.preset.intraday_recovery_from_gap_down.label'), desc: t('view.scanners.preset.intraday_recovery_from_gap_down.desc') },
     { id: 'intraday_rejection_from_gap_up', label: t('view.scanners.preset.intraday_rejection_from_gap_up.label'), desc: t('view.scanners.preset.intraday_rejection_from_gap_up.desc') },
+    { id: 'pct52w_mid_upper_hot_vol_down', label: t('view.scanners.preset.pct52w_mid_upper_hot_vol_down.label'), desc: t('view.scanners.preset.pct52w_mid_upper_hot_vol_down.desc') },
+    { id: 'pct52w_mid_lower_hot_vol_up', label: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.label'), desc: t('view.scanners.preset.pct52w_mid_lower_hot_vol_up.desc') },
 ];
 
 export async function renderScanners(mount) {
