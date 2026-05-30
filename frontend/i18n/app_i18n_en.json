@@ -7070,6 +7070,8 @@
   "common.parse_error_line":               "line {line}: {msg}",
   "common.parse_error_inline":             "line {line}: {msg} — {raw}",
   "common.parse.input_must_be_string":     "input must be a string",
+  "common.validate.field_must_be_finite":  "{field} must be finite",
+  "common.validate.field_must_be_non_neg": "{field} must be ≥ 0",
   "common.range_label":                    "range {low} – {high}",
   "common.month_year":                     "{month} {year}",
   "common.unknown":                        "unknown",

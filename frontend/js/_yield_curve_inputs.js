@@ -10,6 +10,8 @@
 //   4. All consecutive spreads ≥ -0.0001 → Normal (allows tiny noise)
 //   5. else → Flat (mixed / non-monotonic)
 
+import { t } from './i18n.js';
+
 export const TENORS = ['y3m', 'y2y', 'y5y', 'y10y', 'y30y'];
 
 // Approximate years (for chart x-axis). 3M = 0.25, etc.
@@ -25,7 +27,7 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(curve) {
     for (const k of TENORS) {
-        if (!Number.isFinite(curve[k])) return `${k} must be finite`;
+        if (!Number.isFinite(curve[k])) return t('common.validate.field_must_be_finite', { field: k });
     }
     return null;
 }

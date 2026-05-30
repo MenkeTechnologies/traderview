@@ -13,6 +13,8 @@
 // Boundary semantics: each transition is strict `<` (so 0.80 exact → contango,
 // 1.00 exact → flat, 1.05 exact → backwardation, 1.20 exact → severe).
 
+import { t } from './i18n.js';
+
 export const STATES = [
     'steep_contango', 'contango', 'flat', 'backwardation', 'severe_backwardation',
 ];
@@ -27,8 +29,8 @@ export const DEFAULT_INPUTS = {
 
 export function validateInputs(ts) {
     for (const k of TENORS) {
-        if (!Number.isFinite(ts[k])) return `${k} must be finite`;
-        if (ts[k] < 0) return `${k} must be ≥ 0`;
+        if (!Number.isFinite(ts[k])) return t('common.validate.field_must_be_finite', { field: k });
+        if (ts[k] < 0) return t('common.validate.field_must_be_non_neg', { field: k });
     }
     return null;
 }
