@@ -450,6 +450,8 @@ const PRESETS = [
     { id: 'range_contraction_after_move', label: t('view.scanners.preset.range_contraction_after_move.label'), desc: t('view.scanners.preset.range_contraction_after_move.desc') },
     { id: 'relative_strength_build', label: t('view.scanners.preset.relative_strength_build.label'), desc: t('view.scanners.preset.relative_strength_build.desc') },
     { id: 'relative_weakness_build', label: t('view.scanners.preset.relative_weakness_build.label'), desc: t('view.scanners.preset.relative_weakness_build.desc') },
+    { id: 'high_vol_absorbing_change', label: t('view.scanners.preset.high_vol_absorbing_change.label'), desc: t('view.scanners.preset.high_vol_absorbing_change.desc') },
+    { id: 'low_vol_wide_range_accumulator', label: t('view.scanners.preset.low_vol_wide_range_accumulator.label'), desc: t('view.scanners.preset.low_vol_wide_range_accumulator.desc') },
 ];
 
 export async function renderScanners(mount) {

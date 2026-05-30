@@ -57,6 +57,11 @@ export async function renderClustersCorrelation(mount, _appState) {
             <div id="cc-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.clusters_correlation.h2.gross_vs_net_chart">Gross vs net exposure per cluster — gap = hedged size</h2>
+            <div id="cc-gross-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="cc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -107,6 +112,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderClusters(local);
     renderExposureChart(local);
+    renderGrossChart(local);
     let resp;
     try {
         resp = await api.clustersCorrelation(buildBody(state.positions, state.correlations, state.threshold));
@@ -119,6 +125,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderClusters(resp);
     renderExposureChart(resp);
+    renderGrossChart(resp);
     const s = summarize(resp);
     const level = s.topPct >= 0.5 ? 'warning' : 'success';
     showToast(t('view.clusters_correlation.toast.clustered', { n: s.nClusters, top: (s.topPct * 100).toFixed(0) }), { level });
@@ -220,6 +227,39 @@ function renderExposureChart(clusters) {
         ],
         legend: { show: true },
     }, [xs, net, zero], el);
+}
+
+function renderGrossChart(clusters) {
+    const el = document.getElementById('cc-gross-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(clusters) || clusters.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.clusters_correlation.empty_gross_chart">${esc(t('view.clusters_correlation.empty_gross_chart'))}</div>`;
+        return;
+    }
+    const xs = clusters.map((_, i) => i + 1);
+    const gross = clusters.map(c => Number.isFinite(c.gross_exposure) ? c.gross_exposure : null);
+    const absNet = clusters.map(c => Number.isFinite(c.net_exposure) ? Math.abs(c.net_exposure) : null);
+    const labels = clusters.map((_, i) => `c${i}`);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.clusters_correlation.chart.cluster_idx') },
+            { label: t('view.clusters_correlation.chart.gross_exposure'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.clusters_correlation.chart.abs_net_exposure'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 8, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, gross, absNet], el);
 }
 
 function showErr(msg) {

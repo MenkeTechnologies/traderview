@@ -568,6 +568,8 @@ pub enum Preset {
     RangeContractionAfterMove,      // hod_dist + lod_dist < 0.8 AND day_pct.abs() < 0.3 AND change_pct.abs() > 1 AND rel_volume between 0.8 and 1.3 — narrow range + flat close + meaningful change + normal vol (continuation pause / range contraction after move)
     RelativeStrengthBuild,          // change_pct > 1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful gain + slightly elevated vol + no big gap (organic relative-strength build; no catalyst-driven gap)
     RelativeWeaknessBuild,          // change_pct < -1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful drop + slightly elevated vol + no big gap (organic relative-weakness build; no catalyst-driven gap)
+    HighVolAbsorbingChange,         // rel_volume >= 2 AND hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — hot vol + tight intraday range + meaningful change (volume absorbing in tight range; strong directional pressure being absorbed for likely follow-through)
+    LowVolWideRangeAccumulator,     // rel_volume < 0.5 AND hod_dist + lod_dist > 2 AND change_pct.abs() > 1 — dry vol + wider intraday range + meaningful change (low-participation but wide spread; accumulator working orders quietly)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2983,6 +2985,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 1.5
                 && hit.gap_pct.abs() < 0.5
         }
+        Preset::HighVolAbsorbingChange => {
+            hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() > 1.0
+        }
+        Preset::LowVolWideRangeAccumulator => {
+            hit.rel_volume < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+                && hit.change_pct.abs() > 1.0
+        }
     }
 }
 
@@ -3441,6 +3453,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RangeContractionAfterMove => "Narrow Range + Flat Close + Meaningful Change + Normal Vol (Continuation Pause)",
         Preset::RelativeStrengthBuild => "Organic Up + Slight Vol Pickup + No Gap (Relative-Strength Build)",
         Preset::RelativeWeaknessBuild => "Organic Down + Slight Vol Pickup + No Gap (Relative-Weakness Build)",
+        Preset::HighVolAbsorbingChange => "Hot Vol + Tight Range + Meaningful Change (Volume Absorbing Directional Pressure)",
+        Preset::LowVolWideRangeAccumulator => "Dry Vol + Wider Range + Meaningful Change (Quiet Accumulator Working)",
     }
 }
 
