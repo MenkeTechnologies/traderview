@@ -992,6 +992,8 @@ pub enum Preset {
     MidpointCloseJustOffYearLowHotVol,         // year_low_pct >= 2 AND year_low_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w low (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh bounce from the 52w low on elevated participation; standoff in the post-extreme zone)
     GapUpCloseAtHodHotVol,                     // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + green close + hot vol (strongest possible bullish gap: gap up held without fade and price closed at the day's high on elevated participation; sustained buying through the bell with no profit-taking)
     GapDownCloseAtLodHotVol,                   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + red close + hot vol (strongest possible bearish gap: gap down held without bounce and price closed at the day's low on elevated participation; sustained selling through the bell with no dip-buying)
+    GapUpCloseAtLodHotVol,                     // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + red close + hot vol (bull-trap reversal: sellers absorbed the entire gap and pushed below the open on elevated participation; classic gap-and-reverse failed-breakout pattern)
+    GapDownCloseAtHodHotVol,                   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + green close + hot vol (bear-trap reversal: buyers absorbed the entire gap and pushed above the open on elevated participation; classic gap-and-reverse failed-breakdown pattern)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5996,6 +5998,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpCloseAtLodHotVol => {
+            hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownCloseAtHodHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6878,6 +6892,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidpointCloseJustOffYearLowHotVol => "Just off 52w Low (2-5 %) + Midpoint Close between HOD and LOD + Hot Vol (Post-tag Intraday Indecision: Neither Bulls nor Bears Closed in Control Immediately after Fresh Bounce from the 52w Low on Elevated Participation; Standoff in the Post-extreme Zone)",
         Preset::GapUpCloseAtHodHotVol => "Gap Up (>2 %) + Close Pinned to HOD + Green Close + Hot Vol (Strongest Possible Bullish Gap: Gap up Held without Fade and Price Closed at the Day's High on Elevated Participation; Sustained Buying through the Bell with No Profit-taking)",
         Preset::GapDownCloseAtLodHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Red Close + Hot Vol (Strongest Possible Bearish Gap: Gap down Held without Bounce and Price Closed at the Day's Low on Elevated Participation; Sustained Selling through the Bell with No Dip-buying)",
+        Preset::GapUpCloseAtLodHotVol => "Gap Up (>2 %) Faded Completely to LOD + Red Close + Hot Vol (Bull-trap Reversal: Sellers Absorbed the Entire Gap and Pushed below the Open on Elevated Participation; Classic Gap-and-reverse Failed-breakout Pattern)",
+        Preset::GapDownCloseAtHodHotVol => "Gap Down (<-2 %) Absorbed Completely to HOD + Green Close + Hot Vol (Bear-trap Reversal: Buyers Absorbed the Entire Gap and Pushed above the Open on Elevated Participation; Classic Gap-and-reverse Failed-breakdown Pattern)",
     }
 }
 
