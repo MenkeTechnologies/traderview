@@ -449,6 +449,8 @@ function bindTabs() {
     window.addEventListener('tv:nav-watchlists',  () => { window.location.hash = 'watchlists'; });
     window.addEventListener('tv:nav-charts',      () => { window.location.hash = 'charts'; });
     window.addEventListener('tv:nav-live',        () => { window.location.hash = 'live'; });
+    window.addEventListener('tv:nav-reports',     () => { window.location.hash = 'reports'; });
+    window.addEventListener('tv:nav-scanner',     () => { window.location.hash = 'live-scanner'; });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {

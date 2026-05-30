@@ -67,6 +67,8 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'nav_watchlists',  keys: { key: 'w', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_watchlists',  actionKey: 'tv:nav-watchlists' },
     { id: 'nav_charts',      keys: { key: 'c', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_charts',      actionKey: 'tv:nav-charts' },
     { id: 'nav_live',        keys: { key: 'l', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_live',        actionKey: 'tv:nav-live' },
+    { id: 'nav_reports',     keys: { key: 'r', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_reports',     actionKey: 'tv:nav-reports' },
+    { id: 'nav_scanner',     keys: { key: 'm', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_scanner',     actionKey: 'tv:nav-scanner' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.

@@ -286,6 +286,8 @@
   "shortcut.nav_watchlists":            "Jump to Watchlists",
   "shortcut.nav_charts":                "Jump to Charts",
   "shortcut.nav_live":                  "Jump to Live Positions",
+  "shortcut.nav_reports":               "Jump to Reports",
+  "shortcut.nav_scanner":               "Jump to Live Scanner",
 
   "view.keyboard_shortcuts.title":      "Keyboard Shortcuts",
   "view.keyboard_shortcuts.placeholder": "Filter shortcuts…",
