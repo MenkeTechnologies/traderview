@@ -892,6 +892,8 @@ pub enum Preset {
     DeepPullbackBigRedHotVol,            // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % below 52w high + big red + hot vol (continuation thrust deeper into pullback zone with institutional distribution; trend-break confirmation candidate)
     DeepBounceBigGreenHotVol,            // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % above 52w low + big green + hot vol (continuation thrust away from the floor with institutional accumulation; recovery momentum well off the trough)
     DeepBounceBigRedHotVol,              // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % above 52w low + big red + hot vol (retracement thrust back toward the floor with institutional distribution; bounce-failure confirmation candidate)
+    BigGapDownReclaimedToHodHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped down + close pinned to HOD + hot vol (full intraday recovery from the gap-down open to the session high; trapped overnight shorts squeezed all the way to the highs with elevated participation)
+    BigGapUpRejectedToLodHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped up + close pinned to LOD + hot vol (full intraday rejection from the gap-up open to the session low; trapped overnight longs flushed all the way to the lows with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5225,6 +5227,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGapDownReclaimedToHodHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapUpRejectedToLodHotVol => {
+            hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6007,6 +6019,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DeepPullbackBigRedHotVol => "10-30 % below 52w High + Big Red + Hot Vol (Continuation Thrust Deeper into Pullback Zone with Institutional Distribution; Trend-break Confirmation Candidate)",
         Preset::DeepBounceBigGreenHotVol => "10-30 % above 52w Low + Big Green + Hot Vol (Continuation Thrust Away from the Floor with Institutional Accumulation; Recovery Momentum Well off the Trough)",
         Preset::DeepBounceBigRedHotVol => "10-30 % above 52w Low + Big Red + Hot Vol (Retracement Thrust Back toward the Floor with Institutional Distribution; Bounce-failure Confirmation Candidate)",
+        Preset::BigGapDownReclaimedToHodHotVol => "Gap Down + Close Pinned to HOD + Hot Vol (Full Intraday Recovery from the Gap-down Open to the Session High; Trapped Overnight Shorts Squeezed All the Way to the Highs with Elevated Participation)",
+        Preset::BigGapUpRejectedToLodHotVol => "Gap Up + Close Pinned to LOD + Hot Vol (Full Intraday Rejection from the Gap-up Open to the Session Low; Trapped Overnight Longs Flushed All the Way to the Lows with Elevated Participation)",
     }
 }
 
