@@ -542,7 +542,7 @@ async function openReceiptMatchModal(meta) {
             <tbody>${rows || `<tr><td colspan="6" class="boot">${esc(t('view.expenses.empty.no_candidates'))}</td></tr>`}</tbody>
         </table>
         <div style="margin-top:12px;display:flex;gap:8px">
-            <a href="${api.receiptBlobUrl(meta.id)}" target="_blank">View receipt</a>
+            <a href="${api.receiptBlobUrl(meta.id)}" target="_blank">${esc(t('common.link.view_receipt'))}</a>
             <button data-i18n="view.expenses.btn.close_4" id="m-close" style="margin-left:auto">Close</button>
         </div>
     </div>`;
@@ -674,7 +674,7 @@ async function openReceiptsModal() {
             <td>${r.ocr_date ?? ''}</td>
             <td>${r.transaction_id ? r.transaction_id.slice(0, 8) : ''}</td>
             <td>
-                <a href="${api.receiptBlobUrl(r.id)}" target="_blank">view</a>
+                <a href="${api.receiptBlobUrl(r.id)}" target="_blank">${esc(t('common.link.view'))}</a>
                 ${!r.transaction_id && r.ocr_status === 'done' ? ` · <button data-i18n="view.expenses.btn.match" class="r-match" data-id="${r.id}">match</button>` : ''}
             </td>
         </tr>`).join('');

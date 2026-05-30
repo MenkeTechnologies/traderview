@@ -180,7 +180,7 @@ function renderFeed(items) {
                 <td>${esc(d.txn_type || '')}</td>
                 <td>${d.shares != null ? Number(d.shares).toLocaleString() : '—'}</td>
                 <td>${d.amount_usd != null ? '$' + fmt(d.amount_usd) : (d.amount_range || '—')}</td>
-                <td>${d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">view</a>` : '—'}</td>
+                <td>${d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(t('common.link.view'))}</a>` : '—'}</td>
             </tr>`).join('')}</tbody></table>`;
 }
 

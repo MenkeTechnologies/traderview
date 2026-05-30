@@ -27,7 +27,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                 <div class="meta">
                     ${fmtDateTime(e.created_at)}
                     ${e.mood !== null ? `· mood ${e.mood}` : ''}
-                    ${e.trade_id ? `· <a href="#trade/${e.trade_id}">trade</a>` : ''}
+                    ${e.trade_id ? `· <a href="#trade/${e.trade_id}">${esc(t('common.link.trade'))}</a>` : ''}
                 </div>
                 <div class="body">${md(e.body_md)}</div>
                 <button data-i18n="view.journal.btn.delete" class="link" data-del="${e.id}">delete</button>

@@ -67,7 +67,7 @@ function renderHits(r) {
                 <div class="journal-entry">
                   <div class="meta">
                     ${j.day ? fmtDate(j.day) : fmtDateTime(j.created_at)}
-                    ${j.trade_id ? `· <a href="#trade/${j.trade_id}">trade</a>` : ''}
+                    ${j.trade_id ? `· <a href="#trade/${j.trade_id}">${esc(t('common.link.trade'))}</a>` : ''}
                     · rank ${j.rank.toFixed(3)}
                   </div>
                   <div class="body">${j.snippet}</div>
