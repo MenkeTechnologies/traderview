@@ -59,6 +59,11 @@ export async function renderDashboard(mount, state) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.dashboard.h2.daily_pnl_chart">Daily P&L (last 90 trading days)</h2>
+            <div id="dash-pnl-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
             <div id="dash-rg" class="muted small" data-i18n="common.loading">loading…</div>
         </div>
@@ -79,6 +84,7 @@ export async function renderDashboard(mount, state) {
     const discEl = mount.querySelector('#dash-disc');
     if (eqEl) equityChart(eqEl, equity);
     if (calEl) renderMiniCalendar(calEl, cal);
+    renderDailyPnlChart(cal);
     if (wmEl) renderWorldMarkets(wmEl);
     if (rgEl) loadRiskGateBadge(rgEl);
     if (discEl && state.accountId) loadDisciplineScore(discEl, state.accountId);
@@ -138,6 +144,46 @@ async function loadRiskGateBadge(el) {
     } catch (_) {
         el.textContent = t('view.dashboard.risk_gate.unavailable');
     }
+}
+
+function renderDailyPnlChart(cells) {
+    const el = document.getElementById('dash-pnl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (cells || [])
+        .filter(c => c.day && Number.isFinite(Number(c.net_pnl)))
+        .slice(-90);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dashboard.empty_chart">${esc(t('view.dashboard.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(c => c.day);
+    const xs = labels.map((_, i) => i + 1);
+    const winY  = rows.map(c => Number(c.net_pnl) >= 0 ? Number(c.net_pnl) : null);
+    const loseY = rows.map(c => Number(c.net_pnl) <  0 ? Number(c.net_pnl) : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dashboard.chart.day') },
+            { label: t('view.dashboard.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.dashboard.chart.lose'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 10, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.dashboard.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, winY, loseY, zero], el);
 }
 
 function renderMiniCalendar(el, cells) {

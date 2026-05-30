@@ -312,6 +312,8 @@ pub enum Preset {
     MidRangeChopDryVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume < 0.5 — equidistant mid-range on dry vol (range-bound digestion)
     CloseNearHodNoBreakout,      // hod_dist.abs() < 0.5 AND change_pct < 1 — closed within 0.5% of HOD but change_pct < 1 (failed thrust)
     CloseNearLodNoBreakdown,     // lod_dist.abs() < 0.5 AND change_pct > -1 — closed within 0.5% of LOD but change_pct > -1 (failed flush)
+    CloseNearHodStrongDay,       // hod_dist.abs() < 0.5 AND change_pct > 3 — closed at HOD AND day up >3% (full-send breakout)
+    CloseNearLodWeakDay,         // lod_dist.abs() < 0.5 AND change_pct < -3 — closed at LOD AND day down >3% (full-send breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1277,6 +1279,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::CloseNearLodNoBreakdown => {
             hit.lod_dist_pct.abs() < 0.5 && hit.change_pct > -1.0
         }
+        Preset::CloseNearHodStrongDay => {
+            hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 3.0
+        }
+        Preset::CloseNearLodWeakDay => {
+            hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -3.0
+        }
     }
 }
 
@@ -1479,6 +1487,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidRangeChopDryVol => "Mid-Range Chop on Dry Vol",
         Preset::CloseNearHodNoBreakout => "Close Near HOD, No Breakout",
         Preset::CloseNearLodNoBreakdown => "Close Near LOD, No Breakdown",
+        Preset::CloseNearHodStrongDay => "Close @ HOD, Strong Day",
+        Preset::CloseNearLodWeakDay => "Close @ LOD, Weak Day",
     }
 }
 

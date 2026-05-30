@@ -194,6 +194,8 @@ const PRESETS = [
     { id: 'mid_range_chop_dry_vol', label: t('view.scanners.preset.mid_range_chop_dry_vol.label'), desc: t('view.scanners.preset.mid_range_chop_dry_vol.desc') },
     { id: 'close_near_hod_no_breakout', label: t('view.scanners.preset.close_near_hod_no_breakout.label'), desc: t('view.scanners.preset.close_near_hod_no_breakout.desc') },
     { id: 'close_near_lod_no_breakdown', label: t('view.scanners.preset.close_near_lod_no_breakdown.label'), desc: t('view.scanners.preset.close_near_lod_no_breakdown.desc') },
+    { id: 'close_near_hod_strong_day', label: t('view.scanners.preset.close_near_hod_strong_day.label'), desc: t('view.scanners.preset.close_near_hod_strong_day.desc') },
+    { id: 'close_near_lod_weak_day', label: t('view.scanners.preset.close_near_lod_weak_day.label'), desc: t('view.scanners.preset.close_near_lod_weak_day.desc') },
 ];
 
 export async function renderScanners(mount) {
