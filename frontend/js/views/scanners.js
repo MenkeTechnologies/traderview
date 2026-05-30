@@ -167,7 +167,7 @@ function renderHits(r) {
                 <th data-i18n="view.scanners.th.vol">Vol</th><th data-i18n="view.scanners.th.rvol">RVol</th><th data-i18n="view.scanners.th.hod_dist">HOD dist</th><th data-i18n="view.scanners.th.52w">52w</th>
             </tr></thead><tbody>${r.hits.map(h => {
                 const cls = h.change_pct >= 0 ? 'pos' : 'neg';
-                return `<tr>
+                return `<tr data-context-scope="symbol-row" data-symbol="${esc(h.symbol)}">
                     <td><a href="#research/${encodeURIComponent(h.symbol)}">${esc(h.symbol)}</a></td>
                     <td>${fmt(h.price)}</td>
                     <td class="${h.gap_pct >= 0 ? 'pos' : 'neg'}">${fmt(h.gap_pct, 2)}%</td>

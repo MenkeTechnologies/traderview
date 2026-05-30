@@ -109,7 +109,7 @@ function render() {
         return;
     }
     tbody.innerHTML = all.map(h => `
-        <tr>
+        <tr data-context-scope="symbol-row" data-symbol="${esc(h.symbol)}">
             <td>${esc(h.halt_time || fmtDateTime(h.fetched_at))}</td>
             <td><strong style="color:var(--accent)">${esc(h.symbol)}</strong></td>
             <td>${esc(h.issue_name)}</td>

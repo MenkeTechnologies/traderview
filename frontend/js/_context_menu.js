@@ -110,6 +110,25 @@ export const SYMBOL_ITEMS = [
       actionKey: 'tv:open-news-for-symbol',     section: 'symbol' },
 ];
 
+// Plain symbol-row context items. Right-click on any <tr data-context-
+// scope="symbol-row" data-symbol="X"> shows: Set active / Charts /
+// Research / Options / Copy symbol. Same handlers as watchlist-row
+// (read data-symbol) but no remove action — for symbol lists that
+// aren't tied to a removable container (halts, catalysts, scanner
+// hits, news items, …).
+export const SYMBOL_ROW_ITEMS = [
+    { id: 'sym_row_set_active', labelKey: 'ctxmenu.wl_row_set_active',
+      actionKey: 'tv:wl-row-set-active', section: 'symbol' },
+    { id: 'sym_row_charts',     labelKey: 'ctxmenu.wl_row_charts',
+      actionKey: 'tv:wl-row-charts',     section: 'symbol' },
+    { id: 'sym_row_research',   labelKey: 'ctxmenu.wl_row_research',
+      actionKey: 'tv:wl-row-research',   section: 'symbol' },
+    { id: 'sym_row_options',    labelKey: 'ctxmenu.wl_row_options',
+      actionKey: 'tv:wl-row-options',    section: 'symbol' },
+    { id: 'sym_row_copy',       labelKey: 'ctxmenu.copy_symbol',
+      actionKey: 'tv:copy-symbol-from-row', section: 'symbol' },
+];
+
 // Watchlist symbol-row context items. Right-click on a <tr data-
 // context-scope="watchlist-symbol-row" data-symbol="X" data-wid="Y">
 // shows: Set as active / Charts / Research / Options / Remove.
@@ -371,6 +390,7 @@ export const ALL_SCOPED_ITEMS = [
     ['position-row',           POSITION_ROW_ITEMS],
     ['alert-rule-row',         ALERT_RULE_ROW_ITEMS],
     ['hotkey-row',             HOTKEY_ROW_ITEMS],
+    ['symbol-row',             SYMBOL_ROW_ITEMS],
     ['custom-indicator-row',   CUSTOM_INDICATOR_ROW_ITEMS],
     ['account-row',            ACCOUNT_ROW_ITEMS],
     ['plan-row',               PLAN_ROW_ITEMS],

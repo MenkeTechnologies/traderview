@@ -170,6 +170,12 @@ export function installContextMenu() {
         }
         clipboardWrite(id, id);
     });
+    // Plain symbol-row copy — read data-symbol off the right-clicked row.
+    window.addEventListener('tv:copy-symbol-from-row', (e) => {
+        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase();
+        if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
+        clipboardWrite(sym, sym);
+    });
     // Watchlist-row actions — read data-symbol (and data-wid for remove)
     // from the right-clicked <tr>.
     const wlSymbolFrom = (detail) => {
