@@ -22,6 +22,7 @@ import {
 } from '../_kalman_beta_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_ASSET = `# Asset returns (the "y"). Demo: synthetic high-beta stock whose
 # β to bench drifts from ~1.5 to ~2.5 over 200 days.
 ${synthAsset(200).join('\n')}
@@ -86,11 +87,13 @@ export async function renderKalmanBeta(mount, _appState) {
                 <div>
                     <h3 data-i18n="view.kalman_beta.h3.asset_returns_y">Asset returns (y)</h3>
                     <textarea id="kb-asset" rows="10"
+                        data-tip="view.kalman_beta.tip.asset"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.assetText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.kalman_beta.h3.bench_returns_x">Bench returns (x)</h3>
                     <textarea id="kb-bench" rows="10"
+                        data-tip="view.kalman_beta.tip.bench"
                         style="width:100%;font-family:monospace;font-size:13px">${esc(state.benchText)}</textarea>
                 </div>
             </div>
@@ -100,14 +103,14 @@ export async function renderKalmanBeta(mount, _appState) {
             <h2 data-i18n="view.kalman_beta.h2.kalman_hyperparameters">Kalman hyperparameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.kalman_beta.label.q">Q (process noise)</span>
-                    <input id="kb-q"    type="number" step="any" min="0" value="${state.params.process_noise_q}"></label>
+                    <input id="kb-q"    type="number" step="any" min="0" value="${state.params.process_noise_q}" data-tip="view.kalman_beta.tip.q"></label>
                 <label><span data-i18n="view.kalman_beta.label.r">R (observation noise)</span>
-                    <input id="kb-r"    type="number" step="any" min="1e-12" value="${state.params.obs_noise_r}"></label>
+                    <input id="kb-r"    type="number" step="any" min="1e-12" value="${state.params.obs_noise_r}" data-tip="view.kalman_beta.tip.r"></label>
                 <label><span data-i18n="view.kalman_beta.label.beta0">β₀ (prior mean)</span>
-                    <input id="kb-b0"   type="number" step="any" value="${state.params.beta0}"></label>
+                    <input id="kb-b0"   type="number" step="any" value="${state.params.beta0}" data-tip="view.kalman_beta.tip.beta0"></label>
                 <label><span data-i18n="view.kalman_beta.label.p0">P₀ (prior variance)</span>
-                    <input id="kb-p0"   type="number" step="any" min="1e-12" value="${state.params.p0}"></label>
-                <button data-i18n="view.kalman_beta.btn.run" id="kb-run" class="primary" type="button">Run</button>
+                    <input id="kb-p0"   type="number" step="any" min="1e-12" value="${state.params.p0}" data-tip="view.kalman_beta.tip.p0"></label>
+                <button data-i18n="view.kalman_beta.btn.run" data-tip="view.kalman_beta.tip.run" data-shortcut="kalman_beta_run" id="kb-run" class="primary" type="button">Run</button>
             </div>
             <p data-i18n="view.kalman_beta.hint.lower_q_smoother_assumes_slow_drift_higher_q_adapt" class="muted">
                 Lower Q → smoother β (assumes slow drift). Higher Q → β adapts faster.
@@ -164,7 +167,7 @@ async function run(mount, tok) {
     if (errors.length) renderParseErrors(errors);
 
     const err = validateInputs(assetParsed.value, benchParsed.value, state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let betas;
     try {
@@ -173,7 +176,8 @@ async function run(mount, tok) {
         );
         if (!Array.isArray(betas)) throw new Error(t('view.kalman_beta.error.non_array'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -181,6 +185,11 @@ async function run(mount, tok) {
     renderSummary(betas);
     renderReturnsChart(assetParsed.value, benchParsed.value);
     renderBetaChart(betas);
+    const last = betas.length ? betas[betas.length - 1] : null;
+    showToast(t('view.kalman_beta.toast.done', {
+        n: betas.length,
+        last: last != null ? fmtBeta(last) : '—',
+    }), { level: 'success' });
 }
 
 function renderSummary(betas) {

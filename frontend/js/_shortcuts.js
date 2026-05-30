@@ -111,6 +111,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'fx_option_price',              keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'fx-option',         descKey: 'shortcut.fx_option_price',              actionKey: 'tv:fx-option-price' },
     { id: 'greeks_profile_compute',       keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'greeks-profile',    descKey: 'shortcut.greeks_profile_compute',       actionKey: 'tv:greeks-profile-compute' },
     { id: 'iv_solver_solve',              keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'iv-solver',         descKey: 'shortcut.iv_solver_solve',              actionKey: 'tv:iv-solver-solve' },
+    { id: 'kalman_beta_run',              keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'kalman-beta',       descKey: 'shortcut.kalman_beta_run',              actionKey: 'tv:kalman-beta-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
