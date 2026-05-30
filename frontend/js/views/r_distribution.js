@@ -1,7 +1,7 @@
 // R-multiple distribution: histogram + SQN + per-tag breakdown.
 
 import { api } from '../api.js';
-import { esc, fmt } from '../util.js';
+import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
 

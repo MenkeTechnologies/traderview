@@ -2,7 +2,7 @@
 // and trade_plans→trades joins for rule-violation tracking.
 
 import { api } from '../api.js';
-import { esc, fmt } from '../util.js';
+import { esc } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

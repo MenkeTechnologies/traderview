@@ -4,7 +4,7 @@
 // table risk_rules (migration 0030) + 4 routes under /api/risk-gate/.
 
 import { api } from '../api.js';
-import { esc, fmtMoney, fmtPct } from '../util.js';
+import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 

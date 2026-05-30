@@ -1,6 +1,6 @@
 // Earnings calendar + surprise leaderboard.
 import { api } from '../api.js';
-import { esc, fmt } from '../util.js';
+import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
