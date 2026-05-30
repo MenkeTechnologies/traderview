@@ -99,6 +99,10 @@ export async function renderAiAnalyze(mount, tradeId) {
             <div id="ai-body"></div>
             <button data-i18n="view.journal_ai.btn.run_analysis" class="btn" id="ai-run">Run analysis</button>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.journal_ai.h2.findings_chart">Findings by category</h2>
+            <div id="ai-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     const status = mount.querySelector('#ai-status');
     const body = mount.querySelector('#ai-body');
@@ -111,10 +115,12 @@ export async function renderAiAnalyze(mount, tradeId) {
                 if (status) status.textContent = t('view.journal_ai.status.cached', { when: new Date(cached.created_at).toLocaleString(), provider: cached.provider, model: cached.model }) +
                     (cached.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: cached.prompt_tokens, r: cached.response_tokens || 0 }) : '');
                 if (body) body.innerHTML = renderFindings(cached.findings);
+                renderFindingsChart(cached.findings);
                 const runBtn = mount.querySelector('#ai-run');
                 if (runBtn) runBtn.textContent = t('view.journal_ai.btn.reanalyze');
             } else {
                 if (status) status.textContent = t('view.journal_ai.status.no_cache');
+                renderFindingsChart(null);
             }
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
@@ -137,6 +143,7 @@ export async function renderAiAnalyze(mount, tradeId) {
             if (status) status.textContent = t('view.journal_ai.status.done', { provider: r.provider, model: r.model }) +
                 (r.prompt_tokens ? t('view.journal_ai.status.tok_suffix', { p: r.prompt_tokens, r: r.response_tokens || 0 }) : '');
             if (body) body.innerHTML = renderFindings(r.findings);
+            renderFindingsChart(r.findings);
             btn.textContent = t('view.journal_ai.btn.reanalyze');
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
@@ -145,6 +152,47 @@ export async function renderAiAnalyze(mount, tradeId) {
             if (viewIsCurrent(tok)) btn.disabled = false;
         }
     });
+}
+
+function renderFindingsChart(f) {
+    const el = document.getElementById('ai-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const cats = [
+        { key: 'mistakes',     color: '#ff3860' },
+        { key: 'risk_gaps',    color: '#ff7a1f' },
+        { key: 'suggestions',  color: '#00e5ff' },
+        { key: 'rule_changes', color: '#7af0a8' },
+    ];
+    const counts = cats.map(c => f && Array.isArray(f[c.key]) ? f[c.key].length : 0);
+    if (!counts.some(n => n > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.journal_ai.empty_chart">${esc(t('view.journal_ai.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = cats.map(c => t(`view.journal_ai.chart.${c.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.journal_ai.chart.category_idx') }];
+    const data = [xs];
+    cats.forEach((c, i) => {
+        const ys = xs.map((_, j) => j === i ? counts[i] : null);
+        series.push({
+            label: labels[i],
+            stroke: c.color, width: 0,
+            points: { show: true, size: 16, fill: c.color, stroke: c.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function renderFindings(f) {

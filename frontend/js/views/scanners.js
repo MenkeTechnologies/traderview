@@ -78,6 +78,8 @@ const PRESETS = [
     { id: 'intraday_wiggle_reset_squeeze', label: t('view.scanners.preset.intraday_wiggle_reset_squeeze.label'), desc: t('view.scanners.preset.intraday_wiggle_reset_squeeze.desc') },
     { id: 'hot_dry_up_squeeze',         label: t('view.scanners.preset.hot_dry_up_squeeze.label'),         desc: t('view.scanners.preset.hot_dry_up_squeeze.desc') },
     { id: 'cold_dry_up_squeeze',        label: t('view.scanners.preset.cold_dry_up_squeeze.label'),        desc: t('view.scanners.preset.cold_dry_up_squeeze.desc') },
+    { id: 'high_vol_gap_fade_squeeze',  label: t('view.scanners.preset.high_vol_gap_fade_squeeze.label'),  desc: t('view.scanners.preset.high_vol_gap_fade_squeeze.desc') },
+    { id: 'chop_and_rest_quiet_squeeze', label: t('view.scanners.preset.chop_and_rest_quiet_squeeze.label'), desc: t('view.scanners.preset.chop_and_rest_quiet_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
