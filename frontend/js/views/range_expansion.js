@@ -16,6 +16,7 @@ import {
 } from '../_range_expansion_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CFG = { lookback: 5, min_expansion_atrs: 1.5, prior_atr_max: 0.7 };
 const DEFAULT_ATR_PERIOD = 14;
 
@@ -31,10 +32,10 @@ export async function renderRangeExpansion(mount, _appState) {
             <p class="muted" data-i18n-html="view.range_expansion.help">Paste <code>high low close</code> per line. ATR is computed
                 locally (Wilder smoothing). Demo loads 30 bars with engineered compression
                 resolving UP and a second compression resolving DOWN.</p>
-            <textarea id="re-bars" rows="6" placeholder="100.5 99.5 100.0&#10;100.8 99.8 100.3&#10;..."></textarea>
+            <textarea id="re-bars" rows="6" placeholder="100.5 99.5 100.0&#10;100.8 99.8 100.3&#10;..." data-tip="view.range_expansion.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.range_expansion.btn.load_demo_30_bars_2_expansions" id="re-demo" class="secondary" type="button">Load demo (30 bars, 2 expansions)</button>
-                <button data-i18n="view.range_expansion.btn.clear" id="re-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.range_expansion.btn.load_demo_30_bars_2_expansions" id="re-demo" class="secondary" type="button" data-tip="view.range_expansion.tip.demo" data-shortcut="range_expansion_demo">Load demo (30 bars, 2 expansions)</button>
+                <button data-i18n="view.range_expansion.btn.clear" id="re-clear" class="secondary" type="button" data-tip="view.range_expansion.tip.clear">Clear</button>
             </div>
         </div>
 
@@ -42,14 +43,14 @@ export async function renderRangeExpansion(mount, _appState) {
             <h2 data-i18n="view.range_expansion.h2.config">Config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.range_expansion.label.atr_period">ATR period</span>
-                    <input id="re-atr" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
+                    <input id="re-atr" type="number" step="1" min="1" value="${state.atrPeriod}" data-tip="view.range_expansion.tip.atr_period"></label>
                 <label><span data-i18n="view.range_expansion.label.lookback">Lookback bars</span>
-                    <input id="re-lb"  type="number" step="1" min="1" value="${state.config.lookback}"></label>
+                    <input id="re-lb"  type="number" step="1" min="1" value="${state.config.lookback}" data-tip="view.range_expansion.tip.lookback"></label>
                 <label><span data-i18n="view.range_expansion.label.min_expansion">Min expansion (× ATR)</span>
-                    <input id="re-min" type="number" step="0.1" min="0" value="${state.config.min_expansion_atrs}"></label>
+                    <input id="re-min" type="number" step="0.1" min="0" value="${state.config.min_expansion_atrs}" data-tip="view.range_expansion.tip.min_expansion"></label>
                 <label><span data-i18n="view.range_expansion.label.prior_atr_max">Prior ATR max (compression cap)</span>
-                    <input id="re-prior" type="number" step="0.1" min="0" value="${state.config.prior_atr_max}"></label>
-                <button data-i18n="view.range_expansion.btn.detect" id="re-run" class="primary" type="button">Detect</button>
+                    <input id="re-prior" type="number" step="0.1" min="0" value="${state.config.prior_atr_max}" data-tip="view.range_expansion.tip.prior_atr_max"></label>
+                <button data-i18n="view.range_expansion.btn.detect" id="re-run" class="primary" type="button" data-tip="view.range_expansion.tip.run" data-shortcut="range_expansion_run">Detect</button>
             </div>
             <p data-i18n="view.range_expansion.hint.industry_defaults_raschke_atr_14_lookback_5_1_5_at" class="muted">Industry defaults (Raschke): ATR-14, lookback 5, ≥1.5× ATR for
                 the expansion bar, &lt;0.7× ATR for at least one compression bar in the lookback.
@@ -78,9 +79,11 @@ export async function renderRangeExpansion(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('re-bars').value =
             b.map(x => `${x.high} ${x.low} ${x.close}`).join('\n');
+        showToast(t('view.range_expansion.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('re-clear').addEventListener('click', () => {
         document.getElementById('re-bars').value = '';
+        showToast(t('view.range_expansion.toast.cleared'), { level: 'info' });
     });
     document.getElementById('re-run').addEventListener('click', () => {
         readInputs();
@@ -109,22 +112,27 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.range_expansion.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length === 0) return;
     }
     const atr = computeAtr(bars, state.atrPeriod);
     const err = validateInputs(bars, atr, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.range_expansion.toast.invalid'), { level: 'warning' }); return; }
 
     let report;
     try {
         report = await api.anlyRangeExpansion(buildBody(bars, atr, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.range_expansion.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, bars, atr);
     renderChart(bars, atr, report);
     renderEvents(report);
+    const events = (report.events || []).length;
+    showToast(t('view.range_expansion.toast.detected', { events, bars: bars.length }), { level: 'success' });
 }
 
 function renderSummary(report, bars, atr) {

@@ -596,6 +596,16 @@ function bindTabs() {
         const el = document.getElementById('tbr-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in range-expansion scope → click Detect.
+    window.addEventListener('tv:range-expansion-run', () => {
+        const el = document.getElementById('re-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in range-expansion scope → click Load demo.
+    window.addEventListener('tv:range-expansion-demo', () => {
+        const el = document.getElementById('re-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
