@@ -500,6 +500,8 @@ pub enum Preset {
     LodCloseHotVolFlat,             // lod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at LOD on hot vol but flat change (absorption at lows; climax sell candidate)
     RisingWedgeCoil,                // hod_dist + lod_dist < 2 AND change_pct > 0 AND day_pct > 0 AND rel_volume < 0.8 — narrow range + green change + green intraday + dry vol (rising wedge consolidation)
     FallingWedgeCoil,               // hod_dist + lod_dist < 2 AND change_pct < 0 AND day_pct < 0 AND rel_volume < 0.8 — narrow range + red change + red intraday + dry vol (falling wedge consolidation)
+    BigGapAndExtend,                // gap_pct.abs() > 3 AND change_pct * gap_pct > 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday extends beyond gap on vol (gap-and-extend)
+    BigGapAndReverse,               // gap_pct.abs() > 3 AND change_pct * gap_pct < 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday reverses + close past prior close on vol (full gap fade and reverse)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2519,6 +2521,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < 0.0
                 && hit.rel_volume < 0.8
         }
+        Preset::BigGapAndExtend => {
+            hit.gap_pct.abs() > 3.0
+                && hit.change_pct * hit.gap_pct > 0.0
+                && hit.change_pct.abs() > hit.gap_pct.abs()
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigGapAndReverse => {
+            hit.gap_pct.abs() > 3.0
+                && hit.change_pct * hit.gap_pct < 0.0
+                && hit.change_pct.abs() > hit.gap_pct.abs()
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2909,6 +2923,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LodCloseHotVolFlat => "LOD Close + Hot Vol + Flat Change (Absorption Low)",
         Preset::RisingWedgeCoil => "Rising Wedge Coil (Narrow Range, Green, Dry Vol)",
         Preset::FallingWedgeCoil => "Falling Wedge Coil (Narrow Range, Red, Dry Vol)",
+        Preset::BigGapAndExtend => "Big Gap + Intraday Extends Beyond (Trend Continuation)",
+        Preset::BigGapAndReverse => "Big Gap + Intraday Reverses Past Prior (Full Reverse)",
     }
 }
 

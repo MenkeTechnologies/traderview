@@ -57,6 +57,11 @@ export async function renderBartlett(mount, _appState) {
             <div id="bt-chart" style="width:100%;height:280px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.bartlett.h2.mean_chart">Group means vs grand mean</h2>
+            <div id="bt-mean-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="bt-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -96,6 +101,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable();
     renderChart(local);
+    renderMeanChart();
     let resp;
     try {
         resp = await api.anlyBartlettVariance(buildBody(state));
@@ -108,6 +114,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable();
     renderChart(resp);
+    renderMeanChart();
 }
 
 function renderSummary(report, pending) {
@@ -179,6 +186,53 @@ function renderTable() {
             <tbody>${rows}</tbody>
         </table>
     `;
+}
+
+function renderMeanChart() {
+    const el = document.getElementById('bt-mean-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const stats = groupStats(state.groups, state.labels);
+    const means = stats.map(s => s.mean).filter(Number.isFinite);
+    if (!means.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bartlett.empty_mean_chart">${esc(t('view.bartlett.empty_mean_chart'))}</div>`;
+        return;
+    }
+    const xs = stats.map((_, i) => i + 1);
+    const ys = stats.map(s => Number.isFinite(s.mean) ? s.mean : null);
+    let totalN = 0, totalSum = 0;
+    for (const s of stats) {
+        if (Number.isFinite(s.mean) && Number.isFinite(s.n)) { totalSum += s.mean * s.n; totalN += s.n; }
+    }
+    const grand = totalN > 0 ? totalSum / totalN : NaN;
+    const grandLine = Number.isFinite(grand) ? xs.map(() => grand) : null;
+    const series = [
+        { label: t('view.bartlett.chart.series.group_idx') },
+        { label: t('view.bartlett.chart.series.mean'),
+          stroke: '#7af0a8', width: 0,
+          points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+    ];
+    const data = [xs, ys];
+    if (grandLine) {
+        series.push({ label: t('view.bartlett.chart.series.grand_mean'),
+                      stroke: '#ffd84a', width: 1.5, dash: [4, 4],
+                      points: { show: false } });
+        data.push(grandLine);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => {
+                  const i = Math.round(v) - 1;
+                  return i >= 0 && i < stats.length ? stats[i].label : '';
+              }) },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function renderChart(report) {

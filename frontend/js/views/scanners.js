@@ -382,6 +382,8 @@ const PRESETS = [
     { id: 'lod_close_hot_vol_flat', label: t('view.scanners.preset.lod_close_hot_vol_flat.label'), desc: t('view.scanners.preset.lod_close_hot_vol_flat.desc') },
     { id: 'rising_wedge_coil', label: t('view.scanners.preset.rising_wedge_coil.label'), desc: t('view.scanners.preset.rising_wedge_coil.desc') },
     { id: 'falling_wedge_coil', label: t('view.scanners.preset.falling_wedge_coil.label'), desc: t('view.scanners.preset.falling_wedge_coil.desc') },
+    { id: 'big_gap_and_extend', label: t('view.scanners.preset.big_gap_and_extend.label'), desc: t('view.scanners.preset.big_gap_and_extend.desc') },
+    { id: 'big_gap_and_reverse', label: t('view.scanners.preset.big_gap_and_reverse.label'), desc: t('view.scanners.preset.big_gap_and_reverse.desc') },
 ];
 
 export async function renderScanners(mount) {
