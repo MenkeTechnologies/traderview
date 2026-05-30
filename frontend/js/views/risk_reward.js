@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS, validateInputs, buildBody, localCompute, dec,
@@ -25,33 +26,33 @@ export async function renderRiskReward(mount, _appState) {
             <h2 data-i18n="view.risk_reward.h2.trade">Planned trade</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.risk_reward.label.side">Side</span>
-                    <select id="rr-side">
+                    <select id="rr-side" data-tip="view.risk_reward.tip.side">
                         <option value="long"  ${state.side === 'long'  ? 'selected' : ''} data-i18n="view.risk_reward.option.long">Long</option>
                         <option value="short" ${state.side === 'short' ? 'selected' : ''} data-i18n="view.risk_reward.option.short">Short</option>
                     </select></label>
                 <label><span data-i18n="view.risk_reward.label.entry">Entry</span>
-                    <input id="rr-entry" type="number" step="any" min="0" value="${state.entry}"></label>
+                    <input id="rr-entry" type="number" step="any" min="0" value="${state.entry}" data-tip="view.risk_reward.tip.entry"></label>
                 <label><span data-i18n="view.risk_reward.label.stop">Stop</span>
-                    <input id="rr-stop" type="number" step="any" min="0" value="${state.stop}"></label>
+                    <input id="rr-stop" type="number" step="any" min="0" value="${state.stop}" data-tip="view.risk_reward.tip.stop"></label>
                 <label><span data-i18n="view.risk_reward.label.target">Target</span>
-                    <input id="rr-target" type="number" step="any" min="0" value="${state.target}"></label>
+                    <input id="rr-target" type="number" step="any" min="0" value="${state.target}" data-tip="view.risk_reward.tip.target"></label>
                 <label><span data-i18n="view.risk_reward.label.risk_budget">Risk budget ($)</span>
-                    <input id="rr-budget" type="number" step="any" min="0" value="${state.risk_budget}"></label>
+                    <input id="rr-budget" type="number" step="any" min="0" value="${state.risk_budget}" data-tip="view.risk_reward.tip.budget"></label>
                 <label><span data-i18n="view.risk_reward.label.multiplier">Multiplier (100 for options, 50 for ES, …)</span>
-                    <input id="rr-mult" type="number" step="any" min="0" value="${state.multiplier}"></label>
+                    <input id="rr-mult" type="number" step="any" min="0" value="${state.multiplier}" data-tip="view.risk_reward.tip.multiplier"></label>
                 <button data-i18n="view.risk_reward.btn.compute" id="rr-run" class="primary"
-                        data-tip="view.risk_reward.tip.compute" type="button">Compute</button>
+                        data-tip="view.risk_reward.tip.compute" data-shortcut="risk_reward_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.risk_reward.btn.demo_long_3r"  id="rr-demo-l3"  class="secondary" type="button">Demo: long 3R</button>
-                <button data-i18n="view.risk_reward.btn.demo_long_1r"  id="rr-demo-l1"  class="secondary" type="button">Demo: long 1R (coin flip)</button>
-                <button data-i18n="view.risk_reward.btn.demo_long_5r"  id="rr-demo-l5"  class="secondary" type="button">Demo: long 5R</button>
-                <button data-i18n="view.risk_reward.btn.demo_short_3r" id="rr-demo-s3"  class="secondary" type="button">Demo: short 3R</button>
-                <button data-i18n="view.risk_reward.btn.demo_options"  id="rr-demo-opt" class="secondary" type="button">Demo: 1 option (×100)</button>
-                <button data-i18n="view.risk_reward.btn.demo_es"       id="rr-demo-es"  class="secondary" type="button">Demo: ES futures (×50)</button>
-                <button data-i18n="view.risk_reward.btn.demo_bad_long" id="rr-demo-bl"  class="secondary" type="button">Demo: BAD long (target below)</button>
-                <button data-i18n="view.risk_reward.btn.demo_bad_short" id="rr-demo-bs" class="secondary" type="button">Demo: BAD short (target above)</button>
-                <button data-i18n="view.risk_reward.btn.demo_zero_stop" id="rr-demo-zs" class="secondary" type="button">Demo: zero stop dist</button>
+                <button data-i18n="view.risk_reward.btn.demo_long_3r"  id="rr-demo-l3"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_l3">Demo: long 3R</button>
+                <button data-i18n="view.risk_reward.btn.demo_long_1r"  id="rr-demo-l1"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_l1">Demo: long 1R (coin flip)</button>
+                <button data-i18n="view.risk_reward.btn.demo_long_5r"  id="rr-demo-l5"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_l5">Demo: long 5R</button>
+                <button data-i18n="view.risk_reward.btn.demo_short_3r" id="rr-demo-s3"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_s3">Demo: short 3R</button>
+                <button data-i18n="view.risk_reward.btn.demo_options"  id="rr-demo-opt" class="secondary" type="button" data-tip="view.risk_reward.tip.demo_opt">Demo: 1 option (×100)</button>
+                <button data-i18n="view.risk_reward.btn.demo_es"       id="rr-demo-es"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_es">Demo: ES futures (×50)</button>
+                <button data-i18n="view.risk_reward.btn.demo_bad_long" id="rr-demo-bl"  class="secondary" type="button" data-tip="view.risk_reward.tip.demo_bl">Demo: BAD long (target below)</button>
+                <button data-i18n="view.risk_reward.btn.demo_bad_short" id="rr-demo-bs" class="secondary" type="button" data-tip="view.risk_reward.tip.demo_bs">Demo: BAD short (target above)</button>
+                <button data-i18n="view.risk_reward.btn.demo_zero_stop" id="rr-demo-zs" class="secondary" type="button" data-tip="view.risk_reward.tip.demo_zs">Demo: zero stop dist</button>
             </div>
             <p data-i18n="view.risk_reward.hint.about" class="muted">qty = risk_budget / (stop_distance × multiplier). Breakeven win-rate = 1 / (1 + R). Scale-out plan: 1/3 at 1R, 1/3 at 2R, 1/3 at target.</p>
         </div>
@@ -111,10 +112,11 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.risk_reward.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state);
     if (!local.ok) {
         showErr(`${t('view.risk_reward.err.geometry')}: ${local.error}`);
+        showToast(t('view.risk_reward.toast.geometry'), { level: 'warning' });
         renderSummary(null, null, true);
         renderTable(null);
         return;
@@ -128,6 +130,7 @@ async function compute(tok) {
         resp = await api.calcRiskReward(buildBody(state));
     } catch (e) {
         showErr(`${t('view.risk_reward.err.api')}: ${e.message || e}`);
+        showToast(t('view.risk_reward.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -144,6 +147,10 @@ async function compute(tok) {
     renderTable(normalized);
     renderLevelsChart();
     renderDollarsChart(normalized);
+    const rr = Number(normalized.rr_ratio || 0);
+    const qty = Number(normalized.qty || 0);
+    const level = rr >= 2 ? 'success' : rr >= 1 ? 'info' : 'warning';
+    showToast(t('view.risk_reward.toast.computed', { rr: rr.toFixed(2), qty: qty.toFixed(0) }), { level });
 }
 
 function renderDollarsChart(report) {
