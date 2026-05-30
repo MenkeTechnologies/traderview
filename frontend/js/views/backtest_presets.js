@@ -20,13 +20,17 @@ async function renderBrowse(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.backtest_presets.h2.save_a_new_preset">Save a new preset</h2>
             <form id="bp-form" class="inline-form">
-                <input name="name" placeholder="name (unique per user)" data-i18n-placeholder="view.backtest_presets.placeholder.name" required style="min-width:200px;">
-                <input name="description" placeholder="optional description" data-i18n-placeholder="view.backtest_presets.placeholder.description" style="min-width:240px;">
-                <label><input name="is_public" type="checkbox"> <span data-i18n="view.backtest_presets.label.public">public</span></label>
-                <button data-i18n="view.backtest_presets.btn.save" class="primary" type="submit">Save</button>
+                <input name="name" placeholder="name (unique per user)" data-i18n-placeholder="view.backtest_presets.placeholder.name"
+                       data-tip="view.backtest_presets.tip.name" data-shortcut="backtest_presets_focus_name"
+                       required style="min-width:200px;">
+                <input name="description" placeholder="optional description" data-i18n-placeholder="view.backtest_presets.placeholder.description"
+                       data-tip="view.backtest_presets.tip.description" style="min-width:240px;">
+                <label><input name="is_public" type="checkbox" data-tip="view.backtest_presets.tip.public"> <span data-i18n="view.backtest_presets.label.public">public</span></label>
+                <button data-i18n="view.backtest_presets.btn.save" data-tip="view.backtest_presets.tip.save" class="primary" type="submit">Save</button>
             </form>
             <textarea id="bp-json" rows="8"
                 data-i18n-placeholder="view.backtest_presets.placeholder.preset"
+                data-tip="view.backtest_presets.tip.preset_json"
                 placeholder='Preset JSON, e.g.
 {
   "symbol": "SPY",
@@ -57,9 +61,10 @@ async function renderBrowse(mount) {
         let preset;
         try { preset = JSON.parse(mount.querySelector('#bp-json').value); }
         catch (err) { showToast(t('view.backtest_presets.alert.json_invalid', { err: err.message }), { level: 'error' }); return; }
+        const name = String(fd.get('name') || '').trim();
         try {
             await api.createBacktestPreset({
-                name: fd.get('name').trim(),
+                name,
                 description: fd.get('description') || null,
                 preset,
                 is_public: !!fd.get('is_public'),
@@ -68,6 +73,7 @@ async function renderBrowse(mount) {
             e.target.reset();
             const ta = mount.querySelector('#bp-json');
             if (ta) ta.value = '';
+            showToast(t('view.backtest_presets.toast.saved', { name }), { level: 'success' });
             await refresh(mount, tok);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
@@ -171,8 +177,8 @@ function table(rows, mine) {
             <td class="small">${new Date(r.updated_at).toLocaleDateString()}</td>
             <td>
                 ${mine
-                    ? `<button data-i18n="view.backtest_presets.btn.delete" class="btn bp-del" data-id="${r.id}">Delete</button>`
-                    : `<button data-i18n="view.backtest_presets.btn.fork" class="btn bp-fork" data-slug="${esc(r.slug)}">Fork</button>`}
+                    ? `<button data-i18n="view.backtest_presets.btn.delete" data-tip="view.backtest_presets.tip.delete_row" class="btn bp-del" data-id="${r.id}">Delete</button>`
+                    : `<button data-i18n="view.backtest_presets.btn.fork" data-tip="view.backtest_presets.tip.fork_row" class="btn bp-fork" data-slug="${esc(r.slug)}">Fork</button>`}
             </td>
         </tr>`).join('')}
         </tbody></table>`;
@@ -183,8 +189,11 @@ function wireRowButtons(scope, mine, mount, tok) {
         scope.querySelectorAll('.bp-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!await tConfirm('view.backtest_presets.confirm.delete', {}, { level: 'danger' })) return;
-                try { await api.deleteBacktestPreset(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
+                try {
+                    await api.deleteBacktestPreset(b.dataset.id);
+                    showToast(t('view.backtest_presets.toast.deleted'), { level: 'success' });
+                    if (viewIsCurrent(tok)) await refresh(mount, tok);
+                } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
     } else {
@@ -192,7 +201,7 @@ function wireRowButtons(scope, mine, mount, tok) {
             b.addEventListener('click', async () => {
                 try {
                     const forked = await api.forkBacktestPreset(b.dataset.slug);
-                    showToast(t('view.backtest_presets.alert.forked', { name: forked.name }), { level: 'error' });
+                    showToast(t('view.backtest_presets.alert.forked', { name: forked.name }), { level: 'success' });
                     if (viewIsCurrent(tok)) await refresh(mount, tok);
                 } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
@@ -228,13 +237,16 @@ async function renderPresetDetail(mount, slug) {
             </div>
         `;
         const btn = mount.querySelector('#bp-fork-btn');
-        if (btn) btn.addEventListener('click', async () => {
-            try {
-                const f = await api.forkBacktestPreset(slug);
-                showToast(t('view.backtest_presets.alert.forked', { name: f.name }), { level: 'error' });
-                window.location.hash = `backtest-presets/${f.slug}`;
-            } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
-        });
+        if (btn) {
+            btn.setAttribute('data-tip', 'view.backtest_presets.tip.fork_to_lib');
+            btn.addEventListener('click', async () => {
+                try {
+                    const f = await api.forkBacktestPreset(slug);
+                    showToast(t('view.backtest_presets.alert.forked', { name: f.name }), { level: 'success' });
+                    window.location.hash = `backtest-presets/${f.slug}`;
+                } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
+            });
+        }
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `<p class="boot">${esc(e.message)}</p>`;

@@ -493,6 +493,11 @@ function bindTabs() {
         const form = document.getElementById('bt-form');
         if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
     });
+    // View-scoped: `n` in backtest-presets scope → focus preset-name input.
+    window.addEventListener('tv:backtest-presets-focus-name', () => {
+        const el = document.querySelector('#bp-form input[name="name"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
