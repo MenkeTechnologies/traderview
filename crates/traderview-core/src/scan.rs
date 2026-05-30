@@ -918,6 +918,8 @@ pub enum Preset {
     ConfirmedBreakdownReclaimHotVol,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 0.5 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + green + hot vol (confirmed-breakdown bounce: was clearly past support, now rallying back into the breakdown zone with elevated participation; failed-breakdown risk signal)
     IntradayBullDriveAtYear52High,       // year_high_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w high + big intraday drive up + hot vol (intraday-led bullish thrust at the breakout zone regardless of overnight context; regular-hours momentum confirmation right at resistance)
     IntradayBearDriveAtYear52Low,        // year_low_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w low + big intraday drive down + hot vol (intraday-led bearish thrust at the breakdown zone regardless of overnight context; regular-hours momentum confirmation right at support)
+    IntradayBearDriveAtYear52High,       // year_high_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w high + big intraday drive DOWN + hot vol (intraday-led bearish rejection at the breakout zone: selling pressure through regular hours pushed the price back from the highs with elevated participation; failed-breakout candidate)
+    IntradayBullDriveAtYear52Low,        // year_low_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w low + big intraday drive UP + hot vol (intraday-led bullish recovery at the breakdown zone: buying pressure through regular hours lifted the price off the lows with elevated participation; failed-breakdown candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5397,6 +5399,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::IntradayBearDriveAtYear52High => {
+            hit.year_high_pct < 2.0
+                && hit.day_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::IntradayBullDriveAtYear52Low => {
+            hit.year_low_pct < 2.0
+                && hit.day_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6205,6 +6217,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ConfirmedBreakdownReclaimHotVol => "1-3 % below Prior 52w Low + Green + Hot Vol (Confirmed-breakdown Bounce: Was Clearly Past Support, Now Rallying Back into the Breakdown Zone with Elevated Participation; Failed-breakdown Risk Signal)",
         Preset::IntradayBullDriveAtYear52High => "At 52w High + Big Intraday Drive Up + Hot Vol (Intraday-led Bullish Thrust at the Breakout Zone Regardless of Overnight Context; Regular-hours Momentum Confirmation Right at Resistance)",
         Preset::IntradayBearDriveAtYear52Low => "At 52w Low + Big Intraday Drive Down + Hot Vol (Intraday-led Bearish Thrust at the Breakdown Zone Regardless of Overnight Context; Regular-hours Momentum Confirmation Right at Support)",
+        Preset::IntradayBearDriveAtYear52High => "At 52w High + Big Intraday Drive Down + Hot Vol (Intraday-led Bearish Rejection at the Breakout Zone: Selling Pressure through Regular Hours Pushed the Price Back from the Highs with Elevated Participation; Failed-breakout Candidate)",
+        Preset::IntradayBullDriveAtYear52Low => "At 52w Low + Big Intraday Drive Up + Hot Vol (Intraday-led Bullish Recovery at the Breakdown Zone: Buying Pressure through Regular Hours Lifted the Price off the Lows with Elevated Participation; Failed-breakdown Candidate)",
     }
 }
 

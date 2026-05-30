@@ -800,6 +800,8 @@ const PRESETS = [
     { id: 'confirmed_breakdown_reclaim_hot_vol', label: t('view.scanners.preset.confirmed_breakdown_reclaim_hot_vol.label'), desc: t('view.scanners.preset.confirmed_breakdown_reclaim_hot_vol.desc') },
     { id: 'intraday_bull_drive_at_year52_high', label: t('view.scanners.preset.intraday_bull_drive_at_year52_high.label'), desc: t('view.scanners.preset.intraday_bull_drive_at_year52_high.desc') },
     { id: 'intraday_bear_drive_at_year52_low', label: t('view.scanners.preset.intraday_bear_drive_at_year52_low.label'), desc: t('view.scanners.preset.intraday_bear_drive_at_year52_low.desc') },
+    { id: 'intraday_bear_drive_at_year52_high', label: t('view.scanners.preset.intraday_bear_drive_at_year52_high.label'), desc: t('view.scanners.preset.intraday_bear_drive_at_year52_high.desc') },
+    { id: 'intraday_bull_drive_at_year52_low', label: t('view.scanners.preset.intraday_bull_drive_at_year52_low.label'), desc: t('view.scanners.preset.intraday_bull_drive_at_year52_low.desc') },
 ];
 
 export async function renderScanners(mount) {
