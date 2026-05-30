@@ -180,6 +180,8 @@ pub enum Preset {
     GapWithChangeMatchSqueeze, // gap and change SAME sign small magnitude (<0.5) + tight day + quiet — small gap held flat
     SlackBetweenExtremesSqueeze, // hod_dist + lod_dist > 4 (close mid of a wide-ish range) AND |change| < 0.5 — wide range but no decision
     PivotPinSqueeze,             // day_pct.abs() < 0.3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close pinned to open with tight extremes
+    EvenSidesSqueeze,            // gap and change opposite sign AND each |x| < 1 AND tight day AND quiet — overnight + intraday cancel out
+    InsideQuarterDaySqueeze,     // day_pct.abs() < 0.25 AND change_pct.abs() < 1 AND rel_volume < 0.8 — barely-moving inside bar
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -457,6 +459,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 1.0
                 && hit.lod_dist_pct.abs() < 1.0
         }
+        Preset::EvenSidesSqueeze => {
+            hit.gap_pct.signum() != hit.change_pct.signum()
+                && hit.gap_pct.abs() < 1.0
+                && hit.change_pct.abs() < 1.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
+        Preset::InsideQuarterDaySqueeze => {
+            hit.day_pct.abs() < 0.25
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -527,6 +541,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapWithChangeMatchSqueeze => "Gap+Change Match Squeeze",
         Preset::SlackBetweenExtremesSqueeze => "Wide-Range No-Decision Squeeze",
         Preset::PivotPinSqueeze => "Pivot-Pin Squeeze",
+        Preset::EvenSidesSqueeze => "Even-Sides Squeeze",
+        Preset::InsideQuarterDaySqueeze => "Quarter-Day Inside Squeeze",
     }
 }
 

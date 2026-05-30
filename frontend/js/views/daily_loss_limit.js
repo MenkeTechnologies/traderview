@@ -66,6 +66,11 @@ export async function renderDailyLossLimit(mount, _appState) {
                 Fill color reflects current state. 0% = no loss; 100% = at the binding cap.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.daily_loss_limit.h2.sweep_chart">Pct-of-limit sweep across today's P&L</h2>
+            <div id="dl-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="dl-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -127,6 +132,52 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderBar(decToNum(resp.pct_of_limit), resp.state);
+    renderSweepChart();
+}
+
+function renderSweepChart() {
+    const el = document.getElementById('dl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const local = localEvaluate(state.params);
+    const limit = Math.abs(Number(local.limit));
+    if (!Number.isFinite(limit) || limit <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.daily_loss_limit.empty_chart">${esc(t('view.daily_loss_limit.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ys = [];
+    const warn = [];
+    const cut = [];
+    const kill = [];
+    const lo = -limit * 1.5;
+    const step = limit / 60;
+    for (let v = 0; v >= lo - 1e-9; v -= step) {
+        const loss = Math.max(0, -v);
+        const pct = loss / limit;
+        xs.push(v);
+        ys.push(pct);
+        warn.push(Number(state.params.warning_threshold));
+        cut.push(Number(state.params.cut_size_threshold));
+        kill.push(Number(state.params.kill_threshold));
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.daily_loss_limit.chart.today_pnl') },
+            { label: t('view.daily_loss_limit.chart.pct'),
+              stroke: '#00e5ff', width: 1.6, points: { show: false } },
+            { label: t('view.daily_loss_limit.chart.warn'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.daily_loss_limit.chart.cut'),
+              stroke: '#ff7a1f', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.daily_loss_limit.chart.kill'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, ys, warn, cut, kill], el);
 }
 
 function renderSummary(r, pending) {

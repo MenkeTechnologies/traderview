@@ -62,6 +62,8 @@ const PRESETS = [
     { id: 'gap_change_match_squeeze',  label: t('view.scanners.preset.gap_change_match_squeeze.label'),  desc: t('view.scanners.preset.gap_change_match_squeeze.desc') },
     { id: 'wide_range_no_decision_squeeze', label: t('view.scanners.preset.wide_range_no_decision_squeeze.label'), desc: t('view.scanners.preset.wide_range_no_decision_squeeze.desc') },
     { id: 'pivot_pin_squeeze',         label: t('view.scanners.preset.pivot_pin_squeeze.label'),         desc: t('view.scanners.preset.pivot_pin_squeeze.desc') },
+    { id: 'even_sides_squeeze',        label: t('view.scanners.preset.even_sides_squeeze.label'),        desc: t('view.scanners.preset.even_sides_squeeze.desc') },
+    { id: 'quarter_day_inside_squeeze', label: t('view.scanners.preset.quarter_day_inside_squeeze.label'), desc: t('view.scanners.preset.quarter_day_inside_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
