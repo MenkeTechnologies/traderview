@@ -23,6 +23,10 @@ export async function renderSearch(mount) {
             <h2 data-i18n="view.search.h2.hits_chart">Hits by category</h2>
             <div id="se-chart" style="width:100%;height:220px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.search.h2.rank_chart">FTS rank: journal + forum results</h2>
+            <div id="se-rank-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#search-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -38,6 +42,7 @@ export async function renderSearch(mount) {
             const elNow = mount.querySelector('#search-results');
             if (elNow) elNow.innerHTML = renderHits(r);
             renderHitsChart(r);
+            renderRankChart(r);
             const total = (r.trades || []).length + (r.journal || []).length + (r.forum || []).length;
             showToast(t('view.search.toast.done', { total, query: q }), { level: total > 0 ? 'success' : 'info' });
         } catch (err) {
@@ -47,6 +52,42 @@ export async function renderSearch(mount) {
             showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
+}
+
+function renderRankChart(r) {
+    const el = document.getElementById('se-rank-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const journal = (r.journal || []).filter(j => Number.isFinite(Number(j.rank)));
+    const forum   = (r.forum   || []).filter(f => Number.isFinite(Number(f.rank)));
+    if (journal.length + forum.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.search.empty_rank_chart">${esc(t('view.search.empty_rank_chart'))}</div>`;
+        return;
+    }
+    journal.sort((a, b) => Number(b.rank) - Number(a.rank));
+    forum.sort((a, b) => Number(b.rank) - Number(a.rank));
+    const rows = [
+        ...journal.map(j => ({ rank: Number(j.rank), kind: 'journal' })),
+        ...forum.map(f => ({ rank: Number(f.rank), kind: 'forum' })),
+    ];
+    const xs = rows.map((_, i) => i + 1);
+    const jY = rows.map(r => r.kind === 'journal' ? r.rank : null);
+    const fY = rows.map(r => r.kind === 'forum'   ? r.rank : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.search.chart.idx') },
+            { label: t('view.search.chart.journal'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.search.chart.forum'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 10, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, jY, fY], el);
 }
 
 function renderHitsChart(r) {

@@ -272,6 +272,8 @@ const PRESETS = [
     { id: 'pct52w_bottom_boundary_accept', label: t('view.scanners.preset.pct52w_bottom_boundary_accept.label'), desc: t('view.scanners.preset.pct52w_bottom_boundary_accept.desc') },
     { id: 'up_from_bottom_spring', label: t('view.scanners.preset.up_from_bottom_spring.label'), desc: t('view.scanners.preset.up_from_bottom_spring.desc') },
     { id: 'down_from_top_upthrust', label: t('view.scanners.preset.down_from_top_upthrust.label'), desc: t('view.scanners.preset.down_from_top_upthrust.desc') },
+    { id: 'up_thrust_bar_reject', label: t('view.scanners.preset.up_thrust_bar_reject.label'), desc: t('view.scanners.preset.up_thrust_bar_reject.desc') },
+    { id: 'down_thrust_bar_reject', label: t('view.scanners.preset.down_thrust_bar_reject.label'), desc: t('view.scanners.preset.down_thrust_bar_reject.desc') },
 ];
 
 export async function renderScanners(mount) {

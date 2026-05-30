@@ -390,6 +390,8 @@ pub enum Preset {
     Pct52wBottomBoundaryAccept,  // year_low_pct between 0 and 1 AND change_pct < -0.5 — touched 52w low boundary and closed lower (acceptance below prior low)
     UpFromBottomSpring,          // year_low_pct < 10 AND change_pct > 5 AND rel_volume >= 2 — strong rally up from the 52w lows on heavy vol (spring reversal)
     DownFromTopUpthrust,         // year_high_pct > -10 AND change_pct < -5 AND rel_volume >= 2 — strong sell-off from the 52w highs on heavy vol (upthrust reversal)
+    UpThrustBarReject,           // hod_dist.abs() > 3 AND lod_dist.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 2 — wick high then closed near LOD on heavy vol (textbook upthrust bar)
+    DownThrustBarReject,         // lod_dist.abs() > 3 AND hod_dist.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 2 — wick low then closed near HOD on heavy vol (textbook spring bar)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1770,6 +1772,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -5.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::UpThrustBarReject => {
+            hit.hod_dist_pct.abs() > 3.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DownThrustBarReject => {
+            hit.lod_dist_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2050,6 +2064,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wBottomBoundaryAccept => "52w-Low Boundary Accept",
         Preset::UpFromBottomSpring => "Up-From-Bottom Spring",
         Preset::DownFromTopUpthrust => "Down-From-Top Upthrust",
+        Preset::UpThrustBarReject => "Upthrust Bar Reject",
+        Preset::DownThrustBarReject => "Spring Bar Reject",
     }
 }
 
