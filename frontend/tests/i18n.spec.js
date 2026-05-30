@@ -118,3 +118,72 @@ test('currentLocale defaults to "en"', () => {
     expect(currentLocale()).toBe('en');
 });
 
+// ── edge cases ────────────────────────────────────────────────────
+
+test('t handles same placeholder appearing twice', () => {
+    setMap({ k: '{x} and {x} again' });
+    expect(t('k', { x: 'foo' })).toBe('foo and foo again');
+});
+
+test('t coerces non-string param values via String()', () => {
+    setMap({ k: '{n}' });
+    expect(t('k', { n: 0 })).toBe('0');
+    expect(t('k', { n: false })).toBe('false');
+    expect(t('k', { n: null })).toBe('{n}');
+});
+
+test('t with non-object params skips interpolation', () => {
+    setMap({ k: '{x}' });
+    // Number / string / null — t() guards via `typeof params === "object"`.
+    // null is typeof object but the guard's && short-circuit handles it.
+    expect(t('k', 42)).toBe('{x}');
+    expect(t('k', 'string')).toBe('{x}');
+    expect(t('k', null)).toBe('{x}');
+});
+
+test('extendMap merges over existing keys (later wins)', () => {
+    setMap({ a: '1', b: '2' });
+    extendMap({ b: '99', c: '3' });
+    expect(getMap()).toEqual({ a: '1', b: '99', c: '3' });
+});
+
+test('extendMap with non-object input is a no-op', () => {
+    setMap({ a: '1' });
+    extendMap(null);
+    extendMap(undefined);
+    extendMap(42);
+    expect(getMap()).toEqual({ a: '1' });
+});
+
+test('decodeNewlines: only converts entities; leaves other text untouched', () => {
+    expect(decodeNewlines('plain text')).toBe('plain text');
+    expect(decodeNewlines('&amp; stays')).toBe('&amp; stays');
+});
+
+test('applyUiI18n: empty-string value treated as miss (textContent preserved)', () => {
+    const el = makeEl('SPAN', { 'i18n': 'k' });
+    el.textContent = 'original';
+    const root = fakeRoot({ '[data-i18n]': [el] });
+    setMap({ k: '' });
+    applyUiI18n(root);
+    expect(el.textContent).toBe('original');
+});
+
+test('applyUiI18n: missing data-i18n attribute → element skipped', () => {
+    const el = makeEl('SPAN', {});  // no data-i18n
+    el.textContent = 'untouched';
+    const root = fakeRoot({ '[data-i18n]': [el] });
+    setMap({});
+    expect(applyUiI18n(root)).toBe(0);
+    expect(el.textContent).toBe('untouched');
+});
+
+test('applyUiI18n: count return value reflects only successful updates', () => {
+    const e1 = makeEl('SPAN', { 'i18n': 'a' });
+    const e2 = makeEl('SPAN', { 'i18n': 'b' });
+    const e3 = makeEl('SPAN', { 'i18n': 'missing' });
+    const root = fakeRoot({ '[data-i18n]': [e1, e2, e3] });
+    setMap({ a: 'A', b: 'B' });  // 'missing' not in map
+    expect(applyUiI18n(root)).toBe(2);
+});
+
