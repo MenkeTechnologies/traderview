@@ -20,6 +20,7 @@ import {
 } from '../_var_calculator_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_RETURNS = `# Paste daily returns (decimal, e.g. -0.012 or 0.018).
 # One per line OR comma/space separated. # comments OK.
 # 252 synthetic days (-2% to +2% with mild left skew) for demo:
@@ -65,11 +66,11 @@ export async function renderVarCalculator(mount, _appState) {
             <div class="inline-form">
                 <label><span data-i18n="view.var_calculator.label.confidence">Confidence</span>
                     <input id="vc-conf" type="number" step="0.01" min="0.5" max="0.999"
-                           value="${state.confidence}"></label>
+                           value="${state.confidence}" data-tip="view.var_calculator.tip.confidence"></label>
                 <label><span data-i18n="view.var_calculator.label.ewma_lambda">EWMA λ (FHS only)</span>
                     <input id="vc-lambda" type="number" step="0.01" min="0.5" max="0.999"
-                           value="${state.ewmaLambda}"></label>
-                <button data-i18n="view.var_calculator.btn.compute" id="vc-run" class="primary" type="button">Compute</button>
+                           value="${state.ewmaLambda}" data-tip="view.var_calculator.tip.lambda"></label>
+                <button data-i18n="view.var_calculator.btn.compute" data-tip="view.var_calculator.tip.compute" data-shortcut="var_calculator_compute" id="vc-run" class="primary" type="button">Compute</button>
             </div>
             <p data-i18n="view.var_calculator.hint.confidence_0_95_95_var_5_tail_higher_confidence_de" class="muted">
                 Confidence 0.95 = 95% VaR (5% tail). Higher confidence ⇒ deeper-in-tail estimate.
@@ -78,7 +79,8 @@ export async function renderVarCalculator(mount, _appState) {
             </p>
             <h3 data-i18n="view.var_calculator.h3.return_series">Return series</h3>
             <textarea id="vc-text" rows="10"
-                style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
+                style="width:100%;font-family:monospace;font-size:13px"
+                data-tip="view.var_calculator.tip.returns">${esc(state.text)}</textarea>
         </div>
 
         <div id="vc-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -116,15 +118,17 @@ async function compute(mount, tok) {
     if (parsed.errors.length) renderParseErrors(parsed.errors);
 
     const validation = validateReturns(parsed.value);
-    if (validation) { showErr(validation); return; }
+    if (validation) { showErr(validation); showToast(validation, { level: 'warning' }); return; }
 
     if (!Number.isFinite(state.confidence)
         || state.confidence <= 0.5 || state.confidence >= 1) {
-        showErr(t('view.var_calculator.err.confidence_must_be_in_0_5_1')); return;
+        const m = t('view.var_calculator.err.confidence_must_be_in_0_5_1');
+        showErr(m); showToast(m, { level: 'warning' }); return;
     }
     if (!Number.isFinite(state.ewmaLambda)
         || state.ewmaLambda <= 0.5 || state.ewmaLambda >= 1) {
-        showErr(t('view.var_calculator.err.ewma_must_be_in_0_5_1')); return;
+        const m = t('view.var_calculator.err.ewma_must_be_in_0_5_1');
+        showErr(m); showToast(m, { level: 'warning' }); return;
     }
 
     const alpha = confidenceToAlpha(state.confidence);
@@ -138,13 +142,18 @@ async function compute(mount, tok) {
             api.anlyCornishFisherVar({ returns: parsed.value, alpha }),
         ]);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(hs, fhs, cf);
     renderChart(parsed.value, hs, fhs, cf);
+    showToast(t('view.var_calculator.toast.done', {
+        n: parsed.value.length,
+        var: hs?.var != null ? formatLoss(hs.var) : '—',
+    }), { level: 'success' });
 }
 
 function renderSummary(hs, fhs, cf) {

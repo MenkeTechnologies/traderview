@@ -94,6 +94,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'kelly_compute_dynamic',        keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'kelly',             descKey: 'shortcut.kelly_compute_dynamic',        actionKey: 'tv:kelly-compute-dynamic' },
     { id: 'risk_save',                    keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk',              descKey: 'shortcut.risk_save',                    actionKey: 'tv:risk-save' },
     { id: 'darkpool_rank',                keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'darkpool',          descKey: 'shortcut.darkpool_rank',                actionKey: 'tv:darkpool-rank' },
+    { id: 'var_calculator_compute',       keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'var-calculator',    descKey: 'shortcut.var_calculator_compute',       actionKey: 'tv:var-calculator-compute' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
