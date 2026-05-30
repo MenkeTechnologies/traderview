@@ -57,6 +57,12 @@ export async function renderTwap(mount, _appState) {
                 Magenta dashed = fill. Long entries want magenta below yellow; shorts the inverse.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.twap.h2.advantage_chart">Cumulative fill advantage vs typical (signed for the trader)</h2>
+            <div id="tw-adv-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.twap.hint.advantage_chart" class="muted small">Running sum of per-bar (typical − fill) for longs, (fill − typical) for shorts. Above zero = the fill was favorable vs the trajectory; below zero = the fill underperformed bars after it. Orthogonal to the price overlay above.</p>
+        </div>
+
         <div id="tw-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('tw-demo').addEventListener('click', () => {
@@ -106,6 +112,36 @@ async function compute(tok) {
     if (!unwrapped.ok) { showErr(t('common.error.backend', { reason: unwrapped.reason })); return; }
     renderSummary(unwrapped.result, typicals);
     renderChart(typicals, decToNum(unwrapped.result.twap), state.fillPrice);
+    renderAdvantageChart(typicals, state.fillPrice, state.side);
+}
+
+function renderAdvantageChart(typicals, fillPrice, side) {
+    const el = document.getElementById('tw-adv-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const arr = (typicals || []).filter(v => Number.isFinite(Number(v)));
+    if (arr.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.twap.empty_advantage_chart">${esc(t('view.twap.empty_advantage_chart'))}</div>`;
+        return;
+    }
+    const sign = side === 'short' ? -1 : 1;
+    let acc = 0;
+    const cum = arr.map(v => (acc += sign * (Number(v) - Number(fillPrice))));
+    const xs = cum.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.twap.chart.bar_idx') },
+            { label: t('view.twap.chart.cum_advantage'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.twap.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderSummary(r, typicals) {

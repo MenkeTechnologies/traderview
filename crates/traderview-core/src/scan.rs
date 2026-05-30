@@ -824,6 +824,8 @@ pub enum Preset {
     Year52LowGapAndDropExtremeVol,       // year_low_pct < 0 AND gap_pct < -3 AND day_pct < -2 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big gap down + intraday continuation + extreme vol (gap-and-drop breakdown at new lows with overnight gap held and extended during regular hours; max-conviction trend acceleration)
     Year52HighFailedBreakoutFade,        // year_high_pct >= 0 AND year_high_pct < 3 AND gap_pct > 1 AND day_pct < -1 AND change_pct < 0 AND rel_volume >= 2 — close just below 52w high + gap up + intraday sold from open + red close + hot vol (failed breakout at the highs: ran into resistance, gap rejected and faded all session; trapped breakout buyers flushed during the session)
     Year52LowFailedBreakdownReclaim,     // year_low_pct >= 0 AND year_low_pct < 3 AND gap_pct < -1 AND day_pct > 1 AND change_pct > 0 AND rel_volume >= 2 — close just above 52w low + gap down + intraday recovered from open + green close + hot vol (failed breakdown at the lows: bounced off support, gap reclaimed and rallied all session; trapped breakdown shorts squeezed during the session)
+    Year52HighRangeCompressionLowVol,    // year_high_pct >= 0 AND year_high_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just below 52w high + tight intraday range + flat close + dry vol (low-vol compression just below resistance; no participation rotation; pre-breakout coil at the ceiling)
+    Year52LowRangeCompressionLowVol,     // year_low_pct >= 0 AND year_low_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just above 52w low + tight intraday range + flat close + dry vol (low-vol compression just above support; no participation rotation; pre-breakdown coil at the floor)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4753,6 +4755,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighRangeCompressionLowVol => {
+            hit.year_high_pct >= 0.0
+                && hit.year_high_pct < 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+        }
+        Preset::Year52LowRangeCompressionLowVol => {
+            hit.year_low_pct >= 0.0
+                && hit.year_low_pct < 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+        }
     }
 }
 
@@ -5467,6 +5483,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowGapAndDropExtremeVol => "New 52w Low + Big Gap Down + Intraday Continuation + Extreme Vol (Gap-and-drop Breakdown at New Lows with Overnight Gap Held and Extended during Regular Hours; Max-conviction Trend Acceleration)",
         Preset::Year52HighFailedBreakoutFade => "Close Just below 52w High + Gap Up + Intraday Sold from Open + Red Close + Hot Vol (Failed Breakout at the Highs: Ran into Resistance, Gap Rejected and Faded All Session; Trapped Breakout Buyers Flushed during the Session)",
         Preset::Year52LowFailedBreakdownReclaim => "Close Just above 52w Low + Gap Down + Intraday Recovered from Open + Green Close + Hot Vol (Failed Breakdown at the Lows: Bounced off Support, Gap Reclaimed and Rallied All Session; Trapped Breakdown Shorts Squeezed during the Session)",
+        Preset::Year52HighRangeCompressionLowVol => "Close Just below 52w High + Tight Intraday Range + Flat Close + Dry Vol (Low-vol Compression Just below Resistance; No Participation Rotation; Pre-breakout Coil at the Ceiling)",
+        Preset::Year52LowRangeCompressionLowVol => "Close Just above 52w Low + Tight Intraday Range + Flat Close + Dry Vol (Low-vol Compression Just above Support; No Participation Rotation; Pre-breakdown Coil at the Floor)",
     }
 }
 
