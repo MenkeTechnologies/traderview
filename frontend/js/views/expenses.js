@@ -161,7 +161,7 @@ async function refresh() {
     } catch (e) {
         if (!viewIsCurrent(state.tok)) return;
         const tbl = state.mount.querySelector('#exp-table');
-        if (tbl) tbl.innerHTML = `<p class="boot">transactions load failed: ${esc(e.message)}</p>`;
+        if (tbl) tbl.innerHTML = `<p class="boot">${esc(t('view.expenses.boot.transactions_failed', { err: e.message }))}</p>`;
     }
 }
 
@@ -351,7 +351,7 @@ async function openRulesModal() {
     try { rules = await api.expenseRules(); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
-        modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">${esc(t('view.expenses.boot.load_failed', { err: e.message }))}</p>
             <button data-i18n="view.expenses.btn.close" id="rules-close">Close</button></div>`;
         modal.querySelector('#rules-close').onclick = () => modal.classList.add('hidden');
         return;
@@ -509,7 +509,7 @@ async function openReceiptMatchModal(meta) {
     try { matches = await api.receiptMatches(meta.id); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
-        modal.innerHTML = `<div class="modal-inner"><p class="boot">match load failed: ${esc(e.message)}</p>
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">${esc(t('view.expenses.boot.match_failed', { err: e.message }))}</p>
             <button data-i18n="view.expenses.btn.close_3" id="m-close">Close</button></div>`;
         modal.querySelector('#m-close').onclick = () => modal.classList.add('hidden');
         return;
@@ -571,7 +571,7 @@ async function openScheduleCModal(year) {
     try { report = await api.scheduleC(initialYear); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
-        modal.innerHTML = `<div class="modal-inner"><p class="boot">report failed: ${esc(e.message)}</p>
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">${esc(t('view.expenses.boot.report_failed', { err: e.message }))}</p>
             <button data-i18n="view.expenses.btn.close_5" id="sc-close">Close</button></div>`;
         modal.querySelector('#sc-close').onclick = () => modal.classList.add('hidden');
         return;
@@ -660,7 +660,7 @@ async function openReceiptsModal() {
     try { rs = await api.receipts(); }
     catch (e) {
         if (!viewIsCurrent(state.tok)) return;
-        modal.innerHTML = `<div class="modal-inner"><p class="boot">load failed: ${esc(e.message)}</p>
+        modal.innerHTML = `<div class="modal-inner"><p class="boot">${esc(t('view.expenses.boot.load_failed', { err: e.message }))}</p>
             <button data-i18n="view.expenses.btn.close_7" id="r-close">Close</button></div>`;
         modal.querySelector('#r-close').onclick = () => modal.classList.add('hidden');
         return;

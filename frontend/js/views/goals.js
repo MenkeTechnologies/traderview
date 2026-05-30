@@ -123,7 +123,7 @@ async function refresh(mount, tok) {
         const el2 = mount.querySelector('#g-list');
         if (!el2) return;
         el2.innerHTML = progressList.map((p, i) => p ? card(p) : `<div class="chart-panel">
-            <p class="boot">progress fetch failed for ${esc(goals[i].name)}</p></div>`).join('');
+            <p class="boot">${esc(t('view.goals.boot.progress_failed', { name: goals[i].name }))}</p></div>`).join('');
         try { applyUiI18n(el2); } catch (_) {}
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {

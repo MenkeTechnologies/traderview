@@ -73,7 +73,7 @@ export async function renderWorldMarkets(mount) {
         if (!viewIsCurrent(tok)) return;
         const wrap = mount.querySelector('#world-map-wrap');
         if (wrap) {
-            wrap.innerHTML = `<div class="boot">markets unavailable: ${esc(e.message)}</div>`;
+            wrap.innerHTML = `<div class="boot">${esc(t('view.world_map.boot.markets_unavailable', { err: e.message }))}</div>`;
         }
     }
 }
