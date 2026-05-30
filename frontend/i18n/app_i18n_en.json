@@ -7035,6 +7035,8 @@
   "common.distance":                       "distance",
   "common.none":                           "none",
   "common.parse_error_line":               "line {line}: {msg}",
+  "common.parse_error_inline":             "line {line}: {msg} — {raw}",
+  "common.parse_error_inline_src":         "[{src}] line {line}: {msg} — {raw}",
   "common.link.view":                      "view",
   "common.link.view_receipt":              "View receipt",
   "common.link.trade":                     "trade",

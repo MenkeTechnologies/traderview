@@ -75,9 +75,9 @@ async function compute(tok) {
     const { ticks, errors } = parseTickBlob(state.tickText);
     if (errors.length) {
         const head = errors.slice(0, 8).map(e =>
-            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
-        const more = errors.length > 8 ? `<br>… and ${errors.length - 8} more.` : '';
-        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+            t('common.parse_error_inline', { line: e.line_no, msg: e.message, raw: e.raw.slice(0, 80) })).join('<br>');
+        const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
+        errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
         if (ticks.length === 0) return;
     }

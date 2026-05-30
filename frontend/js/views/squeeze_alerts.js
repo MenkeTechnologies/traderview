@@ -165,7 +165,7 @@ async function runReplay() {
     const errs = [...te.map(e => ({ ...e, src: 'ticks' })), ...ae.map(e => ({ ...e, src: 'adv' }))];
     if (errs.length) {
         const head = errs.slice(0, 8).map(e =>
-            `[${e.src}] line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+            t('common.parse_error_inline_src', { src: e.src, line: e.line_no, msg: e.message, raw: e.raw.slice(0, 80) })).join('<br>');
         const el = document.getElementById('sq-errors');
         el.innerHTML = `<strong>${errs.length} parse error(s):</strong><br>${head}`;
         el.style.display = 'block';

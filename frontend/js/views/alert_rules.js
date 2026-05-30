@@ -252,7 +252,7 @@ async function runReplay() {
     const { adv, errors: ae } = squeeze.parseAdvBlob(advText);
     const errors = [...te.map(e => ({ ...e, src: 'ticks' })), ...ae.map(e => ({ ...e, src: 'adv' }))];
     if (errors.length) {
-        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>` +
+        errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>` +
             errors.slice(0, 8).map(e => `[${e.src}] line ${e.line_no}: ${esc(e.message)}`).join('<br>');
         errs.style.display = 'block';
         if (!ticks.length) return;

@@ -96,9 +96,9 @@ async function compute(tok) {
     const { value: realized, errors } = parseRealized(state.realizedText);
     if (errors.length) {
         const head = errors.slice(0, 6).map(e =>
-            `line ${e.line_no}: ${esc(e.message)} — ${esc(e.raw.slice(0, 80))}`).join('<br>');
+            t('common.parse_error_inline', { line: e.line_no, msg: e.message, raw: e.raw.slice(0, 80) })).join('<br>');
         const more = errors.length > 6 ? `<br>… and ${errors.length - 6} more.` : '';
-        errs.innerHTML = `<strong>${errors.length} parse error(s):</strong><br>${head}${more}`;
+        errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
     }
     const err = validateInputs(state.implied, realized);
