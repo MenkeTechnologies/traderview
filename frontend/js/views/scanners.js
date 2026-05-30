@@ -842,6 +842,8 @@ const PRESETS = [
     { id: 'shooting_star_at_confirmed_breakout', label: t('view.scanners.preset.shooting_star_at_confirmed_breakout.label'), desc: t('view.scanners.preset.shooting_star_at_confirmed_breakout.desc') },
     { id: 'dragonfly_doji_at_confirmed_breakdown', label: t('view.scanners.preset.dragonfly_doji_at_confirmed_breakdown.label'), desc: t('view.scanners.preset.dragonfly_doji_at_confirmed_breakdown.desc') },
     { id: 'gravestone_doji_at_confirmed_breakout', label: t('view.scanners.preset.gravestone_doji_at_confirmed_breakout.label'), desc: t('view.scanners.preset.gravestone_doji_at_confirmed_breakout.desc') },
+    { id: 'marubozu_green_at_confirmed_breakout', label: t('view.scanners.preset.marubozu_green_at_confirmed_breakout.label'), desc: t('view.scanners.preset.marubozu_green_at_confirmed_breakout.desc') },
+    { id: 'marubozu_red_at_confirmed_breakdown', label: t('view.scanners.preset.marubozu_red_at_confirmed_breakdown.label'), desc: t('view.scanners.preset.marubozu_red_at_confirmed_breakdown.desc') },
 ];
 
 export async function renderScanners(mount) {
