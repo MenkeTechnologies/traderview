@@ -24,7 +24,7 @@ export async function renderCsvWizard(mount, state) {
     const acct = state.accounts.find(a => a.id === state.accountId);
     if (!acct) { mount.innerHTML = `<p data-i18n="view.csv_wizard.hint.no_account_selected" class="boot">No account selected.</p>`; return; }
     mount.innerHTML = `
-        <h1 class="view-title">// CSV WIZARD — ${esc(acct.broker)} · ${esc(acct.name)}</h1>
+        <h1 class="view-title">${esc(t('view.csv_wizard.h1', { broker: acct.broker, name: acct.name }))}</h1>
         <p class="muted small" data-i18n="view.csv_wizard.hint.intro">Upload any CSV — Notion exports, Excel sheets, hand-rolled logs. The wizard auto-detects headers, you map them to the seven canonical fields below, preview the first 20 rows post-mapping, then commit. Re-imports of the same file are blocked at the imports.sha256 unique constraint; per-row dedupe relies on executions(broker_order_id, executed_at, symbol, side, qty, price).</p>
 
         <div class="chart-panel">

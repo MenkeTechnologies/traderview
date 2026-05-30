@@ -8,7 +8,7 @@ export async function renderOptions(mount, _state, rest) {
     const tok = currentViewToken();
     const sym = (rest || '').toUpperCase() || 'SPY';
     mount.innerHTML = `
-        <h1 class="view-title">// OPTIONS · ${esc(sym)}</h1>
+        <h1 class="view-title">${esc(t('view.options_chain.h1', { sym }))}</h1>
         <form id="of" class="inline-form">
             <input name="sym" value="${esc(sym)}" style="text-transform:uppercase">
             <select name="exp" id="expsel"><option data-i18n="view.options_chain.opt.loading">loading…</option></select>
