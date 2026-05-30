@@ -481,6 +481,11 @@ function bindTabs() {
     window.addEventListener('tv:discipline-refresh',        refreshNow);
     window.addEventListener('tv:replay-refresh',            refreshNow);
     window.addEventListener('tv:mood-refresh',              refreshNow);
+    // View-scoped: `r` in forecast scope → submit Run-forecast form.
+    window.addEventListener('tv:forecast-run', () => {
+        const form = document.getElementById('ef-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

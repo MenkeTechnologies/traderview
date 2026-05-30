@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderEquityForecast(mount, state) {
     const tok = currentViewToken();
@@ -16,24 +17,24 @@ export async function renderEquityForecast(mount, state) {
         <div class="chart-panel">
             <form id="ef-form" class="inline-form">
                 <label><span data-i18n="view.equity_forecast.label.starting_equity">Starting equity</span>
-                    <input name="starting_equity" type="number" min="100" step="any" value="10000" style="width:120px;">
+                    <input name="starting_equity" type="number" min="100" step="any" value="10000" style="width:120px;" data-tip="view.equity_forecast.tip.start">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.risk_pct">Risk per trade %</span>
-                    <input name="risk_pct" type="number" min="0.1" max="100" step="0.1" value="1" style="width:90px;">
+                    <input name="risk_pct" type="number" min="0.1" max="100" step="0.1" value="1" style="width:90px;" data-tip="view.equity_forecast.tip.risk">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.num_trades">Trades</span>
-                    <input name="num_trades" type="number" min="10" max="2000" value="200" style="width:90px;">
+                    <input name="num_trades" type="number" min="10" max="2000" value="200" style="width:90px;" data-tip="view.equity_forecast.tip.trades">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.num_paths">Paths</span>
-                    <input name="num_paths" type="number" min="100" max="50000" value="5000" style="width:100px;">
+                    <input name="num_paths" type="number" min="100" max="50000" value="5000" style="width:100px;" data-tip="view.equity_forecast.tip.paths">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.ruin_pct">Ruin at %</span>
-                    <input name="ruin_pct" type="number" min="0" max="100" step="1" value="50" style="width:80px;">
+                    <input name="ruin_pct" type="number" min="0" max="100" step="1" value="50" style="width:80px;" data-tip="view.equity_forecast.tip.ruin">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.seed">Seed (opt)</span>
-                    <input name="seed" type="number" style="width:120px;">
+                    <input name="seed" type="number" style="width:120px;" data-tip="view.equity_forecast.tip.seed">
                 </label>
-                <button data-i18n="view.equity_forecast.btn.run_forecast" class="primary" type="submit">Run forecast</button>
+                <button data-i18n="view.equity_forecast.btn.run_forecast" data-tip="view.equity_forecast.tip.run" data-shortcut="forecast_run" class="primary" type="submit">Run forecast</button>
                 <span id="ef-status" class="muted small"></span>
             </form>
         </div>
@@ -60,10 +61,15 @@ export async function renderEquityForecast(mount, state) {
             render(r, mount);
             const status2 = mount.querySelector('#ef-status');
             if (status2) status2.textContent = t('view.equity_forecast.status.result', { paths: r.paths, steps: r.steps, samples: r.samples_used });
+            showToast(t('view.equity_forecast.toast.done', {
+                p_ruin: (r.ruin_probability * 100).toFixed(1),
+                p_double: (r.double_probability * 100).toFixed(1),
+            }), { level: r.ruin_probability >= 0.10 ? 'warning' : 'success' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const status2 = mount.querySelector('#ef-status');
             if (status2) status2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
 }

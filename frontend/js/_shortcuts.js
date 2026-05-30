@@ -146,6 +146,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'order_staleness_evaluate',     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'order-staleness',   descKey: 'shortcut.order_staleness_evaluate',     actionKey: 'tv:order-staleness-evaluate' },
     { id: 'order_staleness_demo',         keys: { key: 'l', meta: false, ctrl: false, shift: false, alt: false }, scope: 'order-staleness',   descKey: 'shortcut.order_staleness_demo',         actionKey: 'tv:order-staleness-demo' },
     { id: 'mood_refresh',                 keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mood',              descKey: 'shortcut.mood_refresh',                 actionKey: 'tv:mood-refresh' },
+    { id: 'forecast_run',                 keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'forecast',          descKey: 'shortcut.forecast_run',                 actionKey: 'tv:forecast-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
