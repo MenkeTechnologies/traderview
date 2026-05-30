@@ -776,6 +776,8 @@ pub enum Preset {
     HotVolHugeRangeFlatClose,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() < 0.5 — extreme vol + extreme range + flat close (max-absorption pattern at scale: huge intraday exploration but no net result; institutional indecision day)
     Year52HighDistributionChurn,         // year_high_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w high + flat close + hot vol (distribution at the highs; heavy churn without movement; institutional offloading at the top)
     Year52LowAccumulationChurn,          // year_low_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w low + flat close + hot vol (accumulation at the lows; heavy churn without movement; institutional bottom-fishing at the floor)
+    Year52HighBigGreenBreakoutHotVol,    // year_high_pct < 0 AND change_pct > 4 AND rel_volume >= 2 — breakout to new 52w high + big green + hot vol (decisive breakout from year resistance with institutional sponsorship; trend-following long signal)
+    Year52LowBigRedBreakdownHotVol,      // year_low_pct < 0 AND change_pct < -4 AND rel_volume >= 2 — breakdown to new 52w low + big red + hot vol (decisive breakdown from year support with institutional sponsorship; trend-following short signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4423,6 +4425,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighBigGreenBreakoutHotVol => {
+            hit.year_high_pct < 0.0
+                && hit.change_pct > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Year52LowBigRedBreakdownHotVol => {
+            hit.year_low_pct < 0.0
+                && hit.change_pct < -4.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5089,6 +5101,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolHugeRangeFlatClose => "Extreme Vol + Extreme Range + Flat Close (Max-absorption Pattern at Scale; Institutional Indecision Day)",
         Preset::Year52HighDistributionChurn => "Near 52w High + Flat Close + Hot Vol (Distribution at the Highs; Heavy Churn Without Movement; Institutional Offloading at the Top)",
         Preset::Year52LowAccumulationChurn => "Near 52w Low + Flat Close + Hot Vol (Accumulation at the Lows; Heavy Churn Without Movement; Institutional Bottom-fishing at the Floor)",
+        Preset::Year52HighBigGreenBreakoutHotVol => "New 52w High + Big Green + Hot Vol (Decisive Breakout from Year Resistance with Institutional Sponsorship; Trend-following Long Signal)",
+        Preset::Year52LowBigRedBreakdownHotVol => "New 52w Low + Big Red + Hot Vol (Decisive Breakdown from Year Support with Institutional Sponsorship; Trend-following Short Signal)",
     }
 }
 

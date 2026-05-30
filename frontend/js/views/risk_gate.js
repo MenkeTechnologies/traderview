@@ -104,6 +104,9 @@ export async function renderRiskGate(mount, state) {
             </table>
             <h3 data-i18n="view.risk_gate.h3.fires_chart">Blocks vs warnings per rule</h3>
             <div id="rg-chart" style="width:100%;height:240px"></div>
+            <h3 data-i18n="view.risk_gate.h3.block_ratio_chart">Block ratio per rule (% of fires that are blocks)</h3>
+            <div id="rg-ratio-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.risk_gate.hint.block_ratio" class="muted small">Per-rule share of fires that are blocks. Yellow dashed = 50%. High = harsh rule (most fires kill the trade). Low = soft rule (mostly warnings).</p>
         </div>
 
         <div class="chart-panel">
@@ -370,6 +373,7 @@ async function reloadFiresByRule(mount, tok) {
             </tr>
         `).join('');
         renderFiresChart(stats);
+        renderBlockRatioChart(stats);
     } catch (err) {
         tb.innerHTML = `<tr><td colspan="4" class="muted">${esc(t('view.risk_gate.error', { msg: err.message }))}</td></tr>`;
     }
@@ -410,6 +414,43 @@ function renderFiresChart(stats) {
         ],
         legend: { show: true },
     }, [xs, blocks, warnings], el);
+}
+
+function renderBlockRatioChart(stats) {
+    const el = document.getElementById('rg-ratio-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (stats || [])
+        .filter(s => Number.isFinite(Number(s.fires)) && Number(s.fires) > 0)
+        .sort((a, b) => Number(b.fires) - Number(a.fires))
+        .slice(0, 20);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_gate.empty_ratio_chart">${esc(t('view.risk_gate.empty_ratio_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(s => s.rule);
+    const ratios = top.map(s => Number(s.blocks) / Number(s.fires) * 100);
+    const xs = labels.map((_, i) => i + 1);
+    const half = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.risk_gate.chart.rule_idx') },
+            { label: t('view.risk_gate.chart.block_ratio'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.risk_gate.chart.fifty'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ratios, half], el);
 }
 
 async function reloadFires(mount, tok) {
