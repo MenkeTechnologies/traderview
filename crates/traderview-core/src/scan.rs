@@ -472,6 +472,8 @@ pub enum Preset {
     VolSpikeOnTrend,               // rel_volume >= 5 AND change_pct.abs() > 3 — massive 5×+ vol spike with big change (institutional execution; trend day)
     TightCoilAtHighDryVol,         // hod_dist.abs() < 0.3 AND lod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_high_pct > -5 — closed at HOD on tight range + dry vol + near 52w high (coil at highs)
     TightCoilAtLowDryVol,          // lod_dist.abs() < 0.3 AND hod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_low_pct < 5 — closed at LOD on tight range + dry vol + near 52w low (coil at lows)
+    OrderlyTrendAtHighs,           // change_pct > 0 AND day_pct > 0 AND year_high_pct > -1 AND rel_volume between 0.7 and 1.5 — at 52w high with green intraday + green day on normal vol (orderly trend at highs)
+    OrderlyTrendAtLows,            // change_pct < 0 AND day_pct < 0 AND year_low_pct < 1 AND rel_volume between 0.7 and 1.5 — at 52w low with red intraday + red day on normal vol (orderly downtrend at lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2336,6 +2338,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
                 && hit.year_low_pct < 5.0
         }
+        Preset::OrderlyTrendAtHighs => {
+            hit.change_pct > 0.0
+                && hit.day_pct > 0.0
+                && hit.year_high_pct > -1.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.5
+        }
+        Preset::OrderlyTrendAtLows => {
+            hit.change_pct < 0.0
+                && hit.day_pct < 0.0
+                && hit.year_low_pct < 1.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.5
+        }
     }
 }
 
@@ -2698,6 +2714,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::VolSpikeOnTrend => "Vol Spike (≥5×), On Trend (Institutional)",
         Preset::TightCoilAtHighDryVol => "Tight Coil at 52w High, Dry Vol",
         Preset::TightCoilAtLowDryVol => "Tight Coil at 52w Low, Dry Vol",
+        Preset::OrderlyTrendAtHighs => "Orderly Trend at 52w Highs",
+        Preset::OrderlyTrendAtLows => "Orderly Trend at 52w Lows",
     }
 }
 

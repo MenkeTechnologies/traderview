@@ -354,6 +354,8 @@ const PRESETS = [
     { id: 'vol_spike_on_trend', label: t('view.scanners.preset.vol_spike_on_trend.label'), desc: t('view.scanners.preset.vol_spike_on_trend.desc') },
     { id: 'tight_coil_at_high_dry_vol', label: t('view.scanners.preset.tight_coil_at_high_dry_vol.label'), desc: t('view.scanners.preset.tight_coil_at_high_dry_vol.desc') },
     { id: 'tight_coil_at_low_dry_vol', label: t('view.scanners.preset.tight_coil_at_low_dry_vol.label'), desc: t('view.scanners.preset.tight_coil_at_low_dry_vol.desc') },
+    { id: 'orderly_trend_at_highs', label: t('view.scanners.preset.orderly_trend_at_highs.label'), desc: t('view.scanners.preset.orderly_trend_at_highs.desc') },
+    { id: 'orderly_trend_at_lows', label: t('view.scanners.preset.orderly_trend_at_lows.label'), desc: t('view.scanners.preset.orderly_trend_at_lows.desc') },
 ];
 
 export async function renderScanners(mount) {

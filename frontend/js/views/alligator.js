@@ -50,6 +50,12 @@ export async function renderAlligator(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.alligator.h2.mouth_width_chart">Mouth width (|lips − jaw|)</h2>
+            <div id="al-mouth-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.alligator.hint.mouth_width" class="muted">|lips − jaw| over time: wide = trending (alligator eating); near zero = sleeping. Use as a regime-strength signal independent of direction.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.alligator.h2.bias_history_per_bar">Bias history per bar</h2>
             <div id="al-bias-strip"></div>
             <p data-i18n="view.alligator.hint.one_cell_per_bar_green_up_red_down_grey_sleeping_v" class="muted">One cell per bar — green up, red down, grey sleeping.
@@ -105,6 +111,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(points, bars);
     renderChart(bars, points);
+    renderMouthChart(bars, points);
     renderBiasStrip(points);
     const lastPt = (points || []).filter(p => p && (p.jaw || p.teeth || p.lips)).pop();
     const bias = lastPt ? classifyPoint(lastPt) : 'unknown';
@@ -160,6 +167,40 @@ function renderChart(bars, points) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, median, jaw, teeth, lips], el);
+}
+
+function renderMouthChart(bars, points) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('al-mouth-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const totalBars = bars.length;
+    if (totalBars === 0 || !Array.isArray(points)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.alligator.empty.mouth">No points.</div>`;
+        return;
+    }
+    const { jaw, lips } = shiftLines(points, totalBars);
+    const xs = bars.map((_, i) => i);
+    const width = xs.map(i => {
+        const j = jaw[i], l = lips[i];
+        if (j == null || l == null || !Number.isFinite(j) || !Number.isFinite(l)) return null;
+        return Math.abs(l - j);
+    });
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.alligator.chart.mouth_width'),
+              stroke: '#ffd84a', width: 1.5,
+              fill: '#ffd84a20', points: { show: false } },
+            { label: t('view.alligator.chart.zero'),
+              stroke: '#aab', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, width, zero], el);
 }
 
 function renderBiasStrip(points) {
