@@ -7,7 +7,7 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { listShortcuts } from '../shortcuts.js';
 import { formatKey } from '../_shortcuts.js';
-import { GLOBAL_ITEMS } from '../_context_menu.js';
+import { GLOBAL_ITEMS, ALL_SCOPED_ITEMS } from '../_context_menu.js';
 
 let _query = '';
 
@@ -37,6 +37,12 @@ export async function renderKeyboardShortcuts(mount, _appState) {
             <p data-i18n="view.keyboard_shortcuts.context_hint" class="muted">Right-click anywhere (or hold Shift to get the browser default) to open the menu. Hold Shift then right-click to escape to the native menu.</p>
             <div id="ks-ctxmenu"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.keyboard_shortcuts.section.scoped_ctx">Scope-specific context menus</h2>
+            <p data-i18n="view.keyboard_shortcuts.scoped_hint" class="muted">Right-click a row or tile to get scope-specific actions on top of the global ones above.</p>
+            <div id="ks-scoped-ctx"></div>
+        </div>
     `;
     const input = document.getElementById('ks-filter');
     if (input) {
@@ -57,6 +63,7 @@ export async function renderKeyboardShortcuts(mount, _appState) {
 function paint(isMac) {
     paintShortcuts(isMac);
     paintCtxMenu();
+    paintScopedCtx();
 }
 
 function paintShortcuts(isMac) {
@@ -88,6 +95,49 @@ function paintShortcuts(isMac) {
                     <td>${sc.descKey ? esc(t(sc.descKey)) : ''}</td>
                     <td class="muted">${esc(sc.scope || 'global')}</td>
                     <td class="muted"><code>${esc(sc.id)}</code></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function paintScopedCtx() {
+    const wrap = document.getElementById('ks-scoped-ctx');
+    if (!wrap) return;
+    const q = _query.trim().toLowerCase();
+    // Flatten ALL_SCOPED_ITEMS [scope, items] pairs into one row per
+    // (scope, item) so the filter operates uniformly.
+    const rows = [];
+    for (const [scope, items] of ALL_SCOPED_ITEMS) {
+        for (const it of items) {
+            if (it && it.kind !== 'separator') rows.push({ scope, item: it });
+        }
+    }
+    const filtered = rows.filter(({ scope, item }) => {
+        if (!q) return true;
+        const label = item.labelKey ? t(item.labelKey) : '';
+        const blob = [scope, item.id, item.labelKey, label, item.actionKey || '']
+            .join(' ').toLowerCase();
+        return blob.includes(q);
+    });
+    if (filtered.length === 0) {
+        wrap.innerHTML = `<div class="muted" data-i18n="view.keyboard_shortcuts.empty_filter">${esc(t('view.keyboard_shortcuts.empty_filter'))}</div>`;
+        return;
+    }
+    wrap.innerHTML = `
+        <table class="lq-table">
+            <thead><tr>
+                <th data-i18n="view.keyboard_shortcuts.column.scope">Scope</th>
+                <th data-i18n="view.keyboard_shortcuts.column.label">Label</th>
+                <th data-i18n="view.keyboard_shortcuts.column.action">Action</th>
+                <th data-i18n="view.keyboard_shortcuts.column.id">Id</th>
+            </tr></thead>
+            <tbody>
+                ${filtered.map(({ scope, item }) => `<tr>
+                    <td class="muted"><code>${esc(scope)}</code></td>
+                    <td>${item.labelKey ? esc(t(item.labelKey)) : ''}</td>
+                    <td class="muted"><code>${esc(item.actionKey || '')}</code></td>
+                    <td class="muted"><code>${esc(item.id || '')}</code></td>
                 </tr>`).join('')}
             </tbody>
         </table>

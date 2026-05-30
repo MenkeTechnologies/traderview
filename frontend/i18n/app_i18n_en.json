@@ -301,6 +301,8 @@
   "view.keyboard_shortcuts.section.shortcuts":   "Keyboard shortcuts",
   "view.keyboard_shortcuts.section.context_menu": "Right-click context menu",
   "view.keyboard_shortcuts.context_hint": "Right-click anywhere to open. Hold Shift while right-clicking to escape to the browser's native menu.",
+  "view.keyboard_shortcuts.section.scoped_ctx": "Scope-specific context menus",
+  "view.keyboard_shortcuts.scoped_hint": "Right-click a row or tile to get scope-specific actions on top of the global ones above.",
   "view.keyboard_shortcuts.column.label":   "Label",
   "view.keyboard_shortcuts.column.section": "Section",
 
