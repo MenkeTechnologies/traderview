@@ -164,6 +164,8 @@ const PRESETS = [
     { id: 'low_volume_down_day_squeeze', label: t('view.scanners.preset.low_volume_down_day_squeeze.label'), desc: t('view.scanners.preset.low_volume_down_day_squeeze.desc') },
     { id: 'hi_vol_up_day_no_hod_squeeze', label: t('view.scanners.preset.hi_vol_up_day_no_hod_squeeze.label'), desc: t('view.scanners.preset.hi_vol_up_day_no_hod_squeeze.desc') },
     { id: 'hi_vol_down_day_no_lod_squeeze', label: t('view.scanners.preset.hi_vol_down_day_no_lod_squeeze.label'), desc: t('view.scanners.preset.hi_vol_down_day_no_lod_squeeze.desc') },
+    { id: 'gap_up_fade_to_flat', label: t('view.scanners.preset.gap_up_fade_to_flat.label'), desc: t('view.scanners.preset.gap_up_fade_to_flat.desc') },
+    { id: 'gap_down_reclaim_to_flat', label: t('view.scanners.preset.gap_down_reclaim_to_flat.label'), desc: t('view.scanners.preset.gap_down_reclaim_to_flat.desc') },
 ];
 
 export async function renderScanners(mount) {

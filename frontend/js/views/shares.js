@@ -20,13 +20,56 @@ export async function renderShares(mount) {
                 ${shareTable(pub, false)}
             </div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.shares.h2.views_chart">Views per share</h2>
+            <div id="sh-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderViewsChart(mine, pub);
     mount.querySelectorAll('[data-del-share]').forEach(b =>
         b.addEventListener('click', async () => {
             await api.deleteShare(b.dataset.delShare);
             if (!viewIsCurrent(tok)) return;
             renderShares(mount);
         }));
+}
+
+function renderViewsChart(mine, pub) {
+    const el = document.getElementById('sh-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = [
+        ...(mine || []).map(s => ({ slug: s.slug, v: Number(s.view_count), mine: true })),
+        ...(pub || []).map(s => ({ slug: s.slug, v: Number(s.view_count), mine: false })),
+    ].filter(r => Number.isFinite(r.v));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.shares.empty_chart">${esc(t('view.shares.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.v - a.v);
+    const labels = rows.map(r => r.slug);
+    const xs = labels.map((_, i) => i + 1);
+    const mineY = rows.map(r => r.mine ? r.v : null);
+    const pubY  = rows.map(r => r.mine ? null : r.v);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.shares.chart.slug_idx') },
+            { label: t('view.shares.chart.mine'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.shares.chart.public'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 10, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, mineY, pubY], el);
 }
 
 function shareTable(rows, mine) {
