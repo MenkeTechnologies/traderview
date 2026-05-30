@@ -1030,6 +1030,8 @@ pub enum Preset {
     GapDownMidpointCloseDeepAboveYearLowHotVol,// gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + far above 52w low (>=20%) + hot vol (inconclusive pullback attempt deep in advance territory: gap down well above the prior trough held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff after extended advance with no directional commitment from the pullback)
     GapUpMidpointCloseMidYearHighHotVol,       // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + mid-range from high (5-20%) + hot vol (inconclusive bounce in mid-cycle pullback: gap up in the proper consolidation zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff at mid-range with no directional commitment toward the prior peak)
     GapDownMidpointCloseMidYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + mid-range from low (5-20%) + hot vol (inconclusive pullback in mid-cycle recovery: gap down in the proper consolidation zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff at mid-range with no directional commitment back toward the prior trough)
+    GapUpMidpointCloseJustOffYearHighHotVol,   // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + just off 52w high (2-5%) + hot vol (inconclusive bounce just off the year peak: gap up in the post-extreme zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff in the immediate post-tag zone with the recovery still undecided)
+    GapDownMidpointCloseJustOffYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + just off 52w low (2-5%) + hot vol (inconclusive pullback just off the year trough: gap down in the post-extreme zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff in the immediate post-tag zone with the rejection still undecided)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6318,6 +6320,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 20.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpMidpointCloseJustOffYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownMidpointCloseJustOffYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7238,6 +7258,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownMidpointCloseDeepAboveYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Far above 52w Low (>=20 %) + Hot Vol (Inconclusive Pullback Attempt Deep in Advance Territory: Gap down Well above the Prior Trough Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff after Extended Advance with No Directional Commitment from the Pullback)",
         Preset::GapUpMidpointCloseMidYearHighHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Mid-range from High (5-20 %) + Hot Vol (Inconclusive Bounce in Mid-cycle Pullback: Gap up in the Proper Consolidation Zone Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff at Mid-range with No Directional Commitment toward the Prior Peak)",
         Preset::GapDownMidpointCloseMidYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Mid-range from Low (5-20 %) + Hot Vol (Inconclusive Pullback in Mid-cycle Recovery: Gap down in the Proper Consolidation Zone Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff at Mid-range with No Directional Commitment back toward the Prior Trough)",
+        Preset::GapUpMidpointCloseJustOffYearHighHotVol => "Gap Up (>2 %) + Midpoint Close between HOD and LOD + Just off 52w High (2-5 %) + Hot Vol (Inconclusive Bounce Just off the Year Peak: Gap up in the Post-extreme Zone Held but Neither Extended to a HOD Close nor Failed to a LOD Close on Elevated Participation; Standoff in the Immediate Post-tag Zone with the Recovery Still Undecided)",
+        Preset::GapDownMidpointCloseJustOffYearLowHotVol => "Gap Down (<-2 %) + Midpoint Close between HOD and LOD + Just off 52w Low (2-5 %) + Hot Vol (Inconclusive Pullback Just off the Year Trough: Gap down in the Post-extreme Zone Held but Neither Extended to a LOD Close nor Absorbed to a HOD Close on Elevated Participation; Standoff in the Immediate Post-tag Zone with the Rejection Still Undecided)",
     }
 }
 
