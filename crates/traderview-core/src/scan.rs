@@ -402,6 +402,8 @@ pub enum Preset {
     GapWeakDayOpenPivot,         // gap_pct <= -1 AND gap_pct >= -3 AND change_pct < -4 AND rel_volume >= 2 — small-to-medium gap-down + weak day on heavy vol (gap held + accelerated)
     ConvictionBreakoutCombo,     // year_high_pct >= 0 AND hod_dist.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2.5 — 52w-high broken + closed at HOD + strong day + heavy vol (highest-conviction breakout)
     ConvictionBreakdownCombo,    // year_low_pct <= 0 AND lod_dist.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2.5 — 52w-low broken + closed at LOD + weak day + heavy vol (highest-conviction breakdown)
+    PullbackInsideTrendUp,       // year_high_pct between -20 and -5 AND change_pct between -1 and -0.2 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small pullback inside an uptrend with avg vol (orderly continuation entry)
+    PullbackInsideTrendDown,     // year_low_pct between 5 and 20 AND change_pct between 0.2 and 1 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small bounce inside a downtrend with avg vol (orderly continuation entry)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1854,6 +1856,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -3.0
                 && hit.rel_volume >= 2.5
         }
+        Preset::PullbackInsideTrendUp => {
+            hit.year_high_pct >= -20.0
+                && hit.year_high_pct <= -5.0
+                && hit.change_pct >= -1.0
+                && hit.change_pct <= -0.2
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
+        Preset::PullbackInsideTrendDown => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 20.0
+                && hit.change_pct >= 0.2
+                && hit.change_pct <= 1.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
     }
 }
 
@@ -2146,6 +2164,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapWeakDayOpenPivot => "Gap + Weak Day Pivot",
         Preset::ConvictionBreakoutCombo => "Highest-Conviction Breakout",
         Preset::ConvictionBreakdownCombo => "Highest-Conviction Breakdown",
+        Preset::PullbackInsideTrendUp => "Orderly Pullback in Uptrend",
+        Preset::PullbackInsideTrendDown => "Orderly Bounce in Downtrend",
     }
 }
 

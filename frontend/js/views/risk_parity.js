@@ -60,6 +60,11 @@ export async function renderRiskParity(mount, _appState) {
             <div id="rp-chart" style="width:100%;height:220px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_parity.h2.vol_chart">Asset volatility (%) per symbol</h2>
+            <div id="rp-vol-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="rp-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -100,6 +105,7 @@ async function compute(tok) {
     renderBars(local);
     renderTable(local);
     renderWeightsChart(local);
+    renderVolChart();
     let resp;
     try {
         resp = await api.calcRiskParity(buildBody(state.assets));
@@ -112,6 +118,38 @@ async function compute(tok) {
     renderBars(resp);
     renderTable(resp);
     renderWeightsChart(resp);
+    renderVolChart();
+}
+
+function renderVolChart() {
+    const el = document.getElementById('rp-vol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (state.assets || []).filter(a => Number.isFinite(Number(a.vol)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_parity.empty_vol_chart">${esc(t('view.risk_parity.empty_vol_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.vol) - Number(a.vol));
+    const labels = rows.map(a => a.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(a => Number(a.vol) * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_parity.chart.symbol') },
+            { label: t('view.risk_parity.chart.vol_pct'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderWeightsChart(report) {

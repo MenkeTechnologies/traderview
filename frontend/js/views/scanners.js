@@ -284,6 +284,8 @@ const PRESETS = [
     { id: 'gap_weak_day_open_pivot', label: t('view.scanners.preset.gap_weak_day_open_pivot.label'), desc: t('view.scanners.preset.gap_weak_day_open_pivot.desc') },
     { id: 'conviction_breakout_combo', label: t('view.scanners.preset.conviction_breakout_combo.label'), desc: t('view.scanners.preset.conviction_breakout_combo.desc') },
     { id: 'conviction_breakdown_combo', label: t('view.scanners.preset.conviction_breakdown_combo.label'), desc: t('view.scanners.preset.conviction_breakdown_combo.desc') },
+    { id: 'pullback_inside_trend_up', label: t('view.scanners.preset.pullback_inside_trend_up.label'), desc: t('view.scanners.preset.pullback_inside_trend_up.desc') },
+    { id: 'pullback_inside_trend_down', label: t('view.scanners.preset.pullback_inside_trend_down.label'), desc: t('view.scanners.preset.pullback_inside_trend_down.desc') },
 ];
 
 export async function renderScanners(mount) {
