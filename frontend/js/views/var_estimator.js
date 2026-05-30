@@ -13,6 +13,7 @@ import {
 } from '../_var_estimator_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     returns: makeDemoReturns('normal'),
     positionValue: 100_000,
@@ -26,26 +27,26 @@ export async function renderVarEstimator(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.var_estimator.h2.daily_returns">Daily returns</span> <small class="muted" data-i18n="view.var_estimator.h2.daily_returns_hint">(decimal or with % suffix; csv/space/newline mix)</small></h2>
-            <textarea id="var-blob" rows="6" placeholder="0.005&#10;-0.012&#10;0.003&#10;-0.5%&#10;...">${esc(returnsToBlob(state.returns))}</textarea>
+            <textarea id="var-blob" rows="6" placeholder="0.005&#10;-0.012&#10;0.003&#10;-0.5%&#10;..." data-tip="view.var_estimator.tip.blob">${esc(returnsToBlob(state.returns))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.var_estimator.label.position_value">Position value ($)</span>
-                    <input id="var-pv" type="number" step="any" min="0" value="${state.positionValue}"></label>
+                    <input id="var-pv" type="number" step="any" min="0" value="${state.positionValue}" data-tip="view.var_estimator.tip.pv"></label>
                 <label><span data-i18n="view.var_estimator.label.confidence">Confidence</span>
                     <small class="muted" data-i18n="view.var_estimator.hint.confidence">(0.95 / 0.99 / 0.999)</small>
-                    <select id="var-conf">
+                    <select id="var-conf" data-tip="view.var_estimator.tip.conf">
                         <option value="0.90"  ${state.confidence === 0.90  ? 'selected' : ''}>90%</option>
                         <option value="0.95"  ${state.confidence === 0.95  ? 'selected' : ''}>95%</option>
                         <option value="0.99"  ${state.confidence === 0.99  ? 'selected' : ''}>99%</option>
                         <option value="0.999" ${state.confidence === 0.999 ? 'selected' : ''}>99.9%</option>
                     </select></label>
-                <button data-i18n="view.var_estimator.btn.compute" id="var-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.var_estimator.btn.compute" id="var-run" class="primary" type="button" data-tip="view.var_estimator.tip.run" data-shortcut="var_estimator_run">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.var_estimator.btn.demo_normal_returns" id="var-demo-normal"    class="secondary" type="button">Demo: normal returns</button>
-                <button data-i18n="view.var_estimator.btn.demo_fat_tailed" id="var-demo-fat"       class="secondary" type="button">Demo: fat-tailed</button>
-                <button data-i18n="view.var_estimator.btn.demo_30_day_crisis_embedded" id="var-demo-crisis"    class="secondary" type="button">Demo: 30-day crisis embedded</button>
-                <button data-i18n="view.var_estimator.btn.demo_low_vol_drift" id="var-demo-low-vol"   class="secondary" type="button">Demo: low-vol drift</button>
-                <button data-i18n="view.var_estimator.btn.demo_random_walk" id="var-demo-walk"      class="secondary" type="button">Demo: random walk</button>
+                <button data-i18n="view.var_estimator.btn.demo_normal_returns" id="var-demo-normal"    class="secondary" type="button" data-tip="view.var_estimator.tip.demo_normal">Demo: normal returns</button>
+                <button data-i18n="view.var_estimator.btn.demo_fat_tailed" id="var-demo-fat"       class="secondary" type="button" data-tip="view.var_estimator.tip.demo_fat">Demo: fat-tailed</button>
+                <button data-i18n="view.var_estimator.btn.demo_30_day_crisis_embedded" id="var-demo-crisis"    class="secondary" type="button" data-tip="view.var_estimator.tip.demo_crisis">Demo: 30-day crisis embedded</button>
+                <button data-i18n="view.var_estimator.btn.demo_low_vol_drift" id="var-demo-low-vol"   class="secondary" type="button" data-tip="view.var_estimator.tip.demo_low_vol">Demo: low-vol drift</button>
+                <button data-i18n="view.var_estimator.btn.demo_random_walk" id="var-demo-walk"      class="secondary" type="button" data-tip="view.var_estimator.tip.demo_walk">Demo: random walk</button>
             </div>
             <p data-i18n="view.var_estimator.hint.historical_empirical_percentile_of_loss_distributi" class="muted">Historical = empirical percentile of loss distribution. Parametric assumes Gaussian (μ ± z·σ). When historical &gt; parametric, fat tails are punishing your model. Expected Shortfall (CVaR) = mean loss BEYOND VaR — always ≥ VaR.</p>
         </div>
@@ -86,6 +87,7 @@ function readInputs() {
     const parsed = parseReturnsBlob(document.getElementById('var-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.var_estimator.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -97,7 +99,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.returns, state.positionValue, state.confidence);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.var_estimator.toast.invalid'), { level: 'warning' }); return; }
     const localHist  = localHistorical(state.returns, state.positionValue, state.confidence);
     const localGauss = localParametricGaussian(state.returns, state.positionValue, state.confidence);
     renderSummary(localHist, localGauss, true);
@@ -110,12 +112,19 @@ async function compute(tok) {
             api.calcVarGaussian(buildBody(state.returns, state.positionValue, state.confidence)),
         ]);
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.var_estimator.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(hist, gauss, false);
     renderCompare(hist, gauss);
     renderHistogram(state.returns, state.positionValue, hist, gauss);
+    const fatTail = hist.var_dollars > gauss.var_dollars * 1.05;
+    showToast(t('view.var_estimator.toast.computed', {
+        hist: Math.round(hist.var_dollars).toLocaleString(),
+        gauss: Math.round(gauss.var_dollars).toLocaleString(),
+    }), { level: fatTail ? 'warning' : 'success' });
 }
 
 function renderSummary(hist, gauss, pending) {
