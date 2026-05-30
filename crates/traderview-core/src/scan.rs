@@ -142,6 +142,8 @@ pub enum Preset {
     GapFillSqueeze,     // gap opened ≥1% AND day_pct collapsed (<0.5) AND quiet volume — failed continuation
     EndOfRangeSqueeze,  // close hugging mid of intraday range (HOD≈LOD distance) AND tight day_pct
     PreBreakoutSqueeze, // near 52w high (year_high_pct ≥ -3) AND very tight day_pct AND low rel_volume
+    PreBreakdownSqueeze,// near 52w low (year_low_pct ≤ 3) AND very tight day_pct AND low rel_volume
+    SymmetricSqueeze,   // identical HOD/LOD distances AND change near zero AND gap near zero AND quiet
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -219,6 +221,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.8
         }
+        Preset::PreBreakdownSqueeze => {
+            hit.year_low_pct <= 3.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
+        Preset::SymmetricSqueeze => {
+            (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.2
+                && hit.change_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 0.3
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -251,6 +264,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapFillSqueeze => "Gap-Fill Squeeze",
         Preset::EndOfRangeSqueeze => "End-of-Range Squeeze",
         Preset::PreBreakoutSqueeze => "Pre-Breakout Squeeze",
+        Preset::PreBreakdownSqueeze => "Pre-Breakdown Squeeze",
+        Preset::SymmetricSqueeze => "Symmetric Squeeze",
     }
 }
 

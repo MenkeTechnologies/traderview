@@ -55,6 +55,11 @@ export async function renderSentiment(mount, _state, symbol) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.sentiment.h2.delta_chart">Top sentiment Δ by symbol</h2>
+            <div id="sent-delta-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.sentiment.h2.live_feed">Live feed</h2>
             <div id="feed"></div>
         </div>
@@ -121,6 +126,45 @@ async function refresh(mount, tok) {
     if (downEl) downEl.innerHTML = rankedTable(downs, 'down');
     if (volEl) volEl.innerHTML = volumeTable(byVol);
     if (feedEl) feedEl.innerHTML = feedTable(feed);
+    renderDeltaChart(ranked);
+}
+
+function renderDeltaChart(ranked) {
+    const el = document.getElementById('sent-delta-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = [...(ranked || [])]
+        .filter(r => Number.isFinite(Number(r.sentiment_delta)))
+        .sort((a, b) => Math.abs(Number(b.sentiment_delta)) - Math.abs(Number(a.sentiment_delta)))
+        .slice(0, 30);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.sentiment.empty_chart">${esc(t('view.sentiment.empty_chart'))}</div>`;
+        return;
+    }
+    top.sort((a, b) => Number(b.sentiment_delta) - Number(a.sentiment_delta));
+    const labels = top.map(r => r.symbol);
+    const deltas = top.map(r => Number(r.sentiment_delta));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.sentiment.chart.symbol_idx') },
+            { label: t('view.sentiment.chart.delta'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.sentiment.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, deltas, zero], el);
 }
 
 function rankedTable(rows, dir) {
