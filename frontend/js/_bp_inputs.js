@@ -111,7 +111,7 @@ export function erf(v) {
 export function parsePairsBlob(blob) {
     const out = { x: [], y: [], errors: [] };
     if (typeof blob !== 'string') {
-        out.errors.push({ line_no: 0, message: 'input must be a string' });
+        out.errors.push({ line_no: 0, message: t('common.parse.input_must_be_string') });
         return out;
     }
     const lines = blob.split(/\r?\n/);

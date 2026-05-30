@@ -87,7 +87,7 @@ function erf(x) {
 export function parseReturnsBlob(blob) {
     const out = { returns: [], errors: [] };
     if (typeof blob !== 'string') {
-        out.errors.push({ line_no: 0, message: 'input must be a string' });
+        out.errors.push({ line_no: 0, message: t('common.parse.input_must_be_string') });
         return out;
     }
     const tokens = blob
