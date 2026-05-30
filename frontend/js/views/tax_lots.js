@@ -136,9 +136,48 @@ function renderReport(r, out) {
             <h2 data-i18n="view.tax_lots.h2.realized_chart">Realized gain/loss per event</h2>
             <div id="tl-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_lots.h2.cum_chart">Cumulative realized gain/loss through the year</h2>
+            <div id="tl-cum-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.tax_lots.hint.cum_chart" class="muted small">Running sum of realized gain/loss in event order. Reveals the tax-year equity trajectory: where the year was made or unmade, and which event tipped the net positive or negative. Yellow dashed = breakeven (zero).</p>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
     renderRealizedChart(r.realized);
+    renderCumRealizedChart(r.realized);
+}
+
+function renderCumRealizedChart(realized) {
+    const el = document.getElementById('tl-cum-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const events = Array.isArray(realized) ? realized.filter(e => Number.isFinite(e.gain_loss)) : [];
+    if (events.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_lots.empty_cum_chart">${esc(t('view.tax_lots.empty_cum_chart'))}</div>`;
+        return;
+    }
+    events.sort((a, b) => new Date(a.disposed_at) - new Date(b.disposed_at));
+    let acc = 0;
+    const cum = events.map(e => (acc += Number(e.gain_loss)));
+    const xs = cum.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_lots.chart.event_idx') },
+            { label: t('view.tax_lots.chart.cum_gain_loss'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.tax_lots.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderRealizedChart(realized) {
