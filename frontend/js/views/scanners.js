@@ -362,6 +362,8 @@ const PRESETS = [
     { id: 'day_change_aligned_big', label: t('view.scanners.preset.day_change_aligned_big.label'), desc: t('view.scanners.preset.day_change_aligned_big.desc') },
     { id: 'huge_range_hot_vol', label: t('view.scanners.preset.huge_range_hot_vol.label'), desc: t('view.scanners.preset.huge_range_hot_vol.desc') },
     { id: 'huge_range_dry_vol', label: t('view.scanners.preset.huge_range_dry_vol.label'), desc: t('view.scanners.preset.huge_range_dry_vol.desc') },
+    { id: 'pct52w_low_hot_vol_up', label: t('view.scanners.preset.pct52w_low_hot_vol_up.label'), desc: t('view.scanners.preset.pct52w_low_hot_vol_up.desc') },
+    { id: 'pct52w_high_hot_vol_down', label: t('view.scanners.preset.pct52w_high_hot_vol_down.label'), desc: t('view.scanners.preset.pct52w_high_hot_vol_down.desc') },
 ];
 
 export async function renderScanners(mount) {

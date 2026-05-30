@@ -55,6 +55,11 @@ export async function renderAmihud(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.amihud.h2.dvol_chart">Dollar volume per bar (liquidity input)</h2>
+            <div id="am-dvol-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.amihud.h2.table">Per-bar Amihud (tail — last 30)</h2>
             <div id="am-table"></div>
         </div>
@@ -99,6 +104,7 @@ async function compute(tok) {
     const local = localCompute(state.returns, state.dollar_volumes, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderDvolChart();
     renderTable(local);
     let resp;
     try {
@@ -110,6 +116,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderDvolChart();
     renderTable(resp);
 }
 
@@ -169,6 +176,39 @@ function renderChart(series) {
         ],
         legend: { show: true },
     }, [xs, series], el);
+}
+
+function renderDvolChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('am-dvol-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const dvols = state.dollar_volumes;
+    if (!Array.isArray(dvols) || dvols.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.amihud.empty_dvol">${esc(t('view.amihud.empty_dvol'))}</div>`;
+        return;
+    }
+    const xs = dvols.map((_, i) => i);
+    const ys = dvols.map(v => Number.isFinite(v) ? v : null);
+    const mean = ys.reduce((s, v) => s + (v == null ? 0 : v), 0) / Math.max(1, ys.filter(v => v != null).length);
+    const meanLine = xs.map(() => mean);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.amihud.chart.dvol'),
+              stroke: '#7af0a8', width: 1.5,
+              points: { show: true, size: 4, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.amihud.chart.dvol_mean'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, meanLine], el);
 }
 
 function renderTable(series) {

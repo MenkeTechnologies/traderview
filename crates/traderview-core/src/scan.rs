@@ -480,6 +480,8 @@ pub enum Preset {
     DayChangeAlignedBig,           // change_pct * day_pct > 0 AND change_pct.abs() > 3 AND day_pct.abs() > 3 AND rel_volume >= 1.5 — change_pct and day_pct same-sign big on hot vol (full trend day)
     HugeRangeHotVol,               // hod_dist + lod_dist > 8 AND rel_volume >= 3 — massive intraday range on hot vol (volatility expansion; chaos)
     HugeRangeDryVol,               // hod_dist + lod_dist > 8 AND rel_volume < 0.5 — massive intraday range on dry vol (illiquid swing; one-sided liquidation)
+    Pct52wLowHotVolUp,             // year_low_pct < 10 AND change_pct > 3 AND rel_volume >= 2 — near 52w low + big up move + hot vol (basing-to-up; bounce / accumulation candidate)
+    Pct52wHighHotVolDown,          // year_high_pct > -10 AND change_pct < -3 AND rel_volume >= 2 — near 52w high + big down move + hot vol (distribution / topping candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2386,6 +2388,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
                 && hit.rel_volume < 0.5
         }
+        Preset::Pct52wLowHotVolUp => {
+            hit.year_low_pct < 10.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wHighHotVolDown => {
+            hit.year_high_pct > -10.0
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2756,6 +2768,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DayChangeAlignedBig => "Day/Change Aligned Big, Hot Vol (Full Trend Day)",
         Preset::HugeRangeHotVol => "Huge Range (≥8%) Hot Vol (Volatility Expansion)",
         Preset::HugeRangeDryVol => "Huge Range (≥8%) Dry Vol (Illiquid Swing)",
+        Preset::Pct52wLowHotVolUp => "Near 52w Low + Hot Vol Up (Bounce/Accumulation)",
+        Preset::Pct52wHighHotVolDown => "Near 52w High + Hot Vol Down (Distribution/Topping)",
     }
 }
 
