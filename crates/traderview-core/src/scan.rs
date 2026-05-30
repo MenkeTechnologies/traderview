@@ -758,6 +758,8 @@ pub enum Preset {
     GapUpIntradayReversalCloseAtLOD,     // gap_pct > 0.5 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap up + intraday went down + close near LOD + decent vol (textbook reversal-down day; gap-up was sold, declined through the day to close at the lows; strong bearish reversal candidate)
     BigGreenMidYearSweetSpot,            // change_pct > 3 AND year_high_pct in [5, 20] AND year_low_pct > 15 AND rel_volume >= 1.5 — big green + 5-20% below 52w high + well above 52w low + decent vol (sweet-spot up move: high-momentum stock pushing higher from mid-range; room to run before resistance)
     BigRedMidYearSweetSpot,              // change_pct < -3 AND year_low_pct in [5, 20] AND year_high_pct > 15 AND rel_volume >= 1.5 — big red + 5-20% above 52w low + well below 52w high + decent vol (sweet-spot down move: high-momentum drop from mid-range; room to fall before support)
+    TripleZeroHotVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume >= 2 — gap + change + day ALL near zero + hot vol (massive participation produced literally zero movement on all three axes; max-absorption pattern; institutional cross at one price)
+    TripleZeroDryVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume < 0.5 — gap + change + day ALL near zero + dry vol (universal dormancy; market completely absent on all axes; near-dead-tape day; possibly halted or unattended)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4299,6 +4301,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct > 15.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::TripleZeroHotVol => {
+            hit.gap_pct.abs() < 0.1
+                && hit.change_pct.abs() < 0.1
+                && hit.day_pct.abs() < 0.1
+                && hit.rel_volume >= 2.0
+        }
+        Preset::TripleZeroDryVol => {
+            hit.gap_pct.abs() < 0.1
+                && hit.change_pct.abs() < 0.1
+                && hit.day_pct.abs() < 0.1
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -4947,6 +4961,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapUpIntradayReversalCloseAtLOD => "Gap Up + Down Intraday + Close at LOD + Decent Vol (Textbook Reversal-down Day; Gap-up Sold to Close at Lows)",
         Preset::BigGreenMidYearSweetSpot => "Big Green + 5-20% Below 52w High + Above 52w Low + Decent Vol (Sweet-spot Up Move; High-momentum Push From Mid-range; Room to Run)",
         Preset::BigRedMidYearSweetSpot => "Big Red + 5-20% Above 52w Low + Below 52w High + Decent Vol (Sweet-spot Down Move; High-momentum Drop From Mid-range; Room to Fall)",
+        Preset::TripleZeroHotVol => "Gap + Change + Day All Near Zero + Hot Vol (Max-absorption Pattern; Massive Participation, Zero Movement; Institutional Cross at One Price)",
+        Preset::TripleZeroDryVol => "Gap + Change + Day All Near Zero + Dry Vol (Universal Dormancy; Near-dead Tape on All Axes; Possibly Halted or Unattended)",
     }
 }
 

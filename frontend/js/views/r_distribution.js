@@ -74,9 +74,46 @@ function render(r, mount) {
             <h2 data-i18n="view.r_distribution.h2.tag_chart">Mean R + SQN per tag (top 20)</h2>
             <div id="rd-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.r_distribution.h2.tag_samples_chart">Sample count per tag (top 20)</h2>
+            <div id="rd-samples-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.r_distribution.hint.tag_samples" class="muted small">Trade count per tag. Reveals which tags have meaningful sample sizes vs noisy low-sample tags. A 0.5R mean over 200 trades is real edge; over 3 trades it's noise.</p>
+        </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
     renderTagChart(r.by_tag);
+    renderTagSamplesChart(r.by_tag);
+}
+
+function renderTagSamplesChart(byTag) {
+    const el = document.getElementById('rd-samples-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const tags = (byTag || []).slice(0, 20);
+    if (tags.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.r_distribution.empty_samples_chart">${esc(t('view.r_distribution.empty_samples_chart'))}</div>`;
+        return;
+    }
+    const sorted = tags.slice().sort((a, b) => Number(b.samples) - Number(a.samples));
+    const labels = sorted.map(g => g.tag_name);
+    const ys = sorted.map(g => Number(g.samples));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.r_distribution.chart.tag_idx') },
+            { label: t('view.r_distribution.chart.samples'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTagChart(byTag) {
