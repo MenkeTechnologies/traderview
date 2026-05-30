@@ -1014,6 +1014,8 @@ const PRESETS = [
     { id: 'quintupled_vol_down_confirmed_below_year_low_hot_vol', label: t('view.scanners.preset.quintupled_vol_down_confirmed_below_year_low_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_down_confirmed_below_year_low_hot_vol.desc') },
     { id: 'quintupled_vol_up_mid_year_high_hot_vol', label: t('view.scanners.preset.quintupled_vol_up_mid_year_high_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_up_mid_year_high_hot_vol.desc') },
     { id: 'quintupled_vol_down_mid_year_low_hot_vol', label: t('view.scanners.preset.quintupled_vol_down_mid_year_low_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_down_mid_year_low_hot_vol.desc') },
+    { id: 'quintupled_vol_up_just_off_year_high_hot_vol', label: t('view.scanners.preset.quintupled_vol_up_just_off_year_high_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_up_just_off_year_high_hot_vol.desc') },
+    { id: 'quintupled_vol_down_just_off_year_low_hot_vol', label: t('view.scanners.preset.quintupled_vol_down_just_off_year_low_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_down_just_off_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

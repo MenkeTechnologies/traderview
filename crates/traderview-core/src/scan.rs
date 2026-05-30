@@ -1132,6 +1132,8 @@ pub enum Preset {
     QuintupledVolDownConfirmedBelowYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 — quintupled vol (>=5) + big down move (<-3%) + confirmed-breakdown zone (1-3% past 52w low) (extreme catalyst extending validated breakdown: vol is 5x average and price prints a significant down move while extending further past the prior trough; trend-extension at the highest possible tier worth a follow-through alert)
     QuintupledVolUpMidYearHighHotVol,          // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 — quintupled vol (>=5) + big up move (>3%) + mid-range from high (5-20%) (extreme catalyst rally in mid-cycle pullback zone: vol is 5x average and price prints a significant up move in the proper consolidation range below the prior peak; tier-1 conviction-recovery signal worth a swing-screen)
     QuintupledVolDownMidYearLowHotVol,         // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — quintupled vol (>=5) + big down move (<-3%) + mid-range from low (5-20%) (extreme catalyst rejection in mid-cycle recovery zone: vol is 5x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-1 conviction-rejection signal worth a swing-screen)
+    QuintupledVolUpJustOffYearHighHotVol,      // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — quintupled vol (>=5) + big up move (>3%) + just off 52w high (2-5%) (extreme catalyst rally just off the year peak: vol is 5x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-1 post-tag-recovery catalyst worth a re-test-screen)
+    QuintupledVolDownJustOffYearLowHotVol,     // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — quintupled vol (>=5) + big down move (<-3%) + just off 52w low (2-5%) (extreme catalyst rejection just off the year trough: vol is 5x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-1 post-tag-rejection catalyst worth a re-test-screen)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6970,6 +6972,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::QuintupledVolUpJustOffYearHighHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.change_pct > 3.0
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::QuintupledVolDownJustOffYearLowHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.change_pct < -3.0
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -7992,6 +8006,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolDownConfirmedBelowYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Extreme Catalyst Extending Validated Breakdown: Vol Is 5x Average and Price Prints a Significant Down Move While Extending Further past the Prior Trough; Trend-extension at the Highest Possible Tier Worth a Follow-through Alert)",
         Preset::QuintupledVolUpMidYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + Mid-range from High (5-20 %) (Extreme Catalyst Rally in Mid-cycle Pullback Zone: Vol Is 5x Average and Price Prints a Significant Up Move in the Proper Consolidation Range below the Prior Peak; Tier-1 Conviction-recovery Signal Worth a Swing-screen)",
         Preset::QuintupledVolDownMidYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Mid-range from Low (5-20 %) (Extreme Catalyst Rejection in Mid-cycle Recovery Zone: Vol Is 5x Average and Price Prints a Significant Down Move in the Proper Consolidation Range above the Prior Trough; Tier-1 Conviction-rejection Signal Worth a Swing-screen)",
+        Preset::QuintupledVolUpJustOffYearHighHotVol => "Quintupled Vol (>=5) + Big Up Move (>3 %) + Just off 52w High (2-5 %) (Extreme Catalyst Rally Just off the Year Peak: Vol Is 5x Average and Price Prints a Significant Up Move Immediately after a Shallow Pullback from the 52w High; Tier-1 Post-tag-recovery Catalyst Worth a Re-test-screen)",
+        Preset::QuintupledVolDownJustOffYearLowHotVol => "Quintupled Vol (>=5) + Big Down Move (<-3 %) + Just off 52w Low (2-5 %) (Extreme Catalyst Rejection Just off the Year Trough: Vol Is 5x Average and Price Prints a Significant Down Move Immediately after a Shallow Bounce from the 52w Low; Tier-1 Post-tag-rejection Catalyst Worth a Re-test-screen)",
     }
 }
 
