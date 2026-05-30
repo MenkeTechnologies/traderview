@@ -974,6 +974,8 @@ pub enum Preset {
     CloseAtLodMidYearHighHotVol,               // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — mid-range from high (5-20%) + close pinned to LOD + red close + hot vol (closing-weakness signal in the pullback zone: bear conviction dumped into the close without requiring a long upper-wick rejection; supply-led mid-cycle continuation)
     CloseAtHodDeepBelowYearHighHotVol,         // year_high_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — far below 52w high (>=20%) + close pinned to HOD + green close + hot vol (closing-strength signal deep in the pullback zone: bull conviction ramped into the close well below the prior peak; early-reversal candidate after extended decline without requiring wick-rejection context)
     CloseAtLodDeepAboveYearLowHotVol,          // year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — far above 52w low (>=20%) + close pinned to LOD + red close + hot vol (closing-weakness signal deep in the advance zone: bear conviction dumped into the close well above the prior trough; early-reversal candidate after extended advance without requiring wick-rejection context)
+    CloseAtHodNearYearHighHotVol,              // year_high_pct < 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close pinned to HOD + green close + hot vol (freshest possible breakout signal: closing at the high of day at the high of the year on elevated participation; momentum-continuation with no overhead supply)
+    CloseAtLodNearYearLowHotVol,               // year_low_pct < 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close pinned to LOD + red close + hot vol (freshest possible breakdown signal: closing at the low of day at the low of the year on elevated participation; momentum-continuation with no underlying support)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5850,6 +5852,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::CloseAtHodNearYearHighHotVol => {
+            hit.year_high_pct < 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseAtLodNearYearLowHotVol => {
+            hit.year_low_pct < 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6714,6 +6728,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseAtLodMidYearHighHotVol => "Mid-range from High (5-20 %) + Close Pinned to LOD + Red Close + Hot Vol (Closing-weakness Signal in the Pullback Zone: Bear Conviction Dumped into the Close without Requiring a Long Upper-wick Rejection; Supply-led Mid-cycle Continuation)",
         Preset::CloseAtHodDeepBelowYearHighHotVol => "Far below 52w High (>=20 %) + Close Pinned to HOD + Green Close + Hot Vol (Closing-strength Signal Deep in the Pullback Zone: Bull Conviction Ramped into the Close Well below the Prior Peak; Early-reversal Candidate after Extended Decline without Requiring Wick-rejection Context)",
         Preset::CloseAtLodDeepAboveYearLowHotVol => "Far above 52w Low (>=20 %) + Close Pinned to LOD + Red Close + Hot Vol (Closing-weakness Signal Deep in the Advance Zone: Bear Conviction Dumped into the Close Well above the Prior Trough; Early-reversal Candidate after Extended Advance without Requiring Wick-rejection Context)",
+        Preset::CloseAtHodNearYearHighHotVol => "At/near 52w High (<2 %) + Close Pinned to HOD + Green Close + Hot Vol (Freshest Possible Breakout Signal: Closing at the High of Day at the High of the Year on Elevated Participation; Momentum-continuation with No Overhead Supply)",
+        Preset::CloseAtLodNearYearLowHotVol => "At/near 52w Low (<2 %) + Close Pinned to LOD + Red Close + Hot Vol (Freshest Possible Breakdown Signal: Closing at the Low of Day at the Low of the Year on Elevated Participation; Momentum-continuation with No Underlying Support)",
     }
 }
 
