@@ -306,6 +306,8 @@ pub enum Preset {
     NewLowOnHotVol,              // year_low_pct <= 0 AND rel_volume >= 3 — new 52w low on >=3× volume (institutional distribution)
     QuietNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w high on light vol (coiled spring up)
     QuietNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w low on light vol (coiled spring down)
+    NoisyNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w high on heavy vol (battle for the top)
+    NoisyNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w low on heavy vol (battle for the bottom)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1241,6 +1243,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
                 && hit.rel_volume < 1.0
         }
+        Preset::NoisyNearTheTop => {
+            hit.year_high_pct > -3.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::NoisyNearTheBottom => {
+            hit.year_low_pct < 3.0
+                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1437,6 +1449,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NewLowOnHotVol => "New 52w Low on Hot Vol",
         Preset::QuietNearTheTop => "Quiet Near The Top",
         Preset::QuietNearTheBottom => "Quiet Near The Bottom",
+        Preset::NoisyNearTheTop => "Noisy Near The Top",
+        Preset::NoisyNearTheBottom => "Noisy Near The Bottom",
     }
 }
 

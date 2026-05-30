@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { esc, fmt } from '../util.js';
 import { tConfirm, tPrompt } from '../dialog.js';
+import { t } from '../i18n.js';
 
 export async function renderWatchlists(mount) {
     const tok = currentViewToken();
@@ -46,6 +47,11 @@ export async function renderWatchlists(mount) {
                         data-shortcut="watchlists_refresh">⟳ Refresh</button>
             </form>
             <div id="wl-table"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.watchlists.h2.change_chart">Change % per symbol</h2>
+            <div id="wl-chart" style="width:100%;height:240px"></div>
         </div>
     `;
 
@@ -133,6 +139,7 @@ export async function renderWatchlists(mount) {
                     </tr>`;
                 }).join('')}</tbody>
             </table>`;
+        renderChangeChart(data.symbols, byKey);
         elNow.querySelectorAll('[data-rm]').forEach(b =>
             b.addEventListener('click', async () => {
                 await api.removeWatchlistSym(wid, b.dataset.rm);
@@ -141,4 +148,45 @@ export async function renderWatchlists(mount) {
             }));
     }
     void go;
+}
+
+function renderChangeChart(symbols, byKey) {
+    const el = document.getElementById('wl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (symbols || [])
+        .map(sym => ({ sym, ch: Number(byKey.get(sym)?.change_pct) }))
+        .filter(r => Number.isFinite(r.ch));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.watchlists.empty_chart">${esc(t('view.watchlists.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => b.ch - a.ch);
+    const labels = rows.map(r => r.sym);
+    const xs = labels.map((_, i) => i + 1);
+    const upY   = rows.map(r => r.ch >= 0 ? r.ch : null);
+    const downY = rows.map(r => r.ch <  0 ? r.ch : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.watchlists.chart.symbol') },
+            { label: t('view.watchlists.chart.up'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.watchlists.chart.down'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.watchlists.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, upY, downY, zero], el);
 }
