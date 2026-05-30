@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePrintsBlob, printsToBlob, validateInputs, buildBody, localCompute,
@@ -30,19 +31,19 @@ export async function renderTickBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.tick_bar.label.ticks">Ticks per bar</span>
-                    <input id="tb-ticks" type="number" step="1" min="1" value="${state.ticks_per_bar}"></label>
+                    <input id="tb-ticks" type="number" step="1" min="1" value="${state.ticks_per_bar}" data-tip="view.tick_bar.tip.ticks"></label>
                 <button data-i18n="view.tick_bar.btn.compute" id="tb-run" class="primary"
-                        data-tip="view.tick_bar.tip.compute" type="button">Build bars</button>
+                        data-tip="view.tick_bar.tip.compute" data-shortcut="tick_bar_run" type="button">Build bars</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.tick_bar.btn.demo_up"      id="tb-demo-up"      class="secondary" type="button">Demo: pure uptrend</button>
-                <button data-i18n="view.tick_bar.btn.demo_down"    id="tb-demo-down"    class="secondary" type="button">Demo: pure downtrend</button>
-                <button data-i18n="view.tick_bar.btn.demo_flat"    id="tb-demo-flat"    class="secondary" type="button">Demo: flat (doji bars)</button>
-                <button data-i18n="view.tick_bar.btn.demo_noisy"   id="tb-demo-noisy"   class="secondary" type="button">Demo: noisy walk (200 prints)</button>
-                <button data-i18n="view.tick_bar.btn.demo_small"   id="tb-demo-small"   class="secondary" type="button">Demo: small bars (N=5)</button>
-                <button data-i18n="view.tick_bar.btn.demo_large"   id="tb-demo-large"   class="secondary" type="button">Demo: large bars (N=30)</button>
-                <button data-i18n="view.tick_bar.btn.demo_partial" id="tb-demo-partial" class="secondary" type="button">Demo: partial trailing bar (dropped)</button>
-                <button data-i18n="view.tick_bar.btn.demo_one"     id="tb-demo-one"     class="secondary" type="button">Demo: 1 tick/bar (every print)</button>
+                <button data-i18n="view.tick_bar.btn.demo_up"      id="tb-demo-up"      class="secondary" type="button" data-tip="view.tick_bar.tip.demo_up">Demo: pure uptrend</button>
+                <button data-i18n="view.tick_bar.btn.demo_down"    id="tb-demo-down"    class="secondary" type="button" data-tip="view.tick_bar.tip.demo_down">Demo: pure downtrend</button>
+                <button data-i18n="view.tick_bar.btn.demo_flat"    id="tb-demo-flat"    class="secondary" type="button" data-tip="view.tick_bar.tip.demo_flat">Demo: flat (doji bars)</button>
+                <button data-i18n="view.tick_bar.btn.demo_noisy"   id="tb-demo-noisy"   class="secondary" type="button" data-tip="view.tick_bar.tip.demo_noisy">Demo: noisy walk (200 prints)</button>
+                <button data-i18n="view.tick_bar.btn.demo_small"   id="tb-demo-small"   class="secondary" type="button" data-tip="view.tick_bar.tip.demo_small">Demo: small bars (N=5)</button>
+                <button data-i18n="view.tick_bar.btn.demo_large"   id="tb-demo-large"   class="secondary" type="button" data-tip="view.tick_bar.tip.demo_large">Demo: large bars (N=30)</button>
+                <button data-i18n="view.tick_bar.btn.demo_partial" id="tb-demo-partial" class="secondary" type="button" data-tip="view.tick_bar.tip.demo_partial">Demo: partial trailing bar (dropped)</button>
+                <button data-i18n="view.tick_bar.btn.demo_one"     id="tb-demo-one"     class="secondary" type="button" data-tip="view.tick_bar.tip.demo_one">Demo: 1 tick/bar (every print)</button>
             </div>
             <p data-i18n="view.tick_bar.hint.about" class="muted">One OHLC bar per N prints. Time is ignored — useful in liquid markets where 1-minute bars contain wildly different trade counts. Trailing partial bars are not emitted.</p>
         </div>
@@ -83,6 +84,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.tick_bar.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.tick_bar.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -94,7 +96,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.tick_bar.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.prints, state.ticks_per_bar);
     renderSummary(local, true);
     renderChart(local);
@@ -104,12 +106,18 @@ async function compute(tok) {
         resp = await api.chartsTickBar(buildBody(state));
     } catch (e) {
         showErr(`${t('view.tick_bar.err.api')}: ${e.message || e}`);
+        showToast(t('view.tick_bar.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const bars = Array.isArray(resp) ? resp.length : 0;
+    const covered = bars * state.ticks_per_bar;
+    const dropped = state.prints.length - covered;
+    const level = dropped > 0 ? 'warning' : 'success';
+    showToast(t('view.tick_bar.toast.built', { bars, prints: state.prints.length, dropped }), { level });
 }
 
 function renderSummary(bars, pending) {
