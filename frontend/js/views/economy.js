@@ -68,6 +68,10 @@ function renderEvents(evs, mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.economy.h2.density">Events per day (high-importance overlay)</h2>
             <div id="ec-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.economy.h2.category_chart">Event count by category — which macro themes dominate the horizon</h2>
+            <div id="ec-category-chart" style="width:100%;height:220px"></div>
         </div>`;
     const html = sortedDays
         .map(([day, items]) => `
@@ -88,6 +92,41 @@ function renderEvents(evs, mount) {
             </div>`).join('');
     ecEl.innerHTML = chartHtml + html;
     renderDensityChart(sortedDays);
+    renderCategoryChart(evs);
+}
+
+function renderCategoryChart(evs) {
+    const el = document.getElementById('ec-category-chart');
+    if (!el || !window.uPlot || !Array.isArray(evs) || evs.length < 1) {
+        if (el) el.innerHTML = `<div class="muted" data-i18n="view.economy.empty_category_chart">${esc(t('view.economy.empty_category_chart'))}</div>`;
+        return;
+    }
+    el.innerHTML = '';
+    const counts = new Map();
+    for (const e of evs) {
+        const c = e.category || '?';
+        counts.set(c, (counts.get(c) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 20);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.economy.chart.category_idx') },
+            { label: t('view.economy.chart.event_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderDensityChart(sortedDays) {

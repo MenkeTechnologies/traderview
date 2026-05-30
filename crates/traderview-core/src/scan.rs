@@ -628,6 +628,8 @@ pub enum Preset {
     ClimaxGreenFadedFromHod,        // change_pct > 3 AND day_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() > 1.5 — big green overall + significant red intraday + hot vol + pulled from HOD (climax high; euphoria followed by intraday fade)
     WideRangeChopMixedVol,          // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.5 — wide range + small change + normal vol (range exploration without conviction; vol-of-vol; mixed signal)
     NarrowRangeBigChangeNoIntraday, // hod_dist + lod_dist < 1 AND change_pct.abs() > 1.5 AND day_pct.abs() < 0.3 — narrow range + big change + flat intraday (all change happened overnight; no intraday move; pure gap day)
+    EveryAxisExtreme,               // gap_pct.abs() > 1 AND day_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — every measurable signal axis extreme simultaneously (multi-axis breakout; outlier across the full feature space)
+    EveryAxisFlat,                  // gap_pct.abs() < 0.2 AND day_pct.abs() < 0.2 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1 — every measurable signal axis tiny simultaneously (silent day; total absence of activity across the full feature space)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3391,6 +3393,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 1.5
                 && hit.day_pct.abs() < 0.3
         }
+        Preset::EveryAxisExtreme => {
+            hit.gap_pct.abs() > 1.0
+                && hit.day_pct.abs() > 1.0
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+        }
+        Preset::EveryAxisFlat => {
+            hit.gap_pct.abs() < 0.2
+                && hit.day_pct.abs() < 0.2
+                && hit.change_pct.abs() < 0.2
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -3909,6 +3925,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ClimaxGreenFadedFromHod => "Big Green Day + HOD Fade + Hot Vol (Climax High / Euphoric Reversal)",
         Preset::WideRangeChopMixedVol => "Wide Range + Small Change + Normal Vol (Range Exploration without Conviction)",
         Preset::NarrowRangeBigChangeNoIntraday => "Narrow Range + Big Change + Flat Intraday (Pure Gap Day; All Change Overnight)",
+        Preset::EveryAxisExtreme => "Every Signal Axis Extreme Simultaneously (Multi-axis Breakout / Full-feature Outlier)",
+        Preset::EveryAxisFlat => "Every Signal Axis Tiny Simultaneously (Silent Day / Full-feature Null)",
     }
 }
 
