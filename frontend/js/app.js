@@ -1106,6 +1106,11 @@ function bindTabs() {
         const el = document.getElementById('bs-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in breusch-pagan scope → click Test.
+    window.addEventListener('tv:bp-test-run', () => {
+        const el = document.getElementById('bp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePairsBlob, pairsToBlob,
@@ -32,17 +33,17 @@ export async function renderBpTest(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.bp.btn.compute" id="bp-run" class="primary"
-                        data-tip="view.bp.tip.compute" type="button">Test</button>
+                        data-tip="view.bp.tip.compute" data-shortcut="bp_test_run" type="button">Test</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bp.btn.demo_hom"   id="bp-d1" class="secondary" type="button">Demo: homoskedastic</button>
-                <button data-i18n="view.bp.btn.demo_var_up" id="bp-d2" class="secondary" type="button">Demo: variance ↑ x</button>
-                <button data-i18n="view.bp.btn.demo_var_dn" id="bp-d3" class="secondary" type="button">Demo: variance ↓ x</button>
-                <button data-i18n="view.bp.btn.demo_v"     id="bp-d4" class="secondary" type="button">Demo: V-shape variance</button>
-                <button data-i18n="view.bp.btn.demo_n_w"   id="bp-d5" class="secondary" type="button">Demo: narrow → wide</button>
-                <button data-i18n="view.bp.btn.demo_small" id="bp-d6" class="secondary" type="button">Demo: small sample (n=12)</button>
-                <button data-i18n="view.bp.btn.demo_returns" id="bp-d7" class="secondary" type="button">Demo: returns vs price</button>
-                <button data-i18n="view.bp.btn.demo_spike" id="bp-d8" class="secondary" type="button">Demo: spike residuals</button>
+                <button data-i18n="view.bp.btn.demo_hom"     id="bp-d1" class="secondary" data-tip="view.bp.tip.demo_hom"     type="button">Demo: homoskedastic</button>
+                <button data-i18n="view.bp.btn.demo_var_up"  id="bp-d2" class="secondary" data-tip="view.bp.tip.demo_var_up"  type="button">Demo: variance ↑ x</button>
+                <button data-i18n="view.bp.btn.demo_var_dn"  id="bp-d3" class="secondary" data-tip="view.bp.tip.demo_var_dn"  type="button">Demo: variance ↓ x</button>
+                <button data-i18n="view.bp.btn.demo_v"       id="bp-d4" class="secondary" data-tip="view.bp.tip.demo_v"       type="button">Demo: V-shape variance</button>
+                <button data-i18n="view.bp.btn.demo_n_w"     id="bp-d5" class="secondary" data-tip="view.bp.tip.demo_n_w"     type="button">Demo: narrow → wide</button>
+                <button data-i18n="view.bp.btn.demo_small"   id="bp-d6" class="secondary" data-tip="view.bp.tip.demo_small"   type="button">Demo: small sample (n=12)</button>
+                <button data-i18n="view.bp.btn.demo_returns" id="bp-d7" class="secondary" data-tip="view.bp.tip.demo_returns" type="button">Demo: returns vs price</button>
+                <button data-i18n="view.bp.btn.demo_spike"   id="bp-d8" class="secondary" data-tip="view.bp.tip.demo_spike"   type="button">Demo: spike residuals</button>
             </div>
             <p data-i18n="view.bp.hint.about" class="muted">Tests H₀: OLS residual variance is independent of x. Fits y = α + β·x, then regresses ê² on x. LM = n · R²_aux ~ χ²(1) under H₀. p &lt; 0.05 → reject homoskedasticity → use White / HC standard errors. Univariate predictor only.</p>
         </div>
@@ -87,6 +88,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bp.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bp.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -97,9 +99,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bp.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.x, state.y);
-    if (!local) { showErr(t('view.bp.err.degenerate')); return; }
+    if (!local) { showErr(t('view.bp.err.degenerate')); showToast(t('view.bp.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart();
     renderAuxChart();
@@ -109,14 +111,16 @@ async function compute(tok) {
         resp = await api.anlyBreuschPagan(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bp.err.api')}: ${e.message || e}`);
+        showToast(t('view.bp.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.bp.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.bp.err.server_rejected')); showToast(t('view.bp.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart();
     renderAuxChart();
     renderStats();
+    showToast(t('view.bp.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
