@@ -275,6 +275,41 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Strategy-alert-row actions — read data-id from the tr, call API.
+    window.addEventListener('tv:sa-row-toggle', (e) => {
+        const target = e.detail && e.detail.target;
+        const id = target && target.dataset && target.dataset.id;
+        if (!id) return;
+        void (async () => {
+            try {
+                const rules = await api.listStrategyAlerts();
+                const row = rules.find(x => x.id === id);
+                if (!row) return;
+                await api.updateStrategyAlert(id, { enabled: !row.enabled });
+                showToast(
+                    t(row.enabled ? 'toast.sa_disabled' : 'toast.sa_enabled', { name: row.name }),
+                    { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
+    window.addEventListener('tv:sa-row-delete', (e) => {
+        const target = e.detail && e.detail.target;
+        const id = target && target.dataset && target.dataset.id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.sa_row_delete_confirm', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteStrategyAlert(id);
+                showToast(t('toast.sa_deleted', { id }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     window.addEventListener('tv:trade-delete', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {

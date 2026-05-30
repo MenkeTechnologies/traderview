@@ -157,6 +157,16 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Strategy-alert-row context items. Right-click on a <tr data-
+// context-scope="strategy-alert-row" data-id="X"> shows: Toggle
+// enabled / Delete. Handlers call api.update/deleteStrategyAlert.
+export const STRATEGY_ALERT_ROW_ITEMS = [
+    { id: 'sa_row_toggle', labelKey: 'ctxmenu.sa_row_toggle',
+      actionKey: 'tv:sa-row-toggle', section: 'alert' },
+    { id: 'sa_row_delete', labelKey: 'ctxmenu.sa_row_delete',
+      actionKey: 'tv:sa-row-delete', section: 'alert' },
+];
+
 // Trade-row context items. Right-click on a <tr data-context-scope=
 // "trade-row" data-id="X"> shows: View detail / Copy ID / Delete.
 // Handlers read `data-id` from `CustomEvent.detail.target`.

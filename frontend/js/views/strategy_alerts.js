@@ -151,7 +151,7 @@ function renderRules(rules, mount, tok) {
             <th data-i18n="view.strategy_alerts.th.last_eval">Last eval</th><th data-i18n="view.strategy_alerts.th.last_fired">Last fired</th><th data-i18n="view.strategy_alerts.th.error">Error</th><th></th>
         </tr></thead>
         <tbody>
-        ${rules.map(r => `<tr>
+        ${rules.map(r => `<tr data-context-scope="strategy-alert-row" data-id="${esc(r.id)}">
             <td>${esc(r.name)}</td>
             <td class="${r.enabled ? 'pos' : 'muted'}">${t(r.enabled ? 'common.on_lc' : 'common.off_lc')}</td>
             <td>${r.last_truth == null ? '—' : (r.last_truth ? '✓' : '✗')}</td>
