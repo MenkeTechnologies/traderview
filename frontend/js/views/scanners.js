@@ -582,6 +582,8 @@ const PRESETS = [
     { id: 'both_sides_tagged_big_change_hot_vol', label: t('view.scanners.preset.both_sides_tagged_big_change_hot_vol.label'), desc: t('view.scanners.preset.both_sides_tagged_big_change_hot_vol.desc') },
     { id: 'moderate_green_gap_down_reversal', label: t('view.scanners.preset.moderate_green_gap_down_reversal.label'), desc: t('view.scanners.preset.moderate_green_gap_down_reversal.desc') },
     { id: 'moderate_red_gap_up_fade', label: t('view.scanners.preset.moderate_red_gap_up_fade.label'), desc: t('view.scanners.preset.moderate_red_gap_up_fade.desc') },
+    { id: 'gap_and_intraday_both_big_same_dir_hot_vol', label: t('view.scanners.preset.gap_and_intraday_both_big_same_dir_hot_vol.label'), desc: t('view.scanners.preset.gap_and_intraday_both_big_same_dir_hot_vol.desc') },
+    { id: 'gap_and_intraday_both_big_opposing_hot_vol', label: t('view.scanners.preset.gap_and_intraday_both_big_opposing_hot_vol.label'), desc: t('view.scanners.preset.gap_and_intraday_both_big_opposing_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

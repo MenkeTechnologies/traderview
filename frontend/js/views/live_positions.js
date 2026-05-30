@@ -34,6 +34,11 @@ export async function renderLivePositions(mount, state) {
             <h2 data-i18n="view.live_positions.h2.upnl_chart">Unrealized P/L per position</h2>
             <div id="lp-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.live_positions.h2.notional_chart">Notional exposure per position</h2>
+            <div id="lp-notional-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.live_positions.hint.notional" class="muted small">Per-symbol notional size. Reveals capital concentration independent of P/L performance — a 60% notional in one name is concentration risk even if it's green today.</p>
+        </div>
         <p class="muted small" id="lp-status"></p>
     `;
     const refreshBtn = mount.querySelector('#live-refresh-btn');
@@ -58,6 +63,7 @@ async function refresh(accountId, mount, tok) {
         renderCards(r, mount);
         renderTable(r, mount);
         renderUpnlChart(r);
+        renderNotionalChart(r);
         const st = mount.querySelector('#lp-status');
         if (st) st.textContent = t('view.live_positions.status.updated', {
             time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
@@ -181,4 +187,35 @@ function renderUpnlChart(r) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderNotionalChart(r) {
+    const el = document.getElementById('lp-notional-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (r.positions || []).filter(p => Number.isFinite(Number(p.notional)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.live_positions.empty_notional_chart">${esc(t('view.live_positions.empty_notional_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.notional) - Number(a.notional));
+    const labels = valid.map(p => p.symbol);
+    const ys = valid.map(p => Number(p.notional));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.live_positions.chart.symbol_idx') },
+            { label: t('view.live_positions.chart.notional'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

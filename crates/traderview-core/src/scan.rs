@@ -700,6 +700,8 @@ pub enum Preset {
     BothSidesTaggedBigChangeHotVol,  // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 — both extremes well-distant + big change + hot vol (full-range exploration ending decisively on volume; trend day that swept both sides first before resolving)
     ModerateGreenGapDownReversal,    // gap_pct < -1 AND change_pct between 1 and 2 AND rel_volume between 1 and 1.5 — gap down + moderate green finish (1-2%) + slightly elevated vol (moderate-conviction gap reversal; institutional buying without panic; conservative reclaim)
     ModerateRedGapUpFade,            // gap_pct > 1 AND change_pct between -2 and -1 AND rel_volume between 1 and 1.5 — gap up + moderate red finish (-1 to -2%) + slightly elevated vol (moderate-conviction gap fade; institutional selling without panic; conservative rejection)
+    GapAndIntradayBothBigSameDirHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct > 0 AND rel_volume >= 1.5 — significant gap + significant intraday + same-direction + hot vol (gap-and-intraday-extend; both halves of the day pushed the same way on volume; conviction continuation)
+    GapAndIntradayBothBigOpposingHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct < 0 AND rel_volume >= 1.5 — significant gap + significant intraday + opposite-direction + hot vol (gap rejected and reversed by significant intraday; full counter-move on volume)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3869,6 +3871,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
                 && hit.rel_volume <= 1.5
         }
+        Preset::GapAndIntradayBothBigSameDirHotVol => {
+            hit.gap_pct.abs() > 2.0
+                && hit.day_pct.abs() > 2.0
+                && hit.gap_pct * hit.day_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapAndIntradayBothBigOpposingHotVol => {
+            hit.gap_pct.abs() > 2.0
+                && hit.day_pct.abs() > 2.0
+                && hit.gap_pct * hit.day_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4459,6 +4473,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BothSidesTaggedBigChangeHotVol => "Both Extremes Tagged + Big Change + Hot Vol (Full-range Exploration Ending Decisively; Trend Day After Sweeping Both Sides)",
         Preset::ModerateGreenGapDownReversal => "Gap Down + Moderate Green Finish + Slightly Elevated Vol (Moderate-conviction Gap Reversal; Conservative Reclaim)",
         Preset::ModerateRedGapUpFade => "Gap Up + Moderate Red Finish + Slightly Elevated Vol (Moderate-conviction Gap Fade; Conservative Rejection)",
+        Preset::GapAndIntradayBothBigSameDirHotVol => "Big Gap + Big Same-direction Intraday + Hot Vol (Both Halves of the Day Pushed Same Way on Volume; Conviction Continuation)",
+        Preset::GapAndIntradayBothBigOpposingHotVol => "Big Gap + Big Opposing Intraday + Hot Vol (Gap Rejected and Reversed by Significant Intraday; Full Counter-move on Volume)",
     }
 }
 
