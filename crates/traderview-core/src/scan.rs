@@ -654,6 +654,8 @@ pub enum Preset {
     IntradayOpposesChange,          // change_pct.abs() > 1 AND day_pct * change_pct < 0 AND day_pct.abs() > 0.5 — meaningful change + opposite-sign intraday + meaningful intraday (gap dominated; intraday reversed but couldn't overpower gap)
     SymmetricMidRangeBalance,       // (hod_dist - lod_dist).abs() < 0.2 AND hod_dist + lod_dist > 1 AND change_pct.abs() < 0.3 — close exactly mid-range + meaningful range visited + flat change (geometric symmetry; perfect balance day)
     AsymmetricExtremeBias,          // (hod_dist - lod_dist).abs() > 2 AND hod_dist + lod_dist > 3 — close strongly biased to one extreme + wide range visited (one-sided range; close clearly favored one side of the day's exploration)
+    YearLowExplosiveSqueezeIgnition, // year_low_pct < 3 AND change_pct > 5 AND rel_volume >= 3 — at 52w low + huge gain + extreme vol (squeeze ignition from 52w low; potential reversal of a multi-month downtrend)
+    YearHighSharpDistribution,       // year_high_pct < 3 AND change_pct < -5 AND rel_volume >= 3 — at 52w high + huge drop + extreme vol (sharp distribution from the highs; potential trend break)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3562,6 +3564,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() > 2.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
         }
+        Preset::YearLowExplosiveSqueezeIgnition => {
+            hit.year_low_pct < 3.0
+                && hit.change_pct > 5.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::YearHighSharpDistribution => {
+            hit.year_high_pct < 3.0
+                && hit.change_pct < -5.0
+                && hit.rel_volume >= 3.0
+        }
     }
 }
 
@@ -4106,6 +4118,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayOpposesChange => "Meaningful Change + Intraday Opposes Sign + Meaningful Intraday (Gap Dominated)",
         Preset::SymmetricMidRangeBalance => "Close Exactly Mid-Range + Meaningful Range + Flat Change (Symmetric Balance Day)",
         Preset::AsymmetricExtremeBias => "Asymmetric Close + Wide Range (One-sided Range Exploration)",
+        Preset::YearLowExplosiveSqueezeIgnition => "At 52w Low + Huge Green + Extreme Vol (Squeeze Ignition from Multi-month Lows)",
+        Preset::YearHighSharpDistribution => "At 52w High + Huge Red + Extreme Vol (Sharp Distribution from Multi-month Highs)",
     }
 }
 

@@ -67,6 +67,11 @@ export async function renderGoalTracker(mount, _appState) {
             <div id="gt-chart" style="height:260px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.goal_tracker.h2.dd_chart">Running drawdown — peak-to-current % with kill-switch cap</h2>
+            <div id="gt-dd-chart" style="height:220px"></div>
+        </div>
+
         <div id="gt-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -121,6 +126,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderProgress(local);
     renderChart(state.params.equity);
+    renderDdChart(state.params.equity);
 
     let resp;
     try {
@@ -229,6 +235,43 @@ function renderChart(equity) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
         legend: { show: true },
     }, [xs, equity, targetLine], el);
+}
+
+function renderDdChart(equity) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('gt-dd-chart');
+    if (!el) return;
+    if (!equity.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.goal_tracker.empty_dd_chart">${esc(t('view.goal_tracker.empty_dd_chart'))}</div>`;
+        return;
+    }
+    el.innerHTML = '';
+    const xs = equity.map((_, i) => i);
+    let peak = -Infinity;
+    const dd = equity.map(v => {
+        if (v > peak) peak = v;
+        return peak > 0 ? -((peak - v) / peak) : 0;
+    });
+    const cap = xs.map(() => -Math.abs(Number(state.params.max_dd_pct) || 0));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.goal_tracker.chart.dd'),
+              stroke: '#ff3860', width: 1.5,
+              fill: 'rgba(255,56,96,0.10)',
+              points: { show: false } },
+            { label: t('view.goal_tracker.chart.dd_cap'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => (v * 100).toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, dd, cap], el);
 }
 
 function showErr(msg) {
