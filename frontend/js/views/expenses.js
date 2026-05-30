@@ -25,6 +25,48 @@ const state = {
     tok: 0,
 };
 
+function renderCategoryChart() {
+    const el = document.getElementById('exp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const codeToLabel = new Map(state.categories.map(c => [c.code, c.label]));
+    const totals = new Map();
+    for (const tx of state.transactions || []) {
+        if (tx.is_transfer) continue;
+        const amt = Math.abs(Number(tx.amount));
+        if (!Number.isFinite(amt)) continue;
+        const key = tx.category_code || '__none__';
+        totals.set(key, (totals.get(key) || 0) + amt);
+    }
+    const rows = [...totals.entries()].map(([k, v]) => ({
+        label: k === '__none__' ? t('view.expenses.chart.uncategorized') : (codeToLabel.get(k) || k),
+        v,
+    })).sort((a, b) => b.v - a.v).slice(0, 10);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.expenses.empty_chart">${esc(t('view.expenses.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.label);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.v);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.expenses.chart.category') },
+            { label: t('view.expenses.chart.total_spend'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
 export async function renderExpensesView(mount) {
     const tok = currentViewToken();
     state.mount = mount;
@@ -224,7 +266,12 @@ function drawTable() {
                 <th data-i18n="view.expenses.th.amount">Amount</th><th data-i18n="view.expenses.th.category_schedule_c">Category (Schedule C)</th><th data-i18n="view.expenses.th.biz">Biz?</th><th data-i18n="view.expenses.th.transfer">Transfer?</th>
             </tr></thead>
             <tbody>${rows}</tbody>
-        </table>`;
+        </table>
+        <div class="chart-panel">
+            <h2 data-i18n="view.expenses.h2.cat_chart">Total spend by category (top 10)</h2>
+            <div id="exp-chart" style="width:100%;height:240px"></div>
+        </div>`;
+    renderCategoryChart();
 
     host.querySelectorAll('select.exp-cat').forEach(sel => {
         sel.addEventListener('change', async ev => {

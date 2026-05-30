@@ -356,6 +356,8 @@ pub enum Preset {
     Pct52wTightCoil,             // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND hod_dist + lod_dist < 2 — coiled mid-high zone on tight range (decision-zone setup)
     SymmetricTriangle,           // hod_dist + lod_dist < 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.3 — balanced tight range with average vol (symmetric triangle wait)
     NarrowingRangeOnFlat,        // hod_dist between 0.5 and 2 AND lod_dist between 0.5 and 2 AND change_pct.abs() < 0.3 — both wicks small, no net move (narrowing-range setup)
+    GapTooFarBigPullback,        // gap_pct > 4 AND change_pct < gap_pct - 3 — gapped up but pulled back >3% from the gap (over-extended fade)
+    GapTooFarBigBounce,          // gap_pct < -4 AND change_pct > gap_pct + 3 — gapped down but bounced >3% off the gap (over-extended bounce)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1565,6 +1567,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && l >= 0.5 && l <= 2.0
                 && hit.change_pct.abs() < 0.3
         }
+        Preset::GapTooFarBigPullback => {
+            hit.gap_pct > 4.0
+                && hit.change_pct < hit.gap_pct - 3.0
+        }
+        Preset::GapTooFarBigBounce => {
+            hit.gap_pct < -4.0
+                && hit.change_pct > hit.gap_pct + 3.0
+        }
     }
 }
 
@@ -1811,6 +1821,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wTightCoil => "52w Tight Coil",
         Preset::SymmetricTriangle => "Symmetric Triangle",
         Preset::NarrowingRangeOnFlat => "Narrowing Range on Flat",
+        Preset::GapTooFarBigPullback => "Gap-Too-Far Big Pullback",
+        Preset::GapTooFarBigBounce => "Gap-Too-Far Big Bounce",
     }
 }
 
