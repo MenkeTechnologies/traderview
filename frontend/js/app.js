@@ -616,6 +616,16 @@ function bindTabs() {
         const el = document.getElementById('al-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in demarker scope → click Compute.
+    window.addEventListener('tv:demarker-run', () => {
+        const el = document.getElementById('dm-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in demarker scope → click Load demo.
+    window.addEventListener('tv:demarker-demo', () => {
+        const el = document.getElementById('dm-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

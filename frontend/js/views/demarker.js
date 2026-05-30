@@ -14,6 +14,7 @@ import {
 } from '../_demarker_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { barText: '', period: 14 };
 
 export async function renderDemarker(mount, _appState) {
@@ -25,13 +26,13 @@ export async function renderDemarker(mount, _appState) {
             <h2 data-i18n="view.demarker.h2.hl_bars">HL bars</h2>
             <p class="muted" data-i18n-html="view.demarker.help">Paste <code>high low</code> per line. Demo loads 60 bars
                 cycling through uptrend → chop → downtrend so OB and OS readings both fire.</p>
-            <textarea id="dm-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
+            <textarea id="dm-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..." data-tip="view.demarker.tip.bars"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.demarker.label.period">Period</span>
-                    <input id="dm-period" type="number" step="1" min="2" value="${state.period}"></label>
-                <button data-i18n="view.demarker.btn.load_demo_60_bars_ob_os_cycle" id="dm-demo" class="secondary" type="button">Load demo (60 bars, OB+OS cycle)</button>
-                <button data-i18n="view.demarker.btn.clear" id="dm-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.demarker.btn.compute" id="dm-run" class="primary" type="button">Compute</button>
+                    <input id="dm-period" type="number" step="1" min="2" value="${state.period}" data-tip="view.demarker.tip.period"></label>
+                <button data-i18n="view.demarker.btn.load_demo_60_bars_ob_os_cycle" id="dm-demo" class="secondary" type="button" data-tip="view.demarker.tip.demo" data-shortcut="demarker_demo">Load demo (60 bars, OB+OS cycle)</button>
+                <button data-i18n="view.demarker.btn.clear" id="dm-clear" class="secondary" type="button" data-tip="view.demarker.tip.clear">Clear</button>
+                <button data-i18n="view.demarker.btn.compute" id="dm-run" class="primary" type="button" data-tip="view.demarker.tip.run" data-shortcut="demarker_run">Compute</button>
             </div>
             <p data-i18n="view.demarker.hint.bounded_0_1_0_70_overbought_setup_for_short_mean_r" class="muted">Bounded [0, 1]. ≥0.70 = overbought (setup for short / mean-reversion).
                 ≤0.30 = oversold (setup for long / mean-reversion). Crossovers from neutral into
@@ -59,9 +60,11 @@ export async function renderDemarker(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('dm-bars').value =
             b.map(x => `${x.high} ${x.low}`).join('\n');
+        showToast(t('view.demarker.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('dm-clear').addEventListener('click', () => {
         document.getElementById('dm-bars').value = '';
+        showToast(t('view.demarker.toast.cleared'), { level: 'info' });
     });
     document.getElementById('dm-run').addEventListener('click', () => {
         readInputs();
@@ -85,16 +88,19 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.demarker.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length === 0) return;
     }
     const err = validateInputs(bars, state.period);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.demarker.toast.invalid'), { level: 'warning' }); return; }
 
     let values;
     try {
         values = await api.anlyDemarker(buildBody(bars, state.period));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.demarker.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     // Backend returns Option<f64> as null for warmup → keep that as null for chart.
@@ -102,6 +108,9 @@ async function compute(tok) {
     renderSummary(numeric, bars);
     renderChart(numeric);
     renderEvents(numeric);
+    const latest = latestValue(numeric);
+    const regime = regimeOf(latest.value);
+    showToast(t('view.demarker.toast.computed', { bars: bars.length, regime }), { level: 'success' });
 }
 
 function renderSummary(values, bars) {
