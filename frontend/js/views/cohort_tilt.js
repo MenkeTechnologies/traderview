@@ -52,6 +52,11 @@ export async function renderCohortTilt(mount, _appState) {
             <div id="ct-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.cohort_tilt.h2.net_chart">Net contracts by symbol — raw directional commitment</h2>
+            <div id="ct-net-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="ct-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -101,6 +106,7 @@ async function compute(tok) {
     renderBars(resp);
     renderTable(resp);
     renderRatioChart(resp);
+    renderNetChart(resp);
     const syms = (resp && resp.by_symbol) ? resp.by_symbol.length : 0;
     showToast(t('view.cohort_tilt.toast.done', { symbols: syms }), { level: 'success' });
 }
@@ -137,6 +143,39 @@ function renderRatioChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, mid], el);
+}
+
+function renderNetChart(report) {
+    const el = document.getElementById('ct-net-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report && report.by_symbol) ? report.by_symbol : [];
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cohort_tilt.empty_net_chart">${esc(t('view.cohort_tilt.empty_net_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(s => s.symbol);
+    const ys = rows.map(s => Number(s.net_contracts) || 0);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.cohort_tilt.chart.symbol_idx') },
+            { label: t('view.cohort_tilt.chart.net_contracts'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.cohort_tilt.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSummary(report, pending) {

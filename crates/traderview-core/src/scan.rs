@@ -574,6 +574,8 @@ pub enum Preset {
     BearishEngulfingHotVol,         // gap_pct > 0.5 AND change_pct < -1.5 AND day_pct < -1 AND rel_volume >= 1.5 — gap up + reversed weak + closed negative intraday + hot vol (bearish engulfing with volume confirmation)
     DoubleBottomRetest,             // year_low_pct < 3 AND rel_volume >= 1.2 AND change_pct >= 0 AND day_pct >= 0 — near 52w low + decent vol + non-negative day (potential double-bottom retest forming)
     DoubleTopRetest,                // year_high_pct < 3 AND rel_volume >= 1.2 AND change_pct <= 0 AND day_pct <= 0 — near 52w high + decent vol + non-positive day (potential double-top retest forming)
+    LiquiditySweepBothSides,        // hod_dist + lod_dist > 3 AND hod_dist > 1 AND lod_dist > 1 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — both extremes visited + flat close + hot vol (raid-both-sides liquidity sweep before closing flat)
+    SteadyGrinderNoVolPickup,       // change_pct between 0.5 and 2 AND rel_volume between 0.8 and 1.0 AND day_pct between 0.3 and 1.5 AND gap_pct.abs() < 0.2 — small steady gain + below-average vol + steady intraday + no gap (low-vol grinder; quiet uptrend continuation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3023,6 +3025,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct <= 0.0
                 && hit.day_pct <= 0.0
         }
+        Preset::LiquiditySweepBothSides => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.day_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::SteadyGrinderNoVolPickup => {
+            hit.change_pct >= 0.5
+                && hit.change_pct <= 2.0
+                && hit.rel_volume >= 0.8
+                && hit.rel_volume <= 1.0
+                && hit.day_pct >= 0.3
+                && hit.day_pct <= 1.5
+                && hit.gap_pct.abs() < 0.2
+        }
     }
 }
 
@@ -3487,6 +3505,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BearishEngulfingHotVol => "Bearish Engulfing + Hot Vol (Gap Up + Strong Reversal)",
         Preset::DoubleBottomRetest => "Near 52w Low + Holding Day + Decent Vol (Potential Double-Bottom Retest)",
         Preset::DoubleTopRetest => "Near 52w High + Failing Day + Decent Vol (Potential Double-Top Retest)",
+        Preset::LiquiditySweepBothSides => "Both Extremes Visited + Flat Close + Hot Vol (Liquidity Sweep)",
+        Preset::SteadyGrinderNoVolPickup => "Small Steady Gain + Sub-avg Vol + No Gap (Quiet Uptrend Grinder)",
     }
 }
 

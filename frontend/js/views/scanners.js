@@ -456,6 +456,8 @@ const PRESETS = [
     { id: 'bearish_engulfing_hot_vol', label: t('view.scanners.preset.bearish_engulfing_hot_vol.label'), desc: t('view.scanners.preset.bearish_engulfing_hot_vol.desc') },
     { id: 'double_bottom_retest', label: t('view.scanners.preset.double_bottom_retest.label'), desc: t('view.scanners.preset.double_bottom_retest.desc') },
     { id: 'double_top_retest', label: t('view.scanners.preset.double_top_retest.label'), desc: t('view.scanners.preset.double_top_retest.desc') },
+    { id: 'liquidity_sweep_both_sides', label: t('view.scanners.preset.liquidity_sweep_both_sides.label'), desc: t('view.scanners.preset.liquidity_sweep_both_sides.desc') },
+    { id: 'steady_grinder_no_vol_pickup', label: t('view.scanners.preset.steady_grinder_no_vol_pickup.label'), desc: t('view.scanners.preset.steady_grinder_no_vol_pickup.desc') },
 ];
 
 export async function renderScanners(mount) {
