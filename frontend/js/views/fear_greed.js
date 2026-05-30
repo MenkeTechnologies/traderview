@@ -17,6 +17,10 @@ export async function renderFearGreed(mount) {
         <div class="chart-panel" id="fgGauge"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         <div id="fgComps"></div>
         <div class="chart-panel">
+            <h2 data-i18n="view.fear_greed.h2.component_chart">Component scores (0–100)</h2>
+            <div id="fg-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.fear_greed.h2.score_bands">Score bands</h2>
             <table class="trades">
                 <thead><tr><th>0–24</th><th>25–44</th><th>45–55</th><th>56–74</th><th>75–100</th></tr></thead>
@@ -112,4 +116,43 @@ function renderComponents(s, mount) {
             }).join('')}
         </div>
     `;
+    renderComponentChart(s);
+}
+
+function renderComponentChart(s) {
+    const el = document.getElementById('fg-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const comps = (s && Array.isArray(s.components)) ? s.components.filter(c => Number.isFinite(Number(c.score))) : [];
+    if (comps.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.fear_greed.empty_chart">${esc(t('view.fear_greed.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = comps.map(c => c.label);
+    const ys = comps.map(c => Number(c.score));
+    const xs = labels.map((_, i) => i + 1);
+    const neutral = xs.map(() => 50);
+    const overall = xs.map(() => Number(s.score));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        series: [
+            { label: t('view.fear_greed.chart.component_idx') },
+            { label: t('view.fear_greed.chart.score'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.fear_greed.chart.composite'),
+              stroke: '#b86bff', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.fear_greed.chart.neutral'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, overall, neutral], el);
 }
