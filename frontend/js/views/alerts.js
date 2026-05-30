@@ -69,8 +69,14 @@ export async function renderAlerts(mount) {
             <h2 data-i18n="view.alerts.h2.fire_chart">Trigger counts by rule (top 20)</h2>
             <div id="alert-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.alerts.h2.trigger_kind_chart">Rules by trigger kind</h2>
+            <div id="alert-kind-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderFireChart(rules);
+    renderTriggerKindChart(rules);
     mount.querySelector('#alert-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -117,6 +123,41 @@ export async function renderAlerts(mount) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
         }));
+}
+
+function renderTriggerKindChart(rules) {
+    const el = document.getElementById('alert-kind-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!Array.isArray(rules) || rules.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.alerts.empty_kind_chart">${esc(t('view.alerts.empty_kind_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const r of rules) {
+        const key = (r.trigger || '?').toString();
+        counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.alerts.chart.kind_idx') },
+            { label: t('view.alerts.chart.count'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderFireChart(rules) {

@@ -470,6 +470,8 @@ pub enum Preset {
     Pct52wMidDryVolFlat,           // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume < 0.5 — middle of 52w range with dry vol (forgotten consolidation)
     VolSpikeNoTrend,               // rel_volume >= 5 AND change_pct.abs() < 0.5 — massive 5×+ vol spike with no net change (climax/exhaustion candidate; true churn)
     VolSpikeOnTrend,               // rel_volume >= 5 AND change_pct.abs() > 3 — massive 5×+ vol spike with big change (institutional execution; trend day)
+    TightCoilAtHighDryVol,         // hod_dist.abs() < 0.3 AND lod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_high_pct > -5 — closed at HOD on tight range + dry vol + near 52w high (coil at highs)
+    TightCoilAtLowDryVol,          // lod_dist.abs() < 0.3 AND hod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_low_pct < 5 — closed at LOD on tight range + dry vol + near 52w low (coil at lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2320,6 +2322,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume >= 5.0
                 && hit.change_pct.abs() > 3.0
         }
+        Preset::TightCoilAtHighDryVol => {
+            hit.hod_dist_pct.abs() < 0.3
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.year_high_pct > -5.0
+        }
+        Preset::TightCoilAtLowDryVol => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -2680,6 +2696,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wMidDryVolFlat => "52w-Mid Dry-Vol Flat (Forgotten Consolidation)",
         Preset::VolSpikeNoTrend => "Vol Spike (≥5×), No Trend (Climax/Exhaustion)",
         Preset::VolSpikeOnTrend => "Vol Spike (≥5×), On Trend (Institutional)",
+        Preset::TightCoilAtHighDryVol => "Tight Coil at 52w High, Dry Vol",
+        Preset::TightCoilAtLowDryVol => "Tight Coil at 52w Low, Dry Vol",
     }
 }
 

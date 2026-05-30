@@ -352,6 +352,8 @@ const PRESETS = [
     { id: 'pct52w_mid_dry_vol_flat', label: t('view.scanners.preset.pct52w_mid_dry_vol_flat.label'), desc: t('view.scanners.preset.pct52w_mid_dry_vol_flat.desc') },
     { id: 'vol_spike_no_trend', label: t('view.scanners.preset.vol_spike_no_trend.label'), desc: t('view.scanners.preset.vol_spike_no_trend.desc') },
     { id: 'vol_spike_on_trend', label: t('view.scanners.preset.vol_spike_on_trend.label'), desc: t('view.scanners.preset.vol_spike_on_trend.desc') },
+    { id: 'tight_coil_at_high_dry_vol', label: t('view.scanners.preset.tight_coil_at_high_dry_vol.label'), desc: t('view.scanners.preset.tight_coil_at_high_dry_vol.desc') },
+    { id: 'tight_coil_at_low_dry_vol', label: t('view.scanners.preset.tight_coil_at_low_dry_vol.label'), desc: t('view.scanners.preset.tight_coil_at_low_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
