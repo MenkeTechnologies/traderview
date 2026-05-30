@@ -25,10 +25,10 @@ export async function renderTradesView(mount, state) {
                     data-i18n="view.trades.btn.refresh"
                     data-tip="view.trades.tip.refresh"
                     data-shortcut="trades_refresh">⟳ Refresh</button>
-            <button data-i18n="view.trades.btn.re_run_fifo" class="primary" id="rollup-btn">Re-run FIFO</button>
-            <button data-i18n="view.trades.btn.close_expired_options" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
+            <button data-i18n="view.trades.btn.re_run_fifo" data-tip="view.trades.tip.rollup" class="primary" id="rollup-btn">Re-run FIFO</button>
+            <button data-i18n="view.trades.btn.close_expired_options" data-tip="view.trades.tip.close_exp" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
             <span class="muted" id="sel-count" style="margin-left:14px">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>
-            <select id="bulk-action" style="width:auto;min-width:140px;display:inline-block">
+            <select id="bulk-action" data-tip="view.trades.tip.bulk_action" style="width:auto;min-width:140px;display:inline-block">
                 <option data-i18n="view.trades.opt.bulk_action" value="">— bulk action —</option>
                 <option data-i18n="view.trades.opt.delete" value="delete">Delete</option>
                 <option data-i18n="view.trades.opt.merge_into_one" value="merge">Merge into one</option>
@@ -38,7 +38,7 @@ export async function renderTradesView(mount, state) {
                 <option data-i18n="view.trades.opt.set_risk_amount" value="set_risk">Set risk amount…</option>
                 <option data-i18n="view.trades.opt.share_publicly" value="share">Share publicly</option>
             </select>
-            <button data-i18n="view.trades.btn.apply" class="primary" id="apply-bulk" disabled>Apply</button>
+            <button data-i18n="view.trades.btn.apply" data-tip="view.trades.tip.apply" class="primary" id="apply-bulk" disabled>Apply</button>
         </div>
         <div id="trades-table"></div>
         <div class="chart-panel">
@@ -57,18 +57,27 @@ export async function renderTradesView(mount, state) {
     if (refreshBtn) refreshBtn.addEventListener('click', () =>
         window.dispatchEvent(new HashChangeEvent('hashchange')));
     mount.querySelector('#rollup-btn').addEventListener('click', async () => {
-        await api.rollupTrades(state.accountId);
-        if (!viewIsCurrent(tok)) return;
-        await refresh();
+        try {
+            await api.rollupTrades(state.accountId);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.trades.toast.rollup_done'), { level: 'success' });
+            await refresh();
+        } catch (e) {
+            showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
+        }
     });
     mount.querySelector('#close-exp-btn').addEventListener('click', async () => {
-        const n = await api.closeExpiredOptions(state.accountId);
-        if (!viewIsCurrent(tok)) return;
-        showToast(t('view.trades.alert.closed_expired', {
-            n,
-            label: t(n === 1 ? 'view.trades.label.trade_singular' : 'view.trades.label.trade_plural'),
-        }), { level: 'error' });
-        await refresh();
+        try {
+            const n = await api.closeExpiredOptions(state.accountId);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.trades.alert.closed_expired', {
+                n,
+                label: t(n === 1 ? 'view.trades.label.trade_singular' : 'view.trades.label.trade_plural'),
+            }), { level: n > 0 ? 'success' : 'info' });
+            await refresh();
+        } catch (e) {
+            showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
+        }
     });
 
     mount.querySelector('#apply-bulk').addEventListener('click', async () => {
@@ -84,7 +93,7 @@ export async function renderTradesView(mount, state) {
             if (extras === null) return; // cancelled
             const r = await api.bulkTrades(ids, action, extras);
             if (!viewIsCurrent(tok)) return;
-            showToast(t('view.trades.alert.bulk_done', { action, affected: r.affected }), { level: 'error' });
+            showToast(t('view.trades.alert.bulk_done', { action, affected: r.affected }), { level: 'success' });
             await refresh();
         } catch (e) {
             showToast(t('view.trades.alert.error', { msg: e.message }), { level: 'error' });
