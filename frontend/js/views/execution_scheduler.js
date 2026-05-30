@@ -135,7 +135,7 @@ function algoCard(label, color, res, totalOrder) {
     if (!res) {
         return `<div class="card">
             <div class="label">${esc(label)}</div>
-            <div class="value neg">failed</div>
+            <div class="value neg">${esc(t('common.failed'))}</div>
         </div>`;
     }
     const s = summarizeSchedule(res);

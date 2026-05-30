@@ -180,7 +180,7 @@ function renderBuckets(report) {
                 <div class="is-bar-row">
                     <div class="is-bar-label">${esc(b.label)}</div>
                     <div class="is-bar-track"><div class="is-bar-midline"></div></div>
-                    <div class="is-bar-value">no trades</div>
+                    <div class="is-bar-value">${esc(t('common.no_trades'))}</div>
                 </div>`;
         }
         const widthPct = Math.max(0, Math.min(50, (Math.abs(pnl) / maxAbs) * 50)).toFixed(2);

@@ -193,7 +193,7 @@ function renderComponents(series, components) {
     // series at the top.
     wrap.innerHTML = `
         <div class="sd-row">
-            <div class="sd-row-label">original</div>
+            <div class="sd-row-label">${esc(t('common.original'))}</div>
             <div id="sd-chart-orig" class="sd-chart-cell"></div>
         </div>
         ${components.map((c, i) =>

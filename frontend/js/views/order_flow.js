@@ -139,7 +139,7 @@ function renderGauge(report) {
     const sideClass = imb >= 0 ? 'is-fill-pos obi-fill-bid' : 'is-fill-neg obi-fill-ask';
     wrap.innerHTML = `
         <div class="is-bar-row">
-            <div class="is-bar-label">imbalance</div>
+            <div class="is-bar-label">${esc(t('common.imbalance'))}</div>
             <div class="is-bar-track">
                 <div class="is-bar-midline"></div>
                 <div class="is-bar-midline obi-q-neg-strong"></div>
