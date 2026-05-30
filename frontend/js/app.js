@@ -841,6 +841,11 @@ function bindTabs() {
         const el = document.getElementById('slb-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `b` in futures-roll scope → click Build schedule.
+    window.addEventListener('tv:futures-roll-run', () => {
+        const el = document.getElementById('fr-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

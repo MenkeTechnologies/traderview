@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePositionBlob, validateInputs, buildBody, localSchedule,
@@ -34,18 +35,18 @@ export async function renderFuturesRoll(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.futures_roll.label.today">Today</span>
-                    <input id="fr-today" type="date" value="${esc(state.today)}"></label>
+                    <input id="fr-today" type="date" value="${esc(state.today)}" data-tip="view.futures_roll.tip.today"></label>
                 <label><span data-i18n="view.futures_roll.label.window">Roll window (days)</span>
-                    <input id="fr-window" type="number" step="1" min="0" value="${state.roll_window_days}"></label>
+                    <input id="fr-window" type="number" step="1" min="0" value="${state.roll_window_days}" data-tip="view.futures_roll.tip.window"></label>
                 <button data-i18n="view.futures_roll.btn.schedule" id="fr-run" class="primary"
-                        data-tip="view.futures_roll.tip.schedule" type="button">Build schedule</button>
+                        data-tip="view.futures_roll.tip.schedule" data-shortcut="futures_roll_run" type="button">Build schedule</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.futures_roll.btn.demo_mixed"  id="fr-demo-mix"   class="secondary" type="button">Demo: mixed urgency</button>
-                <button data-i18n="view.futures_roll.btn.demo_now"    id="fr-demo-now"   class="secondary" type="button">Demo: all NOW</button>
-                <button data-i18n="view.futures_roll.btn.demo_soon"   id="fr-demo-soon"  class="secondary" type="button">Demo: all SOON</button>
-                <button data-i18n="view.futures_roll.btn.demo_comf"   id="fr-demo-comf"  class="secondary" type="button">Demo: all comfortable</button>
-                <button data-i18n="view.futures_roll.btn.demo_emerg"  id="fr-demo-emerg" class="secondary" type="button">Demo: emergency (expired)</button>
+                <button data-i18n="view.futures_roll.btn.demo_mixed"  id="fr-demo-mix"   class="secondary" type="button" data-tip="view.futures_roll.tip.demo_mix">Demo: mixed urgency</button>
+                <button data-i18n="view.futures_roll.btn.demo_now"    id="fr-demo-now"   class="secondary" type="button" data-tip="view.futures_roll.tip.demo_now">Demo: all NOW</button>
+                <button data-i18n="view.futures_roll.btn.demo_soon"   id="fr-demo-soon"  class="secondary" type="button" data-tip="view.futures_roll.tip.demo_soon">Demo: all SOON</button>
+                <button data-i18n="view.futures_roll.btn.demo_comf"   id="fr-demo-comf"  class="secondary" type="button" data-tip="view.futures_roll.tip.demo_comf">Demo: all comfortable</button>
+                <button data-i18n="view.futures_roll.btn.demo_emerg"  id="fr-demo-emerg" class="secondary" type="button" data-tip="view.futures_roll.tip.demo_emerg">Demo: emergency (expired)</button>
             </div>
             <p data-i18n="view.futures_roll.hint.about" class="muted">Urgency: &lt; 0d EXPIRED · ≤ window NOW · ≤ 2× window SOON · else COMFORTABLE. Most futures traders roll 5-10 days before expiry to avoid physical delivery.</p>
         </div>
@@ -86,6 +87,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.futures_roll.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.futures_roll.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -97,7 +99,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.positions, state.today, state.roll_window_days);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.futures_roll.toast.invalid'), { level: 'warning' }); return; }
     const local = localSchedule(state.positions, state.today, state.roll_window_days);
     renderSummary(local, true);
     renderTable(local);
@@ -107,12 +109,17 @@ async function compute(tok) {
         resp = await api.futuresRollSchedule(buildBody(state.positions, state.today, state.roll_window_days));
     } catch (e) {
         showErr(`${t('view.futures_roll.err.api')}: ${e.message || e}`);
+        showToast(t('view.futures_roll.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
     renderExpiryChart(resp);
+    const expired = resp.expired_count | 0;
+    const now = resp.now_count | 0;
+    const level = expired > 0 ? 'error' : now > 0 ? 'warning' : 'success';
+    showToast(t('view.futures_roll.toast.scheduled', { n: resp.rows.length, expired, now }), { level });
 }
 
 function renderSummary(report, pending) {
