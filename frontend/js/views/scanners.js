@@ -524,6 +524,8 @@ const PRESETS = [
     { id: 'long_candle_down_trend_day', label: t('view.scanners.preset.long_candle_down_trend_day.label'), desc: t('view.scanners.preset.long_candle_down_trend_day.desc') },
     { id: 'year52_high_with_range_contraction', label: t('view.scanners.preset.year52_high_with_range_contraction.label'), desc: t('view.scanners.preset.year52_high_with_range_contraction.desc') },
     { id: 'year52_low_with_range_contraction', label: t('view.scanners.preset.year52_low_with_range_contraction.label'), desc: t('view.scanners.preset.year52_low_with_range_contraction.desc') },
+    { id: 'gap_and_intraday_harmonic', label: t('view.scanners.preset.gap_and_intraday_harmonic.label'), desc: t('view.scanners.preset.gap_and_intraday_harmonic.desc') },
+    { id: 'micro_day_early_shakeout', label: t('view.scanners.preset.micro_day_early_shakeout.label'), desc: t('view.scanners.preset.micro_day_early_shakeout.desc') },
 ];
 
 export async function renderScanners(mount) {

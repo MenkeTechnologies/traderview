@@ -21,6 +21,10 @@ export async function renderFearGreed(mount) {
             <div id="fg-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.fear_greed.h2.deviation_chart">Component deviation from composite — which signals tilt the score</h2>
+            <div id="fg-dev-chart" style="width:100%;height:220px"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.fear_greed.h2.score_bands">Score bands</h2>
             <table class="trades">
                 <thead><tr><th>0–24</th><th>25–44</th><th>45–55</th><th>56–74</th><th>75–100</th></tr></thead>
@@ -117,6 +121,41 @@ function renderComponents(s, mount) {
         </div>
     `;
     renderComponentChart(s);
+    renderDeviationChart(s);
+}
+
+function renderDeviationChart(s) {
+    const el = document.getElementById('fg-dev-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const comps = (s && Array.isArray(s.components)) ? s.components.filter(c => Number.isFinite(Number(c.score))) : [];
+    if (comps.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.fear_greed.empty_dev_chart">${esc(t('view.fear_greed.empty_dev_chart'))}</div>`;
+        return;
+    }
+    const labels = comps.map(c => c.label);
+    const composite = Number(s.score);
+    const ys = comps.map(c => Number(c.score) - composite);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.fear_greed.chart.component_idx') },
+            { label: t('view.fear_greed.chart.deviation'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.fear_greed.chart.composite_zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderComponentChart(s) {
