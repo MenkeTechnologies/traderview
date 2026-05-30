@@ -400,6 +400,8 @@ const PRESETS = [
     { id: 'hot_vol_gap_faded_deep', label: t('view.scanners.preset.hot_vol_gap_faded_deep.label'), desc: t('view.scanners.preset.hot_vol_gap_faded_deep.desc') },
     { id: 'tight_range_at_year_high', label: t('view.scanners.preset.tight_range_at_year_high.label'), desc: t('view.scanners.preset.tight_range_at_year_high.desc') },
     { id: 'tight_range_at_year_low', label: t('view.scanners.preset.tight_range_at_year_low.label'), desc: t('view.scanners.preset.tight_range_at_year_low.desc') },
+    { id: 'balanced_mid_wick_hot_vol', label: t('view.scanners.preset.balanced_mid_wick_hot_vol.label'), desc: t('view.scanners.preset.balanced_mid_wick_hot_vol.desc') },
+    { id: 'balanced_mid_wick_dry_vol', label: t('view.scanners.preset.balanced_mid_wick_dry_vol.label'), desc: t('view.scanners.preset.balanced_mid_wick_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

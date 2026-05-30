@@ -518,6 +518,8 @@ pub enum Preset {
     HotVolGapFadedDeep,             // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct < 0 AND change_pct.abs() >= gap_pct.abs() * 0.5 — hot vol + big gap + reversed ≥50% of gap (institutional gap-fade with conviction)
     TightRangeAtYearHigh,           // hod_dist + lod_dist < 1 AND year_high_pct > -3 AND rel_volume between 0.7 and 1.3 — tight range at 52w high on normal vol (consolidation at the top; bullish base)
     TightRangeAtYearLow,            // hod_dist + lod_dist < 1 AND year_low_pct < 3 AND rel_volume between 0.7 and 1.3 — tight range at 52w low on normal vol (basing at the bottom; potential reversal)
+    BalancedMidWickHotVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume >= 1.5 — balanced wicks in middle on hot vol (mid-range churn with participation)
+    BalancedMidWickDryVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume < 0.6 — balanced wicks in middle on dry vol (sleepy mid-range)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2639,6 +2641,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.7
                 && hit.rel_volume <= 1.3
         }
+        Preset::BalancedMidWickHotVol => {
+            hit.hod_dist_pct.abs() >= 0.3
+                && hit.hod_dist_pct.abs() <= 1.5
+                && hit.lod_dist_pct.abs() >= 0.3
+                && hit.lod_dist_pct.abs() <= 1.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BalancedMidWickDryVol => {
+            hit.hod_dist_pct.abs() >= 0.3
+                && hit.hod_dist_pct.abs() <= 1.5
+                && hit.lod_dist_pct.abs() >= 0.3
+                && hit.lod_dist_pct.abs() <= 1.5
+                && hit.rel_volume < 0.6
+        }
     }
 }
 
@@ -3047,6 +3063,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolGapFadedDeep => "Hot-Vol Gap Faded ≥50% (Institutional Conviction Fade)",
         Preset::TightRangeAtYearHigh => "Tight Range at 52w High (Bullish Base)",
         Preset::TightRangeAtYearLow => "Tight Range at 52w Low (Potential Reversal)",
+        Preset::BalancedMidWickHotVol => "Balanced Mid-Wick, Hot Vol (Mid-Range Churn)",
+        Preset::BalancedMidWickDryVol => "Balanced Mid-Wick, Dry Vol (Sleepy Mid-Range)",
     }
 }
 

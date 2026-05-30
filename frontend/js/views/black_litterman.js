@@ -54,6 +54,11 @@ export async function renderBlackLitterman(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.blit.h2.vol_chart">Prior σ vs posterior σ per asset</h2>
+            <div id="bl-vol-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.blit.h2.table">Per-asset breakdown</h2>
             <div id="bl-table"></div>
         </div>
@@ -103,6 +108,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.blit.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart(local);
+    renderVolChart(local);
     renderTable(local);
     let resp;
     try {
@@ -115,6 +121,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.blit.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderVolChart(resp);
     renderTable(resp);
 }
 
@@ -186,6 +193,44 @@ function renderChart(report) {
         ],
         legend: { show: true },
     }, [xs, priors, posts], el);
+}
+
+function renderVolChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('bl-vol-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const n = report.posterior_returns.length;
+    if (n === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.blit.empty_vol">${esc(t('view.blit.empty_vol'))}</div>`;
+        return;
+    }
+    const xs = Array.from({ length: n }, (_, i) => i);
+    const priorSig = state.inputs.covariance.map((row, i) => Math.sqrt(Math.max(0, row[i])) * 100);
+    const postSig = report.posterior_covariance.map((row, i) => Math.sqrt(Math.max(0, row[i])) * 100);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.asset') },
+            { label: t('view.blit.series.prior_sig'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 9, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.blit.series.post_sig'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 9, fill: '#7af0a8', stroke: '#7af0a8' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => {
+                  const i = Math.trunc(v);
+                  return i >= 0 && i < n ? assetLabel(state.inputs.labels, i) : '';
+              }) },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, priorSig, postSig], el);
 }
 
 function renderTable(report) {
