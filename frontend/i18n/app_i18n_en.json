@@ -11787,6 +11787,8 @@
   "view.stress_test.card.best_case": "Best-case",
   "view.stress_test.card.best_shock": "Best shock",
   "view.stress_test.card.time_decay": "Time-decay",
+  "view.stress_test.card.time_decay_value": "{n} days",
+  "view.stress_test.card.shock_value": "{px} px · {iv} IV",
   "view.three_bar_reversal.card.bars": "Bars",
   "view.three_bar_reversal.card.events": "Events",
   "view.three_bar_reversal.card.bullish": "Bullish",

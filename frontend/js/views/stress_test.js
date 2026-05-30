@@ -142,11 +142,11 @@ function renderSummary(report, legs) {
         card(t('view.stress_test.card.cells'),        String((report.grid || []).length)),
         card(t('view.stress_test.card.worst_case'),   fmtUSDSigned(w.pnl_dollars),
             (w.pnl_dollars || 0) < 0 ? 'neg' : 'pos'),
-        card(t('view.stress_test.card.worst_shock'),  `${fmtPct(w.price_shock_pct)} px · ${fmtPct(w.iv_shock_pct)} IV`),
+        card(t('view.stress_test.card.worst_shock'),  t('view.stress_test.card.shock_value', { px: fmtPct(w.price_shock_pct), iv: fmtPct(w.iv_shock_pct) })),
         card(t('view.stress_test.card.best_case'),    fmtUSDSigned(b.pnl_dollars),
             (b.pnl_dollars || 0) >= 0 ? 'pos' : 'neg'),
-        card(t('view.stress_test.card.best_shock'),   `${fmtPct(b.price_shock_pct)} px · ${fmtPct(b.iv_shock_pct)} IV`),
-        card(t('view.stress_test.card.time_decay'),   `${state.timeDecay} days`),
+        card(t('view.stress_test.card.best_shock'),   t('view.stress_test.card.shock_value', { px: fmtPct(b.price_shock_pct), iv: fmtPct(b.iv_shock_pct) })),
+        card(t('view.stress_test.card.time_decay'),   t('view.stress_test.card.time_decay_value', { n: state.timeDecay })),
     ].join('');
 }
 
