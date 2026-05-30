@@ -20,6 +20,7 @@ import {
 } from '../_cusum_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CFG = {
     reference_mean: 0.0,
     reference_stdev: 1.0,
@@ -38,11 +39,11 @@ export async function renderCusum(mount, _appState) {
             <h2 data-i18n="view.cusum.h2.series">Series</h2>
             <p data-i18n="view.cusum.hint.paste_one_signed_value_per_line_typically_log_retu" class="muted">Paste one signed value per line — typically log-returns or
                 vol-normalized returns. Demo loads 200 bars where mean flips at bar 100.</p>
-            <textarea id="cu-series" rows="6" placeholder="0.0025&#10;-0.001&#10;0.004&#10;..."></textarea>
+            <textarea id="cu-series" rows="6" placeholder="0.0025&#10;-0.001&#10;0.004&#10;..." data-tip="view.cusum.tip.series"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.cusum.btn.load_demo_200_bars_regime_flip_100" id="cu-demo" class="secondary" type="button">Load demo (200 bars, regime flip @ 100)</button>
-                <button data-i18n="view.cusum.btn.clear" id="cu-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.cusum.btn.auto_fit_mean_stdev_from_series" id="cu-autofit" class="secondary" type="button">Auto-fit mean / stdev from series</button>
+                <button data-i18n="view.cusum.btn.load_demo_200_bars_regime_flip_100" data-tip="view.cusum.tip.demo" id="cu-demo" class="secondary" type="button">Load demo (200 bars, regime flip @ 100)</button>
+                <button data-i18n="view.cusum.btn.clear" data-tip="view.cusum.tip.clear" id="cu-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.cusum.btn.auto_fit_mean_stdev_from_series" data-tip="view.cusum.tip.autofit" data-shortcut="cusum_autofit" id="cu-autofit" class="secondary" type="button">Auto-fit mean / stdev from series</button>
             </div>
         </div>
 
@@ -50,14 +51,14 @@ export async function renderCusum(mount, _appState) {
             <h2 data-i18n="view.cusum.h2.config">Config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.cusum.label.ref_mean">Reference mean</span>
-                    <input id="cu-mean" type="number" step="any" value="${state.config.reference_mean}"></label>
+                    <input id="cu-mean" type="number" step="any" value="${state.config.reference_mean}" data-tip="view.cusum.tip.mean"></label>
                 <label><span data-i18n="view.cusum.label.ref_stdev">Reference stdev</span>
-                    <input id="cu-sd" type="number" step="any" min="0" value="${state.config.reference_stdev}"></label>
+                    <input id="cu-sd" type="number" step="any" min="0" value="${state.config.reference_stdev}" data-tip="view.cusum.tip.sd"></label>
                 <label><span data-i18n="view.cusum.label.threshold">Threshold (stdevs)</span>
-                    <input id="cu-thr" type="number" step="any" min="0" value="${state.config.threshold_stdevs}"></label>
+                    <input id="cu-thr" type="number" step="any" min="0" value="${state.config.threshold_stdevs}" data-tip="view.cusum.tip.thr"></label>
                 <label><span data-i18n="view.cusum.label.slack">Slack</span>
-                    <input id="cu-slk" type="number" step="any" min="0" value="${state.config.slack}"></label>
-                <button data-i18n="view.cusum.btn.detect" id="cu-run" class="primary" type="button">Detect</button>
+                    <input id="cu-slk" type="number" step="any" min="0" value="${state.config.slack}" data-tip="view.cusum.tip.slk"></label>
+                <button data-i18n="view.cusum.btn.detect" data-tip="view.cusum.tip.detect" data-shortcut="cusum_detect" id="cu-run" class="primary" type="button">Detect</button>
             </div>
             <p data-i18n="view.cusum.hint.threshold_stdevs_reference_stdev_trigger_level_sla" class="muted">
                 threshold_stdevs × reference_stdev = trigger level. Slack subtracts a
@@ -127,17 +128,23 @@ async function compute(tok) {
         errs.style.display = 'block';
     }
     const err = validateInputs(series, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let res;
     try {
         res = await api.anlyCusum(buildBody(series, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, series);
     renderChart(series, res);
     renderEvents(res);
+    const events = res.events || [];
+    showToast(t('view.cusum.toast.done', {
+        bars: series.length,
+        events: events.length,
+    }), { level: events.length > 0 ? 'success' : 'info' });
 }
 
 function renderSummary(report, series) {

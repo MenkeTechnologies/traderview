@@ -830,6 +830,16 @@ function bindTabs() {
         const el = document.getElementById('obi-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `d` in cusum scope → click Detect.
+    window.addEventListener('tv:cusum-detect', () => {
+        const el = document.getElementById('cu-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `a` in cusum scope → click Auto-fit mean/stdev.
+    window.addEventListener('tv:cusum-autofit', () => {
+        const el = document.getElementById('cu-autofit');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
