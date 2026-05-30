@@ -966,6 +966,8 @@ pub enum Preset {
     MarubozuGreenAtConfirmedBreakdown,   // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + green marubozu + no overnight gap + hot vol (full intraday recovery trend day after confirmed breakdown: regular-hours conviction lifted from open to high with no gap aid; max-conviction failed-breakdown reclaim above support)
     TripleAlignedBullBigConvictionDay,   // gap_pct > 1.5 AND change_pct > 3 AND day_pct > 1.5 AND rel_volume >= 2 — gap up + big net move + big intraday up + hot vol (triple-aligned bullish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
     TripleAlignedBearBigConvictionDay,   // gap_pct < -1.5 AND change_pct < -3 AND day_pct < -1.5 AND rel_volume >= 2 — gap down + big net move + big intraday down + hot vol (triple-aligned bearish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
+    DistantFromYearHighRangeContractionHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far below 52w high (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the pullback territory: tight digestion with elevated participation deep below the prior peak; pre-reversal coil with institutional positioning)
+    DistantFromYearLowRangeContractionHotVol,  // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far above 52w low (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the advance territory: tight digestion with elevated participation deep above the prior trough; pre-reversal coil with institutional positioning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5794,6 +5796,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -1.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::DistantFromYearHighRangeContractionHotVol => {
+            hit.year_high_pct >= 20.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DistantFromYearLowRangeContractionHotVol => {
+            hit.year_low_pct >= 20.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6650,6 +6664,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MarubozuGreenAtConfirmedBreakdown => "1-3 % below Prior 52w Low + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Recovery Trend Day after Confirmed Breakdown: Regular-hours Conviction Lifted from Open to High with No Gap Aid; Max-conviction Failed-breakdown Reclaim above Support)",
         Preset::TripleAlignedBullBigConvictionDay => "Gap Up + Big Net Move + Big Intraday Up + Hot Vol (Triple-aligned Bullish Conviction: Overnight, Regular Hours, and Net All Moved Meaningfully in the Same Direction with Elevated Participation; Full-stack Directional Commitment Day)",
         Preset::TripleAlignedBearBigConvictionDay => "Gap Down + Big Net Move + Big Intraday Down + Hot Vol (Triple-aligned Bearish Conviction: Overnight, Regular Hours, and Net All Moved Meaningfully in the Same Direction with Elevated Participation; Full-stack Directional Commitment Day)",
+        Preset::DistantFromYearHighRangeContractionHotVol => "Far below 52w High (>=20 %) + Tight Intraday Range + Flat Close + Hot Vol (Stealth Absorption in the Pullback Territory: Tight Digestion with Elevated Participation Deep below the Prior Peak; Pre-reversal Coil with Institutional Positioning)",
+        Preset::DistantFromYearLowRangeContractionHotVol => "Far above 52w Low (>=20 %) + Tight Intraday Range + Flat Close + Hot Vol (Stealth Absorption in the Advance Territory: Tight Digestion with Elevated Participation Deep above the Prior Trough; Pre-reversal Coil with Institutional Positioning)",
     }
 }
 
