@@ -144,14 +144,8 @@ export function installContextMenu() {
     // News view doesn't accept a hash-path symbol — it's filtered via
     // its own form. Navigate to the view; the user picks the symbol.
     window.addEventListener('tv:open-news-for-symbol',     () => { window.location.hash = 'news'; });
-    // Trade-row actions — read data-id from the right-clicked <tr>.
-    const tradeIdFrom = (detail) => {
-        const t = detail && detail.target;
-        if (!t || !t.dataset) return null;
-        return t.dataset.id || null;
-    };
     window.addEventListener('tv:trade-view-detail', (e) => {
-        const id = tradeIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) {
             toastErr(t('toast.err.no_trade'));
             return;
@@ -159,7 +153,7 @@ export function installContextMenu() {
         window.location.hash = `trade/${id}`;
     });
     window.addEventListener('tv:trade-copy-id', (e) => {
-        const id = tradeIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) {
             toastErr(t('toast.err.no_trade'));
             return;
@@ -172,20 +166,8 @@ export function installContextMenu() {
         if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
         clipboardWrite(sym, sym);
     });
-    // Watchlist-row actions — read data-symbol (and data-wid for remove)
-    // from the right-clicked <tr>.
-    const wlSymbolFrom = (detail) => {
-        const t = detail && detail.target;
-        if (!t || !t.dataset) return null;
-        return (t.dataset.symbol || '').toUpperCase() || null;
-    };
-    const wlWidFrom = (detail) => {
-        const t = detail && detail.target;
-        if (!t || !t.dataset) return null;
-        return t.dataset.wid || null;
-    };
     const wlNavTo = (viewId) => (e) => {
-        const sym = wlSymbolFrom(e.detail);
+        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -194,7 +176,7 @@ export function installContextMenu() {
         window.location.hash = `${viewId}/${sym}`;
     };
     window.addEventListener('tv:wl-row-set-active', (e) => {
-        const sym = wlSymbolFrom(e.detail);
+        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -206,8 +188,8 @@ export function installContextMenu() {
     window.addEventListener('tv:wl-row-research', wlNavTo('research'));
     window.addEventListener('tv:wl-row-options',  wlNavTo('options'));
     window.addEventListener('tv:wl-row-remove', (e) => {
-        const sym = wlSymbolFrom(e.detail);
-        const wid = wlWidFrom(e.detail);
+        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
+        const wid = dataFromTarget(e.detail, 'wid');
         if (!sym || !wid) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -235,7 +217,7 @@ export function installContextMenu() {
         window.location.hash = `trade/${id}`;
     });
     window.addEventListener('tv:pos-row-set-active', (e) => {
-        const sym = wlSymbolFrom(e.detail);
+        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -249,13 +231,8 @@ export function installContextMenu() {
     // Alert-rule-row actions — read data-rule-id from the right-clicked
     // <div>. Mutates engine state in localStorage, then re-dispatches
     // hashchange so the view repaints.
-    const ruleIdFrom = (detail) => {
-        const t = detail && detail.target;
-        if (!t || !t.dataset) return null;
-        return t.dataset.ruleId || null;
-    };
     window.addEventListener('tv:ar-row-toggle', (e) => {
-        const id = ruleIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'ruleId');
         if (!id) return;
         let s = alertEngine.loadState();
         const rule = (s.rules || []).find(r => r.id === id);
@@ -268,7 +245,7 @@ export function installContextMenu() {
         refreshView();
     });
     window.addEventListener('tv:ar-row-duplicate', (e) => {
-        const id = ruleIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'ruleId');
         if (!id) return;
         let s = alertEngine.loadState();
         const rule = (s.rules || []).find(r => r.id === id);
@@ -282,7 +259,7 @@ export function installContextMenu() {
         refreshView();
     });
     window.addEventListener('tv:ar-row-delete', (e) => {
-        const id = ruleIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'ruleId');
         if (!id) return;
         void (async () => {
             const s0 = alertEngine.loadState();
@@ -681,7 +658,7 @@ export function installContextMenu() {
         })();
     });
     window.addEventListener('tv:trade-delete', (e) => {
-        const id = tradeIdFrom(e.detail);
+        const id = dataFromTarget(e.detail, 'id');
         if (!id) {
             toastErr(t('toast.err.no_trade'));
             return;
