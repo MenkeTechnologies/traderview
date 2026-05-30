@@ -516,6 +516,8 @@ pub enum Preset {
     WideRangeAtYearLow,             // hod_dist + lod_dist > 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — wide intraday range while at 52w low on vol (volatility at the bottom; potential bottom)
     HotVolGapHeldAndExtended,       // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() >= gap_pct.abs() * 0.8 — hot vol + big gap + held + ≥80% extension (institutional gap-hold-and-go)
     HotVolGapFadedDeep,             // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct < 0 AND change_pct.abs() >= gap_pct.abs() * 0.5 — hot vol + big gap + reversed ≥50% of gap (institutional gap-fade with conviction)
+    TightRangeAtYearHigh,           // hod_dist + lod_dist < 1 AND year_high_pct > -3 AND rel_volume between 0.7 and 1.3 — tight range at 52w high on normal vol (consolidation at the top; bullish base)
+    TightRangeAtYearLow,            // hod_dist + lod_dist < 1 AND year_low_pct < 3 AND rel_volume between 0.7 and 1.3 — tight range at 52w low on normal vol (basing at the bottom; potential reversal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2625,6 +2627,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct * hit.gap_pct < 0.0
                 && hit.change_pct.abs() >= hit.gap_pct.abs() * 0.5
         }
+        Preset::TightRangeAtYearHigh => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.year_high_pct > -3.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
+        Preset::TightRangeAtYearLow => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.year_low_pct < 3.0
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.3
+        }
     }
 }
 
@@ -3031,6 +3045,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WideRangeAtYearLow => "Wide Range at 52w Low (Volatility at Bottom)",
         Preset::HotVolGapHeldAndExtended => "Hot-Vol Gap Held & ≥80% Extended (Institutional Gap-Go)",
         Preset::HotVolGapFadedDeep => "Hot-Vol Gap Faded ≥50% (Institutional Conviction Fade)",
+        Preset::TightRangeAtYearHigh => "Tight Range at 52w High (Bullish Base)",
+        Preset::TightRangeAtYearLow => "Tight Range at 52w Low (Potential Reversal)",
     }
 }
 

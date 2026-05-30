@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('balanced') };
 let chart = null;
+let flowChart = null;
 
 export async function renderBidAskVol(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderBidAskVol(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.bavr.h2.chart">Ratio overlay</h2>
             <div id="bv-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.bavr.h2.flow_chart">Per-bar bid vs ask volume</h2>
+            <div id="bv-flow-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderFlowChart();
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.bavr.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderFlowChart();
     renderStats();
 }
 
@@ -167,6 +175,31 @@ function renderChart(ratios) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderFlowChart() {
+    const el = document.getElementById('bv-flow-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.bars.length) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const bid = state.bars.map(b => Number.isFinite(b.bid_volume) ? b.bid_volume : null);
+    const ask = state.bars.map(b => Number.isFinite(b.ask_volume) ? b.ask_volume : null);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.bavr.series.bid_vol'),
+              stroke: '#7af0a8', width: 1.2, points: { show: false } },
+            { label: t('view.bavr.series.ask_vol'),
+              stroke: '#ff3860', width: 1.2, points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (flowChart) { try { flowChart.destroy(); } catch {} flowChart = null; }
+    flowChart = new window.uPlot(opts, [xs, bid, ask], el);
 }
 
 function renderStats() {
