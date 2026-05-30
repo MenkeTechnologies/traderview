@@ -14,6 +14,7 @@ import {
 } from '../_chandelier_stop_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_CFG = { lookback: 22, atr_multiplier: 3.0 };
 const DEFAULT_ATR_PERIOD = 14;
 
@@ -29,10 +30,10 @@ export async function renderChandelierStop(mount, _appState) {
             <p class="muted" data-i18n-html="view.chandelier_stop.help">Paste <code>high low close</code> per line. ATR computed
                 locally (Wilder smoothing). Demo loads 60 bars: 40-bar uptrend → 20-bar
                 reversal — long stop should trigger on the way down.</p>
-            <textarea id="cs-bars" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.5&#10;..."></textarea>
+            <textarea id="cs-bars" rows="6" placeholder="100.5 99.5 100.0&#10;101.0 100.0 100.5&#10;..." data-tip="view.chandelier_stop.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.chandelier_stop.btn.load_demo_60_bars_uptrend_reversal" id="cs-demo" class="secondary" type="button">Load demo (60 bars, uptrend → reversal)</button>
-                <button data-i18n="view.chandelier_stop.btn.clear" id="cs-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.chandelier_stop.btn.load_demo_60_bars_uptrend_reversal" id="cs-demo" class="secondary" type="button" data-tip="view.chandelier_stop.tip.demo" data-shortcut="chandelier_stop_demo">Load demo (60 bars, uptrend → reversal)</button>
+                <button data-i18n="view.chandelier_stop.btn.clear" id="cs-clear" class="secondary" type="button" data-tip="view.chandelier_stop.tip.clear">Clear</button>
             </div>
         </div>
 
@@ -40,17 +41,17 @@ export async function renderChandelierStop(mount, _appState) {
             <h2 data-i18n="view.chandelier_stop.h2.config">Config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.chandelier_stop.label.side">Side</span>
-                    <select id="cs-side">
+                    <select id="cs-side" data-tip="view.chandelier_stop.tip.side">
                         <option data-i18n="view.chandelier_stop.opt.long" value="long"  ${state.side === 'long'  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.chandelier_stop.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.chandelier_stop.label.atr_period">ATR period</span>
-                    <input id="cs-atrp" type="number" step="1" min="1" value="${state.atrPeriod}"></label>
+                    <input id="cs-atrp" type="number" step="1" min="1" value="${state.atrPeriod}" data-tip="view.chandelier_stop.tip.atr_period"></label>
                 <label><span data-i18n="view.chandelier_stop.label.lookback">Lookback bars</span>
-                    <input id="cs-lb"  type="number" step="1" min="1" value="${state.config.lookback}"></label>
+                    <input id="cs-lb"  type="number" step="1" min="1" value="${state.config.lookback}" data-tip="view.chandelier_stop.tip.lookback"></label>
                 <label><span data-i18n="view.chandelier_stop.label.multiplier">ATR multiplier</span>
-                    <input id="cs-mul" type="number" step="0.1" min="0" value="${state.config.atr_multiplier}"></label>
-                <button data-i18n="view.chandelier_stop.btn.compute" id="cs-run" class="primary" type="button">Compute</button>
+                    <input id="cs-mul" type="number" step="0.1" min="0" value="${state.config.atr_multiplier}" data-tip="view.chandelier_stop.tip.multiplier"></label>
+                <button data-i18n="view.chandelier_stop.btn.compute" id="cs-run" class="primary" type="button" data-tip="view.chandelier_stop.tip.run" data-shortcut="chandelier_stop_run">Compute</button>
             </div>
             <p data-i18n="view.chandelier_stop.hint.lebeau_defaults_atr_22_lookback_3_0_multiplier_tig" class="muted">LeBeau defaults: ATR-22 lookback, 3.0× multiplier. Tighter
                 multipliers (2.0×) trail closer but trigger on noise; looser (4.0×) catch
@@ -73,9 +74,11 @@ export async function renderChandelierStop(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('cs-bars').value =
             b.map(x => `${x.high} ${x.low} ${x.close}`).join('\n');
+        showToast(t('view.chandelier_stop.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('cs-clear').addEventListener('click', () => {
         document.getElementById('cs-bars').value = '';
+        showToast(t('view.chandelier_stop.toast.cleared'), { level: 'info' });
     });
     document.getElementById('cs-run').addEventListener('click', () => {
         readInputs();
@@ -104,6 +107,7 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.chandelier_stop.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length === 0) return;
     }
     // Compute ATR locally so the backend gets a parallel-length array.
@@ -113,17 +117,22 @@ async function compute(tok) {
     // stops which we already null-pad in splitStops).
     const safeAtr = atr.map(v => Number.isFinite(v) ? v : 0);
     const err = validateInputs(bars, safeAtr, state.side, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.chandelier_stop.toast.invalid'), { level: 'warning' }); return; }
 
     let stops;
     try {
         stops = await api.discChandelierStop(buildBody(bars, safeAtr, state.side, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.chandelier_stop.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(stops || [], bars);
     renderChart(bars, stops || []);
+    const arr = stops || [];
+    const triggers = arr.filter(s => s && s.triggered).length;
+    showToast(t('view.chandelier_stop.toast.computed', { bars: bars.length, triggers }), { level: triggers > 0 ? 'warning' : 'success' });
 }
 
 function renderSummary(stops, bars) {

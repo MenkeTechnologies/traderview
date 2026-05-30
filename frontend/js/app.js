@@ -671,6 +671,16 @@ function bindTabs() {
         const el = document.getElementById('st-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in chandelier-stop scope → click Compute.
+    window.addEventListener('tv:chandelier-stop-run', () => {
+        const el = document.getElementById('cs-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in chandelier-stop scope → click Load demo.
+    window.addEventListener('tv:chandelier-stop-demo', () => {
+        const el = document.getElementById('cs-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
