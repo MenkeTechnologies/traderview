@@ -103,17 +103,16 @@ export function installContextMenu() {
             toastErr(t('toast.err.no_view'));
             return;
         }
-        const name = (typeof window.prompt === 'function')
-            ? window.prompt(t('prompt.bookmark_name', { view: vid }), vid)
-            : vid;
-        if (name == null) return;     // user cancelled
-        const trimmed = String(name).trim();
-        if (!trimmed) return;
-        const state = loadState();
-        const next = addBookmark(state, trimmed, vid);
-        saveState(next);
-        toastOk('toast.bookmark_added', { name: trimmed });
-        window.dispatchEvent(new CustomEvent('tv:favorites-changed'));
+        void (async () => {
+            const name = await tPrompt('prompt.bookmark_name', { view: vid }, { defaultValue: vid });
+            if (name == null || !name.trim()) return;     // cancelled or empty
+            const trimmed = name.trim();
+            const state = loadState();
+            const next = addBookmark(state, trimmed, vid);
+            saveState(next);
+            toastOk('toast.bookmark_added', { name: trimmed });
+            window.dispatchEvent(new CustomEvent('tv:favorites-changed'));
+        })();
     });
     window.addEventListener('tv:edit-cut',        () => execEdit('cut'));
     window.addEventListener('tv:edit-copy',       () => execEdit('copy'));
