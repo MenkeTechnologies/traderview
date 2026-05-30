@@ -6,6 +6,7 @@ import uPlot from '../vendor/uPlot.esm.js';
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { uplotTheme } from '../uplot_theme.js';
 import {
@@ -44,17 +45,17 @@ export async function renderAbsorption(mount, _appState) {
                 <input id="abs-volmul" type="number" step="0.1" min="0.1" value="${state.vol_multiplier}"
                        data-tip="view.abs.tip.vol_mul">
                 <button data-i18n="view.abs.btn.compute" id="abs-run" class="primary"
-                        data-tip="view.abs.tip.compute" type="button">Detect</button>
+                        data-tip="view.abs.tip.compute" data-shortcut="absorption_run" type="button">Detect</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.abs.btn.demo_flat"   id="abs-d1" class="secondary" type="button">Demo: flat</button>
-                <button data-i18n="view.abs.btn.demo_bull"   id="abs-d2" class="secondary" type="button">Demo: bullish</button>
-                <button data-i18n="view.abs.btn.demo_bear"   id="abs-d3" class="secondary" type="button">Demo: bearish</button>
-                <button data-i18n="view.abs.btn.demo_normal" id="abs-d4" class="secondary" type="button">Demo: normal vol</button>
-                <button data-i18n="view.abs.btn.demo_multi"  id="abs-d5" class="secondary" type="button">Demo: multi</button>
-                <button data-i18n="view.abs.btn.demo_noisy"  id="abs-d6" class="secondary" type="button">Demo: noisy</button>
-                <button data-i18n="view.abs.btn.demo_short"  id="abs-d7" class="secondary" type="button">Demo: short period</button>
-                <button data-i18n="view.abs.btn.demo_tight"  id="abs-d8" class="secondary" type="button">Demo: tight thresh</button>
+                <button data-i18n="view.abs.btn.demo_flat"   id="abs-d1" class="secondary" data-tip="view.abs.tip.demo_flat"   type="button">Demo: flat</button>
+                <button data-i18n="view.abs.btn.demo_bull"   id="abs-d2" class="secondary" data-tip="view.abs.tip.demo_bull"   type="button">Demo: bullish</button>
+                <button data-i18n="view.abs.btn.demo_bear"   id="abs-d3" class="secondary" data-tip="view.abs.tip.demo_bear"   type="button">Demo: bearish</button>
+                <button data-i18n="view.abs.btn.demo_normal" id="abs-d4" class="secondary" data-tip="view.abs.tip.demo_normal" type="button">Demo: normal vol</button>
+                <button data-i18n="view.abs.btn.demo_multi"  id="abs-d5" class="secondary" data-tip="view.abs.tip.demo_multi"  type="button">Demo: multi</button>
+                <button data-i18n="view.abs.btn.demo_noisy"  id="abs-d6" class="secondary" data-tip="view.abs.tip.demo_noisy"  type="button">Demo: noisy</button>
+                <button data-i18n="view.abs.btn.demo_short"  id="abs-d7" class="secondary" data-tip="view.abs.tip.demo_short"  type="button">Demo: short period</button>
+                <button data-i18n="view.abs.btn.demo_tight"  id="abs-d8" class="secondary" data-tip="view.abs.tip.demo_tight"  type="button">Demo: tight thresh</button>
             </div>
             <p data-i18n="view.abs.hint.about" class="muted">Flags bars where range-per-volume is much smaller than recent baseline AND volume is much larger — i.e. one side absorbed the other's flow. Direction inferred from close vs midpoint and prior close.</p>
         </div>
@@ -107,6 +108,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.abs.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.abs.toast.parse_error'), { level: 'error' });
         return;
     }
     state.bars           = p.bars;
@@ -118,7 +120,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.abs.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period, state.threshold, state.vol_multiplier);
     renderSummary(local, true);
     renderChart(local);
@@ -130,6 +132,7 @@ async function compute(tok) {
         resp = await api.anlyAbsorptionDetector(buildBody(state));
     } catch (e) {
         showErr(`${t('view.abs.err.api')}: ${e.message || e}`);
+        showToast(t('view.abs.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -138,6 +141,12 @@ async function compute(tok) {
     renderVolChart(resp);
     renderEvents(resp);
     renderStats();
+    const events = (resp.bullish?.length || 0) + (resp.bearish?.length || 0);
+    if (events > 0) {
+        showToast(t('view.abs.toast.detected'), { level: 'success' });
+    } else {
+        showToast(t('view.abs.toast.none'), { level: 'info' });
+    }
 }
 
 function renderSummary(report, pending) {
