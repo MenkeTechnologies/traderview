@@ -19,6 +19,7 @@ import {
 } from '../_second_order_greeks_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_PARAMS = {
     kind: 'call',
     strike: 100,
@@ -54,26 +55,26 @@ export async function renderSecondOrderGreeks(mount, _appState) {
             <h2 data-i18n="view.second_order_greeks.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.second_order_greeks.label.kind">Kind</span>
-                    <select id="sg-kind">
+                    <select id="sg-kind" data-tip="view.second_order_greeks.tip.kind">
                         <option data-i18n="view.second_order_greeks.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.second_order_greeks.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span> <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span> <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.r">Rate r</span> <input id="sg-r" type="number" step="any" value="${state.params.risk_free}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.q">Dividend q</span> <input id="sg-q" type="number" step="any" min="0" value="${state.params.dividend_yield}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span> <input id="sg-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span> <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.second_order_greeks.tip.strike"></label>
+                <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span> <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}" data-tip="view.second_order_greeks.tip.t"></label>
+                <label><span data-i18n="view.second_order_greeks.label.r">Rate r</span> <input id="sg-r" type="number" step="any" value="${state.params.risk_free}" data-tip="view.second_order_greeks.tip.r"></label>
+                <label><span data-i18n="view.second_order_greeks.label.q">Dividend q</span> <input id="sg-q" type="number" step="any" min="0" value="${state.params.dividend_yield}" data-tip="view.second_order_greeks.tip.q"></label>
+                <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span> <input id="sg-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.second_order_greeks.tip.sigma"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.second_order_greeks.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
-                <label><span data-i18n="view.second_order_greeks.label.low">Low</span> <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.high">High</span> <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}"></label>
-                <label><span data-i18n="view.second_order_greeks.label.points">Points</span> <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}"></label>
-                <button data-i18n="view.second_order_greeks.btn.50_from_strike" id="sg-defaults" class="secondary" type="button">±50% from strike</button>
-                <button data-i18n="view.second_order_greeks.btn.compute" id="sg-run" class="primary" type="button">Compute</button>
+                <label><span data-i18n="view.second_order_greeks.label.low">Low</span> <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}" data-tip="view.second_order_greeks.tip.low"></label>
+                <label><span data-i18n="view.second_order_greeks.label.high">High</span> <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}" data-tip="view.second_order_greeks.tip.high"></label>
+                <label><span data-i18n="view.second_order_greeks.label.points">Points</span> <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}" data-tip="view.second_order_greeks.tip.points"></label>
+                <button data-i18n="view.second_order_greeks.btn.50_from_strike" id="sg-defaults" class="secondary" type="button" data-tip="view.second_order_greeks.tip.defaults">±50% from strike</button>
+                <button data-i18n="view.second_order_greeks.btn.compute" id="sg-run" class="primary" type="button" data-tip="view.second_order_greeks.tip.run" data-shortcut="second_order_greeks_run">Compute</button>
             </div>
             <p data-i18n="view.second_order_greeks.hint.grid_values_computed_client_side_bs_closed_form_th" class="muted">
                 Grid values computed client-side (BS closed-form). The "backend ATM"
@@ -122,7 +123,7 @@ function readInputs() {
 async function compute(_mount, tok) {
     hideErr();
     const err = validateParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.second_order_greeks.toast.invalid'), { level: 'warning' }); return; }
 
     // Local grid is instant — no backend round-trips per spot.
     const grid = computeGrid(state.params);
@@ -140,11 +141,13 @@ async function compute(_mount, tok) {
         // Non-fatal — local grid still renders; show as backend "—" in card.
         // eslint-disable-next-line no-console
         console.warn('second-order-greeks backend call failed', e);
+        showToast(t('view.second_order_greeks.toast.backend_warn'), { level: 'warning' });
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(atmLocal, atmBackend);
     renderGrid(grid, atmLocal);
+    showToast(t('view.second_order_greeks.toast.computed', { n: grid.spots.length }), { level: 'success' });
 }
 
 function renderSummary(atmLocal, atmBackend) {
