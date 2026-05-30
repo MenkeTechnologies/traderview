@@ -57,6 +57,11 @@ export async function renderFuturesRoll(mount, _appState) {
             <div id="fr-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.futures_roll.h2.expiry_chart">Days to expiry per contract</h2>
+            <div id="fr-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="fr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -96,6 +101,7 @@ async function compute(tok) {
     const local = localSchedule(state.positions, state.today, state.roll_window_days);
     renderSummary(local, true);
     renderTable(local);
+    renderExpiryChart(local);
     let resp;
     try {
         resp = await api.futuresRollSchedule(buildBody(state.positions, state.today, state.roll_window_days));
@@ -106,6 +112,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
+    renderExpiryChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -162,6 +169,43 @@ function renderTable(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderExpiryChart(report) {
+    const el = document.getElementById('fr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.rows) || report.rows.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.futures_roll.empty_chart">${esc(t('view.futures_roll.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = report.rows.map(r => r.symbol);
+    const days = report.rows.map(r => Number.isFinite(r.days_to_expiry) ? r.days_to_expiry : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    const win = xs.map(() => state.roll_window_days);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.futures_roll.chart.contract_idx') },
+            { label: t('view.futures_roll.chart.days'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.futures_roll.chart.window'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.futures_roll.chart.zero'),
+              stroke: '#ff3860', width: 0.8, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, days, win, zero], el);
 }
 
 function card(label, value, cls = '') {
