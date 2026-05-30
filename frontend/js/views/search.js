@@ -49,7 +49,7 @@ function renderHits(r) {
               <table class="trades">
                 <thead><tr><th data-i18n="view.search.th.symbol">Symbol</th><th data-i18n="view.search.th.side">Side</th><th data-i18n="view.search.th.status">Status</th><th data-i18n="view.search.th.opened">Opened</th><th data-i18n="view.search.th.net_p_l">Net P&L</th></tr></thead>
                 <tbody>${r.trades.map(t => `
-                    <tr>
+                    <tr data-context-scope="trade-row" data-id="${esc(t.id)}">
                       <td><a href="#trade/${t.id}">${esc(t.symbol)}</a></td>
                       <td>${t.side}</td><td>${t.status}</td>
                       <td>${fmtDateTime(t.opened_at)}</td>
@@ -64,7 +64,10 @@ function renderHits(r) {
             <div class="chart-panel">
               <h2>${esc(t('view.search.h2.journal', { count: r.journal.length }))}</h2>
               ${r.journal.map(j => `
-                <div class="journal-entry">
+                <div class="journal-entry"
+                     data-context-scope="journal-entry"
+                     data-id="${esc(j.id)}"
+                     data-trade-id="${esc(j.trade_id || '')}">
                   <div class="meta">
                     ${j.day ? fmtDate(j.day) : fmtDateTime(j.created_at)}
                     ${j.trade_id ? `· <a href="#trade/${j.trade_id}">${esc(t('common.link.trade'))}</a>` : ''}
