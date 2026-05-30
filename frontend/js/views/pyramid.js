@@ -78,6 +78,12 @@ export async function renderPyramid(mount, _appState) {
                 Scale-In curves TOWARD initial entry (avg cost moves favorably).</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.pyramid.h2.total_qty_chart">Total position size after each tranche</h2>
+            <div id="py-qty-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.pyramid.hint.total_qty" class="muted small">Cumulative qty after each tranche fires. Pyramid-Up: tapering adds = decreasing slope (smaller-each-add discipline). Scale-In: equal/larger adds = steeper slope (martingale risk).</p>
+        </div>
+
         <div id="py-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -152,6 +158,7 @@ async function compute(tok) {
     renderSummary(report);
     renderTable(report);
     renderChart(report);
+    renderTotalQtyChart(report);
     const states = (report.states || []).length;
     showToast(t('view.pyramid.toast.built', { states }), { level: report.plan_misordered ? 'warning' : 'success' });
 }
@@ -222,6 +229,31 @@ function renderChart(report) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, ys, triggerYs], el);
+}
+
+function renderTotalQtyChart(report) {
+    const el = document.getElementById('py-qty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const states = report.states || [];
+    if (states.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.pyramid.empty_qty_chart">${esc(t('view.pyramid.empty_qty_chart'))}</div>`;
+        return;
+    }
+    const xs = states.map((_, i) => i + 1);
+    const ys = states.map(s => decToNum(s.total_qty));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.state_') },
+            { label: t('view.pyramid.chart.total_qty'),
+              stroke: '#b86bff', width: 1.6,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function showErr(msg) {

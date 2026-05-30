@@ -638,6 +638,8 @@ const PRESETS = [
     { id: 'dead_cat_bounce_at_year_low', label: t('view.scanners.preset.dead_cat_bounce_at_year_low.label'), desc: t('view.scanners.preset.dead_cat_bounce_at_year_low.desc') },
     { id: 'gap_down_intraday_reversal_close_at_hod', label: t('view.scanners.preset.gap_down_intraday_reversal_close_at_hod.label'), desc: t('view.scanners.preset.gap_down_intraday_reversal_close_at_hod.desc') },
     { id: 'gap_up_intraday_reversal_close_at_lod', label: t('view.scanners.preset.gap_up_intraday_reversal_close_at_lod.label'), desc: t('view.scanners.preset.gap_up_intraday_reversal_close_at_lod.desc') },
+    { id: 'big_green_mid_year_sweet_spot', label: t('view.scanners.preset.big_green_mid_year_sweet_spot.label'), desc: t('view.scanners.preset.big_green_mid_year_sweet_spot.desc') },
+    { id: 'big_red_mid_year_sweet_spot', label: t('view.scanners.preset.big_red_mid_year_sweet_spot.label'), desc: t('view.scanners.preset.big_red_mid_year_sweet_spot.desc') },
 ];
 
 export async function renderScanners(mount) {

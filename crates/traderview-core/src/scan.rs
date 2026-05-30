@@ -756,6 +756,8 @@ pub enum Preset {
     DeadCatBounceAtYearLow,              // change_pct in [-1.5, -0.5] AND day_pct < -0.5 AND gap_pct in [0, 0.5] AND year_low_pct < 5 AND rel_volume in [1, 1.8] — moderate red + red intraday + small green gap + within 5% of 52w low + decent vol (textbook dead-cat-bounce setup near the lows; gap-up sold intraday)
     GapDownIntradayReversalCloseAtHOD,   // gap_pct < -0.5 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap down + intraday went up + close near HOD + decent vol (textbook reversal-up day; gap-down was bought, rallied through the day to close at the highs; strong bullish reversal candidate)
     GapUpIntradayReversalCloseAtLOD,     // gap_pct > 0.5 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap up + intraday went down + close near LOD + decent vol (textbook reversal-down day; gap-up was sold, declined through the day to close at the lows; strong bearish reversal candidate)
+    BigGreenMidYearSweetSpot,            // change_pct > 3 AND year_high_pct in [5, 20] AND year_low_pct > 15 AND rel_volume >= 1.5 — big green + 5-20% below 52w high + well above 52w low + decent vol (sweet-spot up move: high-momentum stock pushing higher from mid-range; room to run before resistance)
+    BigRedMidYearSweetSpot,              // change_pct < -3 AND year_low_pct in [5, 20] AND year_high_pct > 15 AND rel_volume >= 1.5 — big red + 5-20% above 52w low + well below 52w high + decent vol (sweet-spot down move: high-momentum drop from mid-range; room to fall before support)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4283,6 +4285,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.3
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigGreenMidYearSweetSpot => {
+            hit.change_pct > 3.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct <= 20.0
+                && hit.year_low_pct > 15.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BigRedMidYearSweetSpot => {
+            hit.change_pct < -3.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct <= 20.0
+                && hit.year_high_pct > 15.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4929,6 +4945,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DeadCatBounceAtYearLow => "Moderate Red + Red Intraday + Small Green Gap + Near 52w Low + Decent Vol (Textbook Dead-cat-bounce Near the Lows; Gap-up Sold Intraday)",
         Preset::GapDownIntradayReversalCloseAtHOD => "Gap Down + Up Intraday + Close at HOD + Decent Vol (Textbook Reversal-up Day; Gap-down Bought to Close at Highs)",
         Preset::GapUpIntradayReversalCloseAtLOD => "Gap Up + Down Intraday + Close at LOD + Decent Vol (Textbook Reversal-down Day; Gap-up Sold to Close at Lows)",
+        Preset::BigGreenMidYearSweetSpot => "Big Green + 5-20% Below 52w High + Above 52w Low + Decent Vol (Sweet-spot Up Move; High-momentum Push From Mid-range; Room to Run)",
+        Preset::BigRedMidYearSweetSpot => "Big Red + 5-20% Above 52w Low + Below 52w High + Decent Vol (Sweet-spot Down Move; High-momentum Drop From Mid-range; Room to Fall)",
     }
 }
 
