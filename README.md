@@ -45,7 +45,7 @@
 - [\[0x0A\] Importing Trades](#0x0a-importing-trades)
 - [\[0x0AA\] Business Expenses (Schedule C)](#0x0aa-business-expenses-schedule-c)
 - [\[0x0B\] Configuration](#0x0b-configuration)
-- [\[0x0C\] Roadmap](#0x0c-roadmap)
+- [\[0x0C\] Status](#0x0c-status)
 - [\[0xFF\] License](#0xff-license)
 
 ---
