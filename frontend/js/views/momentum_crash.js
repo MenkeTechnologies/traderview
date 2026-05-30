@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_INPUTS,
@@ -33,29 +34,29 @@ export async function renderMomentumCrash(mount, _appState) {
             <h2 data-i18n="view.mcp.h2.params">Parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.mcp.label.vol_lookback">Vol lookback (bars)</span>
-                    <input id="mcp-vol-lb" type="number" step="1" min="5" value="${state.vol_lookback}"></label>
+                    <input id="mcp-vol-lb" type="number" step="1" min="5" value="${state.vol_lookback}" data-tip="view.mcp.tip.vol_lookback"></label>
                 <label><span data-i18n="view.mcp.label.target_vol">Target ann. vol</span>
-                    <input id="mcp-target" type="number" step="any" min="0.001" value="${state.target_annualized_vol}"></label>
+                    <input id="mcp-target" type="number" step="any" min="0.001" value="${state.target_annualized_vol}" data-tip="view.mcp.tip.target_vol"></label>
                 <label><span data-i18n="view.mcp.label.periods">Periods / yr</span>
-                    <input id="mcp-periods" type="number" step="any" min="1" value="${state.periods_per_year}"></label>
+                    <input id="mcp-periods" type="number" step="any" min="1" value="${state.periods_per_year}" data-tip="view.mcp.tip.periods"></label>
                 <label><span data-i18n="view.mcp.label.max_lev">Max leverage</span>
-                    <input id="mcp-max-lev" type="number" step="any" min="0.1" value="${state.max_leverage}"></label>
+                    <input id="mcp-max-lev" type="number" step="any" min="0.1" value="${state.max_leverage}" data-tip="view.mcp.tip.max_lev"></label>
                 <label><span data-i18n="view.mcp.label.crash_lb">Crash lookback (bars)</span>
-                    <input id="mcp-crash-lb" type="number" step="1" min="1" value="${state.crash_filter_lookback}"></label>
+                    <input id="mcp-crash-lb" type="number" step="1" min="1" value="${state.crash_filter_lookback}" data-tip="view.mcp.tip.crash_lb"></label>
                 <label><span data-i18n="view.mcp.label.crash_thr">Crash threshold (decimal)</span>
-                    <input id="mcp-crash-thr" type="number" step="any" value="${state.crash_filter_threshold_pct}"></label>
+                    <input id="mcp-crash-thr" type="number" step="any" value="${state.crash_filter_threshold_pct}" data-tip="view.mcp.tip.crash_thr"></label>
                 <button data-i18n="view.mcp.btn.compute" id="mcp-run" class="primary"
-                        data-tip="view.mcp.tip.compute" type="button">Manage</button>
+                        data-tip="view.mcp.tip.compute" data-shortcut="momentum_crash_run" type="button">Manage</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.mcp.btn.demo_normal"     id="mcp-demo-normal"   class="secondary" type="button">Demo: normal regime</button>
-                <button data-i18n="view.mcp.btn.demo_low"        id="mcp-demo-low"      class="secondary" type="button">Demo: low vol</button>
-                <button data-i18n="view.mcp.btn.demo_high"       id="mcp-demo-high"     class="secondary" type="button">Demo: high vol</button>
-                <button data-i18n="view.mcp.btn.demo_crash"      id="mcp-demo-crash"    class="secondary" type="button">Demo: crash event</button>
-                <button data-i18n="view.mcp.btn.demo_persistent" id="mcp-demo-pers"     class="secondary" type="button">Demo: persistent crash</button>
-                <button data-i18n="view.mcp.btn.demo_mixed"      id="mcp-demo-mixed"    class="secondary" type="button">Demo: mixed regime</button>
-                <button data-i18n="view.mcp.btn.demo_short"      id="mcp-demo-short"    class="secondary" type="button">Demo: short lookback</button>
-                <button data-i18n="view.mcp.btn.demo_tight"      id="mcp-demo-tight"    class="secondary" type="button">Demo: tight 5% target vol</button>
+                <button data-i18n="view.mcp.btn.demo_normal"     id="mcp-demo-normal"   class="secondary" type="button" data-tip="view.mcp.tip.demo_normal">Demo: normal regime</button>
+                <button data-i18n="view.mcp.btn.demo_low"        id="mcp-demo-low"      class="secondary" type="button" data-tip="view.mcp.tip.demo_low">Demo: low vol</button>
+                <button data-i18n="view.mcp.btn.demo_high"       id="mcp-demo-high"     class="secondary" type="button" data-tip="view.mcp.tip.demo_high">Demo: high vol</button>
+                <button data-i18n="view.mcp.btn.demo_crash"      id="mcp-demo-crash"    class="secondary" type="button" data-tip="view.mcp.tip.demo_crash">Demo: crash event</button>
+                <button data-i18n="view.mcp.btn.demo_persistent" id="mcp-demo-pers"     class="secondary" type="button" data-tip="view.mcp.tip.demo_pers">Demo: persistent crash</button>
+                <button data-i18n="view.mcp.btn.demo_mixed"      id="mcp-demo-mixed"    class="secondary" type="button" data-tip="view.mcp.tip.demo_mixed">Demo: mixed regime</button>
+                <button data-i18n="view.mcp.btn.demo_short"      id="mcp-demo-short"    class="secondary" type="button" data-tip="view.mcp.tip.demo_short">Demo: short lookback</button>
+                <button data-i18n="view.mcp.btn.demo_tight"      id="mcp-demo-tight"    class="secondary" type="button" data-tip="view.mcp.tip.demo_tight">Demo: tight 5% target vol</button>
             </div>
             <p data-i18n="view.mcp.hint.about" class="muted">w_t = min(target_vol / forecast_vol_t, max_leverage). Crash filter zeros leverage when the trailing crash-lookback cumret &lt; threshold. Defaults: 60-day vol, 22-day crash filter, 15% target ann. vol, −20% crash threshold.</p>
         </div>
@@ -101,6 +102,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.mcp.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.mcp.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -116,13 +118,17 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.mcp.toast.invalid'), { level: 'warning' }); return; }
     const local = localManage(
         state.momentum_returns, state.vol_lookback, state.target_annualized_vol,
         state.periods_per_year, state.max_leverage,
         state.crash_filter_lookback, state.crash_filter_threshold_pct,
     );
-    if (!local) { showErr(t('view.mcp.err.degenerate')); return; }
+    if (!local) {
+        showErr(t('view.mcp.err.degenerate'));
+        showToast(t('view.mcp.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(local, true);
     renderChart(local);
     renderTable(local);
@@ -131,13 +137,25 @@ async function compute(tok) {
         resp = await api.portfolioMomentumCrashProtection(buildBody(state));
     } catch (e) {
         showErr(`${t('view.mcp.err.api')}: ${e.message || e}`);
+        showToast(t('view.mcp.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.mcp.err.server_rejected')); return; }
+    if (!resp) {
+        showErr(t('view.mcp.err.server_rejected'));
+        showToast(t('view.mcp.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const meanLev = Number(resp.mean_leverage) || 0;
+    const filtered = resp.crash_filter_triggered_count | 0;
+    const level = filtered > 0 ? 'warning' : 'success';
+    showToast(t('view.mcp.toast.managed', {
+        lev: meanLev.toFixed(2),
+        filtered,
+    }), { level });
 }
 
 function renderSummary(report, pending) {

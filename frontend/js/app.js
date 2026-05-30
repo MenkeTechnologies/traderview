@@ -901,6 +901,11 @@ function bindTabs() {
         const el = document.getElementById('tlb-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `m` in mcp scope → click Manage.
+    window.addEventListener('tv:momentum-crash-run', () => {
+        const el = document.getElementById('mcp-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
