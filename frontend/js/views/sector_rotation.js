@@ -112,6 +112,45 @@ function render(r, mount) {
             </table>
             <p class="muted small">${esc(t('view.sector_rotation.hint.computed', { time: new Date(r.computed_at).toLocaleString() }))}</p>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.sector_rotation.h2.rs_now">Latest 60-day RS edge by sector</h2>
+            <div id="sr-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderRsChart(r.sectors);
     void fmt;
+}
+
+function renderRsChart(sectors) {
+    const el = document.getElementById('sr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (sectors || []).filter(s => Array.isArray(s.rs_sparkline) && s.rs_sparkline.length > 0);
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.sector_rotation.empty_chart">${esc(t('view.sector_rotation.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(s => s.symbol);
+    const latest = valid.map(s => Number(s.rs_sparkline[s.rs_sparkline.length - 1]));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.sector_rotation.chart.sector_idx') },
+            { label: t('view.sector_rotation.chart.rs_latest'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.sector_rotation.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, latest, zero], el);
 }
