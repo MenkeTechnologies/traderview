@@ -599,6 +599,11 @@ function bindTabs() {
         const el = document.getElementById('e-poll');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `r` in monte-carlo scope → click Run button.
+    window.addEventListener('tv:monte-carlo-run', () => {
+        const el = document.getElementById('mc-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

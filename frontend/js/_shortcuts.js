@@ -89,6 +89,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'economy_load',                 keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'economy',           descKey: 'shortcut.economy_load',                 actionKey: 'tv:economy-load' },
     { id: 'earnings_cal_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'earnings-cal',      descKey: 'shortcut.earnings_cal_refresh',         actionKey: 'tv:earnings-cal-refresh' },
     { id: 'earnings_cal_poll',            keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'earnings-cal',      descKey: 'shortcut.earnings_cal_poll',            actionKey: 'tv:earnings-cal-poll' },
+    { id: 'monte_carlo_run',              keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'monte-carlo',       descKey: 'shortcut.monte_carlo_run',              actionKey: 'tv:monte-carlo-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

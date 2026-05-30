@@ -18,6 +18,7 @@ import {
 } from '../_monte_carlo_models.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     modelId: 'gbm',
     values: defaultValues('gbm'),
@@ -34,13 +35,13 @@ export async function renderMonteCarlo(mount, _appState) {
             <h2 data-i18n="view.monte_carlo.h2.model">Model</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.monte_carlo.label.model">Stochastic model</span>
-                    <select id="mc-model">
+                    <select id="mc-model" data-tip="view.monte_carlo.tip.model">
                         ${Object.entries(MODELS).map(([id, m]) =>
                             `<option value="${id}" ${id === state.modelId ? 'selected' : ''}>${esc(m.label)}</option>`
                         ).join('')}
                     </select>
                 </label>
-                <button data-i18n="view.monte_carlo.btn.run" id="mc-run" class="primary" type="button">Run</button>
+                <button data-i18n="view.monte_carlo.btn.run" data-tip="view.monte_carlo.tip.run" data-shortcut="monte_carlo_run" id="mc-run" class="primary" type="button">Run</button>
             </div>
         </div>
 
@@ -108,7 +109,11 @@ function wireForm(mount, tok) {
 async function runSim(mount, tok) {
     hideErr();
     const validation = validateValues(state.modelId, state.values);
-    if (validation) { showErr(validation); return; }
+    if (validation) {
+        showErr(validation);
+        showToast(validation, { level: 'warning' });
+        return;
+    }
 
     const model = MODELS[state.modelId];
     const body = model.buildBody(state.values);
@@ -117,16 +122,27 @@ async function runSim(mount, tok) {
         res = await api[model.endpoint](body);
         if (res == null) throw new Error(t('view.monte_carlo.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const msg = t("common.error.api", { msg: e.message || e });
+        showErr(msg);
+        showToast(msg, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     const stats = model.extractTerminalStats(res);
-    if (!stats) { showErr(t('view.monte_carlo.err.simulator_returned_unexpected_shape')); return; }
+    if (!stats) {
+        const msg = t('view.monte_carlo.err.simulator_returned_unexpected_shape');
+        showErr(msg);
+        showToast(msg, { level: 'error' });
+        return;
+    }
     state.lastStats = stats;
     renderSummary(stats);
     renderChart(stats);
+    showToast(t('view.monte_carlo.toast.done', {
+        model: MODELS[state.modelId].label,
+        mean: formatN(stats.mean, 4),
+    }), { level: 'success' });
 }
 
 function renderSummary(stats) {
