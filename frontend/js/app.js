@@ -539,6 +539,16 @@ function bindTabs() {
         const el = document.getElementById('save');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `n` in hotkeys scope → focus binding-name input.
+    window.addEventListener('tv:hotkeys-focus-name', () => {
+        const el = document.querySelector('#hk-form input[name="name"]');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
+    // View-scoped: `c` in hotkeys scope → click Capture combo button.
+    window.addEventListener('tv:hotkeys-capture', () => {
+        const el = document.getElementById('capture');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

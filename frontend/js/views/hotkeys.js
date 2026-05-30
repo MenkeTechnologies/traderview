@@ -5,6 +5,8 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
+import { tConfirm } from '../dialog.js';
 
 const ACTIONS = [
     { id: 'go_dashboard',      get label() { return t('view.hotkeys.action.go_dashboard'); } },
@@ -30,16 +32,17 @@ export async function renderHotkeys(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.hotkeys.h2.new_binding">New binding</h2>
             <form id="hk-form" class="inline-form">
-                <input name="name" placeholder="binding name" data-i18n-placeholder="view.hotkeys.placeholder.name" required>
-                <button data-i18n="view.hotkeys.btn.capture_combo" type="button" id="capture" class="primary"
+                <input name="name" placeholder="binding name" data-i18n-placeholder="view.hotkeys.placeholder.name"
+                       data-tip="view.hotkeys.tip.name" data-shortcut="hotkeys_focus_name" required>
+                <button data-i18n="view.hotkeys.btn.capture_combo" data-tip="view.hotkeys.tip.capture" data-shortcut="hotkeys_capture" type="button" id="capture" class="primary"
                     style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">
                     Capture combo
                 </button>
-                <input name="combo" placeholder="ctrl+shift+z" data-i18n-placeholder="view.hotkeys.placeholder.combo" required readonly>
-                <select name="action" required>
+                <input name="combo" placeholder="ctrl+shift+z" data-i18n-placeholder="view.hotkeys.placeholder.combo" data-tip="view.hotkeys.tip.combo" required readonly>
+                <select name="action" data-tip="view.hotkeys.tip.action" required>
                     ${ACTIONS.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('')}
                 </select>
-                <button data-i18n="view.hotkeys.btn.save" class="primary" type="submit">Save</button>
+                <button data-i18n="view.hotkeys.btn.save" data-tip="view.hotkeys.tip.save" class="primary" type="submit">Save</button>
             </form>
         </div>
 
@@ -51,7 +54,7 @@ export async function renderHotkeys(mount) {
                     <tr data-context-scope="hotkey-row" data-id="${esc(k.id)}" data-combo="${esc(k.combo)}"><td>${esc(k.name)}</td>
                     <td><code>${esc(k.combo)}</code></td>
                     <td>${esc(actionLabel(k.action))}</td>
-                    <td><button data-i18n="view.hotkeys.btn.delete" class="link" data-del="${k.id}">delete</button></td></tr>
+                    <td><button data-i18n="view.hotkeys.btn.delete" data-tip="view.hotkeys.tip.delete_row" class="link" data-del="${k.id}">delete</button></td></tr>
                 `).join('')}</tbody></table>` : '<p data-i18n="view.hotkeys.hint.no_bindings_yet" class="muted">No bindings yet.</p>'}
         </div>
         <div class="chart-panel">
@@ -83,20 +86,32 @@ export async function renderHotkeys(mount) {
     mount.querySelector('#hk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.upsertHotkey({
-            name: fd.get('name'),
-            combo: fd.get('combo'),
-            action: fd.get('action'),
-            payload: {},
-        });
-        if (!viewIsCurrent(tok)) return;
-        renderHotkeys(mount);
+        const name = String(fd.get('name') || '').trim();
+        const combo = String(fd.get('combo') || '').trim();
+        try {
+            await api.upsertHotkey({
+                name, combo,
+                action: fd.get('action'),
+                payload: {},
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.hotkeys.toast.bound', { name, combo }), { level: 'success' });
+            renderHotkeys(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteHotkey(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderHotkeys(mount);
+            if (!await tConfirm('view.hotkeys.confirm.delete', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteHotkey(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.hotkeys.toast.deleted'), { level: 'success' });
+                renderHotkeys(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         }));
 }
 
