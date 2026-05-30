@@ -336,6 +336,8 @@ pub enum Preset {
     SteadyDownDryVol,            // change_pct between -2 and -0.5 AND day_pct < 0 AND rel_volume < 0.7 — steady-down day on light volume (low-conviction drift down)
     ImpulsiveUpHotVol,           // change_pct between 2 and 5 AND day_pct > 0 AND rel_volume >= 1.5 — impulsive up day on heavy vol (initiative buying)
     ImpulsiveDownHotVol,         // change_pct between -5 and -2 AND day_pct < 0 AND rel_volume >= 1.5 — impulsive down day on heavy vol (initiative selling)
+    ParabolicUp,                 // change_pct > 10 AND rel_volume >= 3 AND hod_dist.abs() < 0.5 — parabolic up: >10% on >=3× vol closing at HOD (capitulation buy / blow-off candidate)
+    ParabolicDown,               // change_pct < -10 AND rel_volume >= 3 AND lod_dist.abs() < 0.5 — parabolic down: <-10% on >=3× vol closing at LOD (capitulation sell / panic candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1429,6 +1431,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::ParabolicUp => {
+            hit.change_pct > 10.0
+                && hit.rel_volume >= 3.0
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::ParabolicDown => {
+            hit.change_pct < -10.0
+                && hit.rel_volume >= 3.0
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1655,6 +1667,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SteadyDownDryVol => "Steady Down, Dry Vol",
         Preset::ImpulsiveUpHotVol => "Impulsive Up, Hot Vol",
         Preset::ImpulsiveDownHotVol => "Impulsive Down, Hot Vol",
+        Preset::ParabolicUp => "Parabolic Up",
+        Preset::ParabolicDown => "Parabolic Down",
     }
 }
 

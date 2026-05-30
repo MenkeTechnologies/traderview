@@ -5,6 +5,7 @@
 import { go } from '../app.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 const SECTIONS = [
     {
@@ -215,7 +216,14 @@ export async function renderTutorial(mount, _state) {
                 </section>
             `).join('')}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tutorial.h2.coverage_chart">Coverage: items per section</h2>
+            <div id="tut-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+
+    renderCoverageChart();
 
     // Tile-jump buttons inside the body — every <button data-go="X"> navigates.
     mount.querySelectorAll('button[data-go]').forEach(b => {
@@ -242,4 +250,44 @@ export async function renderTutorial(mount, _state) {
         });
         q.focus();
     }
+}
+
+function renderCoverageChart() {
+    const el = document.getElementById('tut-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = SECTIONS.map(s => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = s.body;
+        const items = tmp.querySelectorAll('dt, li').length;
+        const links = tmp.querySelectorAll('button[data-go]').length;
+        return { id: s.id, items, links };
+    });
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tutorial.empty_chart">${esc(t('view.tutorial.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.id);
+    const xs = labels.map((_, i) => i + 1);
+    const items = rows.map(r => r.items);
+    const links = rows.map(r => r.links);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tutorial.chart.section') },
+            { label: t('view.tutorial.chart.items'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.tutorial.chart.links'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, items, links], el);
 }
