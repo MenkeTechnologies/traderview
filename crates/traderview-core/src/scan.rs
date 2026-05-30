@@ -772,6 +772,8 @@ pub enum Preset {
     Year52LowBigDayDryVol,               // year_low_pct < 2 AND day_pct < -2 AND rel_volume < 0.7 — near 52w low + big red intraday + dry vol (no-volume push to new lows intraday; capitulation without conviction / thin-tape breakdown)
     MidMagnitudeGreenMidWickHotVol,      // change_pct in [1, 3] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate green + mid-range close + decent vol (moderate-conviction up day with mid-wick finish; less extreme than BigUpMidRangeClose; consolidation candidate)
     MidMagnitudeRedMidWickHotVol,        // change_pct in [-3, -1] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate red + mid-range close + decent vol (moderate-conviction down day with mid-wick finish; less extreme than BigDownMidRangeClose; basing candidate)
+    HotVolHugeRangeBigChange,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() > 4 — extreme vol (3×+) + extreme range (>6%) + big change (>4%) (catalyst day with massive participation, wide exploration, and big finish; max-volatility resolution)
+    HotVolHugeRangeFlatClose,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() < 0.5 — extreme vol + extreme range + flat close (max-absorption pattern at scale: huge intraday exploration but no net result; institutional indecision day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4399,6 +4401,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() <= 2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HotVolHugeRangeBigChange => {
+            hit.rel_volume >= 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.change_pct.abs() > 4.0
+        }
+        Preset::HotVolHugeRangeFlatClose => {
+            hit.rel_volume >= 3.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -5061,6 +5073,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowBigDayDryVol => "Near 52w Low + Big Red Intraday + Dry Vol (No-volume Push to New Lows; Capitulation Without Conviction / Thin-tape Breakdown)",
         Preset::MidMagnitudeGreenMidWickHotVol => "Moderate Green + Mid-wick Close + Decent Vol (Moderate-conviction Up Day with Mid-range Finish; Consolidation Candidate)",
         Preset::MidMagnitudeRedMidWickHotVol => "Moderate Red + Mid-wick Close + Decent Vol (Moderate-conviction Down Day with Mid-range Finish; Basing Candidate)",
+        Preset::HotVolHugeRangeBigChange => "Extreme Vol (3×+) + Extreme Range (>6%) + Big Change (>4%) (Catalyst Day; Massive Participation, Wide Exploration, Big Finish)",
+        Preset::HotVolHugeRangeFlatClose => "Extreme Vol + Extreme Range + Flat Close (Max-absorption Pattern at Scale; Institutional Indecision Day)",
     }
 }
 

@@ -293,10 +293,49 @@ function renderEarnings(el, e) {
                 <td class="${(h.surprisePercent?.raw ?? 0) >= 0 ? 'pos' : 'neg'}">${rawVal(h.surprisePercent)}</td></tr>
         `).join('')}</tbody></table>
         <h3 data-i18n="view.research.h3.surprise_chart">EPS surprise % per period</h3>
-        <div id="res-earn-chart" style="width:100%;height:240px"></div>` : ''}
+        <div id="res-earn-chart" style="width:100%;height:240px"></div>
+        <h3 data-i18n="view.research.h3.eps_estvactual_chart">EPS estimate vs actual per period</h3>
+        <div id="res-earn-ea-chart" style="width:100%;height:220px"></div>
+        <p data-i18n="view.research.hint.eps_estvactual" class="muted small">Estimate vs actual side-by-side. Persistent positive surprises = analyst sandbagging; persistent negatives = optimistic estimates.</p>` : ''}
     `;
     try { applyUiI18n(el); } catch (_) {}
     renderEarningsSurpriseChart(hist);
+    renderEarningsEstActChart(hist);
+}
+
+function renderEarningsEstActChart(hist) {
+    const el = document.getElementById('res-earn-ea-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (hist || []).filter(h =>
+        Number.isFinite(Number(h.epsEstimate?.raw)) && Number.isFinite(Number(h.epsActual?.raw)));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.research.empty_estact_chart">${esc(t('view.research.empty_estact_chart'))}</div>`;
+        return;
+    }
+    const labels = pts.map(h => h.period || '');
+    const ests = pts.map(h => Number(h.epsEstimate.raw));
+    const acts = pts.map(h => Number(h.epsActual.raw));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.research.chart.period_idx') },
+            { label: t('view.research.chart.eps_estimate'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 12, fill: '#ffd84a', stroke: '#ffd84a' } },
+            { label: t('view.research.chart.eps_actual'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ests, acts], el);
 }
 
 function renderEarningsSurpriseChart(hist) {
