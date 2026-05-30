@@ -904,6 +904,8 @@ pub enum Preset {
     LowerWickFlatCloseHotVol,            // lod_dist_pct > 3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long lower wick + flat net close + no overnight gap + hot vol (pure demand test: intraday sell-off bounced back to roughly the open with elevated participation; neither bull nor bear net but floor tested)
     PartialGapUpHoldHotVol,              // gap_pct > 2 AND day_pct < -0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap up + intraday sold from open + still closed green + hot vol (partial gap-up fade: overnight thrust partially eroded intraday but the gap held the prior close; tested but not flushed)
     PartialGapDownHoldHotVol,            // gap_pct < -2 AND day_pct > 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap down + intraday recovered from open + still closed red + hot vol (partial gap-down fade: overnight thrust partially recovered intraday but the gap held below the prior close; tested but not reclaimed)
+    BreakoutZoneRangeExpansionHotVol,    // year_high_pct >= -3 AND year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakout zone + wide intraday range + hot vol (volatility expansion right at the breakout level: institutional fight day occurring as new high is being established with elevated participation)
+    BreakdownZoneRangeExpansionHotVol,   // year_low_pct >= -3 AND year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakdown zone + wide intraday range + hot vol (volatility expansion right at the breakdown level: institutional fight day occurring as new low is being established with elevated participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5301,6 +5303,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BreakoutZoneRangeExpansionHotVol => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BreakdownZoneRangeExpansionHotVol => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6095,6 +6109,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowerWickFlatCloseHotVol => "Long Lower Wick + Flat Net Close + No Overnight Gap + Hot Vol (Pure Demand Test: Intraday Sell-off Bounced Back to Roughly the Open with Elevated Participation; Neither Bull nor Bear Net but Floor Tested)",
         Preset::PartialGapUpHoldHotVol => "Gap Up + Intraday Sold from Open + Still Closed Green + Hot Vol (Partial Gap-up Fade: Overnight Thrust Partially Eroded Intraday but the Gap Held the Prior Close; Tested but Not Flushed)",
         Preset::PartialGapDownHoldHotVol => "Gap Down + Intraday Recovered from Open + Still Closed Red + Hot Vol (Partial Gap-down Fade: Overnight Thrust Partially Recovered Intraday but the Gap Held below the Prior Close; Tested but Not Reclaimed)",
+        Preset::BreakoutZoneRangeExpansionHotVol => "Fresh 52w Breakout Zone + Wide Intraday Range + Hot Vol (Volatility Expansion Right at the Breakout Level: Institutional Fight Day Occurring as New High Is Being Established with Elevated Participation)",
+        Preset::BreakdownZoneRangeExpansionHotVol => "Fresh 52w Breakdown Zone + Wide Intraday Range + Hot Vol (Volatility Expansion Right at the Breakdown Level: Institutional Fight Day Occurring as New Low Is Being Established with Elevated Participation)",
     }
 }
 

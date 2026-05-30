@@ -786,6 +786,8 @@ const PRESETS = [
     { id: 'lower_wick_flat_close_hot_vol', label: t('view.scanners.preset.lower_wick_flat_close_hot_vol.label'), desc: t('view.scanners.preset.lower_wick_flat_close_hot_vol.desc') },
     { id: 'partial_gap_up_hold_hot_vol', label: t('view.scanners.preset.partial_gap_up_hold_hot_vol.label'), desc: t('view.scanners.preset.partial_gap_up_hold_hot_vol.desc') },
     { id: 'partial_gap_down_hold_hot_vol', label: t('view.scanners.preset.partial_gap_down_hold_hot_vol.label'), desc: t('view.scanners.preset.partial_gap_down_hold_hot_vol.desc') },
+    { id: 'breakout_zone_range_expansion_hot_vol', label: t('view.scanners.preset.breakout_zone_range_expansion_hot_vol.label'), desc: t('view.scanners.preset.breakout_zone_range_expansion_hot_vol.desc') },
+    { id: 'breakdown_zone_range_expansion_hot_vol', label: t('view.scanners.preset.breakdown_zone_range_expansion_hot_vol.label'), desc: t('view.scanners.preset.breakdown_zone_range_expansion_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
