@@ -64,7 +64,7 @@ function renderTable(hits) {
         return '<p data-i18n="view.earnings_iv.hint.no_earnings_inside_the_horizon_for_your_universe_a" class="muted">No earnings inside the horizon for your universe. Add some watchlist symbols and rerun.</p>';
     }
     return `<div class="chart-panel">
-        <h2>${hits.length} candidates</h2>
+        <h2>${esc(t('view.earnings_iv.h2.candidates', { count: hits.length }))}</h2>
         <table class="trades">
             <thead><tr>
                 <th data-i18n="view.earnings_iv.th.symbol">Symbol</th><th data-i18n="view.earnings_iv.th.earnings">Earnings</th><th data-i18n="view.earnings_iv.th.days">Days</th>

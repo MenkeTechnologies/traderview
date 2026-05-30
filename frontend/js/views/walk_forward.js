@@ -100,7 +100,7 @@ function renderResult(r, body, out, mount) {
                 <div class="value ${r.avg_oos_return_pct >= 0 ? 'pos' : 'neg'}">${r.avg_oos_return_pct.toFixed(2)}%</div></div>
             <div class="card"><div class="label" data-i18n="view.walk_forward.card.windows_grid">Windows × grid</div>
                 <div class="value">${r.windows.length} × ${r.grid_size}</div>
-                <div class="small muted">= ${r.windows.length * r.grid_size} backtests</div></div>
+                <div class="small muted">${esc(t('view.walk_forward.card.total_backtests', { n: r.windows.length * r.grid_size }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.walk_forward.card.final_equity">Final equity</div>
                 <div class="value">$${fmt(r.final_oos_equity)}</div>
                 <div class="small muted">${esc(t('view.walk_forward.card.from_capital', { capital: fmt(body.initial_capital) }))}</div></div>

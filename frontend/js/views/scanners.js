@@ -73,7 +73,7 @@ export async function renderScanners(mount) {
 
 function renderHits(r) {
     return `<div class="chart-panel">
-        <h2>${esc(r.label)} · ${r.hits.length} hits of ${r.universe_size} scanned</h2>
+        <h2>${esc(t('view.scanners.h2.hits_summary', { label: r.label, hits: r.hits.length, universe: r.universe_size }))}</h2>
         ${r.hits.length ? `<table class="trades">
             <thead><tr>
                 <th data-i18n="view.scanners.th.symbol">Symbol</th><th data-i18n="view.scanners.th.price">Price</th><th data-i18n="view.scanners.th.gap">Gap%</th><th data-i18n="view.scanners.th.day">Day%</th><th data-i18n="view.scanners.th.vs_prior">Δ vs prior</th>
