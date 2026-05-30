@@ -130,8 +130,8 @@ function row(n) {
                 <div style="font-size:13px;">${link}</div>
                 <div class="muted small">
                     <strong>${esc(n.symbol)}</strong> ·
-                    ${esc(n.publisher || 'unknown')} · ${esc(ago)}
-                    ${n.sentiment != null ? ` · sentiment ${n.sentiment.toFixed(2)}` : ''}
+                    ${esc(n.publisher || t('common.unknown'))} · ${esc(ago)}
+                    ${n.sentiment != null ? esc(t('view.news.row.sentiment_suffix', { score: n.sentiment.toFixed(2) })) : ''}
                 </div>
             </div>
         </div>
