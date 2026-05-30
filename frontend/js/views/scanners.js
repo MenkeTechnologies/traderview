@@ -532,6 +532,8 @@ const PRESETS = [
     { id: 'narrow_range_meaningful_change', label: t('view.scanners.preset.narrow_range_meaningful_change.label'), desc: t('view.scanners.preset.narrow_range_meaningful_change.desc') },
     { id: 'year52_high_gap_down_reclaimed', label: t('view.scanners.preset.year52_high_gap_down_reclaimed.label'), desc: t('view.scanners.preset.year52_high_gap_down_reclaimed.desc') },
     { id: 'year52_low_gap_up_faded', label: t('view.scanners.preset.year52_low_gap_up_faded.label'), desc: t('view.scanners.preset.year52_low_gap_up_faded.desc') },
+    { id: 'intraday_matches_change', label: t('view.scanners.preset.intraday_matches_change.label'), desc: t('view.scanners.preset.intraday_matches_change.desc') },
+    { id: 'intraday_opposes_change', label: t('view.scanners.preset.intraday_opposes_change.label'), desc: t('view.scanners.preset.intraday_opposes_change.desc') },
 ];
 
 export async function renderScanners(mount) {

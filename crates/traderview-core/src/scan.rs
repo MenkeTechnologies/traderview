@@ -650,6 +650,8 @@ pub enum Preset {
     NarrowRangeMeaningfulChange,    // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — narrow intraday range + meaningful change (one-print day; price moved without exploring; mostly gap-driven without intraday discovery)
     Year52HighGapDownReclaimed,     // year_high_pct < 5 AND gap_pct < -0.5 AND change_pct >= 0 AND rel_volume >= 1 — at 52w high + gap down + reclaimed positive + decent vol (resilience at the highs; gap-down absorbed by intraday strength)
     Year52LowGapUpFaded,            // year_low_pct < 5 AND gap_pct > 0.5 AND change_pct <= 0 AND rel_volume >= 1 — at 52w low + gap up + faded negative + decent vol (relief gap rejected at the lows; continuation lower)
+    IntradayMatchesChange,          // gap_pct.abs() < 0.2 AND change_pct.abs() > 1 AND (change_pct - day_pct).abs() < 0.3 — no gap + meaningful change + intraday matches change (entire move came from regular session; no overnight component)
+    IntradayOpposesChange,          // change_pct.abs() > 1 AND day_pct * change_pct < 0 AND day_pct.abs() > 0.5 — meaningful change + opposite-sign intraday + meaningful intraday (gap dominated; intraday reversed but couldn't overpower gap)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3539,6 +3541,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct <= 0.0
                 && hit.rel_volume >= 1.0
         }
+        Preset::IntradayMatchesChange => {
+            hit.gap_pct.abs() < 0.2
+                && hit.change_pct.abs() > 1.0
+                && (hit.change_pct - hit.day_pct).abs() < 0.3
+        }
+        Preset::IntradayOpposesChange => {
+            hit.change_pct.abs() > 1.0
+                && hit.day_pct * hit.change_pct < 0.0
+                && hit.day_pct.abs() > 0.5
+        }
     }
 }
 
@@ -4079,6 +4091,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowRangeMeaningfulChange => "Narrow Range + Meaningful Change (One-print Day; No Intraday Discovery)",
         Preset::Year52HighGapDownReclaimed => "Near 52w High + Gap Down Reclaimed Positive + Decent Vol (Resilience at Highs)",
         Preset::Year52LowGapUpFaded => "Near 52w Low + Gap Up Faded Negative + Decent Vol (Relief Gap Rejected at Lows)",
+        Preset::IntradayMatchesChange => "No Gap + Intraday Matches Change (All Move from Regular Session)",
+        Preset::IntradayOpposesChange => "Meaningful Change + Intraday Opposes Sign + Meaningful Intraday (Gap Dominated)",
     }
 }
 
