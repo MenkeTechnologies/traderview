@@ -5784,6 +5784,7 @@
   "view.walk_forward.card.baseline_return": "Baseline return",
   "view.walk_forward.card.baseline_sharpe": "Baseline Sharpe",
   "view.walk_forward.card.baseline_trades": "Baseline trades",
+  "view.vol.boot.loading_yields": "loading yields…",
   "view.vol.card.vix_spot": "VIX spot",
   "view.vol.card.vix3m": "VIX3M",
   "view.vol.card.vvix": "VVIX",
