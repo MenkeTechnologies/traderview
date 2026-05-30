@@ -186,6 +186,8 @@ pub enum Preset {
     TightCoilHighSqueeze,        // year_high_pct >= -2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND hod_dist.abs() < 1 — coiled near all-time/52w high
     TightCoilLowSqueeze,         // year_low_pct <= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND lod_dist.abs() < 1 — coiled near 52w low
     EvenWidthSqueeze,            // hod_dist between 1 and 2 AND lod_dist between 1 and 2 AND |change_pct| < 0.5 AND rel_volume < 0.9 — evenly distributed range
+    SmallGapNoFollowSqueeze,     // |gap_pct| between 0.3 and 0.8 AND |change_pct| < 0.3 AND quiet — small gap that fades to flat
+    HoldingHighsSqueeze,         // change_pct >= 0 AND change_pct < 1 AND hod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_high_pct >= -5 — closing at HOD without explosion
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -501,6 +503,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
+        Preset::SmallGapNoFollowSqueeze => {
+            hit.gap_pct.abs() >= 0.3
+                && hit.gap_pct.abs() <= 0.8
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.8
+        }
+        Preset::HoldingHighsSqueeze => {
+            hit.change_pct >= 0.0
+                && hit.change_pct < 1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume < 1.2
+                && hit.year_high_pct >= -5.0
+        }
     }
 }
 
@@ -577,6 +592,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightCoilHighSqueeze => "Tight Coil at 52w-High",
         Preset::TightCoilLowSqueeze => "Tight Coil at 52w-Low",
         Preset::EvenWidthSqueeze => "Even-Width Squeeze",
+        Preset::SmallGapNoFollowSqueeze => "Small-Gap No-Follow Squeeze",
+        Preset::HoldingHighsSqueeze => "Holding-Highs Squeeze",
     }
 }
 

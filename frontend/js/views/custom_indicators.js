@@ -52,6 +52,11 @@ export async function renderCustomIndicators(mount) {
             <h2 data-i18n="view.custom_indicators.h2.saved_presets">Saved presets</h2>
             <div id="ci-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.custom_indicators.h2.kind_chart">Presets by indicator kind</h2>
+            <div id="ci-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     const kindSel = mount.querySelector('#ci-form [name=kind]');
     const renderParams = () => {
@@ -128,9 +133,45 @@ async function refresh(mount, tok) {
                 try { await api.deleteCustomIndicator(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
                 catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             }));
+        renderKindChart(rows);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el2 = mount.querySelector('#ci-list');
         if (el2) el2.innerHTML = `<p class="boot">${esc(e.message)}</p>`;
     }
+}
+
+function renderKindChart(rows) {
+    const el = document.getElementById('ci-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!rows || !rows.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.custom_indicators.empty_chart">${esc(t('view.custom_indicators.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const r of rows) {
+        const kind = (r.definition && r.definition.kind) || '?';
+        counts.set(kind, (counts.get(kind) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.custom_indicators.chart.kind_idx') },
+            { label: t('view.custom_indicators.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

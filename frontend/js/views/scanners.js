@@ -68,6 +68,8 @@ const PRESETS = [
     { id: 'tight_coil_high_squeeze',    label: t('view.scanners.preset.tight_coil_high_squeeze.label'),    desc: t('view.scanners.preset.tight_coil_high_squeeze.desc') },
     { id: 'tight_coil_low_squeeze',     label: t('view.scanners.preset.tight_coil_low_squeeze.label'),     desc: t('view.scanners.preset.tight_coil_low_squeeze.desc') },
     { id: 'even_width_squeeze',         label: t('view.scanners.preset.even_width_squeeze.label'),         desc: t('view.scanners.preset.even_width_squeeze.desc') },
+    { id: 'small_gap_no_follow_squeeze', label: t('view.scanners.preset.small_gap_no_follow_squeeze.label'), desc: t('view.scanners.preset.small_gap_no_follow_squeeze.desc') },
+    { id: 'holding_highs_squeeze',      label: t('view.scanners.preset.holding_highs_squeeze.label'),      desc: t('view.scanners.preset.holding_highs_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
