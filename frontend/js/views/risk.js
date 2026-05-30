@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderRisk(mount, state) {
     const tok = currentViewToken();
@@ -30,13 +31,13 @@ export async function renderRisk(mount, state) {
         <h1 class="view-title">// RISK · ${esc(today)}</h1>
 
         <div class="cards">
-            <div class="card"><div class="label" data-i18n="view.risk.card.today_pnl">Today P&L</div>
+            <div class="card" data-tip="view.risk.tip.today_pnl"><div class="label" data-i18n="view.risk.card.today_pnl">Today P&L</div>
                 <div class="value ${todayNum >= 0 ? 'pos' : 'neg'}">${fmtMoney(todayNum)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.risk.card.daily_goal">Daily goal</div>
+            <div class="card" data-tip="view.risk.tip.daily_goal"><div class="label" data-i18n="view.risk.card.daily_goal">Daily goal</div>
                 <div class="value">${fmtMoney(goal)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.risk.card.max_loss">Max loss</div>
+            <div class="card" data-tip="view.risk.tip.max_loss"><div class="label" data-i18n="view.risk.card.max_loss">Max loss</div>
                 <div class="value">${fmtMoney(maxLoss)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.risk.card.alltime_net">All-time net</div>
+            <div class="card" data-tip="view.risk.tip.alltime_net"><div class="label" data-i18n="view.risk.card.alltime_net">All-time net</div>
                 <div class="value ${Number(summary.net_pnl) >= 0 ? 'pos' : 'neg'}">${fmtMoney(summary.net_pnl)}</div></div>
         </div>
 
@@ -67,10 +68,10 @@ export async function renderRisk(mount, state) {
             <h2 data-i18n="view.risk.h2.adjust_limits">Adjust limits</h2>
             <form id="risk-form" class="inline-form">
                 <label><span data-i18n="view.risk.label.goal">Daily profit goal</span>
-                    <input name="goal" type="number" step="any" value="${goal}"></label>
+                    <input name="goal" type="number" step="any" value="${goal}" data-tip="view.risk.tip.goal_input"></label>
                 <label><span data-i18n="view.risk.label.max_loss">Daily max loss</span>
-                    <input name="max" type="number" step="any" value="${maxLoss}"></label>
-                <button data-i18n="view.risk.btn.save" class="primary" type="submit">Save</button>
+                    <input name="max" type="number" step="any" value="${maxLoss}" data-tip="view.risk.tip.max_input"></label>
+                <button data-i18n="view.risk.btn.save" data-tip="view.risk.tip.save" data-shortcut="risk_save" class="primary" type="submit">Save</button>
             </form>
         </div>
 
@@ -87,9 +88,16 @@ export async function renderRisk(mount, state) {
             daily_profit_goal: Number(fd.get('goal') || 0),
             daily_max_loss:    Number(fd.get('max')  || 0),
         });
-        await api.updateSettings(body);
-        if (!viewIsCurrent(tok)) return;
-        renderRisk(mount, state);
+        try {
+            await api.updateSettings(body);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.risk.toast.saved', {
+                goal: fmtMoney(body.daily_profit_goal), max: fmtMoney(body.daily_max_loss),
+            }), { level: 'success' });
+            renderRisk(mount, state);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
     void fmt;
 }

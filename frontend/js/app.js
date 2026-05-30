@@ -614,6 +614,11 @@ function bindTabs() {
         const el = document.getElementById('kl-run-dyn');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in risk scope → submit limits form.
+    window.addEventListener('tv:risk-save', () => {
+        const form = document.getElementById('risk-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
