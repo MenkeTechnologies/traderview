@@ -212,7 +212,7 @@ import { renderCholesky } from './views/cholesky.js';
 import { renderAbcPattern } from './views/abc_pattern.js';
 import { renderAbsorption } from './views/absorption.js';
 import { renderFavoritesManager } from './views/favorites_manager.js';
-import { installShortcuts } from './shortcuts.js';
+import { installShortcuts, setScope } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installDialog } from './dialog.js';
@@ -597,6 +597,18 @@ export async function dispatch() {
     // Inner `data-context-scope` on chart-panel elements still wins
     // for granular scopes (it's the closer ancestor).
     mount.setAttribute('data-context-scope', view);
+    // Shortcut scope follows the active view so future view-specific
+    // bindings (registered with scope: view) can fire here without
+    // bleeding into other views.
+    setScope(view);
+    // Browser tab title: "TraderView • <localized view label>". Falls
+    // back to the view slug for routes without a tile (trade/X, etc.).
+    if (typeof document !== 'undefined') {
+        const labelKey = `tile.${view}.label`;
+        const lab = t(labelKey);
+        const label = (lab && lab !== labelKey) ? lab : view;
+        document.title = `TraderView • ${label}`;
+    }
     mount.innerHTML = spinnerHTML(t('common.loading_view', { view }));
     try {
         switch (view) {
