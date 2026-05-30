@@ -21,13 +21,13 @@ export async function renderImportView(mount, state) {
             <h2 data-i18n="view.import.h2.new_import">New import</h2>
             <div class="import-form">
                 <label><span data-i18n="view.import.label.broker">Broker</span>
-                    <select id="source">
+                    <select id="source" data-tip="view.import.tip.broker">
                         ${sources.sources.map(s => `<option value="${s}">${esc(s)}</option>`).join('')}
                     </select>
                 </label>
-                <div class="dropzone" id="drop" data-i18n="view.import.dropzone">Drop CSV here, or click to pick.</div>
+                <div class="dropzone" id="drop" data-i18n="view.import.dropzone" data-tip="view.import.tip.dropzone" data-shortcut="import_pick_file">Drop CSV here, or click to pick.</div>
                 <input type="file" id="file" accept=".csv,text/csv" hidden>
-                <button data-i18n="view.import.btn.upload" class="primary" id="go">Upload</button>
+                <button data-i18n="view.import.btn.upload" data-tip="view.import.tip.upload" data-shortcut="import_upload" class="primary" id="go">Upload</button>
             </div>
             <pre id="import-result" class="result"></pre>
         </div>
@@ -79,11 +79,15 @@ export async function renderImportView(mount, state) {
             const out = mount.querySelector('#import-result');
             if (out) out.textContent =
                 `parsed=${r.parsed} inserted=${r.inserted} duplicates=${r.duplicates} trades=${r.trades_rolled}`;
+            showToast(t('view.import.toast.uploaded', {
+                inserted: r.inserted, duplicates: r.duplicates, trades: r.trades_rolled,
+            }), { level: r.inserted > 0 ? 'success' : 'info' });
             renderImportView(mount, state);
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const out = mount.querySelector('#import-result');
             if (out) out.textContent = t('common.error', { err: e.message });
+            showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
         }
         void fmt;
     });

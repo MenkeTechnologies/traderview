@@ -508,6 +508,16 @@ function bindTabs() {
         const el = document.querySelector('#b-new input[name="name"]');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `p` in import scope → click the dropzone (opens file picker).
+    window.addEventListener('tv:import-pick-file', () => {
+        const el = document.getElementById('drop');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `u` in import scope → click the Upload button.
+    window.addEventListener('tv:import-upload', () => {
+        const el = document.getElementById('go');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
