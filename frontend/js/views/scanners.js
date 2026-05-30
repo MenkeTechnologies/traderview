@@ -60,6 +60,8 @@ const PRESETS = [
     { id: 'slight_lean_long_squeeze',  label: t('view.scanners.preset.slight_lean_long_squeeze.label'),  desc: t('view.scanners.preset.slight_lean_long_squeeze.desc') },
     { id: 'slight_lean_short_squeeze', label: t('view.scanners.preset.slight_lean_short_squeeze.label'), desc: t('view.scanners.preset.slight_lean_short_squeeze.desc') },
     { id: 'gap_change_match_squeeze',  label: t('view.scanners.preset.gap_change_match_squeeze.label'),  desc: t('view.scanners.preset.gap_change_match_squeeze.desc') },
+    { id: 'wide_range_no_decision_squeeze', label: t('view.scanners.preset.wide_range_no_decision_squeeze.label'), desc: t('view.scanners.preset.wide_range_no_decision_squeeze.desc') },
+    { id: 'pivot_pin_squeeze',         label: t('view.scanners.preset.pivot_pin_squeeze.label'),         desc: t('view.scanners.preset.pivot_pin_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
