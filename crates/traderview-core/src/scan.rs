@@ -386,6 +386,8 @@ pub enum Preset {
     LodFailFromFlatGap,          // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct < -1 — flat open then closed at LOD with negative change (organic down-day slide)
     Pct52wTopBoundaryReject,     // year_high_pct between -1 and 0 AND change_pct < -0.5 — touched 52w high boundary but closed lower (rejection from top boundary)
     Pct52wBottomBoundaryReject,  // year_low_pct between 0 and 1 AND change_pct > 0.5 — touched 52w low boundary but closed higher (rejection from bottom boundary)
+    Pct52wTopBoundaryAccept,     // year_high_pct between -1 and 0 AND change_pct > 0.5 — touched 52w high boundary and closed higher (acceptance above prior high)
+    Pct52wBottomBoundaryAccept,  // year_low_pct between 0 and 1 AND change_pct < -0.5 — touched 52w low boundary and closed lower (acceptance below prior low)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1746,6 +1748,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 1.0
                 && hit.change_pct > 0.5
         }
+        Preset::Pct52wTopBoundaryAccept => {
+            hit.year_high_pct >= -1.0
+                && hit.year_high_pct <= 0.0
+                && hit.change_pct > 0.5
+        }
+        Preset::Pct52wBottomBoundaryAccept => {
+            hit.year_low_pct >= 0.0
+                && hit.year_low_pct <= 1.0
+                && hit.change_pct < -0.5
+        }
     }
 }
 
@@ -2022,6 +2034,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LodFailFromFlatGap => "LOD Slide From Flat Open",
         Preset::Pct52wTopBoundaryReject => "52w-High Boundary Reject",
         Preset::Pct52wBottomBoundaryReject => "52w-Low Boundary Reject",
+        Preset::Pct52wTopBoundaryAccept => "52w-High Boundary Accept",
+        Preset::Pct52wBottomBoundaryAccept => "52w-Low Boundary Accept",
     }
 }
 

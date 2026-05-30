@@ -64,6 +64,11 @@ export async function renderDashboard(mount, state) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.dashboard.h2.trades_chart">Trade count per day (last 90)</h2>
+            <div id="dash-tr-chart" style="width:100%;height:200px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
             <div id="dash-rg" class="muted small" data-i18n="common.loading">loading…</div>
         </div>
@@ -85,6 +90,7 @@ export async function renderDashboard(mount, state) {
     if (eqEl) equityChart(eqEl, equity);
     if (calEl) renderMiniCalendar(calEl, cal);
     renderDailyPnlChart(cal);
+    renderTradesChart(cal);
     if (wmEl) renderWorldMarkets(wmEl);
     if (rgEl) loadRiskGateBadge(rgEl);
     if (discEl && state.accountId) loadDisciplineScore(discEl, state.accountId);
@@ -144,6 +150,38 @@ async function loadRiskGateBadge(el) {
     } catch (_) {
         el.textContent = t('view.dashboard.risk_gate.unavailable');
     }
+}
+
+function renderTradesChart(cells) {
+    const el = document.getElementById('dash-tr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (cells || [])
+        .filter(c => c.day && Number.isFinite(Number(c.trades)))
+        .slice(-90);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dashboard.empty_tr_chart">${esc(t('view.dashboard.empty_tr_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(c => c.day);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(c => Number(c.trades));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dashboard.chart.day') },
+            { label: t('view.dashboard.chart.trades'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderDailyPnlChart(cells) {
