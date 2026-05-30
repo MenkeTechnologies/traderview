@@ -871,6 +871,11 @@ function bindTabs() {
         const el = document.getElementById('hk-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `b` in kagi scope → click Build Kagi.
+    window.addEventListener('tv:kagi-run', () => {
+        const el = document.getElementById('kg-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

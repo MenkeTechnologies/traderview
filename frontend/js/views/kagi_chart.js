@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     KINDS,
@@ -31,24 +32,24 @@ export async function renderKagiChart(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.kagi.label.reversal">Reversal</span>
-                    <input id="kg-rev" type="number" step="any" min="0" value="${state.reversal}"></label>
+                    <input id="kg-rev" type="number" step="any" min="0" value="${state.reversal}" data-tip="view.kagi.tip.reversal"></label>
                 <label><span data-i18n="view.kagi.label.kind">Kind</span>
-                    <select id="kg-kind">
+                    <select id="kg-kind" data-tip="view.kagi.tip.kind">
                         ${KINDS.map(k => `<option value="${k}" ${k === state.kind ? 'selected' : ''}
                             data-i18n="view.kagi.kind.${k}">${esc(k)}</option>`).join('')}
                     </select></label>
                 <button data-i18n="view.kagi.btn.compute" id="kg-run" class="primary"
-                        data-tip="view.kagi.tip.compute" type="button">Build Kagi</button>
+                        data-tip="view.kagi.tip.compute" data-shortcut="kagi_run" type="button">Build Kagi</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.kagi.btn.demo_uptrend"   id="kg-demo-up"      class="secondary" type="button">Demo: pure uptrend</button>
-                <button data-i18n="view.kagi.btn.demo_downtrend" id="kg-demo-down"    class="secondary" type="button">Demo: pure downtrend</button>
-                <button data-i18n="view.kagi.btn.demo_choppy"    id="kg-demo-choppy"  class="secondary" type="button">Demo: choppy</button>
-                <button data-i18n="view.kagi.btn.demo_breakout"  id="kg-demo-bo"      class="secondary" type="button">Demo: breakout from flat</button>
-                <button data-i18n="view.kagi.btn.demo_flat"      id="kg-demo-flat"    class="secondary" type="button">Demo: flat (no reversal)</button>
-                <button data-i18n="view.kagi.btn.demo_pct"       id="kg-demo-pct"     class="secondary" type="button">Demo: pct reversal</button>
-                <button data-i18n="view.kagi.btn.demo_storm"     id="kg-demo-storm"   class="secondary" type="button">Demo: reversal storm</button>
-                <button data-i18n="view.kagi.btn.demo_bull"      id="kg-demo-bull"    class="secondary" type="button">Demo: gentle bull</button>
+                <button data-i18n="view.kagi.btn.demo_uptrend"   id="kg-demo-up"      class="secondary" type="button" data-tip="view.kagi.tip.demo_up">Demo: pure uptrend</button>
+                <button data-i18n="view.kagi.btn.demo_downtrend" id="kg-demo-down"    class="secondary" type="button" data-tip="view.kagi.tip.demo_down">Demo: pure downtrend</button>
+                <button data-i18n="view.kagi.btn.demo_choppy"    id="kg-demo-choppy"  class="secondary" type="button" data-tip="view.kagi.tip.demo_choppy">Demo: choppy</button>
+                <button data-i18n="view.kagi.btn.demo_breakout"  id="kg-demo-bo"      class="secondary" type="button" data-tip="view.kagi.tip.demo_bo">Demo: breakout from flat</button>
+                <button data-i18n="view.kagi.btn.demo_flat"      id="kg-demo-flat"    class="secondary" type="button" data-tip="view.kagi.tip.demo_flat">Demo: flat (no reversal)</button>
+                <button data-i18n="view.kagi.btn.demo_pct"       id="kg-demo-pct"     class="secondary" type="button" data-tip="view.kagi.tip.demo_pct">Demo: pct reversal</button>
+                <button data-i18n="view.kagi.btn.demo_storm"     id="kg-demo-storm"   class="secondary" type="button" data-tip="view.kagi.tip.demo_storm">Demo: reversal storm</button>
+                <button data-i18n="view.kagi.btn.demo_bull"      id="kg-demo-bull"    class="secondary" type="button" data-tip="view.kagi.tip.demo_bull">Demo: gentle bull</button>
             </div>
             <p data-i18n="view.kagi.hint.about" class="muted">Direction holds until price reverses by ≥ reversal against the running extreme. Yang (thick) = up line crossing prior peak. Yin (thin) = down line crossing prior trough. Time axis is line-count, not bars — characteristic of Kagi.</p>
         </div>
@@ -90,6 +91,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.kagi.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.kagi.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -101,7 +103,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.kagi.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.reversal, state.kind);
     renderSummary(local, true);
     renderChart(local);
@@ -111,12 +113,18 @@ async function compute(tok) {
         resp = await api.chartsKagi(buildBody(state));
     } catch (e) {
         showErr(`${t('view.kagi.err.api')}: ${e.message || e}`);
+        showToast(t('view.kagi.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const lines = Array.isArray(resp) ? resp.length : 0;
+    const last = lines > 0 ? resp[lines - 1] : null;
+    const dir = last ? String(last.direction) : '—';
+    const level = dir === 'up' ? 'success' : dir === 'down' ? 'warning' : 'info';
+    showToast(t('view.kagi.toast.built', { lines, dir }), { level });
 }
 
 function renderSummary(lines, pending) {
