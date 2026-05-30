@@ -121,20 +121,17 @@ export function installContextMenu() {
     window.addEventListener('tv:edit-select-all', () => execEdit('selectAll'));
     window.addEventListener('tv:edit-undo',       () => execEdit('undo'));
     window.addEventListener('tv:edit-redo',       () => execEdit('redo'));
+    // _global_symbol.js stores upper-case (setGlobalSymbol normalizes);
+    // getGlobalSymbol() returns '' when never set — both `null` and ''
+    // are falsy so a single `if (!sym)` covers the unset case.
     window.addEventListener('tv:copy-symbol', () => {
-        const sym = (getGlobalSymbol() || '').toUpperCase();
-        if (!sym) {
-            toastErr(t('toast.err.no_symbol'));
-            return;
-        }
+        const sym = getGlobalSymbol();
+        if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
         clipboardWrite(sym, sym);
     });
     const navForSymbol = (viewId) => () => {
-        const sym = (getGlobalSymbol() || '').toUpperCase();
-        if (!sym) {
-            toastErr(t('toast.err.no_symbol'));
-            return;
-        }
+        const sym = getGlobalSymbol();
+        if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
         window.location.hash = `${viewId}/${sym}`;
     };
     window.addEventListener('tv:open-charts-for-symbol',   navForSymbol('charts'));
@@ -162,7 +159,7 @@ export function installContextMenu() {
     });
     // Plain symbol-row copy — read data-symbol off the right-clicked row.
     window.addEventListener('tv:copy-symbol-from-row', (e) => {
-        const sym = (symbolFromTarget(e.detail) || '');
+        const sym = symbolFromTarget(e.detail);
         if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
         clipboardWrite(sym, sym);
     });
