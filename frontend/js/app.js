@@ -650,6 +650,11 @@ function bindTabs() {
         const el = document.getElementById('ls-voice');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `r` in top-signals scope → submit refresh form.
+    window.addEventListener('tv:top-signals-refresh', () => {
+        const form = document.getElementById('top-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

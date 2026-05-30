@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderTopSignals(mount) {
     const tok = currentViewToken();
@@ -14,14 +15,14 @@ export async function renderTopSignals(mount) {
         <div class="chart-panel">
             <form id="top-form" class="inline-form">
                 <label><span data-i18n="view.top_signals.label.watchlist">Watchlist</span>
-                    <select name="watchlist_id">
+                    <select name="watchlist_id" data-tip="view.top_signals.tip.watchlist">
                         <option data-i18n="view.top_signals.opt.all_my_watchlists" value="">all my watchlists</option>
                         ${lists.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.top_signals.label.limit">Limit</span>
-                    <input name="limit" type="number" value="25"></label>
-                <button data-i18n="view.top_signals.btn.refresh" class="primary" type="submit">Refresh</button>
+                    <input name="limit" type="number" value="25" data-tip="view.top_signals.tip.limit"></label>
+                <button data-i18n="view.top_signals.btn.refresh" data-tip="view.top_signals.tip.refresh" data-shortcut="top_signals_refresh" class="primary" type="submit">Refresh</button>
             </form>
         </div>
 
@@ -62,12 +63,17 @@ export async function renderTopSignals(mount) {
             if (buysEl) buysEl.innerHTML  = renderList(buys, 'buy');
             if (sellsEl) sellsEl.innerHTML = renderList(sells, 'sell');
             renderScoreChart(buys, sells);
+            const total = (buys.hits?.length || 0) + (sells.hits?.length || 0);
+            showToast(t('view.top_signals.toast.done', {
+                buys: buys.hits?.length || 0, sells: sells.hits?.length || 0,
+            }), { level: total > 0 ? 'success' : 'info' });
         } catch (e) {
             if (!viewIsCurrent(tok)) return;
             const buysEl = mount.querySelector('#buys');
             const sellsEl = mount.querySelector('#sells');
             if (buysEl) buysEl.innerHTML  = `<p class="boot">${esc(e.message)}</p>`;
             if (sellsEl) sellsEl.innerHTML = '';
+            showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
         }
     };
     mount.querySelector('#top-form').addEventListener('submit', (e) => { e.preventDefault(); refresh(); });
