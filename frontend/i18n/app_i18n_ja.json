@@ -4,24 +4,12 @@
   "nav.dashboard": "ダッシュボード",
   "nav.scanner": "スキャナー",
   "nav.toggle": "ナビゲーション切替",
-
   "palette.title": "コマンドパレット",
   "palette.placeholder": "ビュー / スキャナー / インジケータをフィルタ…",
   "palette.empty": "一致なし",
   "palette.hint.up_down": "↑↓ 移動",
   "palette.hint.enter": "↵ 開く",
   "palette.hint.esc": "esc 閉じる",
-  "palette.section.favorites": "お気に入り",
-  "palette.section.bookmarks": "ブックマーク",
-
   "shortcut.command_palette": "コマンドパレットを開く",
-  "shortcut.help": "ヘルプ / チュートリアル",
-
-  "menu.view.command_palette": "コマンドパレット…",
-  "menu.help.tutorial": "チュートリアル",
-
-  "locale.en": "English",
-  "locale.es": "Español",
-  "locale.de": "Deutsch",
-  "locale.ja": "日本語"
+  "shortcut.help": "ヘルプ / チュートリアル"
 }

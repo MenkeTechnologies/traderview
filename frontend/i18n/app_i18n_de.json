@@ -4,25 +4,13 @@
   "nav.dashboard": "Dashboard",
   "nav.scanner": "Scanner",
   "nav.toggle": "Navigation umschalten",
-
   "palette.title": "Befehlspalette",
   "palette.placeholder": "Tippen, um Ansichten / Scanner / Indikatoren zu filtern…",
   "palette.empty": "Keine Treffer",
   "palette.hint.up_down": "↑↓ navigieren",
   "palette.hint.enter": "↵ öffnen",
   "palette.hint.esc": "esc schließen",
-  "palette.section.favorites": "Favoriten",
-  "palette.section.bookmarks": "Lesezeichen",
-
   "shortcut.command_palette": "Befehlspalette öffnen",
   "shortcut.help": "Hilfe / Tutorial",
-  "shortcut.escape": "Overlays schließen",
-
-  "menu.view.command_palette": "Befehlspalette…",
-  "menu.help.tutorial": "Tutorial",
-
-  "locale.en": "English",
-  "locale.es": "Español",
-  "locale.de": "Deutsch",
-  "locale.ja": "日本語"
+  "shortcut.escape": "Overlays schließen"
 }
