@@ -492,6 +492,8 @@ pub enum Preset {
     WideRangeDryVolDrift,           // hod_dist + lod_dist > 4 AND rel_volume < 0.5 AND change_pct.abs() < 1 — wide range + dry vol + flat change (low-participation swing; hidden fade)
     LeadershipTrendDay,             // year_high_pct > -5 AND change_pct > 2 AND day_pct > 1 AND hod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w high + big up + green intraday + close near HOD on vol (leadership trend day)
     WorstActorFlushDay,             // year_low_pct < 5 AND change_pct < -2 AND day_pct < -1 AND lod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w low + big down + red intraday + close near LOD on vol (worst-actor flush)
+    GapUpAtYearLow,                 // gap_pct > 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap up while still near 52w low on vol (oversold squeeze; mean-reversion buy candidate)
+    GapDownAtYearHigh,              // gap_pct < -2 AND year_high_pct > -5 AND rel_volume >= 1.5 — gap down while still near 52w high on vol (sudden distribution; risk-off topping candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2467,6 +2469,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpAtYearLow => {
+            hit.gap_pct > 2.0
+                && hit.year_low_pct < 5.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownAtYearHigh => {
+            hit.gap_pct < -2.0
+                && hit.year_high_pct > -5.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2849,6 +2861,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WideRangeDryVolDrift => "Wide Range, Dry Vol, Flat Change (Low-Participation Drift)",
         Preset::LeadershipTrendDay => "Leadership Trend Day (Near 52w High)",
         Preset::WorstActorFlushDay => "Worst-Actor Flush Day (Near 52w Low)",
+        Preset::GapUpAtYearLow => "Gap Up at 52w Low (Oversold Squeeze)",
+        Preset::GapDownAtYearHigh => "Gap Down at 52w High (Sudden Distribution)",
     }
 }
 

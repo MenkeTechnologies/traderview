@@ -54,6 +54,12 @@ export async function renderAtrCone(mount, _appState) {
             <p data-i18n="view.atr_cone.hint.chart" class="muted">Center cyan = entry. Yellow = ±1σ band (≈68% range). Red = ±2σ band (≈95% range).</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.atr_cone.h2.width_chart">Cone width per day (σ-bandwidth growth)</h2>
+            <div id="ac-width-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.atr_cone.hint.width_chart" class="muted">|upper_2σ − lower_2σ| vs days forward. Confirms the √N scaling: doubling horizon ≈ ×√2 width.</p>
+        </div>
+
         <div id="ac-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -89,6 +95,7 @@ async function compute(tok) {
     const local = localProject(state.entry, state.daily_atr, state.horizon_days);
     renderSummary(local, true);
     renderChart(local);
+    renderWidthChart(local);
     let resp;
     try {
         resp = await api.chartsAtrCone(buildBody(state));
@@ -99,6 +106,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderWidthChart(resp);
 }
 
 function renderSummary(points, pending) {
@@ -131,6 +139,32 @@ function renderSummary(points, pending) {
              parityOk ? 'pos' : 'neg'),
     ].join('');
     void fmtUSDSigned;
+}
+
+function renderWidthChart(points) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('ac-width-chart');
+    if (!el || !points || points.length === 0) { if (el) el.innerHTML = ''; return; }
+    el.innerHTML = '';
+    const xs = points.map(p => p.days_forward);
+    const width2 = points.map(p => p.upper_2sd - p.lower_2sd);
+    const width1 = points.map(p => p.upper_1sd - p.lower_1sd);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: {} },
+        series: [
+            { label: t('chart.series.days') },
+            { label: t('view.atr_cone.chart.width_2sd'),
+              stroke: '#ff3860', width: 1.5, points: { show: false } },
+            { label: t('view.atr_cone.chart.width_1sd'),
+              stroke: '#ffd84a', width: 1.5, points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, width2, width1], el);
 }
 
 function renderChart(points) {
