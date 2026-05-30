@@ -38,7 +38,7 @@ test('non-string input returns single descriptive error', () => {
     const r = parseFloatBlob(null);
     expect(r.value).toEqual([]);
     expect(r.errors.length).toBe(1);
-    expect(r.errors[0].message).toMatch(/not a string/);
+    expect(r.errors[0].message).toMatch(/must be a string/);
 });
 
 test('nonNegative option flags negative values', () => {

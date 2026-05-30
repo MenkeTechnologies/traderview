@@ -13,7 +13,7 @@ export function parseReturnsBlob(text) {
     const returns = [];
     const errors = [];
     if (typeof text !== 'string') {
-        return { returns, errors: [{ line: 0, message: t('common.parse.input_must_be_string') }] };
+        return { returns, errors: [{ line: 0, message: tr('common.parse.input_must_be_string') }] };
     }
     const cleaned = text.replace(/#[^\n]*/g, ' ');  // strip line comments
     const tokens = cleaned.split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
