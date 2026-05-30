@@ -636,6 +636,8 @@ const PRESETS = [
     { id: 'full_range_52w_at_low_side', label: t('view.scanners.preset.full_range_52w_at_low_side.label'), desc: t('view.scanners.preset.full_range_52w_at_low_side.desc') },
     { id: 'pullback_and_rally_at_year_high', label: t('view.scanners.preset.pullback_and_rally_at_year_high.label'), desc: t('view.scanners.preset.pullback_and_rally_at_year_high.desc') },
     { id: 'dead_cat_bounce_at_year_low', label: t('view.scanners.preset.dead_cat_bounce_at_year_low.label'), desc: t('view.scanners.preset.dead_cat_bounce_at_year_low.desc') },
+    { id: 'gap_down_intraday_reversal_close_at_hod', label: t('view.scanners.preset.gap_down_intraday_reversal_close_at_hod.label'), desc: t('view.scanners.preset.gap_down_intraday_reversal_close_at_hod.desc') },
+    { id: 'gap_up_intraday_reversal_close_at_lod', label: t('view.scanners.preset.gap_up_intraday_reversal_close_at_lod.label'), desc: t('view.scanners.preset.gap_up_intraday_reversal_close_at_lod.desc') },
 ];
 
 export async function renderScanners(mount) {

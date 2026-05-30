@@ -754,6 +754,8 @@ pub enum Preset {
     FullRange52wAtLowSide,               // year_low_pct < 2 AND year_high_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w low + >50% below 52w high + decent vol (stock has dropped 50%+ from 52w high and is at the lows; max-downtrend + at decision point for capitulation/reversal)
     PullbackAndRallyAtYearHigh,          // change_pct in [0.5, 1.5] AND day_pct > 0.5 AND gap_pct in [-0.5, 0] AND year_high_pct < 5 AND rel_volume in [1, 1.8] — moderate green (0.5-1.5%) + green intraday + small red gap + within 5% of 52w high + decent vol (textbook pullback-and-rally setup near the highs; gap-down bought intraday)
     DeadCatBounceAtYearLow,              // change_pct in [-1.5, -0.5] AND day_pct < -0.5 AND gap_pct in [0, 0.5] AND year_low_pct < 5 AND rel_volume in [1, 1.8] — moderate red + red intraday + small green gap + within 5% of 52w low + decent vol (textbook dead-cat-bounce setup near the lows; gap-up sold intraday)
+    GapDownIntradayReversalCloseAtHOD,   // gap_pct < -0.5 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap down + intraday went up + close near HOD + decent vol (textbook reversal-up day; gap-down was bought, rallied through the day to close at the highs; strong bullish reversal candidate)
+    GapUpIntradayReversalCloseAtLOD,     // gap_pct > 0.5 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap up + intraday went down + close near LOD + decent vol (textbook reversal-down day; gap-up was sold, declined through the day to close at the lows; strong bearish reversal candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4269,6 +4271,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
                 && hit.rel_volume <= 1.8
         }
+        Preset::GapDownIntradayReversalCloseAtHOD => {
+            hit.gap_pct < -0.5
+                && hit.day_pct > 0.5
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapUpIntradayReversalCloseAtLOD => {
+            hit.gap_pct > 0.5
+                && hit.day_pct < -0.5
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4913,6 +4927,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::FullRange52wAtLowSide => "Near 52w Low + >50% Below 52w High + Decent Vol (Stock Has Dropped 50%+ From the Ceiling; Max-downtrend at Decision Point)",
         Preset::PullbackAndRallyAtYearHigh => "Moderate Green + Green Intraday + Small Red Gap + Near 52w High + Decent Vol (Textbook Pullback-and-rally Near the Highs; Gap-down Bought Intraday)",
         Preset::DeadCatBounceAtYearLow => "Moderate Red + Red Intraday + Small Green Gap + Near 52w Low + Decent Vol (Textbook Dead-cat-bounce Near the Lows; Gap-up Sold Intraday)",
+        Preset::GapDownIntradayReversalCloseAtHOD => "Gap Down + Up Intraday + Close at HOD + Decent Vol (Textbook Reversal-up Day; Gap-down Bought to Close at Highs)",
+        Preset::GapUpIntradayReversalCloseAtLOD => "Gap Up + Down Intraday + Close at LOD + Decent Vol (Textbook Reversal-down Day; Gap-up Sold to Close at Lows)",
     }
 }
 

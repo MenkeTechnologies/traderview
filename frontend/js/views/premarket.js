@@ -21,6 +21,11 @@ export async function renderPremarket(mount) {
             <h2 data-i18n="view.premarket.h2.change_chart">Overnight change % across contracts</h2>
             <div id="pm-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.premarket.h2.atr_chart">ATR-normalized move (×ATR) across contracts</h2>
+            <div id="pm-atr-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.premarket.hint.atr" class="muted small">Overnight move as a multiple of the security's own 20-day ATR. ≥1.0× = statistically significant. Reveals true-significance moves that raw % hides (a 0.3% FX move at 3× ATR is bigger news than a 5% crypto move at 0.4× ATR).</p>
+        </div>
     `;
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
@@ -40,6 +45,7 @@ async function refresh(mount, tok) {
         renderGroups(s.contracts, mount);
         renderEvents(s.today_events, s.fetched_at, mount);
         renderChangeChart(s.contracts);
+        renderAtrChart(s.contracts);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#pmContent');
@@ -125,6 +131,41 @@ function renderChangeChart(contracts) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderAtrChart(contracts) {
+    const el = document.getElementById('pm-atr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (contracts || []).filter(c => Number.isFinite(Number(c.atr_multiple)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.premarket.empty_atr_chart">${esc(t('view.premarket.empty_atr_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Math.abs(Number(b.atr_multiple)) - Math.abs(Number(a.atr_multiple)));
+    const labels = valid.map(c => c.symbol);
+    const ys = valid.map(c => Number(c.atr_multiple));
+    const xs = labels.map((_, i) => i + 1);
+    const one = xs.map(() => 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.premarket.chart.contract_idx') },
+            { label: t('view.premarket.chart.atr_multiple'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.premarket.chart.atr_threshold'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + '×') },
+        ],
+        legend: { show: true },
+    }, [xs, ys, one], el);
 }
 
 function renderEvents(events, fetched, mount) {
