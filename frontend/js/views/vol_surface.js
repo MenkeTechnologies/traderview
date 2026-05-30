@@ -69,10 +69,51 @@ function renderSurface(s, out, mount) {
             <h2 data-i18n="view.vol_surface.h2.front_month_skew">Front-month skew</h2>
             <div id="vsSkew"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol_surface.h2.skew_chart">Front-month skew: calls vs puts (interactive)</h2>
+            <div id="vs-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     renderHeatmap(s, mount);
     renderTermSvg(s, mount);
     renderSkewSvg(s, mount);
+    renderSkewUplot(s);
+}
+
+function renderSkewUplot(s) {
+    const el = document.getElementById('vs-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (s.front_skew || []).filter(p =>
+        Number.isFinite(Number(p.moneyness)) && (p.call_iv != null || p.put_iv != null));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol_surface.empty_chart">${esc(t('view.vol_surface.empty_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => Number(a.moneyness) - Number(b.moneyness));
+    const xs   = pts.map(p => Number(p.moneyness) * 100);
+    const call = pts.map(p => p.call_iv != null ? Number(p.call_iv) * 100 : null);
+    const put  = pts.map(p => p.put_iv  != null ? Number(p.put_iv)  * 100 : null);
+    const atm  = xs.map(() => null);
+    // Inject a vertical-looking dashed ATM reference using a flat series sized to y-range:
+    // simpler: draw the dashed line via uPlot grid by overlaying a zero-x marker series is awkward.
+    // Skip the ATM ref series; legend stays clean.
+    void atm;
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.vol_surface.chart.moneyness_pct') },
+            { label: t('view.vol_surface.chart.call_iv_pct'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.vol_surface.chart.put_iv_pct'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, call, put], el);
 }
 
 function renderHeatmap(s, mount) {

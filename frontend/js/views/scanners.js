@@ -198,6 +198,8 @@ const PRESETS = [
     { id: 'close_near_lod_weak_day', label: t('view.scanners.preset.close_near_lod_weak_day.label'), desc: t('view.scanners.preset.close_near_lod_weak_day.desc') },
     { id: 'inside_range_no_volume', label: t('view.scanners.preset.inside_range_no_volume.label'), desc: t('view.scanners.preset.inside_range_no_volume.desc') },
     { id: 'outside_range_on_volume', label: t('view.scanners.preset.outside_range_on_volume.label'), desc: t('view.scanners.preset.outside_range_on_volume.desc') },
+    { id: 'up_day_lower_high', label: t('view.scanners.preset.up_day_lower_high.label'), desc: t('view.scanners.preset.up_day_lower_high.desc') },
+    { id: 'down_day_higher_low', label: t('view.scanners.preset.down_day_higher_low.label'), desc: t('view.scanners.preset.down_day_higher_low.desc') },
 ];
 
 export async function renderScanners(mount) {
