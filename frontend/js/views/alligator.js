@@ -16,6 +16,7 @@ import {
 } from '../_alligator_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = { barText: '' };
 
 export async function renderAlligator(mount, _appState) {
@@ -28,11 +29,11 @@ export async function renderAlligator(mount, _appState) {
             <p class="muted" data-i18n-html="view.alligator.help">Paste <code>high low</code> per line. Median price
                 ((H+L)/2) drives the three SMMAs. Demo loads 50 bars cycling through
                 sleep → uptrend → sleep → downtrend so all three biases are visible.</p>
-            <textarea id="al-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..."></textarea>
+            <textarea id="al-bars" rows="6" placeholder="100.5 99.5&#10;100.8 99.8&#10;..." data-tip="view.alligator.tip.bars"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.alligator.btn.load_demo_50_bars_4_phases" id="al-demo" class="secondary" type="button">Load demo (50 bars, 4 phases)</button>
-                <button data-i18n="view.alligator.btn.clear" id="al-clear" class="secondary" type="button">Clear</button>
-                <button data-i18n="view.alligator.btn.compute" id="al-run" class="primary" type="button">Compute</button>
+                <button data-i18n="view.alligator.btn.load_demo_50_bars_4_phases" id="al-demo" class="secondary" type="button" data-tip="view.alligator.tip.demo" data-shortcut="alligator_demo">Load demo (50 bars, 4 phases)</button>
+                <button data-i18n="view.alligator.btn.clear" id="al-clear" class="secondary" type="button" data-tip="view.alligator.tip.clear">Clear</button>
+                <button data-i18n="view.alligator.btn.compute" id="al-run" class="primary" type="button" data-tip="view.alligator.tip.run" data-shortcut="alligator_run">Compute</button>
             </div>
         </div>
 
@@ -61,9 +62,11 @@ export async function renderAlligator(mount, _appState) {
         const b = makeDemoBars();
         document.getElementById('al-bars').value =
             b.map(x => `${x.high} ${x.low}`).join('\n');
+        showToast(t('view.alligator.toast.demo_loaded', { n: b.length }), { level: 'info' });
     });
     document.getElementById('al-clear').addEventListener('click', () => {
         document.getElementById('al-bars').value = '';
+        showToast(t('view.alligator.toast.cleared'), { level: 'info' });
     });
     document.getElementById('al-run').addEventListener('click', () => {
         readInputs();
@@ -86,20 +89,26 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.alligator.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (bars.length === 0) return;
     }
     const err = validateInputs(bars);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.alligator.toast.invalid'), { level: 'warning' }); return; }
     let points;
     try {
         points = await api.barsAlligator(buildBody(bars));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.alligator.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(points, bars);
     renderChart(bars, points);
     renderBiasStrip(points);
+    const lastPt = (points || []).filter(p => p && (p.jaw || p.teeth || p.lips)).pop();
+    const bias = lastPt ? classifyPoint(lastPt) : 'unknown';
+    showToast(t('view.alligator.toast.computed', { bars: bars.length, bias }), { level: 'success' });
 }
 
 function renderSummary(points, bars) {
