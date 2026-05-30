@@ -716,6 +716,16 @@ function bindTabs() {
         const el = document.getElementById('vsc-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in time-in-force scope → click Evaluate.
+    window.addEventListener('tv:time-in-force-run', () => {
+        const el = document.getElementById('tif-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `n` in time-in-force scope → click Snap now.
+    window.addEventListener('tv:time-in-force-snap-now', () => {
+        const el = document.getElementById('tif-now-snap');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

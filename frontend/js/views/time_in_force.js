@@ -10,6 +10,7 @@ import {
 } from '../_time_in_force_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = makeDemoOrder('gtc-keep');
 
 export async function renderTimeInForce(mount, _appState) {
@@ -21,19 +22,19 @@ export async function renderTimeInForce(mount, _appState) {
             <h2 data-i18n="view.time_in_force.h2.order">Order</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.time_in_force.label.tif">TIF</span>
-                    <select id="tif-kind">
+                    <select id="tif-kind" data-tip="view.time_in_force.tip.tif">
                         ${TIF_KINDS.map(k => `<option value="${k}" ${state.order.tif === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.time_in_force.label.orig_qty">Original qty</span>
-                    <input id="tif-oq" type="number" step="any" min="0" value="${state.order.original_qty}"></label>
+                    <input id="tif-oq" type="number" step="any" min="0" value="${state.order.original_qty}" data-tip="view.time_in_force.tip.orig_qty"></label>
                 <label><span data-i18n="view.time_in_force.label.filled_qty">Filled qty</span>
-                    <input id="tif-fq" type="number" step="any" min="0" value="${state.order.filled_qty}"></label>
+                    <input id="tif-fq" type="number" step="any" min="0" value="${state.order.filled_qty}" data-tip="view.time_in_force.tip.filled_qty"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.time_in_force.label.placed_at">Placed at</span> <small class="muted" data-i18n="view.time_in_force.label.placed_at_hint">(your local time → UTC at the wire)</small>
-                    <input id="tif-placed" type="datetime-local" value="${esc(isoUtcToLocalDt(state.order.placed_at))}"></label>
+                    <input id="tif-placed" type="datetime-local" value="${esc(isoUtcToLocalDt(state.order.placed_at))}" data-tip="view.time_in_force.tip.placed"></label>
                 <label><span data-i18n="view.time_in_force.label.good_until">Good until (GTD only)</span>
-                    <input id="tif-good" type="date" value="${esc(state.good_until_in_order || '')}"></label>
+                    <input id="tif-good" type="date" value="${esc(state.good_until_in_order || '')}" data-tip="view.time_in_force.tip.good_until"></label>
             </div>
         </div>
 
@@ -41,11 +42,11 @@ export async function renderTimeInForce(mount, _appState) {
             <h2 data-i18n="view.time_in_force.h2.clock_session">Clock + session</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.time_in_force.label.now">Now</span>
-                    <input id="tif-now" type="datetime-local" value="${esc(isoUtcToLocalDt(state.now))}"></label>
+                    <input id="tif-now" type="datetime-local" value="${esc(isoUtcToLocalDt(state.now))}" data-tip="view.time_in_force.tip.now"></label>
                 <label><span data-i18n="view.time_in_force.label.session_open">Session open (UTC date)</span>
-                    <input id="tif-sess" type="date" value="${esc(state.session_open)}"></label>
-                <button data-i18n="view.time_in_force.btn.snap_now_session_to_current_time" id="tif-now-snap" class="secondary" type="button">Snap "now" + session to current time</button>
-                <button data-i18n="view.time_in_force.btn.evaluate" id="tif-run" class="primary" type="button">Evaluate</button>
+                    <input id="tif-sess" type="date" value="${esc(state.session_open)}" data-tip="view.time_in_force.tip.session"></label>
+                <button data-i18n="view.time_in_force.btn.snap_now_session_to_current_time" id="tif-now-snap" class="secondary" type="button" data-tip="view.time_in_force.tip.snap_now" data-shortcut="time_in_force_snap_now">Snap "now" + session to current time</button>
+                <button data-i18n="view.time_in_force.btn.evaluate" id="tif-run" class="primary" type="button" data-tip="view.time_in_force.tip.run" data-shortcut="time_in_force_run">Evaluate</button>
             </div>
             <div class="inline-form">
                 <button data-i18n="view.time_in_force.btn.day_keep" id="tif-demo-day-keep"    class="secondary" type="button">DAY → keep</button>
@@ -145,19 +146,24 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.order, state.now, state.session_open);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.time_in_force.toast.invalid'), { level: 'warning' }); return; }
     const local = localEvaluate(state.order, state.now, state.session_open);
     renderSummary(local, true);
     let resp;
     try {
         resp = await api.discTimeInForce(buildBody(state.order, state.now, state.session_open));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.time_in_force.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderQtyChart();
     renderAgeChart();
+    const action = String(resp.action || '').toUpperCase();
+    const level = action === 'CANCEL' ? 'warning' : action === 'COMPLETED' ? 'info' : 'success';
+    showToast(t('view.time_in_force.toast.evaluated', { tif: state.order.tif.toUpperCase(), action }), { level });
 }
 
 function renderAgeChart() {
