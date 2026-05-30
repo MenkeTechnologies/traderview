@@ -9457,6 +9457,7 @@
   "view.charts.h1.charts": "// CHARTS",
   "view.charts.btn.refresh": "⟳ Refresh",
   "view.charts.tip.refresh": "Reload OHLC + indicators for the current symbol",
+  "view.charts.tip.symbol_input": "Symbol to chart — e.g. AAPL, NVDA, ^GSPC, BTC-USD",
   "view.charts.btn.load": "Load",
   "view.charts.btn.select": "Select",
   "view.charts.btn.trendline": "Trendline",

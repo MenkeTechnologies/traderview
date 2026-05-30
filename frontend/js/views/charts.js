@@ -22,7 +22,7 @@ export async function renderCharts(mount, _state, symbol = '') {
         </h1>
         <div class="chart-toolbar">
             <label><span data-i18n="view.charts.label.symbol">Symbol</span>
-                <input id="sym" data-shortcut="focus_search" value="${esc(symbol)}"></label>
+                <input id="sym" data-shortcut="focus_search" data-tip="view.charts.tip.symbol_input" value="${esc(symbol)}"></label>
             <label><span data-i18n="view.charts.label.interval">Interval</span>
                 <select id="iv">
                     <option data-i18n="view.charts.opt.1m" value="1m">1m</option>
