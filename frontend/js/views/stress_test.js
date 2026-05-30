@@ -79,6 +79,12 @@ export async function renderStressTest(mount, _appState) {
             <div id="st-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.stress_test.h2.vega_chart">Portfolio vega ($) vs price shock (per IV shock)</h2>
+            <div id="st-vega-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.stress_test.hint.vega_chart" class="muted small">Orthogonal to the P&L curve: how the portfolio's dollar vega shifts across the same shock grid. Reveals whether the position becomes more or less vol-sensitive in the tails — critical for sizing under a vol regime change.</p>
+        </div>
+
         <div id="st-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('st-demo').addEventListener('click', () => {
@@ -143,6 +149,7 @@ async function compute(tok) {
     renderSummary(report, legs);
     renderGrid(report);
     renderCurveChart(report);
+    renderVegaChart(report);
     const cells = (report && report.grid) ? report.grid.length : 0;
     showToast(t('view.stress_test.toast.done', { legs: legs.length, cells }), { level: 'success' });
 }
@@ -182,6 +189,48 @@ function renderCurveChart(report) {
     data.push(zero);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series,
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],
+        legend: { show: true },
+    }, data, el);
+}
+
+function renderVegaChart(report) {
+    const el = document.getElementById('st-vega-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const grid = (report && report.grid) || [];
+    if (grid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.stress_test.empty_vega_chart">${esc(t('view.stress_test.empty_vega_chart'))}</div>`;
+        return;
+    }
+    const matrix = pivotGrid(grid, state.priceShocks, state.ivShocks);
+    const sortedIdx = state.priceShocks
+        .map((v, i) => [v, i])
+        .sort((a, b) => a[0] - b[0]);
+    const xs = sortedIdx.map(([v]) => v * 100);
+    const palette = ['#ff3860', '#ff7a1f', '#ffd84a', '#7af0a8', '#00e5ff', '#b86bff'];
+    const series = [{ label: t('view.stress_test.chart.price_shock') }];
+    const data = [xs];
+    state.ivShocks.forEach((iv, ii) => {
+        const ys = sortedIdx.map(([, pi]) => {
+            const c = matrix[pi] && matrix[pi][ii];
+            return c && Number.isFinite(Number(c.portfolio_vega_dollars)) ? Number(c.portfolio_vega_dollars) : null;
+        });
+        series.push({
+            label: t('view.stress_test.chart.iv_label', { iv: (iv * 100).toFixed(0) + '%' }),
+            stroke: palette[ii % palette.length],
+            width: 1.6,
+            points: { show: true, size: 6, fill: palette[ii % palette.length], stroke: palette[ii % palette.length] },
+        });
+        data.push(ys);
+    });
+    const zero = xs.map(() => 0);
+    series.push({ label: t('view.stress_test.chart.zero'), stroke: '#888', width: 1.0, dash: [4, 4], points: { show: false } });
+    data.push(zero);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
         scales: { x: { auto: true }, y: { auto: true } },
         series,
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 } ],

@@ -802,6 +802,8 @@ pub enum Preset {
     Year52LowParabolicExtreme,           // year_low_pct < 0 AND change_pct < -10 AND rel_volume >= 5 — new 52w low + parabolic red + extreme vol (panic capitulation at new lows; exhaustion-vol flush; either continuation or terminal bottom)
     HotVolNoChangeTightRange,            // rel_volume >= 3 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND gap_pct.abs() < 0.5 — hot vol + tight intraday range + flat close + no gap (extreme absorption coil; institutional accumulation / distribution with no price expansion; pre-breakout compression at scale)
     DryVolBigMoveNoFollow,               // rel_volume < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 — dry vol + big move + tight close range (low-participation thrust; illiquidity-driven move without follow-through; fade candidate)
+    BigGapBigContinuationBigRange,       // gap_pct.abs() > 4 AND change_pct.abs() > 2 * gap_pct.abs() AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + 2x-gap continuation + wide range + hot vol (gap-and-rip extension; momentum doubled the overnight thrust during regular hours; conviction trend day with full range expansion)
+    BigGapFullReversalBigRange,          // gap_pct.abs() > 4 AND change_pct.abs() > 2 AND gap_pct * change_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + sign-flipped intraday move + wide range + hot vol (full gap reversal; opposite-side dominance after the gap; trapped gap traders flushed both ways during the session)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4590,6 +4592,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 4.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 3.0
         }
+        Preset::BigGapBigContinuationBigRange => {
+            hit.gap_pct.abs() > 4.0
+                && hit.change_pct.abs() > 2.0 * hit.gap_pct.abs()
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigGapFullReversalBigRange => {
+            hit.gap_pct.abs() > 4.0
+                && hit.change_pct.abs() > 2.0
+                && hit.gap_pct * hit.change_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5282,6 +5297,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowParabolicExtreme => "New 52w Low + Parabolic Red + Extreme Vol (Panic Capitulation at New Lows; Exhaustion-vol Flush; Either Continuation or Terminal Bottom)",
         Preset::HotVolNoChangeTightRange => "Hot Vol + Tight Intraday Range + Flat Close + No Gap (Extreme Absorption Coil; Institutional Accumulation / Distribution with No Price Expansion; Pre-breakout Compression at Scale)",
         Preset::DryVolBigMoveNoFollow => "Dry Vol + Big Move + Tight Close Range (Low-participation Thrust; Illiquidity-driven Move without Follow-through; Fade Candidate)",
+        Preset::BigGapBigContinuationBigRange => "Big Gap + 2x-Gap Continuation + Wide Range + Hot Vol (Gap-and-rip Extension; Momentum Doubled the Overnight Thrust during Regular Hours; Conviction Trend Day with Full Range Expansion)",
+        Preset::BigGapFullReversalBigRange => "Big Gap + Sign-flipped Intraday Move + Wide Range + Hot Vol (Full Gap Reversal; Opposite-side Dominance after the Gap; Trapped Gap Traders Flushed Both Ways during the Session)",
     }
 }
 
