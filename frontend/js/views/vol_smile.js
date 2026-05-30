@@ -19,6 +19,7 @@ import {
     parseStrikeIvText, buildSviBody, validateSmileInputs,
     sortRowsByStrike, atmSkewSlope,
 } from '../_vol_smile_inputs.js';
+import { showToast } from '../toast.js';
 
 const DEFAULT_BLOB = `# Paste your chain here. One row per quote:
 #   strike  iv     (whitespace or comma separated; iv as 0.25 OR 25%)
@@ -50,14 +51,14 @@ export async function renderVolSmile(mount, _appState) {
             <h2 data-i18n="view.vol_smile.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vol_smile.label.spot">Spot</span>
-                    <input id="vs-spot" type="number" step="any" value="${state.spot}"></label>
+                    <input id="vs-spot" type="number" step="any" value="${state.spot}" data-tip="view.vol_smile.tip.spot"></label>
                 <label><span data-i18n="view.vol_smile.label.t_years">Expiry (years)</span>
-                    <input id="vs-t" type="number" step="any" value="${state.t_years}"></label>
+                    <input id="vs-t" type="number" step="any" value="${state.t_years}" data-tip="view.vol_smile.tip.t_years"></label>
                 <label><span data-i18n="view.vol_smile.label.rate">Rate</span>
-                    <input id="vs-rate" type="number" step="any" value="${state.rate}"></label>
+                    <input id="vs-rate" type="number" step="any" value="${state.rate}" data-tip="view.vol_smile.tip.rate"></label>
                 <label><span data-i18n="view.vol_smile.label.div_yield">Div yield</span>
-                    <input id="vs-q" type="number" step="any" value="${state.div_yield}"></label>
-                <button data-i18n="view.vol_smile.btn.fit" id="vs-fit" class="primary" type="button">Fit</button>
+                    <input id="vs-q" type="number" step="any" value="${state.div_yield}" data-tip="view.vol_smile.tip.div_yield"></label>
+                <button data-i18n="view.vol_smile.btn.fit" data-tip="view.vol_smile.tip.fit" data-shortcut="vol_smile_fit" id="vs-fit" class="primary" type="button">Fit</button>
             </div>
             <p class="muted" data-i18n-html="view.vol_smile.intro">
                 Paste quotes below — one per line, two whitespace-OR-comma
@@ -65,7 +66,8 @@ export async function renderVolSmile(mount, _appState) {
                 <code>0.25</code> or <code>25%</code>. Lines starting
                 with <code>#</code> are skipped.
             </p>
-            <textarea id="vs-text" rows="10" style="width:100%;font-family:monospace;font-size:13px">${esc(state.text)}</textarea>
+            <textarea id="vs-text" rows="10" style="width:100%;font-family:monospace;font-size:13px"
+                      data-tip="view.vol_smile.tip.quotes">${esc(state.text)}</textarea>
         </div>
 
         <div id="vs-parse-errors" class="boot" style="display:none;color:var(--red)"></div>
@@ -104,7 +106,7 @@ async function fit(mount, tok) {
     const sorted = sortRowsByStrike(rows);
 
     const validation = validateSmileInputs(sorted, state.spot, state.t_years);
-    if (validation) { showErr(validation); return; }
+    if (validation) { showErr(validation); showToast(validation, { level: 'warning' }); return; }
 
     const body = buildSviBody(sorted, state.spot, state.rate, state.div_yield, state.t_years);
     let res;
@@ -112,13 +114,18 @@ async function fit(mount, tok) {
         res = await api.anlySviVolatilitySmile(body);
         if (!res) throw new Error(t('view.vol_smile.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(res, state.t_years);
     renderChart(sorted, res);
+    showToast(t('view.vol_smile.toast.done', {
+        n: sorted.length,
+        arb: t(res.arbitrage_ok ? 'view.vol_smile.arb.ok' : 'view.vol_smile.arb.fail'),
+    }), { level: res.arbitrage_ok ? 'success' : 'warning' });
 }
 
 function renderSummary(res, tYears) {

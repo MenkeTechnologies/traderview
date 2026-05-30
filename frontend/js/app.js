@@ -660,6 +660,11 @@ function bindTabs() {
         const el = document.getElementById('pt-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `f` in vol-smile scope → click Fit button.
+    window.addEventListener('tv:vol-smile-fit', () => {
+        const el = document.getElementById('vs-fit');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
