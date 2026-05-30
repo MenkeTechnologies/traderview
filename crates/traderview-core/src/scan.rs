@@ -466,6 +466,8 @@ pub enum Preset {
     GapHeldAndExtendedDown,      // gap_pct < -1 AND day_pct < -1 AND rel_volume >= 1.5 — gap down + held + extended intraday on vol (continuation sellers)
     Pct52wHighBreakoutCloseAtHod,  // year_high_pct > 0 AND day_pct > 1 AND hod_dist.abs() < 0.5 AND rel_volume >= 2 — broke above 52w high + close at HOD + hot vol (textbook breakout)
     Pct52wLowBreakdownCloseAtLod,  // year_low_pct < 0 AND day_pct < -1 AND lod_dist.abs() < 0.5 AND rel_volume >= 2 — broke below 52w low + close at LOD + hot vol (textbook breakdown)
+    Pct52wMidHotVolFlat,           // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume >= 2 — middle of 52w range with hot vol but flat change (decision-point churn)
+    Pct52wMidDryVolFlat,           // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume < 0.5 — middle of 52w range with dry vol (forgotten consolidation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2292,6 +2294,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::Pct52wMidHotVolFlat => {
+            hit.year_high_pct >= -55.0
+                && hit.year_high_pct <= -35.0
+                && hit.year_low_pct >= 35.0
+                && hit.year_low_pct <= 55.0
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wMidDryVolFlat => {
+            hit.year_high_pct >= -55.0
+                && hit.year_high_pct <= -35.0
+                && hit.year_low_pct >= 35.0
+                && hit.year_low_pct <= 55.0
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -2648,6 +2666,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapHeldAndExtendedDown => "Gap Held & Extended Down (Continuation Sellers)",
         Preset::Pct52wHighBreakoutCloseAtHod => "52w-High Breakout, Close at HOD, Hot Vol",
         Preset::Pct52wLowBreakdownCloseAtLod => "52w-Low Breakdown, Close at LOD, Hot Vol",
+        Preset::Pct52wMidHotVolFlat => "52w-Mid Hot-Vol Flat (Decision Churn)",
+        Preset::Pct52wMidDryVolFlat => "52w-Mid Dry-Vol Flat (Forgotten Consolidation)",
     }
 }
 

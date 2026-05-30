@@ -348,6 +348,8 @@ const PRESETS = [
     { id: 'gap_held_and_extended_down', label: t('view.scanners.preset.gap_held_and_extended_down.label'), desc: t('view.scanners.preset.gap_held_and_extended_down.desc') },
     { id: 'pct52w_high_breakout_close_at_hod', label: t('view.scanners.preset.pct52w_high_breakout_close_at_hod.label'), desc: t('view.scanners.preset.pct52w_high_breakout_close_at_hod.desc') },
     { id: 'pct52w_low_breakdown_close_at_lod', label: t('view.scanners.preset.pct52w_low_breakdown_close_at_lod.label'), desc: t('view.scanners.preset.pct52w_low_breakdown_close_at_lod.desc') },
+    { id: 'pct52w_mid_hot_vol_flat', label: t('view.scanners.preset.pct52w_mid_hot_vol_flat.label'), desc: t('view.scanners.preset.pct52w_mid_hot_vol_flat.desc') },
+    { id: 'pct52w_mid_dry_vol_flat', label: t('view.scanners.preset.pct52w_mid_dry_vol_flat.label'), desc: t('view.scanners.preset.pct52w_mid_dry_vol_flat.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -55,6 +55,11 @@ export async function renderAdfTest(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.adf.h2.roll_chart">Series + rolling mean (window=20)</h2>
+            <div id="adf-roll-chart" style="width:100%;height:220px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.adf.h2.thresholds">Critical-value comparison</h2>
             <div id="adf-thresh"></div>
         </div>
@@ -99,6 +104,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.adf.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderRollChart();
     renderThresholds(local);
     let resp;
     try {
@@ -111,6 +117,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.adf.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderRollChart();
     renderThresholds(resp);
 }
 
@@ -165,6 +172,43 @@ function renderChart() {
         ],
         legend: { show: true },
     }, [xs, state.series, diffs], el);
+}
+
+function renderRollChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('adf-roll-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const s = state.series;
+    if (!s || s.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.adf.empty_roll_chart">${esc(t('view.adf.empty_roll_chart'))}</div>`;
+        return;
+    }
+    const win = Math.min(20, Math.max(2, Math.floor(s.length / 4)));
+    const xs = s.map((_, i) => i);
+    const roll = s.map((_, i) => {
+        if (i + 1 < win) return null;
+        let sum = 0;
+        for (let j = i - win + 1; j <= i; j++) sum += s[j];
+        return sum / win;
+    });
+    const mean = s.reduce((a, b) => a + b, 0) / s.length;
+    const meanLine = xs.map(() => mean);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.t') },
+            { label: t('chart.series.y'),  stroke: '#00e5ff', width: 1.0, points: { show: false } },
+            { label: t('view.adf.chart.roll'), stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.adf.chart.global_mean'), stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, s, roll, meanLine], el);
 }
 
 function renderThresholds(report) {
