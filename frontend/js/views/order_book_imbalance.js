@@ -68,6 +68,12 @@ export async function renderOrderBookImbalance(mount, _appState) {
             <div id="obi-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.order_book_imbalance.h2.per_level_imb_chart">Per-level signed imbalance (bid − ask)</h2>
+            <div id="obi-imb-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.order_book_imbalance.hint.per_level_imb" class="muted small">Signed bid − ask at each level. Reveals if pressure is concentrated at L1 (HFT scalp signal) or spread across all levels (institutional commit). Yellow dashed = neutral.</p>
+        </div>
+
         <div id="obi-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -125,6 +131,7 @@ async function compute(tok) {
     renderGauge(res);
     renderTable(bidSizes, askSizes, state.levels);
     renderDepthChart(bidSizes, askSizes, state.levels);
+    renderPerLevelImbChart(bidSizes, askSizes, state.levels);
     showToast(t('view.order_book_imbalance.toast.done', {
         imbalance: fmtImbalance(res.imbalance),
     }), { level: 'success' });
@@ -157,6 +164,34 @@ function renderDepthChart(bidSizes, askSizes, levels) {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
         legend: { show: true },
     }, [xs, bid, ask], el);
+}
+
+function renderPerLevelImbChart(bidSizes, askSizes, levels) {
+    const el = document.getElementById('obi-imb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = alignLevels(bidSizes, askSizes, levels);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.order_book_imbalance.empty_imb_chart">${esc(t('view.order_book_imbalance.empty_imb_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(r => r.level);
+    const imb = rows.map(r => Number(r.bid) - Number(r.ask));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.order_book_imbalance.chart.level') },
+            { label: t('view.order_book_imbalance.chart.signed_imbalance'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.order_book_imbalance.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, imb, zero], el);
 }
 
 function renderSummary(r, bidLevels, askLevels) {

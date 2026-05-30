@@ -740,6 +740,8 @@ pub enum Preset {
     BigRedIntradayOnlyHotVol,            // change_pct < -3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big red close + flat open + wide intraday + hot vol (intraday-only decline; no overnight bias; pure intraday discovery to new lows; all of the day's loss from intraday participation)
     BrokeAbove52wHighHotVol,             // year_high_pct > 0 AND change_pct > 1 AND rel_volume >= 2 — closed ABOVE prior 52w high + green + hot vol (true new-high breakout with volume confirmation; institutional initiation at a multi-year extreme)
     BrokeBelow52wLowHotVol,              // year_low_pct < 0 AND change_pct < -1 AND rel_volume >= 2 — closed BELOW prior 52w low + red + hot vol (true new-low breakdown with volume confirmation; institutional capitulation at a multi-year extreme)
+    ChangeIntradayDisagreeBothTagged,    // change_pct * day_pct < 0 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — change/day signs disagree + both extremes visited + decent vol (full schizophrenic day; gap dominates close direction but intraday went opposite and explored both sides; institutional repositioning vs retail)
+    ChangeIntradayDisagreeFlatRange,     // change_pct * day_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — change/day signs disagree + tight intraday + decent vol (gap-vs-intraday sign disagreement but intraday compressed; overnight news held even as intraday tried to fade in narrow range)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4169,6 +4171,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::ChangeIntradayDisagreeBothTagged => {
+            hit.change_pct * hit.day_pct < 0.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ChangeIntradayDisagreeFlatRange => {
+            hit.change_pct * hit.day_pct < 0.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4799,6 +4812,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedIntradayOnlyHotVol => "Big Red + Flat Open + Wide Intraday + Hot Vol (Intraday-only Decline; All Loss from Intraday Discovery; No Overnight Bias)",
         Preset::BrokeAbove52wHighHotVol => "Closed Above Prior 52w High + Green + Hot Vol (True New-high Breakout with Volume Confirmation)",
         Preset::BrokeBelow52wLowHotVol => "Closed Below Prior 52w Low + Red + Hot Vol (True New-low Breakdown with Volume Confirmation)",
+        Preset::ChangeIntradayDisagreeBothTagged => "Change/Day Signs Disagree + Both Extremes Tagged + Decent Vol (Schizophrenic Day; Gap vs Intraday Opposition with Full-range Exploration)",
+        Preset::ChangeIntradayDisagreeFlatRange => "Change/Day Signs Disagree + Tight Intraday + Decent Vol (Overnight News Held While Intraday Tried to Fade in Narrow Range)",
     }
 }
 
