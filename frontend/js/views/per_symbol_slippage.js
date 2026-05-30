@@ -52,6 +52,12 @@ export async function renderPerSymbolSlippage(mount, _appState) {
             <div id="ps-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.per_symbol_slippage.h2.stdev_chart">Slippage stdev (consistency) per symbol</h2>
+            <div id="ps-stdev-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.per_symbol_slippage.hint.stdev" class="muted small">Per-symbol stdev of slippage bps. Reveals which names have wildly variable execution — a 0-mean / 30-stdev name is just as bad as a -10-mean / 5-stdev one. Stable execution names sit at the bottom.</p>
+        </div>
+
         <div id="ps-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('ps-demo').addEventListener('click', () => {
@@ -98,6 +104,7 @@ async function compute(tok) {
     renderSummary(report, records);
     renderTable(report);
     renderMeanChart(report);
+    renderStdevChart(report);
     const worst = worstSymbol(report);
     showToast(t('view.per_symbol_slippage.toast.done', {
         symbols: (report || []).length,
@@ -138,6 +145,37 @@ function renderMeanChart(report) {
         ],
         legend: { show: true },
     }, [xs, ys, zero], el);
+}
+
+function renderStdevChart(report) {
+    const el = document.getElementById('ps-stdev-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (report || []).filter(r => Number.isFinite(Number(r.stdev_bps)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.per_symbol_slippage.empty_stdev_chart">${esc(t('view.per_symbol_slippage.empty_stdev_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.stdev_bps) - Number(a.stdev_bps));
+    const labels = valid.map(r => r.symbol);
+    const ys = valid.map(r => Number(r.stdev_bps));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.per_symbol_slippage.chart.symbol_idx') },
+            { label: t('view.per_symbol_slippage.chart.stdev_bps'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSummary(report, records) {
