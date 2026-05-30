@@ -932,6 +932,8 @@ pub enum Preset {
     ShootingStarAtMidYearHighRange,      // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long upper wick + close near LOD + red close + hot vol (shooting star reversal in the topping zone: intraday rip sold with red finish below the ceiling; mid-cycle topping signal)
     HammerAtDeepPullback,                // year_high_pct >= 10 AND year_high_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long lower wick + close near HOD + green close + hot vol (hammer reversal deep into the pullback: intraday plunge reclaimed in the rebuild zone; counter-trend bounce candidate)
     ShootingStarAtDeepBounce,            // year_low_pct >= 10 AND year_low_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long upper wick + close near LOD + red close + hot vol (shooting star reversal deep into the bounce: intraday rip sold in the rebuild zone; counter-trend rejection candidate)
+    DragonflyDojiAtMidYearLow,           // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal in the recovery zone: intraday plunge fully reclaimed by close in the mid-range; demand-test signal away from the floor)
+    GravestoneDojiAtMidYearHigh,         // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the topping zone: intraday rip fully sold by close in the mid-range; supply-test signal away from the ceiling)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5507,6 +5509,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::DragonflyDojiAtMidYearLow => {
+            hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.change_pct.abs() < 0.3
+                && hit.lod_dist_pct > 4.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GravestoneDojiAtMidYearHigh => {
+            hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.change_pct.abs() < 0.3
+                && hit.hod_dist_pct < -4.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6329,6 +6347,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ShootingStarAtMidYearHighRange => "Mid-range from High (5-20 % below 52w High) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Shooting Star Reversal in the Topping Zone: Intraday Rip Sold with Red Finish below the Ceiling; Mid-cycle Topping Signal)",
         Preset::HammerAtDeepPullback => "Deep Pullback Zone (10-30 % below 52w High) + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Hammer Reversal Deep into the Pullback: Intraday Plunge Reclaimed in the Rebuild Zone; Counter-trend Bounce Candidate)",
         Preset::ShootingStarAtDeepBounce => "Deep Bounce Zone (10-30 % above 52w Low) + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Shooting Star Reversal Deep into the Bounce: Intraday Rip Sold in the Rebuild Zone; Counter-trend Rejection Candidate)",
+        Preset::DragonflyDojiAtMidYearLow => "Mid-range from Low (5-20 % above 52w Low) + Flat Close + LOD Far Below + Close Near HOD + Hot Vol (Dragonfly Doji Reversal in the Recovery Zone: Intraday Plunge Fully Reclaimed by Close in the Mid-range; Demand-test Signal away from the Floor)",
+        Preset::GravestoneDojiAtMidYearHigh => "Mid-range from High (5-20 % below 52w High) + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji Reversal in the Topping Zone: Intraday Rip Fully Sold by Close in the Mid-range; Supply-test Signal away from the Ceiling)",
     }
 }
 
