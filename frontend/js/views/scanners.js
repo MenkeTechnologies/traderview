@@ -174,6 +174,8 @@ const PRESETS = [
     { id: 'gap_and_crash_xl', label: t('view.scanners.preset.gap_and_crash_xl.label'), desc: t('view.scanners.preset.gap_and_crash_xl.desc') },
     { id: 'gap_up_but_day_red', label: t('view.scanners.preset.gap_up_but_day_red.label'), desc: t('view.scanners.preset.gap_up_but_day_red.desc') },
     { id: 'gap_down_but_day_green', label: t('view.scanners.preset.gap_down_but_day_green.label'), desc: t('view.scanners.preset.gap_down_but_day_green.desc') },
+    { id: 'gap_up_flush_on_volume', label: t('view.scanners.preset.gap_up_flush_on_volume.label'), desc: t('view.scanners.preset.gap_up_flush_on_volume.desc') },
+    { id: 'gap_down_reversal_on_volume', label: t('view.scanners.preset.gap_down_reversal_on_volume.label'), desc: t('view.scanners.preset.gap_down_reversal_on_volume.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -292,6 +292,8 @@ pub enum Preset {
     GapAndCrashXl,               // gap_pct < -3 AND change_pct < -5 AND rel_volume >= 2 — extra-large gap-and-crash (strong gap-down + strong red day + heavy vol)
     GapUpButDayRed,              // gap_pct > 1 AND change_pct < -1 — gapped up overnight but day closed red (failed open)
     GapDownButDayGreen,          // gap_pct < -1 AND change_pct > 1 — gapped down overnight but day closed green (reversal)
+    GapUpFlushOnVolume,          // gap_pct > 2 AND change_pct < -2 AND rel_volume >= 2 — failed open with heavy participation (distribution)
+    GapDownReversalOnVolume,     // gap_pct < -2 AND change_pct > 2 AND rel_volume >= 2 — gap-down reversal with heavy participation (accumulation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1177,6 +1179,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::GapDownButDayGreen => {
             hit.gap_pct < -1.0 && hit.change_pct > 1.0
         }
+        Preset::GapUpFlushOnVolume => {
+            hit.gap_pct > 2.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::GapDownReversalOnVolume => {
+            hit.gap_pct < -2.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1359,6 +1371,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAndCrashXl => "Gap And Crash XL",
         Preset::GapUpButDayRed => "Gap-Up But Day Red",
         Preset::GapDownButDayGreen => "Gap-Down But Day Green",
+        Preset::GapUpFlushOnVolume => "Gap-Up Flush On Volume",
+        Preset::GapDownReversalOnVolume => "Gap-Down Reversal On Volume",
     }
 }
 

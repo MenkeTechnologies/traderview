@@ -97,6 +97,11 @@ export async function renderSqueezeAlerts(mount, _appState) {
             <h2 data-i18n="view.squeeze_alerts.h2.detected_squeeze_events_chronological">Detected squeeze events (chronological)</h2>
             <div id="sq-events"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.squeeze_alerts.h2.events_chart">Events: price Δ × volume ×</h2>
+            <div id="sq-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
 
     // Wire test buttons.
@@ -175,6 +180,7 @@ async function runReplay() {
     lastEvents = events;
     renderSummary(ticks, events);
     renderEvents(events);
+    renderEventsChart(events);
 
     // Fire audio in chronological order, paced by real-time intervals
     // BETWEEN events (capped to keep replay snappy). Each event triggers:
@@ -227,6 +233,36 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderEventsChart(events) {
+    const el = document.getElementById('sq-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (events || []).filter(e =>
+        Number.isFinite(Number(e.price_change_pct)) && Number.isFinite(Number(e.volume_multiplier)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.squeeze_alerts.empty_chart">${esc(t('view.squeeze_alerts.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(e => Number(e.price_change_pct) * 100);
+    const norm = rows.map(e => e.severity === 'critical' ? null : Number(e.volume_multiplier));
+    const crit = rows.map(e => e.severity === 'critical' ? Number(e.volume_multiplier) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.squeeze_alerts.chart.price_pct') },
+            { label: t('view.squeeze_alerts.chart.normal'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.squeeze_alerts.chart.critical'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, norm, crit], el);
 }
 
 function renderEvents(events) {
