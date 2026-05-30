@@ -888,6 +888,8 @@ pub enum Preset {
     BigRedLowerRangeHotVol,              // change_pct < -2 AND hod_dist_pct.abs() > 2 * lod_dist_pct AND rel_volume >= 2 — big red + close clearly in lower portion of intraday range + hot vol (bearish weakness close in the bottom half of the intraday range without requiring close pinned to LOD; supply-side dominance with elevated participation)
     BigBreakoutAboveYearHigh,            // year_high_pct < -3 AND change_pct > 1 AND rel_volume >= 1.5 — close more than 3% above the prior 52w high + green + hot vol (deep breakout extension: not just a fresh peak but materially above it; price-discovery expansion with elevated participation)
     BigBreakdownBelowYearLow,            // year_low_pct < -3 AND change_pct < -1 AND rel_volume >= 1.5 — close more than 3% below the prior 52w low + red + hot vol (deep breakdown extension: not just a fresh trough but materially below it; price-discovery contraction with elevated participation)
+    DeepPullbackBigGreenHotVol,          // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % below 52w high + big green + hot vol (recovery thrust from deep-pullback zone with institutional accumulation; pre-retest momentum candidate)
+    DeepPullbackBigRedHotVol,            // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % below 52w high + big red + hot vol (continuation thrust deeper into pullback zone with institutional distribution; trend-break confirmation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5197,6 +5199,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::DeepPullbackBigGreenHotVol => {
+            hit.year_high_pct >= 10.0
+                && hit.year_high_pct < 30.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DeepPullbackBigRedHotVol => {
+            hit.year_high_pct >= 10.0
+                && hit.year_high_pct < 30.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5975,6 +5989,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedLowerRangeHotVol => "Big Red + Close Clearly in Lower Portion of Intraday Range + Hot Vol (Bearish Weakness Close in the Bottom Half of the Intraday Range without Requiring Close Pinned to LOD; Supply-side Dominance with Elevated Participation)",
         Preset::BigBreakoutAboveYearHigh => "Close More than 3% above the Prior 52w High + Green + Hot Vol (Deep Breakout Extension: Not Just a Fresh Peak but Materially above It; Price-discovery Expansion with Elevated Participation)",
         Preset::BigBreakdownBelowYearLow => "Close More than 3% below the Prior 52w Low + Red + Hot Vol (Deep Breakdown Extension: Not Just a Fresh Trough but Materially below It; Price-discovery Contraction with Elevated Participation)",
+        Preset::DeepPullbackBigGreenHotVol => "10-30 % below 52w High + Big Green + Hot Vol (Recovery Thrust from Deep-pullback Zone with Institutional Accumulation; Pre-retest Momentum Candidate)",
+        Preset::DeepPullbackBigRedHotVol => "10-30 % below 52w High + Big Red + Hot Vol (Continuation Thrust Deeper into Pullback Zone with Institutional Distribution; Trend-break Confirmation Candidate)",
     }
 }
 
