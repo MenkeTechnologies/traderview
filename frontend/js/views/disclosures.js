@@ -211,7 +211,7 @@ function renderFeed(items) {
         <thead><tr><th data-i18n="view.disclosures.th.filed">Filed</th><th data-i18n="view.disclosures.th.kind">Kind</th><th data-i18n="view.disclosures.th.filer">Filer</th><th data-i18n="view.disclosures.th.symbol">Symbol</th>
             <th data-i18n="view.disclosures.th.tx">Tx</th><th data-i18n="view.disclosures.th.shares">Shares</th><th data-i18n="view.disclosures.th.amount">Amount</th><th data-i18n="view.disclosures.th.source">Source</th></tr></thead>
         <tbody>${items.map(d => `
-            <tr>
+            <tr${d.symbol ? ` data-context-scope="symbol-row" data-symbol="${esc(d.symbol)}"` : ''}>
                 <td>${fmtDateTime(d.filed_at)}</td>
                 <td><span class="tape-sym">${esc(kindLabel(d.kind))}</span></td>
                 <td>${esc(d.filer_name)}${d.filer_role ? ` <span class="muted small">(${esc(d.filer_role)})</span>` : ''}</td>

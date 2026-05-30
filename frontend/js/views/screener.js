@@ -71,7 +71,7 @@ function renderResult(r) {
             <th data-i18n="view.screener.th.macd_hist">MACD hist</th><th data-i18n="view.screener.th.signals">Signals</th></tr></thead>
             <tbody>${r.hits.map(h => {
                 const cls = h.score >= 3 ? 'pos' : h.score <= -3 ? 'neg' : '';
-                return `<tr>
+                return `<tr data-context-scope="symbol-row" data-symbol="${esc(h.symbol)}">
                     <td><a href="#research/${encodeURIComponent(h.symbol)}">${esc(h.symbol)}</a></td>
                     <td class="${cls}">${h.score >= 0 ? '+' : ''}${h.score}</td>
                     <td class="${cls}">${h.summary}</td>

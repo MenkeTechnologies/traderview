@@ -46,7 +46,7 @@ export async function renderAlerts(mount) {
                 <thead><tr><th data-i18n="view.alerts.th.symbol">Symbol</th><th data-i18n="view.alerts.th.trigger">Trigger</th><th data-i18n="view.alerts.th.threshold">Threshold</th>
                     <th data-i18n="view.alerts.th.sound">Sound</th><th data-i18n="view.alerts.th.voice">Voice</th><th data-i18n="view.alerts.th.last_fired">Last fired</th><th data-i18n="view.alerts.th.count">Count</th><th></th></tr></thead>
                 <tbody>${rules.map(r => `
-                    <tr>
+                    <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                         <td>${esc(r.symbol)}</td>
                         <td>${esc(t(`view.alerts.trigger.${r.trigger}`))}</td>
                         <td>${r.threshold != null ? r.threshold : '—'}</td>
