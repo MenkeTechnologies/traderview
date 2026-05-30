@@ -202,6 +202,8 @@ const PRESETS = [
     { id: 'down_day_higher_low', label: t('view.scanners.preset.down_day_higher_low.label'), desc: t('view.scanners.preset.down_day_higher_low.desc') },
     { id: 'strong_day_balanced_range', label: t('view.scanners.preset.strong_day_balanced_range.label'), desc: t('view.scanners.preset.strong_day_balanced_range.desc') },
     { id: 'weak_day_balanced_range', label: t('view.scanners.preset.weak_day_balanced_range.label'), desc: t('view.scanners.preset.weak_day_balanced_range.desc') },
+    { id: 'channel_ride_up', label: t('view.scanners.preset.channel_ride_up.label'), desc: t('view.scanners.preset.channel_ride_up.desc') },
+    { id: 'channel_ride_down', label: t('view.scanners.preset.channel_ride_down.label'), desc: t('view.scanners.preset.channel_ride_down.desc') },
 ];
 
 export async function renderScanners(mount) {

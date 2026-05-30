@@ -320,6 +320,8 @@ pub enum Preset {
     DownDayHigherLow,            // change_pct < -1 AND lod_dist.abs() > 1 AND hod_dist.abs() < 1 — red day but failed to make LOD (cushioned decline)
     StrongDayBalancedRange,      // change_pct > 3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — strong day with both ends touched (impulsive breakout)
     WeakDayBalancedRange,        // change_pct < -3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — weak day with both ends touched (impulsive breakdown)
+    ChannelRideUp,               // change_pct > 1 AND day_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 3 — close at HOD with LOD far away (one-side day up)
+    ChannelRideDown,             // change_pct < -1 AND day_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 3 — close at LOD with HOD far away (one-side day down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1319,6 +1321,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 1.0
                 && hit.lod_dist_pct.abs() < 1.0
         }
+        Preset::ChannelRideUp => {
+            hit.change_pct > 1.0
+                && hit.day_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() > 3.0
+        }
+        Preset::ChannelRideDown => {
+            hit.change_pct < -1.0
+                && hit.day_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() > 3.0
+        }
     }
 }
 
@@ -1529,6 +1543,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownDayHigherLow => "Down Day But Cushioned LOD",
         Preset::StrongDayBalancedRange => "Strong Day, Balanced Range",
         Preset::WeakDayBalancedRange => "Weak Day, Balanced Range",
+        Preset::ChannelRideUp => "Channel Ride Up",
+        Preset::ChannelRideDown => "Channel Ride Down",
     }
 }
 

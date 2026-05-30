@@ -70,6 +70,11 @@ export async function renderTripleScreen(mount, _appState) {
             <div id="ts-cascade"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.triple_screen.h2.osc_chart">Oscillator vs OS/OB bands</h2>
+            <div id="ts-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="ts-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -112,6 +117,7 @@ async function compute(tok) {
     // then refresh once the backend confirms.
     renderSummary({ verdict: localEvaluate(state.params) }, true);
     renderCascade();
+    renderOscChart();
     let resp;
     try {
         resp = await api.discTripleScreen(buildBody(state.params));
@@ -148,6 +154,41 @@ function card(label, value, cls = '') {
         <div class="label">${esc(label)}</div>
         <div class="value ${cls}">${esc(value)}</div>
     </div>`;
+}
+
+function renderOscChart() {
+    const el = document.getElementById('ts-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const osc = Number(state.params.daily_oscillator_value);
+    const os  = Number(state.params.oversold_threshold);
+    const ob  = Number(state.params.overbought_threshold);
+    if (![osc, os, ob].every(Number.isFinite)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.triple_screen.empty_chart">${esc(t('view.triple_screen.empty_chart'))}</div>`;
+        return;
+    }
+    const xs   = [1, 2, 3, 4, 5];
+    const oscY = [null, null, osc, null, null];
+    const osY  = xs.map(() => os);
+    const obY  = xs.map(() => ob);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.triple_screen.chart.idx') },
+            { label: t('view.triple_screen.chart.osc'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 18, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.triple_screen.chart.os'),
+              stroke: '#7af0a8', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.triple_screen.chart.ob'),
+              stroke: '#ff3860', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, oscY, osY, obY], el);
 }
 
 function renderCascade() {
