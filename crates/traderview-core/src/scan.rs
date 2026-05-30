@@ -314,6 +314,8 @@ pub enum Preset {
     CloseNearLodNoBreakdown,     // lod_dist.abs() < 0.5 AND change_pct > -1 — closed within 0.5% of LOD but change_pct > -1 (failed flush)
     CloseNearHodStrongDay,       // hod_dist.abs() < 0.5 AND change_pct > 3 — closed at HOD AND day up >3% (full-send breakout)
     CloseNearLodWeakDay,         // lod_dist.abs() < 0.5 AND change_pct < -3 — closed at LOD AND day down >3% (full-send breakdown)
+    InsideRangeNoVolume,         // hod_dist + lod_dist < 2 AND rel_volume < 0.5 — tight inside range on dry vol (NR7-style squeeze)
+    OutsideRangeOnVolume,        // hod_dist + lod_dist > 6 AND rel_volume >= 2 — wide outside range on heavy vol (volatility expansion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1285,6 +1287,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::CloseNearLodWeakDay => {
             hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -3.0
         }
+        Preset::InsideRangeNoVolume => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
+                && hit.rel_volume < 0.5
+        }
+        Preset::OutsideRangeOnVolume => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1489,6 +1499,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseNearLodNoBreakdown => "Close Near LOD, No Breakdown",
         Preset::CloseNearHodStrongDay => "Close @ HOD, Strong Day",
         Preset::CloseNearLodWeakDay => "Close @ LOD, Weak Day",
+        Preset::InsideRangeNoVolume => "Inside Range, No Volume",
+        Preset::OutsideRangeOnVolume => "Outside Range, On Volume",
     }
 }
 

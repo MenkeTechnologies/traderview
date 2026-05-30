@@ -3,6 +3,46 @@ import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
+function renderInventoryChart(templates, filters) {
+    const el = document.getElementById('set-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const tradeTpl   = (templates || []).filter(x => x.scope === 'trade').length;
+    const journalTpl = (templates || []).filter(x => x.scope === 'journal').length;
+    const defaultTpl = (templates || []).filter(x => x.is_default).length;
+    const filterCt   = (filters || []).length;
+    const defaultFi  = (filters || []).filter(x => x.is_default).length;
+    const labels = [
+        t('view.settings.chart.trade_tpl'),
+        t('view.settings.chart.journal_tpl'),
+        t('view.settings.chart.default_tpl'),
+        t('view.settings.chart.filters'),
+        t('view.settings.chart.default_filters'),
+    ];
+    const ys = [tradeTpl, journalTpl, defaultTpl, filterCt, defaultFi];
+    if (ys.reduce((a, b) => a + b, 0) < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.settings.empty_chart">${esc(t('view.settings.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.settings.chart.kind') },
+            { label: t('view.settings.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
 export async function renderSettings(mount, state) {
     const tok = currentViewToken();
     const [s, filters, templates] = await Promise.all([
@@ -111,7 +151,14 @@ export async function renderSettings(mount, state) {
             <p data-i18n="view.settings.hint.share_this_with_someone_if_they_want_to_mentor_you">Share this with someone if they want to mentor you.</p>
             <code>${esc(state.me?.id || '')}</code>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.settings.h2.inventory_chart">Inventory: templates &amp; filters</h2>
+            <div id="set-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+
+    renderInventoryChart(templates, filters);
 
     // Repaint the color-scheme grid into the Appearance panel.
     if (window.tvHud && typeof window.tvHud.remountSchemeGrid === 'function') {
