@@ -584,6 +584,11 @@ function bindTabs() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         }
     });
+    // View-scoped: `r` in economy scope → submit calendar form (Load).
+    window.addEventListener('tv:economy-load', () => {
+        const form = document.getElementById('ec-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
