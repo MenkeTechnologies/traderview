@@ -11,6 +11,7 @@ import {
 } from '../_choppiness_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     bars: makeDemoBars('trend-then-chop'),
     period: 14,
@@ -23,18 +24,18 @@ export async function renderChoppiness(mount, _appState) {
 
         <div class="chart-panel">
             <h2><span data-i18n="view.choppiness.h2.paste_bars">Paste OHLC bars (per line:</span> <code>high low close</code>)</h2>
-            <textarea id="cp-blob" rows="6" placeholder="100.5 99.5 100.0&#10;100.6 99.4 100.1&#10;...">${esc(barsToBlob(state.bars))}</textarea>
+            <textarea id="cp-blob" rows="6" placeholder="100.5 99.5 100.0&#10;100.6 99.4 100.1&#10;..." data-tip="view.choppiness.tip.blob">${esc(barsToBlob(state.bars))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.choppiness.label.period">Lookback period</span>
-                    <input id="cp-per" type="number" step="1" min="2" max="200" value="${state.period}"></label>
-                <button data-i18n="view.choppiness.btn.compute" id="cp-run" class="primary" type="button">Compute</button>
+                    <input id="cp-per" type="number" step="1" min="2" max="200" value="${state.period}" data-tip="view.choppiness.tip.period"></label>
+                <button data-i18n="view.choppiness.btn.compute" id="cp-run" class="primary" type="button" data-tip="view.choppiness.tip.run" data-shortcut="choppiness_run">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.choppiness.btn.demo_trending_up" id="cp-demo-trend-up"   class="secondary" type="button">Demo: trending up</button>
-                <button data-i18n="view.choppiness.btn.demo_trending_down" id="cp-demo-trend-dn"   class="secondary" type="button">Demo: trending down</button>
-                <button data-i18n="view.choppiness.btn.demo_choppy" id="cp-demo-choppy"     class="secondary" type="button">Demo: choppy</button>
-                <button data-i18n="view.choppiness.btn.demo_mixed_drift" id="cp-demo-mixed"      class="secondary" type="button">Demo: mixed drift</button>
-                <button data-i18n="view.choppiness.btn.demo_trend_chop_switch" id="cp-demo-switch"     class="secondary" type="button">Demo: trend → chop switch</button>
+                <button data-i18n="view.choppiness.btn.demo_trending_up" id="cp-demo-trend-up"   class="secondary" type="button" data-tip="view.choppiness.tip.demo_trend_up">Demo: trending up</button>
+                <button data-i18n="view.choppiness.btn.demo_trending_down" id="cp-demo-trend-dn"   class="secondary" type="button" data-tip="view.choppiness.tip.demo_trend_dn">Demo: trending down</button>
+                <button data-i18n="view.choppiness.btn.demo_choppy" id="cp-demo-choppy"     class="secondary" type="button" data-tip="view.choppiness.tip.demo_choppy">Demo: choppy</button>
+                <button data-i18n="view.choppiness.btn.demo_mixed_drift" id="cp-demo-mixed"      class="secondary" type="button" data-tip="view.choppiness.tip.demo_mixed">Demo: mixed drift</button>
+                <button data-i18n="view.choppiness.btn.demo_trend_chop_switch" id="cp-demo-switch"     class="secondary" type="button" data-tip="view.choppiness.tip.demo_switch">Demo: trend → chop switch</button>
             </div>
             <p data-i18n="view.choppiness.hint.formula_ci_100_log10_tr_max_h_min_l_log10_period_d" class="muted">Formula: CI = 100 × log10(ΣTR / (max H − min L)) / log10(period). Default period 14. Reference bands: 61.8 (choppy line), 38.2 (trending line).</p>
         </div>
@@ -70,6 +71,7 @@ function readInputs() {
     const parsed = parseBarBlob(document.getElementById('cp-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.choppiness.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -80,7 +82,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.bars, state.period);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.choppiness.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(state.bars, local);
@@ -88,11 +90,17 @@ async function compute(tok) {
     try {
         resp = await api.anlyChoppiness(buildBody(state.bars, state.period));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.choppiness.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(state.bars, resp);
+    const regime = String(resp.regime || '');
+    const latest = resp.latest == null ? '—' : Number(resp.latest).toFixed(1);
+    const level = regime === 'trending' ? 'success' : regime === 'choppy' ? 'warning' : 'info';
+    showToast(t('view.choppiness.toast.computed', { regime, ci: latest }), { level });
 }
 
 function renderSummary(report, pending) {
