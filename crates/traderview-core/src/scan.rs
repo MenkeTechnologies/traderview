@@ -1138,6 +1138,8 @@ pub enum Preset {
     QuintupledVolCloseAtLodHotVol,             // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + close pinned to LOD + red close + hot vol (tier-1 institutional selloff with no end-of-day bounce: vol is 5x average and close pins to the day's low with negative change; rarest possible bear-conviction close at the highest participation tier)
     QuintupledVolGapUpHotVol,                  // rel_volume >= 5 AND gap_pct > 2 — quintupled vol (>=5) + gap up (>2%) (tier-1 catalyst gap-up: vol is 5x average and overnight repricing pushes the open more than 2% above prior close; rare news/earnings/sector-rotation event with full session participation confirming the bull-direction catalyst)
     QuintupledVolGapDownHotVol,                // rel_volume >= 5 AND gap_pct < -2 — quintupled vol (>=5) + gap down (<-2%) (tier-1 catalyst gap-down: vol is 5x average and overnight repricing pushes the open more than 2% below prior close; rare news/earnings/sector-rotation event with full session participation confirming the bear-direction catalyst)
+    QuintupledVolGapUpCloseAtHodHotVol,        // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + gap up (>2%) + close pinned to HOD + green close (highest-conviction catalyst gap-up that holds: vol is 5x average, overnight gap up holds without fade and price closes at the day's high; rarest possible validated bull-catalyst event across all sessions)
+    QuintupledVolGapDownCloseAtLodHotVol,      // rel_volume >= 5 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + gap down (<-2%) + close pinned to LOD + red close (highest-conviction catalyst gap-down that holds: vol is 5x average, overnight gap down holds without bounce and price closes at the day's low; rarest possible validated bear-catalyst event across all sessions)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7000,6 +7002,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::QuintupledVolGapDownHotVol => {
             hit.rel_volume >= 5.0 && hit.gap_pct < -2.0
         }
+        Preset::QuintupledVolGapUpCloseAtHodHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+        }
+        Preset::QuintupledVolGapDownCloseAtLodHotVol => {
+            hit.rel_volume >= 5.0
+                && hit.gap_pct < -2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -8028,6 +8042,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::QuintupledVolCloseAtLodHotVol => "Quintupled Vol (>=5) + Close Pinned to LOD + Red Close + Hot Vol (Tier-1 Institutional Selloff with No End-of-day Bounce: Vol Is 5x Average and Close Pins to the Day's Low with Negative Change; Rarest Possible Bear-conviction Close at the Highest Participation Tier)",
         Preset::QuintupledVolGapUpHotVol => "Quintupled Vol (>=5) + Gap Up (>2 %) (Tier-1 Catalyst Gap-up: Vol Is 5x Average and Overnight Repricing Pushes the Open More than 2 % above Prior Close; Rare News/earnings/sector-rotation Event with Full Session Participation Confirming the Bull-direction Catalyst)",
         Preset::QuintupledVolGapDownHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) (Tier-1 Catalyst Gap-down: Vol Is 5x Average and Overnight Repricing Pushes the Open More than 2 % below Prior Close; Rare News/earnings/sector-rotation Event with Full Session Participation Confirming the Bear-direction Catalyst)",
+        Preset::QuintupledVolGapUpCloseAtHodHotVol => "Quintupled Vol (>=5) + Gap Up (>2 %) + Close Pinned to HOD + Green Close (Highest-conviction Catalyst Gap-up that Holds: Vol Is 5x Average, Overnight Gap up Holds without Fade and Price Closes at the Day's High; Rarest Possible Validated Bull-catalyst Event across All Sessions)",
+        Preset::QuintupledVolGapDownCloseAtLodHotVol => "Quintupled Vol (>=5) + Gap Down (<-2 %) + Close Pinned to LOD + Red Close (Highest-conviction Catalyst Gap-down that Holds: Vol Is 5x Average, Overnight Gap down Holds without Bounce and Price Closes at the Day's Low; Rarest Possible Validated Bear-catalyst Event across All Sessions)",
     }
 }
 
