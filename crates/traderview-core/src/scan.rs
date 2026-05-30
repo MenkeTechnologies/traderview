@@ -730,6 +730,8 @@ pub enum Preset {
     Year52LowGapUpWeakCloseHotVol,       // year_low_pct < 3 AND gap_pct > 0.5 AND change_pct < -1 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + gap up + red close + close near LOD + decent vol (rejection day at the lows; relief gap faded, sold all day to close weak; bearish continuation candidate)
     FlatOpenTrendUpModerate,             // gap_pct.abs() < 0.3 AND change_pct in [1, 3] AND day_pct > 1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate green (1-3%) + green intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend up; mid-magnitude organic move; conviction without spike)
     FlatOpenTrendDownModerate,           // gap_pct.abs() < 0.3 AND change_pct in [-3, -1] AND day_pct < -1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate red + red intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend down; mid-magnitude organic move; conviction without spike)
+    MidRangeRecoveryRallyHotVol,         // year_high_pct > 10 AND year_low_pct > 10 AND change_pct > 3 AND rel_volume >= 2 — recovered well off 52w lows + still below highs + big green + hot vol (sustained recovery rally in mid-52w; not at either extreme; mid-range bullish move with conviction)
+    MidRangeSelloffHotVol,               // year_high_pct > 10 AND year_low_pct > 10 AND change_pct < -3 AND rel_volume >= 2 — sold off well from 52w highs + still above lows + big red + hot vol (sustained selloff in mid-52w; not at either extreme; mid-range bearish move with conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4099,6 +4101,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
                 && hit.rel_volume <= 2.0
         }
+        Preset::MidRangeRecoveryRallyHotVol => {
+            hit.year_high_pct > 10.0
+                && hit.year_low_pct > 10.0
+                && hit.change_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MidRangeSelloffHotVol => {
+            hit.year_high_pct > 10.0
+                && hit.year_low_pct > 10.0
+                && hit.change_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4719,6 +4733,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowGapUpWeakCloseHotVol => "Near 52w Low + Gap Up + Red Close + Close Near LOD + Decent Vol (Rejection Day at the Lows; Relief Gap Faded, Closed Weak)",
         Preset::FlatOpenTrendUpModerate => "Flat Open + Moderate Green + Green Intraday + Same-sign + Normal-elevated Vol (No Overnight Bias + Clean Intraday Trend Up; Conviction Without Spike)",
         Preset::FlatOpenTrendDownModerate => "Flat Open + Moderate Red + Red Intraday + Same-sign + Normal-elevated Vol (No Overnight Bias + Clean Intraday Trend Down; Conviction Without Spike)",
+        Preset::MidRangeRecoveryRallyHotVol => "Mid 52w + Big Green + Hot Vol (Sustained Recovery Rally Off Lows; Not At Either Extreme; Mid-range Bullish)",
+        Preset::MidRangeSelloffHotVol => "Mid 52w + Big Red + Hot Vol (Sustained Selloff Off Highs; Not At Either Extreme; Mid-range Bearish)",
     }
 }
 
