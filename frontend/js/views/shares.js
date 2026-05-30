@@ -34,7 +34,7 @@ function shareTable(rows, mine) {
     return `<table class="trades">
         <thead><tr><th data-i18n="view.shares.th.slug">Slug</th><th data-i18n="view.shares.th.views">Views</th><th data-i18n="view.shares.th.created">Created</th>${mine ? '<th></th>' : ''}</tr></thead>
         <tbody>${rows.map(s => `
-            <tr><td><a href="#shared/${s.slug}">${s.slug}</a></td>
+            <tr data-context-scope="share-row" data-id="${esc(s.id)}" data-slug="${esc(s.slug)}" data-mine="${mine ? 'true' : 'false'}"><td><a href="#shared/${s.slug}">${s.slug}</a></td>
             <td>${s.view_count}</td>
             <td>${fmtDateTime(s.created_at)}</td>
             ${mine ? `<td><button data-i18n="view.shares.btn.delete" class="link" data-del-share="${s.id}">delete</button></td>` : ''}

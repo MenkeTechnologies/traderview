@@ -275,6 +275,45 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Share-row actions — read data-id / data-slug / data-mine.
+    window.addEventListener('tv:share-row-copy-url', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        if (!slug) return;
+        const url = `${window.location.origin}${window.location.pathname}#shared/${slug}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(url).then(
+                () => showToast(t('toast.copied', { what: t('toast.what.url') }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:share-row-open', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const slug = tgt && tgt.dataset && tgt.dataset.slug;
+        if (!slug) return;
+        window.location.hash = `shared/${slug}`;
+    });
+    window.addEventListener('tv:share-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const isMine = tgt && tgt.dataset && tgt.dataset.mine === 'true';
+        if (!id) return;
+        if (!isMine) {
+            showToast(t('toast.share_not_mine'), { level: 'warning' });
+            return;
+        }
+        void (async () => {
+            if (!await tConfirm('ctxmenu.share_row_delete_confirm', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteShare(id);
+                showToast(t('toast.share_deleted'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Plan-row actions — read data-id / data-symbol.
     window.addEventListener('tv:plan-row-copy-symbol', (e) => {
         const tgt = e.detail && e.detail.target;

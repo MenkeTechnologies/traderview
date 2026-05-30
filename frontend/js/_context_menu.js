@@ -157,6 +157,19 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Share-row context items. Right-click on a <tr data-context-scope=
+// "share-row" data-id="X" data-slug="Y" data-mine="bool"> shows:
+// Copy share URL / Open shared trade / Delete. Delete toasts a
+// warning when data-mine="false" (public shares aren't yours).
+export const SHARE_ROW_ITEMS = [
+    { id: 'share_row_copy_url', labelKey: 'ctxmenu.share_row_copy_url',
+      actionKey: 'tv:share-row-copy-url', section: 'share' },
+    { id: 'share_row_open',     labelKey: 'ctxmenu.share_row_open',
+      actionKey: 'tv:share-row-open',     section: 'share' },
+    { id: 'share_row_delete',   labelKey: 'ctxmenu.share_row_delete',
+      actionKey: 'tv:share-row-delete',   section: 'share' },
+];
+
 // Plan-row context items. Right-click on a <tr data-context-scope=
 // "plan-row" data-id="X" data-symbol="Y"> shows: Copy symbol /
 // Abandon plan. Abandon uses tConfirm + api.abandonPlan.
@@ -309,6 +322,7 @@ export const ALL_SCOPED_ITEMS = [
     ['custom-indicator-row',   CUSTOM_INDICATOR_ROW_ITEMS],
     ['account-row',            ACCOUNT_ROW_ITEMS],
     ['plan-row',               PLAN_ROW_ITEMS],
+    ['share-row',              SHARE_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],
