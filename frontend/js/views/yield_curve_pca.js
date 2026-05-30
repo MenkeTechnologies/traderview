@@ -8,6 +8,7 @@ import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import {
     parseCurves, parseTenorLabels, validatePcaInputs,
     factorName, normalizeTenors, buildBody, factorColor,
@@ -65,18 +66,20 @@ export async function renderYieldCurvePca(mount, _appState) {
                 <div>
                     <h3 data-i18n="view.yield_curve_pca.h3.yield_curves_t_n">Yield curves (T × N)</h3>
                     <textarea id="yp-curves" rows="14"
-                        style="width:100%;font-family:monospace;font-size:13px">${esc(state.curvesText)}</textarea>
+                        style="width:100%;font-family:monospace;font-size:13px"
+                        data-tip="view.yield_curve_pca.tip.curves">${esc(state.curvesText)}</textarea>
                 </div>
                 <div>
                     <h3 data-i18n="view.yield_curve_pca.h3.tenor_labels">Tenor labels</h3>
                     <textarea id="yp-tenors" rows="14"
-                        style="width:100%;font-family:monospace;font-size:13px">${esc(state.tenorsText)}</textarea>
+                        style="width:100%;font-family:monospace;font-size:13px"
+                        data-tip="view.yield_curve_pca.tip.tenors">${esc(state.tenorsText)}</textarea>
                 </div>
             </div>
             <div class="inline-form" style="margin-top:10px">
                 <label><span data-i18n="view.yield_curve_pca.label.topk">top_k factors</span>
-                    <input id="yp-topk" type="number" step="1" min="1" max="20" value="${state.topK}"></label>
-                <button data-i18n="view.yield_curve_pca.btn.decompose" id="yp-run" class="primary" type="button">Decompose</button>
+                    <input id="yp-topk" type="number" step="1" min="1" max="20" value="${state.topK}" data-tip="view.yield_curve_pca.tip.topk"></label>
+                <button data-i18n="view.yield_curve_pca.btn.decompose" id="yp-run" class="primary" type="button" data-tip="view.yield_curve_pca.tip.run" data-shortcut="yield_curve_pca_run">Decompose</button>
             </div>
         </div>
 
@@ -116,10 +119,13 @@ export async function renderYieldCurvePca(mount, _appState) {
 async function run(mount, tok) {
     hideErrs();
     const parsed = parseCurves(state.curvesText);
-    if (parsed.errors.length) renderParseErrors(parsed.errors);
+    if (parsed.errors.length) {
+        renderParseErrors(parsed.errors);
+        showToast(t('view.yield_curve_pca.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
+    }
 
     const err = validatePcaInputs(parsed.value, state.topK);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.yield_curve_pca.toast.invalid'), { level: 'warning' }); return; }
 
     const tenors = normalizeTenors(parseTenorLabels(state.tenorsText), parsed.value[0].length);
     let res;
@@ -128,6 +134,7 @@ async function run(mount, tok) {
         if (!res) throw new Error(t('view.yield_curve_pca.error.null_result'));
     } catch (e) {
         showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.yield_curve_pca.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -135,6 +142,8 @@ async function run(mount, tok) {
     renderSummary(res);
     renderLoadingsChart(tenors, res);
     renderVarianceChart(res);
+    const cum = res.cumulative_variance?.[res.cumulative_variance.length - 1] ?? 0;
+    showToast(t('view.yield_curve_pca.toast.decomposed', { k: res.loadings.length, cum: (cum * 100).toFixed(1) }), { level: 'success' });
 }
 
 function renderSummary(res) {
