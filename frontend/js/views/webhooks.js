@@ -34,7 +34,7 @@ export async function renderWebhooks(mount) {
                 <thead><tr><th data-i18n="view.webhooks.th.name">Name</th><th data-i18n="view.webhooks.th.kind">Kind</th><th data-i18n="view.webhooks.th.url">URL</th><th data-i18n="view.webhooks.th.on">On</th>
                     <th data-i18n="view.webhooks.th.fires">Fires</th><th data-i18n="view.webhooks.th.last_status">Last status</th><th data-i18n="view.webhooks.th.last_fired">Last fired</th><th></th></tr></thead>
                 <tbody>${rows.map(w => `
-                    <tr>
+                    <tr data-context-scope="webhook-row" data-id="${esc(w.id)}" data-enabled="${w.enabled ? 'true' : 'false'}">
                         <td>${esc(w.name)}</td>
                         <td><span class="tape-sym">${esc(w.kind)}</span></td>
                         <td class="muted small">${esc(redact(w.url))}</td>

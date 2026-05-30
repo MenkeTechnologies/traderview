@@ -157,6 +157,18 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Webhook-row context items. Right-click on a <tr data-context-
+// scope="webhook-row" data-id="X" data-enabled="bool"> shows:
+// Test / Toggle enabled / Delete.
+export const WEBHOOK_ROW_ITEMS = [
+    { id: 'wh_row_test',   labelKey: 'ctxmenu.wh_row_test',
+      actionKey: 'tv:wh-row-test',   section: 'webhook' },
+    { id: 'wh_row_toggle', labelKey: 'ctxmenu.wh_row_toggle',
+      actionKey: 'tv:wh-row-toggle', section: 'webhook' },
+    { id: 'wh_row_delete', labelKey: 'ctxmenu.wh_row_delete',
+      actionKey: 'tv:wh-row-delete', section: 'webhook' },
+];
+
 // Strategy-alert-row context items. Right-click on a <tr data-
 // context-scope="strategy-alert-row" data-id="X"> shows: Toggle
 // enabled / Delete. Handlers call api.update/deleteStrategyAlert.

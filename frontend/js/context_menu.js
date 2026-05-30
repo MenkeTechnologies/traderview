@@ -275,6 +275,53 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Webhook-row actions — read data-id (and data-enabled for toggle) from tr.
+    const idFromTr = (detail) => {
+        const t = detail && detail.target;
+        return (t && t.dataset && t.dataset.id) || null;
+    };
+    window.addEventListener('tv:wh-row-test', (e) => {
+        const id = idFromTr(e.detail);
+        if (!id) return;
+        void (async () => {
+            try {
+                await api.testWebhook(id);
+                showToast(t('toast.wh_test_fired'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
+    window.addEventListener('tv:wh-row-toggle', (e) => {
+        const id = idFromTr(e.detail);
+        const tgt = e.detail && e.detail.target;
+        const wasEnabled = tgt && tgt.dataset && tgt.dataset.enabled === 'true';
+        if (!id) return;
+        void (async () => {
+            try {
+                await api.toggleWebhook(id, !wasEnabled);
+                showToast(t(wasEnabled ? 'toast.wh_disabled' : 'toast.wh_enabled'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
+    window.addEventListener('tv:wh-row-delete', (e) => {
+        const id = idFromTr(e.detail);
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.wh_row_delete_confirm', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteWebhook(id);
+                showToast(t('toast.wh_deleted'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Strategy-alert-row actions — read data-id from the tr, call API.
     window.addEventListener('tv:sa-row-toggle', (e) => {
         const target = e.detail && e.detail.target;
