@@ -230,6 +230,8 @@ const PRESETS = [
     { id: 'reversal_down_from_open', label: t('view.scanners.preset.reversal_down_from_open.label'), desc: t('view.scanners.preset.reversal_down_from_open.desc') },
     { id: 'trend_day_up', label: t('view.scanners.preset.trend_day_up.label'), desc: t('view.scanners.preset.trend_day_up.desc') },
     { id: 'trend_day_down', label: t('view.scanners.preset.trend_day_down.label'), desc: t('view.scanners.preset.trend_day_down.desc') },
+    { id: 'double_bottom_candidate', label: t('view.scanners.preset.double_bottom_candidate.label'), desc: t('view.scanners.preset.double_bottom_candidate.desc') },
+    { id: 'double_top_candidate', label: t('view.scanners.preset.double_top_candidate.label'), desc: t('view.scanners.preset.double_top_candidate.desc') },
 ];
 
 export async function renderScanners(mount) {
@@ -278,6 +280,7 @@ export async function renderScanners(mount) {
                 if (!viewIsCurrent(tok)) return;
                 const elNow = mount.querySelector('#scan-result');
                 if (elNow) elNow.innerHTML = renderHits(r);
+                renderMoveVsVolChart(r.hits || []);
             } catch (e) {
                 if (!viewIsCurrent(tok)) return;
                 const elNow = mount.querySelector('#scan-result');
@@ -307,5 +310,39 @@ function renderHits(r) {
                     <td>${fmt(h.year_high_pct, 1)}% / ${fmt(h.year_low_pct, 1)}%</td>
                 </tr>`;
             }).join('')}</tbody></table>` : '<p data-i18n="view.scanners.hint.no_matches" class="muted">No matches.</p>'}
+    </div>
+    <div class="chart-panel">
+        <h2 data-i18n="view.scanners.h2.move_vs_vol_chart">Change % vs relative volume</h2>
+        <div id="sc-chart" style="width:100%;height:240px"></div>
     </div>`;
+}
+
+function renderMoveVsVolChart(hits) {
+    const el = document.getElementById('sc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (hits || []).filter(h =>
+        Number.isFinite(Number(h.change_pct)) && Number.isFinite(Number(h.rel_volume)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.scanners.empty_chart">${esc(t('view.scanners.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(h => Number(h.change_pct));
+    const upY   = rows.map(h => Number(h.change_pct) >= 0 ? Number(h.rel_volume) : null);
+    const downY = rows.map(h => Number(h.change_pct) <  0 ? Number(h.rel_volume) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.scanners.chart.change_pct') },
+            { label: t('view.scanners.chart.rvol_up'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.scanners.chart.rvol_down'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 10, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, upY, downY], el);
 }

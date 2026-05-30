@@ -348,6 +348,8 @@ pub enum Preset {
     ReversalDownFromOpen,        // gap_pct > 1 AND change_pct < 0 AND rel_volume >= 1.5 AND lod_dist.abs() < 0.5 — gap-up reversed and closed at LOD on heavy vol (powerful failure)
     TrendDayUp,                  // change_pct > 2 AND day_pct > 1 AND rel_volume >= 1.2 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 — trend-day-up: opened low, closed near HOD on heavy vol
     TrendDayDown,                // change_pct < -2 AND day_pct < -1 AND rel_volume >= 1.2 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 — trend-day-down: opened high, closed near LOD on heavy vol
+    DoubleBottomCandidate,       // year_low_pct < 5 AND hod_dist.abs() > 1 AND lod_dist.abs() < 0.5 AND change_pct > 0 — touched 52w-low zone but closed higher (double-bottom candidate)
+    DoubleTopCandidate,          // year_high_pct > -5 AND lod_dist.abs() > 1 AND hod_dist.abs() < 0.5 AND change_pct < 0 — touched 52w-high zone but closed lower (double-top candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1509,6 +1511,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.hod_dist_pct.abs() > 2.0
         }
+        Preset::DoubleBottomCandidate => {
+            hit.year_low_pct < 5.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+        }
+        Preset::DoubleTopCandidate => {
+            hit.year_high_pct > -5.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+        }
     }
 }
 
@@ -1747,6 +1761,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ReversalDownFromOpen => "Reversal Down From Open",
         Preset::TrendDayUp => "Trend Day Up",
         Preset::TrendDayDown => "Trend Day Down",
+        Preset::DoubleBottomCandidate => "Double-Bottom Candidate",
+        Preset::DoubleTopCandidate => "Double-Top Candidate",
     }
 }
 
