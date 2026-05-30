@@ -36,39 +36,39 @@ export async function renderResearch(mount, _state, sym) {
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.signals_score">Signals + Score</h2>
-                <div id="rs-signals">loading…</div>
+                <div id="rs-signals" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.indicators">Indicators</h2>
-                <div id="rs-indicators">loading…</div>
+                <div id="rs-indicators" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.pivots_classic">Pivots (classic)</h2>
-                <div id="rs-pivots">loading…</div>
+                <div id="rs-pivots" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.latest_news">Latest News</h2>
-                <div id="rs-news">loading…</div>
+                <div id="rs-news" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.analyst_recommendations">Analyst Recommendations</h2>
-                <div id="rs-recs">loading…</div>
+                <div id="rs-recs" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.fundamentals">Fundamentals</h2>
-                <div id="rs-fund">loading…</div>
+                <div id="rs-fund" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.earnings">Earnings</h2>
-                <div id="rs-earn">loading…</div>
+                <div id="rs-earn" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.insider_activity">Insider Activity</h2>
-                <div id="rs-ins">loading…</div>
+                <div id="rs-ins" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.holders">Holders</h2>
-                <div id="rs-hold">loading…</div>
+                <div id="rs-hold" data-i18n="common.loading">loading…</div>
             </div>
         </div>
     `;

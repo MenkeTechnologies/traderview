@@ -20,14 +20,14 @@ export async function renderCrypto(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.crypto.h1.crypto" class="view-title">// CRYPTO</h1>
-        <div id="c-glob" class="cards">loading…</div>
+        <div id="c-glob" class="cards" data-i18n="common.loading">loading…</div>
         <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.top_100_by_market_cap">Top-100 by market cap</h2>
-            <div id="c-table">loading…</div>
+            <div id="c-table" data-i18n="common.loading">loading…</div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.bitcoin_on_chain">Bitcoin on-chain</h2>
-            <div id="c-onchain" class="cards">loading…</div>
+            <div id="c-onchain" class="cards" data-i18n="common.loading">loading…</div>
         </div>
     `;
     try {

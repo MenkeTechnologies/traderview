@@ -14,15 +14,15 @@ export async function renderTape(mount) {
         <div class="panel-grid">
             <div class="chart-panel" style="grid-column: 1 / -1">
                 <h2 data-i18n="view.tape.h2.news_feed">News feed</h2>
-                <div id="tape-news">loading…</div>
+                <div id="tape-news" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.tape.h2.sectors_right_now">Sectors right now</h2>
-                <div id="tape-sectors">loading…</div>
+                <div id="tape-sectors" data-i18n="common.loading">loading…</div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.tape.h2.watchlist_quotes">Watchlist quotes</h2>
-                <div id="tape-quotes">loading…</div>
+                <div id="tape-quotes" data-i18n="common.loading">loading…</div>
             </div>
         </div>
     `;
