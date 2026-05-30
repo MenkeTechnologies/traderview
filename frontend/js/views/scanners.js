@@ -574,6 +574,8 @@ const PRESETS = [
     { id: 'organic_micro_drop_normal_vol', label: t('view.scanners.preset.organic_micro_drop_normal_vol.label'), desc: t('view.scanners.preset.organic_micro_drop_normal_vol.desc') },
     { id: 'intraday_range_wider_than_gap_hot_vol', label: t('view.scanners.preset.intraday_range_wider_than_gap_hot_vol.label'), desc: t('view.scanners.preset.intraday_range_wider_than_gap_hot_vol.desc') },
     { id: 'gap_wider_than_intraday_range_hot_vol', label: t('view.scanners.preset.gap_wider_than_intraday_range_hot_vol.label'), desc: t('view.scanners.preset.gap_wider_than_intraday_range_hot_vol.desc') },
+    { id: 'big_green_low_vol_weak_close', label: t('view.scanners.preset.big_green_low_vol_weak_close.label'), desc: t('view.scanners.preset.big_green_low_vol_weak_close.desc') },
+    { id: 'big_red_low_vol_weak_close', label: t('view.scanners.preset.big_red_low_vol_weak_close.label'), desc: t('view.scanners.preset.big_red_low_vol_weak_close.desc') },
 ];
 
 export async function renderScanners(mount) {

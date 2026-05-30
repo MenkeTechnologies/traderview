@@ -74,6 +74,12 @@ export async function renderKelly(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.kelly.h2.cum_pnl_chart">Cumulative P&L over trades</h2>
+            <div id="kl-cum-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.kelly.hint.cum_pnl" class="muted small">Running sum of trade PnLs. Overlay against the rolling-Kelly chart above to see whether your equity grew during the trades that Kelly said to bet aggressively.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.kelly.h2.per_trade_window_stats">Per-trade window stats</h2>
             <div id="kl-dyn-table"></div>
         </div>
@@ -169,6 +175,7 @@ async function computeDynamic(tok) {
     const local = localComputeDynamic(state.pnls, state.window);
     renderDynamic(local, true);
     renderDynamicChart(local);
+    renderCumPnlChart();
     renderDynamicTable(local);
     let resp;
     try {
@@ -180,6 +187,7 @@ async function computeDynamic(tok) {
     if (!viewIsCurrent(tok)) return;
     renderDynamic(resp, false);
     renderDynamicChart(resp);
+    renderCumPnlChart();
     renderDynamicTable(resp);
 }
 
@@ -262,6 +270,36 @@ function renderDynamicChart(points) {
         ],
         legend: { show: true },
     }, [xs, ks, hk, zero], el);
+}
+
+function renderCumPnlChart() {
+    if (!window.uPlot) return;
+    const el = document.getElementById('kl-cum-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    const pnls = state.pnls || [];
+    if (pnls.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.kelly.empty_cum_chart">${esc(t('view.kelly.empty_cum_chart'))}</div>`;
+        return;
+    }
+    const xs = pnls.map((_, i) => i + 1);
+    const cum = [];
+    let acc = 0;
+    for (const p of pnls) { acc += Number(p) || 0; cum.push(acc); }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.kelly.series.trade') },
+            { label: t('view.kelly.chart.cum_pnl'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.kelly.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 60 }],
+        legend: { show: true },
+    }, [xs, cum, zero], el);
 }
 
 function renderDynamicTable(points) {

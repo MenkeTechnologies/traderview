@@ -692,6 +692,8 @@ pub enum Preset {
     OrganicMicroDropNormalVol,       // change_pct between -1 and -0.3 AND day_pct < -0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest drop (-1 to -0.3%) + red intraday + normal vol + no gap (silent drift down; pure organic distribution under the radar)
     IntradayRangeWiderThanGapHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > gap_pct.abs() * 2 AND gap_pct.abs() > 1 AND rel_volume >= 2 — intraday range > 2× the gap + meaningful gap + hot vol (intraday discovery dominates the gap; market traded a much wider range than overnight expected on volume)
     GapWiderThanIntradayRangeHotVol, // gap_pct.abs() > hod_dist_pct.abs() + lod_dist_pct.abs() AND gap_pct.abs() > 1.5 AND rel_volume >= 2 — gap > entire intraday range + significant gap + hot vol (gap dominates the day's move; intraday only consolidated in a narrow band near the new level on volume)
+    BigGreenLowVolWeakClose,         // change_pct > 3 AND rel_volume < 1 AND hod_dist_pct.abs() > 1 — meaningful gain + dry vol + close not near HOD (fake-breakout warning; up-move on weak participation closing off the highs; reversion candidate)
+    BigRedLowVolWeakClose,           // change_pct < -3 AND rel_volume < 1 AND lod_dist_pct.abs() > 1 — meaningful drop + dry vol + close not near LOD (fake-breakdown warning; down-move on weak participation closing off the lows; reversion candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3815,6 +3817,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() > 1.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigGreenLowVolWeakClose => {
+            hit.change_pct > 3.0
+                && hit.rel_volume < 1.0
+                && hit.hod_dist_pct.abs() > 1.0
+        }
+        Preset::BigRedLowVolWeakClose => {
+            hit.change_pct < -3.0
+                && hit.rel_volume < 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+        }
     }
 }
 
@@ -4397,6 +4409,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OrganicMicroDropNormalVol => "Modest Drop (-1 to -0.3%) + Red Intraday + Normal Vol + No Gap (Silent Organic Distribution Under the Radar)",
         Preset::IntradayRangeWiderThanGapHotVol => "Intraday Range > 2× Gap + Hot Vol (Intraday Discovery Dominates the Gap; Market Traded Far Wider Than Overnight Expected)",
         Preset::GapWiderThanIntradayRangeHotVol => "Gap > Intraday Range + Hot Vol (Gap Dominates; Intraday Only Consolidated Near the New Level on Volume)",
+        Preset::BigGreenLowVolWeakClose => "Big Green + Dry Vol + Close Off Highs (Fake-Breakout Warning; Up-Move on Weak Participation; Reversion Candidate)",
+        Preset::BigRedLowVolWeakClose => "Big Red + Dry Vol + Close Off Lows (Fake-Breakdown Warning; Down-Move on Weak Participation; Reversion Candidate)",
     }
 }
 
