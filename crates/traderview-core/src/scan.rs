@@ -990,6 +990,8 @@ pub enum Preset {
     MidpointCloseMidYearLowHotVol,             // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from low (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle recovery zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
     MidpointCloseJustOffYearHighHotVol,        // year_high_pct >= 2 AND year_high_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w high (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh pullback from the 52w high on elevated participation; standoff in the post-extreme zone)
     MidpointCloseJustOffYearLowHotVol,         // year_low_pct >= 2 AND year_low_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w low (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh bounce from the 52w low on elevated participation; standoff in the post-extreme zone)
+    GapUpCloseAtHodHotVol,                     // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + green close + hot vol (strongest possible bullish gap: gap up held without fade and price closed at the day's high on elevated participation; sustained buying through the bell with no profit-taking)
+    GapDownCloseAtLodHotVol,                   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + red close + hot vol (strongest possible bearish gap: gap down held without bounce and price closed at the day's low on elevated participation; sustained selling through the bell with no dip-buying)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5982,6 +5984,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::GapUpCloseAtHodHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapDownCloseAtLodHotVol => {
+            hit.gap_pct < -2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6862,6 +6876,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MidpointCloseMidYearLowHotVol => "Mid-range from Low (5-20 %) + Midpoint Close between HOD and LOD + Hot Vol (Context-free Intraday Indecision in the Mid-cycle Recovery Zone: Neither Bulls nor Bears Closed in Control in the Proper Consolidation Range on Elevated Participation; Standoff in the Middle of the Year-range)",
         Preset::MidpointCloseJustOffYearHighHotVol => "Just off 52w High (2-5 %) + Midpoint Close between HOD and LOD + Hot Vol (Post-tag Intraday Indecision: Neither Bulls nor Bears Closed in Control Immediately after Fresh Pullback from the 52w High on Elevated Participation; Standoff in the Post-extreme Zone)",
         Preset::MidpointCloseJustOffYearLowHotVol => "Just off 52w Low (2-5 %) + Midpoint Close between HOD and LOD + Hot Vol (Post-tag Intraday Indecision: Neither Bulls nor Bears Closed in Control Immediately after Fresh Bounce from the 52w Low on Elevated Participation; Standoff in the Post-extreme Zone)",
+        Preset::GapUpCloseAtHodHotVol => "Gap Up (>2 %) + Close Pinned to HOD + Green Close + Hot Vol (Strongest Possible Bullish Gap: Gap up Held without Fade and Price Closed at the Day's High on Elevated Participation; Sustained Buying through the Bell with No Profit-taking)",
+        Preset::GapDownCloseAtLodHotVol => "Gap Down (<-2 %) + Close Pinned to LOD + Red Close + Hot Vol (Strongest Possible Bearish Gap: Gap down Held without Bounce and Price Closed at the Day's Low on Elevated Participation; Sustained Selling through the Bell with No Dip-buying)",
     }
 }
 
