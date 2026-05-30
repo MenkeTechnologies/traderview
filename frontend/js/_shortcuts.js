@@ -191,6 +191,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'drawdown_throttle_run',        keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'drawdown-throttle', descKey: 'shortcut.drawdown_throttle_run',        actionKey: 'tv:drawdown-throttle-run' },
     { id: 'goal_tracker_run',             keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'goal-tracker',      descKey: 'shortcut.goal_tracker_run',             actionKey: 'tv:goal-tracker-run' },
     { id: 'trade_plan_checklist_run',     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trade-plan-checklist', descKey: 'shortcut.trade_plan_checklist_run', actionKey: 'tv:trade-plan-checklist-run' },
+    { id: 'regime_equity_run',            keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'regime-equity',     descKey: 'shortcut.regime_equity_run',            actionKey: 'tv:regime-equity-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

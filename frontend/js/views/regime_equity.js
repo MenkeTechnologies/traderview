@@ -12,6 +12,7 @@ import {
 } from '../_regime_equity_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     equity: makeDemoEquity('realistic'),
     config: { ...DEFAULT_CONFIG },
@@ -24,23 +25,23 @@ export async function renderRegimeEquity(mount, _appState) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.regime_equity.h2.paste_equity_curve_one_value_per_line_or_csv_white">Paste equity curve (one value per line, or CSV / whitespace-separated)</h2>
-            <textarea id="re-blob" rows="6" placeholder="10000&#10;10100&#10;10250&#10;...">${esc(state.equity.join('\n'))}</textarea>
+            <textarea id="re-blob" rows="6" placeholder="10000&#10;10100&#10;10250&#10;..." data-tip="view.regime_equity.tip.blob">${esc(state.equity.join('\n'))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.regime_equity.label.trend_slope">Trend slope %</span>
                     <small class="muted" data-i18n="view.regime_equity.hint.trend_slope">(min |slope/mean_eq| to count as trending; default 0.001 = 0.1%)</small>
-                    <input id="re-slope" type="number" step="any" min="0" value="${state.config.trend_slope_pct}"></label>
+                    <input id="re-slope" type="number" step="any" min="0" value="${state.config.trend_slope_pct}" data-tip="view.regime_equity.tip.trend_slope"></label>
                 <label><span data-i18n="view.regime_equity.label.clean_rel_stdev">Clean rel stdev</span>
                     <small class="muted" data-i18n="view.regime_equity.hint.clean_rel_stdev">(max residual/mean_eq for "clean" trend; default 0.02 = 2%)</small>
-                    <input id="re-rsd"   type="number" step="any" min="0" value="${state.config.clean_trend_rel_stdev}"></label>
-                <button data-i18n="view.regime_equity.btn.analyze" id="re-run" class="primary" type="button">Analyze</button>
+                    <input id="re-rsd"   type="number" step="any" min="0" value="${state.config.clean_trend_rel_stdev}" data-tip="view.regime_equity.tip.clean_rel_stdev"></label>
+                <button data-i18n="view.regime_equity.btn.analyze" id="re-run" class="primary" type="button" data-tip="view.regime_equity.tip.run" data-shortcut="regime_equity_run">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.regime_equity.btn.demo_trending_up" id="re-demo-trend-up"   class="secondary" type="button">Demo: TRENDING UP</button>
-                <button data-i18n="view.regime_equity.btn.demo_trending_down" id="re-demo-trend-dn"   class="secondary" type="button">Demo: TRENDING DOWN</button>
-                <button data-i18n="view.regime_equity.btn.demo_volatile_up" id="re-demo-vol-up"     class="secondary" type="button">Demo: VOLATILE UP</button>
-                <button data-i18n="view.regime_equity.btn.demo_volatile_down" id="re-demo-vol-dn"     class="secondary" type="button">Demo: VOLATILE DOWN</button>
-                <button data-i18n="view.regime_equity.btn.demo_choppy" id="re-demo-choppy"    class="secondary" type="button">Demo: CHOPPY</button>
-                <button data-i18n="view.regime_equity.btn.demo_realistic_90_day" id="re-demo-realistic" class="secondary" type="button">Demo: realistic 90-day</button>
+                <button data-i18n="view.regime_equity.btn.demo_trending_up" id="re-demo-trend-up"   class="secondary" type="button" data-tip="view.regime_equity.tip.demo_trend_up">Demo: TRENDING UP</button>
+                <button data-i18n="view.regime_equity.btn.demo_trending_down" id="re-demo-trend-dn"   class="secondary" type="button" data-tip="view.regime_equity.tip.demo_trend_dn">Demo: TRENDING DOWN</button>
+                <button data-i18n="view.regime_equity.btn.demo_volatile_up" id="re-demo-vol-up"     class="secondary" type="button" data-tip="view.regime_equity.tip.demo_vol_up">Demo: VOLATILE UP</button>
+                <button data-i18n="view.regime_equity.btn.demo_volatile_down" id="re-demo-vol-dn"     class="secondary" type="button" data-tip="view.regime_equity.tip.demo_vol_dn">Demo: VOLATILE DOWN</button>
+                <button data-i18n="view.regime_equity.btn.demo_choppy" id="re-demo-choppy"    class="secondary" type="button" data-tip="view.regime_equity.tip.demo_choppy">Demo: CHOPPY</button>
+                <button data-i18n="view.regime_equity.btn.demo_realistic_90_day" id="re-demo-realistic" class="secondary" type="button" data-tip="view.regime_equity.tip.demo_realistic">Demo: realistic 90-day</button>
             </div>
         </div>
 
@@ -75,6 +76,7 @@ function readInputs() {
     const parsed = parseEquityBlob(document.getElementById('re-blob').value);
     if (parsed.errors.length) {
         showErr(t("common.error.parse_errors", { summary: parsed.errors.slice(0, 3).map(e => `[] `).join("; ") }));
+        showToast(t('view.regime_equity.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     state.equity = parsed.equity;
@@ -87,7 +89,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.equity, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.regime_equity.toast.invalid'), { level: 'warning' }); return; }
     const local = localEvaluate(state.equity, state.config);
     renderSummary(local, true);
     renderChart(state.equity, local);
@@ -95,11 +97,17 @@ async function compute(tok) {
     try {
         resp = await api.regimeEquity(buildBody(state.equity, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.regime_equity.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary({ ...resp, intercept: local.intercept, mean_equity: local.mean_equity }, false);
     renderChart(state.equity, { ...resp, intercept: local.intercept });
+    const regime = String(resp.regime || '');
+    const level = (regime === 'TrendingDown' || regime === 'VolatileDown') ? 'warning'
+        : (regime === 'Choppy') ? 'info' : 'success';
+    showToast(t('view.regime_equity.toast.analyzed', { regime, n: state.equity.length }), { level });
 }
 
 function renderSummary(r, pending) {
