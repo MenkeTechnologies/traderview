@@ -268,6 +268,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bipower_variation_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bpv',               descKey: 'shortcut.bipower_variation_run',        actionKey: 'tv:bipower-variation-run' },
     { id: 'borrow_rate_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'borrow-rate-indicator', descKey: 'shortcut.borrow_rate_run',          actionKey: 'tv:borrow-rate-run' },
     { id: 'black_litterman_run',          keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'black-litterman',   descKey: 'shortcut.black_litterman_run',          actionKey: 'tv:black-litterman-run' },
+    { id: 'block_bootstrap_run',          keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'block-bootstrap',   descKey: 'shortcut.block_bootstrap_run',          actionKey: 'tv:block-bootstrap-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

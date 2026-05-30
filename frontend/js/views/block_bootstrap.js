@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_BLOCK_SIZE, DEFAULT_RESAMPLES, DEFAULT_SEED, STATISTICS,
@@ -30,30 +31,33 @@ export async function renderBlockBootstrap(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.block_boot.label.block">Block size</span>
-                    <input id="bb-block" type="number" step="1" min="1" value="${state.block_size}"></label>
+                    <input id="bb-block" type="number" step="1" min="1" value="${state.block_size}"
+                           data-tip="view.block_boot.tip.block"></label>
                 <label><span data-i18n="view.block_boot.label.resamples">Resamples</span>
-                    <input id="bb-resamples" type="number" step="1" min="50" max="10000" value="${state.n_resamples}"></label>
+                    <input id="bb-resamples" type="number" step="1" min="50" max="10000" value="${state.n_resamples}"
+                           data-tip="view.block_boot.tip.resamples"></label>
                 <label><span data-i18n="view.block_boot.label.stat">Statistic</span>
-                    <select id="bb-stat">
+                    <select id="bb-stat" data-tip="view.block_boot.tip.stat">
                         <option value="mean"           data-i18n="view.block_boot.stat.mean">mean</option>
                         <option value="stdev"          data-i18n="view.block_boot.stat.stdev">stdev</option>
                         <option value="sharpe_ratio"   data-i18n="view.block_boot.stat.sharpe">sharpe_ratio</option>
                         <option value="max_drawdown"   data-i18n="view.block_boot.stat.maxdd">max_drawdown</option>
                     </select></label>
                 <label><span data-i18n="view.block_boot.label.seed">Seed</span>
-                    <input id="bb-seed" type="number" step="1" value="${state.seed}"></label>
+                    <input id="bb-seed" type="number" step="1" value="${state.seed}"
+                           data-tip="view.block_boot.tip.seed"></label>
                 <button data-i18n="view.block_boot.btn.compute" id="bb-run" class="primary"
-                        data-tip="view.block_boot.tip.compute" type="button">Resample</button>
+                        data-tip="view.block_boot.tip.compute" data-shortcut="block_bootstrap_run" type="button">Resample</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.block_boot.btn.demo_meanrevert" id="bb-d1" class="secondary" type="button">Demo: mean-revert AR(1)</button>
-                <button data-i18n="view.block_boot.btn.demo_momentum"   id="bb-d2" class="secondary" type="button">Demo: momentum AR(1)</button>
-                <button data-i18n="view.block_boot.btn.demo_volclust"   id="bb-d3" class="secondary" type="button">Demo: volatility clusters</button>
-                <button data-i18n="view.block_boot.btn.demo_sharpe"     id="bb-d4" class="secondary" type="button">Demo: Sharpe strategy</button>
-                <button data-i18n="view.block_boot.btn.demo_dd"         id="bb-d5" class="secondary" type="button">Demo: drawdown tail</button>
-                <button data-i18n="view.block_boot.btn.demo_iid"        id="bb-d6" class="secondary" type="button">Demo: iid noise</button>
-                <button data-i18n="view.block_boot.btn.demo_small"      id="bb-d7" class="secondary" type="button">Demo: small sample</button>
-                <button data-i18n="view.block_boot.btn.demo_fat"        id="bb-d8" class="secondary" type="button">Demo: fat tail</button>
+                <button data-i18n="view.block_boot.btn.demo_meanrevert" id="bb-d1" class="secondary" data-tip="view.block_boot.tip.demo_meanrevert" type="button">Demo: mean-revert AR(1)</button>
+                <button data-i18n="view.block_boot.btn.demo_momentum"   id="bb-d2" class="secondary" data-tip="view.block_boot.tip.demo_momentum"   type="button">Demo: momentum AR(1)</button>
+                <button data-i18n="view.block_boot.btn.demo_volclust"   id="bb-d3" class="secondary" data-tip="view.block_boot.tip.demo_volclust"   type="button">Demo: volatility clusters</button>
+                <button data-i18n="view.block_boot.btn.demo_sharpe"     id="bb-d4" class="secondary" data-tip="view.block_boot.tip.demo_sharpe"     type="button">Demo: Sharpe strategy</button>
+                <button data-i18n="view.block_boot.btn.demo_dd"         id="bb-d5" class="secondary" data-tip="view.block_boot.tip.demo_dd"         type="button">Demo: drawdown tail</button>
+                <button data-i18n="view.block_boot.btn.demo_iid"        id="bb-d6" class="secondary" data-tip="view.block_boot.tip.demo_iid"        type="button">Demo: iid noise</button>
+                <button data-i18n="view.block_boot.btn.demo_small"      id="bb-d7" class="secondary" data-tip="view.block_boot.tip.demo_small"      type="button">Demo: small sample</button>
+                <button data-i18n="view.block_boot.btn.demo_fat"        id="bb-d8" class="secondary" data-tip="view.block_boot.tip.demo_fat"        type="button">Demo: fat tail</button>
             </div>
             <p data-i18n="view.block_boot.hint.about" class="muted">Draws blocks of consecutive observations with replacement to preserve serial dependence. Block size ≈ ⌊n^(1/3)⌋ for daily returns; larger blocks for stronger autocorrelation. Reports original statistic, bootstrap mean/stdev, and 95% percentile CI.</p>
         </div>
@@ -108,6 +112,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.block_boot.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.block_boot.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -127,9 +132,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.block_boot.toast.invalid'), { level: 'warning' }); return; }
     const local = localBootstrap(state.data, state.block_size, state.n_resamples, state.statistic, state.seed);
-    if (!local) { showErr(t('view.block_boot.err.degenerate')); return; }
+    if (!local) { showErr(t('view.block_boot.err.degenerate')); showToast(t('view.block_boot.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderCi(local);
     renderTable();
@@ -140,15 +145,17 @@ async function compute(tok) {
         resp = await api.anlyBlockBootstrap(buildBody(state));
     } catch (e) {
         showErr(`${t('view.block_boot.err.api')}: ${e.message || e}`);
+        showToast(t('view.block_boot.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.block_boot.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.block_boot.err.server_rejected')); showToast(t('view.block_boot.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderCi(resp);
     renderTable();
     renderSeriesChart();
     renderCumChart();
+    showToast(t('view.block_boot.toast.resampled'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
