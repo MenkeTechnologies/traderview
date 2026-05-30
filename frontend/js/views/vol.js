@@ -32,6 +32,11 @@ export async function renderVol(mount) {
             <h2 data-i18n="view.vol.h2.yields_change_chart">Yield change per tenor (bp)</h2>
             <div id="vol-bp-chart" style="width:100%;height:220px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.vol.h2.yields_value_chart">Yield value per tenor (%)</h2>
+            <div id="vol-yld-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     try {
         const [v, y, d] = await Promise.all([
@@ -44,6 +49,7 @@ export async function renderVol(mount) {
         renderYields(y, mount);
         renderDxy(d, mount);
         renderYieldsBpChart(y);
+        renderYieldsValueChart(y);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const vixEl = mount.querySelector('#vix');
@@ -102,6 +108,36 @@ function renderYields(y, mount) {
             { color: '#00e5ff' },
         );
     }
+}
+
+function renderYieldsValueChart(y) {
+    const el = document.getElementById('vol-yld-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (y?.points || []).filter(p => Number.isFinite(Number(p.yield_pct)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.vol.empty_yld_chart">${esc(t('view.vol.empty_yld_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(p => p.label);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(p => Number(p.yield_pct));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.vol.chart.tenor') },
+            { label: t('view.vol.chart.yield_pct'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderYieldsBpChart(y) {
