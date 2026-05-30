@@ -852,6 +852,8 @@ pub enum Preset {
     Year52LowOutsideDayHotVol,           // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w low + wide intraday range + hot vol (outside-day rotation at the breakdown zone; both supply and demand active just above support; volatility expansion preceding directional resolution)
     YearHighGapDownHotVolRecovery,       // year_high_pct < 0 AND gap_pct < -2 AND day_pct > 3 AND change_pct > 1 AND rel_volume >= 2 — new 52w high prior + gap down opening + huge intraday recovery + green close + hot vol (failed gap-down at the highs: shorts overpressed overnight, intraday short-squeeze fully reclaimed and pushed back into trend with elevated participation)
     YearLowGapUpHotVolRejection,         // year_low_pct < 0 AND gap_pct > 2 AND day_pct < -3 AND change_pct < -1 AND rel_volume >= 2 — new 52w low prior + gap up opening + huge intraday rejection + red close + hot vol (failed gap-up at the lows: longs overpressed overnight, intraday long-liquidation fully unwound and pushed back into trend with elevated participation)
+    Year52HighReclaimAfterFlush,         // year_high_pct < 0 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND change_pct > 1 AND rel_volume >= 1.5 — new 52w high + LOD far below + close near HOD + green close + hot vol (intraday flush below the breakout level reclaimed back to highs by close; trapped breakdown shorts squeezed; conviction continuation candidate)
+    Year52LowReclaimAfterPop,            // year_low_pct < 0 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND change_pct < -1 AND rel_volume >= 1.5 — new 52w low + HOD far above + close near LOD + red close + hot vol (intraday pop above the breakdown level rejected back to lows by close; trapped breakout longs flushed; conviction continuation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4959,6 +4961,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Year52HighReclaimAfterFlush => {
+            hit.year_high_pct < 0.0
+                && hit.lod_dist_pct > 4.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::Year52LowReclaimAfterPop => {
+            hit.year_low_pct < 0.0
+                && hit.hod_dist_pct < -4.0
+                && hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5701,6 +5717,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Year52LowOutsideDayHotVol => "Near 52w Low + Wide Intraday Range + Hot Vol (Outside-day Rotation at the Breakdown Zone; Both Supply and Demand Active Just above Support; Volatility Expansion Preceding Directional Resolution)",
         Preset::YearHighGapDownHotVolRecovery => "New 52w High Prior + Gap Down Opening + Huge Intraday Recovery + Green Close + Hot Vol (Failed Gap-down at the Highs: Shorts Overpressed Overnight, Intraday Short-squeeze Fully Reclaimed and Pushed Back into Trend with Elevated Participation)",
         Preset::YearLowGapUpHotVolRejection => "New 52w Low Prior + Gap Up Opening + Huge Intraday Rejection + Red Close + Hot Vol (Failed Gap-up at the Lows: Longs Overpressed Overnight, Intraday Long-liquidation Fully Unwound and Pushed Back into Trend with Elevated Participation)",
+        Preset::Year52HighReclaimAfterFlush => "New 52w High + LOD Far Below + Close Near HOD + Green Close + Hot Vol (Intraday Flush below the Breakout Level Reclaimed back to Highs by Close; Trapped Breakdown Shorts Squeezed; Conviction Continuation Candidate)",
+        Preset::Year52LowReclaimAfterPop => "New 52w Low + HOD Far Above + Close Near LOD + Red Close + Hot Vol (Intraday Pop above the Breakdown Level Rejected back to Lows by Close; Trapped Breakout Longs Flushed; Conviction Continuation Candidate)",
     }
 }
 

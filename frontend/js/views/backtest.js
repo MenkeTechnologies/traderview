@@ -93,6 +93,7 @@ export async function renderBacktest(mount) {
                 equityChart(eqMount, points, { height: 320 });
             }
             renderTradePnlChart(r.trades);
+            renderHoldChart(r.trades);
             showToast(t('view.backtest.toast.done', {
                 ret: (r.summary.total_return_pct >= 0 ? '+' : '') + r.summary.total_return_pct.toFixed(2),
                 trades: r.summary.trades,
@@ -133,6 +134,11 @@ function render(r) {
             <div id="bt-pnl-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.backtest.h2.hold_chart">Per-trade holding period (bars held)</h2>
+            <div id="bt-hold-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.backtest.hint.hold_chart" class="muted small">Number of bars each trade stayed in market. Orthogonal to the P/L distribution: a small-PnL trade can be a short scalp or a long flat carry; a big-PnL trade can be a quick rip or a multi-week swing. Reveals duration vs profit at a glance.</p>
+        </div>
+        <div class="chart-panel">
             <h2>${esc(t('view.backtest.h2.trades', { count: r.trades.length }))}</h2>
             <table class="trades">
                 <thead><tr><th>#</th><th data-i18n="view.backtest.th.entry">Entry</th><th data-i18n="view.backtest.th.exit">Exit</th><th data-i18n="view.backtest.th.bars">Bars</th>
@@ -152,6 +158,31 @@ function render(r) {
             </table>
         </div>
     `;
+}
+
+function renderHoldChart(trades) {
+    const el = document.getElementById('bt-hold-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (trades || []).filter(tr => Number.isFinite(Number(tr.bars_held)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.backtest.empty_hold_chart">${esc(t('view.backtest.empty_hold_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(tr => Number(tr.bars_held));
+    const xs = ys.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.backtest.chart.trade_idx') },
+            { label: t('view.backtest.chart.bars_held'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTradePnlChart(trades) {
