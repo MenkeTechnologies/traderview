@@ -217,7 +217,7 @@ import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installDialog } from './dialog.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
-import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS, TAG_CHIP_ITEMS, API_TOKEN_ROW_ITEMS, JOURNAL_ENTRY_ITEMS } from './_context_menu.js';
+import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, ALL_SCOPED_ITEMS } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
@@ -367,15 +367,11 @@ function bindTabs() {
     for (const scope of SYMBOL_AWARE_SCOPES) {
         registerContextItems(scope, SYMBOL_ITEMS);
     }
-    registerContextItems('trade-row', TRADE_ROW_ITEMS);
-    registerContextItems('watchlist-symbol-row', WATCHLIST_ROW_ITEMS);
-    registerContextItems('position-row', POSITION_ROW_ITEMS);
-    registerContextItems('alert-rule-row', ALERT_RULE_ROW_ITEMS);
-    registerContextItems('strategy-alert-row', STRATEGY_ALERT_ROW_ITEMS);
-    registerContextItems('webhook-row', WEBHOOK_ROW_ITEMS);
-    registerContextItems('tag-chip', TAG_CHIP_ITEMS);
-    registerContextItems('api-token-row', API_TOKEN_ROW_ITEMS);
-    registerContextItems('journal-entry', JOURNAL_ENTRY_ITEMS);
+    // Per-scope item sets registered from a single source of truth so
+    // future row scopes are 1-line additions in ALL_SCOPED_ITEMS.
+    for (const [scope, items] of ALL_SCOPED_ITEMS) {
+        registerContextItems(scope, items);
+    }
     installTooltips();
     installSymbolHotkey();
     void bootI18n('en').then(() => {

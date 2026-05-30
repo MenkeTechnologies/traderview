@@ -157,6 +157,17 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Hotkey-row context items. Right-click on a <tr data-context-scope=
+// "hotkey-row" data-id="X" data-combo="ctrl+shift+J"> shows: Copy
+// combo / Delete. Delete uses tConfirm to replace the silent inline
+// `delete` button.
+export const HOTKEY_ROW_ITEMS = [
+    { id: 'hk_row_copy_combo', labelKey: 'ctxmenu.hk_row_copy_combo',
+      actionKey: 'tv:hk-row-copy-combo', section: 'hotkey' },
+    { id: 'hk_row_delete',     labelKey: 'ctxmenu.hk_row_delete',
+      actionKey: 'tv:hk-row-delete',     section: 'hotkey' },
+];
+
 // Journal-entry context items. Right-click on a <div data-context-
 // scope="journal-entry" data-id="X" data-trade-id="Y"> shows:
 // View linked trade (if trade-id set) / Delete entry. The view-trade
@@ -255,6 +266,23 @@ export const EDITING_ITEMS = [
       actionKey: 'tv:edit-paste',      section: 'edit' },
     { id: 'edit_select_all', labelKey: 'ctxmenu.select_all',
       actionKey: 'tv:edit-select-all', section: 'edit' },
+];
+
+// Aggregated registry of every scope-specific item set. Each entry is
+// `[scope, items]` so callers can iterate registrations or audit-tests
+// can validate the whole catalog without naming every constant. Order
+// matches the audit's iteration order; add new sets at the bottom.
+export const ALL_SCOPED_ITEMS = [
+    ['watchlist-symbol-row',   WATCHLIST_ROW_ITEMS],
+    ['position-row',           POSITION_ROW_ITEMS],
+    ['alert-rule-row',         ALERT_RULE_ROW_ITEMS],
+    ['hotkey-row',             HOTKEY_ROW_ITEMS],
+    ['journal-entry',          JOURNAL_ENTRY_ITEMS],
+    ['api-token-row',          API_TOKEN_ROW_ITEMS],
+    ['tag-chip',               TAG_CHIP_ITEMS],
+    ['webhook-row',            WEBHOOK_ROW_ITEMS],
+    ['strategy-alert-row',     STRATEGY_ALERT_ROW_ITEMS],
+    ['trade-row',              TRADE_ROW_ITEMS],
 ];
 
 // Same as `mergeMenu`, but additionally prepends `editingItems` (followed

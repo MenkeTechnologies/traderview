@@ -275,6 +275,33 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Hotkey-row actions — read data-id / data-combo.
+    window.addEventListener('tv:hk-row-copy-combo', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const combo = tgt && tgt.dataset && tgt.dataset.combo;
+        if (!combo) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(combo).then(
+                () => showToast(t('toast.copied', { what: combo }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:hk-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.hk_row_delete_confirm', {}, { level: 'danger' })) return;
+            try {
+                await api.deleteHotkey(id);
+                showToast(t('toast.hk_deleted'), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Journal-entry actions — read data-id (and data-trade-id for nav).
     window.addEventListener('tv:je-view-trade', (e) => {
         const tgt = e.detail && e.detail.target;

@@ -48,7 +48,7 @@ export async function renderHotkeys(mount) {
             ${keys.length ? `<table class="trades">
                 <thead><tr><th data-i18n="view.hotkeys.th.name">Name</th><th data-i18n="view.hotkeys.th.combo">Combo</th><th data-i18n="view.hotkeys.th.action">Action</th><th></th></tr></thead>
                 <tbody>${keys.map(k => `
-                    <tr><td>${esc(k.name)}</td>
+                    <tr data-context-scope="hotkey-row" data-id="${esc(k.id)}" data-combo="${esc(k.combo)}"><td>${esc(k.name)}</td>
                     <td><code>${esc(k.combo)}</code></td>
                     <td>${esc(actionLabel(k.action))}</td>
                     <td><button data-i18n="view.hotkeys.btn.delete" class="link" data-del="${k.id}">delete</button></td></tr>

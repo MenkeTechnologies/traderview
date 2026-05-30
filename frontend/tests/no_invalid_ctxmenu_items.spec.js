@@ -9,7 +9,9 @@
 import { test, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { GLOBAL_ITEMS, EDITING_ITEMS, SYMBOL_ITEMS, TRADE_ROW_ITEMS, WATCHLIST_ROW_ITEMS, POSITION_ROW_ITEMS, ALERT_RULE_ROW_ITEMS, STRATEGY_ALERT_ROW_ITEMS, WEBHOOK_ROW_ITEMS, TAG_CHIP_ITEMS, API_TOKEN_ROW_ITEMS, JOURNAL_ENTRY_ITEMS, SYMBOL_AWARE_SCOPES } from '../js/_context_menu.js';
+import { GLOBAL_ITEMS, EDITING_ITEMS, SYMBOL_ITEMS, ALL_SCOPED_ITEMS, SYMBOL_AWARE_SCOPES } from '../js/_context_menu.js';
+
+const SCOPED_ROW_ITEMS = ALL_SCOPED_ITEMS.flatMap(([, items]) => items);
 
 const app = readFileSync(join(__dirname, '../js/app.js'), 'utf8');
 const ROUTER_CASES = new Set(
@@ -17,7 +19,7 @@ const ROUTER_CASES = new Set(
 );
 
 test('every non-separator ctxmenu item has a labelKey', () => {
-    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...TRADE_ROW_ITEMS, ...WATCHLIST_ROW_ITEMS, ...POSITION_ROW_ITEMS, ...ALERT_RULE_ROW_ITEMS, ...STRATEGY_ALERT_ROW_ITEMS, ...WEBHOOK_ROW_ITEMS, ...TAG_CHIP_ITEMS, ...API_TOKEN_ROW_ITEMS, ...JOURNAL_ENTRY_ITEMS].filter(it => it.kind !== 'separator');
+    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...SCOPED_ROW_ITEMS].filter(it => it.kind !== 'separator');
     const missing = items.filter(it => !it.labelKey);
     if (missing.length > 0) {
         const lines = missing.map(m => `  ${m.id || JSON.stringify(m)}`).join('\n');
@@ -27,7 +29,7 @@ test('every non-separator ctxmenu item has a labelKey', () => {
 });
 
 test('every non-separator ctxmenu item has at least one action sink', () => {
-    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...TRADE_ROW_ITEMS, ...WATCHLIST_ROW_ITEMS, ...POSITION_ROW_ITEMS, ...ALERT_RULE_ROW_ITEMS, ...STRATEGY_ALERT_ROW_ITEMS, ...WEBHOOK_ROW_ITEMS, ...TAG_CHIP_ITEMS, ...API_TOKEN_ROW_ITEMS, ...JOURNAL_ENTRY_ITEMS].filter(it => it.kind !== 'separator');
+    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...SCOPED_ROW_ITEMS].filter(it => it.kind !== 'separator');
     const dead = items.filter(it => !it.actionKey && !it.navTo && !it.onClick);
     if (dead.length > 0) {
         const lines = dead.map(d => `  ${d.id} (no actionKey, navTo, or onClick)`).join('\n');
@@ -37,7 +39,7 @@ test('every non-separator ctxmenu item has at least one action sink', () => {
 });
 
 test('every ctxmenu navTo target maps to a router case in app.js', () => {
-    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...TRADE_ROW_ITEMS, ...WATCHLIST_ROW_ITEMS, ...POSITION_ROW_ITEMS, ...ALERT_RULE_ROW_ITEMS, ...STRATEGY_ALERT_ROW_ITEMS, ...WEBHOOK_ROW_ITEMS, ...TAG_CHIP_ITEMS, ...API_TOKEN_ROW_ITEMS, ...JOURNAL_ENTRY_ITEMS].filter(it => it.navTo);
+    const items = [...GLOBAL_ITEMS, ...EDITING_ITEMS, ...SYMBOL_ITEMS, ...SCOPED_ROW_ITEMS].filter(it => it.navTo);
     const missing = items.filter(it => !ROUTER_CASES.has(it.navTo));
     if (missing.length > 0) {
         const lines = missing.map(m => `  ${m.id} → navTo:'${m.navTo}'`).join('\n');
