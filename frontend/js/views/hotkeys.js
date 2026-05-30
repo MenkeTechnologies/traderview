@@ -54,7 +54,12 @@ export async function renderHotkeys(mount) {
                     <td><button data-i18n="view.hotkeys.btn.delete" class="link" data-del="${k.id}">delete</button></td></tr>
                 `).join('')}</tbody></table>` : '<p data-i18n="view.hotkeys.hint.no_bindings_yet" class="muted">No bindings yet.</p>'}
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.hotkeys.h2.action_chart">Bindings per action</h2>
+            <div id="hk-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderActionChart(keys);
     const comboInput = mount.querySelector('[name=combo]');
     mount.querySelector('#capture').addEventListener('click', () => {
         comboInput.value = '';
@@ -97,4 +102,36 @@ export async function renderHotkeys(mount) {
 
 function actionLabel(id) {
     return ACTIONS.find(a => a.id === id)?.label || id;
+}
+
+function renderActionChart(keys) {
+    const el = document.getElementById('hk-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!keys || !keys.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.hotkeys.empty_chart">${esc(t('view.hotkeys.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const k of keys) counts.set(k.action, (counts.get(k.action) || 0) + 1);
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([id]) => actionLabel(id));
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.hotkeys.chart.action_idx') },
+            { label: t('view.hotkeys.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

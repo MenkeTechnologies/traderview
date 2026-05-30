@@ -108,6 +108,8 @@ const PRESETS = [
     { id: 'pct52w_high_breath_squeeze', label: t('view.scanners.preset.pct52w_high_breath_squeeze.label'), desc: t('view.scanners.preset.pct52w_high_breath_squeeze.desc') },
     { id: 'pct52w_low_breath_squeeze',  label: t('view.scanners.preset.pct52w_low_breath_squeeze.label'),  desc: t('view.scanners.preset.pct52w_low_breath_squeeze.desc') },
     { id: 'gap_around_close_squeeze',   label: t('view.scanners.preset.gap_around_close_squeeze.label'),   desc: t('view.scanners.preset.gap_around_close_squeeze.desc') },
+    { id: 'tight_close_split_squeeze',  label: t('view.scanners.preset.tight_close_split_squeeze.label'),  desc: t('view.scanners.preset.tight_close_split_squeeze.desc') },
+    { id: 'hi_vol_no_extreme_squeeze',  label: t('view.scanners.preset.hi_vol_no_extreme_squeeze.label'),  desc: t('view.scanners.preset.hi_vol_no_extreme_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
