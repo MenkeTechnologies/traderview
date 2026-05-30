@@ -1044,6 +1044,8 @@ pub enum Preset {
     HotVolFlatCloseJustOffYearLowHotVol,       // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — flat close + hot vol + just off 52w low (2-5%) (post-tag stealth release: doubled participation with no net price impact immediately after fresh bounce from the 52w low; institutions exchange hands in the post-extreme zone while price digests the recent trough)
     DryVolBigUpNearYearHighHotVol,             // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct < 2 — big up move (>3%) + dry vol (<0.5) + at/near 52w high (<2%) (thin-tape breakout: large gains push price to new highs but participation is below average; air-pocket move with little resistance, fragile if vol returns)
     DryVolBigDownNearYearLowHotVol,            // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct < 2 — big down move (<-3%) + dry vol (<0.5) + at/near 52w low (<2%) (thin-tape breakdown: large losses push price to new lows but participation is below average; air-pocket move with little support, fragile if vol returns)
+    DryVolBigUpConfirmedAboveYearHighHotVol,   // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — big up move (>3%) + dry vol (<0.5) + confirmed-breakout zone (1-3% past 52w high) (thin-tape extension after validated breakout: momentum continues on below-average participation past the prior peak; volume-unconfirmed extension prone to mean-reversion)
+    DryVolBigDownConfirmedBelowYearLowHotVol,  // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — big down move (<-3%) + dry vol (<0.5) + confirmed-breakdown zone (1-3% past 52w low) (thin-tape extension after validated breakdown: momentum continues on below-average participation past the prior trough; volume-unconfirmed extension prone to mean-reversion)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6416,6 +6418,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
                 && hit.year_low_pct < 2.0
         }
+        Preset::DryVolBigUpConfirmedAboveYearHighHotVol => {
+            hit.change_pct > 3.0
+                && hit.rel_volume < 0.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::DryVolBigDownConfirmedBelowYearLowHotVol => {
+            hit.change_pct < -3.0
+                && hit.rel_volume < 0.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -7350,6 +7364,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::HotVolFlatCloseJustOffYearLowHotVol => "Flat Close (|change|<0.5 %) + Hot Vol (>=2) + Just off 52w Low (2-5 %) (Post-tag Stealth Release: Doubled Participation with No Net Price Impact Immediately after Fresh Bounce from the 52w Low; Institutions Exchange Hands in the Post-extreme Zone While Price Digests the Recent Trough)",
         Preset::DryVolBigUpNearYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + At/near 52w High (<2 %) (Thin-tape Breakout: Large Gains Push Price to New Highs but Participation Is below Average; Air-pocket Move with Little Resistance, Fragile if Vol Returns)",
         Preset::DryVolBigDownNearYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + At/near 52w Low (<2 %) (Thin-tape Breakdown: Large Losses Push Price to New Lows but Participation Is below Average; Air-pocket Move with Little Support, Fragile if Vol Returns)",
+        Preset::DryVolBigUpConfirmedAboveYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Confirmed-breakout Zone (1-3 % past 52w High) (Thin-tape Extension after Validated Breakout: Momentum Continues on Below-average Participation past the Prior Peak; Volume-unconfirmed Extension Prone to Mean-reversion)",
+        Preset::DryVolBigDownConfirmedBelowYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Thin-tape Extension after Validated Breakdown: Momentum Continues on Below-average Participation past the Prior Trough; Volume-unconfirmed Extension Prone to Mean-reversion)",
     }
 }
 
