@@ -16,6 +16,7 @@ import {
     buildGkBody, validateGkParams,
     garmanKohlhagenPrice, fmtRate, fmtGreek,
 } from '../_fx_option_inputs.js';
+import { showToast } from '../toast.js';
 
 const DEFAULT_PARAMS = {
     kind: 'call',
@@ -39,23 +40,23 @@ export async function renderFxOption(mount, _appState) {
             <h2 data-i18n="view.fx_option.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.fx_option.label.kind">Kind</span>
-                    <select id="fx-kind">
+                    <select id="fx-kind" data-tip="view.fx_option.tip.kind">
                         <option data-i18n="view.fx_option.opt.call_right_to_buy_foreign" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call (right to buy foreign)</option>
                         <option data-i18n="view.fx_option.opt.put_right_to_sell_foreign" value="put"  ${state.params.kind === 'put' ? 'selected' : ''}>Put (right to sell foreign)</option>
                     </select></label>
                 <label><span data-i18n="view.fx_option.label.spot">Spot (dom/for)</span>
-                    <input id="fx-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
+                    <input id="fx-spot" type="number" step="any" min="0" value="${state.params.spot}" data-tip="view.fx_option.tip.spot"></label>
                 <label><span data-i18n="view.fx_option.label.strike">Strike</span>
-                    <input id="fx-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                    <input id="fx-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.fx_option.tip.strike"></label>
                 <label><span data-i18n="view.fx_option.label.t_years">T (years)</span>
-                    <input id="fx-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
+                    <input id="fx-t" type="number" step="any" min="0" value="${state.params.t_years}" data-tip="view.fx_option.tip.t"></label>
                 <label><span data-i18n="view.fx_option.label.rate_dom">Rate domestic</span>
-                    <input id="fx-rd" type="number" step="any" value="${state.params.rate_dom}"></label>
+                    <input id="fx-rd" type="number" step="any" value="${state.params.rate_dom}" data-tip="view.fx_option.tip.rd"></label>
                 <label><span data-i18n="view.fx_option.label.rate_for">Rate foreign</span>
-                    <input id="fx-rf" type="number" step="any" value="${state.params.rate_for}"></label>
+                    <input id="fx-rf" type="number" step="any" value="${state.params.rate_for}" data-tip="view.fx_option.tip.rf"></label>
                 <label><span data-i18n="view.fx_option.label.sigma">σ (FX vol)</span>
-                    <input id="fx-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
-                <button data-i18n="view.fx_option.btn.price" id="fx-run" class="primary" type="button">Price</button>
+                    <input id="fx-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.fx_option.tip.sigma"></label>
+                <button data-i18n="view.fx_option.btn.price" data-tip="view.fx_option.tip.price" data-shortcut="fx_option_price" id="fx-run" class="primary" type="button">Price</button>
             </div>
             <p class="muted">
                 Spot is quoted as <em>domestic per 1 unit of foreign</em> — e.g. EURUSD 1.0850
@@ -102,20 +103,25 @@ function readParams() {
 async function price(mount, tok) {
     hideErr();
     const err = validateGkParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyGarmanKohlhagenFxOption(buildGkBody(state.params));
         if (!res) throw new Error(t('view.fx_option.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
 
     renderSummary(res);
     renderChart(res);
+    showToast(t('view.fx_option.toast.done', {
+        kind: state.params.kind,
+        price: fmtRate(res.price),
+    }), { level: 'success' });
 }
 
 function renderSummary(res) {

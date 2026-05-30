@@ -108,6 +108,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'execution_scheduler_run',      keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'execution-scheduler', descKey: 'shortcut.execution_scheduler_run',    actionKey: 'tv:execution-scheduler-run' },
     { id: 'regime_detector_run',          keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'regime-detector',   descKey: 'shortcut.regime_detector_run',          actionKey: 'tv:regime-detector-run' },
     { id: 'american_option_price',        keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'american-option',   descKey: 'shortcut.american_option_price',        actionKey: 'tv:american-option-price' },
+    { id: 'fx_option_price',              keys: { key: 'p', meta: false, ctrl: false, shift: false, alt: false }, scope: 'fx-option',         descKey: 'shortcut.fx_option_price',              actionKey: 'tv:fx-option-price' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
