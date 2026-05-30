@@ -127,7 +127,7 @@ Same schema, same migrations, same FIFO roll-up, same frontend, same API surface
 
 ## [0x04] SCHEMA
 
-31 migrations from `0001_initial.sql` through `0031_risk_fires.sql` define **69 tables, 87 indexes, 17 PostgreSQL enum types**. Each migration adds a self-contained feature; the schema grows by feature, not by big-bang. Money is `NUMERIC(20, 8)` everywhere — no floats. Grouped by domain:
+31 migrations from `0001_initial.sql` through `0031_risk_fires.sql` define **69 tables, 91 indexes, 17 PostgreSQL enum types**. Each migration adds a self-contained feature; the schema grows by feature, not by big-bang. Money is `NUMERIC(20, 8)` everywhere — no floats. Grouped by domain:
 
 | Domain                     | Tables                                                                 |
 |----------------------------|------------------------------------------------------------------------|
