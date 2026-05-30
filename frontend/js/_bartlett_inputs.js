@@ -256,7 +256,7 @@ export function makeDemoInput(kind = 'equal') {
                     Array.from({ length: 100 }, () => gaussian(r1)),
                     Array.from({ length: 100 }, () => gaussian(r2) * 1.5),
                 ],
-                labels: ['Tight', 'Loose'],
+                labels: [t('view.bartlett.demo.tight'), t('view.bartlett.demo.loose')],
             };
         }
         case 'strong-diff': {
@@ -267,7 +267,7 @@ export function makeDemoInput(kind = 'equal') {
                     Array.from({ length: 100 }, () => gaussian(r1)),
                     Array.from({ length: 100 }, () => gaussian(r2) * 5.0),
                 ],
-                labels: ['Calm', 'Wild'],
+                labels: [t('view.bartlett.demo.calm'), t('view.bartlett.demo.wild')],
             };
         }
         case 'three-equal': {
@@ -290,7 +290,7 @@ export function makeDemoInput(kind = 'equal') {
                     Array.from({ length: 80 }, () => gaussian(r2) * 2.0),
                     Array.from({ length: 80 }, () => gaussian(r3) * 4.0),
                 ],
-                labels: ['Low', 'Med', 'High'],
+                labels: [t('view.bartlett.demo.low'), t('view.bartlett.demo.med'), t('view.bartlett.demo.high')],
             };
         }
         case 'four-volregime': {
@@ -318,7 +318,7 @@ export function makeDemoInput(kind = 'equal') {
                     Array.from({ length: 200 }, () => gaussian(r1)),
                     Array.from({ length: 30 },  () => gaussian(r2)),
                 ],
-                labels: ['Large', 'Small'],
+                labels: [t('view.bartlett.demo.large'), t('view.bartlett.demo.small')],
             };
         }
         default: return makeDemoInput('equal');
