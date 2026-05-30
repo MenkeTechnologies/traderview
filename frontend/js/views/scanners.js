@@ -142,6 +142,8 @@ const PRESETS = [
     { id: 'pinned_to_open_squeeze',     label: t('view.scanners.preset.pinned_to_open_squeeze.label'),     desc: t('view.scanners.preset.pinned_to_open_squeeze.desc') },
     { id: 'big_gap_small_day_squeeze',  label: t('view.scanners.preset.big_gap_small_day_squeeze.label'),  desc: t('view.scanners.preset.big_gap_small_day_squeeze.desc') },
     { id: 'post_crash_squeeze',         label: t('view.scanners.preset.post_crash_squeeze.label'),         desc: t('view.scanners.preset.post_crash_squeeze.desc') },
+    { id: 'post_spike_stabilize_squeeze', label: t('view.scanners.preset.post_spike_stabilize_squeeze.label'), desc: t('view.scanners.preset.post_spike_stabilize_squeeze.desc') },
+    { id: 'tight_with_small_gap_squeeze', label: t('view.scanners.preset.tight_with_small_gap_squeeze.label'), desc: t('view.scanners.preset.tight_with_small_gap_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -260,6 +260,8 @@ pub enum Preset {
     PinnedToOpenSqueeze,         // day_pct.abs() < 0.05 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close ≈ open + narrow range
     BigGapSmallDaySqueeze,       // |gap_pct| >= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.5 — big overnight gap fully absorbed
     PostCrashSqueeze,            // change_pct <= -3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a crash
+    PostSpikeStabilizeSqueeze,   // change_pct >= 3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a spike
+    TightWithSmallGapSqueeze,    // |gap_pct| < 0.5 AND |change_pct| between 0.3 and 0.8 AND |day_pct| < 0.4 — modest move on small gap, tight day
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -986,6 +988,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 1.0
         }
+        Preset::PostSpikeStabilizeSqueeze => {
+            hit.change_pct >= 3.0
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::TightWithSmallGapSqueeze => {
+            hit.gap_pct.abs() < 0.5
+                && hit.change_pct.abs() >= 0.3
+                && hit.change_pct.abs() <= 0.8
+                && hit.day_pct.abs() < 0.4
+        }
     }
 }
 
@@ -1136,6 +1149,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PinnedToOpenSqueeze => "Pinned-To-Open Squeeze",
         Preset::BigGapSmallDaySqueeze => "Big-Gap Small-Day Squeeze",
         Preset::PostCrashSqueeze => "Post-Crash Stabilize Squeeze",
+        Preset::PostSpikeStabilizeSqueeze => "Post-Spike Stabilize Squeeze",
+        Preset::TightWithSmallGapSqueeze => "Tight With-Small-Gap Squeeze",
     }
 }
 

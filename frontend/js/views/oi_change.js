@@ -56,6 +56,11 @@ export async function renderOiChange(mount, _appState) {
                 institutional hedging or directional bearish bets.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.oi_change.h2.pct_chart">Call vs put OI % change by strike</h2>
+            <div id="oi-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="oi-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('oi-demo').addEventListener('click', () => {
@@ -103,6 +108,43 @@ async function compute(tok) {
     renderSummary(report, snapshots);
     renderTable('oi-calls', report.call_alerts || []);
     renderTable('oi-puts',  report.put_alerts  || []);
+    renderOiPctChart(report);
+}
+
+function renderOiPctChart(report) {
+    const el = document.getElementById('oi-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const calls = (report.call_alerts || []).filter(a => Number.isFinite(Number(a.pct_change)));
+    const puts  = (report.put_alerts  || []).filter(a => Number.isFinite(Number(a.pct_change)));
+    if (calls.length + puts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.oi_change.empty_chart">${esc(t('view.oi_change.empty_chart'))}</div>`;
+        return;
+    }
+    const strikes = Array.from(new Set([...calls, ...puts].map(a => Number(a.strike)))).sort((a, b) => a - b);
+    const callMap = new Map(calls.map(a => [Number(a.strike), Number(a.pct_change) * 100]));
+    const putMap  = new Map(puts.map(a => [Number(a.strike), Number(a.pct_change) * 100]));
+    const callYs = strikes.map(s => callMap.has(s) ? callMap.get(s) : null);
+    const putYs  = strikes.map(s => putMap.has(s)  ? putMap.get(s)  : null);
+    const zero = strikes.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.oi_change.chart.strike') },
+            { label: t('view.oi_change.chart.calls'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.oi_change.chart.puts'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.oi_change.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [strikes, callYs, putYs, zero], el);
 }
 
 function renderSummary(report, snapshots) {
