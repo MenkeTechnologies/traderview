@@ -115,11 +115,48 @@ function render(r, out) {
             <div id="tc-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.trade_compare.h2.hold_chart">Hold duration per trade (hours)</h2>
+            <div id="tc-hold-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.trade_compare.hint.hold_chart" class="muted small">Each trade's open-to-close hold in hours. Orthogonal to MFE/MAE: a small-MFE trade may have been a short scalp; a large-MFE trade may have been a multi-day swing. Reveals duration vs excursion at a glance.</p>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.trade_compare.h2.side_by_side_stats">Side-by-side stats</h2>
             ${statsTable(r.rows)}
         </div>
     `;
     renderMfeMaeChart(r.rows);
+    renderHoldChart(r.rows);
+}
+
+function renderHoldChart(rows) {
+    const el = document.getElementById('tc-hold-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.hold_seconds)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_compare.empty_hold_chart">${esc(t('view.trade_compare.empty_hold_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(r => r.symbol);
+    const ys = valid.map(r => Number(r.hold_seconds) / 3600);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_compare.chart.trade_idx') },
+            { label: t('view.trade_compare.chart.hold_hours'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60,
+              values: (_u, splits) => splits.map(v => v.toFixed(1) + 'h') },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderMfeMaeChart(rows) {
