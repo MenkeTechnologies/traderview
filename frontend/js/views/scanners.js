@@ -36,6 +36,8 @@ const PRESETS = [
     { id: 'balanced_drift_squeeze',   label: t('view.scanners.preset.balanced_drift_squeeze.label'),   desc: t('view.scanners.preset.balanced_drift_squeeze.desc') },
     { id: 'penny_move_squeeze',       label: t('view.scanners.preset.penny_move_squeeze.label'),       desc: t('view.scanners.preset.penny_move_squeeze.desc') },
     { id: 'dry_up_squeeze',            label: t('view.scanners.preset.dry_up_squeeze.label'),            desc: t('view.scanners.preset.dry_up_squeeze.desc') },
+    { id: 'upper_range_squeeze',       label: t('view.scanners.preset.upper_range_squeeze.label'),       desc: t('view.scanners.preset.upper_range_squeeze.desc') },
+    { id: 'lower_range_squeeze',       label: t('view.scanners.preset.lower_range_squeeze.label'),       desc: t('view.scanners.preset.lower_range_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

@@ -154,6 +154,8 @@ pub enum Preset {
     BalancedDriftSqueeze,   // tiny gap + slow drift (|change|<0.5) + close mid-day + quiet
     PennyMoveSqueeze,       // |change| < 0.05 (sub-tick close) — frozen tape
     DryUpSqueeze,           // rel_volume < 0.4 AND |change| < 1.5 AND |gap| < 0.5 — supply/demand exhaustion
+    UpperRangeSqueeze,      // close in upper third (lod_dist > 2× hod_dist) AND tight day AND quiet
+    LowerRangeSqueeze,      // close in lower third (hod_dist > 2× lod_dist) AND tight day AND quiet
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -291,6 +293,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 1.5
                 && hit.gap_pct.abs() < 0.5
         }
+        Preset::UpperRangeSqueeze => {
+            hit.lod_dist_pct.abs() > 2.0 * hit.hod_dist_pct.abs()
+                && hit.day_pct.abs() < 1.5
+                && hit.rel_volume < 0.9
+                && hit.hod_dist_pct.abs() < 1.0
+        }
+        Preset::LowerRangeSqueeze => {
+            hit.hod_dist_pct.abs() > 2.0 * hit.lod_dist_pct.abs()
+                && hit.day_pct.abs() < 1.5
+                && hit.rel_volume < 0.9
+                && hit.lod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -335,6 +349,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BalancedDriftSqueeze => "Balanced-Drift Squeeze",
         Preset::PennyMoveSqueeze => "Penny-Move Squeeze",
         Preset::DryUpSqueeze => "Dry-Up Squeeze",
+        Preset::UpperRangeSqueeze => "Upper-Range Squeeze",
+        Preset::LowerRangeSqueeze => "Lower-Range Squeeze",
     }
 }
 

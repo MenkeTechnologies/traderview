@@ -153,7 +153,48 @@ function renderChain(chain, r, mount) {
                     </tr>`;
                 }).join('')}</tbody>
             </table>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.options_chain.h2.iv_smile">IV smile (calls vs puts by strike)</h2>
+            <div id="oc-chart" style="width:100%;height:240px"></div>
         </div>`;
+    renderIvSmile(strikes, callBy, putBy, chain.spot);
+}
+
+function renderIvSmile(strikes, callBy, putBy, spot) {
+    const el = document.getElementById('oc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const xs = strikes.filter(k => Number.isFinite(k));
+    if (xs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.options_chain.empty_chart">${esc(tr('view.options_chain.empty_chart'))}</div>`;
+        return;
+    }
+    const callIv = xs.map(k => {
+        const c = callBy.get(k);
+        return c && Number.isFinite(Number(c.implied_vol)) ? Number(c.implied_vol) * 100 : null;
+    });
+    const putIv = xs.map(k => {
+        const p = putBy.get(k);
+        return p && Number.isFinite(Number(p.implied_vol)) ? Number(p.implied_vol) * 100 : null;
+    });
+    const spotLine = xs.map(k => Number(k) === Number(spot) ? 0 : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: tr('view.options_chain.chart.strike') },
+            { label: tr('view.options_chain.chart.call_iv'),
+              stroke: '#7af0a8', width: 1.4,
+              points: { show: true, size: 6, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: tr('view.options_chain.chart.put_iv'),
+              stroke: '#ff3860', width: 1.4,
+              points: { show: true, size: 6, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, callIv, putIv], el);
+    void spotLine;
 }
 
 function row(c, kind, s, k, t, r) {
