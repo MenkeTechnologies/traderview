@@ -5,6 +5,7 @@ import { api, apiFetchBlob } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t, applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 const PRESETS = [
     { id: '60_40', weights: [
@@ -44,24 +45,26 @@ export async function renderRebalance(mount, state) {
         <div class="chart-panel">
             <form id="rb-form" class="inline-form">
                 <label><span data-i18n="view.rebalance.label.preset">Preset</span>
-                    <select name="preset">
+                    <select name="preset" data-tip="view.rebalance.tip.preset">
                         <option data-i18n="view.rebalance.opt.custom" value="">(custom)</option>
                         ${PRESETS.map(p => `<option value="${p.id}" data-i18n="view.rebalance.preset.${p.id}">${esc(t(`view.rebalance.preset.${p.id}`))}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.rebalance.label.cash">Cash on hand</span>
-                    <input name="cash" type="number" min="0" step="any" value="0" style="width:120px;">
+                    <input name="cash" type="number" min="0" step="any" value="0" style="width:120px;" data-tip="view.rebalance.tip.cash">
                 </label>
                 <label><span data-i18n="view.rebalance.label.max_trades">Max trades</span>
-                    <input name="max_trades" type="number" min="1" max="200" value="20" style="width:80px;">
+                    <input name="max_trades" type="number" min="1" max="200" value="20" style="width:80px;" data-tip="view.rebalance.tip.max_trades">
                 </label>
-                <button data-i18n="view.rebalance.btn.compute_plan" class="primary" id="rb-go" type="button">Compute plan</button>
-                <button data-i18n="view.rebalance.btn.download_trades_csv" class="btn" id="rb-csv" type="button">Download trades CSV</button>
+                <button data-i18n="view.rebalance.btn.compute_plan" data-tip="view.rebalance.tip.compute_plan" data-shortcut="rebalance_compute" class="primary" id="rb-go" type="button">Compute plan</button>
+                <button data-i18n="view.rebalance.btn.download_trades_csv" data-tip="view.rebalance.tip.download_csv" class="btn" id="rb-csv" type="button">Download trades CSV</button>
                 <span id="rb-status" class="muted small"></span>
             </form>
             <textarea id="rb-targets" rows="8"
                 style="width:100%;font-family:'Share Tech Mono',monospace;font-size:11px;background:#070714;color:#cfd2e8;border:1px solid var(--border);padding:8px;margin-top:8px;"
                 data-i18n-placeholder="view.rebalance.placeholder.targets"
+                data-tip="view.rebalance.tip.targets"
+                data-shortcut="rebalance_focus_targets"
                 placeholder='Targets JSON: [{"symbol":"SPY","weight":0.6},{"symbol":"BND","weight":0.4}]'>[
   {"symbol":"SPY","weight":0.6},
   {"symbol":"BND","weight":0.4}
@@ -115,17 +118,21 @@ async function run(accountId, asCsv, mount, tok) {
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
             const s2 = mount.querySelector('#rb-status');
             if (s2) s2.textContent = t('common.status.downloaded');
+            showToast(t('common.status.downloaded'), { level: 'success' });
             return;
         }
         const r = await api.rebalanceRun(body);
         if (!viewIsCurrent(tok)) return;
         render(r, mount);
         const s2 = mount.querySelector('#rb-status');
-        if (s2) s2.textContent = t('view.rebalance.status.result', { trades: r.plan.trade_count, traded: fmt(r.plan.total_trade_value), portfolio: fmt(r.plan.total_value) });
+        const msg = t('view.rebalance.status.result', { trades: r.plan.trade_count, traded: fmt(r.plan.total_trade_value), portfolio: fmt(r.plan.total_value) });
+        if (s2) s2.textContent = msg;
+        showToast(msg, { level: r.plan.trade_count > 0 ? 'success' : 'info' });
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const s2 = mount.querySelector('#rb-status');
         if (s2) s2.textContent = t('common.error', { err: e.message });
+        showToast(t('toast.error.api', { err: e.message }), { level: 'error' });
     }
 }
 

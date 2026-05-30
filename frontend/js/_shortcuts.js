@@ -59,6 +59,8 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'journal_focus_body', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',   descKey: 'shortcut.journal_focus_body', actionKey: 'tv:journal-focus-body' },
     { id: 'watchlists_focus_add', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'watchlists',  descKey: 'shortcut.watchlists_focus_add',  actionKey: 'tv:watchlists-focus-add' },
     { id: 'alert_rules_focus_new', keys: { key: 'n', meta: false, ctrl: false, shift: false, alt: false }, scope: 'alert-rules', descKey: 'shortcut.alert_rules_focus_new', actionKey: 'tv:alert-rules-focus-new' },
+    { id: 'rebalance_compute',       keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'rebalance',   descKey: 'shortcut.rebalance_compute',       actionKey: 'tv:rebalance-compute' },
+    { id: 'rebalance_focus_targets', keys: { key: 't', meta: false, ctrl: false, shift: false, alt: false }, scope: 'rebalance',   descKey: 'shortcut.rebalance_focus_targets', actionKey: 'tv:rebalance-focus-targets' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

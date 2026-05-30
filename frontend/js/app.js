@@ -443,6 +443,16 @@ function bindTabs() {
         const el = document.getElementById('ar-new-name');
         if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
     });
+    // View-scoped: `c` in rebalance scope → trigger Compute plan button.
+    window.addEventListener('tv:rebalance-compute', () => {
+        const el = document.getElementById('rb-go');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `t` in rebalance scope → focus the targets JSON editor.
+    window.addEventListener('tv:rebalance-focus-targets', () => {
+        const el = document.getElementById('rb-targets');
+        if (el && typeof el.focus === 'function') { el.focus(); el.select?.(); }
+    });
     // View-scoped: `r` in live/trades/journal/watchlists/webull/charts
     // scopes — each refreshes the active view via hashchange.
     const refreshNow = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
