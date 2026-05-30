@@ -801,6 +801,11 @@ function bindTabs() {
         const el = document.getElementById('vix-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in currency-exposure scope → click Analyze.
+    window.addEventListener('tv:currency-exposure-run', () => {
+        const el = document.getElementById('ce-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

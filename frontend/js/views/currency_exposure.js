@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parsePositionBlob, parseFxBlob, validateInputs, buildBody, localAnalyze,
@@ -41,16 +42,16 @@ export async function renderCurrencyExposure(mount, _appState) {
             <div class="inline-form">
                 <label><span data-i18n="view.currency_exposure.label.home">Home currency</span>
                     <input id="ce-home" type="text" maxlength="5" value="${esc(state.home_currency)}"
-                           style="text-transform:uppercase;width:80px"></label>
+                           style="text-transform:uppercase;width:80px" data-tip="view.currency_exposure.tip.home"></label>
                 <button data-i18n="view.currency_exposure.btn.analyze" id="ce-run" class="primary"
-                        data-tip="view.currency_exposure.tip.analyze" type="button">Analyze</button>
+                        data-tip="view.currency_exposure.tip.analyze" data-shortcut="currency_exposure_run" type="button">Analyze</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.currency_exposure.btn.demo_multi" id="ce-demo-multi"  class="secondary" type="button">Demo: multi-region (4 ccys)</button>
-                <button data-i18n="view.currency_exposure.btn.demo_eur"   id="ce-demo-eur"    class="secondary" type="button">Demo: EUR concentrated</button>
-                <button data-i18n="view.currency_exposure.btn.demo_short" id="ce-demo-short"  class="secondary" type="button">Demo: short hedged EUR</button>
-                <button data-i18n="view.currency_exposure.btn.demo_home"  id="ce-demo-home"   class="secondary" type="button">Demo: home only (no FX)</button>
-                <button data-i18n="view.currency_exposure.btn.demo_miss"  id="ce-demo-miss"   class="secondary" type="button">Demo: missing FX rate (CAD)</button>
+                <button data-i18n="view.currency_exposure.btn.demo_multi" id="ce-demo-multi"  class="secondary" type="button" data-tip="view.currency_exposure.tip.demo_multi">Demo: multi-region (4 ccys)</button>
+                <button data-i18n="view.currency_exposure.btn.demo_eur"   id="ce-demo-eur"    class="secondary" type="button" data-tip="view.currency_exposure.tip.demo_eur">Demo: EUR concentrated</button>
+                <button data-i18n="view.currency_exposure.btn.demo_short" id="ce-demo-short"  class="secondary" type="button" data-tip="view.currency_exposure.tip.demo_short">Demo: short hedged EUR</button>
+                <button data-i18n="view.currency_exposure.btn.demo_home"  id="ce-demo-home"   class="secondary" type="button" data-tip="view.currency_exposure.tip.demo_home">Demo: home only (no FX)</button>
+                <button data-i18n="view.currency_exposure.btn.demo_miss"  id="ce-demo-miss"   class="secondary" type="button" data-tip="view.currency_exposure.tip.demo_miss">Demo: missing FX rate (CAD)</button>
             </div>
             <p data-i18n="view.currency_exposure.hint.about" class="muted">Home currency gets rate 1.0. Missing FX → 0 exposure (defensive; warn in chart). Overweight = currency > 25% of total home-gross AND not the home currency. Buckets sorted by gross_home DESC.</p>
         </div>
@@ -101,7 +102,11 @@ function readInputs() {
         ...pp.errors.map(e => `pos[${e.line_no}] ${e.message}`),
         ...pf.errors.map(e => `fx[${e.line_no}] ${e.message}`),
     ];
-    if (errs.length) { showErr(errs.slice(0, 4).join('; ')); return; }
+    if (errs.length) {
+        showErr(errs.slice(0, 4).join('; '));
+        showToast(t('view.currency_exposure.toast.parse_error', { n: errs.length }), { level: 'warning' });
+        return;
+    }
     hideErr();
     state.positions     = pp.positions;
     state.fx            = pf.fx;
@@ -111,7 +116,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.positions, state.home_currency, state.fx);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.currency_exposure.toast.invalid'), { level: 'warning' }); return; }
     const local = localAnalyze(state.positions, state.home_currency, state.fx);
     renderSummary(local, true);
     renderTable(local);
@@ -122,12 +127,17 @@ async function compute(tok) {
             state.positions, state.home_currency, state.fx));
     } catch (e) {
         showErr(`${t('view.currency_exposure.err.api')}: ${e.message || e}`);
+        showToast(t('view.currency_exposure.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
     renderExposureChart(resp);
+    const buckets = (resp.buckets || []).length;
+    const overweight = (resp.buckets || []).filter(b => b.overweight).length;
+    const level = overweight > 0 ? 'warning' : 'success';
+    showToast(t('view.currency_exposure.toast.analyzed', { n: buckets, ow: overweight }), { level });
 }
 
 function renderSummary(report, pending) {

@@ -210,6 +210,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'buying_power_run',             keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'buying-power',      descKey: 'shortcut.buying_power_run',             actionKey: 'tv:buying-power-run' },
     { id: 'margin_call_run',              keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'margin-call',       descKey: 'shortcut.margin_call_run',              actionKey: 'tv:margin-call-run' },
     { id: 'vix_term_structure_run',       keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vix-term-structure', descKey: 'shortcut.vix_term_structure_run',      actionKey: 'tv:vix-term-structure-run' },
+    { id: 'currency_exposure_run',        keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'currency-exposure', descKey: 'shortcut.currency_exposure_run',        actionKey: 'tv:currency-exposure-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
