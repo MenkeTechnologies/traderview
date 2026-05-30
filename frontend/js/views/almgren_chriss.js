@@ -21,6 +21,7 @@ import {
 } from '../_almgren_chriss_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_PARAMS = {
     total_shares:    1_000_000,
     horizon_seconds: 23_400,   // 6.5h trading day
@@ -42,11 +43,11 @@ export async function renderAlmgrenChriss(mount, _appState) {
             <h2 data-i18n="view.almgren_chriss.h2.parent_order">Parent order</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.almgren_chriss.label.total_shares">Total shares (signed; − for sell)</span>
-                    <input id="ac-X" type="number" step="any" value="${state.params.total_shares}"></label>
+                    <input id="ac-X" type="number" step="any" value="${state.params.total_shares}" data-tip="view.almgren_chriss.tip.x"></label>
                 <label><span data-i18n="view.almgren_chriss.label.horizon_seconds">Horizon (seconds)</span>
-                    <input id="ac-T" type="number" step="any" min="0" value="${state.params.horizon_seconds}"></label>
+                    <input id="ac-T" type="number" step="any" min="0" value="${state.params.horizon_seconds}" data-tip="view.almgren_chriss.tip.t"></label>
                 <label><span data-i18n="view.almgren_chriss.label.slices">Slices</span>
-                    <input id="ac-n" type="number" step="1" min="1" max="2000" value="${state.params.n_intervals}"></label>
+                    <input id="ac-n" type="number" step="1" min="1" max="2000" value="${state.params.n_intervals}" data-tip="view.almgren_chriss.tip.n"></label>
             </div>
         </div>
 
@@ -54,15 +55,15 @@ export async function renderAlmgrenChriss(mount, _appState) {
             <h2 data-i18n="view.almgren_chriss.h2.impact_and_risk_parameters">Impact &amp; risk parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.almgren_chriss.label.eta">η (temp impact)</span>
-                    <input id="ac-eta" type="number" step="any" min="0" value="${state.params.eta}"></label>
+                    <input id="ac-eta" type="number" step="any" min="0" value="${state.params.eta}" data-tip="view.almgren_chriss.tip.eta"></label>
                 <label><span data-i18n="view.almgren_chriss.label.gamma">γ (perm impact)</span>
-                    <input id="ac-gamma" type="number" step="any" min="0" value="${state.params.gamma}"></label>
+                    <input id="ac-gamma" type="number" step="any" min="0" value="${state.params.gamma}" data-tip="view.almgren_chriss.tip.gamma"></label>
                 <label><span data-i18n="view.almgren_chriss.label.lambda">λ (risk aversion)</span>
-                    <input id="ac-lambda" type="number" step="any" min="0" value="${state.params.lambda}"></label>
+                    <input id="ac-lambda" type="number" step="any" min="0" value="${state.params.lambda}" data-tip="view.almgren_chriss.tip.lambda"></label>
                 <label><span data-i18n="view.almgren_chriss.label.sigma">σ (per-√s vol)</span>
-                    <input id="ac-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
-                <button data-i18n="view.almgren_chriss.btn.solve" id="ac-run" class="primary" type="button">Solve</button>
-                <button data-i18n="view.almgren_chriss.btn.plot_frontier_sweep" id="ac-frontier" class="secondary" type="button">+ Plot frontier (λ sweep)</button>
+                    <input id="ac-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.almgren_chriss.tip.sigma"></label>
+                <button data-i18n="view.almgren_chriss.btn.solve" id="ac-run" class="primary" type="button" data-tip="view.almgren_chriss.tip.run" data-shortcut="almgren_chriss_run">Solve</button>
+                <button data-i18n="view.almgren_chriss.btn.plot_frontier_sweep" id="ac-frontier" class="secondary" type="button" data-tip="view.almgren_chriss.tip.frontier" data-shortcut="almgren_chriss_frontier">+ Plot frontier (λ sweep)</button>
             </div>
             <p data-i18n="view.almgren_chriss.hint.controls_how_front_loaded_the_trajectory_is_0_coll" class="muted">
                 κ = √(λσ²/η) controls how front-loaded the trajectory is. λ→0 collapses to TWAP
@@ -116,23 +117,26 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.almgren_chriss.toast.invalid'), { level: 'warning' }); return; }
     let res;
     try {
         res = await api.microAlmgrenChriss(buildBody(state.params));
         if (!res) throw new Error(t('view.almgren_chriss.error.null'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.almgren_chriss.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(res);
     renderTrajectory(res);
+    showToast(t('view.almgren_chriss.toast.solved', { slices: res.trade_schedule.length }), { level: 'success' });
 }
 
 async function computeFrontier(tok) {
     hideErr();
     const err = validateParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.almgren_chriss.toast.invalid'), { level: 'warning' }); return; }
     const lambdas = lambdaSweep(state.params.lambda, 7);
     let reports;
     try {
@@ -140,7 +144,9 @@ async function computeFrontier(tok) {
             lambdas.map(l => api.microAlmgrenChriss(buildBody({ ...state.params, lambda: l }))),
         );
     } catch (e) {
-        showErr(t('view.almgren_chriss.error.sweep', { msg: e.message || e })); return;
+        showErr(t('view.almgren_chriss.error.sweep', { msg: e.message || e }));
+        showToast(t('view.almgren_chriss.toast.sweep_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     const points = reports.map((r, i) => r ? {
@@ -149,6 +155,7 @@ async function computeFrontier(tok) {
         cost:     r.expected_impact_cost,
     } : null).filter(Boolean);
     renderFrontier(points, state.params.lambda);
+    showToast(t('view.almgren_chriss.toast.frontier', { n: points.length }), { level: 'success' });
 }
 
 function renderSummary(r) {

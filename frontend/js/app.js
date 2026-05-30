@@ -531,6 +531,16 @@ function bindTabs() {
         const el = document.getElementById('cd-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in almgren-chriss scope → click Solve.
+    window.addEventListener('tv:almgren-chriss-run', () => {
+        const el = document.getElementById('ac-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `f` in almgren-chriss scope → click Plot frontier.
+    window.addEventListener('tv:almgren-chriss-frontier', () => {
+        const el = document.getElementById('ac-frontier');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
