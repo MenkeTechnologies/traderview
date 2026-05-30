@@ -260,6 +260,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bbw_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-band-width', descKey: 'shortcut.bbw_run',                   actionKey: 'tv:bbw-run' },
     { id: 'bb_osc_run',                   keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-oscillators', descKey: 'shortcut.bb_osc_run',               actionKey: 'tv:bb-osc-run' },
     { id: 'bbwp_run',                     keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-bandwidth-percentile', descKey: 'shortcut.bbwp_run',         actionKey: 'tv:bbwp-run' },
+    { id: 'bbd_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-band-distance', descKey: 'shortcut.bbd_run',                actionKey: 'tv:bbd-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

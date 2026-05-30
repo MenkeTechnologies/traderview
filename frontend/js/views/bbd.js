@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_N_STDEV, MIN_PERIOD, MAX_PERIOD,
@@ -32,21 +33,23 @@ export async function renderBbd(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bbd.label.period">Period</span>
-                    <input id="bd-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="bd-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.bbd.tip.period"></label>
                 <label><span data-i18n="view.bbd.label.n_stdev">n_stdev</span>
-                    <input id="bd-stdev" type="number" step="0.1" min="0.1" value="${state.n_stdev}"></label>
+                    <input id="bd-stdev" type="number" step="0.1" min="0.1" value="${state.n_stdev}"
+                           data-tip="view.bbd.tip.n_stdev"></label>
                 <button data-i18n="view.bbd.btn.compute" id="bd-run" class="primary"
-                        data-tip="view.bbd.tip.compute" type="button">Compute</button>
+                        data-tip="view.bbd.tip.compute" data-shortcut="bbd_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bbd.btn.demo_osc"   id="bd-d1" class="secondary" type="button">Demo: oscillating</button>
-                <button data-i18n="view.bbd.btn.demo_mid"   id="bd-d2" class="secondary" type="button">Demo: midline walk</button>
-                <button data-i18n="view.bbd.btn.demo_walk"  id="bd-d3" class="secondary" type="button">Demo: band walking</button>
-                <button data-i18n="view.bbd.btn.demo_brkup" id="bd-d4" class="secondary" type="button">Demo: breakout up</button>
-                <button data-i18n="view.bbd.btn.demo_brkdn" id="bd-d5" class="secondary" type="button">Demo: breakdown</button>
-                <button data-i18n="view.bbd.btn.demo_wide"  id="bd-d6" class="secondary" type="button">Demo: wide bands (k=3)</button>
-                <button data-i18n="view.bbd.btn.demo_tight" id="bd-d7" class="secondary" type="button">Demo: tight bands (k=1)</button>
-                <button data-i18n="view.bbd.btn.demo_flat"  id="bd-d8" class="secondary" type="button">Demo: flat (sd=0)</button>
+                <button data-i18n="view.bbd.btn.demo_osc"   id="bd-d1" class="secondary" data-tip="view.bbd.tip.demo_osc"   type="button">Demo: oscillating</button>
+                <button data-i18n="view.bbd.btn.demo_mid"   id="bd-d2" class="secondary" data-tip="view.bbd.tip.demo_mid"   type="button">Demo: midline walk</button>
+                <button data-i18n="view.bbd.btn.demo_walk"  id="bd-d3" class="secondary" data-tip="view.bbd.tip.demo_walk"  type="button">Demo: band walking</button>
+                <button data-i18n="view.bbd.btn.demo_brkup" id="bd-d4" class="secondary" data-tip="view.bbd.tip.demo_brkup" type="button">Demo: breakout up</button>
+                <button data-i18n="view.bbd.btn.demo_brkdn" id="bd-d5" class="secondary" data-tip="view.bbd.tip.demo_brkdn" type="button">Demo: breakdown</button>
+                <button data-i18n="view.bbd.btn.demo_wide"  id="bd-d6" class="secondary" data-tip="view.bbd.tip.demo_wide"  type="button">Demo: wide bands (k=3)</button>
+                <button data-i18n="view.bbd.btn.demo_tight" id="bd-d7" class="secondary" data-tip="view.bbd.tip.demo_tight" type="button">Demo: tight bands (k=1)</button>
+                <button data-i18n="view.bbd.btn.demo_flat"  id="bd-d8" class="secondary" data-tip="view.bbd.tip.demo_flat"  type="button">Demo: flat (sd=0)</button>
             </div>
             <p data-i18n="view.bbd.hint.about" class="muted">BBD = min(|close − upper|, |close − lower|) / band_width. 0 = close exactly at one of the bands; 0.5 = midline; > 0.5 = outside the band (breakout). Distinct from %B which is signed position. Defaults: period=20, n_stdev=2.0.</p>
         </div>
@@ -93,6 +96,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bbd.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bbd.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -106,7 +110,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bbd.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.period, state.n_stdev);
     renderSummary(local, true);
     renderChart(local);
@@ -117,14 +121,16 @@ async function compute(tok) {
         resp = await api.anlyBollingerBandDistance(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bbd.err.api')}: ${e.message || e}`);
+        showToast(t('view.bbd.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.bbd.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.bbd.err.server_rejected')); showToast(t('view.bbd.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderKissChart(resp);
     renderStats();
+    showToast(t('view.bbd.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(bbd, pending) {
