@@ -1026,6 +1026,11 @@ function bindTabs() {
         const el = document.getElementById('ts-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in bartlett scope → click Test.
+    window.addEventListener('tv:bartlett-run', () => {
+        const el = document.getElementById('bt-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

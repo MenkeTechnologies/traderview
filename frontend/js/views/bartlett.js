@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseGroupsBlob, groupsToBlob,
@@ -30,17 +31,17 @@ export async function renderBartlett(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.bartlett.btn.compute" id="bt-run" class="primary"
-                        data-tip="view.bartlett.tip.compute" type="button">Test</button>
+                        data-tip="view.bartlett.tip.compute" data-shortcut="bartlett_run" type="button">Test</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bartlett.btn.demo_equal"    id="bt-d1" class="secondary" type="button">Demo: equal variance</button>
-                <button data-i18n="view.bartlett.btn.demo_mild"     id="bt-d2" class="secondary" type="button">Demo: mild diff (1.5×)</button>
-                <button data-i18n="view.bartlett.btn.demo_strong"   id="bt-d3" class="secondary" type="button">Demo: strong diff (5×)</button>
-                <button data-i18n="view.bartlett.btn.demo_3eq"      id="bt-d4" class="secondary" type="button">Demo: 3 equal groups</button>
-                <button data-i18n="view.bartlett.btn.demo_3mix"     id="bt-d5" class="secondary" type="button">Demo: 3 mixed groups</button>
-                <button data-i18n="view.bartlett.btn.demo_4reg"     id="bt-d6" class="secondary" type="button">Demo: 4 vol regimes</button>
-                <button data-i18n="view.bartlett.btn.demo_small"    id="bt-d7" class="secondary" type="button">Demo: small groups (n=5)</button>
-                <button data-i18n="view.bartlett.btn.demo_asym"     id="bt-d8" class="secondary" type="button">Demo: asymmetric sizes</button>
+                <button data-i18n="view.bartlett.btn.demo_equal"    id="bt-d1" class="secondary" data-tip="view.bartlett.tip.demo_equal"  type="button">Demo: equal variance</button>
+                <button data-i18n="view.bartlett.btn.demo_mild"     id="bt-d2" class="secondary" data-tip="view.bartlett.tip.demo_mild"   type="button">Demo: mild diff (1.5×)</button>
+                <button data-i18n="view.bartlett.btn.demo_strong"   id="bt-d3" class="secondary" data-tip="view.bartlett.tip.demo_strong" type="button">Demo: strong diff (5×)</button>
+                <button data-i18n="view.bartlett.btn.demo_3eq"      id="bt-d4" class="secondary" data-tip="view.bartlett.tip.demo_3eq"    type="button">Demo: 3 equal groups</button>
+                <button data-i18n="view.bartlett.btn.demo_3mix"     id="bt-d5" class="secondary" data-tip="view.bartlett.tip.demo_3mix"   type="button">Demo: 3 mixed groups</button>
+                <button data-i18n="view.bartlett.btn.demo_4reg"     id="bt-d6" class="secondary" data-tip="view.bartlett.tip.demo_4reg"   type="button">Demo: 4 vol regimes</button>
+                <button data-i18n="view.bartlett.btn.demo_small"    id="bt-d7" class="secondary" data-tip="view.bartlett.tip.demo_small"  type="button">Demo: small groups (n=5)</button>
+                <button data-i18n="view.bartlett.btn.demo_asym"     id="bt-d8" class="secondary" data-tip="view.bartlett.tip.demo_asym"   type="button">Demo: asymmetric sizes</button>
             </div>
             <p data-i18n="view.bartlett.hint.about" class="muted">Tests H₀: all k groups share the same variance. χ² = ((N−k)·ln(σ²_pooled) − Σ(n_i−1)·ln(σ²_i)) / correction. Under H₀, χ² ~ χ²(k−1). More powerful than Levene if data is normal — sensitive to non-normality.</p>
         </div>
@@ -85,6 +86,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bartlett.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bartlett.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -95,9 +97,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bartlett.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.groups);
-    if (!local) { showErr(t('view.bartlett.err.degenerate')); return; }
+    if (!local) { showErr(t('view.bartlett.err.degenerate')); showToast(t('view.bartlett.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderTable();
     renderChart(local);
@@ -107,14 +109,16 @@ async function compute(tok) {
         resp = await api.anlyBartlettVariance(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bartlett.err.api')}: ${e.message || e}`);
+        showToast(t('view.bartlett.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.bartlett.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.bartlett.err.server_rejected')); showToast(t('view.bartlett.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderTable();
     renderChart(resp);
     renderMeanChart();
+    showToast(t('view.bartlett.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
