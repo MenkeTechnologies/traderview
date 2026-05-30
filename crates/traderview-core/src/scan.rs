@@ -890,6 +890,8 @@ pub enum Preset {
     BigBreakdownBelowYearLow,            // year_low_pct < -3 AND change_pct < -1 AND rel_volume >= 1.5 — close more than 3% below the prior 52w low + red + hot vol (deep breakdown extension: not just a fresh trough but materially below it; price-discovery contraction with elevated participation)
     DeepPullbackBigGreenHotVol,          // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % below 52w high + big green + hot vol (recovery thrust from deep-pullback zone with institutional accumulation; pre-retest momentum candidate)
     DeepPullbackBigRedHotVol,            // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % below 52w high + big red + hot vol (continuation thrust deeper into pullback zone with institutional distribution; trend-break confirmation candidate)
+    DeepBounceBigGreenHotVol,            // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % above 52w low + big green + hot vol (continuation thrust away from the floor with institutional accumulation; recovery momentum well off the trough)
+    DeepBounceBigRedHotVol,              // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % above 52w low + big red + hot vol (retracement thrust back toward the floor with institutional distribution; bounce-failure confirmation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5211,6 +5213,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::DeepBounceBigGreenHotVol => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct < 30.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::DeepBounceBigRedHotVol => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct < 30.0
+                && hit.change_pct < -2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5991,6 +6005,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigBreakdownBelowYearLow => "Close More than 3% below the Prior 52w Low + Red + Hot Vol (Deep Breakdown Extension: Not Just a Fresh Trough but Materially below It; Price-discovery Contraction with Elevated Participation)",
         Preset::DeepPullbackBigGreenHotVol => "10-30 % below 52w High + Big Green + Hot Vol (Recovery Thrust from Deep-pullback Zone with Institutional Accumulation; Pre-retest Momentum Candidate)",
         Preset::DeepPullbackBigRedHotVol => "10-30 % below 52w High + Big Red + Hot Vol (Continuation Thrust Deeper into Pullback Zone with Institutional Distribution; Trend-break Confirmation Candidate)",
+        Preset::DeepBounceBigGreenHotVol => "10-30 % above 52w Low + Big Green + Hot Vol (Continuation Thrust Away from the Floor with Institutional Accumulation; Recovery Momentum Well off the Trough)",
+        Preset::DeepBounceBigRedHotVol => "10-30 % above 52w Low + Big Red + Hot Vol (Retracement Thrust Back toward the Floor with Institutional Distribution; Bounce-failure Confirmation Candidate)",
     }
 }
 
