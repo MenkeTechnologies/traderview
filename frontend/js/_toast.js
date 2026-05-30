@@ -3,6 +3,8 @@
 //
 // LEVELS = info | success | warning | error. CSS classes use `toast-<level>`.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_DURATION_MS = 2500;
 export const LEVELS = ['info', 'success', 'warning', 'error'];
 
@@ -10,9 +12,9 @@ export const LEVELS = ['info', 'success', 'warning', 'error'];
 export function validateOptions(opts) {
     const o = opts || {};
     if (o.duration != null && (!Number.isFinite(o.duration) || o.duration < 0))
-        return 'duration must be ≥ 0 ms';
+        return t('toast.validate.duration_non_neg');
     if (o.level != null && !LEVELS.includes(o.level))
-        return `level must be one of ${LEVELS.join(', ')}`;
+        return t('toast.validate.level_invalid', { levels: LEVELS.join(', ') });
     return null;
 }
 

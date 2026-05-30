@@ -7089,6 +7089,8 @@
   "view.yield_curve_pca.factor.curvature": "Curvature",
   "view.stop_loss_best_of.summary.fixed_dollar": "${value} stop",
   "view.stop_loss_best_of.summary.fixed_pct":    "{value}% stop",
+  "toast.validate.duration_non_neg":             "duration must be ≥ 0 ms",
+  "toast.validate.level_invalid":                "level must be one of {levels}",
   "common.range_label":                    "range {low} – {high}",
   "common.month_year":                     "{month} {year}",
   "common.unknown":                        "unknown",
