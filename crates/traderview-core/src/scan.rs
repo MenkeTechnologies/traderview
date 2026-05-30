@@ -350,6 +350,8 @@ pub enum Preset {
     TrendDayDown,                // change_pct < -2 AND day_pct < -1 AND rel_volume >= 1.2 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 — trend-day-down: opened high, closed near LOD on heavy vol
     DoubleBottomCandidate,       // year_low_pct < 5 AND hod_dist.abs() > 1 AND lod_dist.abs() < 0.5 AND change_pct > 0 — touched 52w-low zone but closed higher (double-bottom candidate)
     DoubleTopCandidate,          // year_high_pct > -5 AND lod_dist.abs() > 1 AND hod_dist.abs() < 0.5 AND change_pct < 0 — touched 52w-high zone but closed lower (double-top candidate)
+    Pct52wMidZone,               // year_high_pct < -40 AND year_high_pct > -60 AND year_low_pct > 40 AND year_low_pct < 60 — mid-zone of 52w range (no extreme positioning; chop bias)
+    Pct52wRangeBreakoutTriggered, // year_high_pct >= 0 AND change_pct > 2 AND rel_volume >= 2 — broke above 52w high range on heavy vol (range-breakout trigger)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1523,6 +1525,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.change_pct < 0.0
         }
+        Preset::Pct52wMidZone => {
+            hit.year_high_pct < -40.0
+                && hit.year_high_pct > -60.0
+                && hit.year_low_pct > 40.0
+                && hit.year_low_pct < 60.0
+        }
+        Preset::Pct52wRangeBreakoutTriggered => {
+            hit.year_high_pct >= 0.0
+                && hit.change_pct > 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1763,6 +1776,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TrendDayDown => "Trend Day Down",
         Preset::DoubleBottomCandidate => "Double-Bottom Candidate",
         Preset::DoubleTopCandidate => "Double-Top Candidate",
+        Preset::Pct52wMidZone => "52w Mid Zone",
+        Preset::Pct52wRangeBreakoutTriggered => "52w Range Breakout Triggered",
     }
 }
 

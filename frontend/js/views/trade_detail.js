@@ -14,6 +14,37 @@ const dtLocal = (iso) => {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+function renderExecChart(executions) {
+    const el = document.getElementById('td-exec-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (executions || [])
+        .filter(e => Number.isFinite(Number(e.price)))
+        .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_detail.empty_chart">${esc(t('view.trade_detail.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map((_, i) => i + 1);
+    const buyY  = rows.map(e => (e.side === 'buy' || e.side === 'cover') ? Number(e.price) : null);
+    const sellY = rows.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.price) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_detail.chart.exec_idx') },
+            { label: t('view.trade_detail.chart.buy'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 14, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.trade_detail.chart.sell'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, buyY, sellY], el);
+}
+
 export async function renderTradeDetail(mount, state, tradeId) {
     const tok = currentViewToken();
     if (!tradeId) { mount.innerHTML = '<p data-i18n="view.trade_detail.hint.no_trade_id" class="boot">No trade id</p>'; return; }
@@ -50,6 +81,11 @@ export async function renderTradeDetail(mount, state, tradeId) {
         <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.chart">Chart</h2>
             <div id="chart-wrap"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_detail.h2.exec_chart">Execution prices (chronological)</h2>
+            <div id="td-exec-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="panel-grid">
@@ -181,6 +217,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
     }));
     const chartWrap = mount.querySelector('#chart-wrap');
     if (chartWrap) ohlcChart(chartWrap, bars.bars || [], marks, { height: 360 });
+    renderExecChart(executions);
 
     // Tag add
     const allTags = await api.tags();

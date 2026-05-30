@@ -232,6 +232,8 @@ const PRESETS = [
     { id: 'trend_day_down', label: t('view.scanners.preset.trend_day_down.label'), desc: t('view.scanners.preset.trend_day_down.desc') },
     { id: 'double_bottom_candidate', label: t('view.scanners.preset.double_bottom_candidate.label'), desc: t('view.scanners.preset.double_bottom_candidate.desc') },
     { id: 'double_top_candidate', label: t('view.scanners.preset.double_top_candidate.label'), desc: t('view.scanners.preset.double_top_candidate.desc') },
+    { id: 'pct52w_mid_zone', label: t('view.scanners.preset.pct52w_mid_zone.label'), desc: t('view.scanners.preset.pct52w_mid_zone.desc') },
+    { id: 'pct52w_range_breakout_triggered', label: t('view.scanners.preset.pct52w_range_breakout_triggered.label'), desc: t('view.scanners.preset.pct52w_range_breakout_triggered.desc') },
 ];
 
 export async function renderScanners(mount) {
