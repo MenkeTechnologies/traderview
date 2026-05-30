@@ -898,6 +898,8 @@ pub enum Preset {
     TenXVolNoGapBigIntradayMove,         // rel_volume >= 10 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — 10x average vol + no overnight gap + big intraday move (pure regular-hours extreme thrust: no overnight aid, climax-level participation, all directional commitment built during the session)
     MicroVolBigChange,                   // rel_volume < 0.1 AND change_pct.abs() > 3 — 10 % of average vol + big net move (dead-stock surprise: illiquidity-driven extreme move with virtually no participation; thin market-maker quote rip or holiday/holiday-eve thin-tape print)
     MicroVolFlatDay,                     // rel_volume < 0.1 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — 10 % of average vol + flat close + tight range (total dead stock: no participation and no price movement; delisting candidate or fully forgotten name)
+    ConfirmedBreakoutAboveYearHigh,      // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 1 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + green + hot vol (solid confirmed breakout: clearly past resistance but not yet parabolic; trend-establishment zone for new highs)
+    ConfirmedBreakdownBelowYearLow,      // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -1 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + red + hot vol (solid confirmed breakdown: clearly past support but not yet panicked; trend-establishment zone for new lows)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5259,6 +5261,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
         }
+        Preset::ConfirmedBreakoutAboveYearHigh => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < -1.0
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ConfirmedBreakdownBelowYearLow => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < -1.0
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6047,6 +6061,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TenXVolNoGapBigIntradayMove => "10x Average Vol + No Overnight Gap + Big Intraday Move (Pure Regular-hours Extreme Thrust: No Overnight Aid, Climax-level Participation, All Directional Commitment Built during the Session)",
         Preset::MicroVolBigChange => "10 % of Average Vol + Big Net Move (Dead-stock Surprise: Illiquidity-driven Extreme Move with Virtually No Participation; Thin Market-maker Quote Rip or Holiday/holiday-eve Thin-tape Print)",
         Preset::MicroVolFlatDay => "10 % of Average Vol + Flat Close + Tight Range (Total Dead Stock: No Participation and No Price Movement; Delisting Candidate or Fully Forgotten Name)",
+        Preset::ConfirmedBreakoutAboveYearHigh => "1-3 % above Prior 52w High + Green + Hot Vol (Solid Confirmed Breakout: Clearly Past Resistance but Not Yet Parabolic; Trend-establishment Zone for New Highs)",
+        Preset::ConfirmedBreakdownBelowYearLow => "1-3 % below Prior 52w Low + Red + Hot Vol (Solid Confirmed Breakdown: Clearly Past Support but Not Yet Panicked; Trend-establishment Zone for New Lows)",
     }
 }
 
