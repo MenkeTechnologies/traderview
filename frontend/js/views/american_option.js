@@ -23,6 +23,7 @@ import {
 } from '../_american_option_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_PARAMS = {
     kind: 'put',     // puts are where early exercise matters most
     spot: 90,
@@ -48,22 +49,22 @@ export async function renderAmericanOption(mount, _appState) {
             <h2 data-i18n="view.american_option.h2.contract">Contract</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.american_option.label.kind">Kind</span>
-                    <select id="ao-kind">
+                    <select id="ao-kind" data-tip="view.american_option.tip.kind">
                         <option data-i18n="view.american_option.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.american_option.opt.put" value="put" ${state.params.kind === 'put' ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label><span data-i18n="view.american_option.label.spot">Spot</span>
-                    <input id="ao-spot" type="number" step="any" min="0" value="${state.params.spot}"></label>
+                    <input id="ao-spot" type="number" step="any" min="0" value="${state.params.spot}" data-tip="view.american_option.tip.spot"></label>
                 <label><span data-i18n="view.american_option.label.strike">Strike</span>
-                    <input id="ao-strike" type="number" step="any" min="0" value="${state.params.strike}"></label>
+                    <input id="ao-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.american_option.tip.strike"></label>
                 <label><span data-i18n="view.american_option.label.t_years">T (years)</span>
-                    <input id="ao-t" type="number" step="any" min="0" value="${state.params.t_years}"></label>
+                    <input id="ao-t" type="number" step="any" min="0" value="${state.params.t_years}" data-tip="view.american_option.tip.t"></label>
                 <label><span data-i18n="view.american_option.label.rate">Rate r</span>
-                    <input id="ao-rate" type="number" step="any" value="${state.params.rate}"></label>
+                    <input id="ao-rate" type="number" step="any" value="${state.params.rate}" data-tip="view.american_option.tip.rate"></label>
                 <label><span data-i18n="view.american_option.label.dividend">Dividend q</span>
-                    <input id="ao-div" type="number" step="any" min="0" value="${state.params.dividend}"></label>
+                    <input id="ao-div" type="number" step="any" min="0" value="${state.params.dividend}" data-tip="view.american_option.tip.div"></label>
                 <label><span data-i18n="view.american_option.label.sigma">σ</span>
-                    <input id="ao-sigma" type="number" step="any" min="0" value="${state.params.sigma}"></label>
+                    <input id="ao-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.american_option.tip.sigma"></label>
             </div>
         </div>
 
@@ -71,12 +72,12 @@ export async function renderAmericanOption(mount, _appState) {
             <h2 data-i18n="view.american_option.h2.monte_carlo_settings">Monte Carlo settings</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.american_option.label.steps">Steps</span>
-                    <input id="ao-steps" type="number" step="1" min="2" value="${state.params.steps}"></label>
+                    <input id="ao-steps" type="number" step="1" min="2" value="${state.params.steps}" data-tip="view.american_option.tip.steps"></label>
                 <label><span data-i18n="view.american_option.label.paths">Paths</span>
-                    <input id="ao-paths" type="number" step="100" min="10" value="${state.params.paths}"></label>
+                    <input id="ao-paths" type="number" step="100" min="10" value="${state.params.paths}" data-tip="view.american_option.tip.paths"></label>
                 <label><span data-i18n="view.american_option.label.seed">Seed (0 = auto)</span>
-                    <input id="ao-seed" type="number" step="1" min="0" value="${state.params.seed}"></label>
-                <button data-i18n="view.american_option.btn.price" id="ao-run" class="primary" type="button">Price</button>
+                    <input id="ao-seed" type="number" step="1" min="0" value="${state.params.seed}" data-tip="view.american_option.tip.seed"></label>
+                <button data-i18n="view.american_option.btn.price" data-tip="view.american_option.tip.price" data-shortcut="american_option_price" id="ao-run" class="primary" type="button">Price</button>
             </div>
             <p data-i18n="view.american_option.hint.longstaff_schwartz_2001_regression_monte_carlo_lar" class="muted">
                 Longstaff-Schwartz 2001 regression-Monte-Carlo. Larger paths shrink the standard
@@ -126,14 +127,15 @@ function readParams() {
 async function price(mount, tok) {
     hideErr();
     const err = validateLsmcParams(state.params);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
 
     let res;
     try {
         res = await api.anlyAmericanOptionLsmc(buildLsmcBody(state.params));
         if (!res) throw new Error(t('view.american_option.error.null_result'));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e }));
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -141,6 +143,11 @@ async function price(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    showToast(t('view.american_option.toast.done', {
+        kind: state.params.kind,
+        price: fmtMoney(res.price),
+        se: res.standard_error != null ? res.standard_error.toFixed(4) : '—',
+    }), { level: 'success' });
 }
 
 function renderSummary(res) {
