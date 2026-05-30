@@ -1182,6 +1182,8 @@ pub enum Preset {
     GapDownWideRangeJustOffYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (gap-and-fight just off the year trough: overnight gap down followed by a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh lows)
     GapUpTightRangeNearYearHighHotVol,         // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional absorption at the fresh-high gap: overnight gap up positions price at the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the new level without any pullback or further chase)
     GapDownTightRangeNearYearLowHotVol,        // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional absorption at the fresh-low gap: overnight gap down positions price at the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the new level without any bounce or further pressure)
+    GapUpTightRangeConfirmedAboveYearHighHotVol,   // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional absorption past the validated breakout: overnight gap up extends past the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the post-breakout level without any pullback)
+    GapDownTightRangeConfirmedBelowYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional absorption past the validated breakdown: overnight gap down extends past the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the post-breakdown level without any bounce)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7298,6 +7300,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.year_low_pct < 2.0
         }
+        Preset::GapUpTightRangeConfirmedAboveYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::GapDownTightRangeConfirmedBelowYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -8370,6 +8386,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownWideRangeJustOffYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + Just off 52w Low (2-5 %) (Gap-and-fight Just off the Year Trough: Overnight Gap down Followed by a Wide Trading Range Immediately after a Shallow Bounce from the 52w Low with Elevated Participation; Post-tag Re-test Battle Where Catalyst Tries to Push Price back to Fresh Lows)",
         Preset::GapUpTightRangeNearYearHighHotVol => "Gap Up (>2 %) + Tight Intraday Range (<1 %) + Hot Vol + At/near 52w High (<2 %) (Institutional Absorption at the Fresh-high Gap: Overnight Gap up Positions Price at the 52w High then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Acceptance Signal Where Bulls Hold the New Level without Any Pullback or Further Chase)",
         Preset::GapDownTightRangeNearYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + At/near 52w Low (<2 %) (Institutional Absorption at the Fresh-low Gap: Overnight Gap down Positions Price at the 52w Low then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Acceptance Signal Where Bears Hold the New Level without Any Bounce or Further Pressure)",
+        Preset::GapUpTightRangeConfirmedAboveYearHighHotVol => "Gap Up (>2 %) + Tight Intraday Range (<1 %) + Hot Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Institutional Absorption past the Validated Breakout: Overnight Gap up Extends past the Prior Peak then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Acceptance Signal Where Bulls Hold the Post-breakout Level without Any Pullback)",
+        Preset::GapDownTightRangeConfirmedBelowYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional Absorption past the Validated Breakdown: Overnight Gap down Extends past the Prior Trough then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Acceptance Signal Where Bears Hold the Post-breakdown Level without Any Bounce)",
     }
 }
 
