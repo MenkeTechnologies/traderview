@@ -63,6 +63,14 @@ function toastOk(key, params) {
     showToast(t(key, params || {}), { level: 'success' });
 }
 
+// `symbolFromTarget(detail)` — read data-symbol off the right-clicked
+// element, uppercase, return null when missing. Used by every per-row
+// symbol-nav handler (charts / research / options / set-active / etc.).
+function symbolFromTarget(detail) {
+    const raw = dataFromTarget(detail, 'symbol');
+    return raw ? raw.toUpperCase() : null;
+}
+
 export function installContextMenu() {
     if (_installed) return;
     _installed = true;
@@ -162,12 +170,12 @@ export function installContextMenu() {
     });
     // Plain symbol-row copy — read data-symbol off the right-clicked row.
     window.addEventListener('tv:copy-symbol-from-row', (e) => {
-        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase();
+        const sym = (symbolFromTarget(e.detail) || '');
         if (!sym) { toastErr(t('toast.err.no_symbol')); return; }
         clipboardWrite(sym, sym);
     });
     const wlNavTo = (viewId) => (e) => {
-        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
+        const sym = symbolFromTarget(e.detail);
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -176,7 +184,7 @@ export function installContextMenu() {
         window.location.hash = `${viewId}/${sym}`;
     };
     window.addEventListener('tv:wl-row-set-active', (e) => {
-        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
+        const sym = symbolFromTarget(e.detail);
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
@@ -188,7 +196,7 @@ export function installContextMenu() {
     window.addEventListener('tv:wl-row-research', wlNavTo('research'));
     window.addEventListener('tv:wl-row-options',  wlNavTo('options'));
     window.addEventListener('tv:wl-row-remove', (e) => {
-        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
+        const sym = symbolFromTarget(e.detail);
         const wid = dataFromTarget(e.detail, 'wid');
         if (!sym || !wid) {
             toastErr(t('toast.err.no_symbol'));
@@ -217,7 +225,7 @@ export function installContextMenu() {
         window.location.hash = `trade/${id}`;
     });
     window.addEventListener('tv:pos-row-set-active', (e) => {
-        const sym = (dataFromTarget(e.detail, 'symbol') || '').toUpperCase() || null;
+        const sym = symbolFromTarget(e.detail);
         if (!sym) {
             toastErr(t('toast.err.no_symbol'));
             return;
