@@ -874,6 +874,8 @@ pub enum Preset {
     BigChangeBigRangeDryVol,             // change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume < 0.7 — big net move + wide intraday range + dry vol (no-participation thrust + wide range; illiquidity-driven volatility expansion without institutional commitment; fade candidate at scale)
     ExtremeVolFlatDay,                   // rel_volume >= 5 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — extreme vol + flat net + tight range (stealth absorption at scale: extreme participation with no price expansion; institutional accumulation or distribution masked as a quiet day)
     ExtremeVolBigChangeClimax,           // rel_volume >= 5 AND change_pct.abs() > 5 — extreme vol + big net move (climax-style print: extreme participation + extreme directional commitment; potential trend continuation or terminal exhaustion depending on follow-through)
+    ExtremeGapBigContinuationExtremeVol, // gap_pct.abs() > 5 AND change_pct.abs() > 8 AND gap_pct * change_pct > 0 AND rel_volume >= 5 — extreme gap + same-direction extreme continuation + extreme vol (gap-and-go acceleration at extreme scale: overnight thrust extended further during regular hours with climax-level participation; max-conviction trend day)
+    ExtremeGapFullReversalExtremeVol,    // gap_pct.abs() > 5 AND gap_pct * change_pct < 0 AND change_pct.abs() > 3 AND rel_volume >= 5 — extreme gap + sign-flipped net close + extreme vol (extreme-gap fade: overnight thrust fully reversed by the intraday session with climax-level participation; trapped gap traders flushed at scale)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5113,6 +5115,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.rel_volume >= 5.0
                 && hit.change_pct.abs() > 5.0
         }
+        Preset::ExtremeGapBigContinuationExtremeVol => {
+            hit.gap_pct.abs() > 5.0
+                && hit.change_pct.abs() > 8.0
+                && hit.gap_pct * hit.change_pct > 0.0
+                && hit.rel_volume >= 5.0
+        }
+        Preset::ExtremeGapFullReversalExtremeVol => {
+            hit.gap_pct.abs() > 5.0
+                && hit.gap_pct * hit.change_pct < 0.0
+                && hit.change_pct.abs() > 3.0
+                && hit.rel_volume >= 5.0
+        }
     }
 }
 
@@ -5877,6 +5891,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigChangeBigRangeDryVol => "Big Net Move + Wide Intraday Range + Dry Vol (No-participation Thrust + Wide Range; Illiquidity-driven Volatility Expansion without Institutional Commitment; Fade Candidate at Scale)",
         Preset::ExtremeVolFlatDay => "Extreme Vol + Flat Net + Tight Range (Stealth Absorption at Scale: Extreme Participation with No Price Expansion; Institutional Accumulation or Distribution Masked as a Quiet Day)",
         Preset::ExtremeVolBigChangeClimax => "Extreme Vol + Big Net Move (Climax-style Print: Extreme Participation + Extreme Directional Commitment; Potential Trend Continuation or Terminal Exhaustion Depending on Follow-through)",
+        Preset::ExtremeGapBigContinuationExtremeVol => "Extreme Gap + Same-direction Extreme Continuation + Extreme Vol (Gap-and-go Acceleration at Extreme Scale: Overnight Thrust Extended Further during Regular Hours with Climax-level Participation; Max-conviction Trend Day)",
+        Preset::ExtremeGapFullReversalExtremeVol => "Extreme Gap + Sign-flipped Net Close + Extreme Vol (Extreme-gap Fade: Overnight Thrust Fully Reversed by the Intraday Session with Climax-level Participation; Trapped Gap Traders Flushed at Scale)",
     }
 }
 

@@ -756,6 +756,8 @@ const PRESETS = [
     { id: 'big_change_big_range_dry_vol', label: t('view.scanners.preset.big_change_big_range_dry_vol.label'), desc: t('view.scanners.preset.big_change_big_range_dry_vol.desc') },
     { id: 'extreme_vol_flat_day', label: t('view.scanners.preset.extreme_vol_flat_day.label'), desc: t('view.scanners.preset.extreme_vol_flat_day.desc') },
     { id: 'extreme_vol_big_change_climax', label: t('view.scanners.preset.extreme_vol_big_change_climax.label'), desc: t('view.scanners.preset.extreme_vol_big_change_climax.desc') },
+    { id: 'extreme_gap_big_continuation_extreme_vol', label: t('view.scanners.preset.extreme_gap_big_continuation_extreme_vol.label'), desc: t('view.scanners.preset.extreme_gap_big_continuation_extreme_vol.desc') },
+    { id: 'extreme_gap_full_reversal_extreme_vol', label: t('view.scanners.preset.extreme_gap_full_reversal_extreme_vol.label'), desc: t('view.scanners.preset.extreme_gap_full_reversal_extreme_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
