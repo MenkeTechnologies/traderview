@@ -146,3 +146,73 @@ test('getGlobalSymbol survives a localStorage.getItem throw', () => {
     globalThis.localStorage.getItem = () => { throw new Error('private-mode read'); };
     expect(() => getGlobalSymbol()).not.toThrow();
 });
+
+// ── additional edge cases ─────────────────────────────────────────
+
+test('whitespace-only string is NOT empty (passes length check), uppercased + stored', () => {
+    // The guard is `sym.length === 0`, so "   " passes. Uppercase trims nothing.
+    // This captures current behavior — pin so future trim improvement updates test.
+    expect(setGlobalSymbol('   ')).toBe(true);
+    expect(getGlobalSymbol()).toBe('   ');
+});
+
+test('CustomEvent detail.symbol matches uppercased value', () => {
+    let captured = null;
+    globalThis.window.addEventListener('tv-symbol-changed', (e) => { captured = e.detail; });
+    setGlobalSymbol('aapl');
+    expect(captured).toEqual({ symbol: 'AAPL' });
+});
+
+test('a listener throwing does not stop the value update', () => {
+    onGlobalSymbolChanged(() => { throw new Error('listener-broke'); });
+    // setGlobalSymbol wraps dispatchEvent in try/catch, so the throw is swallowed.
+    expect(() => setGlobalSymbol('SAFE')).not.toThrow();
+    expect(getGlobalSymbol()).toBe('SAFE');
+});
+
+test('two subscriptions can be unsubscribed independently', () => {
+    const calls = { a: 0, b: 0 };
+    const offA = onGlobalSymbolChanged(() => { calls.a++; });
+    const offB = onGlobalSymbolChanged(() => { calls.b++; });
+    setGlobalSymbol('AAPL');
+    expect(calls).toEqual({ a: 1, b: 1 });
+    offA();
+    setGlobalSymbol('NVDA');
+    expect(calls).toEqual({ a: 1, b: 2 });
+    offB();
+    setGlobalSymbol('META');
+    expect(calls).toEqual({ a: 1, b: 2 });  // both unsubscribed
+});
+
+test('empty stored value does not propagate as current symbol', () => {
+    globalThis.localStorage.setItem('tv-global-symbol', '');
+    _resetForTests();
+    globalThis.localStorage.setItem('tv-global-symbol', '');
+    expect(getGlobalSymbol()).toBe('');
+});
+
+test('setGlobalSymbol does not write to storage when value unchanged', () => {
+    setGlobalSymbol('AAPL');
+    let writes = 0;
+    const orig = globalThis.localStorage.setItem;
+    globalThis.localStorage.setItem = (k, v) => { writes++; orig.call(globalThis.localStorage, k, v); };
+    setGlobalSymbol('AAPL');     // unchanged
+    setGlobalSymbol('aapl');     // case-only — still unchanged
+    expect(writes).toBe(0);
+});
+
+test('listener registered AFTER a value-set still fires on next change', () => {
+    setGlobalSymbol('AAPL');
+    let captured = null;
+    onGlobalSymbolChanged(s => { captured = s; });
+    setGlobalSymbol('NVDA');
+    expect(captured).toBe('NVDA');
+});
+
+test('CustomEvent type is exactly "tv-symbol-changed"', () => {
+    // Pin event name so consumers wiring window.addEventListener don't break silently.
+    let evType = null;
+    globalThis.window.addEventListener('tv-symbol-changed', (e) => { evType = e.type; });
+    setGlobalSymbol('SPY');
+    expect(evType).toBe('tv-symbol-changed');
+});
