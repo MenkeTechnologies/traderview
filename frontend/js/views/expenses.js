@@ -25,6 +25,45 @@ const state = {
     tok: 0,
 };
 
+function renderMonthChart() {
+    const el = document.getElementById('exp-month-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const totals = new Map();
+    for (const tx of state.transactions || []) {
+        if (tx.is_transfer) continue;
+        const amt = Math.abs(Number(tx.amount));
+        if (!Number.isFinite(amt)) continue;
+        const m = String(tx.posted_at || '').slice(0, 7);
+        if (!m) continue;
+        totals.set(m, (totals.get(m) || 0) + amt);
+    }
+    if (totals.size < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.expenses.empty_month_chart">${esc(t('view.expenses.empty_month_chart'))}</div>`;
+        return;
+    }
+    const months = Array.from(totals.keys()).sort();
+    const ys = months.map(m => totals.get(m));
+    const xs = months.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.expenses.chart.month') },
+            { label: t('view.expenses.chart.monthly_spend'),
+              stroke: '#b86bff', width: 1.5,
+              fill: 'rgba(184,107,255,0.10)',
+              points: { show: true, size: 8, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => months[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
+}
+
 function renderCategoryChart() {
     const el = document.getElementById('exp-chart');
     if (!el || !window.uPlot) return;
@@ -270,8 +309,13 @@ function drawTable() {
         <div class="chart-panel">
             <h2 data-i18n="view.expenses.h2.cat_chart">Total spend by category (top 10)</h2>
             <div id="exp-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.expenses.h2.month_chart">Monthly spend trend (excluding transfers)</h2>
+            <div id="exp-month-chart" style="width:100%;height:220px"></div>
         </div>`;
     renderCategoryChart();
+    renderMonthChart();
 
     host.querySelectorAll('select.exp-cat').forEach(sel => {
         sel.addEventListener('change', async ev => {

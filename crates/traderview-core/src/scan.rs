@@ -638,6 +638,8 @@ pub enum Preset {
     BothSidesTaggedFlatBalance,     // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume >= 1.2 — both extremes well-distant from close + flat change + decent vol (range-bound balance; close mid-range after exploring both sides)
     OutsideDayWideBalanceHotVol,    // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — really wide range + flat change + hot vol (outside-day balance; both extremes visited then closed flat on heavy participation)
     InsideDayBigChangeBigVol,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 2 AND rel_volume >= 2 — narrow range + big change + hot vol (inside-day big move; gap-driven change but with massive participation at flat-after-gap level)
+    LongCandleUpTrendDay,           // change_pct > 2 AND day_pct > 1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND hod_dist_pct.abs() < 0.5 — big green day + significant intraday + wide range + hot vol + HOD close (long candle up; broad trend day with HOD finish)
+    LongCandleDownTrendDay,         // change_pct < -2 AND day_pct < -1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND lod_dist_pct.abs() < 0.5 — big red day + significant intraday + wide range + hot vol + LOD close (long candle down; broad trend day with LOD finish)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3458,6 +3460,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::LongCandleUpTrendDay => {
+            hit.change_pct > 2.0
+                && hit.day_pct > 1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::LongCandleDownTrendDay => {
+            hit.change_pct < -2.0
+                && hit.day_pct < -1.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3986,6 +4002,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BothSidesTaggedFlatBalance => "Both Extremes Visited + Flat Change + Decent Vol (Range-bound Balance)",
         Preset::OutsideDayWideBalanceHotVol => "Very Wide Range + Flat Change + Hot Vol (Outside-Day Balance on Heavy Vol)",
         Preset::InsideDayBigChangeBigVol => "Narrow Range + Big Change + Hot Vol (Inside-Day Gap Day on Heavy Participation)",
+        Preset::LongCandleUpTrendDay => "Big Green Day + Intraday Up + Wide Range + HOD Close + Hot Vol (Long Candle Up Trend Day)",
+        Preset::LongCandleDownTrendDay => "Big Red Day + Intraday Down + Wide Range + LOD Close + Hot Vol (Long Candle Down Trend Day)",
     }
 }
 
