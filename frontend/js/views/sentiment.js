@@ -175,7 +175,7 @@ function rankedTable(rows, dir) {
             const sd = Number(r.sentiment_delta);
             const sc = Number(r.avg_sentiment);
             const sdCls = sd >= 0 ? 'pos' : 'neg';
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                 <td>${i + 1}</td>
                 <td><a href="#sentiment/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
                 <td class="${sc >= 0 ? 'pos' : 'neg'}">${sc >= 0 ? '+' : ''}${sc.toFixed(2)}</td>
@@ -193,7 +193,7 @@ function volumeTable(rows) {
         <tbody>${rows.map((r, i) => {
             const sc = Number(r.avg_sentiment);
             const sd = Number(r.sentiment_delta);
-            return `<tr>
+            return `<tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                 <td>${i + 1}</td>
                 <td><a href="#sentiment/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
                 <td><strong>${r.mention_count}</strong></td>

@@ -80,7 +80,7 @@ function renderRanked(el, rows) {
     el.innerHTML = `<table class="trades">
         <thead><tr><th>#</th><th data-i18n="view.darkpool.th.sym">Sym</th><th data-i18n="view.darkpool.th.avg_off_exch">Avg off-exch %</th><th data-i18n="view.darkpool.th.latest">Latest</th><th data-i18n="view.darkpool.th.sessions">Sessions</th></tr></thead>
         <tbody>${rows.map((r, i) => `
-            <tr>
+            <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                 <td>${i+1}</td>
                 <td><a href="#darkpool/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
                 <td>${pct(r.avg_off_exchange_pct)}</td>

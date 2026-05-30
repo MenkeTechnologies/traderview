@@ -109,7 +109,7 @@ function renderRanked(el, rows) {
         <thead><tr><th>#</th><th data-i18n="view.short_interest.th.sym">Sym</th><th data-i18n="view.short_interest.th.shares_short">Shares short</th><th data-i18n="view.short_interest.th.prior_month">Prior month</th><th>Δ</th>
             <th data-i18n="view.short_interest.th.float">% Float</th><th data-i18n="view.short_interest.th.outstanding">% Outstanding</th><th data-i18n="view.short_interest.th.days_to_cover">Days to cover</th><th data-i18n="view.short_interest.th.float_2">Float</th></tr></thead>
         <tbody>${rows.map((r, i) => `
-            <tr>
+            <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                 <td>${i+1}</td>
                 <td><a href="#short-interest/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
                 <td>${compact(r.shares_short)}</td>
