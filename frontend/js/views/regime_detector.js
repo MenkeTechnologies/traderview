@@ -185,8 +185,8 @@ function pct(x) {
 }
 
 function formatDwell(d) {
-    if (!Number.isFinite(d)) return d === Infinity ? '∞ (absorbing)' : '—';
-    return `${d.toFixed(1)} bars`;
+    if (!Number.isFinite(d)) return d === Infinity ? t('view.regime_detector.dwell.absorbing') : '—';
+    return t('view.regime_detector.dwell.bars', { n: d.toFixed(1) });
 }
 
 function renderChart(returns, probState1) {

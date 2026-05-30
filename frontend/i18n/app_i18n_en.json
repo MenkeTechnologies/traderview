@@ -5694,6 +5694,8 @@
   "view.american_option.row.closed_form": "closed-form",
   "view.american_option.row.no_mc_error": "No MC error",
   "view.american_option.row.sign": "Sign",
+  "view.regime_detector.dwell.bars":        "{n} bars",
+  "view.regime_detector.dwell.absorbing":   "∞ (absorbing)",
   "view.regime_detector.row.em_iterations": "EM iterations",
   "view.regime_detector.row.series_length": "Series length",
   "view.regime_detector.state.state0_low":  "State 0 (low-vol)",
