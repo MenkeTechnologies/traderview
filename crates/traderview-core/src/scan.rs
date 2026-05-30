@@ -548,6 +548,8 @@ pub enum Preset {
     Pct52wLowDryVolFlat,            // year_low_pct < 3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w low on dry vol with no move (forgotten weakness; basing at lows)
     OvernightReversalRepositioning, // change_pct * gap_pct < 0 AND change_pct.abs() > 0.5 AND gap_pct.abs() > 0.5 AND day_pct.abs() < 0.5 — gap and change opposite + flat intraday (overnight repositioning; reversal of overnight bias)
     OrganicIntradayTrendDay,        // gap_pct.abs() < 0.3 AND change_pct.abs() > 2 AND day_pct.abs() > 1 AND rel_volume between 0.7 and 1.3 — no gap + significant change + clear intraday on normal vol (organic intraday trend day)
+    TightRangeFlatDayHotVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume >= 2 — tight range + flat intraday + hot vol (extreme absorption coil)
+    TightRangeFlatDayDryVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume < 0.5 — tight range + flat intraday + dry vol (deep sleep; no participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2854,6 +2856,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.7
                 && hit.rel_volume <= 1.3
         }
+        Preset::TightRangeFlatDayHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.day_pct.abs() < 0.2
+                && hit.rel_volume >= 2.0
+        }
+        Preset::TightRangeFlatDayDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.day_pct.abs() < 0.2
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -3292,6 +3304,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wLowDryVolFlat => "Near 52w Low, Dry Vol, Flat (Forgotten Weakness)",
         Preset::OvernightReversalRepositioning => "Overnight Reversal Repositioning (Gap ↔ Change Sign Flip, Flat Day)",
         Preset::OrganicIntradayTrendDay => "Organic Intraday Trend Day (No Gap, Big Change, Normal Vol)",
+        Preset::TightRangeFlatDayHotVol => "Tight Range + Flat Intraday + Hot Vol (Absorption Coil)",
+        Preset::TightRangeFlatDayDryVol => "Tight Range + Flat Intraday + Dry Vol (Deep Sleep)",
     }
 }
 

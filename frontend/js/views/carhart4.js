@@ -61,6 +61,11 @@ export async function renderCarhart4(mount, _appState) {
             <div id="c4-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.car4.h2.tstat_chart">Factor t-stats vs ±1.96 significance bounds</h2>
+            <div id="c4-tstat-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="c4-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -105,6 +110,7 @@ async function compute(tok) {
     renderFactors(local);
     renderStats();
     renderFactorChart(local);
+    renderTstatChart(local);
     let resp;
     try {
         resp = await api.anlyCarhart4(buildBody(state));
@@ -118,6 +124,7 @@ async function compute(tok) {
     renderFactors(resp);
     renderStats();
     renderFactorChart(resp);
+    renderTstatChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -258,6 +265,53 @@ function renderFactorChart(report) {
         ],
         legend: { show: true },
     }, [xs, coefs, zeroLine], el);
+}
+
+function renderTstatChart(report) {
+    const el = document.getElementById('c4-tstat-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report) {
+        el.innerHTML = `<div class="muted" data-i18n="view.car4.empty_tstat_chart">${esc(t('view.car4.empty_tstat_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.car4.row.alpha'),
+        t('view.car4.row.mkt'),
+        t('view.car4.row.smb'),
+        t('view.car4.row.hml'),
+        t('view.car4.row.wml'),
+    ];
+    const ts = [
+        Number.isFinite(report.alpha_tstat) ? report.alpha_tstat : null,
+        tstat(report.beta_mkt, report.beta_mkt_se),
+        tstat(report.beta_smb, report.beta_smb_se),
+        tstat(report.beta_hml, report.beta_hml_se),
+        tstat(report.beta_wml, report.beta_wml_se),
+    ];
+    const xs = labels.map((_, i) => i + 1);
+    const pos = xs.map(() => 1.96);
+    const neg = xs.map(() => -1.96);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.car4.chart.factor_idx') },
+            { label: t('view.car4.chart.tstat'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.car4.chart.pos_bound'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.car4.chart.neg_bound'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ts, pos, neg], el);
 }
 
 function card(label, value, cls = '') {

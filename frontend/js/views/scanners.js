@@ -430,6 +430,8 @@ const PRESETS = [
     { id: 'pct52w_low_dry_vol_flat', label: t('view.scanners.preset.pct52w_low_dry_vol_flat.label'), desc: t('view.scanners.preset.pct52w_low_dry_vol_flat.desc') },
     { id: 'overnight_reversal_repositioning', label: t('view.scanners.preset.overnight_reversal_repositioning.label'), desc: t('view.scanners.preset.overnight_reversal_repositioning.desc') },
     { id: 'organic_intraday_trend_day', label: t('view.scanners.preset.organic_intraday_trend_day.label'), desc: t('view.scanners.preset.organic_intraday_trend_day.desc') },
+    { id: 'tight_range_flat_day_hot_vol', label: t('view.scanners.preset.tight_range_flat_day_hot_vol.label'), desc: t('view.scanners.preset.tight_range_flat_day_hot_vol.desc') },
+    { id: 'tight_range_flat_day_dry_vol', label: t('view.scanners.preset.tight_range_flat_day_dry_vol.label'), desc: t('view.scanners.preset.tight_range_flat_day_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
