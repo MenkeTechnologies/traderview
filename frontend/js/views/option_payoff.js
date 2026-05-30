@@ -94,6 +94,12 @@ export async function renderOptionPayoff(mount, _appState) {
             <p data-i18n="view.option_payoff.hint.solid_p_l_at_expiry_dashed_current_mtm_black_schol" class="muted">Solid = P/L at expiry · Dashed = current MTM (Black-Scholes per leg)</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.option_payoff.h2.delta_chart">At-expiry delta (slope of payoff curve)</h2>
+            <div id="op-delta-chart" style="width:100%;height:240px"></div>
+            <p data-i18n="view.option_payoff.hint.delta" class="muted small">First difference of the at-expiry payoff at each spot — that's the strategy's terminal delta. Reveals where the position becomes net long, short, or flat across the spot range.</p>
+        </div>
+
         <div id="op-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -192,6 +198,7 @@ async function recalc(mount, tok) {
 
     renderSummary(payoff, mtmAtSpot);
     await renderChart(payoff);
+    renderDeltaChart(payoff);
 
     function showError(msg) {
         err.textContent = msg;
@@ -262,6 +269,38 @@ async function renderChart(payoff) {
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
     }, [xs, atExpiry, mtmCurve], el);
+}
+
+function renderDeltaChart(payoff) {
+    const el = document.getElementById('op-delta-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const xs = payoff.spots || [];
+    const ys = payoff.pnls || [];
+    if (xs.length < 2 || ys.length !== xs.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.option_payoff.empty_delta_chart">${esc(t('view.option_payoff.empty_delta_chart'))}</div>`;
+        return;
+    }
+    const delta = new Array(xs.length).fill(0);
+    for (let i = 1; i < xs.length - 1; i++) {
+        delta[i] = (ys[i + 1] - ys[i - 1]) / (xs[i + 1] - xs[i - 1]);
+    }
+    delta[0] = delta[1];
+    delta[xs.length - 1] = delta[xs.length - 2];
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.spot') },
+            { label: t('view.option_payoff.chart.delta'),
+              stroke: '#b86bff', width: 1.5, points: { show: false } },
+            { label: t('view.option_payoff.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        legend: { show: true },
+    }, [xs, delta, zero], el);
 }
 
 // Call the multi-leg pricer once per spot point for the dashed MTM curve.

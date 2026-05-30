@@ -736,6 +736,8 @@ pub enum Preset {
     IntermediateRedWeakClose,            // change_pct in [-7, -3] AND rel_volume in [1.5, 3] AND lod_dist_pct.abs() < 1 — meaningful red (-3 to -7%) + decent vol (1.5-3×) + close near LOD (intermediate drop with weak finish; sweet spot between organic and crash; weakness without panic)
     MaxVolatilityEventHotVol,            // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big gap + big change + wide intraday range + hot vol (max-volatility event day; gap caught attention, intraday explored wide range, hot vol confirmed; catalyst-driven volatility expansion)
     MaxRangeFakeOutDryVol,               // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 1 — big gap + big change + wide intraday range + DRY vol (max-range fake-out; wide intraday with thin tape suggests stop-runs without true conviction; algorithmic noise on illiquid name)
+    BigGreenIntradayOnlyHotVol,          // change_pct > 3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big green close + flat open + wide intraday + hot vol (intraday-only rally; no overnight bias; pure intraday discovery to new highs; all of the day's gain from intraday participation)
+    BigRedIntradayOnlyHotVol,            // change_pct < -3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big red close + flat open + wide intraday + hot vol (intraday-only decline; no overnight bias; pure intraday discovery to new lows; all of the day's loss from intraday participation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4143,6 +4145,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
                 && hit.rel_volume < 1.0
         }
+        Preset::BigGreenIntradayOnlyHotVol => {
+            hit.change_pct > 3.0
+                && hit.gap_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::BigRedIntradayOnlyHotVol => {
+            hit.change_pct < -3.0
+                && hit.gap_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4769,6 +4783,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntermediateRedWeakClose => "Meaningful Red (-3 to -7%) + Decent Vol (1.5-3×) + Close Near LOD (Intermediate Weakness; Sweet Spot Between Organic and Crash)",
         Preset::MaxVolatilityEventHotVol => "Big Gap + Big Change + Wide Range + Hot Vol (Max-volatility Event Day; Catalyst-driven Volatility Expansion)",
         Preset::MaxRangeFakeOutDryVol => "Big Gap + Big Change + Wide Range + Dry Vol (Max-range Fake-out; Stop-runs Without True Conviction; Algorithmic Noise on Illiquid Name)",
+        Preset::BigGreenIntradayOnlyHotVol => "Big Green + Flat Open + Wide Intraday + Hot Vol (Intraday-only Rally; All Gain from Intraday Discovery; No Overnight Bias)",
+        Preset::BigRedIntradayOnlyHotVol => "Big Red + Flat Open + Wide Intraday + Hot Vol (Intraday-only Decline; All Loss from Intraday Discovery; No Overnight Bias)",
     }
 }
 
