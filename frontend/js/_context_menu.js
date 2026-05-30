@@ -157,6 +157,15 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Account-row context items. Right-click on a <tr data-context-scope=
+// "account-row" data-id="X" data-name="Y"> shows: Copy ID / Delete.
+export const ACCOUNT_ROW_ITEMS = [
+    { id: 'acct_row_copy_id', labelKey: 'ctxmenu.acct_row_copy_id',
+      actionKey: 'tv:acct-row-copy-id', section: 'account' },
+    { id: 'acct_row_delete',  labelKey: 'ctxmenu.acct_row_delete',
+      actionKey: 'tv:acct-row-delete',  section: 'account' },
+];
+
 // Custom-indicator-row context items. Right-click on a <tr data-
 // context-scope="custom-indicator-row" data-id="X" data-name="Y"
 // data-definition="<json>"> shows: Copy JSON definition / Delete.
@@ -288,6 +297,7 @@ export const ALL_SCOPED_ITEMS = [
     ['alert-rule-row',         ALERT_RULE_ROW_ITEMS],
     ['hotkey-row',             HOTKEY_ROW_ITEMS],
     ['custom-indicator-row',   CUSTOM_INDICATOR_ROW_ITEMS],
+    ['account-row',            ACCOUNT_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

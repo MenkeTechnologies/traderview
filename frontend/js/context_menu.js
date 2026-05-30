@@ -275,6 +275,34 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Account-row actions — read data-id / data-name.
+    window.addEventListener('tv:acct-row-copy-id', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(id).then(
+                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:acct-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.acct_row_delete_confirm', { name }, { level: 'danger' })) return;
+            try {
+                await api.deleteAccount(id);
+                showToast(t('toast.acct_deleted', { name }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Custom-indicator-row actions — read data-id / data-name / data-definition.
     window.addEventListener('tv:ci-row-copy-def', (e) => {
         const tgt = e.detail && e.detail.target;

@@ -37,7 +37,7 @@ export async function renderAccounts(mount, _state, onChange) {
         <table class="trades">
             <thead><tr><th data-i18n="view.accounts.th.broker">Broker</th><th data-i18n="view.accounts.th.name">Name</th><th data-i18n="view.accounts.th.currency">Currency</th><th data-i18n="view.accounts.th.created">Created</th><th></th></tr></thead>
             <tbody>${accounts.map(a => `
-                <tr><td>${esc(a.broker)}</td><td>${esc(a.name)}</td>
+                <tr data-context-scope="account-row" data-id="${esc(a.id)}" data-name="${esc(a.name)}"><td>${esc(a.broker)}</td><td>${esc(a.name)}</td>
                 <td>${esc(a.base_currency)}</td>
                 <td>${fmtDateTime(a.created_at)}</td>
                 <td><button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button></td></tr>
