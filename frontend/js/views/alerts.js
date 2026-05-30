@@ -62,7 +62,13 @@ export async function renderAlerts(mount) {
                         </td>
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.alerts.hint.no_alert_rules_yet" class="muted">No alert rules yet.</p>'}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.alerts.h2.fire_chart">Trigger counts by rule (top 20)</h2>
+            <div id="alert-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderFireChart(rules);
     mount.querySelector('#alert-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -91,4 +97,37 @@ export async function renderAlerts(mount) {
             if (!viewIsCurrent(tok)) return;
             renderAlerts(mount);
         }));
+}
+
+function renderFireChart(rules) {
+    const el = document.getElementById('alert-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (rules || [])
+        .filter(r => Number.isFinite(Number(r.trigger_count)))
+        .sort((a, b) => Number(b.trigger_count) - Number(a.trigger_count))
+        .slice(0, 20);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.alerts.empty_chart">${esc(t('view.alerts.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.symbol);
+    const ys = top.map(r => Number(r.trigger_count));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.alerts.chart.rule_idx') },
+            { label: t('view.alerts.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

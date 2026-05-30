@@ -222,6 +222,8 @@ pub enum Preset {
     DownsideAttemptedSqueeze,    // lod_dist.abs() >= 1 AND hod_dist.abs() < 0.5 AND change_pct > 0 — tried down, settled at highs (bull control)
     TightGapSmallChangeSqueeze,  // |gap_pct| < 0.2 AND change_pct between -2 and 2 AND day_pct.abs() < 0.5 — slow drift with no overnight surprise
     Pct52wMidWideRangeSqueeze,   // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND (hod_dist+lod_dist)>3 — at exact 52w mid with wide intraday
+    InsideAndCoiledSqueeze,      // day_pct.abs() < 0.6 AND hod_dist.abs() < 0.6 AND lod_dist.abs() < 0.6 AND rel_volume < 0.8 — all 3 constraints tight + quiet
+    Pct52wHighBreathSqueeze,     // year_high_pct >= -1 AND day_pct.abs() < 0.4 AND |change_pct| < 0.4 — taking a breath right at 52w high
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -742,6 +744,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 10.0
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 3.0
         }
+        Preset::InsideAndCoiledSqueeze => {
+            hit.day_pct.abs() < 0.6
+                && hit.hod_dist_pct.abs() < 0.6
+                && hit.lod_dist_pct.abs() < 0.6
+                && hit.rel_volume < 0.8
+        }
+        Preset::Pct52wHighBreathSqueeze => {
+            hit.year_high_pct >= -1.0
+                && hit.day_pct.abs() < 0.4
+                && hit.change_pct.abs() < 0.4
+        }
     }
 }
 
@@ -854,6 +867,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownsideAttemptedSqueeze => "Downside-Attempted Reject Squeeze",
         Preset::TightGapSmallChangeSqueeze => "Tight-Gap Small-Change Squeeze",
         Preset::Pct52wMidWideRangeSqueeze => "52w-Mid Wide-Range Squeeze",
+        Preset::InsideAndCoiledSqueeze => "Inside-And-Coiled Squeeze",
+        Preset::Pct52wHighBreathSqueeze => "52w-High Breath Squeeze",
     }
 }
 
