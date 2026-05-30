@@ -938,6 +938,8 @@ pub enum Preset {
     GravestoneDojiAtDeepBounce,          // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal deep into the bounce: intraday rip sold in the rebuild zone with flat close; counter-trend supply-test signal)
     MarubozuGreenAtMidYearHigh,          // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from high (5-20% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in the pullback zone: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction mid-cycle bounce day)
     MarubozuRedAtMidYearLow,             // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from low (5-20% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day in the bounce zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction mid-cycle rejection day)
+    MarubozuGreenAtDeepPullback,         // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep pullback zone (10-30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day deep in the pullback: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction counter-trend bounce thrust)
+    MarubozuRedAtDeepBounce,             // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep bounce zone (10-30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day deep in the bounce: regular-hours conviction fell from the open to the low with no gap aid; max-conviction counter-trend rejection thrust)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5561,6 +5563,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MarubozuGreenAtDeepPullback => {
+            hit.year_high_pct >= 10.0
+                && hit.year_high_pct < 30.0
+                && hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MarubozuRedAtDeepBounce => {
+            hit.year_low_pct >= 10.0
+                && hit.year_low_pct < 30.0
+                && hit.change_pct < -3.0
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6389,6 +6407,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GravestoneDojiAtDeepBounce => "Deep Bounce Zone (10-30 % above 52w Low) + Flat Close + HOD Far Above + Close Near LOD + Hot Vol (Gravestone Doji Reversal Deep into the Bounce: Intraday Rip Sold in the Rebuild Zone with Flat Close; Counter-trend Supply-test Signal)",
         Preset::MarubozuGreenAtMidYearHigh => "Mid-range from High (5-20 % below 52w High) + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Recovery Trend Day in the Pullback Zone: Regular-hours Conviction Lifted from the Open to the High with No Gap Aid; Max-conviction Mid-cycle Bounce Day)",
         Preset::MarubozuRedAtMidYearLow => "Mid-range from Low (5-20 % above 52w Low) + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Retracement Trend Day in the Bounce Zone: Regular-hours Conviction Fell from the Open to the Low with No Gap Aid; Max-conviction Mid-cycle Rejection Day)",
+        Preset::MarubozuGreenAtDeepPullback => "Deep Pullback Zone (10-30 % below 52w High) + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Recovery Trend Day Deep in the Pullback: Regular-hours Conviction Lifted from the Open to the High with No Gap Aid; Max-conviction Counter-trend Bounce Thrust)",
+        Preset::MarubozuRedAtDeepBounce => "Deep Bounce Zone (10-30 % above 52w Low) + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Retracement Trend Day Deep in the Bounce: Regular-hours Conviction Fell from the Open to the Low with No Gap Aid; Max-conviction Counter-trend Rejection Thrust)",
     }
 }
 
