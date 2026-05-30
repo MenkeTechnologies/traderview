@@ -806,6 +806,8 @@ const PRESETS = [
     { id: 'intraday_bear_drive_above_year_low', label: t('view.scanners.preset.intraday_bear_drive_above_year_low.label'), desc: t('view.scanners.preset.intraday_bear_drive_above_year_low.desc') },
     { id: 'hammer_at_year52_low', label: t('view.scanners.preset.hammer_at_year52_low.label'), desc: t('view.scanners.preset.hammer_at_year52_low.desc') },
     { id: 'shooting_star_at_year52_high', label: t('view.scanners.preset.shooting_star_at_year52_high.label'), desc: t('view.scanners.preset.shooting_star_at_year52_high.desc') },
+    { id: 'marubozu_green_at_year52_high', label: t('view.scanners.preset.marubozu_green_at_year52_high.label'), desc: t('view.scanners.preset.marubozu_green_at_year52_high.desc') },
+    { id: 'marubozu_red_at_year52_low', label: t('view.scanners.preset.marubozu_red_at_year52_low.label'), desc: t('view.scanners.preset.marubozu_red_at_year52_low.desc') },
 ];
 
 export async function renderScanners(mount) {

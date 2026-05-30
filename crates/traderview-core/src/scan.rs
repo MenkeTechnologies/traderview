@@ -924,6 +924,8 @@ pub enum Preset {
     IntradayBearDriveAboveYearLow,       // year_low_pct >= 0 AND year_low_pct < 5 AND day_pct < -3 AND rel_volume >= 2 — within 5% above 52w low + big intraday drive down + hot vol (pre-breakdown intraday plunge: approaching support with regular-hours momentum and elevated participation; breakdown-setup candidate)
     HammerAtYear52Low,                   // year_low_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w low + long lower wick + close near HOD + green close + hot vol (classic hammer reversal at the breakdown floor: intraday plunge reclaimed with green finish and elevated participation; high-probability bottom-fishing signal)
     ShootingStarAtYear52High,            // year_high_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w high + long upper wick + close near LOD + red close + hot vol (classic shooting star reversal at the breakout ceiling: intraday rip sold with red finish and elevated participation; high-probability topping signal)
+    MarubozuGreenAtYear52High,           // year_high_pct < 2 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w high + green marubozu + no overnight gap + hot vol (full intraday breakout trend day at the breakout zone: regular-hours conviction climbed from the open to the high with no gap aid; max-conviction breakout day)
+    MarubozuRedAtYear52Low,              // year_low_pct < 2 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w low + red marubozu + no overnight gap + hot vol (full intraday breakdown trend day at the breakdown zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction breakdown day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5439,6 +5441,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::MarubozuGreenAtYear52High => {
+            hit.year_high_pct < 2.0
+                && hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MarubozuRedAtYear52Low => {
+            hit.year_low_pct < 2.0
+                && hit.change_pct < -3.0
+                && hit.lod_dist_pct.abs() < 0.3
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6253,6 +6269,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IntradayBearDriveAboveYearLow => "Within 5% above 52w Low + Big Intraday Drive Down + Hot Vol (Pre-breakdown Intraday Plunge: Approaching Support with Regular-hours Momentum and Elevated Participation; Breakdown-setup Candidate)",
         Preset::HammerAtYear52Low => "At 52w Low + Long Lower Wick + Close Near HOD + Green Close + Hot Vol (Classic Hammer Reversal at the Breakdown Floor: Intraday Plunge Reclaimed with Green Finish and Elevated Participation; High-probability Bottom-fishing Signal)",
         Preset::ShootingStarAtYear52High => "At 52w High + Long Upper Wick + Close Near LOD + Red Close + Hot Vol (Classic Shooting Star Reversal at the Breakout Ceiling: Intraday Rip Sold with Red Finish and Elevated Participation; High-probability Topping Signal)",
+        Preset::MarubozuGreenAtYear52High => "At 52w High + Green Marubozu + No Overnight Gap + Hot Vol (Full Intraday Breakout Trend Day at the Breakout Zone: Regular-hours Conviction Climbed from the Open to the High with No Gap Aid; Max-conviction Breakout Day)",
+        Preset::MarubozuRedAtYear52Low => "At 52w Low + Red Marubozu + No Overnight Gap + Hot Vol (Full Intraday Breakdown Trend Day at the Breakdown Zone: Regular-hours Conviction Fell from the Open to the Low with No Gap Aid; Max-conviction Breakdown Day)",
     }
 }
 
