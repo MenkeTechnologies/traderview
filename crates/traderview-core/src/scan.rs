@@ -318,6 +318,8 @@ pub enum Preset {
     OutsideRangeOnVolume,        // hod_dist + lod_dist > 6 AND rel_volume >= 2 — wide outside range on heavy vol (volatility expansion)
     UpDayLowerHigh,              // change_pct > 1 AND hod_dist.abs() > 1 AND lod_dist.abs() < 1 — green day but failed to make HOD (capped advance)
     DownDayHigherLow,            // change_pct < -1 AND lod_dist.abs() > 1 AND hod_dist.abs() < 1 — red day but failed to make LOD (cushioned decline)
+    StrongDayBalancedRange,      // change_pct > 3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — strong day with both ends touched (impulsive breakout)
+    WeakDayBalancedRange,        // change_pct < -3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — weak day with both ends touched (impulsive breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1307,6 +1309,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 1.0
                 && hit.hod_dist_pct.abs() < 1.0
         }
+        Preset::StrongDayBalancedRange => {
+            hit.change_pct > 3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+        }
+        Preset::WeakDayBalancedRange => {
+            hit.change_pct < -3.0
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -1515,6 +1527,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OutsideRangeOnVolume => "Outside Range, On Volume",
         Preset::UpDayLowerHigh => "Up Day But Capped HOD",
         Preset::DownDayHigherLow => "Down Day But Cushioned LOD",
+        Preset::StrongDayBalancedRange => "Strong Day, Balanced Range",
+        Preset::WeakDayBalancedRange => "Weak Day, Balanced Range",
     }
 }
 

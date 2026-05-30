@@ -200,6 +200,8 @@ const PRESETS = [
     { id: 'outside_range_on_volume', label: t('view.scanners.preset.outside_range_on_volume.label'), desc: t('view.scanners.preset.outside_range_on_volume.desc') },
     { id: 'up_day_lower_high', label: t('view.scanners.preset.up_day_lower_high.label'), desc: t('view.scanners.preset.up_day_lower_high.desc') },
     { id: 'down_day_higher_low', label: t('view.scanners.preset.down_day_higher_low.label'), desc: t('view.scanners.preset.down_day_higher_low.desc') },
+    { id: 'strong_day_balanced_range', label: t('view.scanners.preset.strong_day_balanced_range.label'), desc: t('view.scanners.preset.strong_day_balanced_range.desc') },
+    { id: 'weak_day_balanced_range', label: t('view.scanners.preset.weak_day_balanced_range.label'), desc: t('view.scanners.preset.weak_day_balanced_range.desc') },
 ];
 
 export async function renderScanners(mount) {

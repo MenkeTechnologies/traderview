@@ -79,6 +79,11 @@ export async function renderTimeInForce(mount, _appState) {
             </table>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.time_in_force.h2.qty_chart">Order quantities: original / filled / remaining</h2>
+            <div id="tif-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="tif-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -146,6 +151,43 @@ async function compute(tok) {
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
+    renderQtyChart();
+}
+
+function renderQtyChart() {
+    const el = document.getElementById('tif-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const orig   = Number(state.order.original_qty);
+    const filled = Number(state.order.filled_qty);
+    const remain = Math.max(0, orig - filled);
+    if (!Number.isFinite(orig) || orig <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.time_in_force.empty_chart">${esc(t('view.time_in_force.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.time_in_force.chart.original'),
+        t('view.time_in_force.chart.filled'),
+        t('view.time_in_force.chart.remaining'),
+    ];
+    const ys = [orig, filled, remain];
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.time_in_force.chart.bucket') },
+            { label: t('view.time_in_force.chart.qty'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 16, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderSummary(verdict, pending) {
