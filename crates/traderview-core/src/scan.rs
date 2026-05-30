@@ -648,6 +648,8 @@ pub enum Preset {
     RedDaySubOptimalClose,          // change_pct < -1 AND lod_dist_pct.abs() > 2 AND rel_volume >= 1 — red day but closed significantly off LOD + decent vol (high-conviction red with sub-optimal close; bounce from trough before close)
     WideRangeNoVolFlat,             // hod_dist + lod_dist > 3 AND rel_volume < 0.7 AND change_pct.abs() < 0.5 — wide intraday range + dry vol + flat change (fake-liquidity range exploration; few prints across wide spread; possible spoof / wash)
     NarrowRangeMeaningfulChange,    // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — narrow intraday range + meaningful change (one-print day; price moved without exploring; mostly gap-driven without intraday discovery)
+    Year52HighGapDownReclaimed,     // year_high_pct < 5 AND gap_pct < -0.5 AND change_pct >= 0 AND rel_volume >= 1 — at 52w high + gap down + reclaimed positive + decent vol (resilience at the highs; gap-down absorbed by intraday strength)
+    Year52LowGapUpFaded,            // year_low_pct < 5 AND gap_pct > 0.5 AND change_pct <= 0 AND rel_volume >= 1 — at 52w low + gap up + faded negative + decent vol (relief gap rejected at the lows; continuation lower)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3525,6 +3527,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::Year52HighGapDownReclaimed => {
+            hit.year_high_pct < 5.0
+                && hit.gap_pct < -0.5
+                && hit.change_pct >= 0.0
+                && hit.rel_volume >= 1.0
+        }
+        Preset::Year52LowGapUpFaded => {
+            hit.year_low_pct < 5.0
+                && hit.gap_pct > 0.5
+                && hit.change_pct <= 0.0
+                && hit.rel_volume >= 1.0
+        }
     }
 }
 
@@ -4063,6 +4077,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RedDaySubOptimalClose => "Red Day + Significant Bounce from LOD (Sub-optimal Close on Down Day)",
         Preset::WideRangeNoVolFlat => "Wide Range + Dry Vol + Flat Change (Fake-liquidity Range Exploration)",
         Preset::NarrowRangeMeaningfulChange => "Narrow Range + Meaningful Change (One-print Day; No Intraday Discovery)",
+        Preset::Year52HighGapDownReclaimed => "Near 52w High + Gap Down Reclaimed Positive + Decent Vol (Resilience at Highs)",
+        Preset::Year52LowGapUpFaded => "Near 52w Low + Gap Up Faded Negative + Decent Vol (Relief Gap Rejected at Lows)",
     }
 }
 

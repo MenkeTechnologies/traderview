@@ -530,6 +530,8 @@ const PRESETS = [
     { id: 'red_day_sub_optimal_close', label: t('view.scanners.preset.red_day_sub_optimal_close.label'), desc: t('view.scanners.preset.red_day_sub_optimal_close.desc') },
     { id: 'wide_range_no_vol_flat', label: t('view.scanners.preset.wide_range_no_vol_flat.label'), desc: t('view.scanners.preset.wide_range_no_vol_flat.desc') },
     { id: 'narrow_range_meaningful_change', label: t('view.scanners.preset.narrow_range_meaningful_change.label'), desc: t('view.scanners.preset.narrow_range_meaningful_change.desc') },
+    { id: 'year52_high_gap_down_reclaimed', label: t('view.scanners.preset.year52_high_gap_down_reclaimed.label'), desc: t('view.scanners.preset.year52_high_gap_down_reclaimed.desc') },
+    { id: 'year52_low_gap_up_faded', label: t('view.scanners.preset.year52_low_gap_up_faded.label'), desc: t('view.scanners.preset.year52_low_gap_up_faded.desc') },
 ];
 
 export async function renderScanners(mount) {

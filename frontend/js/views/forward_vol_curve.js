@@ -70,6 +70,11 @@ export async function renderForwardVolCurve(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.forward_vol_curve.h2.variance_chart">Total variance σ²·t — must monotonically increase (no-arb)</h2>
+            <div id="fv-variance-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="fv-violations" class="chart-panel" style="display:none">
             <h2 data-i18n="view.forward_vol_curve.h2.arbitrage_violations">Arbitrage violations</h2>
             <div id="fv-violations-body"></div>
@@ -112,6 +117,7 @@ async function bootstrap(mount, tok) {
 
     renderSummary(sorted, res);
     renderChart(sorted, res);
+    renderVarianceChart(sorted, res);
     renderViolations(sorted, res);
     const arbN = res.arbitrage_violations?.length || 0;
     if (arbN > 0) {
@@ -217,6 +223,55 @@ function renderChart(rows, res) {
               values: (_, ticks) => ticks.map(t => `${(t * 100).toFixed(1)}%`) },
         ],
     }, [allXs, spotAligned, fwdAligned, violAligned], el);
+}
+
+function renderVarianceChart(rows, res) {
+    const el = document.getElementById('fv-variance-chart');
+    if (!window.uPlot) { el.textContent = t('common.error.uplot_not_loaded'); return; }
+    el.innerHTML = '';
+    if (!rows || rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.forward_vol_curve.empty_variance_chart">${esc(t('view.forward_vol_curve.empty_variance_chart'))}</div>`;
+        return;
+    }
+    const xs = rows.map(r => r.tenor_years);
+    const ys = rows.map(r => r.iv * r.iv * r.tenor_years);
+    const violations = new Set(res.arbitrage_violations || []);
+    const violXs = [];
+    const violYs = [];
+    for (let i = 0; i < ys.length - 1; i++) {
+        if (violations.has(i)) {
+            violXs.push(xs[i + 1]);
+            violYs.push(ys[i + 1]);
+        }
+    }
+    const allXs = Array.from(new Set([...xs, ...violXs])).sort((a, b) => a - b);
+    const varAligned = allXs.map(x => {
+        const i = xs.indexOf(x);
+        return i >= 0 ? ys[i] : null;
+    });
+    const violAligned = allXs.map(x => {
+        const i = violXs.indexOf(x);
+        return i >= 0 ? violYs[i] : null;
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.tenor_years') },
+            { label: t('view.forward_vol_curve.chart.variance'),
+              stroke: '#7af0a8', width: 1.6,
+              fill: 'rgba(122,240,168,0.10)',
+              points: { show: true, size: 6, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.forward_vol_curve.chart.violation'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab' },
+            { stroke: '#aab' },
+        ],
+        legend: { show: true },
+    }, [allXs, varAligned, violAligned], el);
 }
 
 function renderViolations(rows, res) {
