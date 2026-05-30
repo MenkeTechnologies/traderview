@@ -474,6 +474,8 @@ pub enum Preset {
     TightCoilAtLowDryVol,          // lod_dist.abs() < 0.3 AND hod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_low_pct < 5 — closed at LOD on tight range + dry vol + near 52w low (coil at lows)
     OrderlyTrendAtHighs,           // change_pct > 0 AND day_pct > 0 AND year_high_pct > -1 AND rel_volume between 0.7 and 1.5 — at 52w high with green intraday + green day on normal vol (orderly trend at highs)
     OrderlyTrendAtLows,            // change_pct < 0 AND day_pct < 0 AND year_low_pct < 1 AND rel_volume between 0.7 and 1.5 — at 52w low with red intraday + red day on normal vol (orderly downtrend at lows)
+    HotVolMidRangeChurn,           // rel_volume >= 3 AND hod_dist.abs() > 0.5 AND lod_dist.abs() > 0.5 — hot vol but close not at HOD or LOD (mid-range churn; no commitment)
+    DryVolAtExtremeClose,          // rel_volume < 0.4 AND (hod_dist.abs() < 0.3 OR lod_dist.abs() < 0.3) — dry vol but close at one extreme (unconfirmed extreme; thin tape edge)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2352,6 +2354,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 0.7
                 && hit.rel_volume <= 1.5
         }
+        Preset::HotVolMidRangeChurn => {
+            hit.rel_volume >= 3.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+        }
+        Preset::DryVolAtExtremeClose => {
+            hit.rel_volume < 0.4
+                && (hit.hod_dist_pct.abs() < 0.3 || hit.lod_dist_pct.abs() < 0.3)
+        }
     }
 }
 
@@ -2716,6 +2727,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightCoilAtLowDryVol => "Tight Coil at 52w Low, Dry Vol",
         Preset::OrderlyTrendAtHighs => "Orderly Trend at 52w Highs",
         Preset::OrderlyTrendAtLows => "Orderly Trend at 52w Lows",
+        Preset::HotVolMidRangeChurn => "Hot-Vol Mid-Range Churn (No Commitment)",
+        Preset::DryVolAtExtremeClose => "Dry-Vol Close at Extreme (Unconfirmed Edge)",
     }
 }
 

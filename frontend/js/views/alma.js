@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let spreadChart = null;
 
 export async function renderAlma(mount, _appState) {
     const tok = currentViewToken();
@@ -57,6 +58,11 @@ export async function renderAlma(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.alma.h2.chart">ALMA overlay</h2>
             <div id="al-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.alma.h2.spread_chart">Close − ALMA spread (% of ALMA)</h2>
+            <div id="al-spread-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -109,6 +115,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.period, state.offset, state.sigma);
     renderSummary(local, true);
     renderChart(local);
+    renderSpreadChart(local);
     renderStats();
     let resp;
     try {
@@ -121,6 +128,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.alma.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderSpreadChart(resp);
     renderStats();
 }
 
@@ -183,6 +191,36 @@ function renderChart(alma) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderSpreadChart(alma) {
+    const el = document.getElementById('al-spread-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(alma) || state.closes.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.closes.map((_, i) => i);
+    const spread = state.closes.map((c, i) => {
+        const a = alma[i];
+        if (a == null || !Number.isFinite(a) || !(a !== 0)) return null;
+        return ((c - a) / a) * 100;
+    });
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.alma.series.spread_pct'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.alma.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (spreadChart) { try { spreadChart.destroy(); } catch {} spreadChart = null; }
+    spreadChart = new window.uPlot(opts, [xs, spread, zero], el);
 }
 
 function renderStats() {
