@@ -157,6 +157,21 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Dashboard-sidebar item context items. Right-click on a <li data-
+// context-scope="dashboard-sidebar-item" data-id="X" data-name="Y">
+// shows: Pick / Rename… / Duplicate / Delete… . Handlers reach into
+// the dashboards-storage module directly.
+export const DASHBOARD_SIDEBAR_ITEMS = [
+    { id: 'db_side_pick',      labelKey: 'ctxmenu.db_side_pick',
+      actionKey: 'tv:db-side-pick',      section: 'dashboard' },
+    { id: 'db_side_rename',    labelKey: 'ctxmenu.db_side_rename',
+      actionKey: 'tv:db-side-rename',    section: 'dashboard' },
+    { id: 'db_side_duplicate', labelKey: 'ctxmenu.db_side_duplicate',
+      actionKey: 'tv:db-side-duplicate', section: 'dashboard' },
+    { id: 'db_side_delete',    labelKey: 'ctxmenu.db_side_delete',
+      actionKey: 'tv:db-side-delete',    section: 'dashboard' },
+];
+
 // Board-row context items. Right-click on a <tr data-context-scope=
 // "board-row" data-id="X" data-name="Y"> shows: Open board / Copy
 // ID / Delete board.
@@ -352,6 +367,7 @@ export const ALL_SCOPED_ITEMS = [
     ['share-row',              SHARE_ROW_ITEMS],
     ['backtest-preset-row',    BACKTEST_PRESET_ROW_ITEMS],
     ['board-row',              BOARD_ROW_ITEMS],
+    ['dashboard-sidebar-item', DASHBOARD_SIDEBAR_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

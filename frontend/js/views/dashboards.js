@@ -76,7 +76,10 @@ function renderSidebar() {
         <div class="db-sidebar-head" data-i18n="view.dashboards.sidebar.head">DASHBOARDS</div>
         <ul class="db-list">
             ${list.map(d => `
-                <li class="db-list-item ${d.id === state.active ? 'db-active' : ''}" data-id="${esc(d.id)}">
+                <li class="db-list-item ${d.id === state.active ? 'db-active' : ''}"
+                    data-context-scope="dashboard-sidebar-item"
+                    data-id="${esc(d.id)}"
+                    data-name="${esc(d.name)}">
                     <button class="db-pick" data-pick="${esc(d.id)}" type="button">${esc(d.name)}
                         <span class="muted">${d.tiles.length} tile${d.tiles.length === 1 ? '' : 's'}</span></button>
                 </li>

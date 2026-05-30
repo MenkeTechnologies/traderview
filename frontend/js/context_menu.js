@@ -18,8 +18,9 @@ import { showToast } from './toast.js';
 import { loadState, saveState, toggleFavorite, isFavorite, addBookmark } from './_favorites_storage.js';
 import { getGlobalSymbol, setGlobalSymbol } from './_global_symbol.js';
 import { api } from './api.js';
-import { tConfirm } from './dialog.js';
+import { tConfirm, tPrompt } from './dialog.js';
 import * as alertEngine from './_alert_rules.js';
+import * as dbStore from './_dashboards_storage.js';
 
 let _installed = false;
 let _open = false;
@@ -272,6 +273,54 @@ export function installContextMenu() {
             const s = alertEngine.removeRule(s0, id);
             alertEngine.saveState(s);
             showToast(t('toast.ar_deleted', { name }), { level: 'success' });
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+        })();
+    });
+    // Dashboard-sidebar-item actions — read data-id / data-name. Each
+    // handler mutates the dashboards-storage state and dispatches
+    // hashchange so the view re-renders from store.loadState().
+    window.addEventListener('tv:db-side-pick', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        const next = dbStore.setActive(dbStore.loadState(), id);
+        dbStore.saveState(next);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:db-side-rename', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const cur = (tgt && tgt.dataset && tgt.dataset.name) || '';
+        if (!id) return;
+        void (async () => {
+            const name = await tPrompt('ctxmenu.db_side_rename_prompt', { cur }, { defaultValue: cur });
+            if (name == null || !name.trim()) return;
+            const next = dbStore.renameDashboard(dbStore.loadState(), id, name.trim());
+            dbStore.saveState(next);
+            showToast(t('toast.db_renamed', { name: name.trim() }), { level: 'success' });
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+        })();
+    });
+    window.addEventListener('tv:db-side-duplicate', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        const next = dbStore.duplicateDashboard(dbStore.loadState(), id);
+        dbStore.saveState(next);
+        showToast(t('toast.db_duplicated', { name }), { level: 'success' });
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:db-side-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.db_side_delete_confirm', { name }, { level: 'danger' })) return;
+            const next = dbStore.deleteDashboard(dbStore.loadState(), id);
+            dbStore.saveState(next);
+            showToast(t('toast.db_deleted', { name }), { level: 'success' });
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
