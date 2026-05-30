@@ -376,6 +376,8 @@ const PRESETS = [
     { id: 'worst_actor_flush_day', label: t('view.scanners.preset.worst_actor_flush_day.label'), desc: t('view.scanners.preset.worst_actor_flush_day.desc') },
     { id: 'gap_up_at_year_low', label: t('view.scanners.preset.gap_up_at_year_low.label'), desc: t('view.scanners.preset.gap_up_at_year_low.desc') },
     { id: 'gap_down_at_year_high', label: t('view.scanners.preset.gap_down_at_year_high.label'), desc: t('view.scanners.preset.gap_down_at_year_high.desc') },
+    { id: 'big_up_mid_range_close', label: t('view.scanners.preset.big_up_mid_range_close.label'), desc: t('view.scanners.preset.big_up_mid_range_close.desc') },
+    { id: 'big_down_mid_range_close', label: t('view.scanners.preset.big_down_mid_range_close.label'), desc: t('view.scanners.preset.big_down_mid_range_close.desc') },
 ];
 
 export async function renderScanners(mount) {

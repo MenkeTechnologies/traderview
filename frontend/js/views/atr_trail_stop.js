@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let gapChart = null;
 
 export async function renderAtrTrailStop(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderAtrTrailStop(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.atrts.h2.chart">Stops overlay</h2>
             <div id="ts-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.atrts.h2.gap_chart">Stop-gap % per bar (long &amp; short breathing room)</h2>
+            <div id="ts-gap-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -104,6 +110,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period, state.multiplier);
     renderSummary(local, true);
     renderChart(local);
+    renderGapChart(local);
     renderStats();
     let resp;
     try {
@@ -116,6 +123,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.long_stop)) { showErr(t('view.atrts.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderGapChart(resp);
     renderStats();
 }
 
@@ -189,6 +197,42 @@ function renderChart(report) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderGapChart(report) {
+    const el = document.getElementById('ts-gap-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(report.long_stop) || state.bars.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const longGap = state.bars.map((b, i) => {
+        const s = report.long_stop[i];
+        if (s == null || !Number.isFinite(s) || !(s > 0)) return null;
+        return ((b.close - s) / s) * 100;
+    });
+    const shortGap = state.bars.map((b, i) => {
+        const s = report.short_stop[i];
+        if (s == null || !Number.isFinite(s) || !(s > 0)) return null;
+        return ((s - b.close) / s) * 100;
+    });
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.atrts.series.long_gap_pct'),
+              stroke: '#7af0a8', width: 1.5, points: { show: false } },
+            { label: t('view.atrts.series.short_gap_pct'),
+              stroke: '#ff3860', width: 1.5, points: { show: false } },
+            { label: t('view.atrts.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (gapChart) { try { gapChart.destroy(); } catch {} gapChart = null; }
+    gapChart = new window.uPlot(opts, [xs, longGap, shortGap, zero], el);
 }
 
 function renderStats() {
