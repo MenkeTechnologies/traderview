@@ -121,6 +121,11 @@ function renderReport(r, out, mount) {
             <div id="cmp-returns-chart" style="width:100%;height:240px"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.compare.h2.valuation_chart">Trailing P/E by symbol (valuation snapshot)</h2>
+            <div id="cmp-pe-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.compare.hint.valuation_chart" class="muted small">Trailing-twelve-month P/E ratio per symbol. Reveals valuation premium/discount across the comparison set — orthogonal to returns. Lower P/E doesn't always mean cheaper (sector/growth differences), but the spread shows relative valuation discipline.</p>
+        </div>
+        <div class="chart-panel">
             <h2>${esc(t('view.compare.h2.fundamental', { count: r.rows.length }))}</h2>
             ${renderTable(r.rows)}
             <p class="muted small">${esc(t('view.compare.hint.fetched', { time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
@@ -128,6 +133,37 @@ function renderReport(r, out, mount) {
     `;
     renderRsSvg(r.rows, mount);
     renderReturnsChart(r.rows);
+    renderPeChart(r.rows);
+}
+
+function renderPeChart(rows) {
+    const el = document.getElementById('cmp-pe-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(r => Number.isFinite(Number(r.trailing_pe)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.compare.empty_pe_chart">${esc(t('view.compare.empty_pe_chart'))}</div>`;
+        return;
+    }
+    const labels = valid.map(r => r.symbol);
+    const ys = valid.map(r => Number(r.trailing_pe));
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.compare.chart.symbol_idx') },
+            { label: t('view.compare.chart.trailing_pe'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderReturnsChart(rows) {

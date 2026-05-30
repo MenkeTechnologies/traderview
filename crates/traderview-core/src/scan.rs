@@ -854,6 +854,8 @@ pub enum Preset {
     YearLowGapUpHotVolRejection,         // year_low_pct < 0 AND gap_pct > 2 AND day_pct < -3 AND change_pct < -1 AND rel_volume >= 2 — new 52w low prior + gap up opening + huge intraday rejection + red close + hot vol (failed gap-up at the lows: longs overpressed overnight, intraday long-liquidation fully unwound and pushed back into trend with elevated participation)
     Year52HighReclaimAfterFlush,         // year_high_pct < 0 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND change_pct > 1 AND rel_volume >= 1.5 — new 52w high + LOD far below + close near HOD + green close + hot vol (intraday flush below the breakout level reclaimed back to highs by close; trapped breakdown shorts squeezed; conviction continuation candidate)
     Year52LowReclaimAfterPop,            // year_low_pct < 0 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND change_pct < -1 AND rel_volume >= 1.5 — new 52w low + HOD far above + close near LOD + red close + hot vol (intraday pop above the breakdown level rejected back to lows by close; trapped breakout longs flushed; conviction continuation candidate)
+    BigDayPctSmallChangeHotVol,          // day_pct.abs() > 3 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — big intraday move + flat net close + hot vol (full intraday reversal of overnight position: regular hours fully unwound any prior-close drift with elevated participation; rotation day with no net commitment)
+    SmallDayPctBigChangeHotVol,          // day_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat intraday move + big net close + hot vol (overnight gap held intact through regular hours: the entire daily move was the gap, intraday flat acceptance with elevated participation; gap-acceptance day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4975,6 +4977,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BigDayPctSmallChangeHotVol => {
+            hit.day_pct.abs() > 3.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::SmallDayPctBigChangeHotVol => {
+            hit.day_pct.abs() < 0.5
+                && hit.change_pct.abs() > 3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -5719,6 +5731,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::YearLowGapUpHotVolRejection => "New 52w Low Prior + Gap Up Opening + Huge Intraday Rejection + Red Close + Hot Vol (Failed Gap-up at the Lows: Longs Overpressed Overnight, Intraday Long-liquidation Fully Unwound and Pushed Back into Trend with Elevated Participation)",
         Preset::Year52HighReclaimAfterFlush => "New 52w High + LOD Far Below + Close Near HOD + Green Close + Hot Vol (Intraday Flush below the Breakout Level Reclaimed back to Highs by Close; Trapped Breakdown Shorts Squeezed; Conviction Continuation Candidate)",
         Preset::Year52LowReclaimAfterPop => "New 52w Low + HOD Far Above + Close Near LOD + Red Close + Hot Vol (Intraday Pop above the Breakdown Level Rejected back to Lows by Close; Trapped Breakout Longs Flushed; Conviction Continuation Candidate)",
+        Preset::BigDayPctSmallChangeHotVol => "Big Intraday Move + Flat Net Close + Hot Vol (Full Intraday Reversal of Overnight Position: Regular Hours Fully Unwound Any Prior-close Drift with Elevated Participation; Rotation Day with No Net Commitment)",
+        Preset::SmallDayPctBigChangeHotVol => "Flat Intraday Move + Big Net Close + Hot Vol (Overnight Gap Held Intact through Regular Hours: the Entire Daily Move Was the Gap, Intraday Flat Acceptance with Elevated Participation; Gap-acceptance Day)",
     }
 }
 
