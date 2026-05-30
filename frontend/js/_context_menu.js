@@ -127,6 +127,23 @@ export const WATCHLIST_ROW_ITEMS = [
       actionKey: 'tv:wl-row-remove',     section: 'watchlist' },
 ];
 
+// Position-row context items. Right-click on a <tr data-context-scope=
+// "position-row" data-symbol="X" data-id="Y"> shows: View trade /
+// Set active / Charts / Research / Options. Handlers read data-symbol
+// or data-id from `CustomEvent.detail.target`.
+export const POSITION_ROW_ITEMS = [
+    { id: 'pos_row_view_trade', labelKey: 'ctxmenu.pos_row_view_trade',
+      actionKey: 'tv:pos-row-view-trade', section: 'position' },
+    { id: 'pos_row_set_active', labelKey: 'ctxmenu.pos_row_set_active',
+      actionKey: 'tv:pos-row-set-active', section: 'position' },
+    { id: 'pos_row_charts',     labelKey: 'ctxmenu.pos_row_charts',
+      actionKey: 'tv:pos-row-charts',     section: 'position' },
+    { id: 'pos_row_research',   labelKey: 'ctxmenu.pos_row_research',
+      actionKey: 'tv:pos-row-research',   section: 'position' },
+    { id: 'pos_row_options',    labelKey: 'ctxmenu.pos_row_options',
+      actionKey: 'tv:pos-row-options',    section: 'position' },
+];
+
 // Trade-row context items. Right-click on a <tr data-context-scope=
 // "trade-row" data-id="X"> shows: View detail / Copy ID / Delete.
 // Handlers read `data-id` from `CustomEvent.detail.target`.

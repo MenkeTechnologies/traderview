@@ -95,7 +95,9 @@ function renderTable(r, mount) {
         const tag = p.symbol === winner ? '🟢' : p.symbol === loser ? '🔴' : '';
         const upnlCls = p.unrealized_pnl >= 0 ? 'pos' : 'neg';
         const dayCls  = (p.day_pnl ?? 0) >= 0 ? 'pos' : 'neg';
-        return `<tr>
+        return `<tr data-context-scope="position-row"
+                     data-symbol="${esc(p.symbol)}"
+                     data-id="${esc(p.trade_id)}">
             <td>${tag} <a href="#trade/${p.trade_id}">${esc(p.symbol)}</a>
                 <span class="muted small">${esc(p.side)} · ${esc(p.asset_class)}</span></td>
             <td>${fmt(p.qty, 0)}${p.multiplier !== 1 ? `×${fmt(p.multiplier, 0)}` : ''}</td>

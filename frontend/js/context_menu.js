@@ -202,6 +202,29 @@ export function installContextMenu() {
             }
         })();
     });
+    // Position-row actions — read data-symbol (and data-id for trade
+    // detail nav). Same shape as wlNavTo / wlSymbolFrom; reuses them.
+    window.addEventListener('tv:pos-row-view-trade', (e) => {
+        const target = e.detail && e.detail.target;
+        const id = target && target.dataset && target.dataset.id;
+        if (!id) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            return;
+        }
+        window.location.hash = `trade/${id}`;
+    });
+    window.addEventListener('tv:pos-row-set-active', (e) => {
+        const sym = wlSymbolFrom(e.detail);
+        if (!sym) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        setGlobalSymbol(sym);
+        showToast(t('toast.symbol_set_active', { sym }), { level: 'success' });
+    });
+    window.addEventListener('tv:pos-row-charts',   wlNavTo('charts'));
+    window.addEventListener('tv:pos-row-research', wlNavTo('research'));
+    window.addEventListener('tv:pos-row-options',  wlNavTo('options'));
     window.addEventListener('tv:trade-delete', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {
