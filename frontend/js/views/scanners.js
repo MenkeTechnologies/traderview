@@ -778,6 +778,8 @@ const PRESETS = [
     { id: 'big_gap_up_rejected_to_lod_hot_vol', label: t('view.scanners.preset.big_gap_up_rejected_to_lod_hot_vol.label'), desc: t('view.scanners.preset.big_gap_up_rejected_to_lod_hot_vol.desc') },
     { id: 'ten_x_vol_micro_change', label: t('view.scanners.preset.ten_x_vol_micro_change.label'), desc: t('view.scanners.preset.ten_x_vol_micro_change.desc') },
     { id: 'ten_x_vol_no_gap_big_intraday_move', label: t('view.scanners.preset.ten_x_vol_no_gap_big_intraday_move.label'), desc: t('view.scanners.preset.ten_x_vol_no_gap_big_intraday_move.desc') },
+    { id: 'micro_vol_big_change', label: t('view.scanners.preset.micro_vol_big_change.label'), desc: t('view.scanners.preset.micro_vol_big_change.desc') },
+    { id: 'micro_vol_flat_day', label: t('view.scanners.preset.micro_vol_flat_day.label'), desc: t('view.scanners.preset.micro_vol_flat_day.desc') },
 ];
 
 export async function renderScanners(mount) {

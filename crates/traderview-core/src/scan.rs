@@ -896,6 +896,8 @@ pub enum Preset {
     BigGapUpRejectedToLodHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped up + close pinned to LOD + hot vol (full intraday rejection from the gap-up open to the session low; trapped overnight longs flushed all the way to the lows with elevated participation)
     TenXVolMicroChange,                  // rel_volume >= 10 AND change_pct.abs() < 0.3 — 10x average vol + microchange close (rare absorption-at-scale print: extreme participation with virtually no net price movement; large institutional position-build or unwind masked as a quiet day)
     TenXVolNoGapBigIntradayMove,         // rel_volume >= 10 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — 10x average vol + no overnight gap + big intraday move (pure regular-hours extreme thrust: no overnight aid, climax-level participation, all directional commitment built during the session)
+    MicroVolBigChange,                   // rel_volume < 0.1 AND change_pct.abs() > 3 — 10 % of average vol + big net move (dead-stock surprise: illiquidity-driven extreme move with virtually no participation; thin market-maker quote rip or holiday/holiday-eve thin-tape print)
+    MicroVolFlatDay,                     // rel_volume < 0.1 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — 10 % of average vol + flat close + tight range (total dead stock: no participation and no price movement; delisting candidate or fully forgotten name)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5248,6 +5250,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
                 && hit.change_pct.abs() > 3.0
         }
+        Preset::MicroVolBigChange => {
+            hit.rel_volume < 0.1
+                && hit.change_pct.abs() > 3.0
+        }
+        Preset::MicroVolFlatDay => {
+            hit.rel_volume < 0.1
+                && hit.change_pct.abs() < 0.3
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+        }
     }
 }
 
@@ -6034,6 +6045,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigGapUpRejectedToLodHotVol => "Gap Up + Close Pinned to LOD + Hot Vol (Full Intraday Rejection from the Gap-up Open to the Session Low; Trapped Overnight Longs Flushed All the Way to the Lows with Elevated Participation)",
         Preset::TenXVolMicroChange => "10x Average Vol + Microchange Close (Rare Absorption-at-scale Print: Extreme Participation with Virtually No Net Price Movement; Large Institutional Position-build or Unwind Masked as a Quiet Day)",
         Preset::TenXVolNoGapBigIntradayMove => "10x Average Vol + No Overnight Gap + Big Intraday Move (Pure Regular-hours Extreme Thrust: No Overnight Aid, Climax-level Participation, All Directional Commitment Built during the Session)",
+        Preset::MicroVolBigChange => "10 % of Average Vol + Big Net Move (Dead-stock Surprise: Illiquidity-driven Extreme Move with Virtually No Participation; Thin Market-maker Quote Rip or Holiday/holiday-eve Thin-tape Print)",
+        Preset::MicroVolFlatDay => "10 % of Average Vol + Flat Close + Tight Range (Total Dead Stock: No Participation and No Price Movement; Delisting Candidate or Fully Forgotten Name)",
     }
 }
 
