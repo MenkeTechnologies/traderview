@@ -36,6 +36,11 @@ export async function renderReplay(mount, state, day) {
                 <h2 data-i18n="view.replay.h2.exec_chart">Execution price by order #</h2>
                 <div id="replay-exec-chart" style="width:100%;height:240px"></div>
             </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.replay.h2.cum_qty_chart">Cumulative signed quantity over executions</h2>
+                <div id="replay-qty-chart" style="width:100%;height:220px"></div>
+                <p data-i18n="view.replay.hint.cum_qty" class="muted small">Signed running qty (buys +, sells −) across executions in order. Reveals whether the trade was averaged in gradually, pyramid'd with smaller adds, or fired single-shot.</p>
+            </div>
         ` : '<p data-i18n="view.replay.hint.no_closed_trades_on_this_day" class="muted">No closed trades on this day.</p>'}
     `;
     const dayEl = mount.querySelector('#day');
@@ -88,7 +93,42 @@ export async function renderReplay(mount, state, day) {
                 </tbody></table>
         `;
         renderExecChart(execs);
+        renderCumQtyChart(execs);
     }
+}
+
+function renderCumQtyChart(execs) {
+    const el = document.getElementById('replay-qty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (execs || []).filter(e => Number.isFinite(Number(e.qty)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.replay.empty_qty_chart">${esc(t('view.replay.empty_qty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
+    const xs = valid.map((_, i) => i + 1);
+    const ys = [];
+    let acc = 0;
+    for (const e of valid) {
+        const signed = (e.side === 'buy' || e.side === 'cover') ? Number(e.qty) : -Number(e.qty);
+        acc += signed;
+        ys.push(acc);
+    }
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.replay.chart.exec_idx') },
+            { label: t('view.replay.chart.cum_qty'),
+              stroke: '#b86bff', width: 1.6, points: { show: true, size: 6 } },
+            { label: t('view.replay.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderExecChart(execs) {

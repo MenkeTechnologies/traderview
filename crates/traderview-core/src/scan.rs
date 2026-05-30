@@ -770,6 +770,8 @@ pub enum Preset {
     BigDayPctBigChangeAlignedHotVol,     // day_pct.abs() > 2 AND change_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 1.5 — big intraday + big change + same sign + decent vol (max-aligned trend day; both gap and intraday push same way through big move on volume)
     Year52HighBigDayDryVol,              // year_high_pct < 2 AND day_pct > 2 AND rel_volume < 0.7 — near 52w high + big green intraday + dry vol (no-volume push to new highs intraday; distribution suspicion / fake breakout / thin-tape rally)
     Year52LowBigDayDryVol,               // year_low_pct < 2 AND day_pct < -2 AND rel_volume < 0.7 — near 52w low + big red intraday + dry vol (no-volume push to new lows intraday; capitulation without conviction / thin-tape breakdown)
+    MidMagnitudeGreenMidWickHotVol,      // change_pct in [1, 3] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate green + mid-range close + decent vol (moderate-conviction up day with mid-wick finish; less extreme than BigUpMidRangeClose; consolidation candidate)
+    MidMagnitudeRedMidWickHotVol,        // change_pct in [-3, -1] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate red + mid-range close + decent vol (moderate-conviction down day with mid-wick finish; less extreme than BigDownMidRangeClose; basing candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4379,6 +4381,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -2.0
                 && hit.rel_volume < 0.7
         }
+        Preset::MidMagnitudeGreenMidWickHotVol => {
+            hit.change_pct >= 1.0
+                && hit.change_pct <= 3.0
+                && hit.hod_dist_pct.abs() >= 0.5
+                && hit.hod_dist_pct.abs() <= 2.0
+                && hit.lod_dist_pct.abs() >= 0.5
+                && hit.lod_dist_pct.abs() <= 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::MidMagnitudeRedMidWickHotVol => {
+            hit.change_pct <= -1.0
+                && hit.change_pct >= -3.0
+                && hit.hod_dist_pct.abs() >= 0.5
+                && hit.hod_dist_pct.abs() <= 2.0
+                && hit.lod_dist_pct.abs() >= 0.5
+                && hit.lod_dist_pct.abs() <= 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -5039,6 +5059,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigDayPctBigChangeAlignedHotVol => "Big Intraday + Big Change + Same Sign + Decent Vol (Max-aligned Trend Day; Gap and Intraday Push Same Way Through Big Move)",
         Preset::Year52HighBigDayDryVol => "Near 52w High + Big Green Intraday + Dry Vol (No-volume Push to New Highs; Distribution Suspicion / Fake Breakout)",
         Preset::Year52LowBigDayDryVol => "Near 52w Low + Big Red Intraday + Dry Vol (No-volume Push to New Lows; Capitulation Without Conviction / Thin-tape Breakdown)",
+        Preset::MidMagnitudeGreenMidWickHotVol => "Moderate Green + Mid-wick Close + Decent Vol (Moderate-conviction Up Day with Mid-range Finish; Consolidation Candidate)",
+        Preset::MidMagnitudeRedMidWickHotVol => "Moderate Red + Mid-wick Close + Decent Vol (Moderate-conviction Down Day with Mid-range Finish; Basing Candidate)",
     }
 }
 
