@@ -429,6 +429,21 @@ function renderGrid() {
     try { upgradeTooltips(grid); } catch (_) {}
 }
 
+// Map of tile view-id → registered shortcut id. When present, the tile
+// gets `data-shortcut="<id>"` so the tooltip augmenter appends the
+// keyboard chip (e.g. "Trades  (⌘⌥T)") on hover automatically.
+const TILE_SHORTCUTS = {
+    'trades':       'nav_trades',
+    'journal':      'nav_journal',
+    'dashboard':    'nav_dashboard',
+    'watchlists':   'nav_watchlists',
+    'charts':       'nav_charts',
+    'live':         'nav_live',
+    'reports':      'nav_reports',
+    'live-scanner': 'nav_scanner',
+    'launcher':     'go_home',
+};
+
 function renderTile([id, label, glyph, desc, badge]) {
     const fState = favs.loadState();
     const fav = favs.isFavorite(fState, id);
@@ -439,7 +454,8 @@ function renderTile([id, label, glyph, desc, badge]) {
     const descKey  = `tile.${id}.desc`;
     const tLabel = (() => { const v = t(labelKey); return (v && v !== labelKey) ? v : label; })();
     const tDesc  = (() => { const v = t(descKey);  return (v && v !== descKey)  ? v : desc;  })();
-    return `<button class="tile" data-view="${esc(id)}" tabindex="0">
+    const shortcutAttr = TILE_SHORTCUTS[id] ? ` data-shortcut="${esc(TILE_SHORTCUTS[id])}"` : '';
+    return `<button class="tile" data-view="${esc(id)}"${shortcutAttr} tabindex="0">
         <span class="tile-glyph">${glyph}</span>
         <span class="tile-body">
             <span class="tile-label"><span data-i18n="${esc(labelKey)}">${esc(tLabel)}</span>${badge ? ` <span class="tile-badge">${esc(badge)}</span>` : ''}</span>
