@@ -202,6 +202,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'mc_trades_run',                keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mc-trades',         descKey: 'shortcut.mc_trades_run',                actionKey: 'tv:mc-trades-run' },
     { id: 'commission_optimizer_run',     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'commission-optimizer', descKey: 'shortcut.commission_optimizer_run',  actionKey: 'tv:commission-optimizer-run' },
     { id: 'margin_runway_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'margin-runway',     descKey: 'shortcut.margin_runway_run',            actionKey: 'tv:margin-runway-run' },
+    { id: 'risk_parity_run',              keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-parity',       descKey: 'shortcut.risk_parity_run',              actionKey: 'tv:risk-parity-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseAssetBlob, validateInputs, buildBody, localAllocate,
@@ -29,15 +30,15 @@ export async function renderRiskParity(mount, _appState) {
                       placeholder="SPY 15%&#10;AGG 5%&#10;GLD 16%">${esc(assetsToBlob(state.assets))}</textarea>
             <div class="inline-form">
                 <button data-i18n="view.risk_parity.btn.allocate" id="rp-run" class="primary"
-                        data-tip="view.risk_parity.tip.allocate" type="button">Allocate</button>
+                        data-tip="view.risk_parity.tip.allocate" data-shortcut="risk_parity_run" type="button">Allocate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.risk_parity.btn.demo_6040"    id="rp-demo-6040"  class="secondary" type="button">Demo: classic 60/40</button>
-                <button data-i18n="view.risk_parity.btn.demo_five"    id="rp-demo-five"  class="secondary" type="button">Demo: 5-asset diversified</button>
-                <button data-i18n="view.risk_parity.btn.demo_equal"   id="rp-demo-equal" class="secondary" type="button">Demo: equal vol</button>
-                <button data-i18n="view.risk_parity.btn.demo_extreme" id="rp-demo-extr"  class="secondary" type="button">Demo: extreme vol skew</button>
-                <button data-i18n="view.risk_parity.btn.demo_single"  id="rp-demo-one"   class="secondary" type="button">Demo: single asset</button>
-                <button data-i18n="view.risk_parity.btn.demo_zero"    id="rp-demo-zero"  class="secondary" type="button">Demo: cash + risk assets</button>
+                <button data-i18n="view.risk_parity.btn.demo_6040"    id="rp-demo-6040"  class="secondary" type="button" data-tip="view.risk_parity.tip.demo_6040">Demo: classic 60/40</button>
+                <button data-i18n="view.risk_parity.btn.demo_five"    id="rp-demo-five"  class="secondary" type="button" data-tip="view.risk_parity.tip.demo_five">Demo: 5-asset diversified</button>
+                <button data-i18n="view.risk_parity.btn.demo_equal"   id="rp-demo-equal" class="secondary" type="button" data-tip="view.risk_parity.tip.demo_equal">Demo: equal vol</button>
+                <button data-i18n="view.risk_parity.btn.demo_extreme" id="rp-demo-extr"  class="secondary" type="button" data-tip="view.risk_parity.tip.demo_extreme">Demo: extreme vol skew</button>
+                <button data-i18n="view.risk_parity.btn.demo_single"  id="rp-demo-one"   class="secondary" type="button" data-tip="view.risk_parity.tip.demo_single">Demo: single asset</button>
+                <button data-i18n="view.risk_parity.btn.demo_zero"    id="rp-demo-zero"  class="secondary" type="button" data-tip="view.risk_parity.tip.demo_zero">Demo: cash + risk assets</button>
             </div>
             <p data-i18n="view.risk_parity.hint.about" class="muted">Naive risk-parity: weight ∝ 1/σ, normalized to 1. Each asset contributes the same dollar variance — low-vol assets get a larger weight. Assumes uncorrelated returns; for real correlation matrices use HRP (coming soon).</p>
         </div>
@@ -90,6 +91,7 @@ function readInputs() {
     if (parsed.errors.length) {
         showErr(`${t('view.risk_parity.err.parse_prefix')}: `
             + parsed.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.risk_parity.toast.parse_error', { n: parsed.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -99,7 +101,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.assets);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.risk_parity.toast.invalid'), { level: 'warning' }); return; }
     const local = localAllocate(state.assets);
     renderSummary(local, true);
     renderBars(local);
@@ -111,6 +113,7 @@ async function compute(tok) {
         resp = await api.calcRiskParity(buildBody(state.assets));
     } catch (e) {
         showErr(`${t('view.risk_parity.err.api')}: ${e.message || e}`);
+        showToast(t('view.risk_parity.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -119,6 +122,11 @@ async function compute(tok) {
     renderTable(resp);
     renderWeightsChart(resp);
     renderVolChart();
+    const n = (resp.allocations || []).length;
+    const conc = maxConcentration(resp.allocations);
+    const concPct = (Number(conc) * 100).toFixed(1);
+    const level = conc >= 0.5 ? 'warning' : 'success';
+    showToast(t('view.risk_parity.toast.allocated', { n, conc: concPct }), { level });
 }
 
 function renderVolChart() {
