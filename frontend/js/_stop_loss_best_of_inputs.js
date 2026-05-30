@@ -94,8 +94,8 @@ export function describeCandidate(c) {
     const b = methodBadge(c.method);
     switch (c.method) {
         case 'none':         return b.label;
-        case 'fixed_dollar': return `$${c.value.toFixed(2)} stop`;
-        case 'fixed_pct':    return `${(c.value * 100).toFixed(2)}% stop`;
+        case 'fixed_dollar': return t('view.stop_loss_best_of.summary.fixed_dollar', { value: c.value.toFixed(2) });
+        case 'fixed_pct':    return t('view.stop_loss_best_of.summary.fixed_pct', { value: (c.value * 100).toFixed(2) });
         case 'atr_multiple': return `${c.value.toFixed(2)} × ATR(${c.atr.toFixed(2)})`;
         default:             return b.label;
     }

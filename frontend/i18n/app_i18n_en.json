@@ -7087,6 +7087,8 @@
   "view.yield_curve_pca.factor.level":     "Level",
   "view.yield_curve_pca.factor.slope":     "Slope",
   "view.yield_curve_pca.factor.curvature": "Curvature",
+  "view.stop_loss_best_of.summary.fixed_dollar": "${value} stop",
+  "view.stop_loss_best_of.summary.fixed_pct":    "{value}% stop",
   "common.range_label":                    "range {low} – {high}",
   "common.month_year":                     "{month} {year}",
   "common.unknown":                        "unknown",
