@@ -178,10 +178,10 @@ function renderSkewSvg(s, mount) {
             <path d="${linePath('put_iv')}"  stroke="#ff1f7a" stroke-width="2" fill="none"/>
             ${dots('call_iv', '#00ffaa')}
             ${dots('put_iv', '#ff1f7a')}
-            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">moneyness (% from spot)</text>
-            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">IV (%)</text>
-            <text x="${w - 90}" y="${pad + 12}" fill="#00ffaa" font-size="11">calls</text>
-            <text x="${w - 90}" y="${pad + 28}" fill="#ff1f7a" font-size="11">puts</text>
+            <text x="${w / 2}" y="${h - 10}" text-anchor="middle" fill="#9aa0c8" font-size="11">${esc(t('view.vol_surface.svg.x_axis'))}</text>
+            <text x="12" y="${h / 2}" fill="#9aa0c8" font-size="11" transform="rotate(-90 12 ${h / 2})">${esc(t('view.vol_surface.svg.y_axis'))}</text>
+            <text x="${w - 90}" y="${pad + 12}" fill="#00ffaa" font-size="11">${esc(t('view.vol_surface.svg.calls'))}</text>
+            <text x="${w - 90}" y="${pad + 28}" fill="#ff1f7a" font-size="11">${esc(t('view.vol_surface.svg.puts'))}</text>
         </svg>
     `;
 }
