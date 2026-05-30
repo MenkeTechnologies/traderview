@@ -56,6 +56,12 @@ export async function renderRangeBar(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.range_bar.h2.ticks_chart">Tick count per bar (effort to traverse the range)</h2>
+            <div id="rb-ticks-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.range_bar.hint.ticks" class="muted small">How many prints it took to traverse target_range per bar. Many ticks = absorption / chop. Few ticks = momentum impulse blasting through. Independent of OHLC level.</p>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.range_bar.h2.table">Bars (tail — last 30)</h2>
             <div id="rb-table"></div>
         </div>
@@ -100,6 +106,7 @@ async function compute(tok) {
     const local = localCompute(state.prints, state.target_range);
     renderSummary(local, true);
     renderChart(local);
+    renderTicksChart(local);
     renderTable(local);
     let resp;
     try {
@@ -112,6 +119,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderChart(resp);
+    renderTicksChart(resp);
     renderTable(resp);
     const bars = Array.isArray(resp) ? resp.length : 0;
     const s = summarize(resp);
@@ -179,6 +187,34 @@ function renderChart(bars) {
         ],
         legend: { show: true },
     }, [xs, closes, highs, lows], el);
+}
+
+function renderTicksChart(bars) {
+    const el = document.getElementById('rb-ticks-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!bars || bars.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.range_bar.empty_ticks_chart">${esc(t('view.range_bar.empty_ticks_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i + 1);
+    const ys = bars.map(b => Number(b.tick_count) || 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar') },
+            { label: t('view.range_bar.chart.tick_count'),
+              stroke: '#b86bff', width: 1.6,
+              points: { show: true, size: 6, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => '#' + Math.trunc(v)) },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTable(bars) {

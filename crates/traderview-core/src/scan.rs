@@ -760,6 +760,8 @@ pub enum Preset {
     BigRedMidYearSweetSpot,              // change_pct < -3 AND year_low_pct in [5, 20] AND year_high_pct > 15 AND rel_volume >= 1.5 — big red + 5-20% above 52w low + well below 52w high + decent vol (sweet-spot down move: high-momentum drop from mid-range; room to fall before support)
     TripleZeroHotVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume >= 2 — gap + change + day ALL near zero + hot vol (massive participation produced literally zero movement on all three axes; max-absorption pattern; institutional cross at one price)
     TripleZeroDryVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume < 0.5 — gap + change + day ALL near zero + dry vol (universal dormancy; market completely absent on all axes; near-dead-tape day; possibly halted or unattended)
+    ExtremeGapModerateMoveHotVol,        // gap_pct.abs() > 5 AND change_pct.abs() in [2, 5] AND rel_volume >= 2 — huge gap (>5%) + moderate retained change (2-5%) + hot vol (extreme gap retained most but not all of itself on volume; partial-fill move with conviction at a new level)
+    ExtremeGapBigContinuationHotVol,     // gap_pct.abs() > 5 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 2 — extreme gap + change EXCEEDS gap + hot vol (extreme gap that EXTENDED on volume; max-momentum continuation; >100% gap extension)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4313,6 +4315,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.1
                 && hit.rel_volume < 0.5
         }
+        Preset::ExtremeGapModerateMoveHotVol => {
+            hit.gap_pct.abs() > 5.0
+                && hit.change_pct.abs() >= 2.0
+                && hit.change_pct.abs() <= 5.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::ExtremeGapBigContinuationHotVol => {
+            hit.gap_pct.abs() > 5.0
+                && hit.change_pct.abs() > hit.gap_pct.abs()
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -4963,6 +4976,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigRedMidYearSweetSpot => "Big Red + 5-20% Above 52w Low + Below 52w High + Decent Vol (Sweet-spot Down Move; High-momentum Drop From Mid-range; Room to Fall)",
         Preset::TripleZeroHotVol => "Gap + Change + Day All Near Zero + Hot Vol (Max-absorption Pattern; Massive Participation, Zero Movement; Institutional Cross at One Price)",
         Preset::TripleZeroDryVol => "Gap + Change + Day All Near Zero + Dry Vol (Universal Dormancy; Near-dead Tape on All Axes; Possibly Halted or Unattended)",
+        Preset::ExtremeGapModerateMoveHotVol => "Huge Gap (>5%) + Moderate Retained Change (2-5%) + Hot Vol (Extreme Gap Retained Most But Not All; Partial-fill Move with Conviction)",
+        Preset::ExtremeGapBigContinuationHotVol => "Extreme Gap (>5%) + Change Exceeds Gap + Hot Vol (Max-momentum Continuation; >100% Gap Extension on Volume)",
     }
 }
 

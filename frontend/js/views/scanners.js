@@ -642,6 +642,8 @@ const PRESETS = [
     { id: 'big_red_mid_year_sweet_spot', label: t('view.scanners.preset.big_red_mid_year_sweet_spot.label'), desc: t('view.scanners.preset.big_red_mid_year_sweet_spot.desc') },
     { id: 'triple_zero_hot_vol', label: t('view.scanners.preset.triple_zero_hot_vol.label'), desc: t('view.scanners.preset.triple_zero_hot_vol.desc') },
     { id: 'triple_zero_dry_vol', label: t('view.scanners.preset.triple_zero_dry_vol.label'), desc: t('view.scanners.preset.triple_zero_dry_vol.desc') },
+    { id: 'extreme_gap_moderate_move_hot_vol', label: t('view.scanners.preset.extreme_gap_moderate_move_hot_vol.label'), desc: t('view.scanners.preset.extreme_gap_moderate_move_hot_vol.desc') },
+    { id: 'extreme_gap_big_continuation_hot_vol', label: t('view.scanners.preset.extreme_gap_big_continuation_hot_vol.label'), desc: t('view.scanners.preset.extreme_gap_big_continuation_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
