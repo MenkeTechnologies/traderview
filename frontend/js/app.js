@@ -806,6 +806,16 @@ function bindTabs() {
         const el = document.getElementById('ce-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `c` in bond-duration scope → click Compute duration.
+    window.addEventListener('tv:bond-duration-run', () => {
+        const el = document.getElementById('bd-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `b` in bond-duration scope → click Build coupon bond.
+    window.addEventListener('tv:bond-duration-build', () => {
+        const el = document.getElementById('bd-build');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

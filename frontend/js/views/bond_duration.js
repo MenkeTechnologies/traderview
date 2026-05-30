@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseCashFlowBlob, validateInputs, buildBody, localCompute,
@@ -27,13 +28,13 @@ export async function renderBondDuration(mount, _appState) {
             <h2 data-i18n="view.bond_duration.h2.builder">Quick bond builder</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.bond_duration.label.par">Par ($)</span>
-                    <input id="bd-par" type="number" step="any" min="0" value="${state.builder.par}"></label>
+                    <input id="bd-par" type="number" step="any" min="0" value="${state.builder.par}" data-tip="view.bond_duration.tip.par"></label>
                 <label><span data-i18n="view.bond_duration.label.coupon">Coupon rate (decimal — 0.05 = 5%)</span>
-                    <input id="bd-coupon" type="number" step="any" min="0" max="1" value="${state.builder.coupon_rate}"></label>
+                    <input id="bd-coupon" type="number" step="any" min="0" max="1" value="${state.builder.coupon_rate}" data-tip="view.bond_duration.tip.coupon"></label>
                 <label><span data-i18n="view.bond_duration.label.maturity">Maturity (years)</span>
-                    <input id="bd-maturity" type="number" step="any" min="0" value="${state.builder.maturity_years}"></label>
+                    <input id="bd-maturity" type="number" step="any" min="0" value="${state.builder.maturity_years}" data-tip="view.bond_duration.tip.maturity"></label>
                 <button data-i18n="view.bond_duration.btn.build_bond" id="bd-build" class="secondary"
-                        data-tip="view.bond_duration.tip.build_bond" type="button">Build coupon bond</button>
+                        data-tip="view.bond_duration.tip.build_bond" data-shortcut="bond_duration_build" type="button">Build coupon bond</button>
             </div>
             <p data-i18n="view.bond_duration.hint.builder" class="muted">Generates a standard coupon-bond cash-flow schedule and replaces the textarea below.</p>
 
@@ -44,19 +45,19 @@ export async function renderBondDuration(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bond_duration.label.ytm">YTM (decimal)</span>
-                    <input id="bd-ytm" type="number" step="any" value="${state.ytm}"></label>
+                    <input id="bd-ytm" type="number" step="any" value="${state.ytm}" data-tip="view.bond_duration.tip.ytm"></label>
                 <label><span data-i18n="view.bond_duration.label.compounding">Compounding / year</span>
-                    <input id="bd-m" type="number" step="1" min="1" value="${state.compounding_per_year}"></label>
+                    <input id="bd-m" type="number" step="1" min="1" value="${state.compounding_per_year}" data-tip="view.bond_duration.tip.compounding"></label>
                 <button data-i18n="view.bond_duration.btn.compute" id="bd-run" class="primary"
-                        data-tip="view.bond_duration.tip.compute" type="button">Compute duration</button>
+                        data-tip="view.bond_duration.tip.compute" data-shortcut="bond_duration_run" type="button">Compute duration</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bond_duration.btn.demo_zero5"   id="bd-demo-zero"  class="secondary" type="button">Demo: zero-coupon 5yr</button>
-                <button data-i18n="view.bond_duration.btn.demo_5yr"     id="bd-demo-5yr"   class="secondary" type="button">Demo: 5% coupon 5yr (par)</button>
-                <button data-i18n="view.bond_duration.btn.demo_10yr"    id="bd-demo-10yr"  class="secondary" type="button">Demo: 4% × 10yr (semi)</button>
-                <button data-i18n="view.bond_duration.btn.demo_30yr"    id="bd-demo-30yr"  class="secondary" type="button">Demo: 4.5% × 30yr (semi)</button>
-                <button data-i18n="view.bond_duration.btn.demo_premium" id="bd-demo-prem"  class="secondary" type="button">Demo: 8% × 7yr premium</button>
-                <button data-i18n="view.bond_duration.btn.demo_tips"    id="bd-demo-tips"  class="secondary" type="button">Demo: low-rate 2yr zero</button>
+                <button data-i18n="view.bond_duration.btn.demo_zero5"   id="bd-demo-zero"  class="secondary" type="button" data-tip="view.bond_duration.tip.demo_zero">Demo: zero-coupon 5yr</button>
+                <button data-i18n="view.bond_duration.btn.demo_5yr"     id="bd-demo-5yr"   class="secondary" type="button" data-tip="view.bond_duration.tip.demo_5yr">Demo: 5% coupon 5yr (par)</button>
+                <button data-i18n="view.bond_duration.btn.demo_10yr"    id="bd-demo-10yr"  class="secondary" type="button" data-tip="view.bond_duration.tip.demo_10yr">Demo: 4% × 10yr (semi)</button>
+                <button data-i18n="view.bond_duration.btn.demo_30yr"    id="bd-demo-30yr"  class="secondary" type="button" data-tip="view.bond_duration.tip.demo_30yr">Demo: 4.5% × 30yr (semi)</button>
+                <button data-i18n="view.bond_duration.btn.demo_premium" id="bd-demo-prem"  class="secondary" type="button" data-tip="view.bond_duration.tip.demo_prem">Demo: 8% × 7yr premium</button>
+                <button data-i18n="view.bond_duration.btn.demo_tips"    id="bd-demo-tips"  class="secondary" type="button" data-tip="view.bond_duration.tip.demo_tips">Demo: low-rate 2yr zero</button>
             </div>
             <p data-i18n="view.bond_duration.hint.about" class="muted">Macaulay = weighted-avg time-to-CF. Modified = Macaulay / (1 + ytm/m). Rule of thumb: ΔP/P ≈ -ModDur × Δy. Compounding 2 = semi-annual (US Treasury convention); 1 = annual.</p>
         </div>
@@ -100,6 +101,7 @@ export async function renderBondDuration(mount, _appState) {
             state.builder.par, state.builder.coupon_rate,
             state.builder.maturity_years, m);
         document.getElementById('bd-cf').value = cfsToBlob(state.cash_flows);
+        showToast(t('view.bond_duration.toast.built', { n: state.cash_flows.length }), { level: 'info' });
     });
     document.getElementById('bd-run').addEventListener('click', () => { readInputs(); void compute(tok); });
     readInputs(); void compute(tok);
@@ -114,6 +116,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bond_duration.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bond_duration.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -125,7 +128,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.cash_flows, state.ytm, state.compounding_per_year);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bond_duration.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.cash_flows, state.ytm, state.compounding_per_year);
     renderSummary(local, true);
     renderSensitivity(local);
@@ -136,12 +139,17 @@ async function compute(tok) {
             state.cash_flows, state.ytm, state.compounding_per_year));
     } catch (e) {
         showErr(`${t('view.bond_duration.err.api')}: ${e.message || e}`);
+        showToast(t('view.bond_duration.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderSensitivity(resp);
     renderCfChart();
+    const price = Number(resp.price || 0).toFixed(2);
+    const mac = Number(resp.macaulay_duration || 0).toFixed(2);
+    const mod = Number(resp.modified_duration || 0).toFixed(2);
+    showToast(t('view.bond_duration.toast.computed', { price, mac, mod }), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
