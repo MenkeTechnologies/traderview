@@ -133,6 +133,9 @@ pub enum Preset {
     DistributionDay,  // close down >= 2% on rel_volume >= 1.5x
     AccumulationDay,  // close up >= 2% on rel_volume >= 1.5x
     NearYearHighLowVol, // within 1% of 52w high BUT rel_volume < 1 (no real buying interest)
+    InsideDaySqueeze,   // tight day + low volume + close not near either extreme (compression)
+    LowVolSqueeze,      // very quiet bar: rel_volume < 0.5 AND |day_pct| < 1
+    CoilingSqueeze,     // change near zero (|change_pct| < 1) AND quiet volume (< 0.7×) AND narrow gap
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -168,6 +171,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::DistributionDay => hit.change_pct <= -2.0 && hit.rel_volume >= 1.5,
         Preset::AccumulationDay => hit.change_pct >= 2.0 && hit.rel_volume >= 1.5,
         Preset::NearYearHighLowVol => hit.year_high_pct >= -1.0 && hit.rel_volume < 1.0,
+        Preset::InsideDaySqueeze => {
+            hit.day_pct.abs() <= 1.0
+                && hit.rel_volume <= 0.8
+                && hit.hod_dist_pct.abs() <= 1.5
+                && hit.lod_dist_pct.abs() <= 1.5
+        }
+        Preset::LowVolSqueeze => hit.rel_volume < 0.5 && hit.day_pct.abs() < 1.0,
+        Preset::CoilingSqueeze => {
+            hit.change_pct.abs() < 1.0 && hit.rel_volume < 0.7 && hit.gap_pct.abs() < 0.5
+        }
     }
 }
 
@@ -191,6 +204,9 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DistributionDay => "Distribution Day",
         Preset::AccumulationDay => "Accumulation Day",
         Preset::NearYearHighLowVol => "52w High, No Volume",
+        Preset::InsideDaySqueeze => "Inside-Day Squeeze",
+        Preset::LowVolSqueeze => "Low-Volume Squeeze",
+        Preset::CoilingSqueeze => "Coiling Squeeze",
     }
 }
 

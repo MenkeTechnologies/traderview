@@ -15,6 +15,9 @@ const PRESETS = [
     { id: 'pct52w_high',       label: t('view.scanners.preset.pct52w_high.label'),  desc: t('view.scanners.preset.pct52w_high.desc') },
     { id: 'pct52w_low',        label: t('view.scanners.preset.pct52w_low.label'),   desc: t('view.scanners.preset.pct52w_low.desc') },
     { id: 'oversold_bounce',   label: t('chart.series.oversold_bounce'),    desc: 'green day off oversold base' },
+    { id: 'inside_day_squeeze', label: t('view.scanners.preset.inside_day_squeeze.label'), desc: t('view.scanners.preset.inside_day_squeeze.desc') },
+    { id: 'low_vol_squeeze',    label: t('view.scanners.preset.low_vol_squeeze.label'),    desc: t('view.scanners.preset.low_vol_squeeze.desc') },
+    { id: 'coiling_squeeze',    label: t('view.scanners.preset.coiling_squeeze.label'),    desc: t('view.scanners.preset.coiling_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
