@@ -84,6 +84,11 @@ export async function renderTimeInForce(mount, _appState) {
             <div id="tif-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.time_in_force.h2.age_chart">Order age (days since placed) vs cutoffs</h2>
+            <div id="tif-age-chart" style="width:100%;height:180px"></div>
+        </div>
+
         <div id="tif-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -152,6 +157,49 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderQtyChart();
+    renderAgeChart();
+}
+
+function renderAgeChart() {
+    const el = document.getElementById('tif-age-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const placed = state.order.placed_at ? new Date(state.order.placed_at).getTime() : NaN;
+    const now = state.now ? new Date(state.now).getTime() : NaN;
+    if (!Number.isFinite(placed) || !Number.isFinite(now)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.time_in_force.empty_age_chart">${esc(t('view.time_in_force.empty_age_chart'))}</div>`;
+        return;
+    }
+    const ageDays = Math.max(0, (now - placed) / 86400000);
+    const labels = [
+        t('view.time_in_force.chart.age'),
+    ];
+    const xs = [1];
+    const ys = [ageDays];
+    const dayCut = xs.map(() => 1);    // DAY cutoff = 1 day
+    const gtcCut = xs.map(() => 90);   // GTC cutoff = 90 days
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 160,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.time_in_force.chart.bucket') },
+            { label: t('view.time_in_force.chart.age'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 22, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.time_in_force.chart.day_cutoff'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+            { label: t('view.time_in_force.chart.gtc_cutoff'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, dayCut, gtcCut], el);
 }
 
 function renderQtyChart() {

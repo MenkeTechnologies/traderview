@@ -448,6 +448,8 @@ pub enum Preset {
     TinyChangeWideRangeOnDryVol, // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — wide-range no-net-move on light vol (failed setup; both sides absent)
     LargeGapModerateMoveHotVol,  // gap_pct.abs() > 3 AND change_pct.abs() between 1.5 and 3 AND rel_volume >= 2 — large gap + moderate day on heavy vol (institutional execution post-gap)
     SmallGapBigMoveHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat gap + big day on heavy vol (intraday-driven trend; no overnight positioning)
+    NoVolTrendUp,                // change_pct > 1 AND day_pct > 0 AND rel_volume < 0.4 AND hod_dist.abs() < 0.5 — up close on extreme dry vol (trend without participation; vacuum risk)
+    NoVolTrendDown,              // change_pct < -1 AND day_pct < 0 AND rel_volume < 0.4 AND lod_dist.abs() < 0.5 — down close on extreme dry vol (trend without participation; vacuum risk)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2174,6 +2176,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 3.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::NoVolTrendUp => {
+            hit.change_pct > 1.0
+                && hit.day_pct > 0.0
+                && hit.rel_volume < 0.4
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::NoVolTrendDown => {
+            hit.change_pct < -1.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume < 0.4
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2512,6 +2526,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TinyChangeWideRangeOnDryVol => "Tiny-Change Wide-Range Dry Vol",
         Preset::LargeGapModerateMoveHotVol => "Large Gap + Moderate Day, Hot Vol",
         Preset::SmallGapBigMoveHotVol => "Small Gap + Big Day, Hot Vol",
+        Preset::NoVolTrendUp => "No-Vol Up Trend (Vacuum)",
+        Preset::NoVolTrendDown => "No-Vol Down Trend (Vacuum)",
     }
 }
 
