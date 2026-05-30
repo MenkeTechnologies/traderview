@@ -133,7 +133,7 @@ function renderSummary(csm, pending) {
     const mBadge = momentumBadge(last);
     const tBadge = trendBadge(csm);
     const xBadge = crossBadge(csm);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(csm);
     const localTag = pending ? ` (${t('view.csm.tag.local')})` : '';
     document.getElementById('cm-summary').innerHTML = [

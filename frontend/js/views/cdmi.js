@@ -145,7 +145,7 @@ function renderSummary(dmi, pending) {
     const xBadge = crossBadge(dmi);
     const tBadge = trendBadge(dmi);
     const tdInfo = currentTdInfo(state.closes, state.td_const, state.std_period, state.td_min, state.td_max);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(dmi);
     const localTag = pending ? ` (${t('view.cdmi.tag.local')})` : '';
     document.getElementById('cd-summary').innerHTML = [

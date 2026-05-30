@@ -134,7 +134,7 @@ function renderSummary(pb, pending) {
     const xBadge = crossBadge(pb);
     const tBadge = trendBadge(pb);
     const populated = countDefined(pb);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const localTag = pending ? ` (${t('view.bbpb.tag.local')})` : '';
     document.getElementById('pb-summary').innerHTML = [
         card(t('view.bbpb.card.zone'),     t(zBadge.key) + localTag, zBadge.cls),

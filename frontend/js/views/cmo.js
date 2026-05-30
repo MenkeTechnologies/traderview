@@ -128,7 +128,7 @@ function renderSummary(cmo, pending) {
     const zBadge = zoneBadge(last);
     const xBadge = crossBadge(cmo);
     const tBadge = trendBadge(cmo);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(cmo);
     const localTag = pending ? ` (${t('view.cmo.tag.local')})` : '';
     document.getElementById('cm-summary').innerHTML = [

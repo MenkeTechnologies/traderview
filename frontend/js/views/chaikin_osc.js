@@ -134,7 +134,7 @@ function renderSummary(co, pending) {
     const xBadge = crossBadge(co);
     const tBadge = trendBadge(co);
     const dBadge = divergenceBadge(co, state.bars);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(co);
     const localTag = pending ? ` (${t('view.chosc.tag.local')})` : '';
     document.getElementById('co-summary').innerHTML = [

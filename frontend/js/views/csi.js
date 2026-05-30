@@ -128,7 +128,7 @@ function renderSummary(csi, pending) {
     const sBadge = strengthBadge(last);
     const tBadge = trendBadge(csi);
     const xBadge = crossBadge(csi);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(csi);
     const localTag = pending ? ` (${t('view.csi.tag.local')})` : '';
     document.getElementById('cs-summary').innerHTML = [

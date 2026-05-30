@@ -140,10 +140,10 @@ function row(n) {
 
 function relativeTime(iso) {
     if (!iso) return '';
-    const t = new Date(iso).getTime();
-    const diff = (Date.now() - t) / 1000;
-    if (diff < 60)   return `${Math.floor(diff)}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    const ms = new Date(iso).getTime();
+    const diff = (Date.now() - ms) / 1000;
+    if (diff < 60)   return t('common.ago.s', { n: Math.floor(diff) });
+    if (diff < 3600) return t('common.ago.m', { n: Math.floor(diff / 60) });
+    if (diff < 86400) return t('common.ago.h', { n: Math.floor(diff / 3600) });
+    return t('common.ago.d', { n: Math.floor(diff / 86400) });
 }

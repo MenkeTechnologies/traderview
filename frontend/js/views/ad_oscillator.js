@@ -136,7 +136,7 @@ function renderSummary(report, pending) {
     const pBadge = pressureBadge(lastEma, meanVol);
     const xBadge = crossBadge(report.ema);
     const tBadge = trendBadge(report.ema);
-    const xValue = xBadge.barsAgo != null ? `${t(xBadge.key)} (${xBadge.barsAgo} bars ago)` : t(xBadge.key);
+    const xValue = xBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(xBadge.key), n: xBadge.barsAgo }) : t(xBadge.key);
     const populated = countDefined(report.ema);
     const localTag = pending ? ` (${t('view.ado.tag.local')})` : '';
     document.getElementById('ao-summary').innerHTML = [

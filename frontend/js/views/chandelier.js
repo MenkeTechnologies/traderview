@@ -142,7 +142,7 @@ function renderSummary(report, pending) {
     const fBadge = flipBadge(report.direction);
     const distInfo = distanceBadge(lastStop, lastClose);
     const stats = flipStats(report.direction);
-    const fValue = fBadge.barsAgo != null ? `${t(fBadge.key)} (${fBadge.barsAgo} bars ago)` : t(fBadge.key);
+    const fValue = fBadge.barsAgo != null ? t('common.ago.bars_paren', { label: t(fBadge.key), n: fBadge.barsAgo }) : t(fBadge.key);
     const localTag = pending ? ` (${t('view.chx.tag.local')})` : '';
     document.getElementById('cx-summary').innerHTML = [
         card(t('view.chx.card.dir'),       t(dBadge.key) + localTag, dBadge.cls),
