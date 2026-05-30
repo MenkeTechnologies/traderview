@@ -17,6 +17,7 @@ import {
 } from '../_stress_test_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     legText: '',
     priceShocks: defaultPriceShocks(),
@@ -34,10 +35,10 @@ export async function renderStressTest(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.stress_test.h2.option_legs">Option legs</h2>
             <p class="muted" data-i18n="view.stress_test.hint.legs">One leg per line: symbol kind spot strike dte iv contracts entry_price. Multiplier is fixed at 100 (equity options). Demo loads a short SPY iron condor.</p>
-            <textarea id="st-legs" rows="6" placeholder="SPY put 100 95 30 0.30 -1 1.20&#10;SPY put 100 90 30 0.30 1 0.40&#10;..."></textarea>
+            <textarea id="st-legs" rows="6" placeholder="SPY put 100 95 30 0.30 -1 1.20&#10;SPY put 100 90 30 0.30 1 0.40&#10;..." data-tip="view.stress_test.tip.legs"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.stress_test.btn.load_demo_iron_condor" id="st-demo" class="secondary" type="button">Load demo (iron condor)</button>
-                <button data-i18n="view.stress_test.btn.clear" id="st-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.stress_test.btn.load_demo_iron_condor" id="st-demo" class="secondary" type="button" data-tip="view.stress_test.tip.demo" data-shortcut="stress_test_demo">Load demo (iron condor)</button>
+                <button data-i18n="view.stress_test.btn.clear" id="st-clear" class="secondary" type="button" data-tip="view.stress_test.tip.clear">Clear</button>
             </div>
         </div>
 
@@ -45,18 +46,18 @@ export async function renderStressTest(mount, _appState) {
             <h2 data-i18n="view.stress_test.h2.shock_grid_market_params">Shock grid + market params</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.stress_test.label.price_shocks">Price shocks % (comma-sep, fractions e.g. -0.10 = -10%)</span>
-                    <input id="st-ps" type="text" value="${state.priceShocks.join(',')}" style="min-width:300px"></label>
+                    <input id="st-ps" type="text" value="${state.priceShocks.join(',')}" style="min-width:300px" data-tip="view.stress_test.tip.price_shocks"></label>
                 <label><span data-i18n="view.stress_test.label.iv_shocks">IV shocks % (relative to current IV)</span>
-                    <input id="st-iv" type="text" value="${state.ivShocks.join(',')}" style="min-width:240px"></label>
+                    <input id="st-iv" type="text" value="${state.ivShocks.join(',')}" style="min-width:240px" data-tip="view.stress_test.tip.iv_shocks"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.stress_test.label.time_decay">Time-decay days</span>
-                    <input id="st-td" type="number" step="1" min="0" value="${state.timeDecay}"></label>
+                    <input id="st-td" type="number" step="1" min="0" value="${state.timeDecay}" data-tip="view.stress_test.tip.time_decay"></label>
                 <label><span data-i18n="view.stress_test.label.rate">Risk-free rate</span>
-                    <input id="st-rate" type="number" step="any" value="${state.rate}"></label>
+                    <input id="st-rate" type="number" step="any" value="${state.rate}" data-tip="view.stress_test.tip.rate"></label>
                 <label><span data-i18n="view.stress_test.label.div">Dividend yield</span>
-                    <input id="st-div" type="number" step="any" min="0" value="${state.div}"></label>
-                <button data-i18n="view.stress_test.btn.run_stress_test" id="st-run" class="primary" type="button">Run stress test</button>
+                    <input id="st-div" type="number" step="any" min="0" value="${state.div}" data-tip="view.stress_test.tip.div"></label>
+                <button data-i18n="view.stress_test.btn.run_stress_test" id="st-run" class="primary" type="button" data-tip="view.stress_test.tip.run" data-shortcut="stress_test_run">Run stress test</button>
             </div>
             <p data-i18n="view.stress_test.hint.negative_price_shock_downside_negative_iv_shock_vo" class="muted">Negative price-shock = downside; negative IV-shock = vol crush.
                 Worst-case + best-case cells highlighted in the heatmap below.</p>
@@ -84,9 +85,11 @@ export async function renderStressTest(mount, _appState) {
         const legs = makeDemoLegs();
         document.getElementById('st-legs').value =
             legs.map(l => `${l.symbol} ${l.kind} ${l.spot} ${l.strike} ${l.days_to_expiry} ${l.implied_vol} ${l.contracts} ${l.entry_price}`).join('\n');
+        showToast(t('view.stress_test.toast.demo_loaded', { n: legs.length }), { level: 'info' });
     });
     document.getElementById('st-clear').addEventListener('click', () => {
         document.getElementById('st-legs').value = '';
+        showToast(t('view.stress_test.toast.cleared'), { level: 'info' });
     });
     document.getElementById('st-run').addEventListener('click', () => {
         readInputs();
@@ -118,11 +121,12 @@ async function compute(tok) {
         const more = errors.length > 8 ? `<br>${esc(t('common.and_n_more', { n: errors.length - 8 }))}` : '';
         errs.innerHTML = `<strong>${esc(t('common.parse_errors_lead', { n: errors.length }))}</strong><br>${head}${more}`;
         errs.style.display = 'block';
+        showToast(t('view.stress_test.toast.parse_error', { n: errors.length }), { level: 'warning' });
         if (legs.length === 0) return;
     }
     const err = validateInputs(legs, state.priceShocks, state.ivShocks,
         state.timeDecay, state.rate, state.div);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.stress_test.toast.invalid'), { level: 'warning' }); return; }
 
     let report;
     try {
@@ -131,12 +135,16 @@ async function compute(tok) {
             state.timeDecay, state.rate, state.div,
         ));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.stress_test.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report, legs);
     renderGrid(report);
     renderCurveChart(report);
+    const cells = (report && report.grid) ? report.grid.length : 0;
+    showToast(t('view.stress_test.toast.done', { legs: legs.length, cells }), { level: 'success' });
 }
 
 function renderCurveChart(report) {

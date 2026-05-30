@@ -661,6 +661,16 @@ function bindTabs() {
         const el = document.getElementById('fp-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `r` in stress-test scope → click Run stress test.
+    window.addEventListener('tv:stress-test-run', () => {
+        const el = document.getElementById('st-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in stress-test scope → click Load demo.
+    window.addEventListener('tv:stress-test-demo', () => {
+        const el = document.getElementById('st-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');
