@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_PERIOD, DEFAULT_MULTIPLIER, MIN_PERIOD, MAX_PERIOD,
@@ -32,23 +33,26 @@ export async function renderAtrChannel(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.atrc.label.period">Period</span>
-                    <input id="ac-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"></label>
+                    <input id="ac-period" type="number" step="1" min="${MIN_PERIOD}" max="${MAX_PERIOD}" value="${state.period}"
+                           data-tip="view.atrc.tip.period"></label>
                 <label><span data-i18n="view.atrc.label.mult">Multiplier</span>
-                    <input id="ac-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"></label>
+                    <input id="ac-mult" type="number" step="0.1" min="0.1" value="${state.multiplier}"
+                           data-tip="view.atrc.tip.mult"></label>
                 <label><span data-i18n="view.atrc.label.use_ema">Use EMA midline</span>
-                    <input id="ac-ema" type="checkbox" ${state.use_ema ? 'checked' : ''}></label>
+                    <input id="ac-ema" type="checkbox" ${state.use_ema ? 'checked' : ''}
+                           data-tip="view.atrc.tip.use_ema"></label>
                 <button data-i18n="view.atrc.btn.compute" id="ac-run" class="primary"
-                        data-tip="view.atrc.tip.compute" type="button">Compute</button>
+                        data-tip="view.atrc.tip.compute" data-shortcut="atr_channel_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.atrc.btn.demo_up"     id="ac-d1" class="secondary" type="button">Demo: uptrend</button>
-                <button data-i18n="view.atrc.btn.demo_down"   id="ac-d2" class="secondary" type="button">Demo: downtrend</button>
-                <button data-i18n="view.atrc.btn.demo_vside"  id="ac-d3" class="secondary" type="button">Demo: volatile side</button>
-                <button data-i18n="view.atrc.btn.demo_tside"  id="ac-d4" class="secondary" type="button">Demo: tight side</button>
-                <button data-i18n="view.atrc.btn.demo_brup"   id="ac-d5" class="secondary" type="button">Demo: breakout up</button>
-                <button data-i18n="view.atrc.btn.demo_brdn"   id="ac-d6" class="secondary" type="button">Demo: breakdown</button>
-                <button data-i18n="view.atrc.btn.demo_sma"    id="ac-d7" class="secondary" type="button">Demo: SMA midline</button>
-                <button data-i18n="view.atrc.btn.demo_wide"   id="ac-d8" class="secondary" type="button">Demo: wide bands (3.5×)</button>
+                <button data-i18n="view.atrc.btn.demo_up"     id="ac-d1" class="secondary" data-tip="view.atrc.tip.demo_up"    type="button">Demo: uptrend</button>
+                <button data-i18n="view.atrc.btn.demo_down"   id="ac-d2" class="secondary" data-tip="view.atrc.tip.demo_down"  type="button">Demo: downtrend</button>
+                <button data-i18n="view.atrc.btn.demo_vside"  id="ac-d3" class="secondary" data-tip="view.atrc.tip.demo_vside" type="button">Demo: volatile side</button>
+                <button data-i18n="view.atrc.btn.demo_tside"  id="ac-d4" class="secondary" data-tip="view.atrc.tip.demo_tside" type="button">Demo: tight side</button>
+                <button data-i18n="view.atrc.btn.demo_brup"   id="ac-d5" class="secondary" data-tip="view.atrc.tip.demo_brup"  type="button">Demo: breakout up</button>
+                <button data-i18n="view.atrc.btn.demo_brdn"   id="ac-d6" class="secondary" data-tip="view.atrc.tip.demo_brdn"  type="button">Demo: breakdown</button>
+                <button data-i18n="view.atrc.btn.demo_sma"    id="ac-d7" class="secondary" data-tip="view.atrc.tip.demo_sma"   type="button">Demo: SMA midline</button>
+                <button data-i18n="view.atrc.btn.demo_wide"   id="ac-d8" class="secondary" data-tip="view.atrc.tip.demo_wide"  type="button">Demo: wide bands (3.5×)</button>
             </div>
             <p data-i18n="view.atrc.hint.about" class="muted">Volatility envelope: middle = EMA/SMA(close, period); upper/lower = middle ± multiplier × Wilder-ATR(period). Width tracks volatility; close above upper signals breakout, below lower signals breakdown. Defaults: 20 / 2.0× / EMA.</p>
         </div>
@@ -96,6 +100,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.atrc.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.atrc.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -110,7 +115,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.atrc.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars, state.period, state.multiplier, state.use_ema);
     renderSummary(local, true);
     renderChart(local);
@@ -121,14 +126,16 @@ async function compute(tok) {
         resp = await api.anlyAtrChannel(buildBody(state));
     } catch (e) {
         showErr(`${t('view.atrc.err.api')}: ${e.message || e}`);
+        showToast(t('view.atrc.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.atrc.err.server_rejected')); return; }
+    if (!resp || !Array.isArray(resp.middle)) { showErr(t('view.atrc.err.server_rejected')); showToast(t('view.atrc.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderWidthChart(resp);
     renderStats();
+    showToast(t('view.atrc.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

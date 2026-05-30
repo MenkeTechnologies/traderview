@@ -251,6 +251,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'alphatrend_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'alphatrend',        descKey: 'shortcut.alphatrend_run',               actionKey: 'tv:alphatrend-run' },
     { id: 'aroon_run',                    keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'aroon',             descKey: 'shortcut.aroon_run',                    actionKey: 'tv:aroon-run' },
     { id: 'anchored_momentum_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'anchored-momentum', descKey: 'shortcut.anchored_momentum_run',        actionKey: 'tv:anchored-momentum-run' },
+    { id: 'atr_channel_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-channel',       descKey: 'shortcut.atr_channel_run',              actionKey: 'tv:atr-channel-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
