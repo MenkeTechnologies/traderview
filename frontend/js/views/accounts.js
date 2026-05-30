@@ -3,6 +3,7 @@ import { esc, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { tConfirm } from '../dialog.js';
+import { showToast } from '../toast.js';
 
 export async function renderAccounts(mount, _state, onChange) {
     const tok = currentViewToken();
@@ -13,7 +14,7 @@ export async function renderAccounts(mount, _state, onChange) {
         <div class="chart-panel">
             <h2 data-i18n="view.accounts.h2.add_account">Add account</h2>
             <form id="acct-form" class="inline-form">
-                <select name="broker">
+                <select name="broker" data-tip="view.accounts.tip.broker">
                     <option data-i18n="view.accounts.opt.webull" value="webull">Webull</option>
                     <option data-i18n="view.accounts.opt.interactive_brokers_flex" value="ibkr">Interactive Brokers (Flex)</option>
                     <option data-i18n="view.accounts.opt.td_ameritrade" value="tdameritrade">TD Ameritrade</option>
@@ -28,9 +29,10 @@ export async function renderAccounts(mount, _state, onChange) {
                     <option data-i18n="view.accounts.opt.robinhood" value="robinhood">Robinhood</option>
                     <option data-i18n="view.accounts.opt.manual_other" value="manual">Manual / Other</option>
                 </select>
-                <input name="name" placeholder="account name (e.g. Margin)" data-i18n-placeholder="view.accounts.placeholder.name" required>
-                <input name="base_currency" placeholder="USD" value="USD">
-                <button data-i18n="view.accounts.btn.create" class="primary" type="submit">Create</button>
+                <input name="name" placeholder="account name (e.g. Margin)" data-i18n-placeholder="view.accounts.placeholder.name"
+                       data-tip="view.accounts.tip.name" data-shortcut="accounts_focus_name" required>
+                <input name="base_currency" placeholder="USD" value="USD" data-tip="view.accounts.tip.base_currency">
+                <button data-i18n="view.accounts.btn.create" data-tip="view.accounts.tip.create" class="primary" type="submit">Create</button>
             </form>
         </div>
 
@@ -55,18 +57,31 @@ export async function renderAccounts(mount, _state, onChange) {
     mount.querySelector('#acct-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.createAccount(fd.get('broker'), fd.get('name'), fd.get('base_currency'));
-        if (!viewIsCurrent(tok)) return;
-        if (onChange) onChange();
-        renderAccounts(mount, _state, onChange);
+        const name = String(fd.get('name') || '').trim();
+        try {
+            await api.createAccount(fd.get('broker'), name, fd.get('base_currency'));
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.accounts.toast.created', { name }), { level: 'success' });
+            if (onChange) onChange();
+            renderAccounts(mount, _state, onChange);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             if (!await tConfirm('view.accounts.confirm.delete', {}, { level: 'danger' })) return;
-            await api.deleteAccount(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            if (onChange) onChange();
-            renderAccounts(mount, _state, onChange);
+            try {
+                await api.deleteAccount(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                const tr = b.closest('tr');
+                const name = tr?.dataset?.name || '';
+                showToast(t('view.accounts.toast.deleted', { name }), { level: 'success' });
+                if (onChange) onChange();
+                renderAccounts(mount, _state, onChange);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
         }));
 }
 
