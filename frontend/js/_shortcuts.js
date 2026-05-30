@@ -177,6 +177,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'demarker_demo',                keys: { key: 'l', meta: false, ctrl: false, shift: false, alt: false }, scope: 'demarker',          descKey: 'shortcut.demarker_demo',                actionKey: 'tv:demarker-demo' },
     { id: 'murrey_math_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'murrey-math',       descKey: 'shortcut.murrey_math_run',              actionKey: 'tv:murrey-math-run' },
     { id: 'murrey_math_demo',             keys: { key: 'l', meta: false, ctrl: false, shift: false, alt: false }, scope: 'murrey-math',       descKey: 'shortcut.murrey_math_demo',             actionKey: 'tv:murrey-math-demo' },
+    { id: 'demark_pivots_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'demark-pivots',     descKey: 'shortcut.demark_pivots_run',            actionKey: 'tv:demark-pivots-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },

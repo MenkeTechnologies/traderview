@@ -14,6 +14,7 @@ import {
 } from '../_demark_pivots_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     session: makeDemoSession('bullish'),
     spotNow: 105,
@@ -28,19 +29,19 @@ export async function renderDemarkPivots(mount, _appState) {
             <h2 data-i18n="view.demark_pivots.h2.prior_session_ohlc">Prior session OHLC</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.demark_pivots.label.open">Open</span>
-                    <input id="dp-o" type="number" step="any" min="0" value="${state.session.open}"></label>
+                    <input id="dp-o" type="number" step="any" min="0" value="${state.session.open}" data-tip="view.demark_pivots.tip.open"></label>
                 <label><span data-i18n="view.demark_pivots.label.high">High</span>
-                    <input id="dp-h" type="number" step="any" min="0" value="${state.session.high}"></label>
+                    <input id="dp-h" type="number" step="any" min="0" value="${state.session.high}" data-tip="view.demark_pivots.tip.high"></label>
                 <label><span data-i18n="view.demark_pivots.label.low">Low</span>
-                    <input id="dp-l" type="number" step="any" min="0" value="${state.session.low}"></label>
+                    <input id="dp-l" type="number" step="any" min="0" value="${state.session.low}" data-tip="view.demark_pivots.tip.low"></label>
                 <label><span data-i18n="view.demark_pivots.label.close">Close</span>
-                    <input id="dp-c" type="number" step="any" min="0" value="${state.session.close}"></label>
+                    <input id="dp-c" type="number" step="any" min="0" value="${state.session.close}" data-tip="view.demark_pivots.tip.close"></label>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.demark_pivots.btn.demo_bullish_session" id="dp-demo-bull"   class="secondary" type="button">Demo: bullish session</button>
-                <button data-i18n="view.demark_pivots.btn.demo_bearish_session" id="dp-demo-bear"   class="secondary" type="button">Demo: bearish session</button>
-                <button data-i18n="view.demark_pivots.btn.demo_doji" id="dp-demo-doji"   class="secondary" type="button">Demo: doji</button>
-                <button data-i18n="view.demark_pivots.btn.demo_inside_day" id="dp-demo-inside" class="secondary" type="button">Demo: inside day</button>
+                <button data-i18n="view.demark_pivots.btn.demo_bullish_session" id="dp-demo-bull"   class="secondary" type="button" data-tip="view.demark_pivots.tip.demo_bull">Demo: bullish session</button>
+                <button data-i18n="view.demark_pivots.btn.demo_bearish_session" id="dp-demo-bear"   class="secondary" type="button" data-tip="view.demark_pivots.tip.demo_bear">Demo: bearish session</button>
+                <button data-i18n="view.demark_pivots.btn.demo_doji" id="dp-demo-doji"   class="secondary" type="button" data-tip="view.demark_pivots.tip.demo_doji">Demo: doji</button>
+                <button data-i18n="view.demark_pivots.btn.demo_inside_day" id="dp-demo-inside" class="secondary" type="button" data-tip="view.demark_pivots.tip.demo_inside">Demo: inside day</button>
             </div>
         </div>
 
@@ -48,8 +49,8 @@ export async function renderDemarkPivots(mount, _appState) {
             <h2 data-i18n="view.demark_pivots.h2.today_s_spot">Today's spot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.demark_pivots.label.spot_now">Spot now (for trade-bias card)</span>
-                    <input id="dp-spot" type="number" step="any" min="0" value="${state.spotNow}"></label>
-                <button data-i18n="view.demark_pivots.btn.compute" id="dp-run" class="primary" type="button">Compute</button>
+                    <input id="dp-spot" type="number" step="any" min="0" value="${state.spotNow}" data-tip="view.demark_pivots.tip.spot"></label>
+                <button data-i18n="view.demark_pivots.btn.compute" id="dp-run" class="primary" type="button" data-tip="view.demark_pivots.tip.run" data-shortcut="demark_pivots_run">Compute</button>
             </div>
             <p data-i18n="view.demark_pivots.hint.demark_s_x_base_formula_switches_on_close_vs_open_" class="muted">DeMark's X-base formula switches on close-vs-open direction:
                 bearish session → low-heavy X; bullish → high-heavy X; doji → close-heavy X.
@@ -104,18 +105,26 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.session);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.demark_pivots.toast.invalid'), { level: 'warning' }); return; }
     let levels;
     try {
         levels = await api.anlyDemarkPivots(buildBody(state.session));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.demark_pivots.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!levels) { showErr(t('view.demark_pivots.err.backend_returned_null_invalid_session')); return; }
+    if (!levels) {
+        showErr(t('view.demark_pivots.err.backend_returned_null_invalid_session'));
+        showToast(t('view.demark_pivots.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(levels);
     renderXInfo();
     renderChart(levels);
+    const bias = tradeBias(state.spotNow, levels);
+    showToast(t('view.demark_pivots.toast.computed', { pivot: fmtN(levels.pivot), bias: bias.label }), { level: 'success' });
 }
 
 function renderSummary(levels) {
