@@ -42,10 +42,10 @@ function render(r, mount) {
             </div>
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.avg_efficiency">Avg fill efficiency</div>
                 <div class="value ${effCls}">${(o.avg_fill_efficiency * 100).toFixed(1)}%</div>
-                <div class="small muted">100% = best in day's range</div></div>
+                <div class="small muted">${esc(t('view.fill_quality.card.efficiency_legend'))}</div></div>
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.avg_slippage">Avg slippage</div>
                 <div class="value ${slipCls}">${(o.avg_slippage_bps >= 0 ? '+' : '') + o.avg_slippage_bps.toFixed(1)} bps</div>
-                <div class="small muted">vs HLC/3 typical, side-adj</div></div>
+                <div class="small muted">${esc(t('view.fill_quality.card.slippage_legend'))}</div></div>
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.median_slippage">Median slippage</div>
                 <div class="value">${o.median_slippage_bps.toFixed(1)} bps</div></div>
             <div class="card"><div class="label" data-i18n="view.fill_quality.card.worst_best">Worst / Best</div>

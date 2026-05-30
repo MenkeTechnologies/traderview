@@ -46,10 +46,10 @@ function render(r, mount) {
                 <div class="value ${cls(g.total_closed_pnl)}">$${fmt(g.total_closed_pnl)}</div></div>
             <div class="card"><div class="label" data-i18n="view.accounts_overview.card.open_positions">Open positions (∑)</div>
                 <div class="value">${g.open_positions_count}</div>
-                <div class="small muted">$${fmt(g.open_notional)} notional</div></div>
+                <div class="small muted">${esc(t('view.accounts_overview.card.notional', { notional: fmt(g.open_notional) }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.accounts_overview.card.unrealized">Unrealized (∑)</div>
                 <div class="value ${cls(g.open_unrealized_pnl)}">$${fmt(g.open_unrealized_pnl)}</div>
-                <div class="small muted">day Δ ${g.open_day_pnl >= 0 ? '+' : ''}$${fmt(g.open_day_pnl)}</div></div>
+                <div class="small muted">${esc(t('view.accounts_overview.card.day_delta', { sign: g.open_day_pnl >= 0 ? '+' : '', amount: fmt(g.open_day_pnl) }))}</div></div>
         </div>
 
         <div class="chart-panel">

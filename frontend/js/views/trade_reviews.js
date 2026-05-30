@@ -54,14 +54,14 @@ function renderStats(s, mount) {
     el.innerHTML = `
         <div class="card"><div class="label" data-i18n="view.trade_reviews.card.high_r_trades">High-|R| trades</div>
             <div class="value">${s.total_high_r_trades}</div>
-            <div class="small muted">closed, |R| ≥ 2</div></div>
+            <div class="small muted">${esc(t('view.trade_reviews.card.high_r_legend'))}</div></div>
         <div class="card"><div class="label" data-i18n="view.trade_reviews.card.reviewed">Reviewed</div>
             <div class="value pos">${s.reviewed}</div></div>
         <div class="card"><div class="label" data-i18n="view.trade_reviews.card.pending">Pending</div>
             <div class="value ${s.pending > 0 ? 'neg' : ''}">${s.pending}</div></div>
         <div class="card"><div class="label" data-i18n="view.trade_reviews.card.completion">Completion</div>
             <div class="value ${cls}">${s.completion_pct.toFixed(1)}%</div>
-            ${s.last_review_at ? `<div class="small muted">last ${new Date(s.last_review_at).toLocaleString()}</div>` : ''}
+            ${s.last_review_at ? `<div class="small muted">${esc(t('view.trade_reviews.card.last_review_at', { when: new Date(s.last_review_at).toLocaleString() }))}</div>` : ''}
         </div>
     `;
     try { applyUiI18n(el); } catch (_) {}

@@ -72,10 +72,10 @@ function renderReport(r, out) {
                 <div class="small muted">${esc(t('view.tax_lots.card.added_back_to_net'))}</div></div>
             <div class="card"><div class="label" data-i18n="view.tax_lots.card.realized_events">Realized events</div>
                 <div class="value">${r.realized_count}</div>
-                <div class="small muted">proceeds $${fmt(r.total_proceeds)} / basis $${fmt(r.total_basis)}</div></div>
+                <div class="small muted">${esc(t('view.tax_lots.card.proceeds_basis', { proceeds: fmt(r.total_proceeds), basis: fmt(r.total_basis) }))}</div></div>
             <div class="card"><div class="label" data-i18n="view.tax_lots.card.open_lots">Open lots</div>
                 <div class="value">${r.open_lot_count}</div>
-                <div class="small muted">basis $${fmt(r.open_basis)}</div></div>
+                <div class="small muted">${esc(t('view.tax_lots.card.basis_only', { basis: fmt(r.open_basis) }))}</div></div>
         </div>
 
         ${r.skipped_short_events > 0 ? `

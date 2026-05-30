@@ -178,7 +178,7 @@ function card(p) {
                 <div class="small muted">${p.wins}W / ${p.losses}L</div></div>
             <div class="card"><div class="label" data-i18n="view.goals.card.actual_pnl">Actual P/L</div>
                 <div class="value ${p.actual_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(p.actual_pnl)}</div>
-                ${p.projected_pnl != null ? `<div class="small muted">projected end: $${fmt(p.projected_pnl)}</div>` : ''}
+                ${p.projected_pnl != null ? `<div class="small muted">${esc(t('view.goals.card.projected_end', { amount: fmt(p.projected_pnl) }))}</div>` : ''}
             </div>
             <div class="card"><div class="label" data-i18n="view.goals.card.win_rate">Win rate</div>
                 <div class="value">${(p.actual_win_rate * 100).toFixed(1)}%</div></div>
