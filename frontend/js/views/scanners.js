@@ -782,6 +782,8 @@ const PRESETS = [
     { id: 'micro_vol_flat_day', label: t('view.scanners.preset.micro_vol_flat_day.label'), desc: t('view.scanners.preset.micro_vol_flat_day.desc') },
     { id: 'confirmed_breakout_above_year_high', label: t('view.scanners.preset.confirmed_breakout_above_year_high.label'), desc: t('view.scanners.preset.confirmed_breakout_above_year_high.desc') },
     { id: 'confirmed_breakdown_below_year_low', label: t('view.scanners.preset.confirmed_breakdown_below_year_low.label'), desc: t('view.scanners.preset.confirmed_breakdown_below_year_low.desc') },
+    { id: 'upper_wick_flat_close_hot_vol', label: t('view.scanners.preset.upper_wick_flat_close_hot_vol.label'), desc: t('view.scanners.preset.upper_wick_flat_close_hot_vol.desc') },
+    { id: 'lower_wick_flat_close_hot_vol', label: t('view.scanners.preset.lower_wick_flat_close_hot_vol.label'), desc: t('view.scanners.preset.lower_wick_flat_close_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

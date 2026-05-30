@@ -900,6 +900,8 @@ pub enum Preset {
     MicroVolFlatDay,                     // rel_volume < 0.1 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — 10 % of average vol + flat close + tight range (total dead stock: no participation and no price movement; delisting candidate or fully forgotten name)
     ConfirmedBreakoutAboveYearHigh,      // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 1 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + green + hot vol (solid confirmed breakout: clearly past resistance but not yet parabolic; trend-establishment zone for new highs)
     ConfirmedBreakdownBelowYearLow,      // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -1 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + red + hot vol (solid confirmed breakdown: clearly past support but not yet panicked; trend-establishment zone for new lows)
+    UpperWickFlatCloseHotVol,            // hod_dist_pct < -3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long upper wick + flat net close + no overnight gap + hot vol (pure supply test: intraday rally rejected back to roughly the open with elevated participation; neither bull nor bear net but ceiling tested)
+    LowerWickFlatCloseHotVol,            // lod_dist_pct > 3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long lower wick + flat net close + no overnight gap + hot vol (pure demand test: intraday sell-off bounced back to roughly the open with elevated participation; neither bull nor bear net but floor tested)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5273,6 +5275,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::UpperWickFlatCloseHotVol => {
+            hit.hod_dist_pct < -3.0
+                && hit.change_pct.abs() < 1.0
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::LowerWickFlatCloseHotVol => {
+            hit.lod_dist_pct > 3.0
+                && hit.change_pct.abs() < 1.0
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6063,6 +6077,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MicroVolFlatDay => "10 % of Average Vol + Flat Close + Tight Range (Total Dead Stock: No Participation and No Price Movement; Delisting Candidate or Fully Forgotten Name)",
         Preset::ConfirmedBreakoutAboveYearHigh => "1-3 % above Prior 52w High + Green + Hot Vol (Solid Confirmed Breakout: Clearly Past Resistance but Not Yet Parabolic; Trend-establishment Zone for New Highs)",
         Preset::ConfirmedBreakdownBelowYearLow => "1-3 % below Prior 52w Low + Red + Hot Vol (Solid Confirmed Breakdown: Clearly Past Support but Not Yet Panicked; Trend-establishment Zone for New Lows)",
+        Preset::UpperWickFlatCloseHotVol => "Long Upper Wick + Flat Net Close + No Overnight Gap + Hot Vol (Pure Supply Test: Intraday Rally Rejected Back to Roughly the Open with Elevated Participation; Neither Bull nor Bear Net but Ceiling Tested)",
+        Preset::LowerWickFlatCloseHotVol => "Long Lower Wick + Flat Net Close + No Overnight Gap + Hot Vol (Pure Demand Test: Intraday Sell-off Bounced Back to Roughly the Open with Elevated Participation; Neither Bull nor Bear Net but Floor Tested)",
     }
 }
 
