@@ -310,6 +310,8 @@ pub enum Preset {
     NoisyNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w low on heavy vol (battle for the bottom)
     MidRangeChopHotVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume >= 2 — equidistant mid-range on heavy vol (indecision squeeze)
     MidRangeChopDryVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume < 0.5 — equidistant mid-range on dry vol (range-bound digestion)
+    CloseNearHodNoBreakout,      // hod_dist.abs() < 0.5 AND change_pct < 1 — closed within 0.5% of HOD but change_pct < 1 (failed thrust)
+    CloseNearLodNoBreakdown,     // lod_dist.abs() < 0.5 AND change_pct > -1 — closed within 0.5% of LOD but change_pct > -1 (failed flush)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1269,6 +1271,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && l >= 1.0 && l <= 3.0
                 && hit.rel_volume < 0.5
         }
+        Preset::CloseNearHodNoBreakout => {
+            hit.hod_dist_pct.abs() < 0.5 && hit.change_pct < 1.0
+        }
+        Preset::CloseNearLodNoBreakdown => {
+            hit.lod_dist_pct.abs() < 0.5 && hit.change_pct > -1.0
+        }
     }
 }
 
@@ -1469,6 +1477,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NoisyNearTheBottom => "Noisy Near The Bottom",
         Preset::MidRangeChopHotVol => "Mid-Range Chop on Hot Vol",
         Preset::MidRangeChopDryVol => "Mid-Range Chop on Dry Vol",
+        Preset::CloseNearHodNoBreakout => "Close Near HOD, No Breakout",
+        Preset::CloseNearLodNoBreakdown => "Close Near LOD, No Breakdown",
     }
 }
 

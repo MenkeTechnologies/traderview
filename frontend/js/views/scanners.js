@@ -192,6 +192,8 @@ const PRESETS = [
     { id: 'noisy_near_the_bottom', label: t('view.scanners.preset.noisy_near_the_bottom.label'), desc: t('view.scanners.preset.noisy_near_the_bottom.desc') },
     { id: 'mid_range_chop_hot_vol', label: t('view.scanners.preset.mid_range_chop_hot_vol.label'), desc: t('view.scanners.preset.mid_range_chop_hot_vol.desc') },
     { id: 'mid_range_chop_dry_vol', label: t('view.scanners.preset.mid_range_chop_dry_vol.label'), desc: t('view.scanners.preset.mid_range_chop_dry_vol.desc') },
+    { id: 'close_near_hod_no_breakout', label: t('view.scanners.preset.close_near_hod_no_breakout.label'), desc: t('view.scanners.preset.close_near_hod_no_breakout.desc') },
+    { id: 'close_near_lod_no_breakdown', label: t('view.scanners.preset.close_near_lod_no_breakdown.label'), desc: t('view.scanners.preset.close_near_lod_no_breakdown.desc') },
 ];
 
 export async function renderScanners(mount) {
