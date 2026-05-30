@@ -216,6 +216,8 @@ const PRESETS = [
     { id: 'big_down_gap_inside_day', label: t('view.scanners.preset.big_down_gap_inside_day.label'), desc: t('view.scanners.preset.big_down_gap_inside_day.desc') },
     { id: 'steady_up_dry_vol', label: t('view.scanners.preset.steady_up_dry_vol.label'), desc: t('view.scanners.preset.steady_up_dry_vol.desc') },
     { id: 'steady_down_dry_vol', label: t('view.scanners.preset.steady_down_dry_vol.label'), desc: t('view.scanners.preset.steady_down_dry_vol.desc') },
+    { id: 'impulsive_up_hot_vol', label: t('view.scanners.preset.impulsive_up_hot_vol.label'), desc: t('view.scanners.preset.impulsive_up_hot_vol.desc') },
+    { id: 'impulsive_down_hot_vol', label: t('view.scanners.preset.impulsive_down_hot_vol.label'), desc: t('view.scanners.preset.impulsive_down_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

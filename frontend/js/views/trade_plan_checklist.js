@@ -80,6 +80,11 @@ export async function renderTradePlanChecklist(mount, _appState) {
             <div id="tpc-gates"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_plan_checklist.h2.gates_chart">Gate status (green pass / red fail)</h2>
+            <div id="tpc-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="tpc-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (kind) => {
@@ -137,6 +142,7 @@ async function compute(tok) {
     const local = localEvaluate(state.plan, state.config);
     renderSummary(local, true);
     renderGates(local);
+    renderGatesChart(local);
 
     let resp;
     try {
@@ -147,6 +153,42 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderGates(resp);
+    renderGatesChart(resp);
+}
+
+function renderGatesChart(report) {
+    const el = document.getElementById('tpc-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = report?.gates || [];
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_plan_checklist.empty_chart">${esc(t('view.trade_plan_checklist.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(g => gateLabel(g.gate));
+    const xs = labels.map((_, i) => i + 1);
+    const passY = rows.map(g => g.passed ? 1 : null);
+    const failY = rows.map(g => g.passed ? null : 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { range: () => [-0.3, 1.3] } },
+        series: [
+            { label: t('view.trade_plan_checklist.chart.gate') },
+            { label: t('view.trade_plan_checklist.chart.pass'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 16, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.trade_plan_checklist.chart.fail'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 16, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40,
+              values: (_u, splits) => splits.map(v => v === 1 ? 'pass' : v === 0 ? 'fail' : '') },
+        ],
+        legend: { show: true },
+    }, [xs, passY, failY], el);
 }
 
 function renderSummary(r, pending) {

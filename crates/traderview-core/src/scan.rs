@@ -334,6 +334,8 @@ pub enum Preset {
     BigDownGapInsideDay,         // gap_pct < -3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between -3 and -1 — big gap-down but contained inside-day (consolidation after thrust)
     SteadyUpDryVol,              // change_pct between 0.5 and 2 AND day_pct > 0 AND rel_volume < 0.7 — steady-up day on light volume (low-conviction drift up)
     SteadyDownDryVol,            // change_pct between -2 and -0.5 AND day_pct < 0 AND rel_volume < 0.7 — steady-down day on light volume (low-conviction drift down)
+    ImpulsiveUpHotVol,           // change_pct between 2 and 5 AND day_pct > 0 AND rel_volume >= 1.5 — impulsive up day on heavy vol (initiative buying)
+    ImpulsiveDownHotVol,         // change_pct between -5 and -2 AND day_pct < 0 AND rel_volume >= 1.5 — impulsive down day on heavy vol (initiative selling)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1415,6 +1417,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < 0.0
                 && hit.rel_volume < 0.7
         }
+        Preset::ImpulsiveUpHotVol => {
+            hit.change_pct >= 2.0
+                && hit.change_pct <= 5.0
+                && hit.day_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ImpulsiveDownHotVol => {
+            hit.change_pct <= -2.0
+                && hit.change_pct >= -5.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -1639,6 +1653,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BigDownGapInsideDay => "Big Down-Gap, Inside Day",
         Preset::SteadyUpDryVol => "Steady Up, Dry Vol",
         Preset::SteadyDownDryVol => "Steady Down, Dry Vol",
+        Preset::ImpulsiveUpHotVol => "Impulsive Up, Hot Vol",
+        Preset::ImpulsiveDownHotVol => "Impulsive Down, Hot Vol",
     }
 }
 
