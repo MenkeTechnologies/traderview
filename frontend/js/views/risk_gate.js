@@ -251,9 +251,9 @@ export async function renderRiskGate(mount, state) {
     mount.querySelector('#rg-add').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const t = RULE_TYPES.find(x => x.id === fd.get('type'));
-        const rule = { type: t.id };
-        for (const [name, kind] of t.fields) {
+        const ruleType = RULE_TYPES.find(x => x.id === fd.get('type'));
+        const rule = { type: ruleType.id };
+        for (const [name, kind] of ruleType.fields) {
             if (name === 'symbols') {
                 rule.symbols = String(fd.get(name) || '')
                     .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);

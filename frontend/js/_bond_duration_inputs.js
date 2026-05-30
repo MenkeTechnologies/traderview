@@ -41,7 +41,7 @@ export function parseCashFlowBlob(text) {
             continue;
         }
         if (t <= 0) {
-            errors.push({ line_no: i + 1, raw, message: t('view.bond_duration.parse.time_years_positive') });
+            errors.push({ line_no: i + 1, raw, message: tr('view.bond_duration.parse.time_years_positive') });
             continue;
         }
         cash_flows.push({ time_years: t, amount: a });

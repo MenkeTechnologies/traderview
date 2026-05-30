@@ -48,11 +48,11 @@ export function parseTradeBlob(text) {
             continue;
         }
         if (entry <= 0) {
-            errors.push({ line_no: i + 1, raw, message: t('view.stop_loss_backtest.parse.entry_positive') });
+            errors.push({ line_no: i + 1, raw, message: tr('view.stop_loss_backtest.parse.entry_positive') });
             continue;
         }
         if (mae < 0 || mfe < 0) {
-            errors.push({ line_no: i + 1, raw, message: t('view.stop_loss_backtest.parse.mae_mfe_non_neg') });
+            errors.push({ line_no: i + 1, raw, message: tr('view.stop_loss_backtest.parse.mae_mfe_non_neg') });
             continue;
         }
         trades.push({ entry, mae, mfe, actual_exit: exit });

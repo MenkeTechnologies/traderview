@@ -87,7 +87,7 @@ export function parsePositionsBlob(blob) {
             label = toks[0];
             weight = Number(toks[1]);
         } else {
-            out.errors.push({ line_no: i + 1, message: t('view.herfindahl.parse.expected_1_or_2') });
+            out.errors.push({ line_no: i + 1, message: tr('view.herfindahl.parse.expected_1_or_2') });
             continue;
         }
         if (!Number.isFinite(weight)) {
@@ -95,7 +95,7 @@ export function parsePositionsBlob(blob) {
             continue;
         }
         if (weight < 0) {
-            out.errors.push({ line_no: i + 1, message: t('view.herfindahl.parse.weight_non_neg') });
+            out.errors.push({ line_no: i + 1, message: tr('view.herfindahl.parse.weight_non_neg') });
             continue;
         }
         out.weights.push(weight);

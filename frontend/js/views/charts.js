@@ -425,12 +425,12 @@ function appendDeleteBtn(svg, ds, d, x, y) {
     const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 7);
     c.setAttribute('fill', '#1a1d2e'); c.setAttribute('stroke', '#ff1f7a');
-    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    t.setAttribute('x', x); t.setAttribute('y', y + 3);
-    t.setAttribute('text-anchor', 'middle');
-    t.setAttribute('fill', '#ff1f7a'); t.setAttribute('font-size', '10');
-    t.textContent = '×';
-    g.appendChild(c); g.appendChild(t);
+    const xText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xText.setAttribute('x', x); xText.setAttribute('y', y + 3);
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('fill', '#ff1f7a'); xText.setAttribute('font-size', '10');
+    xText.textContent = '×';
+    g.appendChild(c); g.appendChild(xText);
     g.addEventListener('click', async (e) => {
         e.stopPropagation();
         try {

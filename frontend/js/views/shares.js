@@ -49,18 +49,18 @@ export async function renderSharedTrade(mount, _state, slug) {
         api.comments(slug).catch(_ => []),
     ]);
     if (!viewIsCurrent(tok)) return;
-    const t = view.trade;
+    const tr = view.trade;
     mount.innerHTML = `
-        <h1 class="view-title">// SHARED · ${esc(t.symbol)}</h1>
+        <h1 class="view-title">// SHARED · ${esc(tr.symbol)}</h1>
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.shares.card.net_pnl">Net P&L</div>
-                <div class="value ${pnlClass(t.net_pnl)}">${fmtMoney(t.net_pnl)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.shares.card.side">Side</div><div class="value">${t.side}</div></div>
-            <div class="card"><div class="label" data-i18n="view.shares.card.qty">Qty</div><div class="value">${fmt(t.qty, 0)}</div></div>
-            <div class="card"><div class="label" data-i18n="view.shares.card.entry">Entry</div><div class="value">${fmt(t.entry_avg)}</div></div>
+                <div class="value ${pnlClass(tr.net_pnl)}">${fmtMoney(tr.net_pnl)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.side">Side</div><div class="value">${tr.side}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.qty">Qty</div><div class="value">${fmt(tr.qty, 0)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.entry">Entry</div><div class="value">${fmt(tr.entry_avg)}</div></div>
             <div class="card"><div class="label" data-i18n="view.shares.card.exit">Exit</div>
-                <div class="value">${t.exit_avg !== null ? fmt(t.exit_avg) : '—'}</div></div>
-            <div class="card"><div class="label" data-i18n="view.shares.card.asset">Asset</div><div class="value">${t.asset_class}</div></div>
+                <div class="value">${tr.exit_avg !== null ? fmt(tr.exit_avg) : '—'}</div></div>
+            <div class="card"><div class="label" data-i18n="view.shares.card.asset">Asset</div><div class="value">${tr.asset_class}</div></div>
         </div>
 
         <div class="chart-panel">

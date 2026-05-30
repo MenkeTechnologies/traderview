@@ -40,7 +40,7 @@ export function parseLotBlob(text) {
         const qty = Number(parts[2]);
         const cost = Number(parts[3]);
         if (!isValidDate(acquired)) {
-            errors.push({ line_no: i + 1, raw, message: t('view.cost_basis.parse.acquired_iso') });
+            errors.push({ line_no: i + 1, raw, message: tr('view.cost_basis.parse.acquired_iso') });
             continue;
         }
         if (!Number.isFinite(qty) || qty <= 0) {
@@ -48,7 +48,7 @@ export function parseLotBlob(text) {
             continue;
         }
         if (!Number.isFinite(cost) || cost < 0) {
-            errors.push({ line_no: i + 1, raw, message: t('view.cost_basis.parse.cost_per_share_non_neg') });
+            errors.push({ line_no: i + 1, raw, message: tr('view.cost_basis.parse.cost_per_share_non_neg') });
             continue;
         }
         if (seen.has(lot_id)) {
