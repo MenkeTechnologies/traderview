@@ -243,7 +243,7 @@ function renderEvents(events) {
             </tr></thead>
             <tbody>
                 ${events.map((e, i) => `
-                    <tr>
+                    <tr data-context-scope="symbol-row" data-symbol="${esc(e.symbol)}">
                         <td>${i + 1}</td>
                         <td>${esc(engine.fmtTime(e.ts))}</td>
                         <td><strong>${esc(e.symbol)}</strong></td>

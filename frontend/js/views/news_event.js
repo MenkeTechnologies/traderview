@@ -152,7 +152,7 @@ function renderActions(report) {
                     else if (reasonLower.includes('high')) impact = 'high';
                     else if (reasonLower.includes('low')) impact = 'low';
                     const badge = impactBadge(impact);
-                    return `<tr>
+                    return `<tr data-context-scope="symbol-row" data-symbol="${esc(a.symbol)}">
                         <td><strong>${esc(a.symbol)}</strong></td>
                         <td>${esc(fmtN(a.current_qty))}</td>
                         <td>${esc(fmtN(a.recommended_qty))}</td>

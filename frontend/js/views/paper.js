@@ -96,7 +96,7 @@ export async function renderPaper(mount) {
                         const last = q ? Number(q.price) : null;
                         const u = last != null ? (last - Number(p.avg_price)) * Number(p.qty) : null;
                         const cls = u != null && u >= 0 ? 'pos' : 'neg';
-                        return `<tr>
+                        return `<tr data-context-scope="symbol-row" data-symbol="${esc(p.symbol)}">
                             <td><a href="#research/${encodeURIComponent(p.symbol)}">${esc(p.symbol)}</a></td>
                             <td>${fmt(p.qty, 0)}</td>
                             <td>${fmt(p.avg_price)}</td>
@@ -114,7 +114,7 @@ export async function renderPaper(mount) {
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
                 <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th></tr></thead>
                 <tbody>${orders.map(o => `
-                    <tr>
+                    <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}">
                         <td>${fmtDateTime(o.submitted_at)}</td>
                         <td>${esc(o.symbol)}</td>
                         <td>${o.side}</td>
