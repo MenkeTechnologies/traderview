@@ -118,7 +118,7 @@ function ruleTable(rows) {
             <th data-i18n="view.discipline.th.pass">Pass</th>
         </tr></thead>
         <tbody>
-        ${rows.map(r => `<tr>
+        ${rows.map(r => `<tr data-context-scope="trade-row" data-id="${esc(r.trade_id)}">
             <td class="small">${r.date}</td>
             <td><a href="#trade/${r.trade_id}">${esc(r.symbol)}</a></td>
             <td>${tick(r.stop_set)}</td>

@@ -88,7 +88,7 @@ function renderInbox(items, accountId, mount, tok) {
                 <th data-i18n="view.trade_reviews.th.net_p_l">Net P/L</th><th>R</th><th></th>
             </tr></thead>
             <tbody>
-            ${items.map(i => `<tr>
+            ${items.map(i => `<tr data-context-scope="trade-row" data-id="${esc(i.trade_id)}">
                 <td class="small">${i.closed_at ? new Date(i.closed_at).toLocaleString() : '—'}</td>
                 <td><a href="#trade/${i.trade_id}">${esc(i.symbol)}</a></td>
                 <td>${esc(i.side)}</td>
@@ -198,7 +198,7 @@ function renderHistory(rows, mount) {
                 const tick = b => b === true ? '<span class="pos">✓</span>'
                                 : b === false ? '<span class="neg">✗</span>'
                                 : '<span class="muted">—</span>';
-                return `<tr>
+                return `<tr data-context-scope="trade-row" data-id="${esc(r.trade_id)}">
                     <td class="small">${new Date(r.completed_at).toLocaleString()}</td>
                     <td><a href="#trade/${r.trade_id}">${r.trade_id.slice(0, 8)}…</a></td>
                     <td class="small">${tick(r.entry_per_plan)} / ${tick(r.exit_per_plan)}</td>
