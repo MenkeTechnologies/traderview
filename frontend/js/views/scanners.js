@@ -286,6 +286,8 @@ const PRESETS = [
     { id: 'conviction_breakdown_combo', label: t('view.scanners.preset.conviction_breakdown_combo.label'), desc: t('view.scanners.preset.conviction_breakdown_combo.desc') },
     { id: 'pullback_inside_trend_up', label: t('view.scanners.preset.pullback_inside_trend_up.label'), desc: t('view.scanners.preset.pullback_inside_trend_up.desc') },
     { id: 'pullback_inside_trend_down', label: t('view.scanners.preset.pullback_inside_trend_down.label'), desc: t('view.scanners.preset.pullback_inside_trend_down.desc') },
+    { id: 'range_contraction_squeeze_high', label: t('view.scanners.preset.range_contraction_squeeze_high.label'), desc: t('view.scanners.preset.range_contraction_squeeze_high.desc') },
+    { id: 'range_contraction_squeeze_low', label: t('view.scanners.preset.range_contraction_squeeze_low.label'), desc: t('view.scanners.preset.range_contraction_squeeze_low.desc') },
 ];
 
 export async function renderScanners(mount) {

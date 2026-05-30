@@ -136,6 +136,10 @@ function renderPairOut(el, a, b, r, mount) {
             <h2 data-i18n="view.pairs.h2.zscore_chart">Z-score with ±2 reference lines</h2>
             <div id="pair-z-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.pairs.h2.spread_uplot_chart">Spread series (interactive)</h2>
+            <div id="pair-sp-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
     const labels = r.spread_series.map((_, i) => String(i));
@@ -144,6 +148,7 @@ function renderPairOut(el, a, b, r, mount) {
     if (spChart) barChart(spChart, labels, r.spread_series, { color: '#00e5ff' });
     if (zChart) barChart(zChart,  labels, r.zscore_series, { color: '#b86bff' });
     renderZScoreLineChart(r.zscore_series);
+    renderSpreadChart(r.spread_series);
 }
 
 function renderZScoreLineChart(zSeries) {
@@ -177,4 +182,33 @@ function renderZScoreLineChart(zSeries) {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
         legend: { show: true },
     }, [xs, ys, upper, zero, lower], el);
+}
+
+function renderSpreadChart(series) {
+    const el = document.getElementById('pair-sp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const vals = (series || []).filter(Number.isFinite);
+    if (vals.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.pairs.empty_sp_chart">${esc(t('view.pairs.empty_sp_chart'))}</div>`;
+        return;
+    }
+    const xs = vals.map((_, i) => i + 1);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const meanY = xs.map(() => mean);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.pairs.chart.bar') },
+            { label: t('view.pairs.chart.spread'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.pairs.chart.mean'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 56 } ],
+        legend: { show: true },
+    }, [xs, vals, meanY], el);
 }
