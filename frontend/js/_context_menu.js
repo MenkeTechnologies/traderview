@@ -9,6 +9,23 @@
 // `navTo`: shortcut to set `window.location.hash`.
 // `onClick`: in-process callback (used for synchronous things like
 // document.execCommand('copy')).
+//
+// Adding a new scope (3 steps, no audit-test edits required):
+//   1. Declare a new constant FOO_ROW_ITEMS = [{id, labelKey, actionKey}, ...]
+//      below — labelKey must point at an i18n key; actionKey must match a
+//      window.addEventListener('tv:foo-…') handler in context_menu.js.
+//   2. Append ['foo-row', FOO_ROW_ITEMS] to ALL_SCOPED_ITEMS so the
+//      app.js bindTabs() loop registers it AND the no_unwired_action_keys /
+//      no_invalid_ctxmenu_items audits + the keyboard-shortcuts cheat
+//      sheet pick it up automatically.
+//   3. Add the data-context-scope='foo-row' attr on the relevant view's
+//      DOM element(s). Use data-X attrs to expose payload the handler
+//      reads via dataFromTarget(detail, 'X') in context_menu.js.
+//
+// Handler boilerplate is collapsed via 4 helpers in context_menu.js:
+//   clipboardWrite(text, label)  refreshView()
+//   dataFromTarget(detail, key)  toastErr(msg)
+// A typical copy+delete handler body is now ~4 LoC instead of ~10.
 
 // Built-in global menu items every right-click receives. Per-view code
 // can register additional items via the DOM-glue layer (context_menu.js).
