@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderScreener(mount) {
     const tok = currentViewToken();
@@ -63,7 +64,7 @@ export async function renderScreener(mount) {
 
 function renderResult(r) {
     return `<div class="chart-panel">
-        <h2>${r.hits.length} hits of ${r.universe_size} symbols scanned</h2>
+        <h2>${esc(t('view.screener.h2.hits_summary', { hits: r.hits.length, universe: r.universe_size }))}</h2>
         ${r.hits.length ? `<table class="trades">
             <thead><tr><th data-i18n="view.screener.th.symbol">Symbol</th><th data-i18n="view.screener.th.score">Score</th><th data-i18n="view.screener.th.summary">Summary</th>
             <th data-i18n="view.screener.th.close">Close</th><th data-i18n="view.screener.th.rsi_14">RSI(14)</th><th data-i18n="view.screener.th.sma_50">SMA(50)</th><th data-i18n="view.screener.th.sma_200">SMA(200)</th>

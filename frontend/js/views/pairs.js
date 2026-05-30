@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 export async function renderPairs(mount) {
     const tok = currentViewToken();
@@ -99,7 +99,7 @@ function renderMatrix(r, mount) {
         return `rgba(255, 56, 96, ${0.15 + intensity * 0.65})`;
     };
     const html = `<div class="chart-panel">
-        <h2>${r.symbols.length}×${r.symbols.length} correlation · ${r.days}d · ${r.samples} samples</h2>
+        <h2>${esc(t('view.pairs.h2.matrix_summary', { size: r.symbols.length, days: r.days, samples: r.samples }))}</h2>
         <table class="corr-matrix">
             <thead><tr><th></th>${r.symbols.map(s => `<th>${esc(s)}</th>`).join('')}</tr></thead>
             <tbody>${r.symbols.map((row, i) => `<tr>

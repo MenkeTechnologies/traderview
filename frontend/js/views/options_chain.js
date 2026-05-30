@@ -2,13 +2,13 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyUiI18n } from '../i18n.js';
+import { applyUiI18n, t as tr } from '../i18n.js';
 
 export async function renderOptions(mount, _state, rest) {
     const tok = currentViewToken();
     const sym = (rest || '').toUpperCase() || 'SPY';
     mount.innerHTML = `
-        <h1 class="view-title">${esc(t('view.options_chain.h1', { sym }))}</h1>
+        <h1 class="view-title">${esc(tr('view.options_chain.h1', { sym }))}</h1>
         <form id="of" class="inline-form">
             <input name="sym" value="${esc(sym)}" style="text-transform:uppercase">
             <select name="exp" id="expsel"><option data-i18n="view.options_chain.opt.loading">loading…</option></select>
@@ -117,7 +117,7 @@ function renderChain(chain, r, mount) {
     if (!ocm) return;
     ocm.innerHTML = `
         <div class="chart-panel">
-            <h2>${esc(chain.symbol)} · spot ${fmt(chain.spot)} · exp ${esc(chain.expiration)} · T = ${(t*365).toFixed(0)}d</h2>
+            <h2>${esc(tr('view.options_chain.h2.chain', { symbol: chain.symbol, spot: fmt(chain.spot), expiration: chain.expiration, days: (t*365).toFixed(0) }))}</h2>
             <table class="trades">
                 <thead><tr>
                     <th data-i18n="view.options_chain.th.calls" colspan="6" style="text-align:center;color:var(--green)">CALLS</th>
