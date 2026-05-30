@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let siChart = null;
 
 export async function renderAsi(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderAsi(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.asi.h2.chart">Price + ASI overlay</h2>
             <div id="as-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.asi.h2.si_chart">Per-bar swing index (ΔASI)</h2>
+            <div id="as-si-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.limit_move);
     renderSummary(local, true);
     renderChart(local);
+    renderSiChart(local);
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.asi.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderSiChart(resp);
     renderStats();
 }
 
@@ -173,6 +181,43 @@ function renderChart(asi) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderSiChart(asi) {
+    const el = document.getElementById('as-si-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(asi) || asi.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const si = asi.map((v, i) => {
+        if (v == null || !Number.isFinite(v)) return null;
+        if (i === 0) return v;
+        const prev = asi[i - 1];
+        if (prev == null || !Number.isFinite(prev)) return null;
+        return v - prev;
+    });
+    const pos = si.map(v => v != null && v > 0 ? v : null);
+    const neg = si.map(v => v != null && v < 0 ? v : null);
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.asi.series.si_pos'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 7, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.asi.series.si_neg'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 7, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.asi.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (siChart) { try { siChart.destroy(); } catch {} siChart = null; }
+    siChart = new window.uPlot(opts, [xs, pos, neg, zero], el);
 }
 
 function renderStats() {

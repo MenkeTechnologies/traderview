@@ -378,6 +378,8 @@ const PRESETS = [
     { id: 'gap_down_at_year_high', label: t('view.scanners.preset.gap_down_at_year_high.label'), desc: t('view.scanners.preset.gap_down_at_year_high.desc') },
     { id: 'big_up_mid_range_close', label: t('view.scanners.preset.big_up_mid_range_close.label'), desc: t('view.scanners.preset.big_up_mid_range_close.desc') },
     { id: 'big_down_mid_range_close', label: t('view.scanners.preset.big_down_mid_range_close.label'), desc: t('view.scanners.preset.big_down_mid_range_close.desc') },
+    { id: 'hod_close_hot_vol_flat', label: t('view.scanners.preset.hod_close_hot_vol_flat.label'), desc: t('view.scanners.preset.hod_close_hot_vol_flat.desc') },
+    { id: 'lod_close_hot_vol_flat', label: t('view.scanners.preset.lod_close_hot_vol_flat.label'), desc: t('view.scanners.preset.lod_close_hot_vol_flat.desc') },
 ];
 
 export async function renderScanners(mount) {

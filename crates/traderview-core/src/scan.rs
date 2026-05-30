@@ -496,6 +496,8 @@ pub enum Preset {
     GapDownAtYearHigh,              // gap_pct < -2 AND year_high_pct > -5 AND rel_volume >= 1.5 — gap down while still near 52w high on vol (sudden distribution; risk-off topping candidate)
     BigUpMidRangeClose,             // change_pct > 3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big up move but close mid-range on vol (failed to hold extremes; topping action)
     BigDownMidRangeClose,           // change_pct < -3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big down move but close mid-range on vol (failed flush; basing action)
+    HodCloseHotVolFlat,             // hod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at HOD on hot vol but flat change (absorption at highs; climax buy candidate)
+    LodCloseHotVolFlat,             // lod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at LOD on hot vol but flat change (absorption at lows; climax sell candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2493,6 +2495,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 1.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::HodCloseHotVolFlat => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+        }
+        Preset::LodCloseHotVolFlat => {
+            hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.change_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2879,6 +2891,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownAtYearHigh => "Gap Down at 52w High (Sudden Distribution)",
         Preset::BigUpMidRangeClose => "Big Up + Mid-Range Close (Topping Action)",
         Preset::BigDownMidRangeClose => "Big Down + Mid-Range Close (Basing Action)",
+        Preset::HodCloseHotVolFlat => "HOD Close + Hot Vol + Flat Change (Absorption High)",
+        Preset::LodCloseHotVolFlat => "LOD Close + Hot Vol + Flat Change (Absorption Low)",
     }
 }
 
