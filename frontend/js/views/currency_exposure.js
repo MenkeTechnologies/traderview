@@ -68,6 +68,11 @@ export async function renderCurrencyExposure(mount, _appState) {
             <div id="ce-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.currency_exposure.h2.net_chart">Net exposure per currency — directional FX bet (long vs short)</h2>
+            <div id="ce-net-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="ce-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -121,6 +126,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderExposureChart(local);
+    renderNetChart(local);
     let resp;
     try {
         resp = await api.calcCurrencyExposure(buildBody(
@@ -134,6 +140,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable(resp);
     renderExposureChart(resp);
+    renderNetChart(resp);
     const buckets = (resp.buckets || []).length;
     const overweight = (resp.buckets || []).filter(b => b.overweight).length;
     const level = overweight > 0 ? 'warning' : 'success';
@@ -244,6 +251,38 @@ function renderExposureChart(report) {
         ],
         legend: { show: true },
     }, [xs, gross], el);
+}
+
+function renderNetChart(report) {
+    const el = document.getElementById('ce-net-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.buckets) || report.buckets.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.currency_exposure.empty_net_chart">${esc(t('view.currency_exposure.empty_net_chart'))}</div>`;
+        return;
+    }
+    const labels = report.buckets.map(b => b.currency);
+    const net = report.buckets.map(b => Number.isFinite(b.net_home) ? b.net_home : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.currency_exposure.chart.ccy_idx') },
+            { label: t('view.currency_exposure.chart.net_home'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.currency_exposure.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, net, zero], el);
 }
 
 function card(label, value, cls = '') {

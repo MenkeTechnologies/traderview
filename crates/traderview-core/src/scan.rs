@@ -594,6 +594,8 @@ pub enum Preset {
     BreakdownFromMidLevels,         // year_low_pct < 10 AND year_high_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — within 10% of 52w low coming from mid-range + decent drop + hot vol (breakdown candidate from mid-range to lower-zone)
     IntradayStrongerThanGap,        // gap_pct.abs() < 1 AND day_pct.abs() > 1.5 AND change_pct.abs() > 1 AND rel_volume >= 1.2 — small gap + big intraday + decent change + decent vol (intraday energy > overnight; all action during regular session)
     OvernightStrongerThanIntraday,  // gap_pct.abs() > 1.5 AND day_pct.abs() < 0.5 AND change_pct.abs() > 1 — big gap + flat intraday + decent change (overnight dominated; market accepted gap without intraday expansion)
+    EfficientMoveLowEffort,         // change_pct.abs() > 1 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 — meaningful change + dry vol + narrow range (efficient move; few prints needed; sleeper trade)
+    SignalVsNoiseChurn,             // change_pct.abs() < 0.2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — tiny net change + hot vol + wide range visited (signal-vs-noise: lots of activity, no net move; pure noise day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3165,6 +3167,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::EfficientMoveLowEffort => {
+            hit.change_pct.abs() > 1.0
+                && hit.rel_volume < 0.7
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+        }
+        Preset::SignalVsNoiseChurn => {
+            hit.change_pct.abs() < 0.2
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
+        }
     }
 }
 
@@ -3649,6 +3661,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BreakdownFromMidLevels => "Near 52w Low Coming from Mid + Hot Vol (Breakdown from Mid-range)",
         Preset::IntradayStrongerThanGap => "Intraday Move > Gap (All Action Regular Session)",
         Preset::OvernightStrongerThanIntraday => "Overnight Gap > Intraday (Market Accepted Gap Without Expansion)",
+        Preset::EfficientMoveLowEffort => "Meaningful Change + Dry Vol + Narrow Range (Efficient Sleeper Move)",
+        Preset::SignalVsNoiseChurn => "Flat Close + Hot Vol + Wide Range (Pure Noise / Heavy Churn Day)",
     }
 }
 
