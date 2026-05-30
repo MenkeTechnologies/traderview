@@ -11,6 +11,7 @@
 import { test, expect } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { ALL_SCOPED_ITEMS } from '../js/_context_menu.js';
 
 const VIEWS_DIR = join(__dirname, '../js/views');
 
@@ -49,6 +50,23 @@ const SCOPE_REQUIRED_ATTRS = {
     'board-row':             ['data-id'],
     'dashboard-sidebar-item': ['data-id'],
 };
+
+test('SCOPE_REQUIRED_ATTRS covers every scope in ALL_SCOPED_ITEMS', () => {
+    // If a new scope is added to the registry but its required attrs
+    // aren't declared here, this test fires so the developer documents
+    // the contract (or explicitly opts out with an empty array).
+    const registered = ALL_SCOPED_ITEMS.map(([scope]) => scope);
+    const declared = new Set(Object.keys(SCOPE_REQUIRED_ATTRS));
+    const undocumented = registered.filter(s => !declared.has(s));
+    if (undocumented.length > 0) {
+        throw new Error(
+            `${undocumented.length} scope(s) in ALL_SCOPED_ITEMS missing from ` +
+            `SCOPE_REQUIRED_ATTRS — declare required data-* attrs (or [] if ` +
+            `none) for: ${undocumented.join(', ')}`,
+        );
+    }
+    expect(undocumented).toEqual([]);
+});
 
 test('every row-scope tag carries the data-* attrs its handler reads', () => {
     const offenders = [];
