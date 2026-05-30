@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_SMOOTH,
@@ -30,21 +31,23 @@ export async function renderAnchoredMomentum(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.anch_mom.label.anchor">Anchor bar index</span>
-                    <input id="am-anchor" type="number" step="1" min="0" value="${state.anchor}"></label>
+                    <input id="am-anchor" type="number" step="1" min="0" value="${state.anchor}"
+                           data-tip="view.anch_mom.tip.anchor"></label>
                 <label><span data-i18n="view.anch_mom.label.smooth">Smooth period</span>
-                    <input id="am-smooth" type="number" step="1" min="1" value="${state.smooth_period}"></label>
+                    <input id="am-smooth" type="number" step="1" min="1" value="${state.smooth_period}"
+                           data-tip="view.anch_mom.tip.smooth"></label>
                 <button data-i18n="view.anch_mom.btn.compute" id="am-run" class="primary"
-                        data-tip="view.anch_mom.tip.compute" type="button">Compute</button>
+                        data-tip="view.anch_mom.tip.compute" data-shortcut="anchored_momentum_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.anch_mom.btn.demo_rally"    id="am-demo-rally"  class="secondary" type="button">Demo: post-earnings rally</button>
-                <button data-i18n="view.anch_mom.btn.demo_crash"    id="am-demo-crash"  class="secondary" type="button">Demo: post-news crash</button>
-                <button data-i18n="view.anch_mom.btn.demo_flat"     id="am-demo-flat"   class="secondary" type="button">Demo: flat after anchor</button>
-                <button data-i18n="view.anch_mom.btn.demo_clipped"  id="am-demo-clip"   class="secondary" type="button">Demo: pre-anchor clipped</button>
-                <button data-i18n="view.anch_mom.btn.demo_raw"      id="am-demo-raw"    class="secondary" type="button">Demo: raw only (smooth=1)</button>
-                <button data-i18n="view.anch_mom.btn.demo_long"     id="am-demo-long"   class="secondary" type="button">Demo: long smoothing (10)</button>
-                <button data-i18n="view.anch_mom.btn.demo_nan"      id="am-demo-nan"    class="secondary" type="button">Demo: NaN gap</button>
-                <button data-i18n="view.anch_mom.btn.demo_fomc"     id="am-demo-fomc"   class="secondary" type="button">Demo: FOMC volatility</button>
+                <button data-i18n="view.anch_mom.btn.demo_rally"    id="am-demo-rally"  class="secondary" data-tip="view.anch_mom.tip.demo_rally" type="button">Demo: post-earnings rally</button>
+                <button data-i18n="view.anch_mom.btn.demo_crash"    id="am-demo-crash"  class="secondary" data-tip="view.anch_mom.tip.demo_crash" type="button">Demo: post-news crash</button>
+                <button data-i18n="view.anch_mom.btn.demo_flat"     id="am-demo-flat"   class="secondary" data-tip="view.anch_mom.tip.demo_flat"  type="button">Demo: flat after anchor</button>
+                <button data-i18n="view.anch_mom.btn.demo_clipped"  id="am-demo-clip"   class="secondary" data-tip="view.anch_mom.tip.demo_clip"  type="button">Demo: pre-anchor clipped</button>
+                <button data-i18n="view.anch_mom.btn.demo_raw"      id="am-demo-raw"    class="secondary" data-tip="view.anch_mom.tip.demo_raw"   type="button">Demo: raw only (smooth=1)</button>
+                <button data-i18n="view.anch_mom.btn.demo_long"     id="am-demo-long"   class="secondary" data-tip="view.anch_mom.tip.demo_long"  type="button">Demo: long smoothing (10)</button>
+                <button data-i18n="view.anch_mom.btn.demo_nan"      id="am-demo-nan"    class="secondary" data-tip="view.anch_mom.tip.demo_nan"   type="button">Demo: NaN gap</button>
+                <button data-i18n="view.anch_mom.btn.demo_fomc"     id="am-demo-fomc"   class="secondary" data-tip="view.anch_mom.tip.demo_fomc"  type="button">Demo: FOMC volatility</button>
             </div>
             <p data-i18n="view.anch_mom.hint.about" class="muted">raw_i = (close_i − close_anchor) / close_anchor for i ≥ anchor. Smoothed = WMA(raw, smooth_period) with linear weights 1..N. smooth_period=1 → raw series. NaN bars block any window they fall in.</p>
         </div>
@@ -91,6 +94,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.anch_mom.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.anch_mom.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -104,7 +108,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.anch_mom.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.closes, state.anchor, state.smooth_period);
     renderSummary(local, true);
     renderChart(local);
@@ -115,6 +119,7 @@ async function compute(tok) {
         resp = await api.anlyAnchoredMomentum(buildBody(state));
     } catch (e) {
         showErr(`${t('view.anch_mom.err.api')}: ${e.message || e}`);
+        showToast(t('view.anch_mom.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
@@ -122,6 +127,7 @@ async function compute(tok) {
     renderChart(resp);
     renderCloseChart();
     renderTable(resp);
+    showToast(t('view.anch_mom.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(series, pending) {
