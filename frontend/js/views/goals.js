@@ -23,30 +23,31 @@ export async function renderGoals(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.goals.h2.create_goal">Create goal</h2>
             <form id="g-form" class="inline-form">
-                <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name" required style="min-width:180px;">
-                <select name="period">
+                <input name="name" placeholder="name" data-i18n-placeholder="common.placeholder.name"
+                       data-tip="view.goals.tip.name" data-shortcut="goals_focus_name" required style="min-width:180px;">
+                <select name="period" data-tip="view.goals.tip.period">
                     <option data-i18n="view.goals.opt.monthly" value="monthly">monthly</option>
                     <option data-i18n="view.goals.opt.quarterly" value="quarterly">quarterly</option>
                     <option data-i18n="view.goals.opt.yearly" value="yearly">yearly</option>
                     <option data-i18n="view.goals.opt.custom" value="custom">custom</option>
                 </select>
                 <label><span data-i18n="view.goals.label.account">Account</span>
-                    <select name="account_id">
+                    <select name="account_id" data-tip="view.goals.tip.account">
                         <option data-i18n="view.goals.opt.all" value="">(all)</option>
                         ${state.accounts.map(a => `<option value="${a.id}">${esc(a.broker)} · ${esc(a.name)}</option>`).join('')}
                     </select>
                 </label>
                 <label><span data-i18n="view.goals.label.start">Start</span>
-                    <input name="start_date" type="date" required style="width:140px;"></label>
+                    <input name="start_date" type="date" required style="width:140px;" data-tip="view.goals.tip.start"></label>
                 <label><span data-i18n="view.goals.label.end">End</span>
-                    <input name="end_date"   type="date" required style="width:140px;"></label>
+                    <input name="end_date"   type="date" required style="width:140px;" data-tip="view.goals.tip.end"></label>
                 <label><span data-i18n="view.goals.label.target_pnl">Target P/L $</span>
-                    <input name="target_pnl" type="number" step="any" style="width:110px;"></label>
+                    <input name="target_pnl" type="number" step="any" style="width:110px;" data-tip="view.goals.tip.target_pnl"></label>
                 <label><span data-i18n="view.goals.label.target_win">Target win %</span>
-                    <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60"></label>
+                    <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60" data-tip="view.goals.tip.target_win"></label>
                 <label><span data-i18n="view.goals.label.max_dd">Max DD %</span>
-                    <input name="target_max_drawdown_pct" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="10"></label>
-                <button data-i18n="view.goals.btn.create" class="primary" type="submit">Create</button>
+                    <input name="target_max_drawdown_pct" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="10" data-tip="view.goals.tip.max_dd"></label>
+                <button data-i18n="view.goals.btn.create" data-tip="view.goals.tip.create" class="primary" type="submit">Create</button>
                 <span id="g-status" class="muted small"></span>
             </form>
         </div>
@@ -106,10 +107,12 @@ export async function renderGoals(mount, state) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#g-status');
             if (s2) s2.textContent = '';
+            showToast(t('view.goals.toast.created', { name: body.name }), { level: 'success' });
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const s2 = mount.querySelector('#g-status');
             if (s2) s2.textContent = t('common.error', { err: err.message });
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
     await refresh(mount, tok);
@@ -135,8 +138,11 @@ async function refresh(mount, tok) {
         el2.querySelectorAll('.g-del').forEach(b => {
             b.addEventListener('click', async () => {
                 if (!await tConfirm('view.goals.confirm.delete', {}, { level: 'danger' })) return;
-                try { await api.deleteGoal(b.dataset.id); if (viewIsCurrent(tok)) await refresh(mount, tok); }
-                catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
+                try {
+                    await api.deleteGoal(b.dataset.id);
+                    showToast(t('view.goals.toast.deleted'), { level: 'success' });
+                    if (viewIsCurrent(tok)) await refresh(mount, tok);
+                } catch (e) { showToast(t('common.error', { err: e.message }), { level: 'error' }); }
             });
         });
     } catch (e) {
