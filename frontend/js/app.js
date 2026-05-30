@@ -216,6 +216,7 @@ import { installShortcuts } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
+import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
@@ -358,6 +359,12 @@ function bindTabs() {
         { id: 'clear_recents', labelKey: 'ctxmenu.clear_recents',
           actionKey: 'tv:clear-recents', section: 'view' },
     ]);
+    // Symbol-aware views: right-click → Copy SYMBOL / Charts for SYMBOL / etc.
+    // The mount carries `data-context-scope=<view>`, so each scope just needs
+    // the same SYMBOL_ITEMS set registered.
+    for (const scope of SYMBOL_AWARE_SCOPES) {
+        registerContextItems(scope, SYMBOL_ITEMS);
+    }
     installTooltips();
     installSymbolHotkey();
     void bootI18n('en').then(() => {

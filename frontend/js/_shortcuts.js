@@ -41,6 +41,15 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'edit_select_all', keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_select_all', actionKey: 'tv:edit-select-all' },
     { id: 'edit_undo',       keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_undo',       actionKey: 'tv:edit-undo' },
     { id: 'edit_redo',       keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global',  descKey: 'shortcut.edit_redo',       actionKey: 'tv:edit-redo' },
+    // Symbol-aware quick-nav. No default keybinding — surfaced via the
+    // command palette and right-click context menu only. Acts on the
+    // current global symbol; toasts "no active symbol" if unset.
+    { id: 'copy_symbol',              keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.copy_symbol',              actionKey: 'tv:copy-symbol' },
+    { id: 'open_charts_for_symbol',   keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.open_charts_for_symbol',   actionKey: 'tv:open-charts-for-symbol' },
+    { id: 'open_options_for_symbol',  keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.open_options_for_symbol',  actionKey: 'tv:open-options-for-symbol' },
+    { id: 'open_research_for_symbol', keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.open_research_for_symbol', actionKey: 'tv:open-research-for-symbol' },
+    { id: 'open_earnings_for_symbol', keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.open_earnings_for_symbol', actionKey: 'tv:open-earnings-for-symbol' },
+    { id: 'open_news_for_symbol',     keys: { key: null, meta: false, ctrl: false, shift: false, alt: false }, scope: 'global', descKey: 'shortcut.open_news_for_symbol',     actionKey: 'tv:open-news-for-symbol' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.

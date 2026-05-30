@@ -16,6 +16,7 @@ import { t, applyUiI18n } from './i18n.js';
 import { esc } from './util.js';
 import { showToast } from './toast.js';
 import { loadState, saveState, toggleFavorite, isFavorite, addBookmark } from './_favorites_storage.js';
+import { getGlobalSymbol } from './_global_symbol.js';
 
 let _installed = false;
 let _open = false;
@@ -92,6 +93,34 @@ export function installContextMenu() {
     window.addEventListener('tv:edit-select-all', () => execEdit('selectAll'));
     window.addEventListener('tv:edit-undo',       () => execEdit('undo'));
     window.addEventListener('tv:edit-redo',       () => execEdit('redo'));
+    window.addEventListener('tv:copy-symbol', () => {
+        const sym = (getGlobalSymbol() || '').toUpperCase();
+        if (!sym) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(sym).then(
+                () => showToast(t('toast.copied', { what: sym }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    const navForSymbol = (viewId) => () => {
+        const sym = (getGlobalSymbol() || '').toUpperCase();
+        if (!sym) {
+            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            return;
+        }
+        window.location.hash = `${viewId}/${sym}`;
+    };
+    window.addEventListener('tv:open-charts-for-symbol',   navForSymbol('charts'));
+    window.addEventListener('tv:open-options-for-symbol',  navForSymbol('options'));
+    window.addEventListener('tv:open-research-for-symbol', navForSymbol('research'));
+    window.addEventListener('tv:open-earnings-for-symbol', navForSymbol('earnings-iv'));
+    // News view doesn't accept a hash-path symbol — it's filtered via
+    // its own form. Navigate to the view; the user picks the symbol.
+    window.addEventListener('tv:open-news-for-symbol',     () => { window.location.hash = 'news'; });
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {

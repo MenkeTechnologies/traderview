@@ -90,6 +90,33 @@ export function mergeMenu(globalItems, customItems) {
     return [...customItems, { kind: 'separator' }, ...globalItems];
 }
 
+// Symbol-aware quick-nav items. Shown inside any view whose scope is
+// listed in SYMBOL_AWARE_SCOPES — typical right-click on a chart view
+// gets "Copy SYMBOL", "Charts for SYMBOL", etc. as the top block.
+// The label gets interpolated with the current global symbol at render
+// time; if no global symbol is set the items are hidden.
+export const SYMBOL_ITEMS = [
+    { id: 'copy_symbol',             labelKey: 'ctxmenu.copy_symbol',
+      actionKey: 'tv:copy-symbol',             section: 'symbol' },
+    { id: 'open_charts_for_symbol',  labelKey: 'ctxmenu.open_charts_for_symbol',
+      actionKey: 'tv:open-charts-for-symbol',  section: 'symbol' },
+    { id: 'open_options_for_symbol', labelKey: 'ctxmenu.open_options_for_symbol',
+      actionKey: 'tv:open-options-for-symbol', section: 'symbol' },
+    { id: 'open_research_for_symbol', labelKey: 'ctxmenu.open_research_for_symbol',
+      actionKey: 'tv:open-research-for-symbol', section: 'symbol' },
+    { id: 'open_earnings_for_symbol', labelKey: 'ctxmenu.open_earnings_for_symbol',
+      actionKey: 'tv:open-earnings-for-symbol', section: 'symbol' },
+    { id: 'open_news_for_symbol',     labelKey: 'ctxmenu.open_news_for_symbol',
+      actionKey: 'tv:open-news-for-symbol',     section: 'symbol' },
+];
+
+// View IDs (URL slugs) where SYMBOL_ITEMS are auto-registered. Matches
+// the views that take `sym()` in the app.js dispatcher.
+export const SYMBOL_AWARE_SCOPES = [
+    'research', 'replay', 'earnings-iv', 'sentiment', 'options',
+    'short-interest', 'darkpool', 'tape-replay', 'charts',
+];
+
 // Native edit actions surfaced when the right-click target is a text-
 // entry element (input/textarea/contentEditable). These get prepended
 // above the standard global menu so the user can still paste, copy,
