@@ -39,6 +39,10 @@ export async function renderHalts(mount, _state) {
             <h2 data-i18n="view.halts.h2.reason_chart">Halt count by reason code</h2>
             <div id="halts-chart" style="width:100%;height:240px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.halts.h2.category_chart">Halt count by category (news / volatility / circuit / regulatory / ipo / resume / other)</h2>
+            <div id="halts-category-chart" style="width:100%;height:220px"></div>
+        </div>
     `;
     mount.querySelector('#halt-voice').addEventListener('change', (e) => {
         voiceOn = e.target.checked;
@@ -122,6 +126,42 @@ function render() {
         </tr>
     `).join('');
     renderReasonChart(all);
+    renderCategoryChart(all);
+}
+
+function renderCategoryChart(all) {
+    const el = document.getElementById('halts-category-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!all || all.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.halts.empty_category_chart">${esc(t('view.halts.empty_category_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const h of all) {
+        const cat = reasonClass(h.reason_code);
+        counts.set(cat, (counts.get(cat) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.halts.chart.category_idx') },
+            { label: t('view.halts.chart.category_count'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 14, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderReasonChart(all) {

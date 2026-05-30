@@ -662,6 +662,8 @@ pub enum Preset {
     ExtremeSilentRange,              // (year_high_pct < 5 OR year_low_pct < 5) AND hod_dist + lod_dist < 0.8 AND rel_volume < 1 — at 52w extreme + very tight range + dry vol (silence at extreme; pre-reversal exhaustion signal)
     MultiAxisDryDay,                 // change_pct.abs() < 0.5 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 AND gap_pct.abs() < 0.3 — flat change + dry vol + narrow range + small gap (quiet day across multiple axes; near-silent maintenance)
     BigGapBigVolBigChange,           // gap_pct.abs() > 2 AND rel_volume >= 2 AND change_pct.abs() > 2 — big gap + big vol + big change (catalyst day; news-driven gap with sustained intraday activity)
+    GapDownClosedNearHODHotVol,      // gap_pct < -1 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + finished green + closing tick near HOD + hot vol (V-shape reclaim closing on the highs; strong end-of-day demand)
+    GapUpClosedNearLODHotVol,        // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + closed red + closing tick near LOD + hot vol (full fade with finish weakness on the lows; sellers stay in control into close)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3614,6 +3616,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.change_pct.abs() > 2.0
         }
+        Preset::GapDownClosedNearHODHotVol => {
+            hit.gap_pct < -1.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::GapUpClosedNearLODHotVol => {
+            hit.gap_pct > 1.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4166,6 +4180,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ExtremeSilentRange => "At 52w Extreme + Tight Range + Dry Vol (Silence at Extreme; Pre-reversal Exhaustion)",
         Preset::MultiAxisDryDay => "Flat Change + Dry Vol + Narrow Range + Small Gap (Quiet Multi-axis Maintenance Day)",
         Preset::BigGapBigVolBigChange => "Big Gap + Big Vol + Big Change (Catalyst Day; News-driven with Sustained Activity)",
+        Preset::GapDownClosedNearHODHotVol => "Gap Down + Closed Green + Near HOD + Hot Vol (V-shape Reclaim Closing on the Highs)",
+        Preset::GapUpClosedNearLODHotVol => "Gap Up + Closed Red + Near LOD + Hot Vol (Full Fade Closing on the Lows)",
     }
 }
 

@@ -544,6 +544,8 @@ const PRESETS = [
     { id: 'extreme_silent_range', label: t('view.scanners.preset.extreme_silent_range.label'), desc: t('view.scanners.preset.extreme_silent_range.desc') },
     { id: 'multi_axis_dry_day', label: t('view.scanners.preset.multi_axis_dry_day.label'), desc: t('view.scanners.preset.multi_axis_dry_day.desc') },
     { id: 'big_gap_big_vol_big_change', label: t('view.scanners.preset.big_gap_big_vol_big_change.label'), desc: t('view.scanners.preset.big_gap_big_vol_big_change.desc') },
+    { id: 'gap_down_closed_near_hod_hot_vol', label: t('view.scanners.preset.gap_down_closed_near_hod_hot_vol.label'), desc: t('view.scanners.preset.gap_down_closed_near_hod_hot_vol.desc') },
+    { id: 'gap_up_closed_near_lod_hot_vol', label: t('view.scanners.preset.gap_up_closed_near_lod_hot_vol.label'), desc: t('view.scanners.preset.gap_up_closed_near_lod_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
