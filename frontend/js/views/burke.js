@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('steady-growth') };
 let chart = null;
+let ddChart = null;
 
 export async function renderBurke(mount, _appState) {
     const tok = currentViewToken();
@@ -55,6 +56,11 @@ export async function renderBurke(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.burke.h2.chart">Equity curve</h2>
             <div id="bk-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.burke.h2.dd_chart">Underwater drawdown depth %</h2>
+            <div id="bk-dd-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -110,6 +116,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.burke.err.degenerate')); return; }
     renderSummary(local, true);
     renderChart();
+    renderDdChart();
     renderEpisodes();
     renderStats();
     let resp;
@@ -123,6 +130,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.burke.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart();
+    renderDdChart();
     renderEpisodes();
     renderStats();
 }
@@ -174,6 +182,37 @@ function renderChart() {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderDdChart() {
+    const el = document.getElementById('bk-dd-chart');
+    if (!el || !window.uPlot) return;
+    if (state.equity.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.equity.map((_, i) => i);
+    let peak = -Infinity;
+    const dd = state.equity.map(v => {
+        if (v > peak) peak = v;
+        return peak > 0 ? ((v - peak) / peak) * 100 : 0;
+    });
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 200,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.burke.series.dd_pct'),
+              stroke: '#ff3860', width: 1.2,
+              fill: 'rgba(255,56,96,0.15)',
+              points: { show: false } },
+            { label: t('view.burke.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (ddChart) { try { ddChart.destroy(); } catch {} ddChart = null; }
+    ddChart = new window.uPlot(opts, [xs, dd, zero], el);
 }
 
 function renderEpisodes() {

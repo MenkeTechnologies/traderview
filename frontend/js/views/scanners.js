@@ -422,6 +422,8 @@ const PRESETS = [
     { id: 'orderly_mid_range_pullback', label: t('view.scanners.preset.orderly_mid_range_pullback.label'), desc: t('view.scanners.preset.orderly_mid_range_pullback.desc') },
     { id: 'strong_breakout_day', label: t('view.scanners.preset.strong_breakout_day.label'), desc: t('view.scanners.preset.strong_breakout_day.desc') },
     { id: 'strong_breakdown_day', label: t('view.scanners.preset.strong_breakdown_day.label'), desc: t('view.scanners.preset.strong_breakdown_day.desc') },
+    { id: 'vol_spike_big_gap_big_change', label: t('view.scanners.preset.vol_spike_big_gap_big_change.label'), desc: t('view.scanners.preset.vol_spike_big_gap_big_change.desc') },
+    { id: 'vol_spike_tiny_gap_big_change', label: t('view.scanners.preset.vol_spike_tiny_gap_big_change.label'), desc: t('view.scanners.preset.vol_spike_tiny_gap_big_change.desc') },
 ];
 
 export async function renderScanners(mount) {
