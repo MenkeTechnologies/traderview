@@ -344,6 +344,8 @@ pub enum Preset {
     DownDayGapOnlyMove,          // change_pct between -3 and -1 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire decline came from overnight gap-down; flat day after
     IntradayOnlyGreenDay,        // change_pct > 1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work green day (initiative buying continuation)
     IntradayOnlyRedDay,          // change_pct < -1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work red day (initiative selling continuation)
+    ReversalUpFromOpen,          // gap_pct < -1 AND change_pct > 0 AND rel_volume >= 1.5 AND hod_dist.abs() < 0.5 — gap-down reversed and closed at HOD on heavy vol (powerful reclaim)
+    ReversalDownFromOpen,        // gap_pct > 1 AND change_pct < 0 AND rel_volume >= 1.5 AND lod_dist.abs() < 0.5 — gap-up reversed and closed at LOD on heavy vol (powerful failure)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1479,6 +1481,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
                 && hit.rel_volume >= 1.0
         }
+        Preset::ReversalUpFromOpen => {
+            hit.gap_pct < -1.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::ReversalDownFromOpen => {
+            hit.gap_pct > 1.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -1713,6 +1727,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DownDayGapOnlyMove => "Down-Day Gap-Only Move",
         Preset::IntradayOnlyGreenDay => "Intraday-Only Green Day",
         Preset::IntradayOnlyRedDay => "Intraday-Only Red Day",
+        Preset::ReversalUpFromOpen => "Reversal Up From Open",
+        Preset::ReversalDownFromOpen => "Reversal Down From Open",
     }
 }
 

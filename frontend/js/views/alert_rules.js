@@ -304,5 +304,45 @@ function renderEvents(events) {
                 </tbody>
             </table>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.alert_rules.h2.events_chart">Events per rule</h2>
+            <div id="ar-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
+    renderEventsChart(events);
+}
+
+function renderEventsChart(events) {
+    const el = document.getElementById('ar-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map();
+    for (const e of events || []) {
+        counts.set(e.rule_name, (counts.get(e.rule_name) || 0) + 1);
+    }
+    const rows = [...counts.entries()].map(([k, v]) => ({ k, v }))
+        .sort((a, b) => b.v - a.v);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.alert_rules.empty_chart">${esc(tr('view.alert_rules.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.k);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.v);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: tr('view.alert_rules.chart.rule') },
+            { label: tr('view.alert_rules.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }

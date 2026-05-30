@@ -226,6 +226,8 @@ const PRESETS = [
     { id: 'down_day_gap_only_move', label: t('view.scanners.preset.down_day_gap_only_move.label'), desc: t('view.scanners.preset.down_day_gap_only_move.desc') },
     { id: 'intraday_only_green_day', label: t('view.scanners.preset.intraday_only_green_day.label'), desc: t('view.scanners.preset.intraday_only_green_day.desc') },
     { id: 'intraday_only_red_day', label: t('view.scanners.preset.intraday_only_red_day.label'), desc: t('view.scanners.preset.intraday_only_red_day.desc') },
+    { id: 'reversal_up_from_open', label: t('view.scanners.preset.reversal_up_from_open.label'), desc: t('view.scanners.preset.reversal_up_from_open.desc') },
+    { id: 'reversal_down_from_open', label: t('view.scanners.preset.reversal_down_from_open.label'), desc: t('view.scanners.preset.reversal_down_from_open.desc') },
 ];
 
 export async function renderScanners(mount) {
