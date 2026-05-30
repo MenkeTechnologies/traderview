@@ -250,6 +250,8 @@ pub enum Preset {
     Pct52wExactHalfSqueeze,      // year_high_pct -55 to -45 AND year_low_pct 45 to 55 AND |change_pct| < 0.5 — sitting at exact 52w midpoint
     UnchangedOnVolumeSqueeze,    // |change_pct| < 0.1 AND rel_volume >= 1 — totally unchanged on at-or-above-average volume
     WideHodNarrowLodSqueeze,     // hod_dist.abs() >= 2 AND lod_dist.abs() < 0.5 AND change_pct < 0 — high failed, close pinned to low
+    NarrowHodWideLodSqueeze,     // hod_dist.abs() < 0.5 AND lod_dist.abs() >= 2 AND change_pct > 0 — low failed, close pinned to high
+    PerfectBalanceSqueeze,       // |hod_dist - lod_dist| < 0.1 AND |change_pct| < 0.3 — mathematically balanced bar
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -926,6 +928,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.change_pct < 0.0
         }
+        Preset::NarrowHodWideLodSqueeze => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() >= 2.0
+                && hit.change_pct > 0.0
+        }
+        Preset::PerfectBalanceSqueeze => {
+            (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.1
+                && hit.change_pct.abs() < 0.3
+        }
     }
 }
 
@@ -1066,6 +1077,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::Pct52wExactHalfSqueeze => "52w Exact-Half Squeeze",
         Preset::UnchangedOnVolumeSqueeze => "Unchanged-On-Volume Squeeze",
         Preset::WideHodNarrowLodSqueeze => "Wide-HOD Narrow-LOD Squeeze",
+        Preset::NarrowHodWideLodSqueeze => "Narrow-HOD Wide-LOD Squeeze",
+        Preset::PerfectBalanceSqueeze => "Perfect-Balance Squeeze",
     }
 }
 

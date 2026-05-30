@@ -69,8 +69,52 @@ function render(r, mount) {
             <h2 data-i18n="view.r_distribution.h2.per_tag_breakdown_sorted_by_sqn">Per-tag breakdown (sorted by SQN)</h2>
             ${tagTable(r.by_tag)}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.r_distribution.h2.tag_chart">Mean R + SQN per tag (top 20)</h2>
+            <div id="rd-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
+    renderTagChart(r.by_tag);
+}
+
+function renderTagChart(byTag) {
+    const el = document.getElementById('rd-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const tags = (byTag || []).slice(0, 20);
+    if (tags.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.r_distribution.empty_chart">${esc(t('view.r_distribution.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = tags.map(g => g.tag_name);
+    const meanR = tags.map(g => Number(g.mean_r));
+    const sqn = tags.map(g => Number(g.sqn));
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.r_distribution.chart.tag_idx') },
+            { label: t('view.r_distribution.chart.mean_r'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.r_distribution.chart.sqn'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 6, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.r_distribution.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, meanR, sqn, zero], el);
 }
 
 function histogramSvg(bins, stats) {
