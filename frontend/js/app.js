@@ -580,6 +580,11 @@ export async function dispatch() {
         b.classList.toggle('active', b.dataset.view === view)
     );
     const mount = document.getElementById('app');
+    // View-wide context-menu scope: every right-click inside #app now
+    // resolves to the current view's slug via nearestScope() walk-up.
+    // Inner `data-context-scope` on chart-panel elements still wins
+    // for granular scopes (it's the closer ancestor).
+    mount.setAttribute('data-context-scope', view);
     mount.innerHTML = spinnerHTML(t('common.loading_view', { view }));
     try {
         switch (view) {
