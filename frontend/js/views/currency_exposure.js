@@ -62,6 +62,11 @@ export async function renderCurrencyExposure(mount, _appState) {
             <div id="ce-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.currency_exposure.h2.exposure_chart">Gross exposure per currency (home currency)</h2>
+            <div id="ce-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="ce-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -110,6 +115,7 @@ async function compute(tok) {
     const local = localAnalyze(state.positions, state.home_currency, state.fx);
     renderSummary(local, true);
     renderTable(local);
+    renderExposureChart(local);
     let resp;
     try {
         resp = await api.calcCurrencyExposure(buildBody(
@@ -121,6 +127,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderTable(resp);
+    renderExposureChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -198,6 +205,35 @@ function renderTable(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderExposureChart(report) {
+    const el = document.getElementById('ce-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.buckets) || report.buckets.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.currency_exposure.empty_chart">${esc(t('view.currency_exposure.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = report.buckets.map(b => b.currency);
+    const gross = report.buckets.map(b => Number.isFinite(b.gross_home) ? b.gross_home : null);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.currency_exposure.chart.ccy_idx') },
+            { label: t('view.currency_exposure.chart.gross_home'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, gross], el);
 }
 
 function card(label, value, cls = '') {
