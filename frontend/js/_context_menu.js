@@ -157,6 +157,18 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Board-row context items. Right-click on a <tr data-context-scope=
+// "board-row" data-id="X" data-name="Y"> shows: Open board / Copy
+// ID / Delete board.
+export const BOARD_ROW_ITEMS = [
+    { id: 'board_row_open',    labelKey: 'ctxmenu.board_row_open',
+      actionKey: 'tv:board-row-open',    section: 'board' },
+    { id: 'board_row_copy_id', labelKey: 'ctxmenu.board_row_copy_id',
+      actionKey: 'tv:board-row-copy-id', section: 'board' },
+    { id: 'board_row_delete',  labelKey: 'ctxmenu.board_row_delete',
+      actionKey: 'tv:board-row-delete',  section: 'board' },
+];
+
 // Backtest-preset-row context items. Right-click on a <tr data-
 // context-scope="backtest-preset-row" data-id="X" data-slug="Y"
 // data-name="Z" data-mine="bool"> shows: Copy slug / Open preset /
@@ -339,6 +351,7 @@ export const ALL_SCOPED_ITEMS = [
     ['plan-row',               PLAN_ROW_ITEMS],
     ['share-row',              SHARE_ROW_ITEMS],
     ['backtest-preset-row',    BACKTEST_PRESET_ROW_ITEMS],
+    ['board-row',              BOARD_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

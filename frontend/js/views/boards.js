@@ -79,7 +79,7 @@ async function renderList(mount) {
                 : `<table class="trades">
                     <thead><tr><th data-i18n="view.boards.th.name">Name</th><th data-i18n="view.boards.th.widgets">Widgets</th><th data-i18n="view.boards.th.updated">Updated</th><th></th></tr></thead>
                     <tbody>
-                        ${boards.map(b => `<tr>
+                        ${boards.map(b => `<tr data-context-scope="board-row" data-id="${esc(b.id)}" data-name="${esc(b.name)}">
                             <td><a href="#boards/${b.id}">${esc(b.name)}</a></td>
                             <td>${Array.isArray(b.layout) ? b.layout.length : 0}</td>
                             <td class="small">${new Date(b.updated_at).toLocaleString()}</td>

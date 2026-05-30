@@ -275,6 +275,40 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Board-row actions — read data-id / data-name.
+    window.addEventListener('tv:board-row-open', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        window.location.hash = `boards/${id}`;
+    });
+    window.addEventListener('tv:board-row-copy-id', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        if (!id) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(id).then(
+                () => showToast(t('toast.copied', { what: id }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:board-row-delete', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const name = (tgt && tgt.dataset && tgt.dataset.name) || id;
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.board_row_delete_confirm', { name }, { level: 'danger' })) return;
+            try {
+                await api.deleteDashboard(id);
+                showToast(t('toast.board_deleted', { name }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Backtest-preset-row actions — read data-id / data-slug / data-name / data-mine.
     window.addEventListener('tv:bp-row-copy-slug', (e) => {
         const tgt = e.detail && e.detail.target;
