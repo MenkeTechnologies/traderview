@@ -452,6 +452,8 @@ pub enum Preset {
     NoVolTrendDown,              // change_pct < -1 AND day_pct < 0 AND rel_volume < 0.4 AND lod_dist.abs() < 0.5 — down close on extreme dry vol (trend without participation; vacuum risk)
     ChurnAtTopDryVol,            // year_high_pct > -3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w high on dry vol (consolidation at highs; bullish setup)
     ChurnAtBottomDryVol,         // year_low_pct < 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w low on dry vol (consolidation at lows; potential capitulation done)
+    HugeGapFlatChange,           // gap_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — huge overnight gap but flat close on avg vol (frozen open; gap-fill candidate)
+    NoGapHugeChange,             // gap_pct.abs() < 0.3 AND change_pct.abs() > 5 AND rel_volume >= 1.5 — no overnight gap but huge intraday change on hot vol (intraday-only catalyst)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2200,6 +2202,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.3
                 && hit.rel_volume < 0.6
         }
+        Preset::HugeGapFlatChange => {
+            hit.gap_pct.abs() > 5.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 1.0
+        }
+        Preset::NoGapHugeChange => {
+            hit.gap_pct.abs() < 0.3
+                && hit.change_pct.abs() > 5.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2542,6 +2554,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NoVolTrendDown => "No-Vol Down Trend (Vacuum)",
         Preset::ChurnAtTopDryVol => "Churn at 52w High, Dry Vol",
         Preset::ChurnAtBottomDryVol => "Churn at 52w Low, Dry Vol",
+        Preset::HugeGapFlatChange => "Huge Gap + Flat Change (Frozen Open)",
+        Preset::NoGapHugeChange => "No Gap + Huge Change (Intraday Catalyst)",
     }
 }
 
