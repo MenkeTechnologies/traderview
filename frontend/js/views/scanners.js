@@ -180,6 +180,8 @@ const PRESETS = [
     { id: 'pct52w_bottom_decile_hot_vol', label: t('view.scanners.preset.pct52w_bottom_decile_hot_vol.label'), desc: t('view.scanners.preset.pct52w_bottom_decile_hot_vol.desc') },
     { id: 'pct52w_top_decile_dry_vol', label: t('view.scanners.preset.pct52w_top_decile_dry_vol.label'), desc: t('view.scanners.preset.pct52w_top_decile_dry_vol.desc') },
     { id: 'pct52w_bottom_decile_dry_vol', label: t('view.scanners.preset.pct52w_bottom_decile_dry_vol.label'), desc: t('view.scanners.preset.pct52w_bottom_decile_dry_vol.desc') },
+    { id: 'new_high_green_day', label: t('view.scanners.preset.new_high_green_day.label'), desc: t('view.scanners.preset.new_high_green_day.desc') },
+    { id: 'new_low_red_day', label: t('view.scanners.preset.new_low_red_day.label'), desc: t('view.scanners.preset.new_low_red_day.desc') },
 ];
 
 export async function renderScanners(mount) {

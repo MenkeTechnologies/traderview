@@ -51,6 +51,11 @@ export async function renderWebhooks(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.webhooks.h2.fires_chart">Fires per webhook</h2>
+            <div id="wh-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.webhooks.h2.provider_payloads">Provider payloads</h2>
             <details>
                 <summary data-i18n="view.webhooks.summary.discord">Discord embed</summary>
@@ -66,6 +71,7 @@ export async function renderWebhooks(mount) {
             </details>
         </div>
     `;
+    renderFiresChart(rows);
     mount.querySelector('#wf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -97,6 +103,41 @@ export async function renderWebhooks(mount) {
             if (!viewIsCurrent(tok)) return;
             renderWebhooks(mount);
         }));
+}
+
+function renderFiresChart(rows) {
+    const el = document.getElementById('wh-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (rows || []).filter(w => Number.isFinite(Number(w.fire_count)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.webhooks.empty_chart">${esc(t('view.webhooks.empty_chart'))}</div>`;
+        return;
+    }
+    valid.sort((a, b) => Number(b.fire_count) - Number(a.fire_count));
+    const labels = valid.map(w => w.name || w.id);
+    const xs = labels.map((_, i) => i + 1);
+    const onY  = valid.map(w => w.enabled  ? Number(w.fire_count) : null);
+    const offY = valid.map(w => !w.enabled ? Number(w.fire_count) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.webhooks.chart.webhook') },
+            { label: t('view.webhooks.chart.enabled'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.webhooks.chart.disabled'),
+              stroke: '#aab',    width: 0,
+              points: { show: true, size: 12, fill: '#aab',    stroke: '#aab'    } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, onY, offY], el);
 }
 
 function redact(url) {
