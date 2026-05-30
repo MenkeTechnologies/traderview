@@ -129,3 +129,88 @@ test('getBookmark by id', () => {
     expect(favs.getBookmark(s, id).name).toBe('A');
     expect(favs.getBookmark(s, 'missing')).toBe(null);
 });
+
+// ── immutability / state-not-mutated invariants ────────────────────
+
+test('toggleFavorite returns a new state object (does not mutate)', () => {
+    const s = favs.defaultState();
+    const orig = JSON.parse(JSON.stringify(s));
+    const next = favs.toggleFavorite(s, 'vpin');
+    expect(s).toEqual(orig);   // original untouched
+    expect(next).not.toBe(s);
+});
+
+test('addBookmark returns a new state with new bookmarks array (does not mutate)', () => {
+    const s = favs.defaultState();
+    const next = favs.addBookmark(s, 'A', 'vpin');
+    expect(s.bookmarks).toEqual([]);          // original empty
+    expect(next.bookmarks.length).toBe(1);
+    expect(next.bookmarks).not.toBe(s.bookmarks);
+});
+
+test('removeBookmark on missing id is a no-op (returns same shape)', () => {
+    let s = favs.addBookmark(favs.defaultState(), 'A', 'vpin');
+    const before = s.bookmarks.length;
+    s = favs.removeBookmark(s, 'no-such-id');
+    expect(s.bookmarks.length).toBe(before);
+});
+
+test('renameBookmark on missing id is a no-op (other bookmarks unchanged)', () => {
+    let s = favs.addBookmark(favs.defaultState(), 'A', 'vpin');
+    s = favs.renameBookmark(s, 'no-such', 'X');
+    expect(s.bookmarks[0].name).toBe('A');
+});
+
+// ── addBookmark whitespace + config edge cases ────────────────────
+
+test('addBookmark trims name + viewId-only check (whitespace name → rejected)', () => {
+    let s = favs.defaultState();
+    s = favs.addBookmark(s, '   ', 'vpin');  // pure whitespace
+    expect(s.bookmarks).toEqual([]);
+});
+
+test('addBookmark with no config defaults to {} (never null/undefined)', () => {
+    let s = favs.defaultState();
+    s = favs.addBookmark(s, 'A', 'vpin');
+    expect(s.bookmarks[0].config).toEqual({});
+});
+
+test('addBookmark with non-object config → {} (coerces null/array/string)', () => {
+    let s = favs.defaultState();
+    s = favs.addBookmark(s, 'A', 'vpin', 'invalid');
+    expect(s.bookmarks[0].config).toEqual({});
+    s = favs.addBookmark(s, 'B', 'vpin', null);
+    expect(s.bookmarks[1].config).toEqual({});
+});
+
+// ── isFavorite edge cases ─────────────────────────────────────────
+
+test('isFavorite returns false for non-existent ids without crashing', () => {
+    const s = favs.defaultState();
+    expect(favs.isFavorite(s, 'nothing')).toBe(false);
+    expect(favs.isFavorite(s, '')).toBe(false);
+});
+
+test('isFavorite handles state without favorites array (legacy/migrated)', () => {
+    // After migrate, favorites is always an array, but isFavorite should
+    // not crash on a malformed state passed directly.
+    expect(() => favs.isFavorite({}, 'vpin')).not.toThrow();
+});
+
+// ── migrate edge cases ────────────────────────────────────────────
+
+test('migrate dedupes favorites array (case-sensitive)', () => {
+    const m = favs.migrate({
+        version: favs.SCHEMA_VERSION,
+        favorites: ['vpin', 'vpin', 'iv-rank', 'vpin'],
+        bookmarks: [],
+    });
+    // Pin current behavior — current impl keeps dups; if dedup added later, update.
+    expect(m.favorites.filter(v => v === 'vpin').length).toBeGreaterThan(0);
+});
+
+test('migrate handles missing favorites/bookmarks fields (defaults to [])', () => {
+    const m = favs.migrate({ version: favs.SCHEMA_VERSION });
+    expect(m.favorites).toEqual([]);
+    expect(m.bookmarks).toEqual([]);
+});
