@@ -550,6 +550,8 @@ pub enum Preset {
     OrganicIntradayTrendDay,        // gap_pct.abs() < 0.3 AND change_pct.abs() > 2 AND day_pct.abs() > 1 AND rel_volume between 0.7 and 1.3 — no gap + significant change + clear intraday on normal vol (organic intraday trend day)
     TightRangeFlatDayHotVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume >= 2 — tight range + flat intraday + hot vol (extreme absorption coil)
     TightRangeFlatDayDryVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume < 0.5 — tight range + flat intraday + dry vol (deep sleep; no participation)
+    HodHotVolMicroRange,            // hod_dist_pct.abs() < 0.2 AND 0.5 <= lod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at HOD with wider intraday range on hot vol (controlled mark-up)
+    LodHotVolMicroRange,            // lod_dist_pct.abs() < 0.2 AND 0.5 <= hod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at LOD with wider intraday range on hot vol (controlled mark-down)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2866,6 +2868,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.2
                 && hit.rel_volume < 0.5
         }
+        Preset::HodHotVolMicroRange => {
+            hit.hod_dist_pct.abs() < 0.2
+                && hit.lod_dist_pct.abs() >= 0.5
+                && hit.lod_dist_pct.abs() <= 2.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::LodHotVolMicroRange => {
+            hit.lod_dist_pct.abs() < 0.2
+                && hit.hod_dist_pct.abs() >= 0.5
+                && hit.hod_dist_pct.abs() <= 2.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -3306,6 +3320,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::OrganicIntradayTrendDay => "Organic Intraday Trend Day (No Gap, Big Change, Normal Vol)",
         Preset::TightRangeFlatDayHotVol => "Tight Range + Flat Intraday + Hot Vol (Absorption Coil)",
         Preset::TightRangeFlatDayDryVol => "Tight Range + Flat Intraday + Dry Vol (Deep Sleep)",
+        Preset::HodHotVolMicroRange => "Close Pinned at HOD + Wider Range + Hot Vol (Controlled Mark-up)",
+        Preset::LodHotVolMicroRange => "Close Pinned at LOD + Wider Range + Hot Vol (Controlled Mark-down)",
     }
 }
 

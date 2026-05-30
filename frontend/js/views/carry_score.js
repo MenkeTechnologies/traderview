@@ -53,6 +53,11 @@ export async function renderCarryScore(mount, _appState) {
             <div id="cs-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.carry_score.h2.diff_chart">Score sensitivity to rate differential (fixed vol)</h2>
+            <div id="cs-diff-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="cs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -98,6 +103,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderVolChart();
+    renderDiffChart();
     const tier = String(resp.tier || '');
     const score = Number(resp.carry_score || 0).toFixed(2);
     const level = tier === 'strong' ? 'success' : tier === 'okay' ? 'info' : 'warning';
@@ -142,6 +148,47 @@ function renderVolChart() {
         axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
         legend: { show: true },
     }, [xs, ys, strong, okay], el);
+}
+
+function renderDiffChart() {
+    const el = document.getElementById('cs-diff-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const vol = state.annualized_vol;
+    if (!Number.isFinite(vol) || vol <= 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.carry_score.empty_diff_chart">${esc(t('view.carry_score.empty_diff_chart'))}</div>`;
+        return;
+    }
+    const xs = [];
+    const ys = [];
+    const strong = [];
+    const okay = [];
+    const negStrong = [];
+    for (let d = -0.10; d <= 0.10 + 1e-9; d += 0.005) {
+        xs.push(d);
+        ys.push(d / vol);
+        strong.push(1.0);
+        okay.push(0.5);
+        negStrong.push(-1.0);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.carry_score.chart.diff') },
+            { label: t('view.carry_score.chart.score'),
+              stroke: '#7af0a8', width: 1.6,
+              points: { show: false } },
+            { label: t('view.carry_score.chart.strong'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.carry_score.chart.okay'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.carry_score.chart.neg_strong'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, strong, okay, negStrong], el);
 }
 
 function renderSummary(report, pending) {

@@ -432,6 +432,8 @@ const PRESETS = [
     { id: 'organic_intraday_trend_day', label: t('view.scanners.preset.organic_intraday_trend_day.label'), desc: t('view.scanners.preset.organic_intraday_trend_day.desc') },
     { id: 'tight_range_flat_day_hot_vol', label: t('view.scanners.preset.tight_range_flat_day_hot_vol.label'), desc: t('view.scanners.preset.tight_range_flat_day_hot_vol.desc') },
     { id: 'tight_range_flat_day_dry_vol', label: t('view.scanners.preset.tight_range_flat_day_dry_vol.label'), desc: t('view.scanners.preset.tight_range_flat_day_dry_vol.desc') },
+    { id: 'hod_hot_vol_micro_range', label: t('view.scanners.preset.hod_hot_vol_micro_range.label'), desc: t('view.scanners.preset.hod_hot_vol_micro_range.desc') },
+    { id: 'lod_hot_vol_micro_range', label: t('view.scanners.preset.lod_hot_vol_micro_range.label'), desc: t('view.scanners.preset.lod_hot_vol_micro_range.desc') },
 ];
 
 export async function renderScanners(mount) {
