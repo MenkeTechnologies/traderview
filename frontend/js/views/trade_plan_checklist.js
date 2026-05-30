@@ -14,6 +14,7 @@ import {
 } from '../_trade_plan_checklist_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 let state = {
     plan: makeDemoData('good'),
     config: { ...DEFAULT_CONFIG },
@@ -28,26 +29,27 @@ export async function renderTradePlanChecklist(mount, _appState) {
             <h2 data-i18n="view.trade_plan_checklist.h2.planned_trade">Planned trade</h2>
             <label style="display:block;margin-bottom:6px"><span data-i18n="view.trade_plan_checklist.label.thesis">Thesis (free text)</span>
                 <textarea id="tpc-thesis" rows="3" placeholder="Why does this work? Catalyst? Setup? Confirmation?"
-                          data-i18n-placeholder="view.trade_plan_checklist.placeholder.thesis">${esc(state.plan.thesis)}</textarea>
+                          data-i18n-placeholder="view.trade_plan_checklist.placeholder.thesis"
+                          data-tip="view.trade_plan_checklist.tip.thesis">${esc(state.plan.thesis)}</textarea>
             </label>
             <div class="inline-form">
                 <label><span data-i18n="view.trade_plan_checklist.label.side">Side</span>
-                    <select id="tpc-side">
+                    <select id="tpc-side" data-tip="view.trade_plan_checklist.tip.side">
                         <option data-i18n="view.trade_plan_checklist.opt.long" value="long"  ${state.plan.is_long  ? 'selected' : ''}>Long</option>
                         <option data-i18n="view.trade_plan_checklist.opt.short" value="short" ${!state.plan.is_long ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.entry">Entry $</span>
-                    <input id="tpc-entry" type="number" step="any" min="0" value="${state.plan.entry_price}"></label>
+                    <input id="tpc-entry" type="number" step="any" min="0" value="${state.plan.entry_price}" data-tip="view.trade_plan_checklist.tip.entry"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.stop">Stop $ (blank = none)</span>
-                    <input id="tpc-stop"  type="number" step="any" min="0" value="${state.plan.stop_price ?? ''}"></label>
+                    <input id="tpc-stop"  type="number" step="any" min="0" value="${state.plan.stop_price ?? ''}" data-tip="view.trade_plan_checklist.tip.stop"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.target">Target $ (blank = none)</span>
-                    <input id="tpc-tgt"   type="number" step="any" min="0" value="${state.plan.target_price ?? ''}"></label>
+                    <input id="tpc-tgt"   type="number" step="any" min="0" value="${state.plan.target_price ?? ''}" data-tip="view.trade_plan_checklist.tip.target"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.trade_plan_checklist.label.risk">Risk $ (notional dollars on this trade)</span>
-                    <input id="tpc-risk" type="number" step="any" min="0" value="${state.plan.risk_dollars}"></label>
+                    <input id="tpc-risk" type="number" step="any" min="0" value="${state.plan.risk_dollars}" data-tip="view.trade_plan_checklist.tip.risk"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.equity">Account equity $</span>
-                    <input id="tpc-eq" type="number" step="any" min="0" value="${state.plan.account_equity}"></label>
+                    <input id="tpc-eq" type="number" step="any" min="0" value="${state.plan.account_equity}" data-tip="view.trade_plan_checklist.tip.equity"></label>
             </div>
         </div>
 
@@ -55,21 +57,21 @@ export async function renderTradePlanChecklist(mount, _appState) {
             <h2 data-i18n="view.trade_plan_checklist.h2.gate_config">Gate config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.trade_plan_checklist.label.min_words">Min thesis words</span>
-                    <input id="tpc-mw" type="number" step="1" min="0" value="${state.config.min_thesis_words}"></label>
+                    <input id="tpc-mw" type="number" step="1" min="0" value="${state.config.min_thesis_words}" data-tip="view.trade_plan_checklist.tip.min_words"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.min_r">Min R-multiple</span>
-                    <input id="tpc-mr" type="number" step="any" min="0" value="${state.config.min_r_multiple}"></label>
+                    <input id="tpc-mr" type="number" step="any" min="0" value="${state.config.min_r_multiple}" data-tip="view.trade_plan_checklist.tip.min_r"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.max_risk_pct">Max risk % (decimal — 0.02 = 2%)</span>
-                    <input id="tpc-mrp" type="number" step="any" min="0" max="1" value="${state.config.max_risk_pct_per_trade}"></label>
-                <button data-i18n="view.trade_plan_checklist.btn.evaluate" id="tpc-run" class="primary" type="button">Evaluate</button>
+                    <input id="tpc-mrp" type="number" step="any" min="0" max="1" value="${state.config.max_risk_pct_per_trade}" data-tip="view.trade_plan_checklist.tip.max_risk_pct"></label>
+                <button data-i18n="view.trade_plan_checklist.btn.evaluate" id="tpc-run" class="primary" type="button" data-tip="view.trade_plan_checklist.tip.run" data-shortcut="trade_plan_checklist_run">Evaluate</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.trade_plan_checklist.btn.demo_good_plan" id="tpc-demo-good"     class="secondary" type="button">Demo: GOOD plan</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_missing_stop" id="tpc-demo-no-stop"  class="secondary" type="button">Demo: missing stop</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_weak_r" id="tpc-demo-weak-r"   class="secondary" type="button">Demo: weak R</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_oversize_risk" id="tpc-demo-oversize" class="secondary" type="button">Demo: oversize risk</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_wrong_direction" id="tpc-demo-wrong"    class="secondary" type="button">Demo: wrong direction</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_short_good" id="tpc-demo-short"    class="secondary" type="button">Demo: SHORT (good)</button>
-                <button data-i18n="view.trade_plan_checklist.btn.demo_no_thesis" id="tpc-demo-noth"     class="secondary" type="button">Demo: no thesis</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_good_plan" id="tpc-demo-good"     class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_good">Demo: GOOD plan</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_missing_stop" id="tpc-demo-no-stop"  class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_no_stop">Demo: missing stop</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_weak_r" id="tpc-demo-weak-r"   class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_weak_r">Demo: weak R</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_oversize_risk" id="tpc-demo-oversize" class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_oversize">Demo: oversize risk</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_wrong_direction" id="tpc-demo-wrong"    class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_wrong">Demo: wrong direction</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_short_good" id="tpc-demo-short"    class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_short">Demo: SHORT (good)</button>
+                <button data-i18n="view.trade_plan_checklist.btn.demo_no_thesis" id="tpc-demo-noth"     class="secondary" type="button" data-tip="view.trade_plan_checklist.tip.demo_noth">Demo: no thesis</button>
             </div>
         </div>
 
@@ -142,7 +144,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state.plan, state.config);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.trade_plan_checklist.toast.invalid'), { level: 'warning' }); return; }
 
     const local = localEvaluate(state.plan, state.config);
     renderSummary(local, true);
@@ -154,13 +156,19 @@ async function compute(tok) {
     try {
         resp = await api.discTradePlanChecklist(buildBody(state.plan, state.config));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        showErr(t("common.error.api", { msg: e.message || e }));
+        showToast(t('view.trade_plan_checklist.toast.api_error'), { level: 'error' });
+        return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(resp, false);
     renderGates(resp);
     renderGatesChart(resp);
     renderRrChart(resp);
+    const pass = !!resp.passed;
+    const gates = Array.isArray(resp.gates) ? resp.gates : [];
+    const failed = gates.filter(g => g && !g.passed).length;
+    showToast(t(pass ? 'view.trade_plan_checklist.toast.passed' : 'view.trade_plan_checklist.toast.failed', { failed }), { level: pass ? 'success' : 'warning' });
 }
 
 function renderRrChart(report) {
