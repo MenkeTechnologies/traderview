@@ -175,7 +175,7 @@ function renderProgress(r) {
             <div class="gt-bar-label" data-i18n="view.goal_tracker.bar.return_vs_target">Return vs target</div>
             <div class="dl-bar-track">
                 <div class="dl-bar-fill ${fillCls}" data-pct="${fillPct}"></div>
-                <div class="dl-bar-label">${esc(fmtPct(r.current_pct_return))} of ${esc(fmtPct(r.target_pct_return))} target · ${esc(fmtPct(r.pct_of_target, 0))} of target</div>
+                <div class="dl-bar-label">${esc(t('view.goal_tracker.bar.return_target', { current: fmtPct(r.current_pct_return), target: fmtPct(r.target_pct_return), pct: fmtPct(r.pct_of_target, 0) }))}</div>
             </div>
         </div>
         <div class="gt-bar-row" style="margin-top:8px">
@@ -189,7 +189,7 @@ function renderProgress(r) {
             <div class="gt-bar-label" data-i18n="view.goal_tracker.bar.period_elapsed">Period elapsed</div>
             <div class="dl-bar-track">
                 <div class="dl-bar-fill dl-fill-warn" data-pct="${r.days_total > 0 ? Math.max(0, Math.min(100, r.days_elapsed / r.days_total * 100)).toFixed(2) : 0}"></div>
-                <div class="dl-bar-label">${r.days_elapsed} of ${r.days_total} days</div>
+                <div class="dl-bar-label">${esc(t('view.goal_tracker.bar.days_progress', { elapsed: r.days_elapsed, total: r.days_total }))}</div>
             </div>
         </div>
     `;

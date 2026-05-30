@@ -171,7 +171,7 @@ function renderBar(pct, stateKey) {
             <div class="dl-bar-mark dl-mark-warn" data-pct="${wPct}"></div>
             <div class="dl-bar-mark dl-mark-cut"  data-pct="${cPct}"></div>
             <div class="dl-bar-mark dl-mark-kill" data-pct="${kPct}"></div>
-            <div class="dl-bar-label">${esc(fmtPct(pct))} of binding limit ${esc(fmtUSD(localEvaluate(state.params).limit))}</div>
+            <div class="dl-bar-label">${esc(t('view.daily_loss_limit.bar.of_binding_limit', { pct: fmtPct(pct), limit: fmtUSD(localEvaluate(state.params).limit) }))}</div>
         </div>
         <div class="dl-bar-legend">
             <span class="dl-legend-warn">▎ warning ${wPct}%</span>

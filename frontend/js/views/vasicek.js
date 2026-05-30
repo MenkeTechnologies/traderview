@@ -151,7 +151,7 @@ function renderSummary(res) {
         card(t('view.vasicek.card.mean_reversion_half_life'), fmtYears(hl)),
         card(t('view.vasicek.card.simulation_horizon'), fmtYears(horizon)),
         card(t('view.vasicek.card.paths_that_went_negative'),
-            `${negPct.toFixed(1)}% (${Math.round(negPct / 100 * res.paths_run)} of ${res.paths_run})`,
+            t('view.vasicek.row.neg_pct', { pct: negPct.toFixed(1), count: Math.round(negPct / 100 * res.paths_run), total: res.paths_run }),
             negPct > 0 ? 'neg' : 'pos'),
     ].join('');
 }

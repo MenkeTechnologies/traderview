@@ -195,7 +195,7 @@ function renderStatic(report, pending) {
         card(t('view.kelly.card.recommended_f'),   fmtPct(report.recommended_f, 2),
             report.recommended_f > 0 ? 'pos' : ''),
         card(t('view.kelly.card.note'),            report.note || '—'),
-        card(t('view.kelly.card.p_b_vs_q'),      `${(state.winRate * state.payoffRatio).toFixed(3)} vs ${(1 - state.winRate).toFixed(3)}`,
+        card(t('view.kelly.card.p_b_vs_q'),      t('view.kelly.row.p_b_vs_q_value', { pb: (state.winRate * state.payoffRatio).toFixed(3), q: (1 - state.winRate).toFixed(3) }),
             (state.winRate * state.payoffRatio) > (1 - state.winRate) ? 'pos' : 'neg'),
         card(t('view.kelly.card.local_parity'),    parityOk ? t('common.ok') : t('common.diverged'), parityOk ? 'pos' : 'neg'),
     ].join('');
