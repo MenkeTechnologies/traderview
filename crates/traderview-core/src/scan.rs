@@ -146,6 +146,8 @@ pub enum Preset {
     SymmetricSqueeze,   // identical HOD/LOD distances AND change near zero AND gap near zero AND quiet
     OpenCloseSqueeze,   // |day_pct| < 0.3 (close near open) AND quiet vol — open/close almost equal
     TightHodSqueeze,    // pressed to HOD (<0.3%) but change < 1% AND quiet vol — wound spring at high
+    TightLodSqueeze,    // pressed to LOD (<0.3%) but change > -1% AND quiet vol — wound spring at low
+    NoGapNoChangeSqueeze, // gap≈0 + change≈0 + tight day + quiet vol — overnight + intraday total stall
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -242,6 +244,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 1.0
                 && hit.rel_volume < 0.8
         }
+        Preset::TightLodSqueeze => {
+            hit.lod_dist_pct.abs() < 0.3
+                && hit.change_pct.abs() < 1.0
+                && hit.rel_volume < 0.8
+        }
+        Preset::NoGapNoChangeSqueeze => {
+            hit.gap_pct.abs() < 0.2
+                && hit.change_pct.abs() < 0.2
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -278,6 +291,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SymmetricSqueeze => "Symmetric Squeeze",
         Preset::OpenCloseSqueeze => "Open=Close Squeeze",
         Preset::TightHodSqueeze => "Tight-HOD Squeeze",
+        Preset::TightLodSqueeze => "Tight-LOD Squeeze",
+        Preset::NoGapNoChangeSqueeze => "No-Gap-No-Change Squeeze",
     }
 }
 

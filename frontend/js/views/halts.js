@@ -35,6 +35,10 @@ export async function renderHalts(mount, _state) {
                 <tbody><tr><td colspan="6" class="muted" data-i18n="common.connecting">connecting…</td></tr></tbody>
             </table>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.halts.h2.reason_chart">Halt count by reason code</h2>
+            <div id="halts-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#halt-voice').addEventListener('change', (e) => {
         voiceOn = e.target.checked;
@@ -117,6 +121,42 @@ function render() {
             <td>${esc(h.resumption_trade_time || '—')}</td>
         </tr>
     `).join('');
+    renderReasonChart(all);
+}
+
+function renderReasonChart(all) {
+    const el = document.getElementById('halts-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!all || all.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.halts.empty_chart">${esc(t('view.halts.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const h of all) {
+        const code = h.reason_code || '?';
+        counts.set(code, (counts.get(code) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([c]) => c);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.halts.chart.reason_idx') },
+            { label: t('view.halts.chart.count'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function reasonClass(code) {

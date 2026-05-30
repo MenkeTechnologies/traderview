@@ -28,6 +28,8 @@ const PRESETS = [
     { id: 'symmetric_squeeze',    label: t('view.scanners.preset.symmetric_squeeze.label'),    desc: t('view.scanners.preset.symmetric_squeeze.desc') },
     { id: 'open_close_squeeze',   label: t('view.scanners.preset.open_close_squeeze.label'),   desc: t('view.scanners.preset.open_close_squeeze.desc') },
     { id: 'tight_hod_squeeze',    label: t('view.scanners.preset.tight_hod_squeeze.label'),    desc: t('view.scanners.preset.tight_hod_squeeze.desc') },
+    { id: 'tight_lod_squeeze',    label: t('view.scanners.preset.tight_lod_squeeze.label'),    desc: t('view.scanners.preset.tight_lod_squeeze.desc') },
+    { id: 'no_gap_no_change_squeeze', label: t('view.scanners.preset.no_gap_no_change_squeeze.label'), desc: t('view.scanners.preset.no_gap_no_change_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
