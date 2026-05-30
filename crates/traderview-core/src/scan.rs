@@ -294,6 +294,8 @@ pub enum Preset {
     GapDownButDayGreen,          // gap_pct < -1 AND change_pct > 1 — gapped down overnight but day closed green (reversal)
     GapUpFlushOnVolume,          // gap_pct > 2 AND change_pct < -2 AND rel_volume >= 2 — failed open with heavy participation (distribution)
     GapDownReversalOnVolume,     // gap_pct < -2 AND change_pct > 2 AND rel_volume >= 2 — gap-down reversal with heavy participation (accumulation)
+    Pct52wTopDecileHotVol,       // year_high_pct > -10 AND rel_volume >= 2 — within 10% of 52w high on heavy volume (breakout candidate)
+    Pct52wBottomDecileHotVol,    // year_low_pct < 10 AND rel_volume >= 2 — within 10% of 52w low on heavy volume (capitulation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1189,6 +1191,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::Pct52wTopDecileHotVol => {
+            hit.year_high_pct > -10.0 && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wBottomDecileHotVol => {
+            hit.year_low_pct < 10.0 && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -1373,6 +1381,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownButDayGreen => "Gap-Down But Day Green",
         Preset::GapUpFlushOnVolume => "Gap-Up Flush On Volume",
         Preset::GapDownReversalOnVolume => "Gap-Down Reversal On Volume",
+        Preset::Pct52wTopDecileHotVol => "52w Top-Decile on Hot Vol",
+        Preset::Pct52wBottomDecileHotVol => "52w Bottom-Decile on Hot Vol",
     }
 }
 

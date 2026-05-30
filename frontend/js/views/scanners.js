@@ -176,6 +176,8 @@ const PRESETS = [
     { id: 'gap_down_but_day_green', label: t('view.scanners.preset.gap_down_but_day_green.label'), desc: t('view.scanners.preset.gap_down_but_day_green.desc') },
     { id: 'gap_up_flush_on_volume', label: t('view.scanners.preset.gap_up_flush_on_volume.label'), desc: t('view.scanners.preset.gap_up_flush_on_volume.desc') },
     { id: 'gap_down_reversal_on_volume', label: t('view.scanners.preset.gap_down_reversal_on_volume.label'), desc: t('view.scanners.preset.gap_down_reversal_on_volume.desc') },
+    { id: 'pct52w_top_decile_hot_vol', label: t('view.scanners.preset.pct52w_top_decile_hot_vol.label'), desc: t('view.scanners.preset.pct52w_top_decile_hot_vol.desc') },
+    { id: 'pct52w_bottom_decile_hot_vol', label: t('view.scanners.preset.pct52w_bottom_decile_hot_vol.label'), desc: t('view.scanners.preset.pct52w_bottom_decile_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
