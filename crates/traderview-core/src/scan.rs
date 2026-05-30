@@ -1058,6 +1058,8 @@ pub enum Preset {
     UltraDeepAboveYearLowCloseAtLodHotVol,     // year_low_pct >= 50 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + close pinned to LOD + red close + hot vol (topping signal: extended-trend leader closes at the day's low on elevated participation; rare bearish-conviction tape in stretched territory worth a top-fade trade screen)
     UltraDeepBelowYearHighGapUpHotVol,         // year_high_pct >= 50 AND gap_pct > 2 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + hot vol (catalyst-driven turn candidate: beaten-down equity gaps up on news/earnings with elevated participation; potential institutional re-rating event worth a turnaround-trade screen)
     UltraDeepAboveYearLowGapDownHotVol,        // year_low_pct >= 50 AND gap_pct < -2 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + hot vol (catalyst-driven top candidate: extended-trend leader gaps down on news/earnings with elevated participation; potential institutional de-rating event worth a top-fade trade screen)
+    UltraDeepBelowYearHighGapUpFadedHotVol,    // year_high_pct >= 50 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) faded completely to LOD + red close + hot vol (failed turnaround catalyst: beaten-down equity attempts a catalyst-driven gap but sellers absorb the entire move on elevated participation; turnaround-thesis rejection that confirms downtrend control)
+    UltraDeepAboveYearLowGapDownAbsorbedHotVol, // year_low_pct >= 50 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) absorbed completely to HOD + green close + hot vol (failed topping catalyst: extended-trend leader attempts a catalyst-driven gap down but buyers absorb the entire move on elevated participation; top-fade thesis rejection that confirms uptrend control)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6504,6 +6506,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < -2.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::UltraDeepBelowYearHighGapUpFadedHotVol => {
+            hit.year_high_pct >= 50.0
+                && hit.gap_pct > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::UltraDeepAboveYearLowGapDownAbsorbedHotVol => {
+            hit.year_low_pct >= 50.0
+                && hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7452,6 +7468,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::UltraDeepAboveYearLowCloseAtLodHotVol => "Multibagger (>=50 % above 52w Low) + Close Pinned to LOD + Red Close + Hot Vol (Topping Signal: Extended-trend Leader Closes at the Day's Low on Elevated Participation; Rare Bearish-conviction Tape in Stretched Territory Worth a Top-fade Trade Screen)",
         Preset::UltraDeepBelowYearHighGapUpHotVol => "Distressed Stock (>=50 % below 52w High) + Gap Up (>2 %) + Hot Vol (Catalyst-driven Turn Candidate: Beaten-down Equity Gaps up on News/earnings with Elevated Participation; Potential Institutional Re-rating Event Worth a Turnaround-trade Screen)",
         Preset::UltraDeepAboveYearLowGapDownHotVol => "Multibagger (>=50 % above 52w Low) + Gap Down (<-2 %) + Hot Vol (Catalyst-driven Top Candidate: Extended-trend Leader Gaps down on News/earnings with Elevated Participation; Potential Institutional De-rating Event Worth a Top-fade Trade Screen)",
+        Preset::UltraDeepBelowYearHighGapUpFadedHotVol => "Distressed Stock (>=50 % below 52w High) + Gap Up (>2 %) Faded Completely to LOD + Red Close + Hot Vol (Failed Turnaround Catalyst: Beaten-down Equity Attempts a Catalyst-driven Gap but Sellers Absorb the Entire Move on Elevated Participation; Turnaround-thesis Rejection that Confirms Downtrend Control)",
+        Preset::UltraDeepAboveYearLowGapDownAbsorbedHotVol => "Multibagger (>=50 % above 52w Low) + Gap Down (<-2 %) Absorbed Completely to HOD + Green Close + Hot Vol (Failed Topping Catalyst: Extended-trend Leader Attempts a Catalyst-driven Gap down but Buyers Absorb the Entire Move on Elevated Participation; Top-fade Thesis Rejection that Confirms Uptrend Control)",
     }
 }
 
