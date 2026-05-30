@@ -151,7 +151,7 @@ function renderGrid(report) {
                 const pnl = dec(cell.net_pnl);
                 const klass = heatClass(pnl, maxAbs);
                 const title = cell.trades > 0
-                    ? `${cell.trades} trades · ${fmtUSDSigned(pnl)} · ${fmtPct(winRate(cell))} win`
+                    ? t('view.heatmap_dow_hour.cell.title', { trades: cell.trades, pnl: fmtUSDSigned(pnl), winRate: fmtPct(winRate(cell)) })
                     : '';
                 return `<td class="${klass}"
                     title="${esc(title)}"

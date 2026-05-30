@@ -7122,6 +7122,7 @@
   "view.heatmap_dow_hour.parse.date_iso":         "date must be YYYY-MM-DD",
   "view.heatmap_dow_hour.parse.hour_range":       "hour must be integer 0..23",
   "view.heatmap_dow_hour.parse.net_pnl_finite":   "net_pnl must be finite",
+  "view.heatmap_dow_hour.cell.title":             "{trades} trades · {pnl} · {winRate} win",
   "view.kyles_lambda.parse.expected_2_tokens":    "expected 2 tokens (price_change signed_volume)",
   "view.kyles_lambda.parse.price_change_finite":  "price_change not finite",
   "view.kyles_lambda.parse.signed_volume_finite": "signed_volume not finite",
