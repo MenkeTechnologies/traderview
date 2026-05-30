@@ -1046,6 +1046,8 @@ pub enum Preset {
     DryVolBigDownNearYearLowHotVol,            // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct < 2 — big down move (<-3%) + dry vol (<0.5) + at/near 52w low (<2%) (thin-tape breakdown: large losses push price to new lows but participation is below average; air-pocket move with little support, fragile if vol returns)
     DryVolBigUpConfirmedAboveYearHighHotVol,   // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — big up move (>3%) + dry vol (<0.5) + confirmed-breakout zone (1-3% past 52w high) (thin-tape extension after validated breakout: momentum continues on below-average participation past the prior peak; volume-unconfirmed extension prone to mean-reversion)
     DryVolBigDownConfirmedBelowYearLowHotVol,  // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — big down move (<-3%) + dry vol (<0.5) + confirmed-breakdown zone (1-3% past 52w low) (thin-tape extension after validated breakdown: momentum continues on below-average participation past the prior trough; volume-unconfirmed extension prone to mean-reversion)
+    DryVolBigUpDeepBelowYearHighHotVol,        // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 20 — big up move (>3%) + dry vol (<0.5) + far below 52w high (>=20%) (unconvincing recovery rally: large gains deep in the pullback territory on below-average participation; sympathy/short-cover bounce lacking institutional buy-in, fragile if vol returns)
+    DryVolBigDownDeepAboveYearLowHotVol,       // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 20 — big down move (<-3%) + dry vol (<0.5) + far above 52w low (>=20%) (unconvincing pullback: large losses deep in the advance territory on below-average participation; sympathy/long-unwind dip lacking institutional sell-in, fragile if vol returns)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6430,6 +6432,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= -3.0
                 && hit.year_low_pct <= -1.0
         }
+        Preset::DryVolBigUpDeepBelowYearHighHotVol => {
+            hit.change_pct > 3.0
+                && hit.rel_volume < 0.5
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::DryVolBigDownDeepAboveYearLowHotVol => {
+            hit.change_pct < -3.0
+                && hit.rel_volume < 0.5
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -7366,6 +7378,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolBigDownNearYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + At/near 52w Low (<2 %) (Thin-tape Breakdown: Large Losses Push Price to New Lows but Participation Is below Average; Air-pocket Move with Little Support, Fragile if Vol Returns)",
         Preset::DryVolBigUpConfirmedAboveYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Confirmed-breakout Zone (1-3 % past 52w High) (Thin-tape Extension after Validated Breakout: Momentum Continues on Below-average Participation past the Prior Peak; Volume-unconfirmed Extension Prone to Mean-reversion)",
         Preset::DryVolBigDownConfirmedBelowYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Thin-tape Extension after Validated Breakdown: Momentum Continues on Below-average Participation past the Prior Trough; Volume-unconfirmed Extension Prone to Mean-reversion)",
+        Preset::DryVolBigUpDeepBelowYearHighHotVol => "Big Up Move (>3 %) + Dry Vol (<0.5) + Far below 52w High (>=20 %) (Unconvincing Recovery Rally: Large Gains Deep in the Pullback Territory on Below-average Participation; Sympathy/short-cover Bounce Lacking Institutional Buy-in, Fragile if Vol Returns)",
+        Preset::DryVolBigDownDeepAboveYearLowHotVol => "Big Down Move (<-3 %) + Dry Vol (<0.5) + Far above 52w Low (>=20 %) (Unconvincing Pullback: Large Losses Deep in the Advance Territory on Below-average Participation; Sympathy/long-unwind Dip Lacking Institutional Sell-in, Fragile if Vol Returns)",
     }
 }
 
