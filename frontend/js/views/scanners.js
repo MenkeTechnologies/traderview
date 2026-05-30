@@ -608,6 +608,8 @@ const PRESETS = [
     { id: 'compound_confirmed_big_red', label: t('view.scanners.preset.compound_confirmed_big_red.label'), desc: t('view.scanners.preset.compound_confirmed_big_red.desc') },
     { id: 'follow_through_green', label: t('view.scanners.preset.follow_through_green.label'), desc: t('view.scanners.preset.follow_through_green.desc') },
     { id: 'follow_through_red', label: t('view.scanners.preset.follow_through_red.label'), desc: t('view.scanners.preset.follow_through_red.desc') },
+    { id: 'year52_high_gap_down_strong_close_hot_vol', label: t('view.scanners.preset.year52_high_gap_down_strong_close_hot_vol.label'), desc: t('view.scanners.preset.year52_high_gap_down_strong_close_hot_vol.desc') },
+    { id: 'year52_low_gap_up_weak_close_hot_vol', label: t('view.scanners.preset.year52_low_gap_up_weak_close_hot_vol.label'), desc: t('view.scanners.preset.year52_low_gap_up_weak_close_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {

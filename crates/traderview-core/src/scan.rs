@@ -726,6 +726,8 @@ pub enum Preset {
     CompoundConfirmedBigRed,           // change_pct < -3 AND day_pct < -1 AND gap_pct < -0.5 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big red close + red intraday + negative gap + close near LOD + decent vol (every signal aligned bearish; full conviction down day; max-confirmation short candidate)
     FollowThroughGreen,                // change_pct in [1, 3] AND day_pct in [0.5, 2] AND gap_pct in [-0.5, 0.5] AND hod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest green + green intraday + small gap + close near HOD + above-avg vol (clean follow-through up day; no catalyst spike, just steady accumulation with intraday confirmation)
     FollowThroughRed,                  // change_pct in [-3, -1] AND day_pct in [-2, -0.5] AND gap_pct in [-0.5, 0.5] AND lod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest red + red intraday + small gap + close near LOD + above-avg vol (clean follow-through down day; no catalyst spike, just steady distribution with intraday confirmation)
+    Year52HighGapDownStrongCloseHotVol,  // year_high_pct < 3 AND gap_pct < -0.5 AND change_pct > 1 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + gap down + green close + close near HOD + decent vol (resilience day at the highs; gap rejected, recovered and closed strong; bullish continuation candidate)
+    Year52LowGapUpWeakCloseHotVol,       // year_low_pct < 3 AND gap_pct > 0.5 AND change_pct < -1 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + gap up + red close + close near LOD + decent vol (rejection day at the lows; relief gap faded, sold all day to close weak; bearish continuation candidate)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -4063,6 +4065,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.2
                 && hit.rel_volume <= 2.0
         }
+        Preset::Year52HighGapDownStrongCloseHotVol => {
+            hit.year_high_pct < 3.0
+                && hit.gap_pct < -0.5
+                && hit.change_pct > 1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::Year52LowGapUpWeakCloseHotVol => {
+            hit.year_low_pct < 3.0
+                && hit.gap_pct > 0.5
+                && hit.change_pct < -1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -4679,6 +4695,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CompoundConfirmedBigRed => "Big Red + Red Intraday + Negative Gap + Close Near LOD + Decent Vol (Every Signal Aligned Bearish; Max-confirmation Short Candidate)",
         Preset::FollowThroughGreen => "Modest Green + Green Intraday + Small Gap + Close Near HOD + Above-avg Vol (Clean Follow-through Up Day; Steady Accumulation with Intraday Confirmation)",
         Preset::FollowThroughRed => "Modest Red + Red Intraday + Small Gap + Close Near LOD + Above-avg Vol (Clean Follow-through Down Day; Steady Distribution with Intraday Confirmation)",
+        Preset::Year52HighGapDownStrongCloseHotVol => "Near 52w High + Gap Down + Green Close + Close Near HOD + Decent Vol (Resilience Day at the Highs; Gap Rejected, Closed Strong)",
+        Preset::Year52LowGapUpWeakCloseHotVol => "Near 52w Low + Gap Up + Red Close + Close Near LOD + Decent Vol (Rejection Day at the Lows; Relief Gap Faded, Closed Weak)",
     }
 }
 

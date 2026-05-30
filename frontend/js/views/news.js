@@ -40,6 +40,12 @@ export async function renderNews(mount) {
             <div id="n-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.news.h2.symbol_sentiment_chart">Average sentiment per symbol</h2>
+            <div id="n-symbol-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.news.hint.symbol_sentiment" class="muted small">Mean sentiment across all loaded items per symbol. Yellow dashed = neutral. Reveals which tickers have the tape leaning bullish vs bearish independent of item count.</p>
+        </div>
+
         <div id="n-list"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
     `;
     mount.querySelector('#n-form').addEventListener('submit', async (e) => {
@@ -114,6 +120,50 @@ function renderList(el, items) {
     if (!items.length) { el.innerHTML = '<p data-i18n="view.news.hint.no_items" class="muted small">no items</p>'; return; }
     el.innerHTML = items.map(n => row(n)).join('');
     renderSentimentChart(items);
+    renderSymbolSentimentChart(items);
+}
+
+function renderSymbolSentimentChart(items) {
+    const el = document.getElementById('n-symbol-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const bySym = new Map();
+    for (const n of (items || [])) {
+        const s = Number(n.sentiment);
+        if (!Number.isFinite(s) || !n.symbol) continue;
+        const cur = bySym.get(n.symbol) || { sum: 0, n: 0 };
+        cur.sum += s; cur.n += 1;
+        bySym.set(n.symbol, cur);
+    }
+    if (bySym.size < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.news.empty_symbol_chart">${esc(t('view.news.empty_symbol_chart'))}</div>`;
+        return;
+    }
+    const pairs = Array.from(bySym.entries())
+        .map(([sym, c]) => [sym, c.sum / c.n])
+        .sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([s]) => s);
+    const ys = pairs.map(([, v]) => v);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.news.chart.symbol_idx') },
+            { label: t('view.news.chart.avg_sentiment'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.news.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSentimentChart(items) {
