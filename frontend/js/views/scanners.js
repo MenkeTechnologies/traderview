@@ -392,6 +392,8 @@ const PRESETS = [
     { id: 'illiquid_swing_dry_vol', label: t('view.scanners.preset.illiquid_swing_dry_vol.label'), desc: t('view.scanners.preset.illiquid_swing_dry_vol.desc') },
     { id: 'gap_down_intraday_reclaim_up', label: t('view.scanners.preset.gap_down_intraday_reclaim_up.label'), desc: t('view.scanners.preset.gap_down_intraday_reclaim_up.desc') },
     { id: 'gap_up_intraday_reject_down', label: t('view.scanners.preset.gap_up_intraday_reject_down.label'), desc: t('view.scanners.preset.gap_up_intraday_reject_down.desc') },
+    { id: 'hot_vol_moderate_change_flat_day', label: t('view.scanners.preset.hot_vol_moderate_change_flat_day.label'), desc: t('view.scanners.preset.hot_vol_moderate_change_flat_day.desc') },
+    { id: 'dry_vol_moderate_change_flat_day', label: t('view.scanners.preset.dry_vol_moderate_change_flat_day.label'), desc: t('view.scanners.preset.dry_vol_moderate_change_flat_day.desc') },
 ];
 
 export async function renderScanners(mount) {

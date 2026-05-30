@@ -63,6 +63,11 @@ export async function renderBetaShrink(mount, _appState) {
             <div id="bs-chart" style="width:100%;height:240px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.beta_shrink.h2.weight_chart">Shrinkage weight per asset (w)</h2>
+            <div id="bs-weight-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="bs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -105,6 +110,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderBetaChart(local);
+    renderWeightChart(local);
     let resp;
     try {
         resp = await api.anlyBetaShrinkage(buildBody(state));
@@ -117,6 +123,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderTable(resp);
     renderBetaChart(resp);
+    renderWeightChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -221,6 +228,40 @@ function renderBetaChart(report) {
         ],
         legend: { show: true },
     }, [xs, ols, shrunk], el);
+}
+
+function renderWeightChart(report) {
+    const el = document.getElementById('bs-weight-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.assets) || report.assets.length === 0) {
+        el.innerHTML = `<div class="muted" data-i18n="view.beta_shrink.empty_weight_chart">${esc(t('view.beta_shrink.empty_weight_chart'))}</div>`;
+        return;
+    }
+    const sorted = [...report.assets].sort((a, b) => b.shrinkage_weight - a.shrinkage_weight);
+    const labels = sorted.map(a => a.symbol);
+    const ws = sorted.map(a => Number.isFinite(a.shrinkage_weight) ? a.shrinkage_weight * 100 : null);
+    const xs = labels.map((_, i) => i + 1);
+    const half = xs.map(() => 50);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { range: [0, 100] } },
+        series: [
+            { label: t('view.beta_shrink.chart.asset_idx') },
+            { label: t('view.beta_shrink.chart.weight_pct'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.beta_shrink.chart.half'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50,
+              values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
+        ],
+        legend: { show: true },
+    }, [xs, ws, half], el);
 }
 
 function card(label, value, cls = '') {

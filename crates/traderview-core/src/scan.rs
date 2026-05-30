@@ -510,6 +510,8 @@ pub enum Preset {
     IlliquidSwingDryVol,            // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — wide intraday range + flat change + dry vol (illiquid swing both directions)
     GapDownIntradayReclaimUp,       // gap_pct < -1 AND hod_dist.abs() < 0.5 AND change_pct > 0.5 — gap down + close at HOD + close above prior (full intraday reclaim + extension)
     GapUpIntradayRejectDown,        // gap_pct > 1 AND lod_dist.abs() < 0.5 AND change_pct < -0.5 — gap up + close at LOD + close below prior (full intraday rejection)
+    HotVolModerateChangeFlatDay,    // rel_volume >= 2 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — hot vol + moderate change + flat intraday (gap-driven move, no continuation)
+    DryVolModerateChangeFlatDay,    // rel_volume < 0.6 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — dry vol + moderate change + flat intraday (sleepy gap-held move)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2585,6 +2587,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
                 && hit.change_pct < -0.5
         }
+        Preset::HotVolModerateChangeFlatDay => {
+            hit.rel_volume >= 2.0
+                && hit.change_pct.abs() >= 1.0
+                && hit.change_pct.abs() <= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::DryVolModerateChangeFlatDay => {
+            hit.rel_volume < 0.6
+                && hit.change_pct.abs() >= 1.0
+                && hit.change_pct.abs() <= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -2985,6 +2999,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::IlliquidSwingDryVol => "Illiquid Swing (Wide Range, Flat Change, Dry Vol)",
         Preset::GapDownIntradayReclaimUp => "Gap Down + HOD Close + Reclaim Above Prior",
         Preset::GapUpIntradayRejectDown => "Gap Up + LOD Close + Reject Below Prior",
+        Preset::HotVolModerateChangeFlatDay => "Hot Vol + Moderate Change + Flat Intraday (Gap-Driven)",
+        Preset::DryVolModerateChangeFlatDay => "Dry Vol + Moderate Change + Flat Intraday (Sleepy Held)",
     }
 }
 
