@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_LAGS, MIN_LAGS, MAX_LAGS,
@@ -30,19 +31,20 @@ export async function renderArchLm(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.arch_lm.label.lags">Lags (q)</span>
-                    <input id="arl-lags" type="number" step="1" min="${MIN_LAGS}" max="${MAX_LAGS}" value="${state.lags}"></label>
+                    <input id="arl-lags" type="number" step="1" min="${MIN_LAGS}" max="${MAX_LAGS}" value="${state.lags}"
+                           data-tip="view.arch_lm.tip.lags"></label>
                 <button data-i18n="view.arch_lm.btn.compute" id="arl-run" class="primary"
-                        data-tip="view.arch_lm.tip.compute" type="button">Test</button>
+                        data-tip="view.arch_lm.tip.compute" data-shortcut="arch_lm_run" type="button">Test</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.arch_lm.btn.demo_strong" id="arl-d1" class="secondary" type="button">Demo: ARCH(1) strong</button>
-                <button data-i18n="view.arch_lm.btn.demo_mild"   id="arl-d2" class="secondary" type="button">Demo: ARCH(1) mild</button>
-                <button data-i18n="view.arch_lm.btn.demo_garch"  id="arl-d3" class="secondary" type="button">Demo: GARCH(1,1)-like</button>
-                <button data-i18n="view.arch_lm.btn.demo_iid"    id="arl-d4" class="secondary" type="button">Demo: iid Gaussian</button>
-                <button data-i18n="view.arch_lm.btn.demo_lap"    id="arl-d5" class="secondary" type="button">Demo: iid Laplace</button>
-                <button data-i18n="view.arch_lm.btn.demo_regime" id="arl-d6" class="secondary" type="button">Demo: short-memory regime</button>
-                <button data-i18n="view.arch_lm.btn.demo_few"    id="arl-d7" class="secondary" type="button">Demo: few obs (n=25)</button>
-                <button data-i18n="view.arch_lm.btn.demo_high"   id="arl-d8" class="secondary" type="button">Demo: high lags (q=10)</button>
+                <button data-i18n="view.arch_lm.btn.demo_strong" id="arl-d1" class="secondary" data-tip="view.arch_lm.tip.demo_strong" type="button">Demo: ARCH(1) strong</button>
+                <button data-i18n="view.arch_lm.btn.demo_mild"   id="arl-d2" class="secondary" data-tip="view.arch_lm.tip.demo_mild"   type="button">Demo: ARCH(1) mild</button>
+                <button data-i18n="view.arch_lm.btn.demo_garch"  id="arl-d3" class="secondary" data-tip="view.arch_lm.tip.demo_garch"  type="button">Demo: GARCH(1,1)-like</button>
+                <button data-i18n="view.arch_lm.btn.demo_iid"    id="arl-d4" class="secondary" data-tip="view.arch_lm.tip.demo_iid"    type="button">Demo: iid Gaussian</button>
+                <button data-i18n="view.arch_lm.btn.demo_lap"    id="arl-d5" class="secondary" data-tip="view.arch_lm.tip.demo_lap"    type="button">Demo: iid Laplace</button>
+                <button data-i18n="view.arch_lm.btn.demo_regime" id="arl-d6" class="secondary" data-tip="view.arch_lm.tip.demo_regime" type="button">Demo: short-memory regime</button>
+                <button data-i18n="view.arch_lm.btn.demo_few"    id="arl-d7" class="secondary" data-tip="view.arch_lm.tip.demo_few"    type="button">Demo: few obs (n=25)</button>
+                <button data-i18n="view.arch_lm.btn.demo_high"   id="arl-d8" class="secondary" data-tip="view.arch_lm.tip.demo_high"   type="button">Demo: high lags (q=10)</button>
             </div>
             <p data-i18n="view.arch_lm.hint.about" class="muted">Regresses ê²ₜ on q lagged squared residuals. LM = (n−q)·R² ~ χ²(q) under H₀ (homoscedasticity). Reject when LM exceeds tabulated χ²(q) critical value — implies GARCH-style modeling is warranted.</p>
         </div>
@@ -93,6 +95,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.arch_lm.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.arch_lm.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -104,9 +107,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.arch_lm.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.returns, state.lags);
-    if (!local) { showErr(t('view.arch_lm.err.degenerate')); return; }
+    if (!local) { showErr(t('view.arch_lm.err.degenerate')); showToast(t('view.arch_lm.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderCrit(local);
     renderStats();
@@ -117,15 +120,17 @@ async function compute(tok) {
         resp = await api.anlyArchLm(buildBody(state));
     } catch (e) {
         showErr(`${t('view.arch_lm.err.api')}: ${e.message || e}`);
+        showToast(t('view.arch_lm.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.arch_lm.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.arch_lm.err.server_rejected')); showToast(t('view.arch_lm.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderCrit(resp);
     renderStats();
     renderSqChart();
     renderRollChart();
+    showToast(t('view.arch_lm.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {

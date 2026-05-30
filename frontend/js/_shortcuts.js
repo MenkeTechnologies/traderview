@@ -247,6 +247,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'adl_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'adl',               descKey: 'shortcut.adl_run',                      actionKey: 'tv:adl-run' },
     { id: 'alma_run',                     keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'alma',              descKey: 'shortcut.alma_run',                     actionKey: 'tv:alma-run' },
     { id: 'amihud_run',                   keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'amihud',            descKey: 'shortcut.amihud_run',                   actionKey: 'tv:amihud-run' },
+    { id: 'arch_lm_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'arch-lm',           descKey: 'shortcut.arch_lm_run',                  actionKey: 'tv:arch-lm-run' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
