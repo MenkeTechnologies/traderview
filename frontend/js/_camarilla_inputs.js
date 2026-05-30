@@ -144,7 +144,7 @@ export function nearestLevelInfo(levels, current_price) {
     }
     const candidates = [
         ['H4', levels.h4], ['H3', levels.h3], ['H2', levels.h2], ['H1', levels.h1],
-        ['Pivot', levels.pivot],
+        [t('view.cam.lvl.pivot'), levels.pivot],
         ['L1', levels.l1], ['L2', levels.l2], ['L3', levels.l3], ['L4', levels.l4],
     ];
     let best = null;

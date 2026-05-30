@@ -46,7 +46,7 @@ export function validatePcaInputs(curves, topK) {
 
 /** Canonical factor names per Litterman & Scheinkman (1991). */
 export function factorName(idx) {
-    const NAMED = ['Level', 'Slope', 'Curvature'];
+    const NAMED = [t('view.yield_curve_pca.factor.level'), t('view.yield_curve_pca.factor.slope'), t('view.yield_curve_pca.factor.curvature')];
     return idx < NAMED.length ? NAMED[idx] : `PC${idx + 1}`;
 }
 
