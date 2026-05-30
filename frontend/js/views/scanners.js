@@ -312,6 +312,8 @@ const PRESETS = [
     { id: 'divergence_push_from_top', label: t('view.scanners.preset.divergence_push_from_top.label'), desc: t('view.scanners.preset.divergence_push_from_top.desc') },
     { id: 'divergence_push_from_bottom', label: t('view.scanners.preset.divergence_push_from_bottom.label'), desc: t('view.scanners.preset.divergence_push_from_bottom.desc') },
     { id: 'price_flat_vol_hot_above_mid', label: t('view.scanners.preset.price_flat_vol_hot_above_mid.label'), desc: t('view.scanners.preset.price_flat_vol_hot_above_mid.desc') },
+    { id: 'price_flat_vol_hot_below_mid', label: t('view.scanners.preset.price_flat_vol_hot_below_mid.label'), desc: t('view.scanners.preset.price_flat_vol_hot_below_mid.desc') },
+    { id: 'small_change_on_vol_mid', label: t('view.scanners.preset.small_change_on_vol_mid.label'), desc: t('view.scanners.preset.small_change_on_vol_mid.desc') },
 ];
 
 export async function renderScanners(mount) {

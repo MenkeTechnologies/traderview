@@ -430,6 +430,8 @@ pub enum Preset {
     DivergencePushFromTop,       // year_high_pct > -3 AND change_pct < -1 AND rel_volume < 0.8 — touched 52w high but closed red on light vol (divergence reject from top)
     DivergencePushFromBottom,    // year_low_pct < 3 AND change_pct > 1 AND rel_volume < 0.8 — touched 52w low but closed green on light vol (divergence reject from bottom)
     PriceFlatVolHotAboveMid,     // hod_dist + lod_dist < 2 AND day_pct > 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + above-mid + heavy vol (silent accumulation distribution)
+    PriceFlatVolHotBelowMid,     // hod_dist + lod_dist < 2 AND day_pct < 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + below-mid + heavy vol (silent distribution)
+    SmallChangeOnVolMid,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at mid range on heavy vol (mid-range positioning shift)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2047,6 +2049,21 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.change_pct.abs() < 0.3
         }
+        Preset::PriceFlatVolHotBelowMid => {
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
+                && hit.day_pct < 0.0
+                && hit.rel_volume >= 1.5
+                && hit.change_pct.abs() < 0.3
+        }
+        Preset::SmallChangeOnVolMid => {
+            hit.year_high_pct >= -50.0
+                && hit.year_high_pct <= -20.0
+                && hit.year_low_pct >= 20.0
+                && hit.year_low_pct <= 50.0
+                && hit.change_pct.abs() >= 0.5
+                && hit.change_pct.abs() <= 1.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -2367,6 +2384,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DivergencePushFromTop => "Divergence Reject From Top",
         Preset::DivergencePushFromBottom => "Divergence Reject From Bottom",
         Preset::PriceFlatVolHotAboveMid => "Silent Hot-Vol Above Mid",
+        Preset::PriceFlatVolHotBelowMid => "Silent Hot-Vol Below Mid",
+        Preset::SmallChangeOnVolMid => "Small Move + Vol at Mid Range",
     }
 }
 

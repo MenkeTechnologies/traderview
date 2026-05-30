@@ -68,6 +68,11 @@ export async function renderRiskReward(mount, _appState) {
             <div id="rr-chart" style="width:100%;height:200px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.risk_reward.h2.dollars_chart">Dollar risk vs reward vs net</h2>
+            <div id="rr-dollars-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="rr-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -117,6 +122,7 @@ async function compute(tok) {
     renderSummary(local.report, null, true);
     renderTable(local.report);
     renderLevelsChart();
+    renderDollarsChart(local.report);
     let resp;
     try {
         resp = await api.calcRiskReward(buildBody(state));
@@ -137,6 +143,54 @@ async function compute(tok) {
     renderSummary(normalized, local.report, false);
     renderTable(normalized);
     renderLevelsChart();
+    renderDollarsChart(normalized);
+}
+
+function renderDollarsChart(report) {
+    const el = document.getElementById('rr-dollars-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const risk = Number(report?.dollar_risk);
+    const reward = Number(report?.dollar_reward);
+    if (!Number.isFinite(risk) || !Number.isFinite(reward)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.risk_reward.empty_dollars_chart">${esc(t('view.risk_reward.empty_dollars_chart'))}</div>`;
+        return;
+    }
+    const labels = [
+        t('view.risk_reward.chart.risk_d'),
+        t('view.risk_reward.chart.net_d'),
+        t('view.risk_reward.chart.reward_d'),
+    ];
+    const xs = [1, 2, 3];
+    const riskY   = [-risk, null, null];
+    const netY    = [null, reward - risk, null];
+    const rewardY = [null, null, reward];
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.risk_reward.chart.bucket') },
+            { label: t('view.risk_reward.chart.risk_d'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 18, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.risk_reward.chart.net_d'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 18, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.risk_reward.chart.reward_d'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 18, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.risk_reward.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, riskY, netY, rewardY, zero], el);
 }
 
 function renderLevelsChart() {
