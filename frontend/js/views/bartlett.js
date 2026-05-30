@@ -52,6 +52,11 @@ export async function renderBartlett(mount, _appState) {
             <div id="bt-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.bartlett.h2.variance_chart">Group variances</h2>
+            <div id="bt-chart" style="width:100%;height:280px"></div>
+        </div>
+
         <div id="bt-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -90,6 +95,7 @@ async function compute(tok) {
     if (!local) { showErr(t('view.bartlett.err.degenerate')); return; }
     renderSummary(local, true);
     renderTable();
+    renderChart(local);
     let resp;
     try {
         resp = await api.anlyBartlettVariance(buildBody(state));
@@ -101,6 +107,7 @@ async function compute(tok) {
     if (!resp) { showErr(t('view.bartlett.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderTable();
+    renderChart(resp);
 }
 
 function renderSummary(report, pending) {
@@ -172,6 +179,46 @@ function renderTable() {
             <tbody>${rows}</tbody>
         </table>
     `;
+}
+
+function renderChart(report) {
+    const el = document.getElementById('bt-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const stats = groupStats(state.groups, state.labels);
+    const variances = stats.map(s => s.variance).filter(Number.isFinite);
+    if (!variances.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.bartlett.empty_chart">${esc(t('view.bartlett.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = stats.map((_, i) => i + 1);
+    const ys = stats.map(s => Number.isFinite(s.variance) ? s.variance : null);
+    const pooled = (report && Number.isFinite(report.pooled_variance)) ? report.pooled_variance : null;
+    const pooledYs = pooled != null ? xs.map(() => pooled) : null;
+    const series = [
+        { label: t('view.bartlett.chart.series.group_idx') },
+        { label: t('view.bartlett.chart.series.variance'),
+          stroke: '#00e5ff', width: 0,
+          points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+    ];
+    const data = [xs, ys];
+    if (pooledYs) {
+        series.push({ label: t('view.bartlett.chart.series.pooled'),
+                      stroke: '#ffd84a', width: 1.5, dash: [4, 4],
+                      points: { show: false } });
+        data.push(pooledYs);
+    }
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 260,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => stats[Math.round(v) - 1]?.label || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function card(label, value, cls = '') {
