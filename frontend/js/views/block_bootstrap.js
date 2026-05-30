@@ -70,6 +70,11 @@ export async function renderBlockBootstrap(mount, _appState) {
             <div id="bb-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.block_boot.h2.series_chart">Input series</h2>
+            <div id="bb-chart" style="width:100%;height:240px"></div>
+        </div>
+
         <div id="bb-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('bb-stat').value = state.statistic;
@@ -123,6 +128,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderCi(local);
     renderTable();
+    renderSeriesChart();
     let resp;
     try {
         resp = await api.anlyBlockBootstrap(buildBody(state));
@@ -135,6 +141,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderCi(resp);
     renderTable();
+    renderSeriesChart();
 }
 
 function renderSummary(report, pending) {
@@ -212,6 +219,37 @@ function renderTable() {
             </tbody>
         </table>
     `;
+}
+
+function renderSeriesChart() {
+    const el = document.getElementById('bb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const data = Array.isArray(state.data) ? state.data.filter(Number.isFinite) : [];
+    if (data.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.block_boot.empty_chart">${esc(t('view.block_boot.empty_chart'))}</div>`;
+        return;
+    }
+    const xs = data.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.block_boot.chart.obs_idx') },
+            { label: t('view.block_boot.chart.value'),
+              stroke: '#00e5ff', width: 1.2,
+              points: { show: false } },
+            { label: t('view.block_boot.chart.zero'),
+              stroke: '#aab', width: 0.8, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, data, zero], el);
 }
 
 function card(label, value, cls = '') {
