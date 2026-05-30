@@ -194,6 +194,8 @@ pub enum Preset {
     LongShadowQuietSqueeze,      // (hod_dist.abs() + lod_dist.abs()) > 6 AND day_pct.abs() < 1 AND rel_volume < 0.9 — long-shadow doji on quiet vol
     ChangeNoDayPctSqueeze,       // |change_pct| >= 1 AND |day_pct| < 0.2 AND quiet — overnight move with no intraday follow-through
     DayPctNoChangeSqueeze,       // |day_pct| >= 1 AND |change_pct| < 0.2 AND quiet — intraday wiggle but closes near prior close
+    HotDryUpSqueeze,             // year_high_pct >= -1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w high with dried up volume
+    ColdDryUpSqueeze,            // year_low_pct <= 1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w low with dried up volume
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -563,6 +565,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.2
                 && hit.rel_volume < 1.0
         }
+        Preset::HotDryUpSqueeze => {
+            hit.year_high_pct >= -1.0
+                && hit.rel_volume < 0.5
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::ColdDryUpSqueeze => {
+            hit.year_low_pct <= 1.0
+                && hit.rel_volume < 0.5
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -647,6 +659,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LongShadowQuietSqueeze => "Long-Shadow Quiet Squeeze",
         Preset::ChangeNoDayPctSqueeze => "Overnight Move Reset Squeeze",
         Preset::DayPctNoChangeSqueeze => "Intraday Wiggle Reset Squeeze",
+        Preset::HotDryUpSqueeze => "Hot Dry-Up Squeeze",
+        Preset::ColdDryUpSqueeze => "Cold Dry-Up Squeeze",
     }
 }
 

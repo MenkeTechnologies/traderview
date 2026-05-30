@@ -76,6 +76,8 @@ const PRESETS = [
     { id: 'long_shadow_quiet_squeeze',  label: t('view.scanners.preset.long_shadow_quiet_squeeze.label'),  desc: t('view.scanners.preset.long_shadow_quiet_squeeze.desc') },
     { id: 'overnight_move_reset_squeeze', label: t('view.scanners.preset.overnight_move_reset_squeeze.label'), desc: t('view.scanners.preset.overnight_move_reset_squeeze.desc') },
     { id: 'intraday_wiggle_reset_squeeze', label: t('view.scanners.preset.intraday_wiggle_reset_squeeze.label'), desc: t('view.scanners.preset.intraday_wiggle_reset_squeeze.desc') },
+    { id: 'hot_dry_up_squeeze',         label: t('view.scanners.preset.hot_dry_up_squeeze.label'),         desc: t('view.scanners.preset.hot_dry_up_squeeze.desc') },
+    { id: 'cold_dry_up_squeeze',        label: t('view.scanners.preset.cold_dry_up_squeeze.label'),        desc: t('view.scanners.preset.cold_dry_up_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {

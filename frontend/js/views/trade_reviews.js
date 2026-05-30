@@ -26,6 +26,10 @@ export async function renderTradeReviews(mount, state) {
         <div id="tr-inbox"></div>
         <div id="tr-modal"></div>
         <div id="tr-history"></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.trade_reviews.h2.setup_chart">Reviews by setup tag</h2>
+            <div id="tr-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     await refresh(acct.id, mount, tok);
 }
@@ -41,6 +45,7 @@ async function refresh(accountId, mount, tok) {
         renderStats(s, mount);
         renderInbox(needed, accountId, mount, tok);
         renderHistory(history, mount);
+        renderSetupChart(history);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const inbox = mount.querySelector('#tr-inbox');
@@ -205,4 +210,40 @@ function renderHistory(rows, mount) {
             </tbody>
         </table>
     </div>`;
+}
+
+function renderSetupChart(rows) {
+    const el = document.getElementById('tr-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const tagged = (rows || []).filter(r => r.setup_tag && r.setup_tag.trim());
+    if (tagged.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.trade_reviews.empty_chart">${esc(t('view.trade_reviews.empty_chart'))}</div>`;
+        return;
+    }
+    const counts = new Map();
+    for (const r of tagged) {
+        const tag = r.setup_tag.trim().toLowerCase();
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+    }
+    const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    const labels = pairs.map(([k]) => k);
+    const ys = pairs.map(([, n]) => n);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.trade_reviews.chart.tag_idx') },
+            { label: t('view.trade_reviews.chart.count'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
