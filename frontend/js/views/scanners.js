@@ -436,6 +436,8 @@ const PRESETS = [
     { id: 'lod_hot_vol_micro_range', label: t('view.scanners.preset.lod_hot_vol_micro_range.label'), desc: t('view.scanners.preset.lod_hot_vol_micro_range.desc') },
     { id: 'gap_and_go_strong_close', label: t('view.scanners.preset.gap_and_go_strong_close.label'), desc: t('view.scanners.preset.gap_and_go_strong_close.desc') },
     { id: 'gap_and_fade_weak_close', label: t('view.scanners.preset.gap_and_fade_weak_close.label'), desc: t('view.scanners.preset.gap_and_fade_weak_close.desc') },
+    { id: 'inside_day_dry_vol_coiled', label: t('view.scanners.preset.inside_day_dry_vol_coiled.label'), desc: t('view.scanners.preset.inside_day_dry_vol_coiled.desc') },
+    { id: 'outside_day_hot_vol_expansion', label: t('view.scanners.preset.outside_day_hot_vol_expansion.label'), desc: t('view.scanners.preset.outside_day_hot_vol_expansion.desc') },
 ];
 
 export async function renderScanners(mount) {

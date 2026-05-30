@@ -554,6 +554,8 @@ pub enum Preset {
     LodHotVolMicroRange,            // lod_dist_pct.abs() < 0.2 AND 0.5 <= hod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at LOD with wider intraday range on hot vol (controlled mark-down)
     GapAndGoStrongClose,            // gap_pct > 1 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 — gap up + extended past gap + closing at HOD (gap-and-go follow-through)
     GapAndFadeWeakClose,            // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 — gap up + reversed below flat + closing at LOD (gap fade / failed breakout)
+    InsideDayDryVolCoiled,          // hod_dist + lod_dist < 1.5 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 AND gap_pct.abs() < 0.3 — narrow range + flat + dry vol + no gap (inside-day coil; pre-expansion drift)
+    OutsideDayHotVolExpansion,      // hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.8 — wide range + significant move + hot vol (outside-day expansion / volatility breakout)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2892,6 +2894,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.lod_dist_pct.abs() < 0.5
         }
+        Preset::InsideDayDryVolCoiled => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
+                && hit.day_pct.abs() < 0.5
+                && hit.rel_volume < 0.7
+                && hit.gap_pct.abs() < 0.3
+        }
+        Preset::OutsideDayHotVolExpansion => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
+                && hit.change_pct.abs() > 2.0
+                && hit.rel_volume >= 1.8
+        }
     }
 }
 
@@ -3336,6 +3349,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LodHotVolMicroRange => "Close Pinned at LOD + Wider Range + Hot Vol (Controlled Mark-down)",
         Preset::GapAndGoStrongClose => "Gap-and-Go + Strong Close at HOD (Follow-through)",
         Preset::GapAndFadeWeakClose => "Gap-and-Fade + Weak Close at LOD (Failed Breakout)",
+        Preset::InsideDayDryVolCoiled => "Inside Day + Dry Vol Coil (Pre-expansion Drift)",
+        Preset::OutsideDayHotVolExpansion => "Outside Day + Hot Vol Expansion (Volatility Breakout)",
     }
 }
 

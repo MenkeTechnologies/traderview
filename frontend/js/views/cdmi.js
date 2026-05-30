@@ -17,6 +17,7 @@ import {
 
 let state = { ...makeDemoInput('uptrend') };
 let chart = null;
+let priceChart = null;
 
 export async function renderCdmi(mount, _appState) {
     const tok = currentViewToken();
@@ -60,6 +61,11 @@ export async function renderCdmi(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.cdmi.h2.chart">DMI series</h2>
             <div id="cd-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.cdmi.h2.price_chart">Closes (underlying price) — for visual correlation with DMI signals</h2>
+            <div id="cd-price-chart" style="width:100%;height:240px"></div>
         </div>
 
         <div class="chart-panel">
@@ -115,6 +121,7 @@ async function compute(tok) {
     const local = localCompute(state.closes, state.td_const, state.std_period, state.td_min, state.td_max);
     renderSummary(local, true);
     renderChart(local);
+    renderPriceChart(local);
     renderStats();
     let resp;
     try {
@@ -127,6 +134,7 @@ async function compute(tok) {
     if (!Array.isArray(resp)) { showErr(t('view.cdmi.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderPriceChart(resp);
     renderStats();
 }
 
@@ -183,6 +191,44 @@ function renderChart(dmi) {
         axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
         legend: { show: true },
     }, data, el);
+}
+
+function renderPriceChart(dmi) {
+    const el = document.getElementById('cd-price-chart');
+    if (!el || !window.uPlot) return;
+    if (!state.closes || state.closes.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cdmi.empty_price_chart">${esc(t('view.cdmi.empty_price_chart'))}</div>`;
+        return;
+    }
+    const xs = state.closes.map((_, i) => i);
+    const closes = state.closes.slice();
+    const os = state.closes.map((c, i) => {
+        const v = dmi && dmi[i];
+        return (v != null && Number.isFinite(v) && v <= 30) ? c : null;
+    });
+    const ob = state.closes.map((c, i) => {
+        const v = dmi && dmi[i];
+        return (v != null && Number.isFinite(v) && v >= 70) ? c : null;
+    });
+    if (priceChart) { try { priceChart.destroy(); } catch {} priceChart = null; }
+    priceChart = new window.uPlot({
+        width: el.clientWidth || 800, height: 220,
+        scales: { x: { time: false }, y: { auto: true } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.cdmi.series.close'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.cdmi.series.os_zone'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 6, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.cdmi.series.ob_zone'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 6, fill: '#ff3860', stroke: '#ff3860' } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    }, [xs, closes, os, ob], el);
 }
 
 function renderStats() {
