@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DOJ_CONCENTRATED, DOJ_MODERATE,
@@ -31,17 +32,17 @@ export async function renderHerfindahl(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.hhi.btn.compute" id="hh-run" class="primary"
-                        data-tip="view.hhi.tip.compute" type="button">Compute HHI</button>
+                        data-tip="view.hhi.tip.compute" data-shortcut="herfindahl_run" type="button">Compute HHI</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.hhi.btn.demo_eq4"    id="hh-demo-eq4"   class="secondary" type="button">Demo: equal 4</button>
-                <button data-i18n="view.hhi.btn.demo_eq10"   id="hh-demo-eq10"  class="secondary" type="button">Demo: equal 10</button>
-                <button data-i18n="view.hhi.btn.demo_conc"   id="hh-demo-conc"  class="secondary" type="button">Demo: concentrated (80% one name)</button>
-                <button data-i18n="view.hhi.btn.demo_single" id="hh-demo-single" class="secondary" type="button">Demo: single name</button>
-                <button data-i18n="view.hhi.btn.demo_pareto" id="hh-demo-pareto" class="secondary" type="button">Demo: Pareto 80/20</button>
-                <button data-i18n="view.hhi.btn.demo_unnorm" id="hh-demo-unnorm" class="secondary" type="button">Demo: un-normalized</button>
-                <button data-i18n="view.hhi.btn.demo_zeroes" id="hh-demo-zeroes" class="secondary" type="button">Demo: with zeroes</button>
-                <button data-i18n="view.hhi.btn.demo_6040"   id="hh-demo-6040"  class="secondary" type="button">Demo: 60/40</button>
+                <button data-i18n="view.hhi.btn.demo_eq4"    id="hh-demo-eq4"   class="secondary" type="button" data-tip="view.hhi.tip.demo_eq4">Demo: equal 4</button>
+                <button data-i18n="view.hhi.btn.demo_eq10"   id="hh-demo-eq10"  class="secondary" type="button" data-tip="view.hhi.tip.demo_eq10">Demo: equal 10</button>
+                <button data-i18n="view.hhi.btn.demo_conc"   id="hh-demo-conc"  class="secondary" type="button" data-tip="view.hhi.tip.demo_conc">Demo: concentrated (80% one name)</button>
+                <button data-i18n="view.hhi.btn.demo_single" id="hh-demo-single" class="secondary" type="button" data-tip="view.hhi.tip.demo_single">Demo: single name</button>
+                <button data-i18n="view.hhi.btn.demo_pareto" id="hh-demo-pareto" class="secondary" type="button" data-tip="view.hhi.tip.demo_pareto">Demo: Pareto 80/20</button>
+                <button data-i18n="view.hhi.btn.demo_unnorm" id="hh-demo-unnorm" class="secondary" type="button" data-tip="view.hhi.tip.demo_unnorm">Demo: un-normalized</button>
+                <button data-i18n="view.hhi.btn.demo_zeroes" id="hh-demo-zeroes" class="secondary" type="button" data-tip="view.hhi.tip.demo_zeroes">Demo: with zeroes</button>
+                <button data-i18n="view.hhi.btn.demo_6040"   id="hh-demo-6040"  class="secondary" type="button" data-tip="view.hhi.tip.demo_6040">Demo: 60/40</button>
             </div>
             <p data-i18n="view.hhi.hint.about" class="muted">HHI = Σwᵢ². Scaled 0–10,000 (DOJ scale). Effective N = 1/HHI = "equivalent equal-weight positions." DOJ antitrust thresholds: ≥ ${DOJ_MODERATE} moderate · ≥ ${DOJ_CONCENTRATED} highly concentrated.</p>
         </div>
@@ -81,6 +82,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.hhi.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.hhi.toast.parse_error', { n: p.errors.length }), { level: 'warning' });
         return;
     }
     hideErr();
@@ -91,9 +93,13 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.hhi.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.weights);
-    if (!local) { showErr(t('view.hhi.err.degenerate')); return; }
+    if (!local) {
+        showErr(t('view.hhi.err.degenerate'));
+        showToast(t('view.hhi.toast.degenerate'), { level: 'warning' });
+        return;
+    }
     renderSummary(local, true);
     renderChart(local);
     renderTable(local);
@@ -102,13 +108,22 @@ async function compute(tok) {
         resp = await api.portfolioHerfindahl(buildBody(state));
     } catch (e) {
         showErr(`${t('view.hhi.err.api')}: ${e.message || e}`);
+        showToast(t('view.hhi.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.hhi.err.server_rejected')); return; }
+    if (!resp) {
+        showErr(t('view.hhi.err.server_rejected'));
+        showToast(t('view.hhi.toast.rejected'), { level: 'error' });
+        return;
+    }
     renderSummary(resp, false);
     renderChart(resp);
     renderTable(resp);
+    const scaled = Math.round(Number(resp.hhi_scaled) || 0);
+    const effN = (Number(resp.effective_n) || 0).toFixed(2);
+    const level = scaled >= DOJ_CONCENTRATED ? 'error' : scaled >= DOJ_MODERATE ? 'warning' : 'success';
+    showToast(t('view.hhi.toast.computed', { scaled, effN }), { level });
 }
 
 function renderSummary(report, pending) {
