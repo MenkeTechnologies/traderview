@@ -1072,6 +1072,8 @@ pub enum Preset {
     NarrowYearRangeHotVol,                     // year_high_pct < 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — narrow annual range (both year_*_pct <5%) + hot vol (compressed range-bound territory: stock has stayed within ~10% band over 52w with elevated current participation; tightest possible coil at annual scale, breakout-candidate worth watching for direction commitment)
     NarrowYearRangeCloseAtHodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — narrow annual range + close pinned to HOD + green close + hot vol (annual-coil breakout candidate: compressed range-bound stock attempts directional commitment higher, closes at the day's high with hot vol; highest-conviction breakout-from-coil signal at the annual scale)
     NarrowYearRangeCloseAtLodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — narrow annual range + close pinned to LOD + red close + hot vol (annual-coil breakdown candidate: compressed range-bound stock attempts directional commitment lower, closes at the day's low with hot vol; highest-conviction breakdown-from-coil signal at the annual scale)
+    NarrowYearRangeGapUpHotVol,                // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — narrow annual range + gap up (>2%) + hot vol (catalyst-driven attempt to break the annual coil higher: compressed range-bound stock gaps up on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
+    NarrowYearRangeGapDownHotVol,              // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — narrow annual range + gap down (<-2%) + hot vol (catalyst-driven attempt to break the annual coil lower: compressed range-bound stock gaps down on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -6610,6 +6612,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::NarrowYearRangeGapUpHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.gap_pct > 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::NarrowYearRangeGapDownHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.year_low_pct < 5.0
+                && hit.gap_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -7572,6 +7586,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowYearRangeHotVol => "Narrow Annual Range (both year_*_pct <5 %) + Hot Vol (Compressed Range-bound Territory: Stock Has Stayed within ~10 % Band over 52w with Elevated Current Participation; Tightest Possible Coil at Annual Scale, Breakout-candidate Worth Watching for Direction Commitment)",
         Preset::NarrowYearRangeCloseAtHodHotVol => "Narrow Annual Range + Close Pinned to HOD + Green Close + Hot Vol (Annual-coil Breakout Candidate: Compressed Range-bound Stock Attempts Directional Commitment Higher, Closes at the Day's High with Hot Vol; Highest-conviction Breakout-from-coil Signal at the Annual Scale)",
         Preset::NarrowYearRangeCloseAtLodHotVol => "Narrow Annual Range + Close Pinned to LOD + Red Close + Hot Vol (Annual-coil Breakdown Candidate: Compressed Range-bound Stock Attempts Directional Commitment Lower, Closes at the Day's Low with Hot Vol; Highest-conviction Breakdown-from-coil Signal at the Annual Scale)",
+        Preset::NarrowYearRangeGapUpHotVol => "Narrow Annual Range + Gap Up (>2 %) + Hot Vol (Catalyst-driven Attempt to Break the Annual Coil Higher: Compressed Range-bound Stock Gaps up on News/earnings with Elevated Participation; First Sign of Directional Commitment after 52w of Tight Range)",
+        Preset::NarrowYearRangeGapDownHotVol => "Narrow Annual Range + Gap Down (<-2 %) + Hot Vol (Catalyst-driven Attempt to Break the Annual Coil Lower: Compressed Range-bound Stock Gaps down on News/earnings with Elevated Participation; First Sign of Directional Commitment after 52w of Tight Range)",
     }
 }
 
