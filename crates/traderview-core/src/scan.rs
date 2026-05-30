@@ -464,6 +464,8 @@ pub enum Preset {
     WideOutsideRangeDryVol,      // hod_dist + lod_dist > 6 AND rel_volume < 0.6 — wide outside range on dry vol (one-sided liquidation; no follow-through)
     GapHeldAndExtendedUp,        // gap_pct > 1 AND day_pct > 1 AND rel_volume >= 1.5 — gap up + held + extended intraday on vol (continuation buyers)
     GapHeldAndExtendedDown,      // gap_pct < -1 AND day_pct < -1 AND rel_volume >= 1.5 — gap down + held + extended intraday on vol (continuation sellers)
+    Pct52wHighBreakoutCloseAtHod,  // year_high_pct > 0 AND day_pct > 1 AND hod_dist.abs() < 0.5 AND rel_volume >= 2 — broke above 52w high + close at HOD + hot vol (textbook breakout)
+    Pct52wLowBreakdownCloseAtLod,  // year_low_pct < 0 AND day_pct < -1 AND lod_dist.abs() < 0.5 AND rel_volume >= 2 — broke below 52w low + close at LOD + hot vol (textbook breakdown)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2278,6 +2280,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct < -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::Pct52wHighBreakoutCloseAtHod => {
+            hit.year_high_pct > 0.0
+                && hit.day_pct > 1.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
+        Preset::Pct52wLowBreakdownCloseAtLod => {
+            hit.year_low_pct < 0.0
+                && hit.day_pct < -1.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -2632,6 +2646,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::WideOutsideRangeDryVol => "Wide Outside Range, Dry Vol (One-Sided Liquidation)",
         Preset::GapHeldAndExtendedUp => "Gap Held & Extended Up (Continuation Buyers)",
         Preset::GapHeldAndExtendedDown => "Gap Held & Extended Down (Continuation Sellers)",
+        Preset::Pct52wHighBreakoutCloseAtHod => "52w-High Breakout, Close at HOD, Hot Vol",
+        Preset::Pct52wLowBreakdownCloseAtLod => "52w-Low Breakdown, Close at LOD, Hot Vol",
     }
 }
 

@@ -16,6 +16,7 @@ import {
 
 let state = { ...makeDemoInput('buying') };
 let chart = null;
+let clvChart = null;
 
 export async function renderAdOscillator(mount, _appState) {
     const tok = currentViewToken();
@@ -53,6 +54,11 @@ export async function renderAdOscillator(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.ado.h2.chart">Per-bar + EMA</h2>
             <div id="ao-chart" style="width:100%;height:340px"></div>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.ado.h2.clv_chart">Per-bar CLV (volume-normalized direction)</h2>
+            <div id="ao-clv-chart" style="width:100%;height:220px"></div>
         </div>
 
         <div class="chart-panel">
@@ -99,6 +105,7 @@ async function compute(tok) {
     const local = localCompute(state.bars, state.period);
     renderSummary(local, true);
     renderChart(local);
+    renderClvChart(local);
     renderStats();
     let resp;
     try {
@@ -111,6 +118,7 @@ async function compute(tok) {
     if (!resp || !Array.isArray(resp.per_bar)) { showErr(t('view.ado.err.server_rejected')); return; }
     renderSummary(resp, false);
     renderChart(resp);
+    renderClvChart(resp);
     renderStats();
 }
 
@@ -176,6 +184,36 @@ function renderChart(report) {
         legend: { show: true },
     };
     chart = new window.uPlot(opts, data, el);
+}
+
+function renderClvChart(report) {
+    const el = document.getElementById('ao-clv-chart');
+    if (!el || !window.uPlot) return;
+    if (!Array.isArray(report.per_bar) || state.bars.length === 0) { el.innerHTML = ''; return; }
+    const xs = state.bars.map((_, i) => i);
+    const clv = state.bars.map((b, i) => {
+        const v = report.per_bar[i];
+        if (v == null || !Number.isFinite(v) || !(b.volume > 0)) return null;
+        return v / b.volume;
+    });
+    const zero = xs.map(() => 0);
+    const opts = {
+        width: el.clientWidth || 800,
+        height: 220,
+        scales: { x: { time: false } },
+        series: [
+            { label: t('chart.series.i') },
+            { label: t('view.ado.series.clv'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: true, size: 5, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.ado.series.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (clvChart) { try { clvChart.destroy(); } catch {} clvChart = null; }
+    clvChart = new window.uPlot(opts, [xs, clv, zero], el);
 }
 
 function renderStats() {
