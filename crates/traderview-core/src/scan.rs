@@ -1172,6 +1172,8 @@ pub enum Preset {
     GapDownWideRangeHotVol,                    // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — gap down (<-2%) + wide intraday range (>8%) + hot vol (gap-then-volatility-expansion catalyst signal: overnight gap down followed by a wide trading range with elevated participation; two-way fight intraday after the catalyst with bears and bulls trading aggressively in the gap zone; close-position resolves direction)
     GapUpWideRangeNearYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (gap-and-fight at the year peak: overnight gap up followed by a wide trading range at the 52w high with elevated participation; high-stakes breakout-day battle where catalyst meets prior peak resistance; close-position resolves whether the breakout sticks)
     GapDownWideRangeNearYearLowHotVol,         // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (gap-and-fight at the year trough: overnight gap down followed by a wide trading range at the 52w low with elevated participation; high-stakes breakdown-day battle where catalyst meets prior trough support; close-position resolves whether the breakdown sticks)
+    GapUpWideRangeConfirmedAboveYearHighHotVol,// gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (gap-and-fight in the validated-breakout zone: overnight gap up followed by a wide trading range right after price cleared the prior peak with elevated participation; post-breakout extension battle where bulls defend the breakout and bears test it)
+    GapDownWideRangeConfirmedBelowYearLowHotVol,// gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (gap-and-fight in the validated-breakdown zone: overnight gap down followed by a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown extension battle where bears defend the breakdown and bulls test it)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7222,6 +7224,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
                 && hit.year_low_pct < 2.0
         }
+        Preset::GapUpWideRangeConfirmedAboveYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::GapDownWideRangeConfirmedBelowYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -8284,6 +8300,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownWideRangeHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol (Gap-then-volatility-expansion Catalyst Signal: Overnight Gap down Followed by a Wide Trading Range with Elevated Participation; Two-way Fight Intraday after the Catalyst with Bears and Bulls Trading Aggressively in the Gap Zone; Close-position Resolves Direction)",
         Preset::GapUpWideRangeNearYearHighHotVol => "Gap Up (>2 %) + Wide Intraday Range (>8 %) + Hot Vol + At/near 52w High (<2 %) (Gap-and-fight at the Year Peak: Overnight Gap up Followed by a Wide Trading Range at the 52w High with Elevated Participation; High-stakes Breakout-day Battle Where Catalyst Meets Prior Peak Resistance; Close-position Resolves Whether the Breakout Sticks)",
         Preset::GapDownWideRangeNearYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + At/near 52w Low (<2 %) (Gap-and-fight at the Year Trough: Overnight Gap down Followed by a Wide Trading Range at the 52w Low with Elevated Participation; High-stakes Breakdown-day Battle Where Catalyst Meets Prior Trough Support; Close-position Resolves Whether the Breakdown Sticks)",
+        Preset::GapUpWideRangeConfirmedAboveYearHighHotVol => "Gap Up (>2 %) + Wide Intraday Range (>8 %) + Hot Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Gap-and-fight in the Validated-breakout Zone: Overnight Gap up Followed by a Wide Trading Range Right after Price Cleared the Prior Peak with Elevated Participation; Post-breakout Extension Battle Where Bulls Defend the Breakout and Bears Test It)",
+        Preset::GapDownWideRangeConfirmedBelowYearLowHotVol => "Gap Down (<-2 %) + Wide Intraday Range (>8 %) + Hot Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Gap-and-fight in the Validated-breakdown Zone: Overnight Gap down Followed by a Wide Trading Range Right after Price Cleared the Prior Trough with Elevated Participation; Post-breakdown Extension Battle Where Bears Defend the Breakdown and Bulls Test It)",
     }
 }
 

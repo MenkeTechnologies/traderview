@@ -1054,6 +1054,8 @@ const PRESETS = [
     { id: 'gap_down_wide_range_hot_vol', label: t('view.scanners.preset.gap_down_wide_range_hot_vol.label'), desc: t('view.scanners.preset.gap_down_wide_range_hot_vol.desc') },
     { id: 'gap_up_wide_range_near_year_high_hot_vol', label: t('view.scanners.preset.gap_up_wide_range_near_year_high_hot_vol.label'), desc: t('view.scanners.preset.gap_up_wide_range_near_year_high_hot_vol.desc') },
     { id: 'gap_down_wide_range_near_year_low_hot_vol', label: t('view.scanners.preset.gap_down_wide_range_near_year_low_hot_vol.label'), desc: t('view.scanners.preset.gap_down_wide_range_near_year_low_hot_vol.desc') },
+    { id: 'gap_up_wide_range_confirmed_above_year_high_hot_vol', label: t('view.scanners.preset.gap_up_wide_range_confirmed_above_year_high_hot_vol.label'), desc: t('view.scanners.preset.gap_up_wide_range_confirmed_above_year_high_hot_vol.desc') },
+    { id: 'gap_down_wide_range_confirmed_below_year_low_hot_vol', label: t('view.scanners.preset.gap_down_wide_range_confirmed_below_year_low_hot_vol.label'), desc: t('view.scanners.preset.gap_down_wide_range_confirmed_below_year_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
