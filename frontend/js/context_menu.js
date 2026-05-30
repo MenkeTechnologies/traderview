@@ -59,6 +59,14 @@ function dataFromTarget(detail, key) {
     return (target && target.dataset && target.dataset[key]) || null;
 }
 
+// `toastErr(msg)` — show an error toast wrapped in the `toast.error.api`
+// envelope (which gives consistent prefix + styling). `msg` is either a
+// raw string (caught Error message) or an already-translated string
+// (caller resolves the i18n key when the message itself is keyed).
+function toastErr(msg) {
+    showToast(t('toast.error.api', { err: msg }), { level: 'error' });
+}
+
 export function installContextMenu() {
     if (_installed) return;
     _installed = true;
@@ -88,7 +96,7 @@ export function installContextMenu() {
     window.addEventListener('tv:copy-view-id', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
+            toastErr(t('toast.err.no_view'));
             return;
         }
         clipboardWrite(vid, vid);
@@ -96,7 +104,7 @@ export function installContextMenu() {
     window.addEventListener('tv:add-bookmark', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
+            toastErr(t('toast.err.no_view'));
             return;
         }
         const name = (typeof window.prompt === 'function')
@@ -120,7 +128,7 @@ export function installContextMenu() {
     window.addEventListener('tv:copy-symbol', () => {
         const sym = (getGlobalSymbol() || '').toUpperCase();
         if (!sym) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         clipboardWrite(sym, sym);
@@ -128,7 +136,7 @@ export function installContextMenu() {
     const navForSymbol = (viewId) => () => {
         const sym = (getGlobalSymbol() || '').toUpperCase();
         if (!sym) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         window.location.hash = `${viewId}/${sym}`;
@@ -149,7 +157,7 @@ export function installContextMenu() {
     window.addEventListener('tv:trade-view-detail', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            toastErr(t('toast.err.no_trade'));
             return;
         }
         window.location.hash = `trade/${id}`;
@@ -157,7 +165,7 @@ export function installContextMenu() {
     window.addEventListener('tv:trade-copy-id', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            toastErr(t('toast.err.no_trade'));
             return;
         }
         clipboardWrite(id, id);
@@ -177,7 +185,7 @@ export function installContextMenu() {
     const wlNavTo = (viewId) => (e) => {
         const sym = wlSymbolFrom(e.detail);
         if (!sym) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         setGlobalSymbol(sym);
@@ -186,7 +194,7 @@ export function installContextMenu() {
     window.addEventListener('tv:wl-row-set-active', (e) => {
         const sym = wlSymbolFrom(e.detail);
         if (!sym) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         setGlobalSymbol(sym);
@@ -199,7 +207,7 @@ export function installContextMenu() {
         const sym = wlSymbolFrom(e.detail);
         const wid = wlWidFrom(e.detail);
         if (!sym || !wid) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         void (async () => {
@@ -209,7 +217,7 @@ export function installContextMenu() {
                 showToast(t('toast.wl_symbol_removed', { sym }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -219,7 +227,7 @@ export function installContextMenu() {
         const target = e.detail && e.detail.target;
         const id = target && target.dataset && target.dataset.id;
         if (!id) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            toastErr(t('toast.err.no_trade'));
             return;
         }
         window.location.hash = `trade/${id}`;
@@ -227,7 +235,7 @@ export function installContextMenu() {
     window.addEventListener('tv:pos-row-set-active', (e) => {
         const sym = wlSymbolFrom(e.detail);
         if (!sym) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_symbol') }), { level: 'error' });
+            toastErr(t('toast.err.no_symbol'));
             return;
         }
         setGlobalSymbol(sym);
@@ -351,7 +359,7 @@ export function installContextMenu() {
                 showToast(t('toast.board_deleted', { name }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -380,7 +388,7 @@ export function installContextMenu() {
                 showToast(t('toast.bp_forked', { name: forked && forked.name ? forked.name : slug }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -400,7 +408,7 @@ export function installContextMenu() {
                 showToast(t('toast.bp_deleted', { name }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -431,7 +439,7 @@ export function installContextMenu() {
                 showToast(t('toast.share_deleted'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -452,7 +460,7 @@ export function installContextMenu() {
                 showToast(t('toast.plan_abandoned', { sym }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -473,7 +481,7 @@ export function installContextMenu() {
                 showToast(t('toast.acct_deleted', { name }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -495,7 +503,7 @@ export function installContextMenu() {
                 showToast(t('toast.ci_deleted', { name }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -515,7 +523,7 @@ export function installContextMenu() {
                 showToast(t('toast.hk_deleted'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -538,7 +546,7 @@ export function installContextMenu() {
                 showToast(t('toast.je_deleted'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -563,7 +571,7 @@ export function installContextMenu() {
                 showToast(t('toast.tok_revoked'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -584,7 +592,7 @@ export function installContextMenu() {
                 showToast(t('toast.tag_deleted', { name }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -602,7 +610,7 @@ export function installContextMenu() {
                 showToast(t('toast.wh_test_fired'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -617,7 +625,7 @@ export function installContextMenu() {
                 showToast(t(wasEnabled ? 'toast.wh_disabled' : 'toast.wh_enabled'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -631,7 +639,7 @@ export function installContextMenu() {
                 showToast(t('toast.wh_deleted'), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -651,7 +659,7 @@ export function installContextMenu() {
                     { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
@@ -666,14 +674,14 @@ export function installContextMenu() {
                 showToast(t('toast.sa_deleted', { id }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
     window.addEventListener('tv:trade-delete', (e) => {
         const id = tradeIdFrom(e.detail);
         if (!id) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_trade') }), { level: 'error' });
+            toastErr(t('toast.err.no_trade'));
             return;
         }
         void (async () => {
@@ -683,14 +691,14 @@ export function installContextMenu() {
                 showToast(t('toast.trade_deleted', { id }), { level: 'success' });
                 refreshView();
             } catch (err) {
-                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+                toastErr(err.message);
             }
         })();
     });
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {
-            showToast(t('toast.error.api', { err: t('toast.err.no_view') }), { level: 'error' });
+            toastErr(t('toast.err.no_view'));
             return;
         }
         const state = loadState();
