@@ -508,6 +508,8 @@ const PRESETS = [
     { id: 'clean_trend_day_down', label: t('view.scanners.preset.clean_trend_day_down.label'), desc: t('view.scanners.preset.clean_trend_day_down.desc') },
     { id: 'climax_red_bounced_from_lod', label: t('view.scanners.preset.climax_red_bounced_from_lod.label'), desc: t('view.scanners.preset.climax_red_bounced_from_lod.desc') },
     { id: 'climax_green_faded_from_hod', label: t('view.scanners.preset.climax_green_faded_from_hod.label'), desc: t('view.scanners.preset.climax_green_faded_from_hod.desc') },
+    { id: 'wide_range_chop_mixed_vol', label: t('view.scanners.preset.wide_range_chop_mixed_vol.label'), desc: t('view.scanners.preset.wide_range_chop_mixed_vol.desc') },
+    { id: 'narrow_range_big_change_no_intraday', label: t('view.scanners.preset.narrow_range_big_change_no_intraday.label'), desc: t('view.scanners.preset.narrow_range_big_change_no_intraday.desc') },
 ];
 
 export async function renderScanners(mount) {

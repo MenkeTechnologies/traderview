@@ -626,6 +626,8 @@ pub enum Preset {
     CleanTrendDayDown,              // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal negative + close near LOD + decent vol (clean trend day down; everything aligned without extremity)
     ClimaxRedBouncedFromLod,        // change_pct < -3 AND day_pct > 1 AND rel_volume >= 2 AND lod_dist_pct.abs() > 1.5 — big red overall + significant green intraday + hot vol + bounced from LOD (climax low; capitulation followed by intraday bounce)
     ClimaxGreenFadedFromHod,        // change_pct > 3 AND day_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() > 1.5 — big green overall + significant red intraday + hot vol + pulled from HOD (climax high; euphoria followed by intraday fade)
+    WideRangeChopMixedVol,          // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.5 — wide range + small change + normal vol (range exploration without conviction; vol-of-vol; mixed signal)
+    NarrowRangeBigChangeNoIntraday, // hod_dist + lod_dist < 1 AND change_pct.abs() > 1.5 AND day_pct.abs() < 0.3 — narrow range + big change + flat intraday (all change happened overnight; no intraday move; pure gap day)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -3378,6 +3380,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.hod_dist_pct.abs() > 1.5
         }
+        Preset::WideRangeChopMixedVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume >= 0.7
+                && hit.rel_volume <= 1.5
+        }
+        Preset::NarrowRangeBigChangeNoIntraday => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.change_pct.abs() > 1.5
+                && hit.day_pct.abs() < 0.3
+        }
     }
 }
 
@@ -3894,6 +3907,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CleanTrendDayDown => "Gap + Intraday + Change All Negative + LOD Close + Decent Vol (Clean Trend Day Down)",
         Preset::ClimaxRedBouncedFromLod => "Big Red Day + LOD Bounce + Hot Vol (Climax Low / Capitulation Reversal)",
         Preset::ClimaxGreenFadedFromHod => "Big Green Day + HOD Fade + Hot Vol (Climax High / Euphoric Reversal)",
+        Preset::WideRangeChopMixedVol => "Wide Range + Small Change + Normal Vol (Range Exploration without Conviction)",
+        Preset::NarrowRangeBigChangeNoIntraday => "Narrow Range + Big Change + Flat Intraday (Pure Gap Day; All Change Overnight)",
     }
 }
 

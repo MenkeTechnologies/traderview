@@ -50,7 +50,11 @@ export async function renderEarningsIv(mount, _state, symbol) {
             );
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#iv-result');
-            if (el2) { el2.innerHTML = renderTable(hits); renderEdgeChart(hits, mount); }
+            if (el2) {
+                el2.innerHTML = renderTable(hits);
+                renderEdgeChart(hits, mount);
+                renderIvRealChart(hits, mount);
+            }
         } catch (err) {
             if (!viewIsCurrent(tok)) return;
             const el2 = mount.querySelector('#iv-result');
@@ -94,6 +98,10 @@ function renderTable(hits) {
     <div class="chart-panel">
         <h2 data-i18n="view.earnings_iv.h2.edge_chart">Edge % per candidate</h2>
         <div id="iv-chart" style="width:100%;height:240px"></div>
+    </div>
+    <div class="chart-panel">
+        <h2 data-i18n="view.earnings_iv.h2.implied_vs_realized_chart">Implied move vs median realized move — rich/cheap diagonal</h2>
+        <div id="iv-iv-real-chart" style="width:100%;height:220px"></div>
     </div>`;
 }
 
@@ -129,6 +137,36 @@ function renderEdgeChart(hits, mount) {
         ],
         legend: { show: true },
     }, [xs, edges, zero], el);
+}
+
+function renderIvRealChart(hits, mount) {
+    const el = (mount ? mount.querySelector('#iv-iv-real-chart') : document.getElementById('iv-iv-real-chart'));
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (hits || []).filter(h =>
+        Number.isFinite(Number(h.implied_move_pct)) && Number.isFinite(Number(h.median_realized_pct)));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.earnings_iv.empty_iv_real_chart">${esc(t('view.earnings_iv.empty_iv_real_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => Number(a.implied_move_pct) - Number(b.implied_move_pct));
+    const xs = pts.map(p => Number(p.implied_move_pct));
+    const ys = pts.map(p => Number(p.median_realized_pct));
+    const diag = xs.map(x => x);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.earnings_iv.chart.implied_pct') },
+            { label: t('view.earnings_iv.chart.realized_pct'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 10, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.earnings_iv.chart.diagonal'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 } ],
+        legend: { show: true },
+    }, [xs, ys, diag], el);
 }
 
 async function renderDetail(mount, sym) {
