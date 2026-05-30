@@ -330,6 +330,8 @@ pub enum Preset {
     TightBelowMidWeak,           // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct < 0 AND change_pct < -0.5 — tight range below mid (coiled spring; bearish bias)
     HotVolNoMoveAtHigh,          // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w high with no net move (distribution candidate)
     HotVolNoMoveAtLow,           // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w low with no net move (accumulation candidate)
+    BigUpGapInsideDay,           // gap_pct > 3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between 1 and 3 — big gap-up but contained inside-day (consolidation after thrust)
+    BigDownGapInsideDay,         // gap_pct < -3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between -3 and -1 — big gap-down but contained inside-day (consolidation after thrust)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1385,6 +1387,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume >= 2.0
         }
+        Preset::BigUpGapInsideDay => {
+            hit.gap_pct > 3.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct >= 1.0
+                && hit.change_pct <= 3.0
+        }
+        Preset::BigDownGapInsideDay => {
+            hit.gap_pct < -3.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct <= -1.0
+                && hit.change_pct >= -3.0
+        }
     }
 }
 
@@ -1605,6 +1621,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightBelowMidWeak => "Tight Below Mid, Weak",
         Preset::HotVolNoMoveAtHigh => "Hot Vol, No Move at 52w High",
         Preset::HotVolNoMoveAtLow => "Hot Vol, No Move at 52w Low",
+        Preset::BigUpGapInsideDay => "Big Up-Gap, Inside Day",
+        Preset::BigDownGapInsideDay => "Big Down-Gap, Inside Day",
     }
 }
 

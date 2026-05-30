@@ -68,6 +68,11 @@ export async function renderTaxLossHarvest(mount, _appState) {
             <div id="tlh-table"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_loss_harvest.h2.losses_chart">Loss per candidate (red = wash risk)</h2>
+            <div id="tlh-chart" style="width:100%;height:220px"></div>
+        </div>
+
         <div id="tlh-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -120,6 +125,7 @@ async function compute(tok) {
                                 state.realized_loss_ytd, state.mtm_elected);
     renderSummary(local, true);
     renderTable(local);
+    renderLossesChart(local);
     let resp;
     try {
         resp = await api.calcTaxLossHarvest(buildBody(
@@ -142,6 +148,42 @@ async function compute(tok) {
     };
     renderSummary(normalized, false);
     renderTable(normalized);
+    renderLossesChart(normalized);
+}
+
+function renderLossesChart(report) {
+    const el = document.getElementById('tlh-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report?.candidates || []).filter(c => Number.isFinite(Number(c.unrealized_loss)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_loss_harvest.empty_chart">${esc(t('view.tax_loss_harvest.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.unrealized_loss) - Number(a.unrealized_loss));
+    const labels = rows.map(c => c.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const wash = rows.map(c => c.wash_sale_risk  ? Number(c.unrealized_loss) : null);
+    const safe = rows.map(c => !c.wash_sale_risk ? Number(c.unrealized_loss) : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_loss_harvest.chart.symbol') },
+            { label: t('view.tax_loss_harvest.chart.wash'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 14, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.tax_loss_harvest.chart.safe'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, wash, safe], el);
 }
 
 function renderSummary(report, pending) {
