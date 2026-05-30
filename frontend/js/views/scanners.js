@@ -278,6 +278,8 @@ const PRESETS = [
     { id: 'exhaustion_bottom_wide_range', label: t('view.scanners.preset.exhaustion_bottom_wide_range.label'), desc: t('view.scanners.preset.exhaustion_bottom_wide_range.desc') },
     { id: 'up_trend_day_wide_range', label: t('view.scanners.preset.up_trend_day_wide_range.label'), desc: t('view.scanners.preset.up_trend_day_wide_range.desc') },
     { id: 'down_trend_day_wide_range', label: t('view.scanners.preset.down_trend_day_wide_range.label'), desc: t('view.scanners.preset.down_trend_day_wide_range.desc') },
+    { id: 'silent_spring_near_52w_low', label: t('view.scanners.preset.silent_spring_near_52w_low.label'), desc: t('view.scanners.preset.silent_spring_near_52w_low.desc') },
+    { id: 'silent_up_thrust_near_52w_high', label: t('view.scanners.preset.silent_up_thrust_near_52w_high.label'), desc: t('view.scanners.preset.silent_up_thrust_near_52w_high.desc') },
 ];
 
 export async function renderScanners(mount) {
