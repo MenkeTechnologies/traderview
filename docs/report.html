@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri shell, 192,897 Rust LOC + 131,207 JS LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. 69 tables, 31 migrations, 1,028 routes, 257 view modules, 261 launcher tiles, 12 broker importers, live halts + catalysts + Finnhub scanner.">
+  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 6 library crates + Tauri shell, 193,109 Rust LOC + 131,207 JS LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. 69 tables, 31 migrations, 1,028 routes, 257 view modules, 261 launcher tiles, 12 broker importers, live halts + catalysts + Finnhub scanner.">
   <title>TraderView &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
             <a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.78;">
-            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace, 6 library crates + Tauri shell &middot; 192,897 Rust LOC + 131,207 JS LOC &middot; 69 tables, 31 migrations, 1,028 routes, 257 view modules, 261 launcher tiles &middot; 12 broker importers &middot; live halts + catalysts + Finnhub scanner
+            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace, 6 library crates + Tauri shell &middot; 193,109 Rust LOC + 131,207 JS LOC &middot; 69 tables, 31 migrations, 1,028 routes, 257 view modules, 261 launcher tiles &middot; 12 broker importers &middot; live halts + catalysts + Finnhub scanner
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -110,7 +110,7 @@
       <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on six shared library crates (<code>core / db / import / web / expense / ocr</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Twelve broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">192,897</div><div class="stat-label">Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val">193,109</div><div class="stat-label">Rust Lines</div></div>
         <div class="stat-card"><div class="stat-val accent">6+1</div><div class="stat-label">Library Crates + Tauri Shell</div></div>
         <div class="stat-card"><div class="stat-val green">69</div><div class="stat-label">Postgres Tables</div></div>
         <div class="stat-card"><div class="stat-val">31</div><div class="stat-label">Migrations</div></div>
@@ -125,10 +125,10 @@
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 192,897 Rust + 95,911 frontend = 288,626 total lines (excluding SQL + lib/uPlot + vendored assets)</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 193,109 Rust + 95,911 frontend = 288,626 total lines (excluding SQL + lib/uPlot + vendored assets)</p>
         <div class="bar-wrap" style="height:26px;">
           <div class="bar-fill cyan" style="width:66.8%;"></div>
-          <span class="bar-pct" style="font-size:12px;">192,897 Rust (59.1%) &middot; 131,207 JS (40.2%) &middot; 2,512 CSS (0.8%)</span>
+          <span class="bar-pct" style="font-size:12px;">193,109 Rust (59.1%) &middot; 131,207 JS (40.2%) &middot; 2,512 CSS (0.8%)</span>
         </div>
         <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Rust dominates because both the desktop and web binaries import the same library crates plus 6 shared workspace members (no duplication). Frontend is vanilla ES modules with zero npm, zero bundler, zero framework — one render function per view, all routed by hash dispatch.</p>
       </div>
@@ -203,7 +203,7 @@
           </tr>
           <tr class="total-row">
             <td>Total</td>
-            <td class="num">192,897</td>
+            <td class="num">193,109</td>
             <td class="num">100%</td>
             <td></td>
             <td>Plus 131,207 LOC frontend JS + 2,512 LOC CSS (no bundler, no npm).</td>
