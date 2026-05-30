@@ -117,12 +117,58 @@ function renderReport(r, out, mount) {
             <div id="cmp-rs"></div>
         </div>
         <div class="chart-panel">
+            <h2 data-i18n="view.compare.h2.returns_chart">Returns by window (per symbol)</h2>
+            <div id="cmp-returns-chart" style="width:100%;height:240px"></div>
+        </div>
+        <div class="chart-panel">
             <h2>${esc(t('view.compare.h2.fundamental', { count: r.rows.length }))}</h2>
             ${renderTable(r.rows)}
             <p class="muted small">${esc(t('view.compare.hint.fetched', { time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }) }))}</p>
         </div>
     `;
     renderRsSvg(r.rows, mount);
+    renderReturnsChart(r.rows);
+}
+
+function renderReturnsChart(rows) {
+    const el = document.getElementById('cmp-returns-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const windows = ['return_1d', 'return_1w', 'return_1m', 'return_3m', 'return_6m', 'return_1y'];
+    const labels = ['1d', '1w', '1m', '3m', '6m', '1y'];
+    const xs = labels.map((_, i) => i + 1);
+    const symbolSeries = rows.map(r => windows.map(w => {
+        const v = r[w];
+        return (typeof v === 'number' && Number.isFinite(v)) ? v * 100 : null;
+    }));
+    const hasData = symbolSeries.some(s => s.some(v => v != null));
+    if (!hasData) {
+        el.innerHTML = `<div class="muted" data-i18n="view.compare.empty_chart">${esc(t('view.compare.empty_chart'))}</div>`;
+        return;
+    }
+    const zero = xs.map(() => 0);
+    const series = [
+        { label: t('view.compare.chart.window') },
+        ...rows.map((r, i) => ({
+            label: r.symbol,
+            stroke: COLORS[i] || '#aab',
+            width: 1.6,
+            points: { show: true, size: 8, fill: COLORS[i] || '#aab', stroke: COLORS[i] || '#aab' },
+        })),
+        { label: t('view.compare.chart.zero'),
+          stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+    ];
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ...symbolSeries, zero], el);
 }
 
 function renderTable(rows) {

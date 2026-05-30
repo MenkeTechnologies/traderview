@@ -168,6 +168,8 @@ pub enum Preset {
     GapUpNoFollowSqueeze,   // gap_pct >=  1 AND change_pct <=  0.5 AND day_pct.abs() < 0.5 — gap up failing to extend
     UnchVolDryUpSqueeze,    // |change| < 0.1 AND rel_volume < 0.5 — unchanged on dried-up volume
     NarrowAfterTrendSqueeze,// |day_pct| < 0.5 AND |change| >= 5 — narrow day after a big prior move
+    DeadCenterSqueeze,      // hod_dist AND lod_dist within 0.4 of each other AND |change| < 0.3 AND rel_vol < 0.7
+    AnchorDriftSqueeze,     // |day_pct| < 1 AND |change| < 1 AND |gap| < 1 AND rel_volume < 0.8 — generic light-day setup
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -380,6 +382,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NarrowAfterTrendSqueeze => {
             hit.day_pct.abs() < 0.5 && hit.change_pct.abs() >= 5.0
         }
+        Preset::DeadCenterSqueeze => {
+            (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.4
+                && hit.change_pct.abs() < 0.3
+                && hit.rel_volume < 0.7
+        }
+        Preset::AnchorDriftSqueeze => {
+            hit.day_pct.abs() < 1.0
+                && hit.change_pct.abs() < 1.0
+                && hit.gap_pct.abs() < 1.0
+                && hit.rel_volume < 0.8
+        }
     }
 }
 
@@ -438,6 +451,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapUpNoFollowSqueeze => "Gap-Up No-Follow Squeeze",
         Preset::UnchVolDryUpSqueeze => "Unch-Vol Dry-Up Squeeze",
         Preset::NarrowAfterTrendSqueeze => "Narrow-After-Trend Squeeze",
+        Preset::DeadCenterSqueeze => "Dead-Center Squeeze",
+        Preset::AnchorDriftSqueeze => "Anchor-Drift Squeeze",
     }
 }
 

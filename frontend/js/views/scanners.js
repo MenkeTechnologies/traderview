@@ -50,6 +50,8 @@ const PRESETS = [
     { id: 'gap_up_no_follow_squeeze',   label: t('view.scanners.preset.gap_up_no_follow_squeeze.label'),   desc: t('view.scanners.preset.gap_up_no_follow_squeeze.desc') },
     { id: 'unch_vol_dry_up_squeeze',    label: t('view.scanners.preset.unch_vol_dry_up_squeeze.label'),    desc: t('view.scanners.preset.unch_vol_dry_up_squeeze.desc') },
     { id: 'narrow_after_trend_squeeze', label: t('view.scanners.preset.narrow_after_trend_squeeze.label'), desc: t('view.scanners.preset.narrow_after_trend_squeeze.desc') },
+    { id: 'dead_center_squeeze',       label: t('view.scanners.preset.dead_center_squeeze.label'),       desc: t('view.scanners.preset.dead_center_squeeze.desc') },
+    { id: 'anchor_drift_squeeze',      label: t('view.scanners.preset.anchor_drift_squeeze.label'),      desc: t('view.scanners.preset.anchor_drift_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
