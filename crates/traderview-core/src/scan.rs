@@ -552,6 +552,8 @@ pub enum Preset {
     TightRangeFlatDayDryVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume < 0.5 — tight range + flat intraday + dry vol (deep sleep; no participation)
     HodHotVolMicroRange,            // hod_dist_pct.abs() < 0.2 AND 0.5 <= lod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at HOD with wider intraday range on hot vol (controlled mark-up)
     LodHotVolMicroRange,            // lod_dist_pct.abs() < 0.2 AND 0.5 <= hod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at LOD with wider intraday range on hot vol (controlled mark-down)
+    GapAndGoStrongClose,            // gap_pct > 1 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 — gap up + extended past gap + closing at HOD (gap-and-go follow-through)
+    GapAndFadeWeakClose,            // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 — gap up + reversed below flat + closing at LOD (gap fade / failed breakout)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2880,6 +2882,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() <= 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::GapAndGoStrongClose => {
+            hit.gap_pct > 1.0
+                && hit.change_pct > hit.gap_pct
+                && hit.hod_dist_pct.abs() < 0.5
+        }
+        Preset::GapAndFadeWeakClose => {
+            hit.gap_pct > 1.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+        }
     }
 }
 
@@ -3322,6 +3334,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TightRangeFlatDayDryVol => "Tight Range + Flat Intraday + Dry Vol (Deep Sleep)",
         Preset::HodHotVolMicroRange => "Close Pinned at HOD + Wider Range + Hot Vol (Controlled Mark-up)",
         Preset::LodHotVolMicroRange => "Close Pinned at LOD + Wider Range + Hot Vol (Controlled Mark-down)",
+        Preset::GapAndGoStrongClose => "Gap-and-Go + Strong Close at HOD (Follow-through)",
+        Preset::GapAndFadeWeakClose => "Gap-and-Fade + Weak Close at LOD (Failed Breakout)",
     }
 }
 
