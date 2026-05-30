@@ -210,6 +210,8 @@ const PRESETS = [
     { id: 'deep_bounce_in_downtrend', label: t('view.scanners.preset.deep_bounce_in_downtrend.label'), desc: t('view.scanners.preset.deep_bounce_in_downtrend.desc') },
     { id: 'tight_above_mid_strong', label: t('view.scanners.preset.tight_above_mid_strong.label'), desc: t('view.scanners.preset.tight_above_mid_strong.desc') },
     { id: 'tight_below_mid_weak', label: t('view.scanners.preset.tight_below_mid_weak.label'), desc: t('view.scanners.preset.tight_below_mid_weak.desc') },
+    { id: 'hot_vol_no_move_at_high', label: t('view.scanners.preset.hot_vol_no_move_at_high.label'), desc: t('view.scanners.preset.hot_vol_no_move_at_high.desc') },
+    { id: 'hot_vol_no_move_at_low', label: t('view.scanners.preset.hot_vol_no_move_at_low.label'), desc: t('view.scanners.preset.hot_vol_no_move_at_low.desc') },
 ];
 
 export async function renderScanners(mount) {
