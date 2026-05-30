@@ -570,6 +570,8 @@ pub enum Preset {
     RelativeWeaknessBuild,          // change_pct < -1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful drop + slightly elevated vol + no big gap (organic relative-weakness build; no catalyst-driven gap)
     HighVolAbsorbingChange,         // rel_volume >= 2 AND hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — hot vol + tight intraday range + meaningful change (volume absorbing in tight range; strong directional pressure being absorbed for likely follow-through)
     LowVolWideRangeAccumulator,     // rel_volume < 0.5 AND hod_dist + lod_dist > 2 AND change_pct.abs() > 1 — dry vol + wider intraday range + meaningful change (low-participation but wide spread; accumulator working orders quietly)
+    BullishEngulfingHotVol,         // gap_pct < -0.5 AND change_pct > 1.5 AND day_pct > 1 AND rel_volume >= 1.5 — gap down + reversed strong + closed positive intraday + hot vol (bullish engulfing with volume confirmation)
+    BearishEngulfingHotVol,         // gap_pct > 0.5 AND change_pct < -1.5 AND day_pct < -1 AND rel_volume >= 1.5 — gap up + reversed weak + closed negative intraday + hot vol (bearish engulfing with volume confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2995,6 +2997,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
                 && hit.change_pct.abs() > 1.0
         }
+        Preset::BullishEngulfingHotVol => {
+            hit.gap_pct < -0.5
+                && hit.change_pct > 1.5
+                && hit.day_pct > 1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BearishEngulfingHotVol => {
+            hit.gap_pct > 0.5
+                && hit.change_pct < -1.5
+                && hit.day_pct < -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3455,6 +3469,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::RelativeWeaknessBuild => "Organic Down + Slight Vol Pickup + No Gap (Relative-Weakness Build)",
         Preset::HighVolAbsorbingChange => "Hot Vol + Tight Range + Meaningful Change (Volume Absorbing Directional Pressure)",
         Preset::LowVolWideRangeAccumulator => "Dry Vol + Wider Range + Meaningful Change (Quiet Accumulator Working)",
+        Preset::BullishEngulfingHotVol => "Bullish Engulfing + Hot Vol (Gap Down + Strong Reversal)",
+        Preset::BearishEngulfingHotVol => "Bearish Engulfing + Hot Vol (Gap Up + Strong Reversal)",
     }
 }
 

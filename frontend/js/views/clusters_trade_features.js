@@ -53,6 +53,11 @@ export async function renderClustersTradeFeatures(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.clusters_trade_features.h2.performance_chart">Per-cluster mean R + win rate — performance comparison</h2>
+            <div id="cl-perf-chart" style="height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.clusters_trade_features.h2.per_cluster_stats">Per-cluster stats</h2>
             <div id="cl-clusters"></div>
         </div>
@@ -98,6 +103,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderChart(state.features, local);
     renderClusters(local);
+    renderPerfChart(local);
     let resp;
     try {
         resp = await api.clustersTradeFeatures(buildBody(state.features, state.k, state.maxIters));
@@ -110,6 +116,7 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderChart(state.features, resp);
     renderClusters(resp);
+    renderPerfChart(resp);
     showToast(t('view.clusters_trade_features.toast.analyzed', { k: resp.clusters.length, n: state.features.length }), { level: 'success' });
 }
 
@@ -231,6 +238,44 @@ function renderClusters(report) {
             </tbody>
         </table>
     `;
+}
+
+function renderPerfChart(report) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cl-perf-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!report || !Array.isArray(report.clusters) || !report.clusters.length) {
+        el.innerHTML = `<div class="muted" data-i18n="view.clusters_trade_features.empty_perf_chart">${esc(t('view.clusters_trade_features.empty_perf_chart'))}</div>`;
+        return;
+    }
+    const labels = report.clusters.map(c => `c${c.cluster_id}`);
+    const meanR = report.clusters.map(c => Number.isFinite(c.mean_r) ? c.mean_r : null);
+    const winRate = report.clusters.map(c => Number.isFinite(c.win_rate) ? c.win_rate * 100 : null);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true }, y_pct: { range: [0, 100] } },
+        series: [
+            { label: t('view.clusters_trade_features.chart.cluster_idx') },
+            { label: t('view.clusters_trade_features.chart.mean_r'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 14, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.clusters_trade_features.chart.win_rate'),
+              stroke: '#7af0a8', width: 0, scale: 'y_pct',
+              points: { show: true, size: 10, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.clusters_trade_features.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 60 },
+            { stroke: '#7af0a8', size: 50, scale: 'y_pct', side: 1 },
+        ],
+        legend: { show: true },
+    }, [xs, meanR, winRate, zero], el);
 }
 
 function showErr(msg) {

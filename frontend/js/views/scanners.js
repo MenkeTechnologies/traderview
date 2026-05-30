@@ -452,6 +452,8 @@ const PRESETS = [
     { id: 'relative_weakness_build', label: t('view.scanners.preset.relative_weakness_build.label'), desc: t('view.scanners.preset.relative_weakness_build.desc') },
     { id: 'high_vol_absorbing_change', label: t('view.scanners.preset.high_vol_absorbing_change.label'), desc: t('view.scanners.preset.high_vol_absorbing_change.desc') },
     { id: 'low_vol_wide_range_accumulator', label: t('view.scanners.preset.low_vol_wide_range_accumulator.label'), desc: t('view.scanners.preset.low_vol_wide_range_accumulator.desc') },
+    { id: 'bullish_engulfing_hot_vol', label: t('view.scanners.preset.bullish_engulfing_hot_vol.label'), desc: t('view.scanners.preset.bullish_engulfing_hot_vol.desc') },
+    { id: 'bearish_engulfing_hot_vol', label: t('view.scanners.preset.bearish_engulfing_hot_vol.label'), desc: t('view.scanners.preset.bearish_engulfing_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
