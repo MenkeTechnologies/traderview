@@ -380,6 +380,8 @@ pub enum Preset {
     GapDownSmallButHotVol,       // gap_pct between -1.5 and -0.5 AND rel_volume >= 2 — small overnight gap-down on heavy vol (early-positioning signal)
     GapUpMediumNeutral,          // gap_pct between 1.5 and 3 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-up but flat day on light vol (gap-and-stall)
     GapDownMediumNeutral,        // gap_pct between -3 and -1.5 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-down but flat day on light vol (gap-and-stall)
+    HodReclaimAfterFlush,        // change_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at HOD after touching deep LOD on heavy vol (V-bottom intraday)
+    LodFailAfterPush,            // change_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at LOD after touching distant HOD on heavy vol (failed-push intraday)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1708,6 +1710,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 1.0
         }
+        Preset::HodReclaimAfterFlush => {
+            hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.lod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::LodFailAfterPush => {
+            hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.hod_dist_pct.abs() > 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -1978,6 +1992,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownSmallButHotVol => "Gap-Down Small + Hot Vol",
         Preset::GapUpMediumNeutral => "Gap-Up Medium + Flat Day",
         Preset::GapDownMediumNeutral => "Gap-Down Medium + Flat Day",
+        Preset::HodReclaimAfterFlush => "HOD Reclaim After Flush",
+        Preset::LodFailAfterPush => "LOD Fail After Push",
     }
 }
 

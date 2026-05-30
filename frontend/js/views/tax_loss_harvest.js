@@ -73,6 +73,11 @@ export async function renderTaxLossHarvest(mount, _appState) {
             <div id="tlh-chart" style="width:100%;height:220px"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_loss_harvest.h2.qty_chart">Lot size per candidate (shares)</h2>
+            <div id="tlh-qty-chart" style="width:100%;height:200px"></div>
+        </div>
+
         <div id="tlh-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     const loadDemo = (k) => {
@@ -126,6 +131,7 @@ async function compute(tok) {
     renderSummary(local, true);
     renderTable(local);
     renderLossesChart(local);
+    renderQtyChart(local);
     let resp;
     try {
         resp = await api.calcTaxLossHarvest(buildBody(
@@ -149,6 +155,38 @@ async function compute(tok) {
     renderSummary(normalized, false);
     renderTable(normalized);
     renderLossesChart(normalized);
+    renderQtyChart(normalized);
+}
+
+function renderQtyChart(report) {
+    const el = document.getElementById('tlh-qty-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (report?.candidates || []).filter(c => Number.isFinite(Number(c.qty)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_loss_harvest.empty_qty_chart">${esc(t('view.tax_loss_harvest.empty_qty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.qty) - Number(a.qty));
+    const labels = rows.map(c => c.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(c => Number(c.qty));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_loss_harvest.chart.symbol') },
+            { label: t('view.tax_loss_harvest.chart.qty'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderLossesChart(report) {
