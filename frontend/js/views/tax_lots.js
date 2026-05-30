@@ -131,6 +131,44 @@ function renderReport(r, out) {
             <p data-i18n="view.tax_lots.hint.holding_period_clock_on_open_lots_is_current_as_of" class="muted small">Holding-period clock on open lots is current as of now — closing
                 these positions today would realize at their displayed term.</p>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.tax_lots.h2.realized_chart">Realized gain/loss per event</h2>
+            <div id="tl-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(out); } catch (_) {}
+    renderRealizedChart(r.realized);
+}
+
+function renderRealizedChart(realized) {
+    const el = document.getElementById('tl-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const events = Array.isArray(realized) ? realized.filter(e => Number.isFinite(e.gain_loss)) : [];
+    if (events.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.tax_lots.empty_chart">${esc(t('view.tax_lots.empty_chart'))}</div>`;
+        return;
+    }
+    const gain = events.map(e => e.gain_loss);
+    const xs = gain.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.tax_lots.chart.event_idx') },
+            { label: t('view.tax_lots.chart.gain_loss'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.tax_lots.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28 },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: true },
+    }, [xs, gain, zero], el);
 }
