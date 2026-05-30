@@ -79,6 +79,11 @@ export async function renderCusum(mount, _appState) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.cusum.h2.detector_state_chart">CUSUM detector state — G+ and G− vs threshold band</h2>
+            <div id="cu-state-chart" style="height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.cusum.h2.event_log">Event log</h2>
             <div id="cu-events"></div>
         </div>
@@ -139,6 +144,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(res, series);
     renderChart(series, res);
+    renderStateChart(series);
     renderEvents(res);
     const events = res.events || [];
     showToast(t('view.cusum.toast.done', {
@@ -194,6 +200,52 @@ function renderChart(series, report) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, series, up, dn], el);
+}
+
+function renderStateChart(series) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cu-state-chart');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!Array.isArray(series) || series.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.cusum.empty_state_chart">${esc(t('view.cusum.empty_state_chart'))}</div>`;
+        return;
+    }
+    const cfg = state.config;
+    const xs = series.map((_, i) => i);
+    const slack = cfg.slack * cfg.reference_stdev;
+    const trig = cfg.threshold_stdevs * cfg.reference_stdev;
+    const gp = new Array(series.length).fill(0);
+    const gn = new Array(series.length).fill(0);
+    let pos = 0, neg = 0;
+    for (let i = 0; i < series.length; i++) {
+        const dev = series[i] - cfg.reference_mean;
+        pos = Math.max(0, pos + dev - slack);
+        neg = Math.min(0, neg + dev + slack);
+        if (pos >= trig) pos = 0;
+        if (neg <= -trig) neg = 0;
+        gp[i] = pos;
+        gn[i] = neg;
+    }
+    const upBand = xs.map(() => trig);
+    const dnBand = xs.map(() => -trig);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.cusum.series.g_pos'),
+              stroke: '#7af0a8', width: 1.4, points: { show: false } },
+            { label: t('view.cusum.series.g_neg'),
+              stroke: '#ff3860', width: 1.4, points: { show: false } },
+            { label: t('view.cusum.series.up_threshold'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.cusum.series.dn_threshold'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, gp, gn, upBand, dnBand], el);
 }
 
 function renderEvents(report) {
