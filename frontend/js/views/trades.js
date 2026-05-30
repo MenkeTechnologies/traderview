@@ -21,6 +21,10 @@ export async function renderTradesView(mount, state) {
                data-i18n="view.trades.btn.new_trade"
                data-tip="view.trades.tip.new_trade"
                data-shortcut="trades_new">+ New trade</a>
+            <button type="button" class="btn btn-secondary" id="trades-refresh-btn"
+                    data-i18n="view.trades.btn.refresh"
+                    data-tip="view.trades.tip.refresh"
+                    data-shortcut="trades_refresh">⟳ Refresh</button>
             <button data-i18n="view.trades.btn.re_run_fifo" class="primary" id="rollup-btn">Re-run FIFO</button>
             <button data-i18n="view.trades.btn.close_expired_options" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
             <span class="muted" id="sel-count" style="margin-left:14px">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>
@@ -49,6 +53,9 @@ export async function renderTradesView(mount, state) {
     const filterMount = mount.querySelector('#filter-mount');
     if (filterMount) filterMount.appendChild(fEl);
 
+    const refreshBtn = mount.querySelector('#trades-refresh-btn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () =>
+        window.dispatchEvent(new HashChangeEvent('hashchange')));
     mount.querySelector('#rollup-btn').addEventListener('click', async () => {
         await api.rollupTrades(state.accountId);
         if (!viewIsCurrent(tok)) return;

@@ -11725,6 +11725,8 @@
   "view.trades.btn.re_run_fifo": "Re-run FIFO",
   "view.trades.btn.new_trade":   "+ New trade",
   "view.trades.tip.new_trade":   "Open the new-trade form",
+  "view.trades.btn.refresh":     "⟳ Refresh",
+  "view.trades.tip.refresh":     "Re-fetch the trade list from the server",
   "view.trades.btn.close_expired_options": "Close expired options",
   "view.trades.btn.apply": "Apply",
   "view.trades.btn.delete": "delete",
