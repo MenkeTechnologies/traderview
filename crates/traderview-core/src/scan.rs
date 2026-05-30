@@ -256,6 +256,8 @@ pub enum Preset {
     LowVolColdZoneSqueeze,       // year_low_pct <= 5 AND rel_volume < 0.4 — at 52w low zone with very low vol (no panic, no buying)
     DriftHigherSqueeze,          // change_pct > 0 AND change_pct < 2 AND day_pct > 0 AND day_pct < 1 AND rel_volume < 0.9 — slow grinding-up day
     DriftLowerSqueeze,           // change_pct < 0 AND change_pct > -2 AND day_pct < 0 AND day_pct > -1 AND rel_volume < 0.9 — slow grinding-down day
+    ExtremeQuietSqueeze,         // rel_volume < 0.2 AND change_pct.abs() < 0.5 AND day_pct.abs() < 0.5 AND gap_pct.abs() < 0.2 — extreme quiet on all axes
+    PinnedToOpenSqueeze,         // day_pct.abs() < 0.05 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close ≈ open + narrow range
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -961,6 +963,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct > -1.0
                 && hit.rel_volume < 0.9
         }
+        Preset::ExtremeQuietSqueeze => {
+            hit.rel_volume < 0.2
+                && hit.change_pct.abs() < 0.5
+                && hit.day_pct.abs() < 0.5
+                && hit.gap_pct.abs() < 0.2
+        }
+        Preset::PinnedToOpenSqueeze => {
+            hit.day_pct.abs() < 0.05
+                && hit.hod_dist_pct.abs() < 1.0
+                && hit.lod_dist_pct.abs() < 1.0
+        }
     }
 }
 
@@ -1107,6 +1120,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowVolColdZoneSqueeze => "Low-Vol Cold-Zone Squeeze",
         Preset::DriftHigherSqueeze => "Drift-Higher Squeeze",
         Preset::DriftLowerSqueeze => "Drift-Lower Squeeze",
+        Preset::ExtremeQuietSqueeze => "Extreme-Quiet Squeeze",
+        Preset::PinnedToOpenSqueeze => "Pinned-To-Open Squeeze",
     }
 }
 

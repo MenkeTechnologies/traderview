@@ -132,6 +132,10 @@ function renderPairOut(el, a, b, r, mount) {
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.trade_signal">Trade signal</h2><p><strong>${reco}</strong></p></div>
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.spread_series">Spread series</h2><div id="sp-chart"></div></div>
         <div class="chart-panel"><h2 data-i18n="view.pairs.h2.z_score">Z-score</h2><div id="z-chart"></div></div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.pairs.h2.zscore_chart">Z-score with ±2 reference lines</h2>
+            <div id="pair-z-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     try { applyUiI18n(el); } catch (_) {}
     const labels = r.spread_series.map((_, i) => String(i));
@@ -139,4 +143,38 @@ function renderPairOut(el, a, b, r, mount) {
     const zChart = mount.querySelector('#z-chart');
     if (spChart) barChart(spChart, labels, r.spread_series, { color: '#00e5ff' });
     if (zChart) barChart(zChart,  labels, r.zscore_series, { color: '#b86bff' });
+    renderZScoreLineChart(r.zscore_series);
+}
+
+function renderZScoreLineChart(zSeries) {
+    const el = document.getElementById('pair-z-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const valid = (zSeries || []).filter(v => Number.isFinite(Number(v)));
+    if (valid.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.pairs.empty_chart">${esc(t('view.pairs.empty_chart'))}</div>`;
+        return;
+    }
+    const ys = valid.map(v => Number(v));
+    const xs = ys.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    const upper = xs.map(() => 2);
+    const lower = xs.map(() => -2);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.pairs.chart.sample_idx') },
+            { label: t('view.pairs.chart.z'),
+              stroke: '#b86bff', width: 1.6, points: { show: false } },
+            { label: t('view.pairs.chart.upper'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.pairs.chart.zero'),
+              stroke: '#888', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.pairs.chart.lower'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, upper, zero, lower], el);
 }

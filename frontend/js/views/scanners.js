@@ -138,6 +138,8 @@ const PRESETS = [
     { id: 'low_vol_cold_zone_squeeze',  label: t('view.scanners.preset.low_vol_cold_zone_squeeze.label'),  desc: t('view.scanners.preset.low_vol_cold_zone_squeeze.desc') },
     { id: 'drift_higher_squeeze',       label: t('view.scanners.preset.drift_higher_squeeze.label'),       desc: t('view.scanners.preset.drift_higher_squeeze.desc') },
     { id: 'drift_lower_squeeze',        label: t('view.scanners.preset.drift_lower_squeeze.label'),        desc: t('view.scanners.preset.drift_lower_squeeze.desc') },
+    { id: 'extreme_quiet_squeeze',      label: t('view.scanners.preset.extreme_quiet_squeeze.label'),      desc: t('view.scanners.preset.extreme_quiet_squeeze.desc') },
+    { id: 'pinned_to_open_squeeze',     label: t('view.scanners.preset.pinned_to_open_squeeze.label'),     desc: t('view.scanners.preset.pinned_to_open_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
