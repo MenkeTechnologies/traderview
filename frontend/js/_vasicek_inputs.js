@@ -98,6 +98,6 @@ export function fmtRatePct(r, digits = 4) {
 /** Format a years-duration concisely (days vs years depending on size). */
 export function fmtYears(y) {
     if (!Number.isFinite(y)) return '—';
-    if (y < 1.0) return `${(y * 365).toFixed(1)} days`;
-    return `${y.toFixed(2)} years`;
+    if (y < 1.0) return t('view.vasicek.fmt.days', { n: (y * 365).toFixed(1) });
+    return t('view.vasicek.fmt.years', { n: y.toFixed(2) });
 }

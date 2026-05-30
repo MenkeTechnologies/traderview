@@ -31,7 +31,7 @@ export function parseCashFlowBlob(text) {
         if (!s) continue;
         const parts = s.split(TOKEN_DELIM).filter(Boolean);
         if (parts.length !== 2) {
-            errors.push({ line_no: i + 1, raw, message: `expected 2 tokens (time_years amount), got ${parts.length}` });
+            errors.push({ line_no: i + 1, raw, message: tr('view.bond_duration.parse.expected_2_got', { n: parts.length }) });
             continue;
         }
         const t = Number(parts[0]);
@@ -188,7 +188,7 @@ export function fmtPct(v, d = 2) {
 
 export function fmtYears(v, d = 3) {
     if (!Number.isFinite(v)) return '—';
-    return v.toFixed(d) + ' yr';
+    return tr('view.bond_duration.fmt.yr', { n: v.toFixed(d) });
 }
 
 export function fmtBpsSigned(v) {
