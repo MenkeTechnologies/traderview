@@ -3,7 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    parseEquity, validateInputs, buildBody, localEvaluate, paceBadge,
+    validateInputs, buildBody, localEvaluate, paceBadge,
     makeDemoData, todayIso, fmtUSD, fmtPct,
 } from '../js/_goal_tracker_inputs.js';
 

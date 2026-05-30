@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_PERIOD, DEFAULT_INPUTS,
-    parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
+    DEFAULT_PERIOD, parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     regimeBadge, lastCrossover, summarize,
     makeDemoInput,
     fmtNum, fmtPct, fmtOsc, fmtInt, fmtUSD,

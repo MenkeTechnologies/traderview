@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    OVER_TOL, DEFAULT_INPUTS,
-    parseWeightsBlob, weightsToBlob, validateInputs, buildBody, localCompute,
+    OVER_TOL, parseWeightsBlob, weightsToBlob, validateInputs, buildBody, localCompute,
     styleBadge, sumBadge, enrich, stanceLabelKey,
     makeDemoInput,
     fmtPct, fmtPctSigned, fmtNum, fmtInt,

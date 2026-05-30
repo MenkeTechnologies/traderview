@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    KINDS, DEFAULT_INPUTS,
-    parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
+    KINDS, parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     summarize, convictionBadge, lastBadge,
     makeDemoInput,
     fmtUSD, fmtNum, fmtInt, fmtVol, kindLabelKey, kindCls,

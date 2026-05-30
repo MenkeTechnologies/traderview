@@ -3,7 +3,6 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_INPUTS,
     parseQuotesBlob, quotesToBlob, validateInputs, buildBody,
     localCompute, localSeries, summarize, imbalanceBadge,
     makeDemoInput,

@@ -14,6 +14,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const JS_DIR = join(__dirname, '../js');
+const TESTS_DIR = join(__dirname);
 
 function walk(dir) {
     const out = [];
@@ -35,15 +36,32 @@ function stripComments(src) {
 }
 
 function findUnused(src) {
-    // Strip comments for usage counting; keep originals for import location.
+    // Strip block comments for usage counting; line comments left intact
+    // because chopping at `//` would also chop content inside template
+    // literals like `<h1>// SHARED · ${esc(x)}</h1>`. Mitigation: when
+    // scanning for `import { ... }` matches, skip ones that appear inside
+    // a `//` line comment (jsdoc usage examples).
     const stripped = stripComments(src);
     const re = /import\s*\{([^}]+)\}\s*from\s*['"][^'"]+['"]/g;
+    const lines = src.split('\n');
+    // Pre-compute a per-line "starts-with-line-comment-marker?" flag.
+    const lineCommentAt = new Set();
+    let offset = 0;
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trimStart();
+        if (trimmed.startsWith('//') || trimmed.startsWith('*')) {
+            // mark the range of byte offsets this line covers
+            for (let p = offset; p < offset + lines[i].length; p++) lineCommentAt.add(p);
+        }
+        offset += lines[i].length + 1;  // +1 for \n
+    }
     const unused = [];
     let m;
     while ((m = re.exec(src)) !== null) {
+        // Skip if the match starts inside a line comment.
+        if (lineCommentAt.has(m.index)) continue;
         const names = m[1].split(',').map(n => n.trim()).filter(Boolean);
         for (const n of names) {
-            // `X as Y` → check Y usage
             const usageName = n.split(/\s+as\s+/).pop().trim();
             if (!/^[a-zA-Z_$][\w$]*$/.test(usageName)) continue;
             const wre = new RegExp(`\\b${usageName.replace(/[$]/g, '\\$&')}\\b`, 'g');
@@ -54,8 +72,8 @@ function findUnused(src) {
     return unused;
 }
 
-test('no JS file under frontend/js/ has unused named imports', () => {
-    const files = walk(JS_DIR);
+test('no JS file under frontend/js/ or frontend/tests/ has unused named imports', () => {
+    const files = [...walk(JS_DIR), ...walk(TESTS_DIR)];
     const offenders = [];
     for (const f of files) {
         const src = readFileSync(f, 'utf8');

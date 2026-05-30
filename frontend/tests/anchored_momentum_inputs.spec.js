@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_SMOOTH, DEFAULT_INPUTS,
-    parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
+    DEFAULT_SMOOTH, parseClosesBlob, closesToBlob, validateInputs, buildBody, localCompute,
     momentumBadge, summarize,
     makeDemoInput,
     fmtPctSigned, fmtUSD, fmtInt,

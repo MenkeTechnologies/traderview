@@ -3,7 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_LAGS, CRIT_1PCT, CRIT_5PCT, CRIT_10PCT, SIGNIFICANCES,
+    CRIT_1PCT, CRIT_5PCT, CRIT_10PCT, SIGNIFICANCES,
     parseSeriesBlob, seriesToBlob, validateInputs, buildBody, localTest,
     significanceBadge, strengthBadge, significanceLabelKey,
     makeDemoInput,

@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    MU1, THETA, DEFAULT_INPUTS,
-    parseReturnsBlob, returnsToBlob, validateInputs, buildBody, localCompute,
+    MU1, THETA, parseReturnsBlob, returnsToBlob, validateInputs, buildBody, localCompute,
     jumpBadge, jumpFractionBadge, jumpRatio,
     makeDemoInput,
     fmtVar, fmtZ, fmtP, fmtPct, fmtInt,

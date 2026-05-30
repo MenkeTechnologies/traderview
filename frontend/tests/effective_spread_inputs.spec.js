@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    DIRECTIONS, DEFAULT_INPUTS,
-    parseObsBlob, obsToBlob, validateInputs, buildBody, localAnalyze,
+    DIRECTIONS, parseObsBlob, obsToBlob, validateInputs, buildBody, localAnalyze,
     executionBadge, adverseBadge, enrich,
     makeDemoInput,
     fmtUSD, fmtUSDSigned, fmtBps, fmtRatio, fmtInt, dirLabelKey,

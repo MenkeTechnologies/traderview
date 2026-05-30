@@ -3,8 +3,7 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_MAX_LAG, BARTLETT_Z, DEFAULT_INPUTS,
-    parseSeriesBlob, seriesToBlob, validateInputs, buildBody, localCompute,
+    DEFAULT_MAX_LAG, BARTLETT_Z, parseSeriesBlob, seriesToBlob, validateInputs, buildBody, localCompute,
     autocorrelationBadge, ar1PhiEstimate, summarize,
     makeDemoInput,
     fmtAcf, fmtBand, fmtInt, fmtNum,

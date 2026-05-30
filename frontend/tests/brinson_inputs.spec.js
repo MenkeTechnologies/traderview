@@ -3,7 +3,6 @@
 
 import { test, expect } from 'vitest';
 import {
-    DEFAULT_INPUTS,
     parseInputsBlob, inputsToBlob, validateInputs, buildBody, localAnalyze,
     activeBadge, driverBadge, enrichSector,
     makeDemoInput,
