@@ -560,6 +560,8 @@ pub enum Preset {
     LowOfYearHotVolPanic,           // year_low_pct < 1 AND rel_volume >= 2 AND change_pct < -2 — close near 52w low + hot vol + red day (capitulation panic candle)
     HighOfYearHotVolEuphoria,       // year_high_pct < 1 AND rel_volume >= 2 AND change_pct > 2 — close near 52w high + hot vol + green day (euphoric breakout candle)
     WideRangeFlatCloseHeavyChurn,   // hod_dist + lod_dist > 4 AND day_pct.abs() < 0.5 AND rel_volume >= 1.8 — wide intraday range + flat close + hot vol (heavy churning; both sides absorbing)
+    RangeExpansionDryVol,           // hod_dist + lod_dist > 3 AND rel_volume < 0.7 — wide intraday range on dry volume (thin-liquidity swing; algorithmic or illiquid; small participants creating wide range)
+    YearHighGapDownHotVol,          // year_high_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — near 52w high but gapping down on hot vol (distribution from top; topping pattern signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2932,6 +2934,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume >= 1.8
         }
+        Preset::RangeExpansionDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
+                && hit.rel_volume < 0.7
+        }
+        Preset::YearHighGapDownHotVol => {
+            hit.year_high_pct < 5.0
+                && hit.gap_pct < -2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -3382,6 +3393,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::LowOfYearHotVolPanic => "52w Low + Hot Vol + Red Day (Capitulation Panic)",
         Preset::HighOfYearHotVolEuphoria => "52w High + Hot Vol + Green Day (Euphoric Breakout)",
         Preset::WideRangeFlatCloseHeavyChurn => "Wide Range + Flat Close + Hot Vol (Heavy Churn / Both Sides Absorbed)",
+        Preset::RangeExpansionDryVol => "Wide Range + Dry Vol (Thin-liquidity Swing / Algorithmic)",
+        Preset::YearHighGapDownHotVol => "Near 52w High + Gap Down + Hot Vol (Distribution from Top)",
     }
 }
 

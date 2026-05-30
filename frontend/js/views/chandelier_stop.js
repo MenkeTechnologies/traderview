@@ -68,6 +68,11 @@ export async function renderChandelierStop(mount, _appState) {
                 trigger fired on this bar. Long stop trails BELOW price; short stop trails ABOVE.</p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.chandelier_stop.h2.atr_chart">ATR (volatility regime driving the stop width)</h2>
+            <div id="cs-atr-chart" style="height:220px"></div>
+        </div>
+
         <div id="cs-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
     document.getElementById('cs-demo').addEventListener('click', () => {
@@ -130,6 +135,7 @@ async function compute(tok) {
     if (!viewIsCurrent(tok)) return;
     renderSummary(stops || [], bars);
     renderChart(bars, stops || []);
+    renderAtrChart(bars, atr);
     const arr = stops || [];
     const triggers = arr.filter(s => s && s.triggered).length;
     showToast(t('view.chandelier_stop.toast.computed', { bars: bars.length, triggers }), { level: triggers > 0 ? 'warning' : 'success' });
@@ -180,6 +186,34 @@ function renderChart(bars, stops) {
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
     }, [xs, closes, stopPrice, triggers], el);
+}
+
+function renderAtrChart(bars, atr) {
+    if (!window.uPlot) return;
+    const el = document.getElementById('cs-atr-chart');
+    if (!el) return;
+    if (!bars || bars.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.chandelier_stop.empty_atr_chart">${esc(t('view.chandelier_stop.empty_atr_chart'))}</div>`;
+        return;
+    }
+    const xs = bars.map((_, i) => i);
+    const atrSeries = atr.map(v => Number.isFinite(v) ? v : null);
+    const mult = atrSeries.map(v => v == null ? null : v * state.config.atr_multiplier);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('chart.series.bar_num') },
+            { label: t('view.chandelier_stop.series.atr'),
+              stroke: '#00e5ff', width: 1.5,
+              points: { show: false } },
+            { label: t('view.chandelier_stop.series.atr_mult'),
+              stroke: '#ffd84a', width: 1.2, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
+        legend: { show: true },
+    }, [xs, atrSeries, mult], el);
 }
 
 function showErr(msg) {
