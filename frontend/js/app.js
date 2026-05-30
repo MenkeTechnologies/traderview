@@ -1086,6 +1086,11 @@ function bindTabs() {
         const el = document.getElementById('br-run');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `s` in black-litterman scope → click Solve posterior.
+    window.addEventListener('tv:black-litterman-run', () => {
+        const el = document.getElementById('bl-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // View-scoped: `n` in developer scope → focus token-name input.
     window.addEventListener('tv:developer-focus-name', () => {
         const el = document.querySelector('#tok-form input[name="name"]');

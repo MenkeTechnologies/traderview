@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_TAU,
@@ -31,17 +32,17 @@ export async function renderBlackLitterman(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.blit.btn.compute" id="bl-run" class="primary"
-                        data-tip="view.blit.tip.compute" type="button">Solve posterior</button>
+                        data-tip="view.blit.tip.compute" data-shortcut="black_litterman_run" type="button">Solve posterior</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.blit.btn.demo_two"      id="bl-demo-two"     class="secondary" type="button">Demo: 2-asset basic view</button>
-                <button data-i18n="view.blit.btn.demo_no_views" id="bl-demo-no"      class="secondary" type="button">Demo: no views (posterior = prior)</button>
-                <button data-i18n="view.blit.btn.demo_conf"     id="bl-demo-conf"    class="secondary" type="button">Demo: very confident (ω=1e-8)</button>
-                <button data-i18n="view.blit.btn.demo_loose"    id="bl-demo-loose"   class="secondary" type="button">Demo: very loose (ω=1e8)</button>
-                <button data-i18n="view.blit.btn.demo_three"    id="bl-demo-three"   class="secondary" type="button">Demo: 3-asset, 2 views</button>
-                <button data-i18n="view.blit.btn.demo_conflict" id="bl-demo-conflict" class="secondary" type="button">Demo: conflicting views</button>
-                <button data-i18n="view.blit.btn.demo_low_tau"  id="bl-demo-low-tau" class="secondary" type="button">Demo: low τ (0.001)</button>
-                <button data-i18n="view.blit.btn.demo_hi_tau"   id="bl-demo-hi-tau"  class="secondary" type="button">Demo: large τ (0.50)</button>
+                <button data-i18n="view.blit.btn.demo_two"      id="bl-demo-two"      class="secondary" data-tip="view.blit.tip.demo_two"      type="button">Demo: 2-asset basic view</button>
+                <button data-i18n="view.blit.btn.demo_no_views" id="bl-demo-no"       class="secondary" data-tip="view.blit.tip.demo_no_views" type="button">Demo: no views (posterior = prior)</button>
+                <button data-i18n="view.blit.btn.demo_conf"     id="bl-demo-conf"     class="secondary" data-tip="view.blit.tip.demo_conf"     type="button">Demo: very confident (ω=1e-8)</button>
+                <button data-i18n="view.blit.btn.demo_loose"    id="bl-demo-loose"    class="secondary" data-tip="view.blit.tip.demo_loose"    type="button">Demo: very loose (ω=1e8)</button>
+                <button data-i18n="view.blit.btn.demo_three"    id="bl-demo-three"    class="secondary" data-tip="view.blit.tip.demo_three"    type="button">Demo: 3-asset, 2 views</button>
+                <button data-i18n="view.blit.btn.demo_conflict" id="bl-demo-conflict" class="secondary" data-tip="view.blit.tip.demo_conflict" type="button">Demo: conflicting views</button>
+                <button data-i18n="view.blit.btn.demo_low_tau"  id="bl-demo-low-tau"  class="secondary" data-tip="view.blit.tip.demo_low_tau"  type="button">Demo: low τ (0.001)</button>
+                <button data-i18n="view.blit.btn.demo_hi_tau"   id="bl-demo-hi-tau"   class="secondary" data-tip="view.blit.tip.demo_hi_tau"   type="button">Demo: large τ (0.50)</button>
             </div>
             <p data-i18n="view.blit.hint.about" class="muted">μ_bl = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹ · [(τΣ)⁻¹π + PᵀΩ⁻¹Q]. Σ_bl = Σ + A⁻¹. Low ω = high confidence (pulls posterior to view). High τ = weaker prior (more weight on views).</p>
         </div>
@@ -85,6 +86,7 @@ function readInputs() {
     const p = parseBlackLittermanBlob(document.getElementById('bl-blob').value);
     if (p.errors.length) {
         showErr(`${t('view.blit.err.parse_prefix')}: ` + p.errors.slice(0, 3).map(e => e.message).join('; '));
+        showToast(t('view.blit.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -103,9 +105,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.blit.toast.invalid'), { level: 'warning' }); return; }
     const local = localSolve(state.inputs);
-    if (!local) { showErr(t('view.blit.err.degenerate')); return; }
+    if (!local) { showErr(t('view.blit.err.degenerate')); showToast(t('view.blit.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart(local);
     renderVolChart(local);
@@ -115,14 +117,16 @@ async function compute(tok) {
         resp = await api.portfolioBlackLitterman(buildBody(state));
     } catch (e) {
         showErr(`${t('view.blit.err.api')}: ${e.message || e}`);
+        showToast(t('view.blit.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.blit.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.blit.err.server_rejected')); showToast(t('view.blit.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderVolChart(resp);
     renderTable(resp);
+    showToast(t('view.blit.toast.solved'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
