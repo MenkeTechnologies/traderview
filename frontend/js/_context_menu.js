@@ -157,6 +157,16 @@ export const ALERT_RULE_ROW_ITEMS = [
       actionKey: 'tv:ar-row-delete',    section: 'alert' },
 ];
 
+// Plan-row context items. Right-click on a <tr data-context-scope=
+// "plan-row" data-id="X" data-symbol="Y"> shows: Copy symbol /
+// Abandon plan. Abandon uses tConfirm + api.abandonPlan.
+export const PLAN_ROW_ITEMS = [
+    { id: 'plan_row_copy_symbol', labelKey: 'ctxmenu.plan_row_copy_symbol',
+      actionKey: 'tv:plan-row-copy-symbol', section: 'plan' },
+    { id: 'plan_row_abandon',     labelKey: 'ctxmenu.plan_row_abandon',
+      actionKey: 'tv:plan-row-abandon',     section: 'plan' },
+];
+
 // Account-row context items. Right-click on a <tr data-context-scope=
 // "account-row" data-id="X" data-name="Y"> shows: Copy ID / Delete.
 export const ACCOUNT_ROW_ITEMS = [
@@ -298,6 +308,7 @@ export const ALL_SCOPED_ITEMS = [
     ['hotkey-row',             HOTKEY_ROW_ITEMS],
     ['custom-indicator-row',   CUSTOM_INDICATOR_ROW_ITEMS],
     ['account-row',            ACCOUNT_ROW_ITEMS],
+    ['plan-row',               PLAN_ROW_ITEMS],
     ['journal-entry',          JOURNAL_ENTRY_ITEMS],
     ['api-token-row',          API_TOKEN_ROW_ITEMS],
     ['tag-chip',               TAG_CHIP_ITEMS],

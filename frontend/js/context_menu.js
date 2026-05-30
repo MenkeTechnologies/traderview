@@ -275,6 +275,34 @@ export function installContextMenu() {
             window.dispatchEvent(new HashChangeEvent('hashchange'));
         })();
     });
+    // Plan-row actions — read data-id / data-symbol.
+    window.addEventListener('tv:plan-row-copy-symbol', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const sym = tgt && tgt.dataset && tgt.dataset.symbol;
+        if (!sym) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            void navigator.clipboard.writeText(sym).then(
+                () => showToast(t('toast.copied', { what: sym }), { level: 'success' }),
+                () => showToast(t('toast.error.api', { err: t('toast.err.clipboard_denied') }), { level: 'error' }),
+            );
+        }
+    });
+    window.addEventListener('tv:plan-row-abandon', (e) => {
+        const tgt = e.detail && e.detail.target;
+        const id = tgt && tgt.dataset && tgt.dataset.id;
+        const sym = (tgt && tgt.dataset && tgt.dataset.symbol) || '';
+        if (!id) return;
+        void (async () => {
+            if (!await tConfirm('ctxmenu.plan_row_abandon_confirm', { sym }, { level: 'danger' })) return;
+            try {
+                await api.abandonPlan(id);
+                showToast(t('toast.plan_abandoned', { sym }), { level: 'success' });
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        })();
+    });
     // Account-row actions — read data-id / data-name.
     window.addEventListener('tv:acct-row-copy-id', (e) => {
         const tgt = e.detail && e.detail.target;

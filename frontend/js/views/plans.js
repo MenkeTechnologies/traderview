@@ -39,7 +39,7 @@ export async function renderPlans(mount, state) {
                 const risk = p.stop_loss ? Math.abs(Number(p.intended_entry) - Number(p.stop_loss)) : null;
                 const reward = p.initial_target ? Math.abs(Number(p.initial_target) - Number(p.intended_entry)) : null;
                 const rr = risk && reward ? (reward / risk).toFixed(2) : '—';
-                return `<tr>
+                return `<tr data-context-scope="plan-row" data-id="${esc(p.id)}" data-symbol="${esc(p.symbol)}">
                     <td>${fmtDateTime(p.created_at)}</td>
                     <td>${esc(p.symbol)}</td>
                     <td>${p.side}</td>
