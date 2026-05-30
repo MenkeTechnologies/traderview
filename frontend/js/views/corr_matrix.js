@@ -125,7 +125,47 @@ function render(r, out) {
             <h2 data-i18n="view.corr_matrix.h2.most_diversifying_pairs_best_hedges">Most diversifying pairs (best hedges)</h2>
             ${pairTable(r.top_diversifying)}
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.corr_matrix.h2.distribution_chart">ρ distribution across all pairs</h2>
+            <div id="cm-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
+    renderDistributionChart(r);
+}
+
+function renderDistributionChart(r) {
+    const el = document.getElementById('cm-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pairs = (r.pairs || []).filter(p => Number.isFinite(Number(p.value)));
+    if (pairs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.corr_matrix.empty_chart">${esc(t('view.corr_matrix.empty_chart'))}</div>`;
+        return;
+    }
+    const ys = pairs.map(p => Number(p.value)).sort((a, b) => a - b);
+    const xs = ys.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    const hi = xs.map(() => 0.7);
+    const lo = xs.map(() => -0.3);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: false, range: [-1, 1] } },
+        series: [
+            { label: t('view.corr_matrix.chart.pair_idx') },
+            { label: t('view.corr_matrix.chart.rho'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 6, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.corr_matrix.chart.high'),
+              stroke: '#ff3860', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.corr_matrix.chart.zero'),
+              stroke: '#888', width: 1.0, dash: [4, 4], points: { show: false } },
+            { label: t('view.corr_matrix.chart.diverse'),
+              stroke: '#7af0a8', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, hi, zero, lo], el);
 }
 
 function pairTable(pairs) {

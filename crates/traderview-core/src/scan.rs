@@ -206,6 +206,8 @@ pub enum Preset {
     GapAndCloseAtLodSqueeze,     // gap <= -0.5 AND lod_dist.abs() < 0.5 AND day_pct <= 0 — gap down + close at LOD (consolidation low)
     LongInsideQuietSqueeze,      // hod_dist + lod_dist between 2 and 4 AND day_pct.abs() < 0.5 AND rel_volume < 0.8 — wider-than-tight inside bar
     TripleZeroSqueeze,           // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 — gap, change, AND day all near zero
+    Pct52wQuarterFromHighSqueeze, // year_high_pct between -25 and -15 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-high resting
+    Pct52wQuarterFromLowSqueeze,  // year_low_pct between 15 and 25 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-low resting
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -636,6 +638,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.1
                 && hit.day_pct.abs() < 0.1
         }
+        Preset::Pct52wQuarterFromHighSqueeze => {
+            hit.year_high_pct >= -25.0
+                && hit.year_high_pct <= -15.0
+                && hit.day_pct.abs() < 0.7
+                && hit.rel_volume < 0.9
+        }
+        Preset::Pct52wQuarterFromLowSqueeze => {
+            hit.year_low_pct >= 15.0
+                && hit.year_low_pct <= 25.0
+                && hit.day_pct.abs() < 0.7
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -732,6 +746,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapAndCloseAtLodSqueeze => "Gap-Down Hold-LOD Squeeze",
         Preset::LongInsideQuietSqueeze => "Long-Inside Quiet Squeeze",
         Preset::TripleZeroSqueeze => "Triple-Zero Squeeze",
+        Preset::Pct52wQuarterFromHighSqueeze => "Quarter-From-High Squeeze",
+        Preset::Pct52wQuarterFromLowSqueeze => "Quarter-From-Low Squeeze",
     }
 }
 
