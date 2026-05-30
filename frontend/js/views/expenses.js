@@ -51,11 +51,11 @@ function drawShell(mount) {
         .join('');
 
     const sourceOpts = [
-        ['amazon', 'Amazon (CSV / XLSX)'],
-        ['bofa', 'Bank of America (CSV / XLSX)'],
-        ['chase', 'Chase (CSV)'],
-        ['apple_card', 'Apple Card (PDF)'],
-    ].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+        ['amazon', t('view.expenses.source.amazon')],
+        ['bofa', t('view.expenses.source.bofa')],
+        ['chase', t('view.expenses.source.chase')],
+        ['apple_card', t('view.expenses.source.apple_card')],
+    ].map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
 
     const catOpts = state.categories
         .map(c => `<option value="${c.code}">${c.schedule_c_line}. ${esc(c.label)}</option>`)
