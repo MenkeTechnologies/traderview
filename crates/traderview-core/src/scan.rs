@@ -916,6 +916,8 @@ pub enum Preset {
     ModerateGapBearReclaimHotVol,        // gap_pct >= -2 AND gap_pct <= -1 AND change_pct > 1 AND rel_volume >= 2 — moderate gap down + closed green + hot vol (moderate-gap reclaim reversal: gap down was bought throughout the session above prior close; trapped overnight shorts squeezed with elevated participation; reversal-long signal)
     ConfirmedBreakoutFadeHotVol,         // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + red + hot vol (confirmed-breakout pullback: was clearly past resistance, now dropping back into the breakout zone with elevated participation; failed-breakout risk signal)
     ConfirmedBreakdownReclaimHotVol,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 0.5 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + green + hot vol (confirmed-breakdown bounce: was clearly past support, now rallying back into the breakdown zone with elevated participation; failed-breakdown risk signal)
+    IntradayBullDriveAtYear52High,       // year_high_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w high + big intraday drive up + hot vol (intraday-led bullish thrust at the breakout zone regardless of overnight context; regular-hours momentum confirmation right at resistance)
+    IntradayBearDriveAtYear52Low,        // year_low_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w low + big intraday drive down + hot vol (intraday-led bearish thrust at the breakdown zone regardless of overnight context; regular-hours momentum confirmation right at support)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5385,6 +5387,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.5
                 && hit.rel_volume >= 1.5
         }
+        Preset::IntradayBullDriveAtYear52High => {
+            hit.year_high_pct < 2.0
+                && hit.day_pct > 3.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::IntradayBearDriveAtYear52Low => {
+            hit.year_low_pct < 2.0
+                && hit.day_pct < -3.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -6191,6 +6203,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ModerateGapBearReclaimHotVol => "Moderate Gap Down + Closed Green + Hot Vol (Moderate-gap Reclaim Reversal: Gap Down Was Bought throughout the Session above Prior Close; Trapped Overnight Shorts Squeezed with Elevated Participation; Reversal-long Signal)",
         Preset::ConfirmedBreakoutFadeHotVol => "1-3 % above Prior 52w High + Red + Hot Vol (Confirmed-breakout Pullback: Was Clearly Past Resistance, Now Dropping Back into the Breakout Zone with Elevated Participation; Failed-breakout Risk Signal)",
         Preset::ConfirmedBreakdownReclaimHotVol => "1-3 % below Prior 52w Low + Green + Hot Vol (Confirmed-breakdown Bounce: Was Clearly Past Support, Now Rallying Back into the Breakdown Zone with Elevated Participation; Failed-breakdown Risk Signal)",
+        Preset::IntradayBullDriveAtYear52High => "At 52w High + Big Intraday Drive Up + Hot Vol (Intraday-led Bullish Thrust at the Breakout Zone Regardless of Overnight Context; Regular-hours Momentum Confirmation Right at Resistance)",
+        Preset::IntradayBearDriveAtYear52Low => "At 52w Low + Big Intraday Drive Down + Hot Vol (Intraday-led Bearish Thrust at the Breakdown Zone Regardless of Overnight Context; Regular-hours Momentum Confirmation Right at Support)",
     }
 }
 
