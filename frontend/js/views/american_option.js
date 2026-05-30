@@ -98,6 +98,12 @@ export async function renderAmericanOption(mount, _appState) {
             </p>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.american_option.h2.sensitivity_to_sigma">Sensitivity to volatility (σ)</h2>
+            <div id="ao-vol-chart" style="width:100%;height:240px"></div>
+            <p class="muted" data-i18n="view.american_option.vol_chart_caption">European BS price across σ ∈ [0.05, 1.0] at fixed input spot, plus a single LSMC point at the input σ.</p>
+        </div>
+
         <div id="ao-err" class="boot" style="display:none;color:var(--red)"></div>
     `;
 
@@ -143,6 +149,7 @@ async function price(mount, tok) {
 
     renderSummary(res);
     renderChart(res);
+    renderVolChart(res);
     showToast(t('view.american_option.toast.done', {
         kind: state.params.kind,
         price: fmtMoney(res.price),
@@ -224,6 +231,38 @@ function renderChart(res) {
         series: [
             { label: t('chart.series.spot') },
             { label: t('chart.series.european_bs'), stroke: '#00e5ff', width: 2,
+              points: { show: false } },
+            { label: t('chart.series.american_lsmc'), stroke: '#ff9f1a', width: 0,
+              points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },
+        ],
+        axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+    }, [xs, ys, mcPoint], el);
+}
+
+function renderVolChart(res) {
+    const el = document.getElementById('ao-vol-chart');
+    if (!window.uPlot) {
+        el.textContent = t('common.error.uplot_not_loaded');
+        return;
+    }
+    el.innerHTML = '';
+    const p = state.params;
+    const lo = 0.05, hi = 1.0;
+    const n = 96;
+    const xs = new Array(n);
+    const ys = new Array(n);
+    for (let i = 0; i < n; i++) {
+        const s = lo + (hi - lo) * i / (n - 1);
+        xs[i] = s;
+        ys[i] = blackScholesEuropean(p.kind, p.spot, p.strike, p.t_years, p.rate, p.dividend, s);
+    }
+    const mcPoint = xs.map(s => Math.abs(s - p.sigma) < (hi - lo) / (2 * (n - 1)) ? res.price : null);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 800, height: 220,
+        scales: { x: {}, y: {} },
+        series: [
+            { label: t('chart.series.sigma') },
+            { label: t('chart.series.european_bs'), stroke: '#7af0a8', width: 2,
               points: { show: false } },
             { label: t('chart.series.american_lsmc'), stroke: '#ff9f1a', width: 0,
               points: { show: true, size: 10, stroke: '#ff9f1a', fill: '#ff9f1a' } },

@@ -478,6 +478,8 @@ pub enum Preset {
     DryVolAtExtremeClose,          // rel_volume < 0.4 AND (hod_dist.abs() < 0.3 OR lod_dist.abs() < 0.3) — dry vol but close at one extreme (unconfirmed extreme; thin tape edge)
     DayChangeMismatch,             // change_pct * day_pct < 0 AND change_pct.abs() > 1 AND day_pct.abs() > 1 — change_pct and day_pct opposite signs both >1 (full intraday reversal vs overnight)
     DayChangeAlignedBig,           // change_pct * day_pct > 0 AND change_pct.abs() > 3 AND day_pct.abs() > 3 AND rel_volume >= 1.5 — change_pct and day_pct same-sign big on hot vol (full trend day)
+    HugeRangeHotVol,               // hod_dist + lod_dist > 8 AND rel_volume >= 3 — massive intraday range on hot vol (volatility expansion; chaos)
+    HugeRangeDryVol,               // hod_dist + lod_dist > 8 AND rel_volume < 0.5 — massive intraday range on dry vol (illiquid swing; one-sided liquidation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -2376,6 +2378,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() > 3.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::HugeRangeHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume >= 3.0
+        }
+        Preset::HugeRangeDryVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
+                && hit.rel_volume < 0.5
+        }
     }
 }
 
@@ -2744,6 +2754,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DryVolAtExtremeClose => "Dry-Vol Close at Extreme (Unconfirmed Edge)",
         Preset::DayChangeMismatch => "Day/Change Mismatch (Full Intraday Reversal)",
         Preset::DayChangeAlignedBig => "Day/Change Aligned Big, Hot Vol (Full Trend Day)",
+        Preset::HugeRangeHotVol => "Huge Range (≥8%) Hot Vol (Volatility Expansion)",
+        Preset::HugeRangeDryVol => "Huge Range (≥8%) Dry Vol (Illiquid Swing)",
     }
 }
 

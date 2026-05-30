@@ -360,6 +360,8 @@ const PRESETS = [
     { id: 'dry_vol_at_extreme_close', label: t('view.scanners.preset.dry_vol_at_extreme_close.label'), desc: t('view.scanners.preset.dry_vol_at_extreme_close.desc') },
     { id: 'day_change_mismatch', label: t('view.scanners.preset.day_change_mismatch.label'), desc: t('view.scanners.preset.day_change_mismatch.desc') },
     { id: 'day_change_aligned_big', label: t('view.scanners.preset.day_change_aligned_big.label'), desc: t('view.scanners.preset.day_change_aligned_big.desc') },
+    { id: 'huge_range_hot_vol', label: t('view.scanners.preset.huge_range_hot_vol.label'), desc: t('view.scanners.preset.huge_range_hot_vol.desc') },
+    { id: 'huge_range_dry_vol', label: t('view.scanners.preset.huge_range_dry_vol.label'), desc: t('view.scanners.preset.huge_range_dry_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
