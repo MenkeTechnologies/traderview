@@ -21,18 +21,18 @@ export async function renderNewTrade(mount, state) {
         <div class="chart-panel">
             <h2 data-i18n="view.new_trade.h2.add_execution">Add execution</h2>
             <form id="ex-form" class="inline-form">
-                <input name="symbol" data-shortcut="focus_search" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
-                <select name="side">
+                <input name="symbol" data-shortcut="focus_search" data-tip="view.new_trade.tip.symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required>
+                <select name="side" data-tip="view.new_trade.tip.side">
                     <option data-i18n="view.new_trade.opt.buy" value="buy">buy</option>
                     <option data-i18n="view.new_trade.opt.sell" value="sell">sell</option>
                     <option data-i18n="view.new_trade.opt.short" value="short">short</option>
                     <option data-i18n="view.new_trade.opt.cover" value="cover">cover</option>
                 </select>
-                <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
-                <input name="price" type="number" step="any" placeholder="price" data-i18n-placeholder="common.placeholder.price" required>
-                <input name="fee" type="number" step="any" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" value="0">
-                <input name="executed_at" type="datetime-local" required>
-                <select name="asset_class">
+                <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" data-tip="view.new_trade.tip.qty" required>
+                <input name="price" type="number" step="any" placeholder="price" data-i18n-placeholder="common.placeholder.price" data-tip="view.new_trade.tip.price" required>
+                <input name="fee" type="number" step="any" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" data-tip="view.new_trade.tip.fee" value="0">
+                <input name="executed_at" type="datetime-local" data-tip="view.new_trade.tip.executed_at" required>
+                <select name="asset_class" data-tip="view.new_trade.tip.asset_class">
                     <option data-i18n="view.new_trade.opt.stock" value="stock">stock</option>
                     <option data-i18n="view.new_trade.opt.option" value="option">option</option>
                     <option data-i18n="view.new_trade.opt.future" value="future">future</option>
@@ -46,11 +46,11 @@ export async function renderNewTrade(mount, state) {
                 <input name="strike"     type="number" step="any" placeholder="strike" data-i18n-placeholder="common.placeholder.strike" style="display:none">
                 <input name="expiration" type="date"   placeholder="exp" data-i18n-placeholder="common.placeholder.exp" style="display:none">
                 <input name="multiplier" type="number" step="any" placeholder="multiplier" data-i18n-placeholder="common.placeholder.multiplier" style="display:none">
-                <input name="stop_loss"  type="number" step="any" placeholder="stop (for Risk Gate)" data-i18n-placeholder="view.new_trade.placeholder.stop">
-                <label style="display:flex;align-items:center;gap:4px;">
+                <input name="stop_loss"  type="number" step="any" placeholder="stop (for Risk Gate)" data-i18n-placeholder="view.new_trade.placeholder.stop" data-tip="view.new_trade.tip.stop_loss">
+                <label style="display:flex;align-items:center;gap:4px;" data-tip="view.new_trade.tip.plan">
                     <input type="checkbox" name="has_attached_plan"> plan attached
                 </label>
-                <button data-i18n="view.new_trade.btn.add" class="primary" type="submit">Add</button>
+                <button data-i18n="view.new_trade.btn.add" data-tip="view.new_trade.tip.add" data-shortcut="new_trade_add" class="primary" type="submit">Add</button>
             </form>
             <p class="muted small" data-i18n="view.new_trade.hint.risk_gate">Pre-trade Risk Gate rules evaluate stop_loss + has_attached_plan before submission. Configure rules in the Risk Gate view.</p>
         </div>
@@ -149,6 +149,9 @@ export async function renderNewTrade(mount, state) {
 
             await api.createExecution(body);
             if (!viewIsCurrent(tok)) return;
+            showToast(t('view.new_trade.toast.added', {
+                side: body.side, qty: body.qty, symbol: body.symbol, price: fmt(body.price),
+            }), { level: 'success' });
             await refresh();
             if (!viewIsCurrent(tok)) return;
             e.target.reset();

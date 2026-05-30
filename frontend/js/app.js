@@ -569,6 +569,11 @@ function bindTabs() {
         const el = document.getElementById('db-edit');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `a` in new-trade scope → submit execution form (Add).
+    window.addEventListener('tv:new-trade-add', () => {
+        const form = document.getElementById('ex-form');
+        if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });
