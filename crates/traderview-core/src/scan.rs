@@ -236,6 +236,8 @@ pub enum Preset {
     StackedClosesSqueeze,        // hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND |day_pct| < 0.5 AND |change_pct| < 1 — close, HOD, LOD, open all stacked
     PullbackToMidSqueeze,        // change_pct between -2 and -0.5 AND hod_dist.abs() > 1.5 AND year_high_pct >= -10 — orderly pullback from highs
     BounceFromMidSqueeze,        // change_pct between 0.5 and 2 AND lod_dist.abs() > 1.5 AND year_low_pct <= 10 — orderly bounce from lows
+    NarrowGapHotCloseSqueeze,    // |gap_pct| < 0.2 AND year_high_pct >= -2 AND day_pct.abs() < 0.5 — no-gap close at 52w high
+    NarrowGapColdCloseSqueeze,   // |gap_pct| < 0.2 AND year_low_pct <= 2 AND day_pct.abs() < 0.5 — no-gap close at 52w low
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -838,6 +840,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 1.5
                 && hit.year_low_pct <= 10.0
         }
+        Preset::NarrowGapHotCloseSqueeze => {
+            hit.gap_pct.abs() < 0.2
+                && hit.year_high_pct >= -2.0
+                && hit.day_pct.abs() < 0.5
+        }
+        Preset::NarrowGapColdCloseSqueeze => {
+            hit.gap_pct.abs() < 0.2
+                && hit.year_low_pct <= 2.0
+                && hit.day_pct.abs() < 0.5
+        }
     }
 }
 
@@ -964,6 +976,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::StackedClosesSqueeze => "Stacked-Closes Squeeze",
         Preset::PullbackToMidSqueeze => "Pullback-To-Mid Squeeze",
         Preset::BounceFromMidSqueeze => "Bounce-From-Mid Squeeze",
+        Preset::NarrowGapHotCloseSqueeze => "Narrow-Gap Hot-Close Squeeze",
+        Preset::NarrowGapColdCloseSqueeze => "Narrow-Gap Cold-Close Squeeze",
     }
 }
 

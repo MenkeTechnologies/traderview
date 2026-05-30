@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { t } from '../i18n.js';
 
 export async function renderMentorship(mount) {
     const tok = currentViewToken();
@@ -29,8 +30,13 @@ export async function renderMentorship(mount) {
                     <button data-i18n="view.mentorship.btn.invite" class="primary" type="submit">Invite</button>
                 </form>
             </div>
+            <div class="chart-panel" style="grid-column: 1 / -1">
+                <h2 data-i18n="view.mentorship.h2.status_chart">Mentorship status counts</h2>
+                <div id="m-chart" style="width:100%;height:240px"></div>
+            </div>
         </div>
     `;
+    renderStatusChart(mentors, mentees);
 
     mount.querySelector('#mentor-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -52,6 +58,46 @@ export async function renderMentorship(mount) {
             if (!viewIsCurrent(tok)) return;
             renderMentorship(mount);
         }));
+}
+
+function renderStatusChart(mentors, mentees) {
+    const el = document.getElementById('m-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const buckets = [
+        { key: 'mentors_pending',  count: (mentors || []).filter(r => r.status === 'pending').length, color: '#ff7a1f' },
+        { key: 'mentors_accepted', count: (mentors || []).filter(r => r.status === 'accepted').length, color: '#7af0a8' },
+        { key: 'mentees_pending',  count: (mentees || []).filter(r => r.status === 'pending').length, color: '#ffd84a' },
+        { key: 'mentees_accepted', count: (mentees || []).filter(r => r.status === 'accepted').length, color: '#00e5ff' },
+    ];
+    if (!buckets.some(b => b.count > 0)) {
+        el.innerHTML = `<div class="muted" data-i18n="view.mentorship.empty_chart">${esc(t('view.mentorship.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = buckets.map(b => t(`view.mentorship.chart.${b.key}`));
+    const xs = labels.map((_, i) => i + 1);
+    const series = [{ label: t('view.mentorship.chart.bucket_idx') }];
+    const data = [xs];
+    buckets.forEach((b, i) => {
+        const ys = xs.map((_, j) => j === i ? b.count : null);
+        series.push({
+            label: labels[i],
+            stroke: b.color, width: 0,
+            points: { show: true, size: 16, fill: b.color, stroke: b.color },
+        });
+        data.push(ys);
+    });
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series,
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, data, el);
 }
 
 function listTable(rows, idCol, isMentor) {

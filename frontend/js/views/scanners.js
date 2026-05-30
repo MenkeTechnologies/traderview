@@ -118,6 +118,8 @@ const PRESETS = [
     { id: 'stacked_closes_squeeze',     label: t('view.scanners.preset.stacked_closes_squeeze.label'),     desc: t('view.scanners.preset.stacked_closes_squeeze.desc') },
     { id: 'pullback_to_mid_squeeze',    label: t('view.scanners.preset.pullback_to_mid_squeeze.label'),    desc: t('view.scanners.preset.pullback_to_mid_squeeze.desc') },
     { id: 'bounce_from_mid_squeeze',    label: t('view.scanners.preset.bounce_from_mid_squeeze.label'),    desc: t('view.scanners.preset.bounce_from_mid_squeeze.desc') },
+    { id: 'narrow_gap_hot_close_squeeze', label: t('view.scanners.preset.narrow_gap_hot_close_squeeze.label'), desc: t('view.scanners.preset.narrow_gap_hot_close_squeeze.desc') },
+    { id: 'narrow_gap_cold_close_squeeze', label: t('view.scanners.preset.narrow_gap_cold_close_squeeze.label'), desc: t('view.scanners.preset.narrow_gap_cold_close_squeeze.desc') },
 ];
 
 export async function renderScanners(mount) {
