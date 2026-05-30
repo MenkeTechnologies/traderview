@@ -106,9 +106,9 @@ function renderCalendarMatrix(events, days, mount) {
                 ${c.events.length === 0
                     ? '<span class="muted small">—</span>'
                     : c.events.map(ev => {
-                        const t = (ev.timing || 'unknown');
-                        const tag = t === 'amc' ? '🌙' : t === 'bmo' ? '☀' : '·';
-                        const est = ev.eps_estimate != null ? `est ${Number(ev.eps_estimate).toFixed(2)}` : '';
+                        const timing = (ev.timing || 'unknown');
+                        const tag = timing === 'amc' ? '🌙' : timing === 'bmo' ? '☀' : '·';
+                        const est = ev.eps_estimate != null ? t('view.earnings_cal.row.eps_estimate', { value: Number(ev.eps_estimate).toFixed(2) }) : '';
                         return `<div style="font-size:11px;padding:2px 0;">
                             <strong>${esc(ev.symbol)}</strong> ${tag}
                             <span class="muted">${esc(est)}</span>

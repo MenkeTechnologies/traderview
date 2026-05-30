@@ -5548,6 +5548,7 @@
   "view.equity_forecast.status.result": "{paths} paths × {steps} trades · sampled {samples} historical R",
   "view.sentiment.status.result": "{wsb} WSB / {stocktwits} StockTwits new",
   "view.earnings_cal.status.result": "{symbols} symbols · {events} events · {reactions} reactions",
+  "view.earnings_cal.row.eps_estimate": "est {value}",
   "view.rebalance.status.result": "{trades} trades · ${traded} traded · ${portfolio} portfolio",
   "view.news.status.result": "{symbols} symbols / {inserted} new",
   "view.corr_matrix.status.result": "{symbols} symbols · {pairs} pairs",
