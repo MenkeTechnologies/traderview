@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     DEFAULT_LAG, MIN_LAG, MAX_LAG,
@@ -32,19 +33,20 @@ export async function renderBgTest(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bg.label.lag">Lag order (p)</span>
-                    <input id="bg-lag" type="number" step="1" min="${MIN_LAG}" max="${MAX_LAG}" value="${state.lag_order}"></label>
+                    <input id="bg-lag" type="number" step="1" min="${MIN_LAG}" max="${MAX_LAG}" value="${state.lag_order}"
+                           data-tip="view.bg.tip.lag"></label>
                 <button data-i18n="view.bg.btn.compute" id="bg-run" class="primary"
-                        data-tip="view.bg.tip.compute" type="button">Test</button>
+                        data-tip="view.bg.tip.compute" data-shortcut="bg_test_run" type="button">Test</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.bg.btn.demo_iid"      id="bg-d1" class="secondary" type="button">Demo: iid residuals</button>
-                <button data-i18n="view.bg.btn.demo_ar1"      id="bg-d2" class="secondary" type="button">Demo: AR(1) residuals</button>
-                <button data-i18n="view.bg.btn.demo_ar2"      id="bg-d3" class="secondary" type="button">Demo: AR(2) residuals</button>
-                <button data-i18n="view.bg.btn.demo_mild"     id="bg-d4" class="secondary" type="button">Demo: mild AR(1)</button>
-                <button data-i18n="view.bg.btn.demo_cycle"    id="bg-d5" class="secondary" type="button">Demo: cyclical residuals</button>
-                <button data-i18n="view.bg.btn.demo_highlag"  id="bg-d6" class="secondary" type="button">Demo: high lag (p=10)</button>
-                <button data-i18n="view.bg.btn.demo_short"    id="bg-d7" class="secondary" type="button">Demo: short series</button>
-                <button data-i18n="view.bg.btn.demo_pricetn"  id="bg-d8" class="secondary" type="button">Demo: price vs return</button>
+                <button data-i18n="view.bg.btn.demo_iid"      id="bg-d1" class="secondary" data-tip="view.bg.tip.demo_iid"     type="button">Demo: iid residuals</button>
+                <button data-i18n="view.bg.btn.demo_ar1"      id="bg-d2" class="secondary" data-tip="view.bg.tip.demo_ar1"     type="button">Demo: AR(1) residuals</button>
+                <button data-i18n="view.bg.btn.demo_ar2"      id="bg-d3" class="secondary" data-tip="view.bg.tip.demo_ar2"     type="button">Demo: AR(2) residuals</button>
+                <button data-i18n="view.bg.btn.demo_mild"     id="bg-d4" class="secondary" data-tip="view.bg.tip.demo_mild"    type="button">Demo: mild AR(1)</button>
+                <button data-i18n="view.bg.btn.demo_cycle"    id="bg-d5" class="secondary" data-tip="view.bg.tip.demo_cycle"   type="button">Demo: cyclical residuals</button>
+                <button data-i18n="view.bg.btn.demo_highlag"  id="bg-d6" class="secondary" data-tip="view.bg.tip.demo_highlag" type="button">Demo: high lag (p=10)</button>
+                <button data-i18n="view.bg.btn.demo_short"    id="bg-d7" class="secondary" data-tip="view.bg.tip.demo_short"   type="button">Demo: short series</button>
+                <button data-i18n="view.bg.btn.demo_pricetn"  id="bg-d8" class="secondary" data-tip="view.bg.tip.demo_pricetn" type="button">Demo: price vs return</button>
             </div>
             <p data-i18n="view.bg.hint.about" class="muted">Tests H₀: OLS residuals have no serial correlation up to lag p. Fits y = α + β·x, regresses ε̂ on (1, x, ε̂_{t-1}…ε̂_{t-p}); LM = n_aux · R² ~ χ²(p). Allows lagged regressors (unlike Durbin-Watson). Reject → use HAC / Newey-West SEs.</p>
         </div>
@@ -90,6 +92,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.bg.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.bg.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -102,9 +105,9 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.bg.toast.invalid'), { level: 'warning' }); return; }
     const local = localTest(state.x, state.y, state.lag_order);
-    if (!local) { showErr(t('view.bg.err.degenerate')); return; }
+    if (!local) { showErr(t('view.bg.err.degenerate')); showToast(t('view.bg.toast.degenerate'), { level: 'warning' }); return; }
     renderSummary(local, true);
     renderChart();
     renderLagChart();
@@ -114,14 +117,16 @@ async function compute(tok) {
         resp = await api.anlyBreuschGodfrey(buildBody(state));
     } catch (e) {
         showErr(`${t('view.bg.err.api')}: ${e.message || e}`);
+        showToast(t('view.bg.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!resp) { showErr(t('view.bg.err.server_rejected')); return; }
+    if (!resp) { showErr(t('view.bg.err.server_rejected')); showToast(t('view.bg.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart();
     renderLagChart();
     renderStats();
+    showToast(t('view.bg.toast.tested'), { level: 'success' });
 }
 
 function renderSummary(report, pending) {
