@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
@@ -31,17 +32,17 @@ export async function renderAdl(mount, _appState) {
 
             <div class="inline-form">
                 <button data-i18n="view.adl.btn.compute" id="ad-run" class="primary"
-                        data-tip="view.adl.tip.compute" type="button">Compute</button>
+                        data-tip="view.adl.tip.compute" data-shortcut="adl_run" type="button">Compute</button>
             </div>
             <div class="inline-form">
-                <button data-i18n="view.adl.btn.demo_accum"   id="ad-d1" class="secondary" type="button">Demo: accumulation</button>
-                <button data-i18n="view.adl.btn.demo_dist"    id="ad-d2" class="secondary" type="button">Demo: distribution</button>
-                <button data-i18n="view.adl.btn.demo_bulldiv" id="ad-d3" class="secondary" type="button">Demo: bullish divergence</button>
-                <button data-i18n="view.adl.btn.demo_beardiv" id="ad-d4" class="secondary" type="button">Demo: bearish divergence</button>
-                <button data-i18n="view.adl.btn.demo_side"    id="ad-d5" class="secondary" type="button">Demo: sideways</button>
-                <button data-i18n="view.adl.btn.demo_climax"  id="ad-d6" class="secondary" type="button">Demo: climax volume</button>
-                <button data-i18n="view.adl.btn.demo_doji"    id="ad-d7" class="secondary" type="button">Demo: doji cluster</button>
-                <button data-i18n="view.adl.btn.demo_small"   id="ad-d8" class="secondary" type="button">Demo: small-volume</button>
+                <button data-i18n="view.adl.btn.demo_accum"   id="ad-d1" class="secondary" data-tip="view.adl.tip.demo_accum"   type="button">Demo: accumulation</button>
+                <button data-i18n="view.adl.btn.demo_dist"    id="ad-d2" class="secondary" data-tip="view.adl.tip.demo_dist"    type="button">Demo: distribution</button>
+                <button data-i18n="view.adl.btn.demo_bulldiv" id="ad-d3" class="secondary" data-tip="view.adl.tip.demo_bulldiv" type="button">Demo: bullish divergence</button>
+                <button data-i18n="view.adl.btn.demo_beardiv" id="ad-d4" class="secondary" data-tip="view.adl.tip.demo_beardiv" type="button">Demo: bearish divergence</button>
+                <button data-i18n="view.adl.btn.demo_side"    id="ad-d5" class="secondary" data-tip="view.adl.tip.demo_side"    type="button">Demo: sideways</button>
+                <button data-i18n="view.adl.btn.demo_climax"  id="ad-d6" class="secondary" data-tip="view.adl.tip.demo_climax"  type="button">Demo: climax volume</button>
+                <button data-i18n="view.adl.btn.demo_doji"    id="ad-d7" class="secondary" data-tip="view.adl.tip.demo_doji"    type="button">Demo: doji cluster</button>
+                <button data-i18n="view.adl.btn.demo_small"   id="ad-d8" class="secondary" data-tip="view.adl.tip.demo_small"   type="button">Demo: small-volume</button>
             </div>
             <p data-i18n="view.adl.hint.about" class="muted">Cumulative running sum of Money Flow Volume. MFM = ((C−L)−(H−C))/(H−L) ∈ [−1, +1]; MFV = MFM × Volume. Rising ADL = accumulation (closes near highs); falling ADL = distribution (closes near lows). Watch for price/ADL divergence.</p>
         </div>
@@ -86,6 +87,7 @@ function readInputs() {
     if (p.errors.length) {
         showErr(`${t('view.adl.err.parse_prefix')}: `
             + p.errors.slice(0, 3).map(e => `[${e.line_no}] ${e.message}`).join('; '));
+        showToast(t('view.adl.toast.parse_error'), { level: 'error' });
         return;
     }
     hideErr();
@@ -95,7 +97,7 @@ function readInputs() {
 async function compute(tok) {
     hideErr();
     const err = validateInputs(state);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(t('view.adl.toast.invalid'), { level: 'warning' }); return; }
     const local = localCompute(state.bars);
     renderSummary(local, true);
     renderChart(local);
@@ -106,14 +108,16 @@ async function compute(tok) {
         resp = await api.anlyAdl(buildBody(state));
     } catch (e) {
         showErr(`${t('view.adl.err.api')}: ${e.message || e}`);
+        showToast(t('view.adl.toast.api_error'), { level: 'error' });
         return;
     }
     if (!viewIsCurrent(tok)) return;
-    if (!Array.isArray(resp)) { showErr(t('view.adl.err.server_rejected')); return; }
+    if (!Array.isArray(resp)) { showErr(t('view.adl.err.server_rejected')); showToast(t('view.adl.toast.server_rejected'), { level: 'error' }); return; }
     renderSummary(resp, false);
     renderChart(resp);
     renderMfvChart(resp);
     renderStats();
+    showToast(t('view.adl.toast.computed'), { level: 'success' });
 }
 
 function renderSummary(adl, pending) {
