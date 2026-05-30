@@ -46,6 +46,10 @@ async function renderBrowse(mount) {
             <h2 data-i18n="view.backtest_presets.h2.public_library_top_by_forks">Public library (top by forks)</h2>
             <div id="bp-public"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.backtest_presets.h2.public_chart">Public presets by forks (top 20)</h2>
+            <div id="bp-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#bp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -100,6 +104,49 @@ function renderPublic(rows, mount, tok) {
     if (!rows.length) { el.innerHTML = '<p data-i18n="view.backtest_presets.hint.no_public_presets_yet_be_the_first" class="muted small">No public presets yet — be the first.</p>'; return; }
     el.innerHTML = table(rows, false);
     wireRowButtons(el, false, mount, tok);
+    renderForksChart(rows);
+}
+
+function renderForksChart(rows) {
+    const el = document.getElementById('bp-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const top = (rows || [])
+        .filter(r => Number.isFinite(Number(r.fork_count)) || Number.isFinite(Number(r.forks)))
+        .map(r => ({
+            name: r.name,
+            forks: Number(r.fork_count != null ? r.fork_count : (r.forks || 0)),
+            runs: Number(r.run_count != null ? r.run_count : (r.runs || 0)),
+        }))
+        .sort((a, b) => b.forks - a.forks)
+        .slice(0, 20);
+    if (top.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.backtest_presets.empty_chart">${esc(t('view.backtest_presets.empty_chart'))}</div>`;
+        return;
+    }
+    const labels = top.map(r => r.name);
+    const forks = top.map(r => r.forks);
+    const runs = top.map(r => r.runs);
+    const xs = labels.map((_, i) => i + 1);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.backtest_presets.chart.preset_idx') },
+            { label: t('view.backtest_presets.chart.forks'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 10, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.backtest_presets.chart.runs'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 6, fill: '#b86bff', stroke: '#b86bff' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, forks, runs], el);
 }
 
 function table(rows, mine) {

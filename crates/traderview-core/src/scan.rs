@@ -212,6 +212,8 @@ pub enum Preset {
     SmallChangeNarrowGapSqueeze, // change_pct between 0.5 and 1 AND |gap_pct| < 0.3 AND |day_pct| < 0.5 AND rel_volume < 0.9 — modest move + tight day + quiet
     BigRangeNoCommitSqueeze,     // hod_dist + lod_dist > 6 AND change_pct.abs() < 0.5 AND rel_volume < 1.5 — wide range, no commit (battle bar)
     EvenSwingSqueeze,            // hod_dist.abs() between 1 and 3 AND lod_dist.abs() between 1 and 3 AND day_pct.abs() < 1 — small balanced swing
+    NoMoveAtMidSqueeze,          // |change_pct| < 0.2 AND hod_dist.abs() > 1 AND lod_dist.abs() > 1 — close pinned mid with both extremes far
+    BarelyMovingHighSqueeze,     // year_high_pct >= -8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near top quiet drift
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -679,6 +681,17 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() <= 3.0
                 && hit.day_pct.abs() < 1.0
         }
+        Preset::NoMoveAtMidSqueeze => {
+            hit.change_pct.abs() < 0.2
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.lod_dist_pct.abs() > 1.0
+        }
+        Preset::BarelyMovingHighSqueeze => {
+            hit.year_high_pct >= -8.0
+                && hit.day_pct.abs() < 0.3
+                && hit.change_pct.abs() < 0.5
+                && hit.rel_volume < 0.9
+        }
     }
 }
 
@@ -781,6 +794,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::SmallChangeNarrowGapSqueeze => "Small-Change Narrow-Gap Squeeze",
         Preset::BigRangeNoCommitSqueeze => "Big-Range No-Commit Squeeze",
         Preset::EvenSwingSqueeze => "Even-Swing Squeeze",
+        Preset::NoMoveAtMidSqueeze => "No-Move-At-Mid Squeeze",
+        Preset::BarelyMovingHighSqueeze => "Barely-Moving High Squeeze",
     }
 }
 
