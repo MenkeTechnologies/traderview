@@ -1024,6 +1024,8 @@ const PRESETS = [
     { id: 'quintupled_vol_gap_down_close_at_lod_hot_vol', label: t('view.scanners.preset.quintupled_vol_gap_down_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_gap_down_close_at_lod_hot_vol.desc') },
     { id: 'quintupled_vol_gap_up_close_at_lod_hot_vol', label: t('view.scanners.preset.quintupled_vol_gap_up_close_at_lod_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_gap_up_close_at_lod_hot_vol.desc') },
     { id: 'quintupled_vol_gap_down_close_at_hod_hot_vol', label: t('view.scanners.preset.quintupled_vol_gap_down_close_at_hod_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_gap_down_close_at_hod_hot_vol.desc') },
+    { id: 'quintupled_vol_gap_up_midpoint_hot_vol', label: t('view.scanners.preset.quintupled_vol_gap_up_midpoint_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_gap_up_midpoint_hot_vol.desc') },
+    { id: 'quintupled_vol_gap_down_midpoint_hot_vol', label: t('view.scanners.preset.quintupled_vol_gap_down_midpoint_hot_vol.label'), desc: t('view.scanners.preset.quintupled_vol_gap_down_midpoint_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
