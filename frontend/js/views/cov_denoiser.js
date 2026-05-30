@@ -197,8 +197,8 @@ function renderCleanedMatrix(originalCov, res) {
     </table>
     <p class="muted">
         <span class="cd-bumped" style="padding:1px 4px;border-radius:2px">${esc(t('common.bumped'))}</span>
-        <span class="cd-trimmed" style="padding:1px 4px;border-radius:2px">trimmed</span>
-        vs original — cells the MP cleaning shifted by &gt; 1e-9.
+        <span class="cd-trimmed" style="padding:1px 4px;border-radius:2px">${esc(t('common.trimmed'))}</span>
+        ${t('view.cov_denoiser.hint.vs_original')}
     </p>`;
 }
 

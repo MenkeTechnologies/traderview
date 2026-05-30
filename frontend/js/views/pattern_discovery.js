@@ -147,10 +147,10 @@ function renderSummary(motif, discords) {
     const motifCard = motif
         ? `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_motif_pair">Top motif pair</div>
              <div class="value">idx ${motif.i} ↔ idx ${motif.j}</div>
-             <div class="vc-row"><span class="muted">distance</span> <strong>${motif.distance.toFixed(4)}</strong></div>
+             <div class="vc-row"><span class="muted">${esc(t('common.distance'))}</span> <strong>${motif.distance.toFixed(4)}</strong></div>
            </div>`
         : `<div class="card"><div class="label" data-i18n="view.pattern_discovery.card.top_motif_pair">Top motif pair</div>
-             <div class="value">none</div>
+             <div class="value">${esc(t('common.none'))}</div>
              <div class="vc-row"><span class="muted" data-i18n="view.pattern_discovery.row.reason">reason</span> <strong data-i18n="view.pattern_discovery.row.flat_noisy">flat / too noisy</strong></div>
            </div>`;
     const discordCard = discords.length
