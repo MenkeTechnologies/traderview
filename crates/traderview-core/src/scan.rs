@@ -914,6 +914,8 @@ pub enum Preset {
     ModerateGapBearContinuationDryVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume < 0.8 — moderate gap down + bear continuation + dry vol (modest gap extended on no participation; suspect decline without institutional sponsorship; fade-prone setup despite negative net move)
     ModerateGapBullFadeHotVol,           // gap_pct >= 1 AND gap_pct <= 2 AND change_pct < -1 AND rel_volume >= 2 — moderate gap up + closed red + hot vol (moderate-gap fade reversal: gap up was sold throughout the session below prior close; trapped overnight longs flushed with elevated participation; reversal-short signal)
     ModerateGapBearReclaimHotVol,        // gap_pct >= -2 AND gap_pct <= -1 AND change_pct > 1 AND rel_volume >= 2 — moderate gap down + closed green + hot vol (moderate-gap reclaim reversal: gap down was bought throughout the session above prior close; trapped overnight shorts squeezed with elevated participation; reversal-long signal)
+    ConfirmedBreakoutFadeHotVol,         // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + red + hot vol (confirmed-breakout pullback: was clearly past resistance, now dropping back into the breakout zone with elevated participation; failed-breakout risk signal)
+    ConfirmedBreakdownReclaimHotVol,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 0.5 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + green + hot vol (confirmed-breakdown bounce: was clearly past support, now rallying back into the breakdown zone with elevated participation; failed-breakdown risk signal)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -5371,6 +5373,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::ConfirmedBreakoutFadeHotVol => {
+            hit.year_high_pct >= -3.0
+                && hit.year_high_pct < -1.0
+                && hit.change_pct < -0.5
+                && hit.rel_volume >= 1.5
+        }
+        Preset::ConfirmedBreakdownReclaimHotVol => {
+            hit.year_low_pct >= -3.0
+                && hit.year_low_pct < -1.0
+                && hit.change_pct > 0.5
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -6175,6 +6189,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::ModerateGapBearContinuationDryVol => "Moderate Gap Down + Bear Continuation + Dry Vol (Modest Gap Extended on No Participation; Suspect Decline without Institutional Sponsorship; Fade-prone Setup despite Negative Net Move)",
         Preset::ModerateGapBullFadeHotVol => "Moderate Gap Up + Closed Red + Hot Vol (Moderate-gap Fade Reversal: Gap Up Was Sold throughout the Session below Prior Close; Trapped Overnight Longs Flushed with Elevated Participation; Reversal-short Signal)",
         Preset::ModerateGapBearReclaimHotVol => "Moderate Gap Down + Closed Green + Hot Vol (Moderate-gap Reclaim Reversal: Gap Down Was Bought throughout the Session above Prior Close; Trapped Overnight Shorts Squeezed with Elevated Participation; Reversal-long Signal)",
+        Preset::ConfirmedBreakoutFadeHotVol => "1-3 % above Prior 52w High + Red + Hot Vol (Confirmed-breakout Pullback: Was Clearly Past Resistance, Now Dropping Back into the Breakout Zone with Elevated Participation; Failed-breakout Risk Signal)",
+        Preset::ConfirmedBreakdownReclaimHotVol => "1-3 % below Prior 52w Low + Green + Hot Vol (Confirmed-breakdown Bounce: Was Clearly Past Support, Now Rallying Back into the Breakdown Zone with Elevated Participation; Failed-breakdown Risk Signal)",
     }
 }
 
