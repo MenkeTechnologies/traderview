@@ -152,6 +152,8 @@ pub enum Preset {
     NarrowGapPostMomentum, // |gap|<0.3 after |change|>=3 prior — post-trend rest day (proxy: gap & change opposite signs near zero)
     DistantExtremesSqueeze, // far from BOTH 52w high AND 52w low (>=20% each side) AND quiet
     BalancedDriftSqueeze,   // tiny gap + slow drift (|change|<0.5) + close mid-day + quiet
+    PennyMoveSqueeze,       // |change| < 0.05 (sub-tick close) — frozen tape
+    DryUpSqueeze,           // rel_volume < 0.4 AND |change| < 1.5 AND |gap| < 0.5 — supply/demand exhaustion
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -281,6 +283,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.5
                 && hit.rel_volume < 0.9
         }
+        Preset::PennyMoveSqueeze => {
+            hit.change_pct.abs() < 0.05
+        }
+        Preset::DryUpSqueeze => {
+            hit.rel_volume < 0.4
+                && hit.change_pct.abs() < 1.5
+                && hit.gap_pct.abs() < 0.5
+        }
     }
 }
 
@@ -323,6 +333,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NarrowGapPostMomentum => "Post-Momentum Squeeze",
         Preset::DistantExtremesSqueeze => "Distant-Extremes Squeeze",
         Preset::BalancedDriftSqueeze => "Balanced-Drift Squeeze",
+        Preset::PennyMoveSqueeze => "Penny-Move Squeeze",
+        Preset::DryUpSqueeze => "Dry-Up Squeeze",
     }
 }
 

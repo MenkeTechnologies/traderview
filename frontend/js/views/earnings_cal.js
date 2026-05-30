@@ -36,6 +36,11 @@ export async function renderEarningsCal(mount) {
             <h2 data-i18n="view.earnings_cal.h2.biggest_surprises_recent">Biggest surprises (recent)</h2>
             <div id="e-surp"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.earnings_cal.h2.surprise_chart">Surprise % vs 1-day reaction %</h2>
+            <div id="e-chart" style="width:100%;height:240px"></div>
+        </div>
     `;
     mount.querySelector('#e-form').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -72,6 +77,7 @@ async function refresh(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         renderCalendarMatrix(upcoming, days, mount);
         renderSurpriseTable(surprises, mount);
+        renderSurpriseChart(surprises);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#e-cal');
@@ -118,6 +124,36 @@ function renderCalendarMatrix(events, days, mount) {
         </div>
         <p data-i18n="view.earnings_cal.hint.before_market_open_after_market_close_timing_unkno" class="muted small" style="margin-top:6px;">☀ before market open · 🌙 after market close · · timing unknown</p>
     `;
+}
+
+function renderSurpriseChart(events) {
+    const el = document.getElementById('e-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const pts = (events || []).filter(ev => Number.isFinite(Number(ev.surprise_pct)) && Number.isFinite(Number(ev.reaction_1d_pct)));
+    if (pts.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.earnings_cal.empty_chart">${esc(t('view.earnings_cal.empty_chart'))}</div>`;
+        return;
+    }
+    pts.sort((a, b) => Number(a.surprise_pct) - Number(b.surprise_pct));
+    const xs = pts.map(p => Number(p.surprise_pct));
+    const ys = pts.map(p => Number(p.reaction_1d_pct));
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: { auto: true }, y: { auto: true } },
+        series: [
+            { label: t('view.earnings_cal.chart.surprise_pct') },
+            { label: t('view.earnings_cal.chart.reaction_pct'),
+              stroke: '#00e5ff', width: 0,
+              points: { show: true, size: 9, fill: '#00e5ff', stroke: '#00e5ff' } },
+            { label: t('view.earnings_cal.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [ { stroke: '#aab', size: 28 }, { stroke: '#aab', size: 40 } ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderSurpriseTable(events, mount) {
