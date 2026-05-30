@@ -870,6 +870,16 @@ function bindTabs() {
         const el = document.getElementById('ps-demo');
         if (el && typeof el.click === 'function') el.click();
     });
+    // View-scoped: `e` in order-staleness scope → click Evaluate.
+    window.addEventListener('tv:order-staleness-evaluate', () => {
+        const el = document.getElementById('os-run');
+        if (el && typeof el.click === 'function') el.click();
+    });
+    // View-scoped: `l` in order-staleness scope → click Load demo.
+    window.addEventListener('tv:order-staleness-demo', () => {
+        const el = document.getElementById('os-demo');
+        if (el && typeof el.click === 'function') el.click();
+    });
     // Quick-nav globals — Cmd/Ctrl+Option/Alt+<letter> → hash route.
     window.addEventListener('tv:nav-trades',      () => { window.location.hash = 'trades'; });
     window.addEventListener('tv:nav-journal',     () => { window.location.hash = 'journal'; });

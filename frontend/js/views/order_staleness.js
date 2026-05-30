@@ -13,6 +13,7 @@ import {
 } from '../_order_staleness_inputs.js';
 
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 const DEFAULT_THRESH = { warn_hours: 24, stale_hours: 72, forgotten_hours: 168 };
 
 let state = {
@@ -29,10 +30,10 @@ export async function renderOrderStaleness(mount, _appState) {
         <div class="chart-panel">
             <h2 data-i18n="view.order_staleness.h2.resting_orders">Resting orders</h2>
             <p class="muted" data-i18n="view.order_staleness.hint.format">One line per order: id symbol placed_at [last_modified_at] side. Timestamps accept ISO 8601 (2024-06-15T10:00:00Z). Side is one of buy / sell / buy_stop / sell_stop. Modifying an order resets the staleness clock — treated as "re-confirming intent."</p>
-            <textarea id="os-orders" rows="8" placeholder="A1 AAPL 2024-06-15T10:00:00Z buy&#10;B1 TSLA 2024-06-14T10:00:00Z 2024-06-15T08:00:00Z sell_stop"></textarea>
+            <textarea id="os-orders" rows="8" placeholder="A1 AAPL 2024-06-15T10:00:00Z buy&#10;B1 TSLA 2024-06-14T10:00:00Z 2024-06-15T08:00:00Z sell_stop" data-tip="view.order_staleness.tip.orders"></textarea>
             <div class="inline-form">
-                <button data-i18n="view.order_staleness.btn.load_demo_12_orders_across_all_tiers" id="os-demo" class="secondary" type="button">Load demo (12 orders across all tiers)</button>
-                <button data-i18n="view.order_staleness.btn.clear" id="os-clear" class="secondary" type="button">Clear</button>
+                <button data-i18n="view.order_staleness.btn.load_demo_12_orders_across_all_tiers" data-tip="view.order_staleness.tip.demo" data-shortcut="order_staleness_demo" id="os-demo" class="secondary" type="button">Load demo (12 orders across all tiers)</button>
+                <button data-i18n="view.order_staleness.btn.clear" data-tip="view.order_staleness.tip.clear" id="os-clear" class="secondary" type="button">Clear</button>
             </div>
         </div>
 
@@ -40,15 +41,15 @@ export async function renderOrderStaleness(mount, _appState) {
             <h2 data-i18n="view.order_staleness.h2.reference_time_thresholds">Reference time + thresholds</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.order_staleness.label.now">Now (ISO 8601)</span>
-                    <input id="os-now" type="text" value="${state.now}"></label>
-                <button data-i18n="view.order_staleness.btn.now_current_time" id="os-nownow" class="secondary" type="button">now = current time</button>
+                    <input id="os-now" type="text" value="${state.now}" data-tip="view.order_staleness.tip.now"></label>
+                <button data-i18n="view.order_staleness.btn.now_current_time" data-tip="view.order_staleness.tip.now_now" id="os-nownow" class="secondary" type="button">now = current time</button>
                 <label><span data-i18n="view.order_staleness.label.warn_h">Warn (h)</span>
-                    <input id="os-warn" type="number" step="any" min="0" value="${state.thresholds.warn_hours}"></label>
+                    <input id="os-warn" type="number" step="any" min="0" value="${state.thresholds.warn_hours}" data-tip="view.order_staleness.tip.warn"></label>
                 <label><span data-i18n="view.order_staleness.label.stale_h">Stale (h)</span>
-                    <input id="os-stale" type="number" step="any" min="0" value="${state.thresholds.stale_hours}"></label>
+                    <input id="os-stale" type="number" step="any" min="0" value="${state.thresholds.stale_hours}" data-tip="view.order_staleness.tip.stale"></label>
                 <label><span data-i18n="view.order_staleness.label.forgotten_h">Forgotten (h)</span>
-                    <input id="os-forgot" type="number" step="any" min="0" value="${state.thresholds.forgotten_hours}"></label>
-                <button data-i18n="view.order_staleness.btn.evaluate" id="os-run" class="primary" type="button">Evaluate</button>
+                    <input id="os-forgot" type="number" step="any" min="0" value="${state.thresholds.forgotten_hours}" data-tip="view.order_staleness.tip.forgotten"></label>
+                <button data-i18n="view.order_staleness.btn.evaluate" data-tip="view.order_staleness.tip.evaluate" data-shortcut="order_staleness_evaluate" id="os-run" class="primary" type="button">Evaluate</button>
             </div>
             <p data-i18n="view.order_staleness.hint.industry_defaults_24h_warn_72h_stale_168h_forgotte" class="muted">Industry defaults: 24h warn / 72h stale / 168h forgotten.
                 Tight intraday traders use 1h/4h/24h. Position traders use 7d/30d/90d.</p>
@@ -118,16 +119,23 @@ async function compute(tok) {
         if (orders.length === 0) return;
     }
     const err = validateInputs(orders, state.now, state.thresholds);
-    if (err) { showErr(err); return; }
+    if (err) { showErr(err); showToast(err, { level: 'warning' }); return; }
     let report;
     try {
         report = await api.microOrderStaleness(buildBody(orders, state.now, state.thresholds));
     } catch (e) {
-        showErr(t("common.error.api", { msg: e.message || e })); return;
+        const m = t("common.error.api", { msg: e.message || e });
+        showErr(m); showToast(m, { level: 'error' }); return;
     }
     if (!viewIsCurrent(tok)) return;
     renderSummary(report);
     renderTable(report);
+    const rows = report.orders || [];
+    const stale = rows.filter(r => r.tier === 'stale' || r.tier === 'forgotten').length;
+    showToast(t('view.order_staleness.toast.done', {
+        orders: rows.length,
+        stale,
+    }), { level: stale > 0 ? 'warning' : 'success' });
     renderTierChart(report);
 }
 
