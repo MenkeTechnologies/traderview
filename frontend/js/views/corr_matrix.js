@@ -130,8 +130,64 @@ function render(r, out) {
             <h2 data-i18n="view.corr_matrix.h2.distribution_chart">ρ distribution across all pairs</h2>
             <div id="cm-chart" style="width:100%;height:240px"></div>
         </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.corr_matrix.h2.avg_chart">Average ρ to every other symbol (per-symbol crowdedness)</h2>
+            <div id="cm-avg-chart" style="width:100%;height:220px"></div>
+            <p data-i18n="view.corr_matrix.hint.avg_chart" class="muted small">Each symbol's mean correlation to every other symbol in the matrix. High = "in the crowd" (whole basket moves together — concentration risk); low = "outlier / diversifier". Orthogonal to per-pair distribution above.</p>
+        </div>
     `;
     renderDistributionChart(r);
+    renderAvgChart(r);
+}
+
+function renderAvgChart(r) {
+    const el = document.getElementById('cm-avg-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const symbols = r.symbols || [];
+    const values = r.values || [];
+    if (symbols.length < 2 || !Array.isArray(values[0])) {
+        el.innerHTML = `<div class="muted" data-i18n="view.corr_matrix.empty_avg_chart">${esc(t('view.corr_matrix.empty_avg_chart'))}</div>`;
+        return;
+    }
+    const avgs = symbols.map((_, i) => {
+        let sum = 0, n = 0;
+        for (let j = 0; j < symbols.length; j++) {
+            if (i === j) continue;
+            const v = values[i] && values[i][j];
+            if (Number.isFinite(Number(v))) { sum += Number(v); n += 1; }
+        }
+        return n > 0 ? sum / n : null;
+    });
+    const pairs = symbols.map((s, i) => ({ s, avg: avgs[i] })).filter(p => p.avg != null);
+    if (pairs.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.corr_matrix.empty_avg_chart">${esc(t('view.corr_matrix.empty_avg_chart'))}</div>`;
+        return;
+    }
+    pairs.sort((a, b) => b.avg - a.avg);
+    const labels = pairs.map(p => p.s);
+    const ys = pairs.map(p => p.avg);
+    const xs = labels.map((_, i) => i + 1);
+    const zero = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 200,
+        scales: { x: {}, y: { auto: false, range: [-1, 1] } },
+        series: [
+            { label: t('view.corr_matrix.chart.symbol_idx') },
+            { label: t('view.corr_matrix.chart.avg_rho'),
+              stroke: '#b86bff', width: 0,
+              points: { show: true, size: 12, fill: '#b86bff', stroke: '#b86bff' } },
+            { label: t('view.corr_matrix.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 50 },
+        ],
+        legend: { show: true },
+    }, [xs, ys, zero], el);
 }
 
 function renderDistributionChart(r) {
