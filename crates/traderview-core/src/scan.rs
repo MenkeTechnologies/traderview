@@ -302,6 +302,8 @@ pub enum Preset {
     NewLowRedDay,                // year_low_pct <= 0 AND change_pct <= -1 — printed a new 52w low and closed red (continuation)
     NewHighRedDay,               // year_high_pct >= 0 AND change_pct <= -1 — printed a new 52w high then reversed red (failed breakout)
     NewLowGreenDay,              // year_low_pct <= 0 AND change_pct >= 1 — printed a new 52w low then reversed green (failed breakdown)
+    NewHighOnHotVol,             // year_high_pct >= 0 AND rel_volume >= 3 — new 52w high on >=3× volume (institutional accumulation)
+    NewLowOnHotVol,              // year_low_pct <= 0 AND rel_volume >= 3 — new 52w low on >=3× volume (institutional distribution)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1221,6 +1223,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NewLowGreenDay => {
             hit.year_low_pct <= 0.0 && hit.change_pct >= 1.0
         }
+        Preset::NewHighOnHotVol => {
+            hit.year_high_pct >= 0.0 && hit.rel_volume >= 3.0
+        }
+        Preset::NewLowOnHotVol => {
+            hit.year_low_pct <= 0.0 && hit.rel_volume >= 3.0
+        }
     }
 }
 
@@ -1413,6 +1421,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::NewLowRedDay => "New 52w Low + Red Day",
         Preset::NewHighRedDay => "New 52w High + Red Day",
         Preset::NewLowGreenDay => "New 52w Low + Green Day",
+        Preset::NewHighOnHotVol => "New 52w High on Hot Vol",
+        Preset::NewLowOnHotVol => "New 52w Low on Hot Vol",
     }
 }
 

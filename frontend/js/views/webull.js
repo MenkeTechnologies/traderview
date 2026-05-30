@@ -61,6 +61,11 @@ export async function renderWebull(mount, _state) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.webull.h2.unreal_chart">Unrealized P&L per position</h2>
+            <div id="wb-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.webull.h2.today_s_filled_orders">Today's filled orders</h2>
             <table class="trades" id="wb-orders">
                 <thead><tr>
@@ -121,6 +126,45 @@ function connectWs(mount, tok) {
     });
 }
 
+function renderUnrealChart(positions) {
+    const el = document.getElementById('wb-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const rows = (positions || []).filter(p => Number.isFinite(Number(p.unrealized_pnl)));
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.webull.empty_chart">${esc(t('view.webull.empty_chart'))}</div>`;
+        return;
+    }
+    rows.sort((a, b) => Number(b.unrealized_pnl) - Number(a.unrealized_pnl));
+    const labels = rows.map(p => p.symbol);
+    const xs = labels.map((_, i) => i + 1);
+    const winY  = rows.map(p => Number(p.unrealized_pnl) >= 0 ? Number(p.unrealized_pnl) : null);
+    const loseY = rows.map(p => Number(p.unrealized_pnl) <  0 ? Number(p.unrealized_pnl) : null);
+    const zero  = xs.map(() => 0);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.webull.chart.symbol') },
+            { label: t('view.webull.chart.win'),
+              stroke: '#7af0a8', width: 0,
+              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
+            { label: t('view.webull.chart.lose'),
+              stroke: '#ff3860', width: 0,
+              points: { show: true, size: 12, fill: '#ff3860', stroke: '#ff3860' } },
+            { label: t('view.webull.chart.zero'),
+              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
+              points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 56 },
+        ],
+        legend: { show: true },
+    }, [xs, winY, loseY, zero], el);
+}
+
 function render(mount, snap) {
     const fetched = mount.querySelector('#wb-fetched');
     if (fetched) fetched.textContent = snap.fetched_at ? `updated ${fmtDateTime(snap.fetched_at)}` : '';
@@ -134,6 +178,7 @@ function render(mount, snap) {
         if (tp) { tp.textContent = fmtMoney(a.total_pnl); tp.className = `value ${pnlClass(a.total_pnl)}`; }
         const bp = mount.querySelector('#wb-bp');     if (bp) bp.textContent = fmtMoney(a.buying_power);
     }
+    renderUnrealChart(snap.positions || []);
     const posBody = mount.querySelector('#wb-pos tbody');
     if (!posBody) return;
     if (snap.positions && snap.positions.length) {

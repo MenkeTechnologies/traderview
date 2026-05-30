@@ -184,6 +184,8 @@ const PRESETS = [
     { id: 'new_low_red_day', label: t('view.scanners.preset.new_low_red_day.label'), desc: t('view.scanners.preset.new_low_red_day.desc') },
     { id: 'new_high_red_day', label: t('view.scanners.preset.new_high_red_day.label'), desc: t('view.scanners.preset.new_high_red_day.desc') },
     { id: 'new_low_green_day', label: t('view.scanners.preset.new_low_green_day.label'), desc: t('view.scanners.preset.new_low_green_day.desc') },
+    { id: 'new_high_on_hot_vol', label: t('view.scanners.preset.new_high_on_hot_vol.label'), desc: t('view.scanners.preset.new_high_on_hot_vol.desc') },
+    { id: 'new_low_on_hot_vol', label: t('view.scanners.preset.new_low_on_hot_vol.label'), desc: t('view.scanners.preset.new_low_on_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
