@@ -50,10 +50,15 @@ export async function renderDashboards(mount, _appState) {
             <h2 data-i18n="view.dashboards.h2.tiles_chart">Tiles per dashboard</h2>
             <div id="db-chart" style="width:100%;height:200px"></div>
         </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.dashboards.h2.tile_freq_chart">Tile usage across dashboards (top 10)</h2>
+            <div id="db-freq-chart" style="width:100%;height:200px"></div>
+        </div>
     `;
     renderSidebar();
     await renderActive();
     renderTilesChart();
+    renderTileFreqChart();
     if (!_wired) {
         _wired = true;
         // External mutations (e.g. launcher 📌 pin button) wake this view
@@ -67,6 +72,45 @@ export async function renderDashboards(mount, _appState) {
             void renderActive();
         });
     }
+}
+
+function renderTileFreqChart() {
+    const el = document.getElementById('db-freq-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const counts = new Map();
+    for (const d of store.listDashboards(state) || []) {
+        for (const tile of d.tiles || []) {
+            const k = tile.viewId || tile.id || String(tile);
+            counts.set(k, (counts.get(k) || 0) + 1);
+        }
+    }
+    const rows = [...counts.entries()].map(([k, v]) => ({ k, v }))
+        .sort((a, b) => b.v - a.v)
+        .slice(0, 10);
+    if (rows.length < 1) {
+        el.innerHTML = `<div class="muted" data-i18n="view.dashboards.empty_freq_chart">${esc(t('view.dashboards.empty_freq_chart'))}</div>`;
+        return;
+    }
+    const labels = rows.map(r => r.k);
+    const xs = labels.map((_, i) => i + 1);
+    const ys = rows.map(r => r.v);
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 180,
+        scales: { x: {}, y: { auto: true } },
+        series: [
+            { label: t('view.dashboards.chart.tile') },
+            { label: t('view.dashboards.chart.usage'),
+              stroke: '#ffd84a', width: 0,
+              points: { show: true, size: 14, fill: '#ffd84a', stroke: '#ffd84a' } },
+        ],
+        axes: [
+            { stroke: '#aab', size: 28,
+              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+            { stroke: '#aab', size: 40 },
+        ],
+        legend: { show: true },
+    }, [xs, ys], el);
 }
 
 function renderTilesChart() {

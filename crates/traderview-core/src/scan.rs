@@ -412,6 +412,8 @@ pub enum Preset {
     GapInsideRangeImpulse,       // gap_pct.abs() < 1 AND hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — flat gap but wide impulsive day on heavy vol (intraday breakout from balance)
     OneWickCloseAtMid,           // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long upper wick but closed near LOD flat (rejection from upper extreme)
     OneWickCloseAtMidDown,       // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long lower wick but closed near HOD flat (rejection from lower extreme)
+    UpperWickGreenDayConfirm,    // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct > 1 — long upper wick + closed green day (failed reversal; trend continuation)
+    LowerWickRedDayConfirm,      // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct < -1 — long lower wick + closed red day (failed reversal; trend continuation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1925,6 +1927,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.change_pct.abs() < 0.5
         }
+        Preset::UpperWickGreenDayConfirm => {
+            hit.hod_dist_pct.abs() > 2.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.change_pct > 1.0
+        }
+        Preset::LowerWickRedDayConfirm => {
+            hit.lod_dist_pct.abs() > 2.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -2227,6 +2239,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapInsideRangeImpulse => "Flat-Gap Impulse Breakout",
         Preset::OneWickCloseAtMid => "Upper-Wick Flat-Close Reject",
         Preset::OneWickCloseAtMidDown => "Lower-Wick Flat-Close Reject",
+        Preset::UpperWickGreenDayConfirm => "Upper-Wick Green-Day Confirm",
+        Preset::LowerWickRedDayConfirm => "Lower-Wick Red-Day Confirm",
     }
 }
 
