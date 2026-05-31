@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
+        .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -406,6 +407,23 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §1031(f) related-party 2-year clawback ───────────────────────────
+// Mounted at /api/calc/section-1031-f. Pure compute; evaluates whether
+// a subsequent disposition of property received in a related-party
+// §1031 exchange triggers retroactive gain recognition.
+
+async fn section_1031_f_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1031_f::Section1031FInput>,
+) -> Result<Json<traderview_expense::section_1031_f::Section1031FResult>, ApiError> {
+    if b.deferred_gain_at_exchange < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "deferred_gain_at_exchange must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1031_f::compute(&b)))
 }
 
 // ── §1259 constructive sale of appreciated financial position ────────
