@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1091",          post(section_1091_route))
+        .route("/calc/section-1233",          post(section_1233_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -502,6 +503,38 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §1233 short-sale character + holding-period rules ───────────────
+// Mounted at /api/calc/section-1233. Pure compute; §1233(b) gain
+// short-term + holding-period reset for short-held or during-short
+// substantially identical; §1233(d) loss long-term for long-held
+// substantially identical at short open.
+
+async fn section_1233_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1233::Section1233Input>,
+) -> Result<Json<traderview_expense::section_1233::Section1233Result>, ApiError> {
+    if b.short_shares < 0 {
+        return Err(ApiError::BadRequest("short_shares must be >= 0".into()));
+    }
+    if b.short_close_date < b.short_sale_date {
+        return Err(ApiError::BadRequest(
+            "short_close_date must be on or after short_sale_date".into(),
+        ));
+    }
+    for p in b
+        .substantially_identical_held_at_open
+        .iter()
+        .chain(b.substantially_identical_acquired_during_short.iter())
+    {
+        if p.shares < 0 {
+            return Err(ApiError::BadRequest(
+                "long position shares must be >= 0".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_1233::compute(&b)))
 }
 
 // ── §1091 wash sale loss disallowance ────────────────────────────────
