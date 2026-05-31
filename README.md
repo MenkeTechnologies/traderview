@@ -384,6 +384,36 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::lockout_penalties` is the **state-specific self-help eviction penalty table** — sibling to `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Self-help eviction (lockout, utility shutoff, removal of tenant property without court order) is universal landlord exposure — every state prohibits it — but the dollar consequences vary by 10× across jurisdictions.
+
+**Seven distinct penalty regimes** are present in the table:
+
+| Regime                          | States                                  | Formula                                                              |
+|---------------------------------|-----------------------------------------|----------------------------------------------------------------------|
+| **Additive per-day**            | CA § 789.3                              | `max($100/day × days, $250 minimum) + actual + fees`                |
+| **Additive rent + flat**        | TX § 92.0081                            | `1 month rent + $1,000 + actual + fees`                              |
+| **Greater-of rent-mult or actual** | FL § 83.67 / WA § 59.18.290 / MA c.186 §14 | `max(3× rent, actual) + fees`                                  |
+| **Greater-of rent-mult or actual-mult** | AZ § 33-1367                    | `max(2× rent, 2× actual) + fees`                                     |
+| **Greater-of rent-mult or flat, plus actual** | CO § 38-12-510            | `max(3× rent, $5,000) + actual + fees`                              |
+| **Treble actual**               | NY RPL § 235 / DC § 42-3505.01 / NJ § 2A:39-1 | `3× actual + fees` (+ criminal exposure in NY/NJ)             |
+| **Rent multiple + actual**      | IL Forcible Entry Act                   | `2× rent + actual + fees`                                            |
+| **Actual damages only**         | ~35 other states                        | actual + fees (where statute provides)                               |
+| **No statute**                  | AR / WV / WY / MS / SD / ID             | actual common-law trespass damages only                              |
+
+**CO § 38-12-510 is the strictest state in the table** — the deliberate 2021 HB21-1121 reform set a `max(3× rent, $5,000)` floor PLUS actual damages, so even a tenant with zero actual damages on a $1,000/month unit recovers $5,000 (the flat floor wins over $3,000 = 3× rent). Pinned by `colorado_strictest_state_three_times_rent_or_5k_plus_actual` covering both low-rent floor-wins and high-rent multiplier-wins.
+
+**Three states have statutory floors that survive all-zero input**: CA ($250 per-day minimum), TX ($1,000 flat), CO ($5,000 flat). Every other regime zeros out cleanly. Pinned by `zero_rent_zero_actual_zero_days_no_panic` which sweeps all three positive-floor states against the negative-control states (FL/WA/NY/AZ/IL/MA) — catches a future regression where someone moves the floor logic out of CA/TX/CO into a shared helper.
+
+**Treble model has no statutory floor independent of actual damages**: 3× 0 = 0. Distinct from the per-day model. Pinned by `treble_with_zero_actual_yields_zero_total`. This matters at the UI layer — telling a landlord "you owe at least 3× actual" is misleading if actual is zero (e.g., immediate self-cure before any tenant outlay).
+
+**Criminal exposure flag** is independent of civil regime. NY, NJ, MA, GA, MI, NH, CT, LA, MO, NV, PA all flag `criminal_exposure: true` — the landlord faces misdemeanor / criminal trespass charges separate from the civil suit. Pinned by `criminal_exposure_states_pinned`. The flag is a downstream UI signal, not used in the dollar compute.
+
+**Arkansas is uniquely `NoStatute`** — the only US state with effectively no tenant protections on self-help. Pinned by `arkansas_uniquely_no_statute_landlord_friendly`.
+
+**Integer cents + saturating_mul throughout** — large rent / large day count never overflow i64. Pinned by `large_rent_no_overflow_via_saturating_mul` with $10 billion rent against the CO 3× regime, which still clamps under i64::MAX.
+
+Mounted at `POST /api/rental/lockout-penalty-check`. Twenty-five tests pin: 51-row coverage; **CA per-day floor cross-over math** (1 day / 2 days / 3 days / 5 days — floor wins until day 3); CA zero-days still returns $250 minimum; TX additive 1mo rent + $1k + actual; FL greater-of with both directions (actual wins, statutory wins); WA mirrors FL with distinct citation noting separate utility-shutoff statute; AZ both-sides-multiplied; **CO strictest with floor-wins and multiplier-wins both pinned**; treble states pinned at 3× actual; treble × 0 = 0; IL 2× rent additive; MA mirrors FL but criminal flag set; actual-damages-only states pass through; no-statute states (AR/WV/WY/MS/SD/ID) yield actual only with AR uniquely flagged; unknown state errors; case-insensitive lookup; sorted `all_states()`; non-empty citations; attorney_fees_recoverable flag pinned across 9 strong fee-shifting states; criminal_exposure flag pinned across 11 states; arkansas no-statute uniquely; all-zero input no panic; **large-rent no overflow**; TX zero-actual still has $1k+rent floor; greater-of equal amounts no double-count.
+
 `traderview-expense::application_fees` is the **state-specific rental application / tenant-screening fee cap table** — sibling to `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Application fees are the highest-frequency landlord-tenant transaction and increasingly regulated — NJ AG put landlords on notice in 2024, and CA's CPI-adjusted cap moves every December.
 
 Six regulatory regimes plus no-statute:

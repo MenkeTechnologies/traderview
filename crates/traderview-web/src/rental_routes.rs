@@ -62,6 +62,9 @@ use traderview_expense::entry_notice::{
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
 };
+use traderview_expense::lockout_penalties::{
+    check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
+};
 use traderview_expense::retaliation_windows::{
     check as check_retaliation, RetaliationCheckInput, RetaliationCheckResult,
 };
@@ -165,6 +168,7 @@ pub fn router() -> Router<AppState> {
         .route("/entry-notice-check", axum::routing::post(entry_notice_check_route))
         .route("/retaliation-check", axum::routing::post(retaliation_check_route))
         .route("/application-fee-check", axum::routing::post(application_fee_check_route))
+        .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1839,6 +1843,26 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State self-help eviction (lockout / utility shutoff) penalty check
+// ---------------------------------------------------------------------------
+
+async fn lockout_penalty_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LockoutPenaltyInput>,
+) -> Result<Json<LockoutPenaltyResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_cents < 0 || b.actual_damages_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents and actual_damages_cents must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_lockout_penalty(&b)))
 }
 
 // ---------------------------------------------------------------------------

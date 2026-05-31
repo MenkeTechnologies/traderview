@@ -27,6 +27,7 @@ pub mod habitability_remedies;
 pub mod home_office;
 pub mod late_fee_caps;
 pub mod lease_disclosures;
+pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;
 pub mod mileage;
