@@ -1256,6 +1256,8 @@ pub enum Preset {
     MegaRangeDownConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough; rare maximum-conviction follow-through day confirming trend acceleration)
     MegaRangeUpMidYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + doubled vol + mid-range from high (5-20%) (mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone; rare wide-range advance from mid-cycle pullback bottom, swing-trade marker for trend resumption)
     MegaRangeDownMidYearLowHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + doubled vol + mid-range from low (5-20%) (mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone; rare wide-range decline from mid-cycle recovery top, swing-trade marker for trend resumption)
+    MegaRangeUpJustOffYearHighHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + doubled vol + just off 52w high (2-5%) (post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high; rare wide-range push back toward the breakout level with maximum-energy commitment to re-test the prior peak)
+    MegaRangeDownJustOffYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + doubled vol + just off 52w low (2-5%) (post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low; rare wide-range push back toward the breakdown level with maximum-energy commitment to re-test the prior trough)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7834,6 +7836,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::MegaRangeUpJustOffYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::MegaRangeDownJustOffYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -8980,6 +8996,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Volcanic Extension past Validated Breakdown: Extreme Intraday Range with Bear-direction Outcome Extending past the Already-cleared Prior Trough; Rare Maximum-conviction Follow-through Day Confirming Trend Acceleration)",
         Preset::MegaRangeUpMidYearHighHotVol => "Mega Intraday Range (>10 %) + Green Close + Doubled Vol + Mid-range from High (5-20 %) (Mid-cycle Volcanic Rally: Extreme Intraday Range with Bull-direction Outcome in the Proper Consolidation Zone; Rare Wide-range Advance from Mid-cycle Pullback Bottom, Swing-trade Marker for Trend Resumption)",
         Preset::MegaRangeDownMidYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + Mid-range from Low (5-20 %) (Mid-cycle Volcanic Decline: Extreme Intraday Range with Bear-direction Outcome in the Proper Consolidation Zone; Rare Wide-range Decline from Mid-cycle Recovery Top, Swing-trade Marker for Trend Resumption)",
+        Preset::MegaRangeUpJustOffYearHighHotVol => "Mega Intraday Range (>10 %) + Green Close + Doubled Vol + Just off 52w High (2-5 %) (Post-tag Volcanic Recovery: Extreme Intraday Range with Bull-direction Outcome Immediately after a Shallow Pullback from the 52w High; Rare Wide-range Push back toward the Breakout Level with Maximum-energy Commitment to Re-test the Prior Peak)",
+        Preset::MegaRangeDownJustOffYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + Just off 52w Low (2-5 %) (Post-tag Volcanic Rejection: Extreme Intraday Range with Bear-direction Outcome Immediately after a Shallow Bounce from the 52w Low; Rare Wide-range Push back toward the Breakdown Level with Maximum-energy Commitment to Re-test the Prior Trough)",
     }
 }
 
