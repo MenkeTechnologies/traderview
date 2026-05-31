@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-163d",          post(section_163d_route))
+        .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -410,6 +411,19 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §864(b)(2) non-US trader/investor safe harbor ────────────────────
+// Mounted at /api/calc/section-864b2. Pure compute; classifies a
+// non-US person's US securities/commodities trading as effectively
+// connected or not, based on the four-factor test (non-US person /
+// own-account / not a dealer / no US office).
+
+async fn section_864b2_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_864b2::Section864B2Input>,
+) -> Result<Json<traderview_expense::section_864b2::Section864B2Result>, ApiError> {
+    Ok(Json(traderview_expense::section_864b2::compute(&b)))
 }
 
 // ── §163(d) investment interest expense limitation ───────────────────
