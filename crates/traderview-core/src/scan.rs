@@ -1194,6 +1194,8 @@ pub enum Preset {
     DecupledVolDownHotVol,                     // rel_volume >= 10 AND change_pct < -3 — decupled vol (>=10) + big down move (<-3%) (unprecedented bear-direction event: vol is 10x its average and price prints a significant down move; once-per-year occurrence per name, typically a major news event like fraud disclosure, lawsuit, or massive earnings miss at the tier-0 highest-conviction tier)
     DecupledVolUpNearYearHighHotVol,           // rel_volume >= 10 AND change_pct > 3 AND year_high_pct < 2 — decupled vol (>=10) + big up move (>3%) + at/near 52w high (<2%) (absolute-rarest breakout-day signal: vol is 10x average, price prints a significant up move and simultaneously reaches the 52w high; tier-0 once-per-year + breakout-at-extreme = portfolio-changing event)
     DecupledVolDownNearYearLowHotVol,          // rel_volume >= 10 AND change_pct < -3 AND year_low_pct < 2 — decupled vol (>=10) + big down move (<-3%) + at/near 52w low (<2%) (absolute-rarest breakdown-day signal: vol is 10x average, price prints a significant down move and simultaneously reaches the 52w low; tier-0 once-per-year + breakdown-at-extreme = portfolio-changing event)
+    DecupledVolUpDeepBelowYearHighHotVol,      // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 20 — decupled vol (>=10) + big up move (>3%) + far below 52w high (>=20%) (unprecedented turnaround signal from depressed level: vol is 10x average and price prints a significant up move while still well below the prior peak; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
+    DecupledVolDownDeepAboveYearLowHotVol,     // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 20 — decupled vol (>=10) + big down move (<-3%) + far above 52w low (>=20%) (unprecedented top signal from elevated level: vol is 10x average and price prints a significant down move while still well above the prior trough; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7376,6 +7378,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::DecupledVolDownNearYearLowHotVol => {
             hit.rel_volume >= 10.0 && hit.change_pct < -3.0 && hit.year_low_pct < 2.0
         }
+        Preset::DecupledVolUpDeepBelowYearHighHotVol => {
+            hit.rel_volume >= 10.0 && hit.change_pct > 3.0 && hit.year_high_pct >= 20.0
+        }
+        Preset::DecupledVolDownDeepAboveYearLowHotVol => {
+            hit.rel_volume >= 10.0 && hit.change_pct < -3.0 && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -8460,6 +8468,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DecupledVolDownHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) (Unprecedented Bear-direction Event: Vol Is 10x Its Average and Price Prints a Significant Down Move; Once-per-year Occurrence per Name, Typically a Major News Event Like Fraud Disclosure, Lawsuit, or Massive Earnings Miss at the Tier-0 Highest-conviction Tier)",
         Preset::DecupledVolUpNearYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + At/near 52w High (<2 %) (Absolute-rarest Breakout-day Signal: Vol Is 10x Average, Price Prints a Significant Up Move and Simultaneously Reaches the 52w High; Tier-0 Once-per-year + Breakout-at-extreme = Portfolio-changing Event)",
         Preset::DecupledVolDownNearYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + At/near 52w Low (<2 %) (Absolute-rarest Breakdown-day Signal: Vol Is 10x Average, Price Prints a Significant Down Move and Simultaneously Reaches the 52w Low; Tier-0 Once-per-year + Breakdown-at-extreme = Portfolio-changing Event)",
+        Preset::DecupledVolUpDeepBelowYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + Far below 52w High (>=20 %) (Unprecedented Turnaround Signal from Depressed Level: Vol Is 10x Average and Price Prints a Significant Up Move While Still Well below the Prior Peak; Tier-0 Once-per-year Regime-change Catalyst Worth a Portfolio-wide Thesis Review)",
+        Preset::DecupledVolDownDeepAboveYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + Far above 52w Low (>=20 %) (Unprecedented Top Signal from Elevated Level: Vol Is 10x Average and Price Prints a Significant Down Move While Still Well above the Prior Trough; Tier-0 Once-per-year Regime-change Catalyst Worth a Portfolio-wide Thesis Review)",
     }
 }
 
