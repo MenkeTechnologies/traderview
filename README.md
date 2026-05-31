@@ -587,6 +587,30 @@ Basis adjustments per §1296(b): increased by recognized MTM gain, decreased by 
 
 Mounted at `POST /api/calc/section-1296`. Twelve tests pin: year-1 gain recognized as ordinary with basis step-up; year-1 loss with zero prior inclusions fully suspended (basis stays flat); year-2 loss absorbed by prior $2k inclusions; loss exceeding unreversed inclusions split into deductible + suspended (basis reduces only by deductible portion); no-MTM-change no-op; **multi-year chain** (gain → loss → gain) basis and unreversed-inclusions evolve correctly; first-year-loss-then-gain chain showing the suspended-loss-is-gone-forever economic reality (year-2 gain measured from the year-2-start basis, not the original cost basis); unreversed inclusions never negative under stress; exact-zero gain no-op; loss capped at full basis doesn't create negative basis; gain note describes inclusion with amounts; loss note distinguishes full-absorb vs partial-suspend.
 
+`traderview-expense::section_1234` is the **IRC §1234 options character + holding-period rules module** — defines the taxation of every non-§1256 stock/securities option (covered calls, cash-secured puts, equity options that aren't broad-based-index). Trio with `section_1091` (wash sale) + `section_1233` (short sales) on the trader-anti-abuse side, and complement to `section_1256` for non-1256 equity options.
+
+Three subsections govern:
+
+| Subsection         | Applies to     | Result                                                                 |
+|--------------------|----------------|------------------------------------------------------------------------|
+| **§1234(a)**       | Holder         | Character mirrors underlying property; option holding period drives ST/LT (≤ 365 days = ST per §1222) |
+| **§1234(a)(3)**    | Holder, §1221 ordinary underlying | Ordinary character regardless of option holding period   |
+| **§1234(a)(4)**    | Holder exercises | NO realized event — premium adjusts basis of acquired/disposed underlying |
+| **§1234(b)(1)**    | Writer         | **Fixed short-term capital** regardless of holding period — the "premium is always ST to the writer" rule |
+| **§1234(b)(2)(A)** | Writer dealer in options | Ordinary character (carve-out from §1234(b)(1))                 |
+| **Writer assignment** | Writer (counterparty exercises) | NO realized event — premium adjusts proceeds on sale of underlying |
+| **§1234(c)**       | §1256 contracts | §1234 does not apply — route to `section_1256` 60/40 MTM            |
+
+**§1234(b)(1) is the load-bearing bright-line.** Every covered-call and cash-secured-put writer relies on it: even if the writer holds the short side for 18 months, the close is ST. This is a deliberate override of §1234(a)'s mirror-character behavior. Pinned by `writer_held_over_one_year_still_short_term` and the explicit "regardless of option holding period" phrase in the note text (pinned separately so removing it would fail the test).
+
+**Basis-adjustment events (Exercise / Assignment) return `is_basis_adjustment_event = true` with `gain_loss = 0`.** The option itself produces nothing — the premium becomes a price adjustment on the underlying. Caller's downstream code must NOT report these as Schedule D rows; they're folded into the underlying stock transaction. Pinned by `holder_exercised_no_realized_event` and `writer_assigned_is_basis_adjustment_event_no_gain_loss`.
+
+**§1256 override fires before everything else.** A §1256 contract (broad-based index option, futures option, foreign currency option) bypasses §1234 entirely. The compute returns `TaxCharacter::Section1256` so the caller routes to `section_1256.rs` for 60/40 MTM. Pinned twice — once against the dealer-in-options carve-out, once against the holder-exercise basis-adjustment path — to catch any future branch-ordering regression that would let §1234 swallow §1256 cases.
+
+**Sign conventions in the input:** `premium` is always positive (the absolute dollars; sign is implicit from role — Writer received it, Holder paid it). `close_proceeds_or_cost` is the close-side dollars (sale proceeds for Holder/Sold; buyback cost for Writer/BoughtBack). Lapsed is treated as 0 close-side. This keeps the validation logic simple in the route layer.
+
+Mounted at `POST /api/calc/section-1234`. Twenty-one tests pin: writer lapsed → ST gain = premium; writer buyback below premium → ST gain; writer buyback above premium → ST loss; **writer held > 1 year still ST**; writer assigned → basis-adjustment event with zero gain/loss; writer dealer-in-options → ordinary character; holder sold short-term → ST capital; holder sold long-term LEAP → LT capital; holder lapsed → capital loss of premium; holder LEAP lapsed → LT capital loss (the patient-LEAP-holder trap); holder exercised → basis-adjustment event; **365-day boundary holder ST**; **366-day boundary holder LT**; holder ordinary underlying → ordinary regardless of holding period (§1234(a)(3) carve-out); §1256 underlying bypasses §1234; writer sold to another writer → still ST under §1234(b); zero premium writer lapsed → zero gain; **§1256 override priority over dealer flag** (branch-ordering regression target); **§1256 override priority over holder exercise** (similar); note describes actual holding-period days for ST/LT-boundary UX; writer note explicitly states "regardless of option holding period" (UX-text regression target).
+
 `traderview-expense::section_1233` is the **IRC §1233 short-sale character + holding-period rules module** — paired with `section_1091` (wash sale) and `section_1259` (constructive sale) to close the trader anti-abuse trio for short positions. §1259 came in 1997 to shut down "short against the box" deferral; §1233 still applies wherever §1259's 30-day post-short window doesn't trigger.
 
 Three pieces:

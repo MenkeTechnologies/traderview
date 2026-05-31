@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1233",          post(section_1233_route))
+        .route("/calc/section-1234",          post(section_1234_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -503,6 +504,37 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §1234 options character + holding-period rules ──────────────────
+// Mounted at /api/calc/section-1234. Pure compute; §1234(a) holder
+// character mirrors underlying with option holding period driving
+// ST/LT; §1234(b) writer is fixed short-term capital regardless of
+// holding period; §1234(c) §1256 contract override; exercise +
+// assignment are basis-adjustment events with no separate option
+// gain/loss.
+
+async fn section_1234_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1234::Section1234Input>,
+) -> Result<Json<traderview_expense::section_1234::Section1234Result>, ApiError> {
+    if b.option_close_date < b.option_open_date {
+        return Err(ApiError::BadRequest(
+            "option_close_date must be on or after option_open_date".into(),
+        ));
+    }
+    if b.premium < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "premium must be >= 0 (sign is implicit from role: writer = received, holder = paid)"
+                .into(),
+        ));
+    }
+    if b.close_proceeds_or_cost < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "close_proceeds_or_cost must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1234::compute(&b)))
 }
 
 // ── §1233 short-sale character + holding-period rules ───────────────
