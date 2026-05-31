@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-174",           post(section_174_route))
+        .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -441,6 +442,27 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §263A UNICAP (trader vs dealer classifier) ───────────────────────
+// Mounted at /api/calc/section-263a. Pure compute; dealers must
+// capitalize direct + indirect inventory costs; traders + investors
+// are exempt. §263A(b)(2)(B) small business exception per §448(c)
+// threshold.
+
+async fn section_263a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_263a::Section263AInput>,
+) -> Result<Json<traderview_expense::section_263a::Section263AResult>, ApiError> {
+    if b.direct_costs < Decimal::ZERO
+        || b.indirect_costs_allocable_to_inventory < Decimal::ZERO
+        || b.avg_3yr_gross_receipts < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_263a::compute(&b)))
 }
 
 // ── §174 R&D capitalization (post-TCJA) ──────────────────────────────

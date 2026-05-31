@@ -588,6 +588,27 @@ Mounted at `POST /api/calc/section-864b2`. Seventeen tests pin: non-US individua
 
 Mounted at `POST /api/calc/section-988`. Seventeen tests pin: spot default ordinary; loss on spot also ordinary (bypasses the $3k §1212(b) cap); forward + election = capital; forward without election = ordinary; regulated currency futures default to §1256 60/40; kick-out election routes futures back to ordinary; personal-use gain under $200 excluded; exactly $200 excluded; $201 fully ordinary (no graduation); personal-use loss disallowed (not ordinary); FX-denominated debt always ordinary even with election asserted (election doesn't apply); forex spot election ignored; option + election = capital; personal-use zero gain no-op; personal-use route runs first (election flags ignored); accrued FX item ordinary even with election; non-regulated futures + election = capital.
 
+`traderview-expense::section_263a` is the **IRC §263A UNICAP trader-vs-dealer classifier** — the module that pins the load-bearing distinction between traders and dealers for cost-capitalization purposes. A **dealer in securities** under §475(c)(1) (buys + sells to customers in the ordinary course) holds securities as **inventory** and must capitalize direct + indirect costs into basis. A **trader** (proprietary trading for own account; no customers) holds positions as **investment property** and is EXEMPT from §263A under §263A(c)(3) + §475(f) — costs remain currently deductible as §162 ordinary business expenses.
+
+The trader exemption is the most-asked-about distinction in active-trader tax planning, and the module's short-circuit chain reflects the analysis order a CPA actually performs: (1) trader → exempt, costs currently deductible (most common path for proprietary traders); (2) investor → direct costs capitalized to basis per §1012, indirect costs §67(g)-limited (the TCJA 2018-2025 suspension makes them effectively nondeductible); (3) dealer + §263A(b)(2)(B) **small business exception** (avg 3-year gross receipts ≤ §448(c) threshold) → exempt, costs currently deductible; (4) dealer above threshold → subject to UNICAP, capitalize direct + indirect into inventory basis.
+
+`TradingClassification` enum: `Dealer`, `Trader`, `Investor`. The dealer-vs-trader question turns on whether the taxpayer makes "regular and continuous sales to customers" — caller's responsibility to assert based on facts. Active securities dealers almost always blow past the small-business threshold (gross receipts include gross proceeds from every sale), so the exception rarely helps; but day-1 trading startups may briefly qualify.
+
+The **§448(c) threshold table** (shared with iter 16's `section_163j`):
+
+| Year | §448(c) threshold |
+|------|-------------------|
+| 2020 | $26M              |
+| 2021 | $26M              |
+| 2022 | $27M              |
+| 2023 | $29M              |
+| 2024 | $30M              |
+| 2025 | $31M              |
+
+Caller can override via `small_business_threshold_override` for 2026+.
+
+Mounted at `POST /api/calc/section-263a`. Sixteen tests pin: dealer above threshold subject to UNICAP ($150k capitalized); dealer below threshold exempt currently deductible; dealer at threshold exactly still exempt (≤ not <); dealer $1 over loses exemption; **trader exempt regardless of receipts** (even $100M — short-circuits before threshold check); investor costs capitalized to basis not currently deductible (§1012 path); §448(c) threshold table 2020-2025 each year exact; caller override beats embedded table; zero costs dealer subject but nothing to capitalize; only direct costs only those capitalized; only indirect costs only those capitalized; trader note distinguishes from dealer path (§475(f) trader vs §263A applies); investor note describes basis-capitalization path (§1012); small-business exception with huge costs still currently deductible ($2.5M deductible at $5M gross receipts); dealer subject total = sum of buckets invariant; trader short-circuits threshold check.
+
 `traderview-expense::section_267` is the **IRC §267 related-party loss disallowance module** — every trader has family members or controlled entities, and selling stock at a loss to a spouse, child, sibling, or one's own S-corp triggers §267(a)(1) which COMPLETELY disallows the loss. The §267(d) buyer-side adjustment is the non-obvious part: when the related-party buyer later sells the property at a gain, that gain is REDUCED (down to zero) by the previously-disallowed loss. If the buyer sells at a loss, the seller's disallowed amount is gone permanently. Buyer's initial basis is their actual cash purchase price (§267 does NOT transfer the seller's basis — it only preserves the gain-reduction right).
 
 `RelationshipCategory` exposes the §267(b) ten categories explicitly so the API caller doesn't have to guess: `FamilyMember` (§267(b)(1) — siblings whole/half blood, spouse, ancestors, lineal descendants; explicitly NOT in-laws/cousins/aunts/uncles); `IndividualAndControlledCorp` (§267(b)(2) — >50% stock value); `TwoControlledCorps` (§267(b)(3) — §1563(a) common ownership); `GrantorAndTrustFiduciary` / `TwoTrustFiduciariesSameGrantor` / `TrustFiduciaryAndBeneficiary` / `TrustFiduciaryAndOtherBeneficiary` (§267(b)(4)-(7) trust pairs); `CorpAndPartnershipCommonOwner` (§267(b)(8) — frequent gotcha for trader LLC + S-corp combos); `TwoSCorps` (§267(b)(9)); `EstateExecutorAndBeneficiary` (§267(b)(10)); and `Unrelated` to short-circuit when §267 doesn't apply.
