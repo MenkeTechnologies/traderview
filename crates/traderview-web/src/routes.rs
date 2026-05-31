@@ -16,6 +16,7 @@ mod breadth;
 mod catalysts;
 mod chart_drawings;
 mod calc;
+mod carryover;
 mod charts;
 mod chart_indicators;
 mod extras;
@@ -110,6 +111,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(charts::router())
         .merge(chart_indicators::router())
         .merge(calc::router())
+        .merge(carryover::router())
         .merge(trade_analytics::router())
         .merge(microstructure::router())
         .merge(extras::router())

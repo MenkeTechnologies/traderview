@@ -7,6 +7,7 @@ pub mod alerts;
 pub mod api_tokens;
 pub mod backtest_presets;
 pub mod breadth;
+pub mod carryover;
 pub mod catalysts;
 pub mod chart_drawings;
 pub mod comments;
