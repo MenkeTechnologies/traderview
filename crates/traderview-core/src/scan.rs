@@ -1218,6 +1218,8 @@ pub enum Preset {
     PentaConfluenceLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (penta-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
     HexaConfluenceHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 AND day_pct > 1 — gap up + intraday up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (hexa-confluence new-high day: overnight gap aligned with intraday rally, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
     HexaConfluenceLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 AND day_pct < -1 — gap down + intraday down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (hexa-confluence new-low day: overnight gap aligned with intraday selloff, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
+    BreakoutPocketHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year high + close at day high + green close + doubled vol + tight intraday range (<2%) (controlled breakout in a tight pocket: fresh 52w high with no wild whipsaws, just steady upward grind with doubled participation; cleanest possible breakout structure with no fake-out warning)
+    BreakdownPocketLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year low + close at day low + red close + doubled vol + tight intraday range (<2%) (controlled breakdown in a tight pocket: fresh 52w low with no wild whipsaws, just steady downward grind with doubled participation; cleanest possible breakdown structure with no fake-out warning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7542,6 +7544,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < -1.0
                 && hit.day_pct < -1.0
         }
+        Preset::BreakoutPocketHighHotVol => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.year_high_pct < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+        }
+        Preset::BreakdownPocketLowHotVol => {
+            hit.lod_dist_pct.abs() < 0.5
+                && hit.year_low_pct < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
+        }
     }
 }
 
@@ -8650,6 +8666,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::PentaConfluenceLowHotVol => "Gap Down + Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Quintupled Vol (Penta-confluence New-low Day: Overnight Gap, Intraday Close at Day's Low, Fresh 52w Low, Quintupled Participation All Aligned Bear-direction; Five Orthogonal Axes Confirming Break at the Tier-1 Vol Level, Near-once-per-year Highest-conviction Event)",
         Preset::HexaConfluenceHighHotVol => "Gap Up + Intraday Up + Close Pinned to HOD + Close Pinned to 52w High + Green Close + Quintupled Vol (Hexa-confluence New-high Day: Overnight Gap Aligned with Intraday Rally, Intraday Close at Day's High, Fresh 52w High, Quintupled Participation All Aligned Bull-direction; Six Orthogonal Axes Confirming Break with Both Overnight and Intraday Contributing to the Move at Tier-1 Vol Level)",
         Preset::HexaConfluenceLowHotVol => "Gap Down + Intraday Down + Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Quintupled Vol (Hexa-confluence New-low Day: Overnight Gap Aligned with Intraday Selloff, Intraday Close at Day's Low, Fresh 52w Low, Quintupled Participation All Aligned Bear-direction; Six Orthogonal Axes Confirming Break with Both Overnight and Intraday Contributing to the Move at Tier-1 Vol Level)",
+        Preset::BreakoutPocketHighHotVol => "Close at Year High + Close at Day High + Green Close + Doubled Vol + Tight Intraday Range (<2 %) (Controlled Breakout in a Tight Pocket: Fresh 52w High with No Wild Whipsaws, Just Steady Upward Grind with Doubled Participation; Cleanest Possible Breakout Structure with No Fake-out Warning)",
+        Preset::BreakdownPocketLowHotVol => "Close at Year Low + Close at Day Low + Red Close + Doubled Vol + Tight Intraday Range (<2 %) (Controlled Breakdown in a Tight Pocket: Fresh 52w Low with No Wild Whipsaws, Just Steady Downward Grind with Doubled Participation; Cleanest Possible Breakdown Structure with No Fake-out Warning)",
     }
 }
 

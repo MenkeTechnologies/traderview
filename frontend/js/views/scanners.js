@@ -1100,6 +1100,8 @@ const PRESETS = [
     { id: 'penta_confluence_low_hot_vol', label: t('view.scanners.preset.penta_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.penta_confluence_low_hot_vol.desc') },
     { id: 'hexa_confluence_high_hot_vol', label: t('view.scanners.preset.hexa_confluence_high_hot_vol.label'), desc: t('view.scanners.preset.hexa_confluence_high_hot_vol.desc') },
     { id: 'hexa_confluence_low_hot_vol', label: t('view.scanners.preset.hexa_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.hexa_confluence_low_hot_vol.desc') },
+    { id: 'breakout_pocket_high_hot_vol', label: t('view.scanners.preset.breakout_pocket_high_hot_vol.label'), desc: t('view.scanners.preset.breakout_pocket_high_hot_vol.desc') },
+    { id: 'breakdown_pocket_low_hot_vol', label: t('view.scanners.preset.breakdown_pocket_low_hot_vol.label'), desc: t('view.scanners.preset.breakdown_pocket_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
