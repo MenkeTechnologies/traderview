@@ -1228,6 +1228,8 @@ pub enum Preset {
     CloseInLowerThirdNearYearLowHotVol,        // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct < 2 AND rel_volume >= 1.5 — close in lower third + at/near 52w low (<2%) + hot vol (bearish tilt at the year trough without LOD pin: close is in the bottom third of intraday range while price is at 52w low; soft pre-breakdown bias signal showing sellers maintain control at support but haven't pushed through to a fresh trough yet)
     CloseInUpperThirdConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — close in upper third + confirmed-breakout zone (1-3% past 52w high) + hot vol (sustained bullish tilt past validated breakout: close in top third of intraday range while price extends past prior peak; soft trend-extension bias where buyers maintain control after breakout without rigid HOD pin)
     CloseInLowerThirdConfirmedBelowYearLowHotVol,  // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — close in lower third + confirmed-breakdown zone (1-3% past 52w low) + hot vol (sustained bearish tilt past validated breakdown: close in bottom third of intraday range while price extends past prior trough; soft trend-extension bias where sellers maintain control after breakdown without rigid LOD pin)
+    CloseInUpperThirdDeepBelowYearHighHotVol,  // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — close in upper third + far below 52w high (>=20%) + hot vol (soft recovery-bias tilt deep in pullback territory: close in top third of intraday range while price remains well below the prior peak; early-recovery signal where buyers start gaining control after extended decline but without rigid HOD pin)
+    CloseInLowerThirdDeepAboveYearLowHotVol,   // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — close in lower third + far above 52w low (>=20%) + hot vol (soft rejection-bias tilt deep in advance territory: close in bottom third of intraday range while price remains well above the prior trough; early-rejection signal where sellers start gaining control after extended advance but without rigid LOD pin)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7616,6 +7618,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::CloseInUpperThirdDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.year_high_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseInLowerThirdDeepAboveYearLowHotVol => {
+            hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.year_low_pct >= 20.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -8734,6 +8748,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseInLowerThirdNearYearLowHotVol => "Close in Lower Third + At/near 52w Low (<2 %) + Hot Vol (Bearish Tilt at the Year Trough without LOD Pin: Close Is in the Bottom Third of Intraday Range While Price Is at 52w Low; Soft Pre-breakdown Bias Signal Showing Sellers Maintain Control at Support but Haven't Pushed through to a Fresh Trough Yet)",
         Preset::CloseInUpperThirdConfirmedAboveYearHighHotVol => "Close in Upper Third + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Sustained Bullish Tilt past Validated Breakout: Close in Top Third of Intraday Range While Price Extends past Prior Peak; Soft Trend-extension Bias Where Buyers Maintain Control after Breakout without Rigid HOD Pin)",
         Preset::CloseInLowerThirdConfirmedBelowYearLowHotVol => "Close in Lower Third + Confirmed-breakdown Zone (1-3 % past 52w Low) + Hot Vol (Sustained Bearish Tilt past Validated Breakdown: Close in Bottom Third of Intraday Range While Price Extends past Prior Trough; Soft Trend-extension Bias Where Sellers Maintain Control after Breakdown without Rigid LOD Pin)",
+        Preset::CloseInUpperThirdDeepBelowYearHighHotVol => "Close in Upper Third + Far below 52w High (>=20 %) + Hot Vol (Soft Recovery-bias Tilt Deep in Pullback Territory: Close in Top Third of Intraday Range While Price Remains Well below the Prior Peak; Early-recovery Signal Where Buyers Start Gaining Control after Extended Decline but without Rigid HOD Pin)",
+        Preset::CloseInLowerThirdDeepAboveYearLowHotVol => "Close in Lower Third + Far above 52w Low (>=20 %) + Hot Vol (Soft Rejection-bias Tilt Deep in Advance Territory: Close in Bottom Third of Intraday Range While Price Remains Well above the Prior Trough; Early-rejection Signal Where Sellers Start Gaining Control after Extended Advance but without Rigid LOD Pin)",
     }
 }
 
