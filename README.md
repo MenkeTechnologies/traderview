@@ -741,6 +741,44 @@ Three pieces:
 
 Mounted at `POST /api/calc/section-1233`. Twenty-one tests pin: no substantially identical → default ST; short-held at open + gain → §1233(b) + reset; long-held at open + loss → §1233(d); long-held at open + gain → no rule (default ST); short-held at open + loss → no rule (default ST); **acquired-during-short triggers §1233(b)(1)(B)**; both short and long held with loss → §1233(d) wins; both short and long held with gain → §1233(b) wins (only short-held lots reset); FIFO resets capped at short_shares (150 candidates → first 100 reset); 365-day boundary short-held → §1233(b) triggers; 366-day boundary long-held → §1233(d) on loss path only; zero gain/loss → no rule; **reset date equals short-close date not short-open date** (regression target); during-short acquisition resets to close date; long-held lots never appear in reset list; combined (A)+(B) buckets in FIFO order by acquisition date; acquisition on short_sale_date is held_at_open not during_short (boundary classification); only-(A) bucket works; only-(B) bucket works; notes mention short close date when resets emit; notes mention loss amount when §1233(d) fires.
 
+`traderview-expense::section_408m` is the **IRC §408(m) collectibles in IRA module** — the gold/silver/crypto IRA trap. Critical for any trader running a self-directed IRA. Companion to `section_408_d3` (IRA 60-day rollover) and `section_408A_d3` (Roth conversion 5-year aging).
+
+**§408(m)(1) general rule**: acquisition of a "collectible" by an IRA is treated as a **deemed distribution** of the purchase price — taxable income to the beneficiary plus a 10% additional tax under §72(t) if under 59½. The IRA itself isn't disqualified; just the offending acquisition is recharacterized.
+
+**§408(m)(2) definition of "collectible"** = artwork, antiques, gems, metals, stamps, coins, alcoholic beverages, rugs, and "any other tangible personal property" specified by IRS regulations. Cryptocurrency is treated as a collectible per IRS guidance.
+
+**Two narrow exceptions under §408(m)(3):**
+
+**(A) Statutory coin exception** — American Gold / Silver / Platinum / Palladium Eagles AND state-issued coins are permitted regardless of fineness. **The American Gold Eagle is the canonical edge case**: it's only 22-karat (.9167 fineness, BELOW the .995 bullion standard) but explicitly authorized by 31 U.S.C. § 5112 so the purity check is waived. Pinned by `american_gold_eagle_exempt_regardless_of_purity` and `eagle_coin_does_not_require_trustee_to_be_exempt` (Eagles don't even need trustee custody).
+
+**(B) Bullion exception** — physical bullion meets the exception ONLY if BOTH (i) the fineness meets the metal-specific threshold AND (ii) it is in the physical possession of a qualified trustee (a bank or IRS-approved non-bank trustee):
+
+| Metal     | Threshold | Bright-line (per 10,000) |
+|-----------|-----------|--------------------------|
+| Gold      | .995      | 9950                     |
+| Silver    | .999      | 9990                     |
+| Platinum  | .9995     | 9995                     |
+| Palladium | .9995     | 9995                     |
+
+**The "home storage gold IRA" trap is load-bearing.** Personal possession (gold in a home safe) fails the trustee-custody prong even with .9999 purity → deemed distribution fires. Pinned by `gold_bullion_995_without_trustee_home_storage_trap` ($100k purchase price becomes $100k taxable distribution, plus 10% §72(t) penalty if under 59½). The note explicitly mentions "home-storage trap" to surface this to the UI.
+
+**Diagnostic flags** distinguish single-prong vs both-prong bullion failures so the caller can suggest the right fix:
+
+| Path                          | `purity_meets_threshold` | `custody_qualifies` | Note phrasing                |
+|-------------------------------|--------------------------|---------------------|------------------------------|
+| Purity too low                | Some(false)              | true                | "purity below threshold"     |
+| Custody fails (home storage)  | Some(true)               | false               | "home-storage trap"          |
+| Both prongs fail              | Some(false)              | false               | "BOTH purity ... AND not ..." |
+| Eagle/state coin              | None                     | (whatever)          | "statutory coin exception"   |
+
+**Bright-line purity thresholds** are integer math (parts per ten thousand) — no Decimal precision drift. .995 = 9950 exactly; .9995 = 9995 exactly. Pinned by `gold_bullion_995_with_trustee_passes` + `gold_bullion_994_purity_fails` (9950 passes, 9949 fails). Distinct silver (.999 = 9990) vs gold (.995 = 9950) thresholds pinned by `silver_bullion_995_fails_too_low` — using gold's threshold for silver mis-classifies.
+
+**Cryptocurrency in IRA → prohibited.** IRS has signaled in several rulings that crypto held in an IRA is a collectible. Compute returns deemed distribution = full purchase price. Pinned by `cryptocurrency_in_ira_is_prohibited_collectible`. Self-directed IRA promoters mis-sell crypto IRAs constantly; this is the load-bearing trader-facing answer.
+
+**The non-Eagle non-state foreign coin trap** — South African Krugerrand and other foreign gold coins aren't on the Eagle whitelist and aren't state-issued → prohibited despite being mostly-pure gold. Compute calls this out by name in the note. Pinned by `other_coin_krugerrand_prohibited`.
+
+Mounted at `POST /api/calc/section-408m`. Twenty-six tests pin: all four Eagle types exempt; state coin exempt; **Gold Eagle exempt regardless of .9167 purity** (load-bearing statutory exception); gold bullion .995/.9994 boundary; **home storage trap** ($100k → deemed distribution with diagnostic flags); both-prongs-fail with combined note; silver .999 boundary distinct from gold; platinum .9995 vs .9994 boundary; palladium same threshold as platinum; crypto / artwork / antique / gem / rug / stamp / alcoholic beverage all prohibited; Krugerrand foreign-coin trap; bullion missing purity treated as failing; diagnostic flag combinations; **Eagle doesn't require trustee** (no §3(A) custody prong, regression target); §72(t) penalty mentioned in every prohibited note (UX-text regression target); deemed distribution zero for all exempt paths; very large purchase ($100M) no precision loss; citation correct per path (§408(m)(3)(A) for Eagles, (3)(B) for bullion, (1) for prohibited).
+
 `traderview-expense::section_83b` is the **IRC §83(b) restricted-stock election module** — every founder and early employee receiving restricted stock or restricted stock units needs to decide within 30 calendar days of grant whether to file this election. One of the most consequential tax-position choices in the code.
 
 **Decision economics:**

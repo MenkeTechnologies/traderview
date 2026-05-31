@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
+        .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
@@ -709,6 +710,25 @@ async fn section_408A_d3_route(
         ));
     }
     Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
+}
+
+// ── §408(m) collectibles in IRA ──────────────────────────────────────
+// Mounted at /api/calc/section-408m. Pure compute; §408(m)(1)
+// prohibited collectible = deemed distribution; §408(m)(3)(A)
+// Eagle / state-issued coin exception; §408(m)(3)(B) bullion
+// exception with purity threshold (.995 gold / .999 silver / .9995
+// platinum / .9995 palladium) AND trustee custody.
+
+async fn section_408m_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_408m::Section408mInput>,
+) -> Result<Json<traderview_expense::section_408m::Section408mResult>, ApiError> {
+    if b.purchase_price < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "purchase_price must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_408m::compute(&b)))
 }
 
 // ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────
