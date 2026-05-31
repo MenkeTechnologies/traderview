@@ -1394,6 +1394,8 @@ pub enum Preset {
     MegaRangeMidpointCloseMidYearLowQuintupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle recovery territory with strong institutional commitment)
     MegaRangeMidpointCloseJustOffYearHighQuintupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag retracement zone)
     MegaRangeMidpointCloseJustOffYearLowQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag bounce zone)
+    MegaRangeUpperThirdNearYearHighQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the high-water mark with strong institutional commitment but without rigid HOD pinning)
+    MegaRangeUpperThirdNearYearLowQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the low-water mark — capitulation-bottom marker with strong institutional commitment but without rigid HOD pinning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -9024,6 +9026,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::MegaRangeUpperThirdNearYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::MegaRangeUpperThirdNearYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -10308,6 +10324,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseMidYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Mid-range from Low (5-20 %) (Institutional-tier Mid-cycle Wide-range Standoff: Extreme Two-way Intraday Battle in the Proper Consolidation Zone above the Prior Trough with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Pause-or-pivot Showdown in Mid-cycle Recovery Territory with Strong Institutional Commitment)",
         Preset::MegaRangeMidpointCloseJustOffYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Just off 52w High (2-5 %) (Institutional-tier Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Pullback from the 52w High with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Re-test Indecision Day with Strong Institutional Commitment in the Post-tag Retracement Zone)",
         Preset::MegaRangeMidpointCloseJustOffYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Just off 52w Low (2-5 %) (Institutional-tier Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Bounce from the 52w Low with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Re-test Indecision Day with Strong Institutional Commitment in the Post-tag Bounce Zone)",
+        Preset::MegaRangeUpperThirdNearYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Quintupled Vol + At/near 52w High (<2 %) (Institutional-tier Partial-bull Breakout Day: Extreme Intraday Range with Close 2x Closer to HOD than LOD at the 52w Peak with 5x Volume; Quarterly-rare Regime-defining Event Marking Partial Bull-control at the High-water Mark with Strong Institutional Commitment but without Rigid HOD Pinning)",
+        Preset::MegaRangeUpperThirdNearYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Quintupled Vol + At/near 52w Low (<2 %) (Institutional-tier Partial-bull Bottoming-bounce Day: Extreme Intraday Range with Close 2x Closer to HOD than LOD at the 52w Trough with 5x Volume; Quarterly-rare Regime-defining Event Marking Partial Bull-control at the Low-water Mark — Capitulation-bottom Marker with Strong Institutional Commitment but without Rigid HOD Pinning)",
     }
 }
 
