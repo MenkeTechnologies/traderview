@@ -80,6 +80,9 @@ use traderview_expense::foreclosure_tenant_rights::{
 use traderview_expense::heat_requirements::{
     check as check_heat_requirements, HeatCheckInput, HeatCheckResult,
 };
+use traderview_expense::mold_disclosure::{
+    check as check_mold_disclosure, MoldCheckInput, MoldCheckResult,
+};
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
 };
@@ -201,6 +204,7 @@ pub fn router() -> Router<AppState> {
         .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
         .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
+        .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1875,6 +1879,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State mold disclosure + remediation compliance check
+// ---------------------------------------------------------------------------
+
+async fn mold_disclosure_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MoldCheckInput>,
+) -> Result<Json<MoldCheckResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_mold_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
