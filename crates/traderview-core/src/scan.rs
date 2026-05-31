@@ -1245,7 +1245,9 @@ pub enum Preset {
     BullRecoveryWickJustOffYearLowHotVol,      // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + just off 52w low (2-5%) + hot vol (partial bull-recovery wick just off the year trough: price probed lower immediately after a shallow bounce from the 52w low then recovered green but didn't pin to HOD; post-tag bottom-stabilization signal where buyers absorb on the re-test but without full conviction)
     BearRejectionWickJustOffYearHighHotVol,    // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + just off 52w high (2-5%) + hot vol (partial bear-rejection wick just off the year peak: price probed higher immediately after a shallow pullback from the 52w high then rejected red but didn't pin to LOD; post-tag top-stabilization signal where sellers distribute on the re-test but without full conviction)
     BullRecoveryWickConfirmedBelowYearLowHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + confirmed-breakdown zone (1-3% past 52w low) + hot vol (partial bull-recovery wick in confirmed-breakdown zone: price probed lower past the prior trough then recovered green but didn't pin to HOD; bear-trap candidate signal where the breakdown is being challenged by buyers without full conviction)
-    BearRejectionWickConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (partial bear-rejection wick in confirmed-breakout zone: price probed higher past the prior peak then rejected red but didn't pin to LOD; bull-trap candidate signal where the breakout is being challenged by sellers without full conviction)
+    BearRejectionWickConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (partial bull-trap candidate signal where the breakout is being challenged by sellers without full conviction)
+    MegaRangeUpHotVol,                         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + green close + doubled vol (once-per-month-rare volatility event with bull-direction outcome: extreme intraday range with both sides actively trading but bulls won the close; high-energy day worth marking as a key reference point in the chart)
+    MegaRangeDownHotVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + red close + doubled vol (once-per-month-rare volatility event with bear-direction outcome: extreme intraday range with both sides actively trading but bears won the close; high-energy day worth marking as a key reference point in the chart)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7762,6 +7764,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct <= -1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::MegaRangeUpHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MegaRangeDownHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -8898,6 +8910,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BearRejectionWickJustOffYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Just off 52w High (2-5 %) + Hot Vol (Partial Bear-rejection Wick Just off the Year Peak: Price Probed Higher Immediately after a Shallow Pullback from the 52w High then Rejected Red but Didn't Pin to LOD; Post-tag Top-stabilization Signal Where Sellers Distribute on the Re-test but without Full Conviction)",
         Preset::BullRecoveryWickConfirmedBelowYearLowHotVol => "Long Lower Wick + Green Close + Not Pinned to HOD + Confirmed-breakdown Zone (1-3 % past 52w Low) + Hot Vol (Partial Bull-recovery Wick in Confirmed-breakdown Zone: Price Probed Lower past the Prior Trough then Recovered Green but Didn't Pin to HOD; Bear-trap Candidate Signal Where the Breakdown Is Being Challenged by Buyers without Full Conviction)",
         Preset::BearRejectionWickConfirmedAboveYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Partial Bear-rejection Wick in Confirmed-breakout Zone: Price Probed Higher past the Prior Peak then Rejected Red but Didn't Pin to LOD; Bull-trap Candidate Signal Where the Breakout Is Being Challenged by Sellers without Full Conviction)",
+        Preset::MegaRangeUpHotVol => "Mega Intraday Range (>10 % High-low Spread) + Green Close + Doubled Vol (Once-per-month-rare Volatility Event with Bull-direction Outcome: Extreme Intraday Range with Both Sides Actively Trading but Bulls Won the Close; High-energy Day Worth Marking as a Key Reference Point in the Chart)",
+        Preset::MegaRangeDownHotVol => "Mega Intraday Range (>10 % High-low Spread) + Red Close + Doubled Vol (Once-per-month-rare Volatility Event with Bear-direction Outcome: Extreme Intraday Range with Both Sides Actively Trading but Bears Won the Close; High-energy Day Worth Marking as a Key Reference Point in the Chart)",
     }
 }
 
