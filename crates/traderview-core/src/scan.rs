@@ -1188,6 +1188,8 @@ pub enum Preset {
     GapDownTightRangeDeepAboveYearLowHotVol,   // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution at elevated-level catalyst: overnight gap down positions price deep in advance territory then regular session prints a tight trading range with heavy participation; gap-and-park signal at the top-fishing zone where smart money quietly exits without selling further)
     GapUpTightRangeMidYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional absorption in mid-cycle pullback zone: overnight gap up positions price in the proper consolidation range below the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly accumulates without breakout chase)
     GapDownTightRangeMidYearLowHotVol,         // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional absorption in mid-cycle recovery zone: overnight gap down positions price in the proper consolidation range above the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly distributes without breakdown follow-through)
+    GapUpTightRangeJustOffYearHighHotVol,      // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional absorption just off the year peak: overnight gap up positions price immediately after a shallow pullback from the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another high attempt)
+    GapDownTightRangeJustOffYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional absorption just off the year trough: overnight gap down positions price immediately after a shallow bounce from the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another low attempt)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7344,6 +7346,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::GapUpTightRangeJustOffYearHighHotVol => {
+            hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::GapDownTightRangeJustOffYearLowHotVol => {
+            hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
+                && hit.rel_volume >= 1.5
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -8422,6 +8438,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownTightRangeDeepAboveYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + Far above 52w Low (>=20 %) (Institutional Distribution at Elevated-level Catalyst: Overnight Gap down Positions Price Deep in Advance Territory then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at the Top-fishing Zone Where Smart Money Quietly Exits without Selling Further)",
         Preset::GapUpTightRangeMidYearHighHotVol => "Gap Up (>2 %) + Tight Intraday Range (<1 %) + Hot Vol + Mid-range from High (5-20 %) (Institutional Absorption in Mid-cycle Pullback Zone: Overnight Gap up Positions Price in the Proper Consolidation Range below the Prior Peak then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at Mid-cycle Where Smart Money Quietly Accumulates without Breakout Chase)",
         Preset::GapDownTightRangeMidYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + Mid-range from Low (5-20 %) (Institutional Absorption in Mid-cycle Recovery Zone: Overnight Gap down Positions Price in the Proper Consolidation Range above the Prior Trough then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at Mid-cycle Where Smart Money Quietly Distributes without Breakdown Follow-through)",
+        Preset::GapUpTightRangeJustOffYearHighHotVol => "Gap Up (>2 %) + Tight Intraday Range (<1 %) + Hot Vol + Just off 52w High (2-5 %) (Institutional Absorption Just off the Year Peak: Overnight Gap up Positions Price Immediately after a Shallow Pullback from the 52w High then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at the Post-tag Re-test Where Smart Money Positions before Another High Attempt)",
+        Preset::GapDownTightRangeJustOffYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + Just off 52w Low (2-5 %) (Institutional Absorption Just off the Year Trough: Overnight Gap down Positions Price Immediately after a Shallow Bounce from the 52w Low then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at the Post-tag Re-test Where Smart Money Positions before Another Low Attempt)",
     }
 }
 
