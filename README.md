@@ -384,6 +384,46 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::foreclosure_tenant_rights` is the **federal PTFA + state foreclosure tenant rights compliance table** — sibling to `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
+
+**Federal floor (universal)**: Protecting Tenants at Foreclosure Act (PTFA) — enacted 2009 as Title VII of the Helping Families Save Their Homes Act, sunset in 2014, then **permanently reinstated in 2018** by § 304 of the Economic Growth, Regulatory Relief, and Consumer Protection Act (EGRRCPA). Two core protections:
+
+1. **90-day notice minimum** — all bona fide tenants must receive ≥ 90 days written notice before vacating after foreclosure
+2. **Lease honor through expiration** — tenant may stay through bona fide lease end if the lease has > 90 days remaining AND was entered into before notice of foreclosure
+
+**Bona fide tenancy three-prong test** — ALL three required:
+
+| Prong | Test                                                                          | Field                            |
+|-------|-------------------------------------------------------------------------------|----------------------------------|
+| (a)   | Tenant is NOT the mortgagor or spouse/parent/child of mortgagor               | `bona_fide_prong_not_mortgagor_family` |
+| (b)   | Lease/tenancy was the result of an arm's length transaction                   | `bona_fide_prong_arm_length`     |
+| (c)   | Rent is at or above FMR OR is reduced/subsidized by federal/state/local subsidy | `bona_fide_prong_fair_market_rent` |
+
+Failing ANY prong → PTFA protections do NOT apply. Pinned by `all_three_bona_fide_prongs_required` (combinatorial 2×2×2 sweep — only the all-true cell returns bona_fide_tenant=true).
+
+**Subsidized below-FMR rent satisfies prong (c).** Section 8 voucher tenants with below-market rent still qualify because subsidy explicitly counts under the statute. Pinned by `subsidized_rent_satisfies_prong_c`.
+
+**State additions** layered atop the federal floor (federal is a floor, not a ceiling):
+
+| Regime                            | States                                                       |
+|-----------------------------------|--------------------------------------------------------------|
+| **Federal floor only**            | 44 states (most jurisdictions; standard PTFA 90 days)        |
+| **Extended notice period**        | DC (120 days § 42-3505.01a) / CT / IL / MD / NY / OR         |
+| **Right of first refusal**        | CA (SB 1079 + AB 1837) — included in Comprehensive regime    |
+| **Comprehensive state protections** | CA / MA c. 186A / NJ § 2A:50-69 — extended notice + ROFR + non-honor of owner-occupant exception |
+
+**DC is the only state with a longer notice period than 90 days** at 120 days under § 42-3505.01a. Pinned by `dc_120_day_notice_is_the_only_extended_period_state` (sweep verifying every other state is 90 days).
+
+**Purchaser-owner-occupant exception** is federal: if the foreclosure purchaser will occupy the unit as a primary residence, the 90-day notice replaces the lease-completion right. However, **MA and NJ do NOT honor this exception** — even with a primary-residence purchaser, the tenant may still complete the lease in those two pro-tenant comprehensive-regime states. Pinned by `massachusetts_does_not_honor_owner_occupant_exception` + `new_jersey_does_not_honor_owner_occupant_exception`. Most states honor the exception (federal default).
+
+**California's right of first refusal under SB 1079 / AB 1837** lets a bona fide tenant purchase the property at the trustee's sale within 45 days post-auction. Pinned by `california_right_of_first_refusal_available` + `texas_no_right_of_first_refusal` (negative case).
+
+**Tenant-may-complete-lease logic**: lease must extend beyond the notice vacate deadline AND no owner-occupant override. Lease already expired before notice → no completion path. Pinned by `tenant_may_complete_lease_when_extends_beyond_notice` + `lease_already_expired_no_completion_path`.
+
+**Bright-line 90-day boundary** for federal floor: 90 days exact = complies; 89 days = fails. Pinned by `federal_floor_90_day_notice_complies_at_exact_boundary` + `federal_floor_89_day_notice_fails`.
+
+Mounted at `POST /api/rental/foreclosure-tenant-check`. Twenty-five tests pin: 51-row coverage; **90-day exact boundary** (federal); 89-day federal short; **DC 120-day extended period** (exact + short); **CA right of first refusal**; TX no ROFR (negative); each prong's failure mode individually flagged; subsidized rent satisfies prong (c) [Section 8 case]; tenant-may-complete-lease when lease extends; owner-occupant exception overrides lease completion (federal default); **MA + NJ don't honor owner-occupant exception** (comprehensive-regime pin); lease already expired no completion path; unknown state → federal floor; case-insensitive; sorted all_states; non-empty citations; comprehensive-states 3-state regime sweep; **DC-only 120-day sweep** (every other state is 90); **all-three-prongs combinatorial sweep** (8 combinations, only all-true qualifies); note describes "MAY complete lease" path; note states shortfall when noncompliant.
+
 `traderview-expense::lead_disclosure` is the **federal Title X + state lead-based paint compliance table** — sibling to `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **Federal floor (universal)** — Section 1018 of Title X of the Residential Lead-Based Paint Hazard Reduction Act of 1992 (40 CFR Part 745 / 24 CFR Part 35 Subpart A) applies to **all pre-1978 private rentals nationwide**. Four mandatory landlord disclosure elements:

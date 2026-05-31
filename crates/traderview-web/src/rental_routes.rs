@@ -71,6 +71,9 @@ use traderview_expense::just_cause_eviction::{
 use traderview_expense::detector_requirements::{
     check as check_detector, DetectorCheckInput, DetectorCheckResult,
 };
+use traderview_expense::foreclosure_tenant_rights::{
+    check as check_foreclosure_tenant, ForeclosureTenantInput, ForeclosureTenantResult,
+};
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
 };
@@ -189,6 +192,7 @@ pub fn router() -> Router<AppState> {
         .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
         .route("/detector-check", axum::routing::post(detector_check_route))
         .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
+        .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1863,6 +1867,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Foreclosure tenant rights (federal PTFA + state additions) check
+// ---------------------------------------------------------------------------
+
+async fn foreclosure_tenant_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ForeclosureTenantInput>,
+) -> Result<Json<ForeclosureTenantResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_foreclosure_tenant(&b)))
 }
 
 // ---------------------------------------------------------------------------

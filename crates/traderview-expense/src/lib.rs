@@ -23,6 +23,7 @@ pub mod dv_termination;
 pub mod entry_notice;
 pub mod disposition;
 pub mod eviction_notices;
+pub mod foreclosure_tenant_rights;
 pub mod foreign_tax_credit;
 pub mod form_8606;
 pub mod habitability_remedies;
