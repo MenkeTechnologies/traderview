@@ -1266,6 +1266,8 @@ pub enum Preset {
     MegaRangeMidpointCloseNearYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w low (<2%) + doubled vol (wide-range standoff at the year trough: extreme intraday volatility ends with balanced midpoint close right at the 52w low; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
     MegaRangeMidpointCloseConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakout zone (1-3% past 52w high) + doubled vol (post-breakout wide-range standoff: extreme intraday volatility past the prior peak ends in balanced midpoint close; breakout being tested with maximum-energy two-way fight, next-day resolves whether the breakout sticks or fails)
     MegaRangeMidpointCloseConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + doubled vol (post-breakdown wide-range standoff: extreme intraday volatility past the prior trough ends in balanced midpoint close; breakdown being tested with maximum-energy two-way fight, next-day resolves whether the breakdown sticks or fails)
+    MegaRangeMidpointCloseDeepBelowYearHighHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far below 52w high (>=20%) + doubled vol (capitulation indecision deep in pullback: extreme two-way intraday battle well below the prior peak ends with balanced midpoint close; potential turning-point standoff in extended-decline territory where bulls and bears each landed a blow)
+    MegaRangeMidpointCloseDeepAboveYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far above 52w low (>=20%) + doubled vol (exhaustion indecision deep in advance: extreme two-way intraday battle well above the prior trough ends with balanced midpoint close; potential turning-point standoff in extended-advance territory where bulls and bears each landed a blow)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7916,6 +7918,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MegaRangeMidpointCloseDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= 20.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MegaRangeMidpointCloseDeepAboveYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= 20.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -9072,6 +9090,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseNearYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + At/near 52w Low (<2 %) + Doubled Vol (Wide-range Standoff at the Year Trough: Extreme Intraday Volatility Ends with Balanced Midpoint Close Right at the 52w Low; Failed-break-or-resume Indecision Day at Maximum Significance — Next-day Directional Resolution Carries the Wider Trend)",
         Preset::MegaRangeMidpointCloseConfirmedAboveYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakout Zone (1-3 % past 52w High) + Doubled Vol (Post-breakout Wide-range Standoff: Extreme Intraday Volatility past the Prior Peak Ends in Balanced Midpoint Close; Breakout Being Tested with Maximum-energy Two-way Fight, Next-day Resolves Whether the Breakout Sticks or Fails)",
         Preset::MegaRangeMidpointCloseConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakdown Zone (1-3 % past 52w Low) + Doubled Vol (Post-breakdown Wide-range Standoff: Extreme Intraday Volatility past the Prior Trough Ends in Balanced Midpoint Close; Breakdown Being Tested with Maximum-energy Two-way Fight, Next-day Resolves Whether the Breakdown Sticks or Fails)",
+        Preset::MegaRangeMidpointCloseDeepBelowYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Far below 52w High (>=20 %) + Doubled Vol (Capitulation Indecision Deep in Pullback: Extreme Two-way Intraday Battle Well below the Prior Peak Ends with Balanced Midpoint Close; Potential Turning-point Standoff in Extended-decline Territory Where Bulls and Bears Each Landed a Blow)",
+        Preset::MegaRangeMidpointCloseDeepAboveYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Far above 52w Low (>=20 %) + Doubled Vol (Exhaustion Indecision Deep in Advance: Extreme Two-way Intraday Battle Well above the Prior Trough Ends with Balanced Midpoint Close; Potential Turning-point Standoff in Extended-advance Territory Where Bulls and Bears Each Landed a Blow)",
     }
 }
 
