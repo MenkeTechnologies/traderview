@@ -1312,6 +1312,8 @@ pub enum Preset {
     MegaRangeLowerThirdMidYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-failure from mid-cycle bounce top without rigid LOD pinning)
     MegaRangeLowerThirdJustOffYearHighDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test marker with maximum-conviction institutional bear commitment confirming the rejection from the breakout level without rigid LOD pinning)
     MegaRangeLowerThirdJustOffYearLowDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test marker confirming failed-bounce rejection back toward the breakdown level with maximum-conviction institutional bear commitment without rigid LOD pinning)
+    MegaRangeTrendDayUpNearYearHighDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale trend-day-up volcanic breakout: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w peak with 10x volume; once-per-year maximum-domination peak event — full institutional bull control from open to close marking a fresh high without any meaningful intraday retrace)
+    MegaRangeTrendDayUpNearYearLowDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w low (<2%) (institutional-scale trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with 10x volume; once-per-year maximum-domination capitulation-bottom event — full institutional bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8318,6 +8320,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::MegaRangeTrendDayUpNearYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 10.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::MegaRangeTrendDayUpNearYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 10.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -9520,6 +9536,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeLowerThirdMidYearLowDecupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Decupled Vol + Mid-range from Low (5-20 %) (Institutional-scale Mid-cycle Partial-bear Recovery-rejection: Extreme Intraday Range with Close 2x Closer to LOD than HOD in Proper Consolidation Zone above the Prior Trough with 10x Volume; Once-per-year Swing-trade Marker for Institutional Recovery-failure from Mid-cycle Bounce Top without Rigid LOD Pinning)",
         Preset::MegaRangeLowerThirdJustOffYearHighDecupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Decupled Vol + Just off 52w High (2-5 %) (Institutional-scale Post-tag Partial-bear Retracement-continuation: Extreme Intraday Range with Close 2x Closer to LOD than HOD Immediately after a Shallow Pullback from the 52w High with 10x Volume; Once-per-year Re-test Marker with Maximum-conviction Institutional Bear Commitment Confirming the Rejection from the Breakout Level without Rigid LOD Pinning)",
         Preset::MegaRangeLowerThirdJustOffYearLowDecupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Decupled Vol + Just off 52w Low (2-5 %) (Institutional-scale Post-tag Partial-bear Bounce-rejection: Extreme Intraday Range with Close 2x Closer to LOD than HOD Immediately after a Shallow Bounce from the 52w Low with 10x Volume; Once-per-year Re-test Marker Confirming Failed-bounce Rejection back toward the Breakdown Level with Maximum-conviction Institutional Bear Commitment without Rigid LOD Pinning)",
+        Preset::MegaRangeTrendDayUpNearYearHighDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Decupled Vol + At/near 52w High (<2 %) (Institutional-scale Trend-day-up Volcanic Breakout: Extreme Intraday Range with Bull-direction Outcome Closing Rigidly Pinned to HOD at the 52w Peak with 10x Volume; Once-per-year Maximum-domination Peak Event — Full Institutional Bull Control from Open to Close Marking a Fresh High without Any Meaningful Intraday Retrace)",
+        Preset::MegaRangeTrendDayUpNearYearLowDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Decupled Vol + At/near 52w Low (<2 %) (Institutional-scale Trend-day-up V-bottom Capitulation-reversal: Extreme Intraday Range with Bull-direction Outcome Closing Rigidly Pinned to HOD at the 52w Trough with 10x Volume; Once-per-year Maximum-domination Capitulation-bottom Event — Full Institutional Bull Reversal from Open to Close Marking the Absolute Low-water Mark with HOD-pinned Conviction)",
     }
 }
 
