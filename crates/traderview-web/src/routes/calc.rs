@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
         .route("/calc/section-1202",          post(section_1202_route))
+        .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
@@ -351,6 +352,28 @@ async fn section_1202_route(
         ));
     }
     Ok(Json(traderview_expense::section_1202::compute(&b)))
+}
+
+// ── §1045 QSBS rollover ───────────────────────────────────────────────
+// Mounted at /api/calc/section-1045. Pure compute; rolls QSBS gain
+// into replacement QSBS within 60 days, deferring up to the full
+// gain. Holding period tacks for the §1202 5-year clock.
+
+async fn section_1045_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1045::Section1045Input>,
+) -> Result<Json<traderview_expense::section_1045::Section1045Result>, ApiError> {
+    if b.sale_proceeds_net < Decimal::ZERO || b.replacement_cost < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "sale_proceeds_net and replacement_cost must be >= 0".into(),
+        ));
+    }
+    if b.original_sale_date < b.original_acquisition_date {
+        return Err(ApiError::BadRequest(
+            "original_sale_date must be >= original_acquisition_date".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1045::compute(&b)))
 }
 
 // ── §121 home sale exclusion ──────────────────────────────────────────
