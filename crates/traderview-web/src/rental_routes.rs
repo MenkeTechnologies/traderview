@@ -34,6 +34,9 @@ use traderview_expense::cost_segregation::{
     compute as compute_cost_segregation, CostSegInput, CostSegReport,
     PropertyTypeDefault as CostSegPropertyType,
 };
+use traderview_expense::deposit_return_windows::{
+    check as check_deposit_return, DepositReturnCheckInput, DepositReturnCheckResult,
+};
 use traderview_expense::eviction_notices::{
     check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
 };
@@ -133,6 +136,8 @@ pub fn router() -> Router<AppState> {
         .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
+        // State deposit-return window compliance check
+        .route("/deposit-return-check", axum::routing::post(deposit_return_check_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1805,6 +1810,26 @@ async fn contractor_1099_route(
     Json(b): Json<Contractor1099Input>,
 ) -> Result<Json<Contractor1099Report>, ApiError> {
     Ok(Json(compute_contractor_1099(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State security-deposit-return window compliance check
+// ---------------------------------------------------------------------------
+
+async fn deposit_return_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DepositReturnCheckInput>,
+) -> Result<Json<DepositReturnCheckResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    if b.deposit_amount < Decimal::ZERO || b.deductions_claimed < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "deposit_amount and deductions_claimed must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_deposit_return(&b)))
 }
 
 async fn property_cost_segregation(
