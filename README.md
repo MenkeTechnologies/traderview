@@ -800,6 +800,20 @@ Routing:
 
 Mounted at `POST /api/calc/mlp-ubti`. Seventeen tests pin: single MLP below $1,000 no Form 990-T; exactly $1,000 triggers form but zero tax (specific deduction absorbs); aggregate across multiple MLPs; passive income (dividends + cap gains) excluded from UBTI; debt-financed Box 20V additive; Box 13 deductions reduce UBTI; negative UBTI doesn't create artificial deduction; 2024 trust brackets compressed correctly; trust tax at each bracket threshold; zero income zero tax; negative income clamped; corp 21% flat rate when `use_trust_brackets: false`; specific-deduction override; empty MLP list no-op; loss + passive income still zero UBTI; per-MLP breakdown preserves names; high-UBTI year ($30k) uses 37% top bracket correctly.
 
+`traderview-expense::section_408A_d3` is the **IRC §408A(d)(3)(F) Roth conversion 5-year rule module** — the trap that catches early-retirees doing "Roth conversion ladders" (the FIRE-movement strategy). Completes the IRA-rules trio: `form_8606` (iter 12, basis + pro-rata on conversions) + `section_408_d3` (iter 40, 60-day rollover + Bobrow) + this module (5-year aging on conversions per §72(t)).
+
+Each Roth conversion starts its own SEPARATE 5-year clock under §408A(d)(3)(F). Withdrawing converted principal before BOTH 5-year aging AND age 59½ triggers a **10% §72(t) penalty** on the converted amount (not the earnings). Distinct from the general §408A(d)(2)(B) 5-year rule for "qualified distributions" — that one applies to earnings and runs from the FIRST Roth funding (contribution or conversion).
+
+**§408A(d)(4) ordering rules** for Roth IRA distributions — the load-bearing ordering that drives the module's bucket chain:
+
+1. **Contributions** (regular annual contributions) come out FIRST — always tax-free + penalty-free regardless of age or holding period. The Roth's "always-accessible basis" feature.
+2. **Conversions** come out next in **FIFO order** (oldest first), each subject to its OWN §408A(d)(3)(F) 5-year aging clock. Converted basis itself is always tax-free (it was taxed at conversion); the 10% penalty applies on UNAGED conversion withdrawals when under age 59½.
+3. **Earnings** come out LAST — taxable + 10% penalty if before §408A(d)(2)(B) qualified-distribution threshold (5 years from first Roth funding AND age 59½).
+
+**Age 59½ bypass**: once the taxpayer reaches age 59½ (modeled as ≥ 60 since the half-year doesn't have a clean integer representation), the §72(t) penalty disappears regardless of 5-year aging. Aged conversions and unaged conversions both become penalty-free.
+
+Mounted at `POST /api/calc/section-408a-d3`. Eighteen tests pin: withdrawal from contributions only no tax + no penalty (always-accessible basis); aged conversion no penalty at age 45; unaged conversion triggers 10% penalty at age 45 ($10k × 10% = $1k); unaged conversion no penalty at age 60+ (age 59½ bypass); ordering contributions before conversions ($5k+$5k → contributions taken first); FIFO ordering oldest conversion first (2019 aged taken before 2022 unaged); earnings taxable + penalized when not qualified; qualified distribution age 60 + 5 years full tax-free; not qualified when under 5 years from first funding; **conversion 5-year boundary exactly 5 years aged**; conversion 4y-11m-29d not aged (1 day under); multiple conversions some aged some not (independent clocks); withdrawal exceeds all buckets caps at earnings; zero withdrawal no-op; empty account no-op; note distinguishes qualified vs ordering paths; **classic FIRE conversion ladder 5-year wait pays off** (load-bearing scenario); age 59½ + unaged conversion no penalty.
+
 `traderview-expense::section_408_d3` is the **IRC §408(d)(3) IRA 60-day rollover module** — the timing trap that catches retail traders moving IRA money between brokerages. Companion to `form_8606` (which handles backdoor Roth basis + §408(d)(2) pro-rata) — that module is about *what's taxable on conversions*; this one is about *whether the rollover even qualified*.
 
 Three rules in §408(d)(3) all apply concurrently:

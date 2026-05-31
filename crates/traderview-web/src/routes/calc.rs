@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
+        .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
@@ -500,6 +501,28 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §408A(d)(3)(F) Roth conversion 5-year rule ───────────────────────
+// Mounted at /api/calc/section-408a-d3. Pure compute; §408A(d)(4)
+// ordering rules (contributions FIFO first, conversions FIFO with
+// separate 5-year clocks, earnings last), §408A(d)(3)(F) 5-year
+// aging per conversion, age 59½ bypasses 5-year for §72(t).
+
+#[allow(non_snake_case)]
+async fn section_408A_d3_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_408A_d3::Section408AD3Input>,
+) -> Result<Json<traderview_expense::section_408A_d3::Section408AD3Result>, ApiError> {
+    if b.withdrawal_amount < Decimal::ZERO
+        || b.total_contributions_basis < Decimal::ZERO
+        || b.earnings_balance < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
 }
 
 // ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────
