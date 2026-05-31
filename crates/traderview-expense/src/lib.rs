@@ -26,6 +26,7 @@ pub mod quarterly_tax;
 pub mod recurring;
 pub mod rules;
 pub mod schedule_d;
+pub mod schedule_e;
 pub mod section_1256;
 pub mod seed_rules;
 pub mod self_employment_tax;
