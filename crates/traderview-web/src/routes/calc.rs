@@ -48,6 +48,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j",          post(section_163j_route))
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-988",           post(section_988_route))
+        .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -401,6 +402,24 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §1296 PFIC mark-to-market election ───────────────────────────────
+// Mounted at /api/calc/section-1296. Pure compute; annual mark of
+// marketable PFIC stock as ordinary income, with loss limited to
+// prior unreversed inclusions.
+
+async fn section_1296_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1296::Section1296Input>,
+) -> Result<Json<traderview_expense::section_1296::Section1296Result>, ApiError> {
+    if b.adjusted_basis_year_start < Decimal::ZERO
+        || b.fair_market_value_year_end < Decimal::ZERO
+        || b.prior_unreversed_inclusions < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest("all dollar inputs must be >= 0".into()));
+    }
+    Ok(Json(traderview_expense::section_1296::compute(&b)))
 }
 
 // ── §988 forex transaction character ─────────────────────────────────
