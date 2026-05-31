@@ -685,6 +685,39 @@ Three pieces:
 
 Mounted at `POST /api/calc/section-1233`. Twenty-one tests pin: no substantially identical → default ST; short-held at open + gain → §1233(b) + reset; long-held at open + loss → §1233(d); long-held at open + gain → no rule (default ST); short-held at open + loss → no rule (default ST); **acquired-during-short triggers §1233(b)(1)(B)**; both short and long held with loss → §1233(d) wins; both short and long held with gain → §1233(b) wins (only short-held lots reset); FIFO resets capped at short_shares (150 candidates → first 100 reset); 365-day boundary short-held → §1233(b) triggers; 366-day boundary long-held → §1233(d) on loss path only; zero gain/loss → no rule; **reset date equals short-close date not short-open date** (regression target); during-short acquisition resets to close date; long-held lots never appear in reset list; combined (A)+(B) buckets in FIFO order by acquisition date; acquisition on short_sale_date is held_at_open not during_short (boundary classification); only-(A) bucket works; only-(B) bucket works; notes mention short close date when resets emit; notes mention loss amount when §1233(d) fires.
 
+`traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
+
+**Six rule paths** cover every combination of property kind × charity type × basis-election flag:
+
+| Path                                            | Contribution = | AGI cap | Citation                          |
+|-------------------------------------------------|----------------|---------|-----------------------------------|
+| LTCG → public charity (no election)             | **FMV**        | 30%     | §170(b)(1)(C)(i)                  |
+| LTCG → public charity (basis election)          | basis          | 50%     | §170(b)(1)(C)(iii)                |
+| LTCG → private foundation (qualified appreciated stock) | **FMV** | 20%     | §170(e)(5)                        |
+| LTCG → private foundation (not QAS)             | basis          | 20%     | §170(e)(1)(B)(ii)                 |
+| STCG / Ordinary → public charity                | basis          | 50%     | §170(e)(1)(A)                     |
+| STCG / Ordinary → private foundation            | basis          | 30%     | §170(e)(1)(A)                     |
+| Tangible personal unrelated use → public        | basis          | 50%     | §170(e)(1)(B)(i)                  |
+| Tangible personal unrelated use → private       | basis          | 30%     | §170(e)(1)(B)(i)                  |
+
+**§170(e)(5) Qualified Appreciated Stock (QAS) carve-out is load-bearing for family foundations.** Publicly-traded stock not exceeding 10% of the corporation's outstanding shares qualifies for FMV deduction even to a private foundation, despite the general §170(e)(1)(B)(ii) reduction rule. This is why family foundations love receiving Apple / Microsoft / Berkshire-Hathaway shares but not closely-held LLC interests. Pinned by `ltcg_private_foundation_qas_fmv_deduction_at_20pct` ($100k FMV → $40k deductible at 20% AGI cap, $60k carries forward, $90k gain eliminated).
+
+**§170(b)(1)(C)(iii) basis election trades deduction amount for AGI capacity.** Same $100k FMV / $10k basis LTCG stock to public charity:
+- No election: contribution $100k, 30% cap = $60k deductible, $40k carryforward, $90k gain eliminated
+- With election: contribution $10k, 50% cap = $100k, full $10k deductible, $0 carryforward, $0 gain eliminated
+
+The election is rational when basis is close to FMV (gain elimination matters less) or when the donor needs the higher AGI limit. Pinned in `ltcg_public_basis_election_lower_deduction_higher_cap`.
+
+**§170(e)(1)(A) STCG/ordinary reduction is the "don't donate winners you've held < 1 year" trap.** The reduction wipes out the embedded gain entirely, so the deduction is basis only. This is exactly the same answer as the basis election — but you didn't choose it, you got it by holding < 1 year. Pinned by `stcg_property_reduced_to_basis_under_170e1a` and `ordinary_income_property_same_reduction_as_stcg`.
+
+**§170(e)(1)(B)(i) tangible personal unrelated use** hits the "donate art to a hospital" case — the donor must determine whether the donee's use of the property is RELATED to the donee's exempt purpose. Art to a museum that displays it: related, FMV deduction available. Art to a hospital that sells it at auction: unrelated, basis only. The compute does not adjudicate the related/unrelated determination — caller flips the `PropertyKind::TangiblePersonalUnrelatedUse` discriminator when the unrelated test fails.
+
+**Branch ordering between flags is load-bearing.** When both `is_qualified_appreciated_stock = true` AND `elect_basis_for_higher_limit = true` on a public-charity LTCG donation, the basis election wins (QAS is irrelevant for public charity). Pinned by `qas_with_basis_election_election_wins`. Conversely, the QAS flag is silently ignored on public-charity donations (`qas_flag_ignored_for_public_charity_path`).
+
+**§170(d) 5-year carryforward** with same-character bucketing. Prior carryover adds to the current contribution before the AGI cap check; excess rolls to next year. Caller must track buckets separately if straddling rule paths (e.g., LTCG and STCG carryforwards don't pool).
+
+Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
+
 `traderview-expense::section_1014` is the **IRC §1014 stepped-up basis at death module** — the single most powerful rule in the Internal Revenue Code for buy-and-hold investors and the foundation of every "die with low basis" estate-planning strategy. When property passes from a decedent to an heir, the heir's basis is **stepped up (or down) to the fair market value on the date of death** under §1014(a)(1). All gain or loss that accrued during the decedent's lifetime is permanently eliminated.
 
 Four exceptions / refinements:

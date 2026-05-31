@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1014",          post(section_1014_route))
+        .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1233",          post(section_1233_route))
         .route("/calc/section-1234",          post(section_1234_route))
@@ -568,6 +569,30 @@ async fn section_1233_route(
         }
     }
     Ok(Json(traderview_expense::section_1233::compute(&b)))
+}
+
+// ── §170(e) charitable contribution of appreciated property ─────────
+// Mounted at /api/calc/section-170e. Six rule paths cover LTCG-public
+// FMV (30% AGI), basis election (50% AGI), QAS to private foundation
+// (FMV, 20% AGI), private-foundation reduction (basis, 20% AGI),
+// STCG/ordinary reduction (basis, 50% public / 30% private), and
+// tangible unrelated use (basis). §170(d) 5-year carryforward.
+
+async fn section_170e_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_170e::Section170eInput>,
+) -> Result<Json<traderview_expense::section_170e::Section170eResult>, ApiError> {
+    if b.fmv < Decimal::ZERO || b.basis < Decimal::ZERO || b.agi < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "fmv, basis, and agi must be >= 0".into(),
+        ));
+    }
+    if b.prior_year_carryover < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "prior_year_carryover must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_170e::compute(&b)))
 }
 
 // ── §1014 stepped-up basis at death ──────────────────────────────────
