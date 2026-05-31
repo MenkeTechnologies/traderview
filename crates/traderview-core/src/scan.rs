@@ -1248,6 +1248,8 @@ pub enum Preset {
     BearRejectionWickConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (partial bull-trap candidate signal where the breakout is being challenged by sellers without full conviction)
     MegaRangeUpHotVol,                         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + green close + doubled vol (once-per-month-rare volatility event with bull-direction outcome: extreme intraday range with both sides actively trading but bulls won the close; high-energy day worth marking as a key reference point in the chart)
     MegaRangeDownHotVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + red close + doubled vol (once-per-month-rare volatility event with bear-direction outcome: extreme intraday range with both sides actively trading but bears won the close; high-energy day worth marking as a key reference point in the chart)
+    MegaRangeUpNearYearHighHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + green close + doubled vol + at/near 52w high (<2%) (volcanic breakout day: extreme intraday range with bull-direction outcome occurring at the 52w high; rare regime-defining event marking a fresh peak with maximum-energy directional commitment)
+    MegaRangeDownNearYearLowHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + red close + doubled vol + at/near 52w low (<2%) (volcanic breakdown day: extreme intraday range with bear-direction outcome occurring at the 52w low; rare regime-defining event marking a fresh trough with maximum-energy directional commitment)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7774,6 +7776,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MegaRangeUpNearYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::MegaRangeDownNearYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -8912,6 +8926,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BearRejectionWickConfirmedAboveYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Partial Bear-rejection Wick in Confirmed-breakout Zone: Price Probed Higher past the Prior Peak then Rejected Red but Didn't Pin to LOD; Bull-trap Candidate Signal Where the Breakout Is Being Challenged by Sellers without Full Conviction)",
         Preset::MegaRangeUpHotVol => "Mega Intraday Range (>10 % High-low Spread) + Green Close + Doubled Vol (Once-per-month-rare Volatility Event with Bull-direction Outcome: Extreme Intraday Range with Both Sides Actively Trading but Bulls Won the Close; High-energy Day Worth Marking as a Key Reference Point in the Chart)",
         Preset::MegaRangeDownHotVol => "Mega Intraday Range (>10 % High-low Spread) + Red Close + Doubled Vol (Once-per-month-rare Volatility Event with Bear-direction Outcome: Extreme Intraday Range with Both Sides Actively Trading but Bears Won the Close; High-energy Day Worth Marking as a Key Reference Point in the Chart)",
+        Preset::MegaRangeUpNearYearHighHotVol => "Mega Intraday Range (>10 %) + Green Close + Doubled Vol + At/near 52w High (<2 %) (Volcanic Breakout Day: Extreme Intraday Range with Bull-direction Outcome Occurring at the 52w High; Rare Regime-defining Event Marking a Fresh Peak with Maximum-energy Directional Commitment)",
+        Preset::MegaRangeDownNearYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + At/near 52w Low (<2 %) (Volcanic Breakdown Day: Extreme Intraday Range with Bear-direction Outcome Occurring at the 52w Low; Rare Regime-defining Event Marking a Fresh Trough with Maximum-energy Directional Commitment)",
     }
 }
 
