@@ -51,6 +51,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
+        .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -404,6 +405,19 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
+// Mounted at /api/calc/mlp-ubti. Aggregates K-1 line items into
+// Unrelated Business Taxable Income, applies §512(b) exclusions for
+// passive items, §514 debt-financed inclusion, §512(b)(12) $1k
+// specific deduction, and trust-rate tax per §511(b)(2).
+
+async fn mlp_ubti_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::mlp_ubti::MlpUbtiInput>,
+) -> Result<Json<traderview_expense::mlp_ubti::MlpUbtiResult>, ApiError> {
+    Ok(Json(traderview_expense::mlp_ubti::compute(&b)))
 }
 
 // ── §168(g) Alternative Depreciation System (ADS) ────────────────────
