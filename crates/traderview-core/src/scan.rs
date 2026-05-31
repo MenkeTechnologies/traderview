@@ -1210,6 +1210,8 @@ pub enum Preset {
     DecupledVolGapDownCloseAtHodHotVol,        // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — decupled vol (>=10) + gap down (<-2%) absorbed completely to HOD + green close (most decisive failed catalyst possible: vol is 10x average, overnight gap down fully reverses and closes at the day's high; absolute-rarest failed-bear-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight pessimism met overwhelming buyers)
     DecupledVolGapUpMidpointHotVol,            // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap up (>2%) + midpoint close (unprecedented standoff after gap-up catalyst: vol is 10x average, overnight gap up holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bull-catalyst event at the tier-0 participation tier — requires next-session confirmation)
     DecupledVolGapDownMidpointHotVol,          // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap down (<-2%) + midpoint close (unprecedented standoff after gap-down catalyst: vol is 10x average, overnight gap down holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bear-catalyst event at the tier-0 participation tier — requires next-session confirmation)
+    TripleConfluenceHighHotVol,                // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 — close pinned to HOD + close pinned to 52w high + green close + doubled vol (triple-confluence new-high day: close coincides with day's high AND year's high simultaneously with positive change and doubled participation; clearest possible bull-break signal with three orthogonal axes all aligned to maximum strength)
+    TripleConfluenceLowHotVol,                 // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 — close pinned to LOD + close pinned to 52w low + red close + doubled vol (triple-confluence new-low day: close coincides with day's low AND year's low simultaneously with negative change and doubled participation; clearest possible bear-break signal with three orthogonal axes all aligned to maximum weakness)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7478,6 +7480,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 0.5
                 && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
         }
+        Preset::TripleConfluenceHighHotVol => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.year_high_pct < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::TripleConfluenceLowHotVol => {
+            hit.lod_dist_pct.abs() < 0.5
+                && hit.year_low_pct < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -8578,6 +8592,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DecupledVolGapDownCloseAtHodHotVol => "Decupled Vol (>=10) + Gap Down (<-2 %) Absorbed Completely to HOD + Green Close (Most Decisive Failed Catalyst Possible: Vol Is 10x Average, Overnight Gap down Fully Reverses and Closes at the Day's High; Absolute-rarest Failed-bear-catalyst Event Spanning Overnight + Regular Sessions at the Tier-0 Participation Tier, Indicating Extreme Overnight Pessimism Met Overwhelming Buyers)",
         Preset::DecupledVolGapUpMidpointHotVol => "Decupled Vol (>=10) + Gap Up (>2 %) + Midpoint Close (Unprecedented Standoff after Gap-up Catalyst: Vol Is 10x Average, Overnight Gap up Holds but Regular Session Prints Inconclusive Midpoint Close; Absolute-rarest Unresolved-bull-catalyst Event at the Tier-0 Participation Tier — Requires Next-session Confirmation)",
         Preset::DecupledVolGapDownMidpointHotVol => "Decupled Vol (>=10) + Gap Down (<-2 %) + Midpoint Close (Unprecedented Standoff after Gap-down Catalyst: Vol Is 10x Average, Overnight Gap down Holds but Regular Session Prints Inconclusive Midpoint Close; Absolute-rarest Unresolved-bear-catalyst Event at the Tier-0 Participation Tier — Requires Next-session Confirmation)",
+        Preset::TripleConfluenceHighHotVol => "Close Pinned to HOD + Close Pinned to 52w High + Green Close + Doubled Vol (Triple-confluence New-high Day: Close Coincides with Day's High AND Year's High Simultaneously with Positive Change and Doubled Participation; Clearest Possible Bull-break Signal with Three Orthogonal Axes All Aligned to Maximum Strength)",
+        Preset::TripleConfluenceLowHotVol => "Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Doubled Vol (Triple-confluence New-low Day: Close Coincides with Day's Low AND Year's Low Simultaneously with Negative Change and Doubled Participation; Clearest Possible Bear-break Signal with Three Orthogonal Axes All Aligned to Maximum Weakness)",
     }
 }
 
