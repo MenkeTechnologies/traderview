@@ -1222,6 +1222,8 @@ pub enum Preset {
     BreakdownPocketLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year low + close at day low + red close + doubled vol + tight intraday range (<2%) (controlled breakdown in a tight pocket: fresh 52w low with no wild whipsaws, just steady downward grind with doubled participation; cleanest possible breakdown structure with no fake-out warning)
     BreakoutChaosHighHotVol,                   // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year high + close at day high + green close + doubled vol + wide intraday range (>5%) (chaotic breakout: fresh 52w high after wild two-way whipsaw action with doubled participation; bulls won the fight but the wide range warns of two-way conviction and potential next-day fade)
     BreakdownChaosLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year low + close at day low + red close + doubled vol + wide intraday range (>5%) (chaotic breakdown: fresh 52w low after wild two-way whipsaw action with doubled participation; bears won the fight but the wide range warns of two-way conviction and potential next-day bounce)
+    CloseInUpperThirdHotVol,                   // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in upper third of day's range (close 2x closer to HOD than to LOD but not pinned at HOD) + hot vol (bullish bias without HOD pin: close is in the top third of the intraday range with elevated participation; soft bull-strength signal showing closing preference for higher prices without the rigid HOD-pinning constraint)
+    CloseInLowerThirdHotVol,                   // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in lower third of day's range (close 2x closer to LOD than to HOD but not pinned at LOD) + hot vol (bearish bias without LOD pin: close is in the bottom third of the intraday range with elevated participation; soft bear-weakness signal showing closing preference for lower prices without the rigid LOD-pinning constraint)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7574,6 +7576,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
         }
+        Preset::CloseInUpperThirdHotVol => {
+            hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseInLowerThirdHotVol => {
+            hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -8686,6 +8698,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BreakdownPocketLowHotVol => "Close at Year Low + Close at Day Low + Red Close + Doubled Vol + Tight Intraday Range (<2 %) (Controlled Breakdown in a Tight Pocket: Fresh 52w Low with No Wild Whipsaws, Just Steady Downward Grind with Doubled Participation; Cleanest Possible Breakdown Structure with No Fake-out Warning)",
         Preset::BreakoutChaosHighHotVol => "Close at Year High + Close at Day High + Green Close + Doubled Vol + Wide Intraday Range (>5 %) (Chaotic Breakout: Fresh 52w High after Wild Two-way Whipsaw Action with Doubled Participation; Bulls Won the Fight but the Wide Range Warns of Two-way Conviction and Potential Next-day Fade)",
         Preset::BreakdownChaosLowHotVol => "Close at Year Low + Close at Day Low + Red Close + Doubled Vol + Wide Intraday Range (>5 %) (Chaotic Breakdown: Fresh 52w Low after Wild Two-way Whipsaw Action with Doubled Participation; Bears Won the Fight but the Wide Range Warns of Two-way Conviction and Potential Next-day Bounce)",
+        Preset::CloseInUpperThirdHotVol => "Close in Upper Third of Day's Range (Close 2x Closer to HOD than to LOD but Not Pinned at HOD) + Hot Vol (Bullish Bias without HOD Pin: Close Is in the Top Third of the Intraday Range with Elevated Participation; Soft Bull-strength Signal Showing Closing Preference for Higher Prices without the Rigid HOD-pinning Constraint)",
+        Preset::CloseInLowerThirdHotVol => "Close in Lower Third of Day's Range (Close 2x Closer to LOD than to HOD but Not Pinned at LOD) + Hot Vol (Bearish Bias without LOD Pin: Close Is in the Bottom Third of the Intraday Range with Elevated Participation; Soft Bear-weakness Signal Showing Closing Preference for Lower Prices without the Rigid LOD-pinning Constraint)",
     }
 }
 
