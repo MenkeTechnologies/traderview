@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
+        .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -405,6 +406,18 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §1259 constructive sale of appreciated financial position ────────
+// Mounted at /api/calc/section-1259. Pure compute; evaluates whether
+// a hedge transaction triggers constructive sale of an appreciated
+// long position, including the §1259(c)(3)(A) safe harbor.
+
+async fn section_1259_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1259::Section1259Input>,
+) -> Result<Json<traderview_expense::section_1259::Section1259Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1259::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
