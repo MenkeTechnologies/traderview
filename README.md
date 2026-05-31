@@ -384,6 +384,24 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::entry_notice` is the **state-specific landlord entry-notice hour-count table** — sibling to `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Closes the privacy-rights leg of the landlord-state-data set: every other module covers money or eviction, this one covers when the landlord is allowed in the door.
+
+Each state's landlord-tenant code sets a minimum advance-notice period before non-emergency entry (repairs, inspection, showing to prospects). The hour count clusters into four bands:
+
+| Band                   | Hours | States                                                       |
+|------------------------|-------|--------------------------------------------------------------|
+| URLTA-2015 default     | 24    | AK / CA / CO / IA / ME / MT / NE / NV / NM / OH / OK / OR / SC / SD / TN / UT / VA |
+| URLTA-1974 default     | 48    | AL / AZ / DE / DC / HI / KY / RI / VT                        |
+| Strictest (repairs)    | 48    | WA (with separate 24h column for showings to prospects)      |
+| Aggressive carve-out   | 12    | FL (Fla. Stat. § 83.53) / WI (ATCP § 134.09)                |
+| No statutory hours     | n/a   | AR / CT / GA / ID / IL / IN / KS / LA / MA / MD / MI / MN / MO / MS / NC / ND / NH / NJ / NY / PA / TX / WV / WY (common-law "reasonable" applies but is not measurable in hours) |
+
+**The Washington split is load-bearing.** RCW 59.18.150 is the only statute in the table with a per-purpose carve-out: 48h required for repairs/inspection, 24h for showings to prospective buyers or replacement tenants. Every other state uses one column for all non-emergency purposes. The compute fn picks `showing_hours.or(standard_hours)` so the carve-out applies only when the showing column is explicitly set.
+
+**Emergency, tenant-requested, and abandonment exceptions short-circuit to compliant in every state** — these are universal common-law exceptions, not per-state rules. Models them as `EntryPurpose` variants that bypass the hour-count check entirely with a labeled `exception` field on the result.
+
+Mounted at `POST /api/rental/entry-notice-check`. Twenty-two tests pin: 51-row coverage (50 states + DC); case-insensitive state lookup; unknown state errors; emergency entry compliant at 0h notice in every state including WA-48h; tenant-requested entry compliant at 0h; abandoned-unit entry compliant at 0h; CA 24h exactly compliant; CA 23h one hour short (exact shortfall reporting); FL 12h minimum + 11h one-hour-short; **WA 48h repairs but 24h showings split** (the only per-purpose carve-out); URLTA-1974 states (AL/AZ/KY/HI/RI/VT) all default to 48h; no-statute states report compliant at 0h (no measurable standard); "reasonable" states (CT/MN/KS) treated like no-statute; unknown-state error reported; `all_states()` returns sorted by code (first AK, last WY); every row has non-empty citation; showings fall back to standard column when no carve-out (CA showing = 24h); inspections use the standard column (OH 24h); 0h notice fails in every hour-count state; excess notice (96h in CA) still compliant with 0 shortfall; FL 12h is distinct from 24h default (18h compliant in FL/WI, not in AL); emergency short-circuits even for unknown state code (lookup-first ordering).
+
 `traderview-expense::eviction_notices` is the **state-specific eviction-notice period table** — sibling to `late_fee_caps` and `deposit_interest`. Each state's landlord-tenant statute sets a minimum notice period before the landlord can file for possession, varying dramatically by ground:
 
 - **Pay or Quit** (nonpayment): TX 3 days, FL 3 days, CT 3 days vs MA 14 days, NY 14 days, WA 14 days (post-2019), CO 10 days (post-2021), DC 30 days, NJ — no pay-or-quit notice required (landlord files directly after 5 business days late).

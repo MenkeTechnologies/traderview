@@ -56,6 +56,9 @@ use traderview_expense::security_deposit_caps::{
 use traderview_expense::rent_control::{
     check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
+use traderview_expense::entry_notice::{
+    compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
+};
 use traderview_expense::eviction_notices::{
     check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
 };
@@ -153,6 +156,7 @@ pub fn router() -> Router<AppState> {
         .route("/late-fee-check", axum::routing::post(late_fee_check_route))
         // State eviction-notice period lookup
         .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
+        .route("/entry-notice-check", axum::routing::post(entry_notice_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1827,6 +1831,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord entry-notice compliance check
+// ---------------------------------------------------------------------------
+
+async fn entry_notice_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<EntryNoticeInput>,
+) -> Result<Json<EntryNoticeResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_entry_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
