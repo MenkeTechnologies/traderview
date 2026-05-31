@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
+        .route("/calc/section-108",           post(section_108_route))
         .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-1041",          post(section_1041_route))
@@ -711,6 +712,29 @@ async fn section_1015_route(
         ));
     }
     Ok(Json(traderview_expense::section_1015::compute(&b)))
+}
+
+// ── §108 cancellation of debt income ─────────────────────────────────
+// Mounted at /api/calc/section-108. §61(a)(12) gross-income default;
+// §108(a)(1)(A) bankruptcy full exclusion (priority 1); §108(a)(1)(E)
+// QPRI for pre-2026 arrangements (priority 2 over insolvency unless
+// elected otherwise); §108(a)(1)(B) insolvency under §108(d)(3) test;
+// §108(a)(1)(C) qualified farm; §108(a)(1)(D) QRPBI for non-C-corp;
+// §108(b) attribute reduction = excluded amount.
+
+async fn section_108_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_108::Section108Input>,
+) -> Result<Json<traderview_expense::section_108::Section108Result>, ApiError> {
+    if b.canceled_debt_amount < Decimal::ZERO
+        || b.debtor_assets_fmv < Decimal::ZERO
+        || b.debtor_liabilities < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "canceled_debt_amount, debtor_assets_fmv, and debtor_liabilities must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_108::compute(&b)))
 }
 
 // ── §1014 stepped-up basis at death ──────────────────────────────────

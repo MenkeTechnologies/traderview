@@ -989,6 +989,36 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_108` is the **IRC §108 cancellation of debt income module** — critical for distressed debt traders, underwater real estate investors, mortgage workouts, and credit card settlement scenarios. Default rule under §61(a)(12) is that cancelled debt is gross income; §108(a) provides five narrow exclusions with mandatory §108(b) attribute-reduction consequences.
+
+**Five exclusions in priority order:**
+
+| Priority | Citation         | Exclusion type                            | Conditions                                              |
+|----------|------------------|-------------------------------------------|---------------------------------------------------------|
+| 1        | §108(a)(1)(A)    | Title 11 bankruptcy                       | Discharge in bankruptcy case                            |
+| 2        | §108(a)(1)(E)    | Qualified principal residence indebtedness | Pre-2026 written arrangement; election can swap to (B)  |
+| 3        | §108(a)(1)(B)    | Insolvency                                | Liabilities > FMV of assets (§108(d)(3) test)           |
+| 4        | §108(a)(1)(C)    | Qualified farm                            | Farmer (50%+ income from farming for 3 prior years)     |
+| 5        | §108(a)(1)(D)    | Qualified real property business (QRPBI)  | Non-C-corp with qualifying real property biz debt        |
+
+**Bankruptcy is highest priority and full exclusion** under §108(a)(1)(A). Pinned by `bankruptcy_full_exclusion_highest_priority` + `bankruptcy_overrides_qpri` (even with QPRI flags set, bankruptcy wins) + `priority_bankruptcy_over_insolvency`.
+
+**§108(d)(3) Insolvency test**: insolvency_amount = `liabilities - assets_fmv`, clamped at zero (solvent → 0). Insolvency excludes ONLY up to the insolvency amount — solvent taxpayers must include the entire COD income. Pinned by `insolvency_full_exclusion_when_amount_ge_debt` ($30k insolvency, $50k debt? wait actually full exclusion when insolvency ≥ debt; let me re-check — yes, $100k insolvency ≥ $50k debt = full exclusion) + `insolvency_partial_exclusion_with_remainder_includible` ($30k insolvency, $50k debt → $30k excluded, $20k includible) + `insolvency_amount_at_exact_zero_solvent` (assets = liabilities → solvent, no exclusion via this path).
+
+**QPRI sunset before January 1, 2026** under §108(a)(1)(E). Discharges in 2026+ on **pre-2026 written arrangements** still qualify; new arrangements made in 2026 do NOT. Pinned by `qpri_pre_2026_exclusion_overrides_insolvency` (full $50k excluded under (E), insolvency wouldn't have been needed) + `qpri_post_2026_arrangement_does_not_exclude` (flag set but post-2026 arrangement → falls through to no exclusion or insolvency).
+
+**§108(a)(2)(C) election** lets taxpayer choose insolvency (B) instead of QPRI (E). Useful when attribute reduction under (B) is more favorable than basis reduction under (E). Pinned by `qpri_election_to_use_insolvency_routes_through_insolvency` (election routes through (B) path even with QPRI flags set).
+
+**Qualifying-debt categories layer on top of insolvency** when insolvency is only partial. Insolvent by $30k + $50k debt + qualified farm + qualified farmer → $30k via (B), remaining $20k via (C). Pinned by `insolvency_partial_plus_farm_excludes_remainder` + `insolvency_partial_plus_qrpbi_excludes_remainder`.
+
+**Farm exclusion requires BOTH the debt category AND the qualified-farmer status** (§108(g)(1)(B): 50%+ of income for 3 prior years from farming). Pinned by `qualified_farm_indebtedness_solvent_excludes` (both flags + solvent → full exclusion) + `farm_debt_without_qualified_farmer_status_no_exclusion` (farm debt + non-farmer → no exclusion).
+
+**C-corporations cannot use §108(a)(1)(D) QRPBI exclusion** — statutorily blocked. Pinned by `qrpbi_for_non_c_corp_excludes` + `c_corp_cannot_use_qrpbi_exclusion`.
+
+**§108(b) attribute reduction equals the excluded amount** — the "deferred tax" cost of the exclusion. Reduces NOL carryovers, GBC, minimum tax credit, capital loss carryovers, basis of property, PAL carryovers, FTC carryovers (in that order). This module reports the required total; ordering and per-bucket allocation is downstream Form 982 work. Pinned by `attribute_reduction_equals_excluded_amount`.
+
+Mounted at `POST /api/calc/section-108`. Twenty-two tests pin: solvent taxpayer no exclusion full inclusion; **bankruptcy highest priority full exclusion**; insolvency full when amount ≥ debt; insolvency partial with remainder includible; QPRI pre-2026 overrides insolvency; **QPRI post-2026 does NOT exclude** (sunset regression target); QPRI election routes through insolvency; bankruptcy overrides QPRI; qualified farm + farmer excludes solvent; farm debt without farmer status no exclusion; QRPBI for non-C-corp excludes; C-corp cannot use QRPBI; insolvency partial + farm covers remainder; insolvency partial + QRPBI covers remainder; attribute reduction = excluded amount; insolvency clamps to zero when solvent; insolvency at exact zero (liabilities = assets) is solvent; **priority sweep** (bankruptcy > QPRI > insolvency); zero canceled debt no-op; very large precision ($10B bankruptcy discharge); note describes section per path (bankruptcy / QPRI / insolvency / §61(a)(12) no-exclusion).
+
 `traderview-expense::section_7872` is the **IRC §7872 below-market loan module** — the family sweetheart loan trap. When a trader lends to family, child, or controlled entity at below-AFR rates, the IRS imputes the missing interest as if charged at the Applicable Federal Rate. Forgone interest becomes income to the lender AND deemed transferred back as gift / compensation / dividend depending on the relationship.
 
 **AFR brackets by loan term** under §1274(d):
