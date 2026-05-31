@@ -1250,6 +1250,8 @@ pub enum Preset {
     MegaRangeDownHotVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + red close + doubled vol (once-per-month-rare volatility event with bear-direction outcome: extreme intraday range with both sides actively trading but bears won the close; high-energy day worth marking as a key reference point in the chart)
     MegaRangeUpNearYearHighHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + green close + doubled vol + at/near 52w high (<2%) (volcanic breakout day: extreme intraday range with bull-direction outcome occurring at the 52w high; rare regime-defining event marking a fresh peak with maximum-energy directional commitment)
     MegaRangeDownNearYearLowHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + red close + doubled vol + at/near 52w low (<2%) (volcanic breakdown day: extreme intraday range with bear-direction outcome occurring at the 52w low; rare regime-defining event marking a fresh trough with maximum-energy directional commitment)
+    MegaRangeUpDeepBelowYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + doubled vol + far below 52w high (>=20%) (V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory; rare reversal day where buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
+    MegaRangeDownDeepAboveYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + doubled vol + far above 52w low (>=20%) (waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory; rare reversal day where sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7788,6 +7790,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.year_low_pct < 2.0
         }
+        Preset::MegaRangeUpDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::MegaRangeDownDeepAboveYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -8928,6 +8942,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownHotVol => "Mega Intraday Range (>10 % High-low Spread) + Red Close + Doubled Vol (Once-per-month-rare Volatility Event with Bear-direction Outcome: Extreme Intraday Range with Both Sides Actively Trading but Bears Won the Close; High-energy Day Worth Marking as a Key Reference Point in the Chart)",
         Preset::MegaRangeUpNearYearHighHotVol => "Mega Intraday Range (>10 %) + Green Close + Doubled Vol + At/near 52w High (<2 %) (Volcanic Breakout Day: Extreme Intraday Range with Bull-direction Outcome Occurring at the 52w High; Rare Regime-defining Event Marking a Fresh Peak with Maximum-energy Directional Commitment)",
         Preset::MegaRangeDownNearYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + At/near 52w Low (<2 %) (Volcanic Breakdown Day: Extreme Intraday Range with Bear-direction Outcome Occurring at the 52w Low; Rare Regime-defining Event Marking a Fresh Trough with Maximum-energy Directional Commitment)",
+        Preset::MegaRangeUpDeepBelowYearHighHotVol => "Mega Intraday Range (>10 %) + Green Close + Doubled Vol + Far below 52w High (>=20 %) (V-bottom Signal: Extreme Intraday Range with Bull-direction Outcome Deep in Pullback Territory; Rare Reversal Day Where Buyers Absorbed Massive Selling and Reversed It — Historically a Marker for Major Lows in Extended Declines)",
+        Preset::MegaRangeDownDeepAboveYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + Far above 52w Low (>=20 %) (Waterfall-top Signal: Extreme Intraday Range with Bear-direction Outcome Deep in Advance Territory; Rare Reversal Day Where Sellers Overcame Massive Buying and Reversed It — Historically a Marker for Major Highs in Extended Advances)",
     }
 }
 
