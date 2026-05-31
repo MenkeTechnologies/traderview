@@ -27,6 +27,10 @@ use traderview_expense::disposition::{
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
+use traderview_expense::cost_segregation::{
+    compute as compute_cost_segregation, CostSegInput, CostSegReport,
+    PropertyTypeDefault as CostSegPropertyType,
+};
 use traderview_expense::section_280a::{
     compute as compute_section_280a, Section280AInput, Section280AResult,
 };
@@ -106,6 +110,9 @@ pub fn router() -> Router<AppState> {
         // §280A vacation home / mixed-use classification
         .route("/properties/:property_id/section-280a",
             axum::routing::post(property_section_280a))
+        // Cost segregation + §168(k) bonus depreciation accelerator
+        .route("/properties/:property_id/cost-segregation",
+            axum::routing::post(property_cost_segregation))
 }
 
 // ---------------------------------------------------------------------------
@@ -1675,6 +1682,88 @@ async fn property_section_280a(
         tier_2_operating_expenses: b.tier_2_operating_expenses,
         tier_3_depreciation: b.tier_3_depreciation,
         prior_year_suspended: b.prior_year_suspended,
+    })))
+}
+
+// ---------------------------------------------------------------------------
+// Cost segregation + §168(k) bonus depreciation
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct CostSegRequest {
+    /// If omitted, computed from (purchase_price - land_value) on the
+    /// property row.
+    depreciable_basis: Option<Decimal>,
+    /// If omitted, inferred from rental_properties.property_type.
+    cost_seg_type: Option<String>,
+    allocation_override: Option<traderview_expense::cost_segregation::CostSegAllocation>,
+    tax_year: i32,
+    #[serde(default)]
+    elect_bonus_depreciation: bool,
+}
+
+fn cost_seg_type_from_property(ptype: &str) -> CostSegPropertyType {
+    match ptype {
+        "single_family"       => CostSegPropertyType::SingleFamily,
+        "multi_family"        => CostSegPropertyType::MultiFamily,
+        "vacation_short_term" => CostSegPropertyType::ShortTermRental,
+        "commercial"          => CostSegPropertyType::Commercial,
+        _                     => CostSegPropertyType::SingleFamily,
+    }
+}
+
+fn parse_cost_seg_type(s: &str) -> Result<CostSegPropertyType, ApiError> {
+    Ok(match s {
+        "single_family"     => CostSegPropertyType::SingleFamily,
+        "multi_family"      => CostSegPropertyType::MultiFamily,
+        "short_term_rental" => CostSegPropertyType::ShortTermRental,
+        "commercial"        => CostSegPropertyType::Commercial,
+        "restaurant"        => CostSegPropertyType::Restaurant,
+        _ => return Err(ApiError::BadRequest(format!("invalid cost_seg_type: {s}"))),
+    })
+}
+
+async fn property_cost_segregation(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(property_id): Path<Uuid>,
+    Json(b): Json<CostSegRequest>,
+) -> Result<Json<CostSegReport>, ApiError> {
+    ensure_property_owner(&s, u.id, property_id).await?;
+    let (purchase, land, ptype): (Option<Decimal>, Option<Decimal>, String) =
+        sqlx::query_as(
+            "SELECT purchase_price, land_value, property_type::text
+               FROM rental_properties WHERE id = $1",
+        )
+        .bind(property_id)
+        .fetch_one(&s.pool)
+        .await?;
+
+    let depreciable_basis = match b.depreciable_basis {
+        Some(v) => v,
+        None => {
+            let p = purchase.ok_or_else(|| ApiError::BadRequest(
+                "no purchase_price on property; pass depreciable_basis explicitly".into()
+            ))?;
+            (p - land.unwrap_or(Decimal::ZERO)).max(Decimal::ZERO)
+        }
+    };
+
+    let cost_seg_type = match b.cost_seg_type.as_deref() {
+        Some(t) => parse_cost_seg_type(t)?,
+        None => cost_seg_type_from_property(&ptype),
+    };
+
+    if depreciable_basis < Decimal::ZERO {
+        return Err(ApiError::BadRequest("depreciable_basis must be >= 0".into()));
+    }
+
+    Ok(Json(compute_cost_segregation(&CostSegInput {
+        depreciable_basis,
+        property_type: cost_seg_type,
+        allocation_override: b.allocation_override,
+        tax_year: b.tax_year,
+        elect_bonus_depreciation: b.elect_bonus_depreciation,
     })))
 }
 

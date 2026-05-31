@@ -10,6 +10,7 @@ pub mod amazon;
 pub mod apple;
 pub mod boa;
 pub mod chase;
+pub mod cost_segregation;
 pub mod crypto_tax;
 pub mod dedup;
 pub mod depreciation;
