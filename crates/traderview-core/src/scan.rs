@@ -1298,6 +1298,8 @@ pub enum Preset {
     MegaRangeUpperThirdConfirmedBelowYearLowDecupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with 10x volume; once-per-year bull-reclaim reversal day where institutional buyers immediately reasserted control after the break — classic bear-trap marker at the breakdown extension)
     MegaRangeUpperThirdDeepBelowYearHighDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far below 52w high (≥20%) (institutional-scale partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers seized partial control after absorbing massive selling — historically a marker for major lows in extended declines with maximum-conviction commitment but without rigid HOD pinning)
     MegaRangeUpperThirdDeepAboveYearLowDecupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far above 52w low (≥20%) (institutional-scale partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with 10x volume; once-per-year continuation day where institutional buyers maintained partial control deep in extended advance — uptrend-resumption marker in late-stage rally with maximum-conviction commitment without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearHighDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker for institutional trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8196,6 +8198,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 10.0
                 && hit.year_low_pct >= 20.0
         }
+        Preset::MegaRangeUpperThirdMidYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 10.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::MegaRangeUpperThirdMidYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 10.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -9384,6 +9402,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeUpperThirdConfirmedBelowYearLowDecupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Decupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-scale Failed-breakdown Trap Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Just past Validated Breakdown Level with 10x Volume; Once-per-year Bull-reclaim Reversal Day Where Institutional Buyers Immediately Reasserted Control after the Break — Classic Bear-trap Marker at the Breakdown Extension)",
         Preset::MegaRangeUpperThirdDeepBelowYearHighDecupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Decupled Vol + Far below 52w High (≥20 %) (Institutional-scale Partial-bull V-bottom Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Deep in Pullback Territory with 10x Volume; Once-per-year Reversal Day Where Institutional Buyers Seized Partial Control after Absorbing Massive Selling — Historically a Marker for Major Lows in Extended Declines with Maximum-conviction Commitment but without Rigid HOD Pinning)",
         Preset::MegaRangeUpperThirdDeepAboveYearLowDecupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Decupled Vol + Far above 52w Low (≥20 %) (Institutional-scale Partial-bull Deep-recovery Euphoria Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Deep in Advance Territory with 10x Volume; Once-per-year Continuation Day Where Institutional Buyers Maintained Partial Control Deep in Extended Advance — Uptrend-resumption Marker in Late-stage Rally with Maximum-conviction Commitment without Rigid HOD Pinning)",
+        Preset::MegaRangeUpperThirdMidYearHighDecupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Decupled Vol + Mid-range from High (5-20 %) (Institutional-scale Mid-cycle Partial-bull Pullback-recovery: Extreme Intraday Range with Close 2x Closer to HOD than LOD in Proper Consolidation Zone below the Prior Peak with 10x Volume; Once-per-year Swing-trade Marker for Institutional Trend-resumption from Mid-cycle Pullback Bottom without Rigid HOD Pinning)",
+        Preset::MegaRangeUpperThirdMidYearLowDecupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Decupled Vol + Mid-range from Low (5-20 %) (Institutional-scale Mid-cycle Partial-bull Recovery-continuation: Extreme Intraday Range with Close 2x Closer to HOD than LOD in Proper Consolidation Zone above the Prior Trough with 10x Volume; Once-per-year Swing-trade Marker for Institutional Recovery-acceleration from Mid-cycle Recovery Base without Rigid HOD Pinning)",
     }
 }
 
