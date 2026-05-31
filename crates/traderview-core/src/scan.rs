@@ -1378,6 +1378,8 @@ pub enum Preset {
     MegaRangeDownNearYearLowQuintupledVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + red close + quintupled vol + at/near 52w low (<2%) (institutional-tier volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 5x volume; quarterly-rare regime-defining trough event marking a fresh low with strong institutional commitment)
     MegaRangeUpConfirmedAboveYearHighQuintupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
     MegaRangeDownConfirmedBelowYearLowQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
+    MegaRangeUpDeepBelowYearHighQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + quintupled vol + far below 52w high (≥20%) (institutional-tier V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 5x volume; quarterly-rare reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
+    MegaRangeDownDeepAboveYearLowQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + quintupled vol + far above 52w low (≥20%) (institutional-tier waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 5x volume; quarterly-rare reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8882,6 +8884,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= -3.0
                 && hit.year_low_pct <= -1.0
         }
+        Preset::MegaRangeUpDeepBelowYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::MegaRangeDownDeepAboveYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -10150,6 +10164,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownNearYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + At/near 52w Low (<2 %) (Institutional-tier Volcanic Breakdown Day: Extreme Intraday Range with Bear-direction Outcome at the 52w Low with 5x Volume; Quarterly-rare Regime-defining Trough Event Marking a Fresh Low with Strong Institutional Commitment)",
         Preset::MegaRangeUpConfirmedAboveYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Green Close + Quintupled Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Institutional-tier Volcanic Extension past Validated Breakout: Extreme Intraday Range with Bull-direction Outcome Extending past the Already-cleared Prior Peak with 5x Volume; Quarterly-rare Follow-through Day Confirming Institutional Trend Acceleration)",
         Preset::MegaRangeDownConfirmedBelowYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-tier Volcanic Extension past Validated Breakdown: Extreme Intraday Range with Bear-direction Outcome Extending past the Already-cleared Prior Trough with 5x Volume; Quarterly-rare Follow-through Day Confirming Institutional Trend Acceleration)",
+        Preset::MegaRangeUpDeepBelowYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Green Close + Quintupled Vol + Far below 52w High (≥20 %) (Institutional-tier V-bottom Signal: Extreme Intraday Range with Bull-direction Outcome Deep in Pullback Territory with 5x Volume; Quarterly-rare Reversal Day Where Institutional Buyers Absorbed Massive Selling and Reversed it — Historically a Marker for Major Lows in Extended Declines)",
+        Preset::MegaRangeDownDeepAboveYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Far above 52w Low (≥20 %) (Institutional-tier Waterfall-top Signal: Extreme Intraday Range with Bear-direction Outcome Deep in Advance Territory with 5x Volume; Quarterly-rare Reversal Day Where Institutional Sellers Overcame Massive Buying and Reversed it — Historically a Marker for Major Highs in Extended Advances)",
     }
 }
 
