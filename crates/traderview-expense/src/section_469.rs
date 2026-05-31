@@ -176,7 +176,7 @@ pub fn compute(input: &Section469Input) -> Section469Result {
         r.note = if remaining > Decimal::ZERO {
             format!("§469(i) allowance ${} used; ${} suspended to next year", r.allowance_used, remaining)
         } else {
-            format!("§469(i) absorbed full loss within allowance + offset")
+            "§469(i) absorbed full loss within allowance + offset".to_string()
         };
     }
     r

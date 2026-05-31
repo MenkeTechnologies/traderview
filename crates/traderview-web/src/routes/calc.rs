@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tax-loss-harvest",      post(tax_loss_harvest_route))
         .route("/calc/wash-sale",             post(wash_sale_route))
         .route("/calc/cost-basis",            post(cost_basis_route))
+        .route("/calc/section-1244",          post(section_1244_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -301,4 +302,26 @@ async fn vix_term_structure_route(
     _u: AuthUser, Json(ts): Json<vix_term_structure::VixTermStructure>,
 ) -> Json<vix_term_structure::TermStructureReport> {
     Json(vix_term_structure::analyze(&ts))
+}
+
+// ── §1244 small business stock loss ────────────────────────────────────
+// Mounted at /api/calc/section-1244. Pure compute; takes the full
+// Section1244Input struct (loss + filing status + prior-claimed + the
+// 5-test qualification checklist) and returns the ordinary/capital split.
+
+async fn section_1244_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1244::Section1244Input>,
+) -> Result<Json<traderview_expense::section_1244::Section1244Result>, ApiError> {
+    if b.realized_loss < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "realized_loss must be >= 0 (pass loss as positive number)".into(),
+        ));
+    }
+    if b.ordinary_loss_claimed_this_year_so_far < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "ordinary_loss_claimed_this_year_so_far must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1244::compute(&b)))
 }

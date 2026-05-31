@@ -36,6 +36,30 @@ use traderview_expense::schedule_e::{
 };
 use uuid::Uuid;
 
+// Row tuples pulled by the Schedule E roll-up and rent-roll queries.
+// Aliased here so the SELECT bindings stay readable and clippy stops
+// flagging `type_complexity`.
+type PropertyRollupRow = (
+    Uuid,           // id
+    String,         // property_type
+    i32,            // fair_rental_days
+    i32,            // personal_use_days
+    Option<Decimal>, // purchase_price
+    Option<Decimal>, // land_value
+    Option<NaiveDate>, // placed_in_service_at
+    Decimal,        // recovery_period_years
+);
+type LeaseRentRollRow = (
+    Uuid,           // lease id
+    String,         // tenant display_name
+    String,         // unit_label
+    Decimal,        // rent_amount
+    i32,            // rent_due_day
+    i32,            // grace_days
+    NaiveDate,      // starts_on
+    Option<NaiveDate>, // ends_on
+);
+
 pub fn router() -> Router<AppState> {
     Router::new()
         // properties
@@ -1350,7 +1374,7 @@ async fn schedule_e_report(
     // depreciation (purchase price, land value, placed-in-service date,
     // recovery period). Properties missing any of those just get $0
     // depreciation for the year — the rest of the roll-up still works.
-    let props: Vec<(Uuid, String, i32, i32, Option<Decimal>, Option<Decimal>, Option<NaiveDate>, Decimal)> =
+    let props: Vec<PropertyRollupRow> =
         sqlx::query_as(
             "SELECT id, property_type::text, fair_rental_days, personal_use_days,
                     purchase_price, land_value, placed_in_service_at, recovery_period_years
@@ -1720,7 +1744,7 @@ async fn rent_roll(
         .ok_or_else(|| ApiError::BadRequest("invalid date".into()))?;
 
     // Active leases overlapping the window.
-    let leases: Vec<(Uuid, String, String, Decimal, i32, i32, NaiveDate, Option<NaiveDate>)> =
+    let leases: Vec<LeaseRentRollRow> =
         sqlx::query_as(
             "SELECT l.id, COALESCE(t.display_name, ''), l.unit_label, l.rent_amount,
                     l.rent_due_day, l.grace_days, l.starts_on, l.ends_on
