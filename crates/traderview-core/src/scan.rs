@@ -1236,6 +1236,8 @@ pub enum Preset {
     CloseInLowerThirdJustOffYearLowHotVol,     // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — close in lower third + just off 52w low (2-5%) + hot vol (soft bearish tilt just off the year trough: close in bottom third of intraday range immediately after a shallow bounce from the 52w low; post-tag re-test bias signal where sellers maintain control as price probes the breakdown level without rigid LOD pin)
     BullRecoveryWickHotVol,                    // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long lower wick (>3%) + green close (positive change) + close not pinned to HOD (>1% off the day's high) + hot vol (partial bull-recovery wick: price probed substantially lower then recovered to a green close but didn't reach the day's high; weaker-than-hammer signal showing bull-recovery in progress but not complete)
     BearRejectionWickHotVol,                   // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long upper wick (>3%) + red close (negative change) + close not pinned to LOD (>1% off the day's low) + hot vol (partial bear-rejection wick: price probed substantially higher then rejected to a red close but didn't reach the day's low; weaker-than-shooting-star signal showing bear-rejection in progress but not complete)
+    BullRecoveryWickNearYearLowHotVol,         // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct < 2 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + at/near 52w low (<2%) + hot vol (partial bull-recovery wick at the year trough: price probed lower at 52w low then recovered green but didn't pin to HOD; potential bottom-formation signal in early-recovery stage where buyers are gaining traction but haven't yet established full control)
+    BearRejectionWickNearYearHighHotVol,       // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct < 2 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + at/near 52w high (<2%) + hot vol (partial bear-rejection wick at the year peak: price probed higher at 52w high then rejected red but didn't pin to LOD; potential top-formation signal in early-rejection stage where sellers are gaining traction but haven't yet established full control)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7676,6 +7678,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() > 1.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BullRecoveryWickNearYearLowHotVol => {
+            hit.lod_dist_pct.abs() > 3.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.year_low_pct < 2.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BearRejectionWickNearYearHighHotVol => {
+            hit.hod_dist_pct.abs() > 3.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.year_high_pct < 2.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -8802,6 +8818,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseInLowerThirdJustOffYearLowHotVol => "Close in Lower Third + Just off 52w Low (2-5 %) + Hot Vol (Soft Bearish Tilt Just off the Year Trough: Close in Bottom Third of Intraday Range Immediately after a Shallow Bounce from the 52w Low; Post-tag Re-test Bias Signal Where Sellers Maintain Control as Price Probes the Breakdown Level without Rigid LOD Pin)",
         Preset::BullRecoveryWickHotVol => "Long Lower Wick (>3 %) + Green Close + Close Not Pinned to HOD (>1 % off Day's High) + Hot Vol (Partial Bull-recovery Wick: Price Probed Substantially Lower then Recovered to a Green Close but Didn't Reach the Day's High; Weaker-than-hammer Signal Showing Bull-recovery in Progress but Not Complete)",
         Preset::BearRejectionWickHotVol => "Long Upper Wick (>3 %) + Red Close + Close Not Pinned to LOD (>1 % off Day's Low) + Hot Vol (Partial Bear-rejection Wick: Price Probed Substantially Higher then Rejected to a Red Close but Didn't Reach the Day's Low; Weaker-than-shooting-star Signal Showing Bear-rejection in Progress but Not Complete)",
+        Preset::BullRecoveryWickNearYearLowHotVol => "Long Lower Wick + Green Close + Not Pinned to HOD + At/near 52w Low (<2 %) + Hot Vol (Partial Bull-recovery Wick at the Year Trough: Price Probed Lower at 52w Low then Recovered Green but Didn't Pin to HOD; Potential Bottom-formation Signal in Early-recovery Stage Where Buyers Are Gaining Traction but Haven't yet Established Full Control)",
+        Preset::BearRejectionWickNearYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + At/near 52w High (<2 %) + Hot Vol (Partial Bear-rejection Wick at the Year Peak: Price Probed Higher at 52w High then Rejected Red but Didn't Pin to LOD; Potential Top-formation Signal in Early-rejection Stage Where Sellers Are Gaining Traction but Haven't yet Established Full Control)",
     }
 }
 
