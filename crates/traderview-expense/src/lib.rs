@@ -25,6 +25,7 @@ pub mod eviction_notices;
 pub mod foreign_tax_credit;
 pub mod form_8606;
 pub mod habitability_remedies;
+pub mod just_cause_eviction;
 pub mod home_office;
 pub mod late_fee_caps;
 pub mod lease_disclosures;

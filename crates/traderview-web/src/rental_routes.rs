@@ -65,6 +65,9 @@ use traderview_expense::application_fees::{
 use traderview_expense::dv_termination::{
     check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
 };
+use traderview_expense::just_cause_eviction::{
+    check as check_just_cause, JustCauseInput, JustCauseResult,
+};
 use traderview_expense::lockout_penalties::{
     check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
@@ -173,6 +176,7 @@ pub fn router() -> Router<AppState> {
         .route("/application-fee-check", axum::routing::post(application_fee_check_route))
         .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
         .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
+        .route("/just-cause-check", axum::routing::post(just_cause_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1847,6 +1851,26 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State just-cause eviction availability + relocation assistance check
+// ---------------------------------------------------------------------------
+
+async fn just_cause_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<JustCauseInput>,
+) -> Result<Json<JustCauseResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_just_cause(&b)))
 }
 
 // ---------------------------------------------------------------------------
