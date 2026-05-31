@@ -1274,6 +1274,8 @@ pub enum Preset {
     MegaRangeMidpointCloseJustOffYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + doubled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low ends with balanced midpoint close; post-tag re-test indecision day with maximum-energy two-way commitment)
     MegaRangeMidpointCloseAtYearHighDecupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w high (<2%) + decupled vol (climactic peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 10x volume ends with balanced midpoint close; institutional-scale exhaustion-or-continuation showdown at the absolute high-water mark)
     MegaRangeMidpointCloseAtYearLowDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w low (<2%) + decupled vol (climactic trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 10x volume ends with balanced midpoint close; institutional-scale capitulation-or-reversal showdown at the absolute low-water mark)
+    MegaRangeMidpointCloseConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + confirmed-breakout zone (1-3% past 52w high) + decupled vol (post-breakout wide-range standoff: extreme two-way intraday battle just past the validated breakout level with 10x volume ends with balanced midpoint close; institutional-scale follow-through-or-fade showdown in the confirmed expansion zone)
+    MegaRangeMidpointCloseConfirmedBelowYearLowDecupledVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + decupled vol (post-breakdown wide-range standoff: extreme two-way intraday battle just past the validated breakdown level with 10x volume ends with balanced midpoint close; institutional-scale follow-through-or-fade showdown in the confirmed contraction zone)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7992,6 +7994,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 2.0
                 && hit.rel_volume >= 10.0
         }
+        Preset::MegaRangeMidpointCloseConfirmedAboveYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+                && hit.rel_volume >= 10.0
+        }
+        Preset::MegaRangeMidpointCloseConfirmedBelowYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+                && hit.rel_volume >= 10.0
+        }
     }
 }
 
@@ -9156,6 +9176,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseJustOffYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Just off 52w Low (2-5 %) + Doubled Vol (Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Bounce from the 52w Low Ends with Balanced Midpoint Close; Post-tag Re-test Indecision Day with Maximum-energy Two-way Commitment)",
         Preset::MegaRangeMidpointCloseAtYearHighDecupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + At 52w High (<2 %) + Decupled Vol (Climactic Peak-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Peak with 10x Volume Ends with Balanced Midpoint Close; Institutional-scale Exhaustion-or-continuation Showdown at the Absolute High-water Mark)",
         Preset::MegaRangeMidpointCloseAtYearLowDecupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + At 52w Low (<2 %) + Decupled Vol (Climactic Trough-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Trough with 10x Volume Ends with Balanced Midpoint Close; Institutional-scale Capitulation-or-reversal Showdown at the Absolute Low-water Mark)",
+        Preset::MegaRangeMidpointCloseConfirmedAboveYearHighDecupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakout Zone (1-3 % past 52w High) + Decupled Vol (Post-breakout Wide-range Standoff: Extreme Two-way Intraday Battle Just past the Validated Breakout Level with 10x Volume Ends with Balanced Midpoint Close; Institutional-scale Follow-through-or-fade Showdown in the Confirmed Expansion Zone)",
+        Preset::MegaRangeMidpointCloseConfirmedBelowYearLowDecupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakdown Zone (1-3 % past 52w Low) + Decupled Vol (Post-breakdown Wide-range Standoff: Extreme Two-way Intraday Battle Just past the Validated Breakdown Level with 10x Volume Ends with Balanced Midpoint Close; Institutional-scale Follow-through-or-fade Showdown in the Confirmed Contraction Zone)",
     }
 }
 
