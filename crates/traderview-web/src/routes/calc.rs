@@ -49,6 +49,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
+        .route("/calc/section-168g",          post(section_168g_route))
+        .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -402,6 +404,55 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §168(g) Alternative Depreciation System (ADS) ────────────────────
+// Mounted at /api/calc/section-168g. Pure compute; computes the
+// annual ADS deduction for a property at a given year, with a GDS
+// comparison so callers can sum up multi-property differences and
+// feed into the §163(j) tradeoff analyzer.
+
+async fn section_168g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_168g::Section168gInput>,
+) -> Result<Json<traderview_expense::section_168g::Section168gResult>, ApiError> {
+    if b.depreciable_basis < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "depreciable_basis must be >= 0".into(),
+        ));
+    }
+    if !(1..=12).contains(&b.placed_in_service_month) {
+        return Err(ApiError::BadRequest(
+            "placed_in_service_month must be 1..12".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_168g::compute(&b)))
+}
+
+// ── §163(j)(7)(B) electing-RPTB tradeoff analyzer ────────────────────
+// Mounted at /api/calc/section-163j-tradeoff. Pure compute; turns
+// annual depreciation sacrificed + annual interest disallowed into
+// after-tax net benefit using the taxpayer's marginal rate.
+
+async fn section_163j_tradeoff_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_168g::Section163jTradeoffInput>,
+) -> Result<Json<traderview_expense::section_168g::Section163jTradeoffResult>, ApiError> {
+    if b.marginal_federal_rate < Decimal::ZERO
+        || b.marginal_federal_rate > Decimal::ONE
+    {
+        return Err(ApiError::BadRequest(
+            "marginal_federal_rate must be 0..1".into(),
+        ));
+    }
+    if b.annual_depreciation_sacrificed < Decimal::ZERO
+        || b.annual_interest_disallowed_under_163j < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "depreciation / interest amounts must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_168g::analyze_tradeoff(&b)))
 }
 
 // ── §1296 PFIC mark-to-market election ───────────────────────────────
