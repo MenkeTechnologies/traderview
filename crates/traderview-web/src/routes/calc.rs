@@ -67,6 +67,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
+        .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1233",          post(section_1233_route))
         .route("/calc/section-1234",          post(section_1234_route))
@@ -567,6 +568,38 @@ async fn section_1233_route(
         }
     }
     Ok(Json(traderview_expense::section_1233::compute(&b)))
+}
+
+// ── §1014 stepped-up basis at death ──────────────────────────────────
+// Mounted at /api/calc/section-1014. Pure compute; §1014(a)(1) DOD
+// step-up; §1014(a)(2) §2032 alternate-valuation-date election;
+// §1014(c) IRD denies step-up; §1014(e) 1-year clawback for deathbed
+// gifts returning to donor; §1014(f) Form 706 consistent-basis cap.
+
+async fn section_1014_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1014::Section1014Input>,
+) -> Result<Json<traderview_expense::section_1014::Section1014Result>, ApiError> {
+    if b.decedents_adjusted_basis < Decimal::ZERO || b.fmv_at_dod < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "decedents_adjusted_basis and fmv_at_dod must be >= 0".into(),
+        ));
+    }
+    if let Some(av) = b.fmv_at_alternate_valuation_date {
+        if av < Decimal::ZERO {
+            return Err(ApiError::BadRequest(
+                "fmv_at_alternate_valuation_date must be >= 0".into(),
+            ));
+        }
+    }
+    if let Some(f706) = b.fmv_reported_on_form_706 {
+        if f706 < Decimal::ZERO {
+            return Err(ApiError::BadRequest(
+                "fmv_reported_on_form_706 must be >= 0".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_1014::compute(&b)))
 }
 
 // ── §1091 wash sale loss disallowance ────────────────────────────────
