@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
         .route("/calc/section-267",           post(section_267_route))
+        .route("/calc/section-988",           post(section_988_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -400,6 +401,20 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §988 forex transaction character ─────────────────────────────────
+// Mounted at /api/calc/section-988. Pure compute; classifies forex /
+// FX-denominated debt / forex derivatives into ordinary / capital /
+// §1256 60/40 / personal-use-excluded character based on transaction
+// kind + §988(a)(1)(B) capital election + §988(c)(1)(D)(i) kick-out
+// election + personal-use flag.
+
+async fn section_988_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_988::Section988Input>,
+) -> Result<Json<traderview_expense::section_988::Section988Result>, ApiError> {
+    Ok(Json(traderview_expense::section_988::compute(&b)))
 }
 
 // ── §267 related-party loss disallowance ─────────────────────────────

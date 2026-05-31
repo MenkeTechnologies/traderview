@@ -43,6 +43,7 @@ pub mod section_1244;
 pub mod section_1256;
 pub mod section_163j;
 pub mod section_267;
+pub mod section_988;
 pub mod section_280a;
 pub mod section_469;
 pub mod seed_rules;
