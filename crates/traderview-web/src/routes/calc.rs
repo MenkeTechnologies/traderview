@@ -76,6 +76,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-1041",          post(section_1041_route))
         .route("/calc/section-170e",          post(section_170e_route))
+        .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1233",          post(section_1233_route))
@@ -610,6 +611,28 @@ async fn section_83b_route(
         }
     }
     Ok(Json(traderview_expense::section_83b::compute(&b)))
+}
+
+// ── §172 Net Operating Loss deduction ────────────────────────────────
+// Mounted at /api/calc/section-172. Three regimes by NOL year:
+// pre-2018 legacy (2yr carryback / 20yr carryforward / no 80% limit),
+// CARES Act 2018-2020 (5yr carryback / 100% offset), permanent TCJA
+// post-2020 (no carryback / indefinite carryforward / 80% limit).
+// §172(b)(1)(B) farming + insurance 2-year carryback exception.
+
+async fn section_172_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_172::Section172Input>,
+) -> Result<Json<traderview_expense::section_172::Section172Result>, ApiError> {
+    if b.current_year_nol < Decimal::ZERO
+        || b.current_year_taxable_income_before_nol < Decimal::ZERO
+        || b.prior_year_nol_carryforward < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_172::compute(&b)))
 }
 
 // ── §170(e) charitable contribution of appreciated property ─────────

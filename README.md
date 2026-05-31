@@ -1047,6 +1047,34 @@ Pinned by `forfeiture_with_valid_election_no_refund_per_83b2`, `forfeiture_witho
 
 Mounted at `POST /api/calc/section-83b`. Twenty-four tests pin: timely election within 30 days valid; **day 0 / day 30 / day 31 boundaries** (the three bright-line cases); no election falls back to §83(a); founder grant election savings (−$9.99); election with full $50 appreciation → full LTCG; no-election same appreciation → ordinary $9.99 + LTCG $40 split; election sale within 1 year STCG; **365 vs 366-day boundary**; no-election sale at 17 months from vesting → LTCG; no-election STCG path; FMV grant above paid creates ordinary at grant; **election-was-wrong** (positive savings number); negative ordinary clamps to zero; not-yet-sold returns no gain; election before grant invalid (pathological pin); **very large grant precision** ($0.0001 → $5000); day-31 late election uses vesting basis (not grant); note describes 30-day deadline explicitly ("day 14/30"); forfeiture with valid election + §83(b)(2) call-out in note (UX-text regression target); forfeiture without election clean.
 
+`traderview-expense::section_172` is the **IRC §172 Net Operating Loss deduction module** — foundational rule for every business taxpayer including sole-proprietor traders, S-corp shareholders, partnership flow-through partners, and corporations. When deductions exceed gross income, §172 lets the excess offset taxable income in other years.
+
+**Three statutory regimes classified by NOL year:**
+
+| Regime                | NOL years      | Carryback | Carryforward | 80% limit | Citation                  |
+|-----------------------|----------------|-----------|--------------|-----------|---------------------------|
+| **Pre-2018 legacy**   | 2017 and prior | 2 years   | 20 years     | None      | Pre-TCJA § 172            |
+| **CARES Act**         | 2018-2020 only | 5 years   | Indefinite   | None (100% offset) | CARES Act § 2303          |
+| **Permanent TCJA**    | 2021+          | None      | Indefinite   | **80% of taxable income** | TCJA + post-2020 sunset |
+
+Pinned by `pre_2018_legacy_classified` + `cares_act_2018_2020_classified` + `permanent_tcja_post_2020_classified` + the three boundary tests (`tcja_2017_boundary_last_pre_tcja_year` + `tcja_2018_boundary_first_cares_year` + `tcja_2021_boundary_first_post_cares_year`) — all six classifications individually pinned.
+
+**80% limit math** under permanent TCJA: NOL deduction allowed = `min(available_NOL, 80% × taxable_income_before_NOL)`. If NOL > 80% limit, the limit BINDS and excess carries forward indefinitely. Pinned by `tcja_80_percent_limit_does_not_bind_when_nol_small` ($50k NOL ≤ $80k limit → full deduction) + `tcja_80_percent_limit_binds_when_nol_large` ($200k NOL > $80k limit → only $80k deducted, $120k carries) + **boundary tests** (`eighty_percent_limit_boundary_exact_no_binding` at $80k exact and `eighty_percent_limit_boundary_one_over_binds` at $80,001).
+
+**CARES Act 100% offset suspends the 80% limit** for 2018-2020 NOLs. $200k NOL with $100k taxable income absorbs the full $100k, no 80% cap. Pinned by `cares_act_100_percent_offset_no_limit_binding`.
+
+**Pre-2018 legacy has no 80% limit** either. Same full-absorption behavior as CARES. Pinned by `pre_2018_no_80_percent_limit_full_absorption`.
+
+**§172(b)(1)(B) farming + insurance carve-out**: 2-year carryback preserved even under permanent TCJA. Flag set on the result when `farming_or_insurance_loss` input is true. Pinned by `farming_loss_flag_surfaces_2_year_carryback` + `non_farming_loss_no_carryback_flag_post_2020` (default no carryback).
+
+**Current-year NOL flows to carryforward, NOT absorption.** Loss year has no current-year taxable income to absorb against — the current loss enters the carryforward pool to absorb against next year's TI. Only PRIOR carryforward absorbs against current TI. Pinned by `current_year_nol_flows_to_carryforward_not_absorption` (current $50k + TI $0 → $0 deducted, $50k carries) + `current_year_loss_combined_with_prior_carryforward` (prior $50k absorbs against TI $100k, current $30k loss adds to carryforward → $30k carries).
+
+**Boundary regime boundary years individually pinned**: 2017 → Pre2018Legacy; 2018 → CaresAct; 2020 → CaresAct; 2021 → PermanentTcja. The CARES Act sunset between 2020 and 2021 is a hard cut.
+
+**Taxable income after NOL never goes negative** under any pathological input combination. Defensive clamping pinned by `taxable_income_after_nol_never_negative` ($10M NOL with $100k TI → TI clamped at $0).
+
+Mounted at `POST /api/calc/section-172`. Twenty-four tests pin: all three regimes + boundary year classification; **80% limit boundary $80k exact does not bind, $80,001 binds** (regression target); 80% limit binds with large NOL ($200k → $80k + $120k); CARES 100% offset (no 80% limit); pre-2018 100% offset; current-year NOL flows to carryforward not absorption (load-bearing); current loss + prior combined carryforward math; farming flag surfaces 2-year carryback; non-farming default no carryback flag; CARES year flags 5-year carryback regardless of farming; zero TI no absorption; zero NOL no-op; **TI after NOL never negative** (defensive clamping); **$1B / $5B precision** ($800M limit, $4.2B carryforward); note describes regime + 80%-binding flag + 5-year-carryback for CARES paths.
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:

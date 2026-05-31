@@ -61,6 +61,7 @@ pub mod section_108;
 pub mod section_1014;
 pub mod section_1015;
 pub mod section_170e;
+pub mod section_172;
 pub mod section_121;
 pub mod section_1045;
 pub mod section_1092;
