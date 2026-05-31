@@ -1356,6 +1356,8 @@ pub enum Preset {
     MegaRangeUpperThirdNearYearLowHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + at/near 52w low (<2%) (mid-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with doubled volume; once-per-month regime-defining event marking partial bull-control at the low-water mark, mid-tier capitulation-bottom marker without rigid HOD pinning)
     MegaRangeUpperThirdConfirmedAboveYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with doubled volume; once-per-month continuation marker confirming mid-tier trend acceleration without rigid HOD pinning)
     MegaRangeUpperThirdConfirmedBelowYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with doubled volume; once-per-month bull-reclaim reversal day where buyers immediately reasserted control after the break — mid-tier bear-trap marker at the breakdown extension)
+    MegaRangeUpperThirdDeepBelowYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far below 52w high (≥20%) (mid-tier partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with doubled volume; once-per-month reversal day where buyers seized partial control after absorbing massive selling — mid-tier major-low marker in extended declines without rigid HOD pinning)
+    MegaRangeUpperThirdDeepAboveYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far above 52w low (≥20%) (mid-tier partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained partial control deep in extended advance — mid-tier uptrend-resumption marker in late-stage rally without rigid HOD pinning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8696,6 +8698,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= -3.0
                 && hit.year_low_pct <= -1.0
         }
+        Preset::MegaRangeUpperThirdDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::MegaRangeUpperThirdDeepAboveYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -9942,6 +9958,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeUpperThirdNearYearLowHotVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Doubled Vol + At/near 52w Low (<2 %) (Mid-tier Partial-bull Bottoming-bounce Day: Extreme Intraday Range with Close 2x Closer to HOD than LOD at the 52w Trough with Doubled Volume; Once-per-month Regime-defining Event Marking Partial Bull-control at the Low-water Mark, Mid-tier Capitulation-bottom Marker without Rigid HOD Pinning)",
         Preset::MegaRangeUpperThirdConfirmedAboveYearHighHotVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Doubled Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Mid-tier Partial-bull Follow-through Extension: Extreme Intraday Range with Close 2x Closer to HOD than LOD Just past Validated Breakout Level with Doubled Volume; Once-per-month Continuation Marker Confirming Mid-tier Trend Acceleration without Rigid HOD Pinning)",
         Preset::MegaRangeUpperThirdConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Doubled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Mid-tier Failed-breakdown Trap Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Just past Validated Breakdown Level with Doubled Volume; Once-per-month Bull-reclaim Reversal Day Where Buyers Immediately Reasserted Control after the Break — Mid-tier Bear-trap Marker at the Breakdown Extension)",
+        Preset::MegaRangeUpperThirdDeepBelowYearHighHotVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Doubled Vol + Far below 52w High (≥20 %) (Mid-tier Partial-bull V-bottom Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Deep in Pullback Territory with Doubled Volume; Once-per-month Reversal Day Where Buyers Seized Partial Control after Absorbing Massive Selling — Mid-tier Major-low Marker in Extended Declines without Rigid HOD Pinning)",
+        Preset::MegaRangeUpperThirdDeepAboveYearLowHotVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Doubled Vol + Far above 52w Low (≥20 %) (Mid-tier Partial-bull Deep-recovery Euphoria Signal: Extreme Intraday Range with Close 2x Closer to HOD than LOD Deep in Advance Territory with Doubled Volume; Once-per-month Continuation Day Where Buyers Maintained Partial Control Deep in Extended Advance — Mid-tier Uptrend-resumption Marker in Late-stage Rally without Rigid HOD Pinning)",
     }
 }
 
