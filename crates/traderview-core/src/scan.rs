@@ -1288,6 +1288,8 @@ pub enum Preset {
     MegaRangeDownConfirmedBelowYearLowDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
     MegaRangeUpDeepBelowYearHighDecupledVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + decupled vol + far below 52w high (≥20%) (institutional-scale V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines with maximum-conviction commitment)
     MegaRangeDownDeepAboveYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 10x volume; once-per-year reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances with maximum-conviction commitment)
+    MegaRangeUpMidYearHighDecupledVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range advance from mid-cycle pullback bottom, maximum-conviction swing-trade marker for institutional trend resumption)
+    MegaRangeDownMidYearLowDecupledVol,                      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range decline from mid-cycle recovery top, maximum-conviction swing-trade marker for institutional trend resumption)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8114,6 +8116,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 10.0
                 && hit.year_low_pct >= 20.0
         }
+        Preset::MegaRangeUpMidYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 10.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::MegaRangeDownMidYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 10.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -9292,6 +9308,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownConfirmedBelowYearLowDecupledVol => "Mega Intraday Range (>10 %) + Red Close + Decupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-scale Volcanic Extension past Validated Breakdown: Extreme Intraday Range with Bear-direction Outcome Extending past the Already-cleared Prior Trough with 10x Volume; Once-per-year Maximum-conviction Follow-through Day Confirming Institutional Trend Acceleration)",
         Preset::MegaRangeUpDeepBelowYearHighDecupledVol => "Mega Intraday Range (>10 %) + Green Close + Decupled Vol + Far below 52w High (≥20 %) (Institutional-scale V-bottom Signal: Extreme Intraday Range with Bull-direction Outcome Deep in Pullback Territory with 10x Volume; Once-per-year Reversal Day Where Institutional Buyers Absorbed Massive Selling and Reversed it — Historically a Marker for Major Lows in Extended Declines with Maximum-conviction Commitment)",
         Preset::MegaRangeDownDeepAboveYearLowDecupledVol => "Mega Intraday Range (>10 %) + Red Close + Decupled Vol + Far above 52w Low (≥20 %) (Institutional-scale Waterfall-top Signal: Extreme Intraday Range with Bear-direction Outcome Deep in Advance Territory with 10x Volume; Once-per-year Reversal Day Where Institutional Sellers Overcame Massive Buying and Reversed it — Historically a Marker for Major Highs in Extended Advances with Maximum-conviction Commitment)",
+        Preset::MegaRangeUpMidYearHighDecupledVol => "Mega Intraday Range (>10 %) + Green Close + Decupled Vol + Mid-range from High (5-20 %) (Institutional-scale Mid-cycle Volcanic Rally: Extreme Intraday Range with Bull-direction Outcome in the Proper Consolidation Zone with 10x Volume; Once-per-year Wide-range Advance from Mid-cycle Pullback Bottom, Maximum-conviction Swing-trade Marker for Institutional Trend Resumption)",
+        Preset::MegaRangeDownMidYearLowDecupledVol => "Mega Intraday Range (>10 %) + Red Close + Decupled Vol + Mid-range from Low (5-20 %) (Institutional-scale Mid-cycle Volcanic Decline: Extreme Intraday Range with Bear-direction Outcome in the Proper Consolidation Zone with 10x Volume; Once-per-year Wide-range Decline from Mid-cycle Recovery Top, Maximum-conviction Swing-trade Marker for Institutional Trend Resumption)",
     }
 }
 
