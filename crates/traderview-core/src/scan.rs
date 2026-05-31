@@ -1382,6 +1382,8 @@ pub enum Preset {
     MegaRangeDownDeepAboveYearLowQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + quintupled vol + far above 52w low (≥20%) (institutional-tier waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 5x volume; quarterly-rare reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
     MegaRangeUpMidYearHighQuintupledVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range advance from mid-cycle pullback bottom, institutional swing-trade marker for trend resumption)
     MegaRangeDownMidYearLowQuintupledVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range decline from mid-cycle recovery top, institutional swing-trade marker for trend resumption)
+    MegaRangeUpJustOffYearHighQuintupledVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare wide-range push back toward the breakout level with strong institutional commitment to re-test the prior peak)
+    MegaRangeDownJustOffYearLowQuintupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare wide-range push back toward the breakdown level with strong institutional commitment to re-test the prior trough)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8912,6 +8914,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::MegaRangeUpJustOffYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::MegaRangeDownJustOffYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -10184,6 +10200,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownDeepAboveYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Far above 52w Low (≥20 %) (Institutional-tier Waterfall-top Signal: Extreme Intraday Range with Bear-direction Outcome Deep in Advance Territory with 5x Volume; Quarterly-rare Reversal Day Where Institutional Sellers Overcame Massive Buying and Reversed it — Historically a Marker for Major Highs in Extended Advances)",
         Preset::MegaRangeUpMidYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Green Close + Quintupled Vol + Mid-range from High (5-20 %) (Institutional-tier Mid-cycle Volcanic Rally: Extreme Intraday Range with Bull-direction Outcome in the Proper Consolidation Zone with 5x Volume; Quarterly-rare Wide-range Advance from Mid-cycle Pullback Bottom, Institutional Swing-trade Marker for Trend Resumption)",
         Preset::MegaRangeDownMidYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Mid-range from Low (5-20 %) (Institutional-tier Mid-cycle Volcanic Decline: Extreme Intraday Range with Bear-direction Outcome in the Proper Consolidation Zone with 5x Volume; Quarterly-rare Wide-range Decline from Mid-cycle Recovery Top, Institutional Swing-trade Marker for Trend Resumption)",
+        Preset::MegaRangeUpJustOffYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Green Close + Quintupled Vol + Just off 52w High (2-5 %) (Institutional-tier Post-tag Volcanic Recovery: Extreme Intraday Range with Bull-direction Outcome Immediately after a Shallow Pullback from the 52w High with 5x Volume; Quarterly-rare Wide-range Push back toward the Breakout Level with Strong Institutional Commitment to Re-test the Prior Peak)",
+        Preset::MegaRangeDownJustOffYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Just off 52w Low (2-5 %) (Institutional-tier Post-tag Volcanic Rejection: Extreme Intraday Range with Bear-direction Outcome Immediately after a Shallow Bounce from the 52w Low with 5x Volume; Quarterly-rare Wide-range Push back toward the Breakdown Level with Strong Institutional Commitment to Re-test the Prior Trough)",
     }
 }
 
