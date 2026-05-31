@@ -384,6 +384,36 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::dv_termination` is the **state-specific domestic violence early lease termination table** — sibling to `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Federal **VAWA** (34 U.S.C. § 12491) provides a floor for federally-assisted housing (HUD, Section 8, LIHTC, public housing). State laws extend the protection to the private market and provide affirmative early-termination rights with notice + documentation requirements.
+
+Four notice-period bands + three special cases:
+
+| Band                    | States                                                          |
+|-------------------------|-----------------------------------------------------------------|
+| **3 days**              | IL Safe Homes Act (765 ILCS 750/15) — strictest pro-tenant      |
+| **7 days**              | ME / NM                                                          |
+| **14 days**             | CA § 1946.7 / DC § 42-3505.07 / HI § 521-80 / OR § 90.453 / TN / VT |
+| **28-30 days**          | AZ / CT / DE / IA / IN / LA / MD / MI / MT / NC / ND / NE / NH / NJ / NV / NY § 227-c / PA / RI / SD / TX § 92.0161 / UT / VA / WI |
+| **End of current month**| WA § 59.18.575 (calendar-anchored)                              |
+| **Immediate (0 days)**  | MA § 24 / MN § 504B.206 (immediate with documentation)          |
+| **No fixed period**     | CO § 38-12-402 (statute exists, "reasonable" notice required)   |
+| **No state statute**    | 15 states (VAWA floor only)                                     |
+
+**Documentation requirements** are nearly uniform across states with statutes: at least ONE of (a) protective order, (b) police report, or (c) qualified-third-party statement (medical provider, mental health professional, victim service provider, clergy). Compute returns `documentation_sufficient: true` if any of the three flags is true.
+
+**Documentation freshness window** is state-specific and varies 30 days (CT, IA, NE) → 60 days (DC, IL, NJ, NV, WI) → 90 days (HI, MA, NC, OR, WA) → 180 days (CA, DE, RI) → no requirement (most 30-day-notice states). Notice date - incident date must be within the window. Pinned by `california_180_day_freshness_window` (179 days inside / 181 days outside).
+
+**Three immediate-termination triggers** can override the notice requirement entirely:
+- **Co-tenant violence**: TX § 92.0161(b), AZ, HI, IL, MA, MN, OR allow immediate termination when the abuser is a co-tenant on the lease
+- **Landlord/agent violence**: WA § 59.18.575, AZ, DC, HI, IL, MA, MN, OR allow immediate termination when the abuser is the landlord
+- Compute returns `immediate_termination_available: true` whenever the state's per-trigger flag is set AND the corresponding input flag is true
+
+States WITHOUT a carve-out don't override: setting `violence_by_co_tenant = true` in CA has no effect because CA § 1946.7 still requires the 14-day notice. Pinned by `co_tenant_violence_does_not_trigger_immediate_in_states_without_carveout` (7-day actual still shortfalls by 7 against the 14-day requirement).
+
+**Washington's EndOfCurrentMonth regime** is calendar-anchored, not day-counted — required_notice_days returns None. Notice on Jan 15 → must terminate ≥ Jan 31 (end of month). The `end_of_month()` helper handles year rollover (Dec → next Jan) and short-month February correctly. Pinned by `washington_short_month_february_handled` (Feb 5 notice → Feb 28 end) and `washington_december_notice_wraps_to_dec_31` (Dec 15 notice → Dec 31).
+
+Mounted at `POST /api/rental/dv-termination-check`. Twenty-four tests pin: 51-row coverage; CA 14-day exact boundary + 13-day shortfall; TX 30-day boundary; **IL 3-day strictest band**; WA end-of-month with year-rollover and short-Feb handling (calendar-anchored math regression targets); WA Jan-31 boundary; TX co-tenant violence waives notice; WA landlord violence waives notice; **CA without co-tenant carve-out doesn't waive** (7-day shortfall pinned); documentation sufficient with only protective order; documentation insufficient when all three false; CA 180-day freshness window inside/outside; no-freshness states accept any-age documentation; 15 no-statute states flagged correctly with VAWA-only note; unknown state errors; case-insensitive lookup; sorted `all_states()`; non-empty citations; notice-before-incident negative freshness window; end-of-month boundary same-day; shortfall zero when compliant; shortfall reported only for Days regime not EndOfCurrentMonth (note text carries the explanation instead).
+
 `traderview-expense::lockout_penalties` is the **state-specific self-help eviction penalty table** — sibling to `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Self-help eviction (lockout, utility shutoff, removal of tenant property without court order) is universal landlord exposure — every state prohibits it — but the dollar consequences vary by 10× across jurisdictions.
 
 **Seven distinct penalty regimes** are present in the table:

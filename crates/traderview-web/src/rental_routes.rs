@@ -62,6 +62,9 @@ use traderview_expense::entry_notice::{
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
 };
+use traderview_expense::dv_termination::{
+    check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
+};
 use traderview_expense::lockout_penalties::{
     check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
@@ -169,6 +172,7 @@ pub fn router() -> Router<AppState> {
         .route("/retaliation-check", axum::routing::post(retaliation_check_route))
         .route("/application-fee-check", axum::routing::post(application_fee_check_route))
         .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
+        .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1843,6 +1847,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State domestic-violence early-termination compliance check
+// ---------------------------------------------------------------------------
+
+async fn dv_termination_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DvEarlyTerminationInput>,
+) -> Result<Json<DvEarlyTerminationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_dv_termination(&b)))
 }
 
 // ---------------------------------------------------------------------------
