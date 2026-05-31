@@ -62,6 +62,9 @@ use traderview_expense::entry_notice::{
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
 };
+use traderview_expense::bedbug_disclosure::{
+    check as check_bedbug_disclosure, BedbugCheckInput, BedbugCheckResult,
+};
 use traderview_expense::dv_termination::{
     check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
 };
@@ -197,6 +200,7 @@ pub fn router() -> Router<AppState> {
         .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
         .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
+        .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1871,6 +1875,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State bedbug disclosure + inspection-duty compliance check
+// ---------------------------------------------------------------------------
+
+async fn bedbug_disclosure_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<BedbugCheckInput>,
+) -> Result<Json<BedbugCheckResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_bedbug_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

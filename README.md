@@ -384,6 +384,34 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::bedbug_disclosure` is the **state bedbug disclosure + inspection-duty compliance table** — sibling to `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Recent legislative wave (2009-2024) hit dense urban housing hardest after the post-2000 bedbug resurgence.
+
+**Five regimes** across 51 jurisdictions:
+
+| Regime                              | States                                                                  |
+|-------------------------------------|-------------------------------------------------------------------------|
+| **Pre-lease history disclosure**    | CA Civ. Code § 1954.603 (2017) / NJ N.J.A.C. § 5:10-3                  |
+| **Informational pamphlet only**     | AZ § 33-1319 (SFH exempt) / AL / FL / GA / IL Chicago / MI / MN / NE / NV / OH / OR / PA / RI / SD / TX / WI / WV |
+| **Post-discovery adjacent-unit notice** | NY RPL § 235-j (2010, amended 2024 — 72 hours)                      |
+| **Inspection duty on tenant report** | ME 14 M.R.S. § 6021-A (5d) / KS K.S.A. § 58-2576a (5d) / IA Iowa Code § 562A.15 (7d) / NH RSA § 540-A (7d) |
+| **No statewide statute**            | 24 other states — implied habitability + local ordinances              |
+
+**NY's 72-hour adjacent-unit notice is unique** post-discovery requirement. Once landlord learns of an infestation, written notice to tenants in immediately adjacent units (above/below/side) is required within 72 hours per RPL § 235-j (amended 2024 — previous version required 24 hours to all tenants). Pinned by `ny_is_only_state_with_adjacent_notice_hours` (sweep verifying every other state has `adjacent_notice_hours = None`).
+
+**NY 72-hour boundary is bright-line at exact 72**: complies AT 72h; fails at 73h. Pinned by `ny_72_hour_window_complies_at_exactly_72_hours` + `ny_72_hour_adjacent_notice_violation_at_73_hours`. The clock only starts when landlord LEARNS of infestation — `ny_no_violation_if_no_infestation_learned_of` (1000h without infestation = no violation).
+
+**AZ § 33-1319 single-family home exemption is load-bearing.** AZ explicitly excludes single-family rentals from the bedbug pamphlet regime. CA does NOT have a similar exemption — pre-lease history disclosure required even for single-family. Pinned by `az_single_family_home_exempted` (SFH + missing pamphlet = complies) + `ca_sfh_not_exempted_from_disclosure` (CA SFH + missing disclosure = violation).
+
+**ME 14 M.R.S. § 6021-A inspection duty 5-day boundary.** Tenant report triggers 5-day inspection clock. 6 days without inspection = violation; 5 days exact = within window. Pinned by `me_5_day_inspection_duty_violation_at_6_days` + `me_5_day_window_complies_at_exactly_5_days` + `me_complies_when_inspection_done_even_past_deadline` (30 days post-report but inspection done = complies).
+
+**IA / NH 7-day inspection windows** are the next tier; KS matches ME at 5 days. Pinned by `inspection_duty_states_pinned` (4-state regime sweep with day count assertion).
+
+**Multiple simultaneous violations stack.** CA missing both pre-lease history AND info pamphlet → 2 distinct violation entries. Pinned by `multiple_simultaneous_violations_stack`.
+
+**No-statewide-statute states (24 jurisdictions) always comply** at the state level — implied habitability covenant and local ordinances govern instead. Pinned by `no_statute_states_always_comply` (24-state sweep with all flags missing → still complies).
+
+Mounted at `POST /api/rental/bedbug-disclosure-check`. Twenty-five tests pin: 51-row coverage; CA pre-lease history violation; AZ pamphlet required + **single-family exemption** (load-bearing carve-out); CA SFH not exempted (distinguishes from AZ); **NY 72h boundary** (complies at 72h, fails at 73h, no violation pre-learn, complies if notified); ME 5-day boundary (complies at 5d, fails at 6d, complies if completed); KS 5-day mirror; IA 7-day boundary; NJ pre-lease required; no-statute 24-state sweep always complies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; pre-lease history states (CA/NJ) pinned; **NY-only adjacent-notice sweep** (every other state has None); inspection-duty 4-state sweep (ME/KS = 5d, IA/NH = 7d); multiple violations stack.
+
 `traderview-expense::heat_requirements` is the **state heat minimum temperature compliance table** — winter habitability obligation. Sibling to `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Failure to provide adequate heat is one of the most common habitability violations — leading to rent withholding, code enforcement, and M.G.L. c. 186 § 14 criminal felony exposure for willful interruption.
 
 **Three regimes** across 51 jurisdictions:
