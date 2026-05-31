@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
+        .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -630,6 +631,30 @@ async fn section_170e_route(
         ));
     }
     Ok(Json(traderview_expense::section_170e::compute(&b)))
+}
+
+// ── §7872 below-market loans ─────────────────────────────────────────
+// Mounted at /api/calc/section-7872. Pure compute; AFR imputation
+// for below-market loans; §7872(c)(2)(A) $10k de minimis (gift loans
+// only, no income-producing assets); §7872(d)(1) $100k NII cap with
+// $1k floor; full AFR imputation otherwise.
+
+async fn section_7872_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7872::Section7872Input>,
+) -> Result<Json<traderview_expense::section_7872::Section7872Result>, ApiError> {
+    if b.loan_principal < Decimal::ZERO
+        || b.loan_term_years < Decimal::ZERO
+        || b.actual_interest_rate < Decimal::ZERO
+        || b.applicable_federal_rate < Decimal::ZERO
+        || b.aggregate_outstanding_between_parties < Decimal::ZERO
+        || b.borrower_net_investment_income < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar/rate/term inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_7872::compute(&b)))
 }
 
 // ── §1041 transfers between spouses ──────────────────────────────────

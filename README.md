@@ -949,6 +949,47 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_7872` is the **IRC §7872 below-market loan module** — the family sweetheart loan trap. When a trader lends to family, child, or controlled entity at below-AFR rates, the IRS imputes the missing interest as if charged at the Applicable Federal Rate. Forgone interest becomes income to the lender AND deemed transferred back as gift / compensation / dividend depending on the relationship.
+
+**AFR brackets by loan term** under §1274(d):
+
+| Bracket    | Term                       | Boundary       |
+|------------|----------------------------|----------------|
+| Short-term | ≤ 3 years                  | day 0          |
+| Mid-term   | > 3 and ≤ 9 years          | day 3yr + 1    |
+| Long-term  | > 9 years                  | day 9yr + 1    |
+
+Pinned by `short_term_loan_classified_at_3_year_boundary` (term = 3y exact = short) + `mid_term_loan_at_3_year_plus_boundary` (3.01y = mid) + `mid_term_loan_at_9_year_boundary` (9y exact = mid) + `long_term_loan_at_9_year_plus_boundary` (9.01y = long).
+
+**Two narrow exceptions for GIFT loans ONLY** (no exceptions for compensation or corp-shareholder):
+
+**§7872(c)(2)(A) — $10,000 de minimis.** If aggregate outstanding ≤ $10,000 AND proceeds NOT used for income-producing assets, NO imputation. Both conditions required; pinned by `gift_loan_10k_de_minimis_no_imputation` (passes) + `gift_loan_10001_exceeds_de_minimis` (boundary + 1 fails) + `gift_loan_10k_used_for_income_producing_disables_de_minimis` (income-asset flag kills exception even at $10k).
+
+**§7872(d)(1) — $100,000 NII cap.** Gift loans with aggregate ≤ $100,000:
+- Borrower NII ≤ $1,000 → NO imputation (separate de minimis floor on NII)
+- Borrower NII > $1,000 → imputation CAPPED at borrower's NII (never more)
+
+Pinned by `gift_loan_below_100k_nii_below_1k_no_imputation` + `gift_loan_below_100k_nii_exact_1k_no_imputation` (1k exact = ≤ → exception) + `gift_loan_below_100k_nii_above_1k_capped_at_nii` + `gift_loan_below_100k_nii_caps_higher_raw_forgone` (load-bearing: $3,000 raw forgone capped at $1,500 NII).
+
+**Full AFR imputation** under §7872(a)(1) applies to:
+- Gift loans with aggregate > $100,000 (no NII cap)
+- All compensation-related loans (any size)
+- All corporation/shareholder loans (any size)
+
+Pinned by `gift_loan_above_100k_full_afr_imputation` ($200k × 3% gap = $6,000 imputed, no NII cap) + `compensation_loan_no_de_minimis_no_nii_cap` (even $5k compensation loan gets full imputation) + `corporation_shareholder_loan_no_exceptions` ($8k corp loan still imputed).
+
+**Aggregate-outstanding is the threshold metric, not individual loan principal.** A small $5k loan can fall outside the $10k de minimis if the aggregate between the two parties already exceeds $10k. Pinned by `aggregate_outstanding_threshold_uses_aggregate_not_principal`.
+
+**Boundary thresholds use ≤ on the high side**: $10k = de minimis applies; $10k + 1 = fails. $100k = NII cap applies; $100k + 1 = full imputation. NII $1,000 exact = exception applies. Pinned by individual boundary tests.
+
+**Raw forgone interest is reported even when an exception applies** for diagnostic/documentation purposes. UI can show "would have been $X but exception applies". Pinned by `forgone_raw_reported_even_when_exception_applies` ($300 raw, $0 imputed, both fields present on result).
+
+**Deemed transfer equals imputed income (mirror)**. The lender's imputed interest income and the borrower's deemed gift/comp/dividend are always equal — they're two sides of the same accounting entry. Pinned by `deemed_transfer_equals_imputed_income`.
+
+**Rate ≥ AFR short-circuits with no imputation** regardless of loan type or size. The §7872 rule only fires on below-market loans. Pinned by `rate_meets_afr_no_imputation` (rate = AFR exact) + `rate_above_afr_no_imputation` (rate > AFR).
+
+Mounted at `POST /api/calc/section-7872`. Twenty-four tests pin: rate at/above AFR no imputation; **$10k de minimis** with boundary cases (passes at 10k, fails at 10k+1, income-asset disables); **§7872(d)(1) NII cap** with three sub-paths (≤ $1k no imputation, > $1k capped at NII, cap binds when NII < raw forgone); gift loan > $100k full imputation; compensation + corp-shareholder loans always get full imputation (no exceptions); aggregate-outstanding is the metric not principal; **AFR term classification at 3-year and 9-year boundaries** (both edges per bracket); zero-interest loan = full forgone at AFR; forgone raw reported even on exception paths; **aggregate at $100k exact = NII cap path** (boundary regression target); aggregate > $100k = full imputation; **deemed transfer mirrors imputed income** (accounting consistency pin); very large precision ($10B HNW loan with $300M imputed); note describes rule path per branch (de minimis / NII cap / full imputation).
+
 `traderview-expense::section_1041` is the **IRC §1041 transfers between spouses module** — completes the basis-transfer trio with `section_1014` (death) and `section_1015` (lifetime gift). Critical for HNW divorce property division.
 
 **§1041(a)**: NO gain or loss recognized on transfer between current spouses or former spouses if incident to divorce. The transferor doesn't pay tax on embedded appreciation at transfer.
