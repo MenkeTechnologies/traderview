@@ -45,6 +45,10 @@ use traderview_expense::habitability_remedies::{
     remedies as compute_habitability_remedies, HabitabilityRemediesInput,
     HabitabilityRemediesReport,
 };
+use traderview_expense::security_deposit_caps::{
+    check as check_security_deposit_cap, SecurityDepositCheckInput,
+    SecurityDepositCheckResult,
+};
 use traderview_expense::rent_control::{
     check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
@@ -155,6 +159,8 @@ pub fn router() -> Router<AppState> {
         .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
         // State habitability remedies available to tenants
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
+        // State security deposit cap compliance check
+        .route("/security-deposit-cap-check", axum::routing::post(security_deposit_cap_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1900,6 +1906,26 @@ async fn habitability_remedies_route(
         return Err(ApiError::BadRequest("monthly_rent must be >= 0".into()));
     }
     Ok(Json(compute_habitability_remedies(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State security deposit cap compliance check
+// ---------------------------------------------------------------------------
+
+async fn security_deposit_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SecurityDepositCheckInput>,
+) -> Result<Json<SecurityDepositCheckResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    if b.monthly_rent < Decimal::ZERO || b.proposed_deposit_amount < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "monthly_rent and proposed_deposit_amount must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_security_deposit_cap(&b)))
 }
 
 async fn property_cost_segregation(
