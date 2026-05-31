@@ -1336,6 +1336,8 @@ pub enum Preset {
     MegaRangeTrendDayUpNearYearLowHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + at/near 52w low (<2%) (mid-tier trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with doubled volume; once-per-month maximum-domination capitulation-bottom event — full bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
     MegaRangeTrendDayUpConfirmedAboveYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier trend-day-up follow-through extension: extreme intraday range with HOD-pinned close just past the validated breakout level with doubled volume; once-per-month maximum-domination continuation event — full bull control extending past the cleared prior peak, mid-tier follow-through signature)
     MegaRangeTrendDayUpConfirmedBelowYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier trend-day-up failed-breakdown bull-reclaim reversal: extreme intraday range with HOD-pinned close just past the validated breakdown level with doubled volume; once-per-month maximum-conviction bear-trap reversal event — full bull reversal from open to close after the breakdown failed, mid-tier bear-trap signature)
+    MegaRangeTrendDayUpDeepBelowYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far below 52w high (≥20%) (mid-tier trend-day-up V-bottom reversal: extreme intraday range with HOD-pinned close deep in pullback territory with doubled volume; once-per-month reversal day where buyers completely absorbed massive selling and held the high to close — mid-tier major-low marker in extended declines with HOD-pinned domination)
+    MegaRangeTrendDayUpDeepAboveYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far above 52w low (≥20%) (mid-tier trend-day-up late-stage advance momentum-continuation: extreme intraday range with HOD-pinned close deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained full control from open to close deep in extended advance — mid-tier momentum-acceleration marker in late-stage rally with HOD-pinned conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8524,6 +8526,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= -3.0
                 && hit.year_low_pct <= -1.0
         }
+        Preset::MegaRangeTrendDayUpDeepBelowYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct >= 20.0
+        }
+        Preset::MegaRangeTrendDayUpDeepAboveYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct >= 20.0
+        }
     }
 }
 
@@ -9750,6 +9766,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeTrendDayUpNearYearLowHotVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Doubled Vol + At/near 52w Low (<2 %) (Mid-tier Trend-day-up V-bottom Capitulation-reversal: Extreme Intraday Range with Bull-direction Outcome Closing Rigidly Pinned to HOD at the 52w Trough with Doubled Volume; Once-per-month Maximum-domination Capitulation-bottom Event — Full Bull Reversal from Open to Close Marking the Absolute Low-water Mark with HOD-pinned Conviction)",
         Preset::MegaRangeTrendDayUpConfirmedAboveYearHighHotVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Doubled Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Mid-tier Trend-day-up Follow-through Extension: Extreme Intraday Range with HOD-pinned Close Just past the Validated Breakout Level with Doubled Volume; Once-per-month Maximum-domination Continuation Event — Full Bull Control Extending past the Cleared Prior Peak, Mid-tier Follow-through Signature)",
         Preset::MegaRangeTrendDayUpConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Doubled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Mid-tier Trend-day-up Failed-breakdown Bull-reclaim Reversal: Extreme Intraday Range with HOD-pinned Close Just past the Validated Breakdown Level with Doubled Volume; Once-per-month Maximum-conviction Bear-trap Reversal Event — Full Bull Reversal from Open to Close after the Breakdown Failed, Mid-tier Bear-trap Signature)",
+        Preset::MegaRangeTrendDayUpDeepBelowYearHighHotVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Doubled Vol + Far below 52w High (≥20 %) (Mid-tier Trend-day-up V-bottom Reversal: Extreme Intraday Range with HOD-pinned Close Deep in Pullback Territory with Doubled Volume; Once-per-month Reversal Day Where Buyers Completely Absorbed Massive Selling and Held the High to Close — Mid-tier Major-low Marker in Extended Declines with HOD-pinned Domination)",
+        Preset::MegaRangeTrendDayUpDeepAboveYearLowHotVol => "Mega Intraday Range (>10 %) + Close Pinned to HOD (<0.5 %) + Green Close + Doubled Vol + Far above 52w Low (≥20 %) (Mid-tier Trend-day-up Late-stage Advance Momentum-continuation: Extreme Intraday Range with HOD-pinned Close Deep in Advance Territory with Doubled Volume; Once-per-month Continuation Day Where Buyers Maintained Full Control from Open to Close Deep in Extended Advance — Mid-tier Momentum-acceleration Marker in Late-stage Rally with HOD-pinned Conviction)",
     }
 }
 
