@@ -24,6 +24,9 @@ use traderview_expense::deposit_interest::{accrue as accrue_deposit_interest, Ac
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
+use traderview_expense::section_469::{
+    compute as compute_section_469, Section469Input, Section469Result,
+};
 use traderview_expense::schedule_e::{
     roll_property, roll_report, ExpenseRow, IncomeKind as SeIncomeKind, IncomeRow, MileageRow,
     PropertyInput, PropertyType as SePropertyType, ScheduleECategory, ScheduleEReport,
@@ -65,6 +68,8 @@ pub fn router() -> Router<AppState> {
         .route("/properties/:property_id/depreciation", get(property_depreciation))
         // state-specific security deposit interest accrual
         .route("/deposit-interest", axum::routing::post(deposit_interest_accrue))
+        // §469 passive activity loss limitation calculator
+        .route("/section-469", axum::routing::post(section_469_compute))
 }
 
 // ---------------------------------------------------------------------------
@@ -1528,6 +1533,24 @@ async fn deposit_interest_accrue(
         return Err(ApiError::BadRequest("deposit must be >= 0".into()));
     }
     Ok(Json(accrue_deposit_interest(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// §469 passive activity loss limitation calculator
+// ---------------------------------------------------------------------------
+
+async fn section_469_compute(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<Section469Input>,
+) -> Result<Json<Section469Result>, ApiError> {
+    if b.current_year_loss < Decimal::ZERO {
+        return Err(ApiError::BadRequest("current_year_loss must be >= 0 (pass loss as positive)".into()));
+    }
+    if b.prior_year_carryover < Decimal::ZERO {
+        return Err(ApiError::BadRequest("prior_year_carryover must be >= 0".into()));
+    }
+    Ok(Json(compute_section_469(&b)))
 }
 
 // ---------------------------------------------------------------------------
