@@ -19,6 +19,7 @@ pub mod disposition;
 pub mod foreign_tax_credit;
 pub mod form_8606;
 pub mod home_office;
+pub mod late_fee_caps;
 pub mod manual_entry;
 pub mod meals_50;
 pub mod mileage;

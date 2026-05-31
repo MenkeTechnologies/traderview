@@ -31,6 +31,9 @@ use traderview_expense::cost_segregation::{
     compute as compute_cost_segregation, CostSegInput, CostSegReport,
     PropertyTypeDefault as CostSegPropertyType,
 };
+use traderview_expense::late_fee_caps::{
+    check as check_late_fee, LateFeeCheckInput, LateFeeCheckResult,
+};
 use traderview_expense::section_280a::{
     compute as compute_section_280a, Section280AInput, Section280AResult,
 };
@@ -113,6 +116,8 @@ pub fn router() -> Router<AppState> {
         // Cost segregation + §168(k) bonus depreciation accelerator
         .route("/properties/:property_id/cost-segregation",
             axum::routing::post(property_cost_segregation))
+        // State late-fee cap + grace-period compliance check
+        .route("/late-fee-check", axum::routing::post(late_fee_check_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1721,6 +1726,26 @@ fn parse_cost_seg_type(s: &str) -> Result<CostSegPropertyType, ApiError> {
         "restaurant"        => CostSegPropertyType::Restaurant,
         _ => return Err(ApiError::BadRequest(format!("invalid cost_seg_type: {s}"))),
     })
+}
+
+// ---------------------------------------------------------------------------
+// State late-fee cap + grace-period compliance check
+// ---------------------------------------------------------------------------
+
+async fn late_fee_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LateFeeCheckInput>,
+) -> Result<Json<LateFeeCheckResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    if b.monthly_rent < Decimal::ZERO || b.proposed_late_fee < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "monthly_rent and proposed_late_fee must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_late_fee(&b)))
 }
 
 async fn property_cost_segregation(
