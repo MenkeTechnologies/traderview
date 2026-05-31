@@ -27,6 +27,7 @@ pub mod foreclosure_tenant_rights;
 pub mod foreign_tax_credit;
 pub mod form_8606;
 pub mod habitability_remedies;
+pub mod heat_requirements;
 pub mod just_cause_eviction;
 pub mod home_office;
 pub mod late_fee_caps;

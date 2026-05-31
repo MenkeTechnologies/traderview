@@ -384,6 +384,46 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::heat_requirements` is the **state heat minimum temperature compliance table** — winter habitability obligation. Sibling to `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Failure to provide adequate heat is one of the most common habitability violations — leading to rent withholding, code enforcement, and M.G.L. c. 186 § 14 criminal felony exposure for willful interruption.
+
+**Three regimes** across 51 jurisdictions:
+
+| Regime                              | States                                                       |
+|-------------------------------------|--------------------------------------------------------------|
+| **Specific statute / code**         | NY / MA / IL / MN / CT / NJ / OR / DC / RI / MD / VA / WI / CA (13 with concrete temperatures) |
+| **Implied habitability covenant**   | TX / FL / WA / OH / PA / NM / MT / NV / NH / IN / ND / NE / MI / DE / KS / KY / ME / NC / NH / SC / TN / UT / VT / WV / AZ / AK / CO / IA / OK / SD (~28 with no specific temp; caller applies local code) |
+| **No statewide statute**            | AL / AR / GA / HI / ID / LA / MO / MS / SD / WY (10 states; HI listed because warm climate makes no heat needed) |
+
+**Verified specific-statute rules:**
+
+| State    | Day temp | Day window     | Night temp | Night window    | Heat season       | Outside trigger | Citation                              |
+|----------|----------|----------------|------------|-----------------|--------------------|-----------------|---------------------------------------|
+| NY (NYC) | 68°F     | 6am-10pm       | 62°F       | 10pm-6am        | Oct 1 - May 31    | **< 55°F**      | NYC Admin. Code § 27-2029             |
+| MA       | 68°F     | 7am-11pm       | 64°F       | 11pm-7am        | Sept 16 - Jun 14  | none            | M.G.L. c. 105 § 410.201               |
+| IL       | 68°F     | 8:30am-10:30pm | 66°F       | 10:30pm-8:30am  | Sept 15 - Jun 1   | none            | Chicago Mun. Code § 13-196-410        |
+| MN       | 68°F     | 24/7 (no split) | 68°F      | n/a             | Oct 1 - Apr 30    | none            | Minn. Stat. § 504B.161                |
+| CT       | 65°F     | 24/7           | 65°F       | n/a             | Oct 1 - May 31    | none            | Conn. Gen. Stat. § 47a-7              |
+| NJ       | 68°F     | 6am-11pm       | 65°F       | 11pm-6am        | Oct 1 - May 1     | none            | N.J.A.C. § 5:10-14.3                  |
+| OR       | 68°F     | 6am-10pm       | 60°F       | 10pm-6am        | Oct 1 - May 1     | none            | ORS § 90.320                          |
+| DC       | 68°F     | 6am-11pm       | 65°F       | 11pm-6am        | Oct 1 - May 1     | none            | 14 DCMR § 503                         |
+| RI       | 68°F     | 6am-11pm       | 64°F       | 11pm-6am        | Oct 1 - May 1     | none            | R.I. Gen. Laws § 45-24.3-8            |
+| MD       | 68°F     | 7am-11pm       | 65°F       | 11pm-7am        | Oct 1 - May 1     | none            | Md. Code Real Prop. § 8-211           |
+| VA       | 68°F     | 6am-11pm       | 65°F       | 11pm-6am        | Oct 15 - May 1    | none            | Va. Code § 36-105                     |
+| WI       | 67°F     | 24/7           | 67°F       | n/a             | Oct 1 - Apr 30    | none            | Wis. Admin. Code § ATCP 134.04        |
+| CA       | 70°F     | 24/7           | 70°F       | n/a             | Nov 1 - May 31    | none            | Cal. Code Regs. tit. 25 § 34          |
+
+**NY's 55°F outside-temperature trigger is load-bearing and unique to NY.** The NYC Heat Law's daytime 68°F requirement only fires when outside temp drops below 55°F. Every other state requires continuous compliance during heat season regardless of outside temperature. Pinned by `ny_is_only_state_with_outside_trigger` (sweep verifying every other state has `outside_temp_trigger_f = None`) + `ny_day_outside_above_55_disengages_requirement` (60°F outside = no requirement, complies even at 60°F indoor) + `ma_no_outside_temp_trigger_continuous_requirement` (MA fails at 67°F even with 70°F outside).
+
+**Night requirement is unconditional**. NY's nighttime 62°F applies regardless of outside temp — the 55°F trigger gates only the daytime window. Pinned by `night_window_outside_trigger_does_not_apply` (2am, indoor 60°F, outside 80°F → still fails the 62°F night requirement).
+
+**Heat season wrap-around math is load-bearing.** Most heat seasons span the calendar boundary (Oct 1 - May 31 wraps past Jan 1). The `in_heat_season` helper handles `start_month > end_month` correctly. Pinned by `ny_heat_season_wraps_past_jan_1` (Jan 15 is in NY's Oct-May season) + `ny_heat_season_boundary_oct_1_in_season` + `ny_heat_season_boundary_sep_30_out_of_season` (one-day boundaries) + MA September boundary tests.
+
+**Day vs night boundary** is a half-open interval `[day_start, night_start)`. NY at hour 22 (10pm) exact = night (start of night window); hour 21 (9pm) = day. Pinned by `ny_day_night_boundary_at_22_hour`.
+
+**Hawaii is listed as no-statewide-statute deliberately** — warm climate makes heat moot; the no_statute classification is correct rather than a coverage gap. Pinned by `hawaii_no_statewide_statute`.
+
+Mounted at `POST /api/rental/heat-requirements-check`. Twenty-six tests pin: 51-row coverage; **NY day 68°F when outside < 55°F** + **NY outside ≥ 55°F disengages** + **NY night 62°F regardless of outside**; NY heat-season boundary (Oct 1 in season, Sept 30 out of season, Jan 15 wraps); MA day 68 / night 64 with 7am-11pm split + MA continuous requirement (no outside trigger); MN single temp 68 no day/night split; CT 65°F with 24/7 application; **habitability-only states (7-state sweep) return complies=true with habitability_only flag**; **no-statute states (9-state sweep) return complies=true with no_statute flag**; Hawaii no-statute deliberately; MA Sept 16/15 season boundary; unknown state handled; case-insensitive; sorted all_states; non-empty citations; specific-statute states pinned (13-state regime sweep); **NY-only outside-trigger pin** (sweep verifying NoTrigger on all other 50 states); shortfall math correct; **NY day-night boundary at hour 22** (half-open interval pin); night window unconditional vs outside trigger.
+
 `traderview-expense::foreclosure_tenant_rights` is the **federal PTFA + state foreclosure tenant rights compliance table** — sibling to `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **Federal floor (universal)**: Protecting Tenants at Foreclosure Act (PTFA) — enacted 2009 as Title VII of the Helping Families Save Their Homes Act, sunset in 2014, then **permanently reinstated in 2018** by § 304 of the Economic Growth, Regulatory Relief, and Consumer Protection Act (EGRRCPA). Two core protections:
