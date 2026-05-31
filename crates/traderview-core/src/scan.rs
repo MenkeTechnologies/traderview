@@ -1384,6 +1384,8 @@ pub enum Preset {
     MegaRangeDownMidYearLowQuintupledVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range decline from mid-cycle recovery top, institutional swing-trade marker for trend resumption)
     MegaRangeUpJustOffYearHighQuintupledVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare wide-range push back toward the breakout level with strong institutional commitment to re-test the prior peak)
     MegaRangeDownJustOffYearLowQuintupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare wide-range push back toward the breakdown level with strong institutional commitment to re-test the prior trough)
+    MegaRangeMidpointCloseNearYearHighQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w high (<2%) (institutional-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 5x volume ends with balanced midpoint close; quarterly-rare exhaustion-or-continuation showdown at the absolute high-water mark with strong institutional commitment on both sides)
+    MegaRangeMidpointCloseNearYearLowQuintupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w low (<2%) (institutional-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 5x volume ends with balanced midpoint close; quarterly-rare capitulation-or-reversal showdown at the absolute low-water mark with strong institutional commitment on both sides)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8928,6 +8930,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::MegaRangeMidpointCloseNearYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::MegaRangeMidpointCloseNearYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -10202,6 +10220,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownMidYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Mid-range from Low (5-20 %) (Institutional-tier Mid-cycle Volcanic Decline: Extreme Intraday Range with Bear-direction Outcome in the Proper Consolidation Zone with 5x Volume; Quarterly-rare Wide-range Decline from Mid-cycle Recovery Top, Institutional Swing-trade Marker for Trend Resumption)",
         Preset::MegaRangeUpJustOffYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Green Close + Quintupled Vol + Just off 52w High (2-5 %) (Institutional-tier Post-tag Volcanic Recovery: Extreme Intraday Range with Bull-direction Outcome Immediately after a Shallow Pullback from the 52w High with 5x Volume; Quarterly-rare Wide-range Push back toward the Breakout Level with Strong Institutional Commitment to Re-test the Prior Peak)",
         Preset::MegaRangeDownJustOffYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Red Close + Quintupled Vol + Just off 52w Low (2-5 %) (Institutional-tier Post-tag Volcanic Rejection: Extreme Intraday Range with Bear-direction Outcome Immediately after a Shallow Bounce from the 52w Low with 5x Volume; Quarterly-rare Wide-range Push back toward the Breakdown Level with Strong Institutional Commitment to Re-test the Prior Trough)",
+        Preset::MegaRangeMidpointCloseNearYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + At/near 52w High (<2 %) (Institutional-tier Peak-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Peak with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Exhaustion-or-continuation Showdown at the Absolute High-water Mark with Strong Institutional Commitment on Both Sides)",
+        Preset::MegaRangeMidpointCloseNearYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + At/near 52w Low (<2 %) (Institutional-tier Trough-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Trough with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Capitulation-or-reversal Showdown at the Absolute Low-water Mark with Strong Institutional Commitment on Both Sides)",
     }
 }
 
