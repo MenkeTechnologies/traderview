@@ -1260,6 +1260,8 @@ pub enum Preset {
     MegaRangeDownJustOffYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + doubled vol + just off 52w low (2-5%) (post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low; rare wide-range push back toward the breakdown level with maximum-energy commitment to re-test the prior trough)
     MegaRangeFlatDayGapUpHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct > 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-up day + doubled vol (extreme two-way fight after gap up: vol doubled, overnight gap up but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
     MegaRangeFlatDayGapDownHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct < 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-down day + doubled vol (extreme two-way fight after gap down: vol doubled, overnight gap down but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
+    MegaRangeUpperThirdHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in upper third of range (not pinned to HOD) + doubled vol (wide-range partial bull day: extreme intraday volatility with close 2x closer to HOD than to LOD but not rigid; partial bull-control after intense two-way action where buyers held the upper hand without fully dominating)
+    MegaRangeLowerThirdHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in lower third of range (not pinned to LOD) + doubled vol (wide-range partial bear day: extreme intraday volatility with close 2x closer to LOD than to HOD but not rigid; partial bear-control after intense two-way action where sellers held the upper hand without fully dominating)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7864,6 +7866,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct < 0.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MegaRangeUpperThirdHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MegaRangeLowerThirdHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -9014,6 +9028,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeDownJustOffYearLowHotVol => "Mega Intraday Range (>10 %) + Red Close + Doubled Vol + Just off 52w Low (2-5 %) (Post-tag Volcanic Rejection: Extreme Intraday Range with Bear-direction Outcome Immediately after a Shallow Bounce from the 52w Low; Rare Wide-range Push back toward the Breakdown Level with Maximum-energy Commitment to Re-test the Prior Trough)",
         Preset::MegaRangeFlatDayGapUpHotVol => "Mega Intraday Range (>10 %) + Flat Intraday Bar (|day_pct|<0.5 %) + Gap-up Day + Doubled Vol (Extreme Two-way Fight after Gap up: Vol Doubled, Overnight Gap up but Regular Session Prints a >10 % Range that Ends Right Where It Opened; Massive Whipsaw Indecision Day Where Neither Side Won despite Full Participation)",
         Preset::MegaRangeFlatDayGapDownHotVol => "Mega Intraday Range (>10 %) + Flat Intraday Bar (|day_pct|<0.5 %) + Gap-down Day + Doubled Vol (Extreme Two-way Fight after Gap down: Vol Doubled, Overnight Gap down but Regular Session Prints a >10 % Range that Ends Right Where It Opened; Massive Whipsaw Indecision Day Where Neither Side Won despite Full Participation)",
+        Preset::MegaRangeUpperThirdHotVol => "Mega Intraday Range (>10 %) + Close in Upper Third of Range (Not Pinned to HOD) + Doubled Vol (Wide-range Partial Bull Day: Extreme Intraday Volatility with Close 2x Closer to HOD than to LOD but Not Rigid; Partial Bull-control after Intense Two-way Action Where Buyers Held the Upper Hand without Fully Dominating)",
+        Preset::MegaRangeLowerThirdHotVol => "Mega Intraday Range (>10 %) + Close in Lower Third of Range (Not Pinned to LOD) + Doubled Vol (Wide-range Partial Bear Day: Extreme Intraday Volatility with Close 2x Closer to LOD than to HOD but Not Rigid; Partial Bear-control after Intense Two-way Action Where Sellers Held the Upper Hand without Fully Dominating)",
     }
 }
 
