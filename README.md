@@ -421,6 +421,27 @@ Each row carries `Citation { statute, source }` — the published statute refere
 
 Mounted at `POST /api/rental/late-fee-check`. Eighteen tests pin: NY uses lesser of $50 or 5% (at $2k rent → $50 cap, not $100); NY proposed above $50 not compliant; NY grace violation at 3 days < 5; NC greater of $15 or 5% — $50 at $1k rent, $15 at $200 rent; CO $50 floor at $500 rent, 5% at $5k rent; MA 30-day grace blocks early fee; MN 8%; TX 12% safe harbor; CA reasonableness flag (compliant=true with `reasonableness_review_required=true`); unknown state defaults to "no statutory cap" + reasonableness review; case-insensitive lookup; citation correctness for MD/NY/TX; grace satisfaction at exactly the grace day; VA 10%; ME 4% with 15-day grace; NY at 3% with $1k rent under both caps.
 
+`traderview-expense::military_termination` is the **federal SCRA + state military lease termination table** — the tenth state-data module after `deposit_interest`, `late_fee_caps`, `eviction_notices`, `contractor_1099`, `deposit_return_windows`, `lease_disclosures`, `rent_control`, `habitability_remedies`, and `security_deposit_caps`. Landlords near military bases (Fort Cavazos, Camp Pendleton, Fort Bragg, Norfolk) routinely encounter this.
+
+**Federal Servicemembers Civil Relief Act** (50 USC §3955) applies in every state. An active-duty servicemember may terminate any residential lease for any of three **qualifying events**:
+
+1. **Permanent change of station** orders (PCS).
+2. **Deployment ≥ 90 days** with their unit.
+3. **Active duty after lease signing** (entry from reserve or new enlistment).
+
+Mechanics: written notice with copy of orders → termination effective on **the next rent-due date 30+ days after notice**. Landlord cannot charge an early-termination fee. **Civil penalty up to $55,000** for first violation, $110,000 thereafter (15 USC §15), plus tenant's actual damages and equitable relief.
+
+State law layers ADDITIONAL protections on top of the federal floor. 11 states modeled (CA, NY, TX, FL, VA, WA, IL, CO, NJ, NC, PA) with the following extension dimensions:
+
+- **Spouse termination right** — CA, NY, TX, FL, VA, IL, CO, NC. Civilian spouse may terminate when the servicemember PCSs or deploys.
+- **Dependent termination right** — CA, TX, VA, NC. Extends to dependents living with the servicemember.
+- **First-responder termination right** — TX only (Tex. Prop. Code §92.017 unique extension to peace officers, firefighters, EMS reassigned ≥ 50 miles).
+- **Modified notice days** — most states match federal 30; future expansions may use shorter periods.
+
+When neither federal SCRA nor state extension applies, `termination_right_available` returns false (e.g. spouse in WA, where state recognizes federal SCRA but doesn't extend to spouses, and federal doesn't extend to spouses). `controlling_authority` returns "50 U.S.C. §3955 (SCRA)" when federal qualifies, "state extension (statute)" otherwise.
+
+Mounted at `POST /api/rental/military-termination-check`. Twenty-one tests pin: federal SCRA PCS servicemember qualifies; federal deployment ≥ 90 days qualifies; federal active duty after signing qualifies; CA spouse extension applies (federal doesn't extend); CA dependent extension applies; **TX first responder extension is unique** (only TX extends); CA first responder NOT extended (unlike TX); NJ codifies SCRA but no extra extensions (spouse doesn't qualify); NJ servicemember PCS federal still applies; unknown state federal SCRA still applies (returns `state_recognized: false`); unknown state + spouse role no termination right; case-insensitive state lookup; NC extends to spouse + dependent; NY extends to spouse only (not dependent); FL spouse extension; VA dependent extension; WA servicemember PCS qualifies under federal; WA spouse no state extension no federal no right; citation present for known states; controlling authority prefers federal when applicable; controlling authority falls to state extension for spouse.
+
 `traderview-expense::security_deposit_caps` is the **state security deposit maximum amount table** — the ninth state-data module after `deposit_interest`, `late_fee_caps`, `eviction_notices`, `contractor_1099`, `deposit_return_windows`, `lease_disclosures`, `rent_control`, and `habitability_remedies`. Most states cap how much a landlord can require as a security deposit; collecting in excess voids the excess + may trigger statutory penalties (MD 3× excess + attorney's fees the strictest).
 
 14 states modeled (CA, NY, MA, NJ, VA, DC, MD, NV, OR, MI, IA, DE, KS, IL). Cap range from **0 months (no statutory cap — IL state level)** to **3 months (NV — highest in country)**. The applicable cap is the maximum of three potential values:

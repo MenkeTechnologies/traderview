@@ -45,6 +45,10 @@ use traderview_expense::habitability_remedies::{
     remedies as compute_habitability_remedies, HabitabilityRemediesInput,
     HabitabilityRemediesReport,
 };
+use traderview_expense::military_termination::{
+    check as check_military_termination, MilitaryTerminationCheckInput,
+    MilitaryTerminationCheckResult,
+};
 use traderview_expense::security_deposit_caps::{
     check as check_security_deposit_cap, SecurityDepositCheckInput,
     SecurityDepositCheckResult,
@@ -161,6 +165,8 @@ pub fn router() -> Router<AppState> {
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
         // State security deposit cap compliance check
         .route("/security-deposit-cap-check", axum::routing::post(security_deposit_cap_route))
+        // Federal SCRA + state military lease termination check
+        .route("/military-termination-check", axum::routing::post(military_termination_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1926,6 +1932,21 @@ async fn security_deposit_cap_route(
         ));
     }
     Ok(Json(check_security_deposit_cap(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal SCRA + state military lease termination check
+// ---------------------------------------------------------------------------
+
+async fn military_termination_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MilitaryTerminationCheckInput>,
+) -> Result<Json<MilitaryTerminationCheckResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    Ok(Json(check_military_termination(&b)))
 }
 
 async fn property_cost_segregation(

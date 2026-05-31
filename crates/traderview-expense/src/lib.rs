@@ -28,6 +28,7 @@ pub mod lease_disclosures;
 pub mod manual_entry;
 pub mod meals_50;
 pub mod mileage;
+pub mod military_termination;
 pub mod mlp_ubti;
 pub mod mtm_475f;
 pub mod niit;
