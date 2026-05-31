@@ -1328,6 +1328,8 @@ pub enum Preset {
     MegaRangeTrendDayDownConfirmedBelowYearLowDecupledVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale trend-day-down confirmed-breakdown follow-through extension: extreme intraday range with LOD-pinned close just past the validated breakdown level with 10x volume; once-per-year maximum-domination continuation event — full institutional bear control extending past the cleared prior trough, the strongest possible bear-follow-through signature)
     MegaRangeTrendDayDownDeepBelowYearHighDecupledVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far below 52w high (≥20%) (institutional-scale trend-day-down deep-pullback capitulation extension: extreme intraday range with LOD-pinned close deep in pullback territory with 10x volume; once-per-year maximum-conviction capitulation event — full institutional bear control from open to close deep in extended decline, the strongest possible bear-trend acceleration signature in late-stage selloff with LOD-pinned domination)
     MegaRangeTrendDayDownDeepAboveYearLowDecupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale trend-day-down waterfall-top full reversal: extreme intraday range with LOD-pinned close deep in advance territory with 10x volume; once-per-year maximum-conviction reversal event — full institutional bear reversal from open to close after absorbing massive buying — historically the strongest possible major-high marker in extended advances with LOD-pinned domination)
+    MegaRangeTrendDayDownMidYearHighDecupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from high (5-20%) (institutional-scale trend-day-down mid-cycle pullback-continuation: extreme intraday range with LOD-pinned close in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle distribution-acceleration signature from pullback top with full LOD-pinned institutional bear conviction)
+    MegaRangeTrendDayDownMidYearLowDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale trend-day-down mid-cycle recovery-rejection: extreme intraday range with LOD-pinned close in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle recovery-failure signature from bounce top with full LOD-pinned institutional bear conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8454,6 +8456,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 10.0
                 && hit.year_low_pct >= 20.0
         }
+        Preset::MegaRangeTrendDayDownMidYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 10.0
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+        }
+        Preset::MegaRangeTrendDayDownMidYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() < 0.5
+                && hit.rel_volume >= 10.0
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+        }
     }
 }
 
@@ -9672,6 +9690,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeTrendDayDownConfirmedBelowYearLowDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to LOD (<0.5 %) + Red Close + Decupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-scale Trend-day-down Confirmed-breakdown Follow-through Extension: Extreme Intraday Range with LOD-pinned Close Just past the Validated Breakdown Level with 10x Volume; Once-per-year Maximum-domination Continuation Event — Full Institutional Bear Control Extending past the Cleared Prior Trough, the Strongest Possible Bear-follow-through Signature)",
         Preset::MegaRangeTrendDayDownDeepBelowYearHighDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to LOD (<0.5 %) + Red Close + Decupled Vol + Far below 52w High (≥20 %) (Institutional-scale Trend-day-down Deep-pullback Capitulation Extension: Extreme Intraday Range with LOD-pinned Close Deep in Pullback Territory with 10x Volume; Once-per-year Maximum-conviction Capitulation Event — Full Institutional Bear Control from Open to Close Deep in Extended Decline, the Strongest Possible Bear-trend Acceleration Signature in Late-stage Selloff with LOD-pinned Domination)",
         Preset::MegaRangeTrendDayDownDeepAboveYearLowDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to LOD (<0.5 %) + Red Close + Decupled Vol + Far above 52w Low (≥20 %) (Institutional-scale Trend-day-down Waterfall-top Full Reversal: Extreme Intraday Range with LOD-pinned Close Deep in Advance Territory with 10x Volume; Once-per-year Maximum-conviction Reversal Event — Full Institutional Bear Reversal from Open to Close after Absorbing Massive Buying — Historically the Strongest Possible Major-high Marker in Extended Advances with LOD-pinned Domination)",
+        Preset::MegaRangeTrendDayDownMidYearHighDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to LOD (<0.5 %) + Red Close + Decupled Vol + Mid-range from High (5-20 %) (Institutional-scale Trend-day-down Mid-cycle Pullback-continuation: Extreme Intraday Range with LOD-pinned Close in Proper Consolidation Zone below the Prior Peak with 10x Volume; Once-per-year Swing-trade Marker — Strongest Possible Mid-cycle Distribution-acceleration Signature from Pullback Top with Full LOD-pinned Institutional Bear Conviction)",
+        Preset::MegaRangeTrendDayDownMidYearLowDecupledVol => "Mega Intraday Range (>10 %) + Close Pinned to LOD (<0.5 %) + Red Close + Decupled Vol + Mid-range from Low (5-20 %) (Institutional-scale Trend-day-down Mid-cycle Recovery-rejection: Extreme Intraday Range with LOD-pinned Close in Proper Consolidation Zone above the Prior Trough with 10x Volume; Once-per-year Swing-trade Marker — Strongest Possible Mid-cycle Recovery-failure Signature from Bounce Top with Full LOD-pinned Institutional Bear Conviction)",
     }
 }
 
