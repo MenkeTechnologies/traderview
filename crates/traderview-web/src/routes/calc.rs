@@ -45,6 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
+        .route("/calc/section-163j",          post(section_163j_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -375,6 +376,29 @@ async fn section_1045_route(
         ));
     }
     Ok(Json(traderview_expense::section_1045::compute(&b)))
+}
+
+// ── §163(j) business interest limitation ─────────────────────────────
+// Mounted at /api/calc/section-163j. Pure compute; caps margin interest
+// deduction at 30% × ATI + business interest income + floor plan
+// financing for §475(f) traders. Indefinite carryforward; small-business
+// exception ($30M gross receipts for 2024) bypasses the cap entirely.
+
+async fn section_163j_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_163j::Section163jInput>,
+) -> Result<Json<traderview_expense::section_163j::Section163jResult>, ApiError> {
+    if b.business_interest_expense < Decimal::ZERO
+        || b.business_interest_income < Decimal::ZERO
+        || b.floor_plan_financing_interest < Decimal::ZERO
+        || b.prior_year_carryforward < Decimal::ZERO
+        || b.avg_3yr_gross_receipts < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_163j::compute(&b)))
 }
 
 // ── §469(c)(7) Real Estate Professional Status qualification ─────────
