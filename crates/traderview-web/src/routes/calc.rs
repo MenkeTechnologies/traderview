@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
+        .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -409,6 +410,31 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §163(d) investment interest expense limitation ───────────────────
+// Mounted at /api/calc/section-163d. Pure compute; investment
+// interest deductible only up to net investment income, indefinite
+// carryforward. Models the §1(h)(11)(D)(i) QD election and
+// §163(d)(4)(B)(iii) LTCG election that boost the limit but forfeit
+// preferential rates.
+
+async fn section_163d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_163d::Section163dInput>,
+) -> Result<Json<traderview_expense::section_163d::Section163dResult>, ApiError> {
+    if b.investment_interest_expense < Decimal::ZERO
+        || b.interest_income < Decimal::ZERO
+        || b.ordinary_dividends < Decimal::ZERO
+        || b.qualified_dividends < Decimal::ZERO
+        || b.other_investment_expenses < Decimal::ZERO
+        || b.prior_year_carryforward < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_163d::compute(&b)))
 }
 
 // ── §280F luxury auto depreciation cap ───────────────────────────────
