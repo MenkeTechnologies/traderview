@@ -47,6 +47,7 @@ pub mod section_1244;
 pub mod section_1031_f;
 pub mod section_1256;
 pub mod section_1259;
+pub mod section_1295;
 pub mod section_1296;
 pub mod section_163d;
 pub mod section_163j;

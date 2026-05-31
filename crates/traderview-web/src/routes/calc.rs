@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
+        .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -411,6 +412,27 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §1295 PFIC Qualified Electing Fund election ──────────────────────
+// Mounted at /api/calc/section-1295. Pure compute; pro-rata
+// inclusion of PFIC ordinary earnings + net capital gain per §1293.
+// Character preserved (LTCG stays LTCG). Basis + PTI account
+// evolution; previously-taxed-income distribution excluded from gross.
+
+async fn section_1295_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1295::Section1295Input>,
+) -> Result<Json<traderview_expense::section_1295::Section1295Result>, ApiError> {
+    if b.adjusted_basis_year_start < Decimal::ZERO
+        || b.distributions_received < Decimal::ZERO
+        || b.pti_account_year_start < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "adjusted_basis_year_start, distributions_received, pti_account_year_start must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1295::compute(&b)))
 }
 
 // ── §864(b)(2) non-US trader/investor safe harbor ────────────────────
