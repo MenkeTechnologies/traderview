@@ -15,6 +15,7 @@ pub mod log_mw;
 pub mod rate_limit;
 pub mod realtime;
 pub mod receipt_routes;
+pub mod rental_routes;
 pub mod risk_gate_routes;
 pub mod routes;
 pub mod state;
