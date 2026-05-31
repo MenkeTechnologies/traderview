@@ -1372,6 +1372,8 @@ pub enum Preset {
     MegaRangeLowerThirdMidYearLowHotVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + mid-range from low (5-20%) (mid-tier mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker for recovery-failure from mid-cycle bounce top without rigid LOD pinning)
     MegaRangeLowerThirdJustOffYearHighHotVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w high (2-5%) (mid-tier post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test marker confirming rejection from the breakout level with partial-bear commitment without rigid LOD pinning)
     MegaRangeLowerThirdJustOffYearLowHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w low (2-5%) (mid-tier post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test marker confirming failed-bounce rejection back toward the breakdown level with partial-bear commitment without rigid LOD pinning)
+    MegaRangeMidpointCloseAtYearHighHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w high (<2%) (mid-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with doubled volume ends with balanced midpoint close; once-per-month exhaustion-or-continuation showdown at the absolute high-water mark)
+    MegaRangeMidpointCloseAtYearLowHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w low (<2%) (mid-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with doubled volume ends with balanced midpoint close; once-per-month capitulation-or-reversal showdown at the absolute low-water mark)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8834,6 +8836,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::MegaRangeMidpointCloseAtYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_high_pct < 2.0
+        }
+        Preset::MegaRangeMidpointCloseAtYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 2.0
+                && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -10096,6 +10114,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeLowerThirdMidYearLowHotVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Doubled Vol + Mid-range from Low (5-20 %) (Mid-tier Mid-cycle Partial-bear Recovery-rejection: Extreme Intraday Range with Close 2x Closer to LOD than HOD in Proper Consolidation Zone above the Prior Trough with Doubled Volume; Once-per-month Swing-trade Marker for Recovery-failure from Mid-cycle Bounce Top without Rigid LOD Pinning)",
         Preset::MegaRangeLowerThirdJustOffYearHighHotVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Doubled Vol + Just off 52w High (2-5 %) (Mid-tier Post-tag Partial-bear Retracement-continuation: Extreme Intraday Range with Close 2x Closer to LOD than HOD Immediately after a Shallow Pullback from the 52w High with Doubled Volume; Once-per-month Re-test Marker Confirming Rejection from the Breakout Level with Partial-bear Commitment without Rigid LOD Pinning)",
         Preset::MegaRangeLowerThirdJustOffYearLowHotVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Doubled Vol + Just off 52w Low (2-5 %) (Mid-tier Post-tag Partial-bear Bounce-rejection: Extreme Intraday Range with Close 2x Closer to LOD than HOD Immediately after a Shallow Bounce from the 52w Low with Doubled Volume; Once-per-month Re-test Marker Confirming Failed-bounce Rejection back toward the Breakdown Level with Partial-bear Commitment without Rigid LOD Pinning)",
+        Preset::MegaRangeMidpointCloseAtYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Doubled Vol + At 52w High (<2 %) (Mid-tier Peak-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Peak with Doubled Volume Ends with Balanced Midpoint Close; Once-per-month Exhaustion-or-continuation Showdown at the Absolute High-water Mark)",
+        Preset::MegaRangeMidpointCloseAtYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Doubled Vol + At 52w Low (<2 %) (Mid-tier Trough-day Wide-range Standoff: Extreme Two-way Intraday Battle at the 52w Trough with Doubled Volume Ends with Balanced Midpoint Close; Once-per-month Capitulation-or-reversal Showdown at the Absolute Low-water Mark)",
     }
 }
 
