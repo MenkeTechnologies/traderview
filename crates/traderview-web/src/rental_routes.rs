@@ -31,6 +31,9 @@ use traderview_expense::cost_segregation::{
     compute as compute_cost_segregation, CostSegInput, CostSegReport,
     PropertyTypeDefault as CostSegPropertyType,
 };
+use traderview_expense::eviction_notices::{
+    check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
+};
 use traderview_expense::late_fee_caps::{
     check as check_late_fee, LateFeeCheckInput, LateFeeCheckResult,
 };
@@ -118,6 +121,8 @@ pub fn router() -> Router<AppState> {
             axum::routing::post(property_cost_segregation))
         // State late-fee cap + grace-period compliance check
         .route("/late-fee-check", axum::routing::post(late_fee_check_route))
+        // State eviction-notice period lookup
+        .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1746,6 +1751,21 @@ async fn late_fee_check_route(
         ));
     }
     Ok(Json(check_late_fee(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State eviction-notice period lookup
+// ---------------------------------------------------------------------------
+
+async fn eviction_notice_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<NoticeCheckInput>,
+) -> Result<Json<NoticeCheckResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    Ok(Json(check_eviction_notice(&b)))
 }
 
 async fn property_cost_segregation(

@@ -16,6 +16,7 @@ pub mod dedup;
 pub mod depreciation;
 pub mod deposit_interest;
 pub mod disposition;
+pub mod eviction_notices;
 pub mod foreign_tax_credit;
 pub mod form_8606;
 pub mod home_office;
