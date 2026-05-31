@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
+        .route("/calc/section-481",           post(section_481_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -407,6 +408,19 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §481(a) accounting method change adjustment ──────────────────────
+// Mounted at /api/calc/section-481. Pure compute; cumulative MTM
+// adjustment for §475(f) trader-status election, 4-year ratable
+// spread on positive (gain) per Rev. Proc. 2015-13, immediate
+// recognition on negative (loss).
+
+async fn section_481_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_481::Section481Input>,
+) -> Result<Json<traderview_expense::section_481::Section481Result>, ApiError> {
+    Ok(Json(traderview_expense::section_481::compute(&b)))
 }
 
 // ── §1031(f) related-party 2-year clawback ───────────────────────────
