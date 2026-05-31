@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-871m",          post(section_871m_route))
+        .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -439,6 +440,25 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────
+// Mounted at /api/calc/section-408-d3. Pure compute; validates that
+// an indirect IRA rollover satisfies (a) 60-day deposit window,
+// (b) Bobrow once-per-12-months aggregated across all IRAs, with
+// §408(d)(3)(I) hardship-waiver path and §72(t) 10% early withdrawal
+// penalty calculation on failed rollovers.
+
+async fn section_408_d3_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_408_d3::Section408D3Input>,
+) -> Result<Json<traderview_expense::section_408_d3::Section408D3Result>, ApiError> {
+    if b.distribution_amount < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "distribution_amount must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_408_d3::compute(&b)))
 }
 
 // ── §871(m) dividend-equivalent withholding for non-US persons ───────
