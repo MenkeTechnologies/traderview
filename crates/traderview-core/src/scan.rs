@@ -1264,6 +1264,8 @@ pub enum Preset {
     MegaRangeLowerThirdHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in lower third of range (not pinned to LOD) + doubled vol (wide-range partial bear day: extreme intraday volatility with close 2x closer to LOD than to HOD but not rigid; partial bear-control after intense two-way action where sellers held the upper hand without fully dominating)
     MegaRangeMidpointCloseNearYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w high (<2%) + doubled vol (wide-range standoff at the year peak: extreme intraday volatility ends with balanced midpoint close right at the 52w high; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
     MegaRangeMidpointCloseNearYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w low (<2%) + doubled vol (wide-range standoff at the year trough: extreme intraday volatility ends with balanced midpoint close right at the 52w low; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
+    MegaRangeMidpointCloseConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakout zone (1-3% past 52w high) + doubled vol (post-breakout wide-range standoff: extreme intraday volatility past the prior peak ends in balanced midpoint close; breakout being tested with maximum-energy two-way fight, next-day resolves whether the breakout sticks or fails)
+    MegaRangeMidpointCloseConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + doubled vol (post-breakdown wide-range standoff: extreme intraday volatility past the prior trough ends in balanced midpoint close; breakdown being tested with maximum-energy two-way fight, next-day resolves whether the breakdown sticks or fails)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7896,6 +7898,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 2.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MegaRangeMidpointCloseConfirmedAboveYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MegaRangeMidpointCloseConfirmedBelowYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -9050,6 +9070,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeLowerThirdHotVol => "Mega Intraday Range (>10 %) + Close in Lower Third of Range (Not Pinned to LOD) + Doubled Vol (Wide-range Partial Bear Day: Extreme Intraday Volatility with Close 2x Closer to LOD than to HOD but Not Rigid; Partial Bear-control after Intense Two-way Action Where Sellers Held the Upper Hand without Fully Dominating)",
         Preset::MegaRangeMidpointCloseNearYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + At/near 52w High (<2 %) + Doubled Vol (Wide-range Standoff at the Year Peak: Extreme Intraday Volatility Ends with Balanced Midpoint Close Right at the 52w High; Failed-break-or-resume Indecision Day at Maximum Significance — Next-day Directional Resolution Carries the Wider Trend)",
         Preset::MegaRangeMidpointCloseNearYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + At/near 52w Low (<2 %) + Doubled Vol (Wide-range Standoff at the Year Trough: Extreme Intraday Volatility Ends with Balanced Midpoint Close Right at the 52w Low; Failed-break-or-resume Indecision Day at Maximum Significance — Next-day Directional Resolution Carries the Wider Trend)",
+        Preset::MegaRangeMidpointCloseConfirmedAboveYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakout Zone (1-3 % past 52w High) + Doubled Vol (Post-breakout Wide-range Standoff: Extreme Intraday Volatility past the Prior Peak Ends in Balanced Midpoint Close; Breakout Being Tested with Maximum-energy Two-way Fight, Next-day Resolves Whether the Breakout Sticks or Fails)",
+        Preset::MegaRangeMidpointCloseConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakdown Zone (1-3 % past 52w Low) + Doubled Vol (Post-breakdown Wide-range Standoff: Extreme Intraday Volatility past the Prior Trough Ends in Balanced Midpoint Close; Breakdown Being Tested with Maximum-energy Two-way Fight, Next-day Resolves Whether the Breakdown Sticks or Fails)",
     }
 }
 
