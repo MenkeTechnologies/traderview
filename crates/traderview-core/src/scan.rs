@@ -1214,6 +1214,8 @@ pub enum Preset {
     TripleConfluenceLowHotVol,                 // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 — close pinned to LOD + close pinned to 52w low + red close + doubled vol (triple-confluence new-low day: close coincides with day's low AND year's low simultaneously with negative change and doubled participation; clearest possible bear-break signal with three orthogonal axes all aligned to maximum weakness)
     QuadConfluenceHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + doubled vol (quad-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, doubled participation all aligned bull-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
     QuadConfluenceLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + doubled vol (quad-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, doubled participation all aligned bear-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
+    PentaConfluenceHighHotVol,                 // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (penta-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
+    PentaConfluenceLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (penta-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7508,6 +7510,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.gap_pct < -1.0
         }
+        Preset::PentaConfluenceHighHotVol => {
+            hit.hod_dist_pct.abs() < 0.5
+                && hit.year_high_pct < 0.5
+                && hit.change_pct > 1.0
+                && hit.rel_volume >= 5.0
+                && hit.gap_pct > 1.0
+        }
+        Preset::PentaConfluenceLowHotVol => {
+            hit.lod_dist_pct.abs() < 0.5
+                && hit.year_low_pct < 0.5
+                && hit.change_pct < -1.0
+                && hit.rel_volume >= 5.0
+                && hit.gap_pct < -1.0
+        }
     }
 }
 
@@ -8612,6 +8628,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::TripleConfluenceLowHotVol => "Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Doubled Vol (Triple-confluence New-low Day: Close Coincides with Day's Low AND Year's Low Simultaneously with Negative Change and Doubled Participation; Clearest Possible Bear-break Signal with Three Orthogonal Axes All Aligned to Maximum Weakness)",
         Preset::QuadConfluenceHighHotVol => "Gap Up + Close Pinned to HOD + Close Pinned to 52w High + Green Close + Doubled Vol (Quad-confluence New-high Day: Overnight Gap, Intraday Close at Day's High, Fresh 52w High, Doubled Participation All Aligned Bull-direction; Four Orthogonal Axes Confirming Break, Rare Maximum-conviction Signal)",
         Preset::QuadConfluenceLowHotVol => "Gap Down + Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Doubled Vol (Quad-confluence New-low Day: Overnight Gap, Intraday Close at Day's Low, Fresh 52w Low, Doubled Participation All Aligned Bear-direction; Four Orthogonal Axes Confirming Break, Rare Maximum-conviction Signal)",
+        Preset::PentaConfluenceHighHotVol => "Gap Up + Close Pinned to HOD + Close Pinned to 52w High + Green Close + Quintupled Vol (Penta-confluence New-high Day: Overnight Gap, Intraday Close at Day's High, Fresh 52w High, Quintupled Participation All Aligned Bull-direction; Five Orthogonal Axes Confirming Break at the Tier-1 Vol Level, Near-once-per-year Highest-conviction Event)",
+        Preset::PentaConfluenceLowHotVol => "Gap Down + Close Pinned to LOD + Close Pinned to 52w Low + Red Close + Quintupled Vol (Penta-confluence New-low Day: Overnight Gap, Intraday Close at Day's Low, Fresh 52w Low, Quintupled Participation All Aligned Bear-direction; Five Orthogonal Axes Confirming Break at the Tier-1 Vol Level, Near-once-per-year Highest-conviction Event)",
     }
 }
 

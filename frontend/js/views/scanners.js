@@ -1096,6 +1096,8 @@ const PRESETS = [
     { id: 'triple_confluence_low_hot_vol', label: t('view.scanners.preset.triple_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.triple_confluence_low_hot_vol.desc') },
     { id: 'quad_confluence_high_hot_vol', label: t('view.scanners.preset.quad_confluence_high_hot_vol.label'), desc: t('view.scanners.preset.quad_confluence_high_hot_vol.desc') },
     { id: 'quad_confluence_low_hot_vol', label: t('view.scanners.preset.quad_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.quad_confluence_low_hot_vol.desc') },
+    { id: 'penta_confluence_high_hot_vol', label: t('view.scanners.preset.penta_confluence_high_hot_vol.label'), desc: t('view.scanners.preset.penta_confluence_high_hot_vol.desc') },
+    { id: 'penta_confluence_low_hot_vol', label: t('view.scanners.preset.penta_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.penta_confluence_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
