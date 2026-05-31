@@ -909,6 +909,42 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_1041` is the **IRC §1041 transfers between spouses module** — completes the basis-transfer trio with `section_1014` (death) and `section_1015` (lifetime gift). Critical for HNW divorce property division.
+
+**§1041(a)**: NO gain or loss recognized on transfer between current spouses or former spouses if incident to divorce. The transferor doesn't pay tax on embedded appreciation at transfer.
+
+**§1041(b)**: Transferee takes the **transferor's adjusted basis** as carryover — regardless of whether basis is less than, equal to, or greater than FMV at transfer. **No dual-basis rule** like §1015 (spouses are economically a single unit; loss-shifting concern doesn't apply). Holding period TACKS uniformly under §1223(2) — both for gain and for loss.
+
+**§1041(c) "incident to divorce" rules** per Treas. Reg. § 1.1041-1T(b) Q&A-7:
+
+| Days from cessation | Rule                                             | Applies?                          |
+|---------------------|--------------------------------------------------|-----------------------------------|
+| 0-365 (within 1 yr) | **Automatic** — no test required                 | Always yes                        |
+| 366-2190 (1-6 yrs)  | Must be pursuant to divorce/separation instrument | Yes IF instrument flag set       |
+| 2191+ (>6 yrs)      | Presumption against; needs instrument language    | Yes IF instrument flag set (rebuts presumption) |
+
+**§1041(d) NR alien exception**: §1041 does NOT apply when the transferee spouse (or former spouse) is a nonresident alien at the time of transfer. Highest precedence — fires BEFORE the timing-rule check. Transferor recognizes immediate gain/loss as though transferring to a third party. Pinned by `nonresident_alien_overrides_otherwise_applicable_path` (NR alien + currently married still disqualifies).
+
+**Distinction from §1015 (lifetime gift carryover)** is load-bearing:
+
+| Rule                | §1015 (lifetime gift)            | §1041 (spousal transfer)         |
+|---------------------|----------------------------------|----------------------------------|
+| Recognition at transfer | None for donor (gift exclusion) | None for transferor              |
+| Basis to recipient  | Donor's basis                    | Transferor's basis               |
+| Dual-basis on depreciated property | **YES — phantom zone** | **NO — single basis for gain or loss** |
+| §1015(d) gift-tax basis increase | Applies                | Does NOT apply (no gift tax)     |
+| Holding period tacking | Gain path only; loss path resets | Always tacks                  |
+
+Pinned by `depreciated_property_no_dual_basis_unlike_section_1015` (transferor basis $100k, FMV $50k, sale $30k → loss $70k recognized via $100k carryover basis, not via $50k FMV).
+
+**1-year boundary is bright-line**: day 365 = automatic; day 366 = requires instrument. Pinned by `within_one_year_exact_boundary_day_365_automatic` + `day_366_requires_divorce_instrument` + `day_366_with_instrument_applies`.
+
+**6-year boundary is also bright-line at 2190 days** (6 × 365). Day 2190 = within 1-6 year window; day 2191 = beyond 6 years. Both require instrument; difference is the IncidentRule classification that surfaces to the UI. Pinned by `six_year_exact_boundary_with_instrument_applies` (day 2190 = OneToSix) + `day_2191_beyond_six_years_with_instrument_applies` (day 2191 = BeyondSixYears) + `beyond_six_years_without_instrument_disqualified`.
+
+**Holding period only tacks when §1041 applies**. Disqualified paths (NR alien, not incident to divorce) start the holding period at the transfer date. Pinned by `holding_period_tacks_when_section_1041_applies` + `holding_period_starts_at_transfer_when_disqualified`.
+
+Mounted at `POST /api/calc/section-1041`. Twenty-four tests pin: current spouses applies; within 1 year automatic; **day 365 exact boundary**; **day 366 requires instrument** (both with-instrument and without-instrument paths); **6-year boundary at day 2190** (calendar-leap-year-aware regression target); **day 2191 beyond 6 years**; **NR alien overrides everything** (precedence pin); carryover basis with zero recognition; FMV basis with full recognition when §1041 fails; sale uses carryover basis under §1041; sale uses FMV basis when disqualified; holding period tacks vs starts at transfer; **depreciated property NO dual basis** (distinguishes from §1015); loss recognized at carryover basis even on depreciated property; zero basis transferor → zero basis transferee; note describes each IncidentRule path; disqualification reason in note; very large basis ($1.234B) no precision loss; 366-day post-transfer LTCG via tacking; 365-day boundary STCG.
+
 `traderview-expense::section_1015` is the **IRC §1015 carryover basis on gifts module** — sibling to `section_1014` (stepped-up basis at death). Where §1014 wipes out embedded gains at death, §1015 **carries them through to the donee** for eventual recognition. No step-up on lifetime gifts.
 
 **§1015(a) general carryover** — donee's basis = donor's adjusted basis. Holding period TACKS from donor's acquisition date under §1223(2). A one-day-old gift of LTCG-eligible stock is immediately long-term in the donee's hands. Pinned by `appreciated_with_long_donor_holding_immediate_ltcg_via_tacking`.

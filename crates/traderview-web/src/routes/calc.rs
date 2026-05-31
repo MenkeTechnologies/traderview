@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-1015",          post(section_1015_route))
+        .route("/calc/section-1041",          post(section_1041_route))
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-1091",          post(section_1091_route))
@@ -629,6 +630,33 @@ async fn section_170e_route(
         ));
     }
     Ok(Json(traderview_expense::section_170e::compute(&b)))
+}
+
+// ── §1041 transfers between spouses ──────────────────────────────────
+// Mounted at /api/calc/section-1041. Pure compute; §1041(a) no
+// gain/loss; §1041(b) carryover basis (no dual basis); §1041(c)
+// timing rules (1-year automatic / 1-6 year with instrument / 6+
+// year with instrument); §1041(d) NR alien disqualification;
+// §1223(2) holding period tacking.
+
+async fn section_1041_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1041::Section1041Input>,
+) -> Result<Json<traderview_expense::section_1041::Section1041Result>, ApiError> {
+    if b.transferor_adjusted_basis < Decimal::ZERO
+        || b.fmv_at_transfer < Decimal::ZERO
+        || b.sale_price < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "transferor_adjusted_basis, fmv_at_transfer, and sale_price must be >= 0".into(),
+        ));
+    }
+    if b.sale_date < b.transfer_date {
+        return Err(ApiError::BadRequest(
+            "sale_date must be on or after transfer_date".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1041::compute(&b)))
 }
 
 // ── §1015 carryover basis on gifts ───────────────────────────────────
