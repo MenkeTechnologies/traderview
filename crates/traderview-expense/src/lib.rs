@@ -48,6 +48,7 @@ pub mod reps_qualification;
 pub mod rules;
 pub mod schedule_d;
 pub mod security_deposit_caps;
+pub mod soi_protection;
 pub mod schedule_e;
 pub mod section_1014;
 pub mod section_170e;

@@ -384,6 +384,37 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::soi_protection` is the **state-by-state source-of-income (SOI) discrimination protection table** — sibling to `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. The **federal Fair Housing Act does NOT cover source of income** — landlords may refuse Section 8 voucher holders nationwide unless a state or local statute provides protection. ~18-20 states + DC + many cities have enacted SOI protection since CT (1989) became the first.
+
+**Three regimes:**
+
+| Regime                              | States                                                                       |
+|-------------------------------------|------------------------------------------------------------------------------|
+| **Statewide full protection**       | CA / CO / CT / DC / DE / IL / MA / MD / ME / MN / NJ / NM / OR / RI / VA / VT / WA (17 jurisdictions) |
+| **Statewide challenged / partial**  | NY (HSTPA 2019 struck down at appellate level March 2026 — NYC local survives) / UT (veterans only) |
+| **No statewide (federal floor only)** | 33 other states; local ordinances in GA (Atlanta), PA (Philadelphia/Pittsburgh), TN (Memphis), TX (Austin), WI (Madison/Dane County) |
+
+**Historical waves:**
+
+| Wave            | States                                  |
+|-----------------|-----------------------------------------|
+| Pre-2000 pioneers | DC (1977), CT/MA/VT (1989), RI (1996) |
+| 2002-2014       | NJ (2002), ME (2009), OR (2014)         |
+| 2018 wave       | WA (2018)                               |
+| 2019 wave       | CA SB 329 (2019), NY HSTPA (2019)       |
+| 2020 wave       | CO / DE / MD / VA — racial-equity / fair-housing push |
+| 2023 wave       | IL / MN / NM — most recent batch        |
+
+**`verify_current_status_needed` flag** is load-bearing. NY's SOI provision was struck down at the appellate level in March 2026 — statewide enforcement is contested but NYC Human Rights Law still applies. UT § 13-21-302 covers veterans only, not full voucher population. Both flag `verify_current_status_needed: true` to tell the UI to surface "check current court status + locality" rather than reporting a definitive answer. Pinned by `new_york_challenged_regime_verify_needed` and `utah_partial_only_veterans` + the `challenged_states_set_verify_needed_flag` sweep.
+
+**Voucher type doesn't change the answer.** Section 8 HCV, HUD-VASH, FUP, and other federal/state subsidy vouchers all get the same state-law treatment — the SOI statute classifies "source of income" without distinguishing voucher programs. The `voucher_type` enum is captured on input for future-proofing if a state someday differentiates. Pinned by `voucher_type_does_not_change_state_law_outcome` (CA returns identical results across all four voucher types).
+
+**Local-only ordinances surface in the citation.** GA, PA, TN, TX, WI all have `NoProtection` regime statewide but mention local ordinances (Atlanta / Philadelphia / Memphis / Austin / Madison) in the citation field. Caller must check municipal law for these states. Pinned by `local_only_states_flagged_in_citation`.
+
+**Unknown state defaults to federal floor (landlord may refuse).** Safest assumption — if we don't have the state in the table, federal FHA doesn't cover SOI so the landlord can refuse. Pinned by `unknown_state_defaults_to_federal_floor`.
+
+Mounted at `POST /api/rental/soi-protection-check`. Eighteen tests pin: 51-row coverage; CA full protection (landlord may NOT refuse); TX no statewide (landlord may refuse, federal floor only); CT 1989 oldest statewide; OR 2014 first post-2010; **NY challenged regime sets verify flag**; UT partial-only-veterans sets verify flag; **17-state full-protection sweep** (catches regime-flag regression); voucher_type doesn't change outcome (all four types same); unknown state defaults to federal floor; case-insensitive lookup; sorted `all_states()`; non-empty citations; **2023 wave** (IL/MN/NM all enacted 2023); **2020 wave** (CO/DE/MD/VA); pre-2000 pioneers (CT/MA/VT/RI/DC); local-only-states flagged in citation (GA/PA/TN/TX/WI); `verify_current_status_needed` flag set for both NY and UT.
+
 `traderview-expense::just_cause_eviction` is the **state-by-state just-cause eviction + relocation assistance table** — sibling to `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Major statutory shift 2019-2021 — CA AB 1482 (Tenant Protection Act), OR SB 608, WA HB 1236 — changed whether a landlord can terminate at lease end at all, and required relocation assistance equal to one month's rent for no-fault grounds.
 
 **Four regimes**:
