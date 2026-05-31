@@ -1196,6 +1196,8 @@ const PRESETS = [
     { id: 'mega_range_lower_third_just_off_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_lower_third_just_off_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_lower_third_just_off_year_low_decupled_vol.desc') },
     { id: 'mega_range_trend_day_up_near_year_high_decupled_vol', label: t('view.scanners.preset.mega_range_trend_day_up_near_year_high_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_trend_day_up_near_year_high_decupled_vol.desc') },
     { id: 'mega_range_trend_day_up_near_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_trend_day_up_near_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_trend_day_up_near_year_low_decupled_vol.desc') },
+    { id: 'mega_range_trend_day_up_confirmed_above_year_high_decupled_vol', label: t('view.scanners.preset.mega_range_trend_day_up_confirmed_above_year_high_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_trend_day_up_confirmed_above_year_high_decupled_vol.desc') },
+    { id: 'mega_range_trend_day_up_confirmed_below_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_trend_day_up_confirmed_below_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_trend_day_up_confirmed_below_year_low_decupled_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
