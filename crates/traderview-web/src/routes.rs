@@ -48,6 +48,7 @@ mod heatmap;
 mod hotkeys;
 mod imports;
 mod institutional;
+mod ira_basis;
 mod journal;
 mod journal_ai;
 mod live_positions;
@@ -112,6 +113,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(chart_indicators::router())
         .merge(calc::router())
         .merge(carryover::router())
+        .merge(ira_basis::router())
         .merge(trade_analytics::router())
         .merge(microstructure::router())
         .merge(extras::router())
