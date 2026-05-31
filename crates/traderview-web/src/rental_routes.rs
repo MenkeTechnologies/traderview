@@ -27,6 +27,9 @@ use traderview_expense::disposition::{
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
+use traderview_expense::section_280a::{
+    compute as compute_section_280a, Section280AInput, Section280AResult,
+};
 use traderview_expense::section_469::{
     compute as compute_section_469, Section469Input, Section469Result,
 };
@@ -100,6 +103,9 @@ pub fn router() -> Router<AppState> {
         // disposition: §1250 unrecaptured + §1231 LTCG + §1031 deferral
         .route("/properties/:property_id/dispose",
             axum::routing::post(property_disposition))
+        // §280A vacation home / mixed-use classification
+        .route("/properties/:property_id/section-280a",
+            axum::routing::post(property_section_280a))
 }
 
 // ---------------------------------------------------------------------------
@@ -1602,6 +1608,74 @@ struct DispositionRequest {
     capital_improvements_added: Option<Decimal>,
     like_kind_exchange: Option<traderview_expense::disposition::LikeKindExchange>,
     filing_status: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// §280A vacation-home / mixed-use classification
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct Section280ARequest {
+    /// If omitted, pulled from rental_properties.fair_rental_days.
+    fair_rental_days: Option<u32>,
+    /// If omitted, pulled from rental_properties.personal_use_days.
+    personal_use_days: Option<u32>,
+    /// Gross rental income for the year.
+    gross_rental_income: Decimal,
+    tier_1_expenses_personal_deductible: Decimal,
+    tier_2_operating_expenses: Decimal,
+    tier_3_depreciation: Decimal,
+    #[serde(default)]
+    prior_year_suspended: Decimal,
+}
+
+async fn property_section_280a(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(property_id): Path<Uuid>,
+    Json(b): Json<Section280ARequest>,
+) -> Result<Json<Section280AResult>, ApiError> {
+    ensure_property_owner(&s, u.id, property_id).await?;
+    // Fill missing day counts from the property record.
+    let (frd, pud) = match (b.fair_rental_days, b.personal_use_days) {
+        (Some(frd), Some(pud)) => (frd, pud),
+        (frd_opt, pud_opt) => {
+            let (db_frd, db_pud): (i32, i32) = sqlx::query_as(
+                "SELECT fair_rental_days, personal_use_days
+                   FROM rental_properties WHERE id = $1",
+            )
+            .bind(property_id)
+            .fetch_one(&s.pool)
+            .await?;
+            (
+                frd_opt.unwrap_or(db_frd.max(0) as u32),
+                pud_opt.unwrap_or(db_pud.max(0) as u32),
+            )
+        }
+    };
+    if [
+        b.gross_rental_income,
+        b.tier_1_expenses_personal_deductible,
+        b.tier_2_operating_expenses,
+        b.tier_3_depreciation,
+        b.prior_year_suspended,
+    ]
+    .iter()
+    .any(|x| *x < Decimal::ZERO)
+    {
+        return Err(ApiError::BadRequest(
+            "income and expense amounts must be >= 0".into(),
+        ));
+    }
+    Ok(Json(compute_section_280a(&Section280AInput {
+        fair_rental_days: frd,
+        personal_use_days: pud,
+        gross_rental_income: b.gross_rental_income,
+        tier_1_expenses_personal_deductible: b.tier_1_expenses_personal_deductible,
+        tier_2_operating_expenses: b.tier_2_operating_expenses,
+        tier_3_depreciation: b.tier_3_depreciation,
+        prior_year_suspended: b.prior_year_suspended,
+    })))
 }
 
 async fn property_disposition(
