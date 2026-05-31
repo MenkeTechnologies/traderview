@@ -1192,6 +1192,8 @@ pub enum Preset {
     GapDownTightRangeJustOffYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional absorption just off the year trough: overnight gap down positions price immediately after a shallow bounce from the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another low attempt)
     DecupledVolUpHotVol,                       // rel_volume >= 10 AND change_pct > 3 — decupled vol (>=10) + big up move (>3%) (unprecedented bull-direction event: vol is 10x its average and price prints a significant up move; once-per-year occurrence per name, typically a major news event like takeover, FDA approval, or massive earnings beat at the tier-0 highest-conviction tier)
     DecupledVolDownHotVol,                     // rel_volume >= 10 AND change_pct < -3 — decupled vol (>=10) + big down move (<-3%) (unprecedented bear-direction event: vol is 10x its average and price prints a significant down move; once-per-year occurrence per name, typically a major news event like fraud disclosure, lawsuit, or massive earnings miss at the tier-0 highest-conviction tier)
+    DecupledVolUpNearYearHighHotVol,           // rel_volume >= 10 AND change_pct > 3 AND year_high_pct < 2 — decupled vol (>=10) + big up move (>3%) + at/near 52w high (<2%) (absolute-rarest breakout-day signal: vol is 10x average, price prints a significant up move and simultaneously reaches the 52w high; tier-0 once-per-year + breakout-at-extreme = portfolio-changing event)
+    DecupledVolDownNearYearLowHotVol,          // rel_volume >= 10 AND change_pct < -3 AND year_low_pct < 2 — decupled vol (>=10) + big down move (<-3%) + at/near 52w low (<2%) (absolute-rarest breakdown-day signal: vol is 10x average, price prints a significant down move and simultaneously reaches the 52w low; tier-0 once-per-year + breakdown-at-extreme = portfolio-changing event)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7368,6 +7370,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::DecupledVolDownHotVol => {
             hit.rel_volume >= 10.0 && hit.change_pct < -3.0
         }
+        Preset::DecupledVolUpNearYearHighHotVol => {
+            hit.rel_volume >= 10.0 && hit.change_pct > 3.0 && hit.year_high_pct < 2.0
+        }
+        Preset::DecupledVolDownNearYearLowHotVol => {
+            hit.rel_volume >= 10.0 && hit.change_pct < -3.0 && hit.year_low_pct < 2.0
+        }
     }
 }
 
@@ -8450,6 +8458,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::GapDownTightRangeJustOffYearLowHotVol => "Gap Down (<-2 %) + Tight Intraday Range (<1 %) + Hot Vol + Just off 52w Low (2-5 %) (Institutional Absorption Just off the Year Trough: Overnight Gap down Positions Price Immediately after a Shallow Bounce from the 52w Low then Regular Session Prints a Tight Trading Range with Heavy Participation; Gap-and-park Signal at the Post-tag Re-test Where Smart Money Positions before Another Low Attempt)",
         Preset::DecupledVolUpHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) (Unprecedented Bull-direction Event: Vol Is 10x Its Average and Price Prints a Significant Up Move; Once-per-year Occurrence per Name, Typically a Major News Event Like Takeover, FDA Approval, or Massive Earnings Beat at the Tier-0 Highest-conviction Tier)",
         Preset::DecupledVolDownHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) (Unprecedented Bear-direction Event: Vol Is 10x Its Average and Price Prints a Significant Down Move; Once-per-year Occurrence per Name, Typically a Major News Event Like Fraud Disclosure, Lawsuit, or Massive Earnings Miss at the Tier-0 Highest-conviction Tier)",
+        Preset::DecupledVolUpNearYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + At/near 52w High (<2 %) (Absolute-rarest Breakout-day Signal: Vol Is 10x Average, Price Prints a Significant Up Move and Simultaneously Reaches the 52w High; Tier-0 Once-per-year + Breakout-at-extreme = Portfolio-changing Event)",
+        Preset::DecupledVolDownNearYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + At/near 52w Low (<2 %) (Absolute-rarest Breakdown-day Signal: Vol Is 10x Average, Price Prints a Significant Down Move and Simultaneously Reaches the 52w Low; Tier-0 Once-per-year + Breakdown-at-extreme = Portfolio-changing Event)",
     }
 }
 
