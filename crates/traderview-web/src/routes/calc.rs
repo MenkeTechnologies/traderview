@@ -65,6 +65,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
+        .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -442,6 +443,24 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §168(e)(6) Qualified Improvement Property ────────────────────────
+// Mounted at /api/calc/section-168-e6. Pure compute; interior
+// improvements to nonresidential buildings qualify as 15-year QIP +
+// §168(k) bonus eligible. Excluded types (enlargement, elevator,
+// internal structural framework) fall to 39-year nonresidential.
+
+async fn section_168_e6_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_168_e6::Section168E6Input>,
+) -> Result<Json<traderview_expense::section_168_e6::Section168E6Result>, ApiError> {
+    if b.improvement_cost < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "improvement_cost must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_168_e6::compute(&b)))
 }
 
 // ── §263A UNICAP (trader vs dealer classifier) ───────────────────────
