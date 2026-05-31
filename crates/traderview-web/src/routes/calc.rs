@@ -67,6 +67,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
+        .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -501,6 +502,34 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §1091 wash sale loss disallowance ────────────────────────────────
+// Mounted at /api/calc/section-1091. Pure compute; 61-day window
+// (sale_date ±30 days inclusive), FIFO basis allocation to replacement
+// lots under §1091(d), Rev. Rul. 2008-5 IRA permanent-loss carve-out,
+// and §475(f)(1)(C) MTM elector exemption.
+
+async fn section_1091_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1091::Section1091Input>,
+) -> Result<Json<traderview_expense::section_1091::Section1091Result>, ApiError> {
+    if b.sale_shares < 0
+        || b.sale_price_per_share < Decimal::ZERO
+        || b.basis_per_share < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "sale_shares, sale_price_per_share, basis_per_share must be >= 0".into(),
+        ));
+    }
+    for p in &b.replacement_purchases {
+        if p.shares < 0 || p.price_per_share < Decimal::ZERO {
+            return Err(ApiError::BadRequest(
+                "replacement shares and price must be >= 0".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_1091::compute(&b)))
 }
 
 // ── §408A(d)(3)(F) Roth conversion 5-year rule ───────────────────────
