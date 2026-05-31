@@ -37,6 +37,10 @@ use traderview_expense::cost_segregation::{
 use traderview_expense::deposit_return_windows::{
     check as check_deposit_return, DepositReturnCheckInput, DepositReturnCheckResult,
 };
+use traderview_expense::lease_disclosures::{
+    required_for as lease_disclosures_required_for, DisclosuresRequiredInput,
+    DisclosuresRequiredReport,
+};
 use traderview_expense::eviction_notices::{
     check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
 };
@@ -138,6 +142,8 @@ pub fn router() -> Router<AppState> {
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
         .route("/deposit-return-check", axum::routing::post(deposit_return_check_route))
+        // State + federal lease disclosure requirements
+        .route("/lease-disclosures-required", axum::routing::post(lease_disclosures_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1830,6 +1836,21 @@ async fn deposit_return_check_route(
         ));
     }
     Ok(Json(check_deposit_return(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State + federal lease disclosure requirements
+// ---------------------------------------------------------------------------
+
+async fn lease_disclosures_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DisclosuresRequiredInput>,
+) -> Result<Json<DisclosuresRequiredReport>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    Ok(Json(lease_disclosures_required_for(&b)))
 }
 
 async fn property_cost_segregation(
