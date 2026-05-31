@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
+        .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -408,6 +409,22 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §280F luxury auto depreciation cap ───────────────────────────────
+// Mounted at /api/calc/section-280f. Pure compute; caps annual
+// depreciation on passenger autos under §280F(a)(1). Year-by-year
+// caps from Rev. Proc. tables 2020-2024 (caller_override for 2025+).
+// §280F(d)(5) heavy-vehicle carve-out for > 6,000 lb GVWR exempts.
+
+async fn section_280f_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280f::Section280FInput>,
+) -> Result<Json<traderview_expense::section_280f::Section280FResult>, ApiError> {
+    if b.cost_basis < Decimal::ZERO {
+        return Err(ApiError::BadRequest("cost_basis must be >= 0".into()));
+    }
+    Ok(Json(traderview_expense::section_280f::compute(&b)))
 }
 
 // ── §481(a) accounting method change adjustment ──────────────────────
