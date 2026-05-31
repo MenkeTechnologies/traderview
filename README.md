@@ -1017,6 +1017,63 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_401a9` is the **IRC §401(a)(9) Required Minimum Distribution module** — every trader retiree with a traditional IRA or 401(k) reaching the RMD age must begin taking distributions or face the §4974 excise tax. SECURE Act of 2019 raised the RMD age from 70½ to 72; SECURE 2.0 Act of 2022 raised it again to 73 (and to 75 for the 1960+ cohort).
+
+**RMD age by birth year** (SECURE 2.0 cohort logic):
+
+| Birth year      | RMD age | Source                         |
+|-----------------|---------|--------------------------------|
+| 1949 or earlier | 70 (½)  | Pre-SECURE legacy              |
+| 1950            | 72      | SECURE 1.0 (2019)              |
+| 1951-1959       | 73      | SECURE 2.0 (2022)              |
+| 1960+           | 75      | SECURE 2.0 (2033 first triggers) |
+
+Pinned by `born_1949_rmd_age_70` + `born_1950_rmd_age_72` + `born_1951_rmd_age_73` + `born_1959_rmd_age_73_last_year` + `born_1960_rmd_age_75` — all four cohort boundaries are individually pinned to catch any future regression where the SECURE 2.0 age thresholds shift.
+
+**Roth account carve-outs:**
+
+| Account type            | RMD required?     | Citation                  |
+|-------------------------|-------------------|---------------------------|
+| Roth IRA                | NEVER (lifetime)  | §408A(c)(5)               |
+| Roth 401(k) pre-2024    | Yes               | (legacy)                  |
+| Roth 401(k) post-2024   | NO (SECURE 2.0)   | SECURE 2.0 § 325          |
+| Traditional IRA         | Yes               | §401(a)(9)(A)             |
+| Traditional 401(k)      | Yes               | §401(a)(9)(A)             |
+
+Pinned by `roth_ira_no_rmd_regardless_of_age` (age 86 Roth IRA owner = no RMD) + `roth_401k_post_2024_no_rmd` (post-2024 carve-out) + `roth_401k_pre_2024_did_have_rmd` (legacy regression target — distinguishes the two Roth 401(k) regimes).
+
+**Uniform Lifetime Table** factors per IRS Pub 590-B Appendix B (November 2020 update, effective 2022+):
+
+| Age | Factor | Implied % |
+|-----|--------|-----------|
+| 72  | 27.4   | 3.65%     |
+| 73  | 26.5   | 3.77%     |
+| 74  | 25.5   | 3.92%     |
+| 75  | 24.6   | 4.07%     |
+| 80  | 20.2   | 4.95%     |
+| 85  | 16.0   | 6.25%     |
+| 90  | 12.2   | 8.20%     |
+| 95  | 8.9    | 11.24%    |
+| 100 | 6.4    | 15.63%    |
+
+RMD amount = `prior_year_end_balance / lifetime_factor`. Module ships ages 72-100. Pinned by `age_73_uniform_lifetime_factor_26_5` ($1M / 26.5 = $37,735.85) + `uniform_lifetime_factor_age_75` (24.6) + `uniform_lifetime_factor_age_85` (16.0) + `uniform_lifetime_factor_age_100` (6.4).
+
+**§4974 excise tax structure (SECURE 2.0 reduction):**
+
+| Condition                                     | Penalty rate |
+|-----------------------------------------------|--------------|
+| No timely correction                          | **25%** (down from 50% pre-SECURE 2.0) |
+| Timely correction within 2-year window + Form 5329 | **10%** |
+| RMD fully met                                  | 0%          |
+
+Pinned by `rmd_shortfall_25_percent_penalty` (no distribution → full shortfall × 25%) + `timely_correction_reduces_penalty_to_10_percent` (same shortfall × 10% with correction flag) + `partial_shortfall_proportional_penalty` ($20k distributed of $37,735 RMD → $17,735 shortfall × 25%).
+
+**First-RMD-year flag** is set when `current_age == rmd_age`, signaling the RBD (Required Beginning Date) extension applies — first RMD due April 1 of year AFTER turning RMD age, not December 31. Missing the first-year deadline pushes both distributions into year 2, doubling the income tax that year. Pinned by `is_first_rmd_year_only_when_current_age_equals_rmd_age` (age 73 = first year; age 74 = not first year).
+
+**Current-age clamps at zero** for pathological inputs (birth year > current year). No panic; just classifies as below-RMD-age. Pinned by `current_age_clamps_at_zero_for_future_birth_year`.
+
+Mounted at `POST /api/calc/section-401a9`. Twenty-seven tests pin: Roth IRA no RMD lifetime; **Roth 401(k) post-2024 SECURE 2.0 carve-out** + pre-2024 had RMD (regression target distinguishing the two regimes); **all four birth-year cohort boundaries** (1949 = 70, 1950 = 72, 1951-1959 = 73, 1960+ = 75); under-RMD-age no requirement; age 73 factor 26.5 with exact RMD math ($1M case); RMD met no penalty; full shortfall 25% penalty; **timely correction reduces to 10%**; partial shortfall proportional penalty; Uniform Lifetime Table factors at 75/85/100; **first-RMD-year flag** only when current_age == rmd_age; high balance ($50M) no precision loss; pathological future-birth-year clamps to age 0; traditional IRA + traditional 401(k) both subject; **1959/1960 cohort boundary pinned at both** (1959 age 73, 1960 age 75 — the only single-year difference between 73 and 75 cohorts is the load-bearing boundary); note describes §4974 + 25% or 10% per path.
+
 `traderview-expense::section_108` is the **IRC §108 cancellation of debt income module** — critical for distressed debt traders, underwater real estate investors, mortgage workouts, and credit card settlement scenarios. Default rule under §61(a)(12) is that cancelled debt is gross income; §108(a) provides five narrow exclusions with mandatory §108(b) attribute-reduction consequences.
 
 **Five exclusions in priority order:**

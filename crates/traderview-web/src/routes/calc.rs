@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-871m",          post(section_871m_route))
+        .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
@@ -817,6 +818,26 @@ async fn section_408A_d3_route(
         ));
     }
     Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
+}
+
+// ── §401(a)(9) Required Minimum Distributions (RMDs) ─────────────────
+// Mounted at /api/calc/section-401a9. SECURE 2.0 age cohorts
+// (1949-/1950/1951-1959/1960+), Roth IRA + Roth 401(k) post-2024
+// exemptions, Uniform Lifetime Table factors (ages 72-100), §4974
+// 25% / 10% correction-window penalty.
+
+async fn section_401a9_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_401a9::Section401a9Input>,
+) -> Result<Json<traderview_expense::section_401a9::Section401a9Result>, ApiError> {
+    if b.prior_year_end_balance < Decimal::ZERO
+        || b.actual_distribution_taken < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "prior_year_end_balance and actual_distribution_taken must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_401a9::compute(&b)))
 }
 
 // ── §408(m) collectibles in IRA ──────────────────────────────────────
