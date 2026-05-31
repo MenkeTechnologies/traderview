@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
+        .route("/calc/section-453",           post(section_453_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -413,6 +414,30 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §453 installment sale gain deferral ──────────────────────────────
+// Mounted at /api/calc/section-453. Pure compute; gross profit ratio
+// applied to each year's principal payment with §453(k) marketable
+// securities exclusion + §453(g) related-party 2-year resale anti-
+// abuse + §453(d) opt-out election.
+
+async fn section_453_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_453::Section453Input>,
+) -> Result<Json<traderview_expense::section_453::Section453Result>, ApiError> {
+    if b.sale_price < Decimal::ZERO
+        || b.selling_costs < Decimal::ZERO
+        || b.adjusted_basis < Decimal::ZERO
+        || b.principal_received_this_year < Decimal::ZERO
+        || b.interest_received_this_year < Decimal::ZERO
+        || b.unrecognized_gain_remaining < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_453::compute(&b)))
 }
 
 // ── §1092 straddle loss deferral ──────────────────────────────────────
