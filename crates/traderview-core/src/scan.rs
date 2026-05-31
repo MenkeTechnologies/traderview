@@ -1232,6 +1232,8 @@ pub enum Preset {
     CloseInLowerThirdDeepAboveYearLowHotVol,   // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — close in lower third + far above 52w low (>=20%) + hot vol (soft rejection-bias tilt deep in advance territory: close in bottom third of intraday range while price remains well above the prior trough; early-rejection signal where sellers start gaining control after extended advance but without rigid LOD pin)
     CloseInUpperThirdMidYearHighHotVol,        // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — close in upper third + mid-range from high (5-20%) + hot vol (soft bullish tilt in mid-cycle pullback zone: close in top third of intraday range while price is in proper consolidation below the prior peak; mid-cycle accumulation-bias signal where buyers gain modest control during the consolidation phase)
     CloseInLowerThirdMidYearLowHotVol,         // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — close in lower third + mid-range from low (5-20%) + hot vol (soft bearish tilt in mid-cycle recovery zone: close in bottom third of intraday range while price is in proper consolidation above the prior trough; mid-cycle distribution-bias signal where sellers gain modest control during the consolidation phase)
+    CloseInUpperThirdJustOffYearHighHotVol,    // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — close in upper third + just off 52w high (2-5%) + hot vol (soft bullish tilt just off the year peak: close in top third of intraday range immediately after a shallow pullback from the 52w high; post-tag re-test bias signal where buyers maintain control as price probes the breakout level without rigid HOD pin)
+    CloseInLowerThirdJustOffYearLowHotVol,     // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — close in lower third + just off 52w low (2-5%) + hot vol (soft bearish tilt just off the year trough: close in bottom third of intraday range immediately after a shallow bounce from the 52w low; post-tag re-test bias signal where sellers maintain control as price probes the breakdown level without rigid LOD pin)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7646,6 +7648,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 20.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::CloseInUpperThirdJustOffYearHighHotVol => {
+            hit.hod_dist_pct.abs() * 2.0 < hit.lod_dist_pct.abs()
+                && hit.hod_dist_pct.abs() > 0.3
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::CloseInLowerThirdJustOffYearLowHotVol => {
+            hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -8768,6 +8784,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::CloseInLowerThirdDeepAboveYearLowHotVol => "Close in Lower Third + Far above 52w Low (>=20 %) + Hot Vol (Soft Rejection-bias Tilt Deep in Advance Territory: Close in Bottom Third of Intraday Range While Price Remains Well above the Prior Trough; Early-rejection Signal Where Sellers Start Gaining Control after Extended Advance but without Rigid LOD Pin)",
         Preset::CloseInUpperThirdMidYearHighHotVol => "Close in Upper Third + Mid-range from High (5-20 %) + Hot Vol (Soft Bullish Tilt in Mid-cycle Pullback Zone: Close in Top Third of Intraday Range While Price Is in Proper Consolidation below the Prior Peak; Mid-cycle Accumulation-bias Signal Where Buyers Gain Modest Control during the Consolidation Phase)",
         Preset::CloseInLowerThirdMidYearLowHotVol => "Close in Lower Third + Mid-range from Low (5-20 %) + Hot Vol (Soft Bearish Tilt in Mid-cycle Recovery Zone: Close in Bottom Third of Intraday Range While Price Is in Proper Consolidation above the Prior Trough; Mid-cycle Distribution-bias Signal Where Sellers Gain Modest Control during the Consolidation Phase)",
+        Preset::CloseInUpperThirdJustOffYearHighHotVol => "Close in Upper Third + Just off 52w High (2-5 %) + Hot Vol (Soft Bullish Tilt Just off the Year Peak: Close in Top Third of Intraday Range Immediately after a Shallow Pullback from the 52w High; Post-tag Re-test Bias Signal Where Buyers Maintain Control as Price Probes the Breakout Level without Rigid HOD Pin)",
+        Preset::CloseInLowerThirdJustOffYearLowHotVol => "Close in Lower Third + Just off 52w Low (2-5 %) + Hot Vol (Soft Bearish Tilt Just off the Year Trough: Close in Bottom Third of Intraday Range Immediately after a Shallow Bounce from the 52w Low; Post-tag Re-test Bias Signal Where Sellers Maintain Control as Price Probes the Breakdown Level without Rigid LOD Pin)",
     }
 }
 
