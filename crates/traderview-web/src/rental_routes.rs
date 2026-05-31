@@ -89,6 +89,9 @@ use traderview_expense::lead_disclosure::{
 use traderview_expense::soi_protection::{
     check as check_soi_protection, SoiCheckInput, SoiCheckResult,
 };
+use traderview_expense::sublet_consent::{
+    check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
+};
 use traderview_expense::lockout_penalties::{
     check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
@@ -205,6 +208,7 @@ pub fn router() -> Router<AppState> {
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
         .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
         .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
+        .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1879,6 +1883,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State sublet / lease-assignment consent compliance check
+// ---------------------------------------------------------------------------
+
+async fn sublet_consent_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SubletConsentInput>,
+) -> Result<Json<SubletConsentResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_sublet_consent(&b)))
 }
 
 // ---------------------------------------------------------------------------

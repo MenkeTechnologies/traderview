@@ -384,6 +384,42 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
+
+**Two state-law regimes** override the default contract-governs baseline:
+
+| Regime                                | States    | Citation                                         |
+|---------------------------------------|-----------|--------------------------------------------------|
+| **StatuteReasonableStandard** (sublet) | NY / DC / VA / WA | NY RPL § 226-b / DC § 42-3505.55 / Va. Code § 55.1-1224 / RCW § 59.18.230 |
+| **CaseLawReasonableStandard** (sublet) | CA        | Kendall v. Ernest Pestana, Inc. (1985) + Cal. Civ. Code § 1995.260 |
+| **ContractGoverns** (sublet, default)  | 45 other states | Lease provisions enforced; landlord may withhold for any stated reason |
+
+**Three assignment-consent regimes:**
+
+| Regime                                              | States                     | Behavior                                              |
+|-----------------------------------------------------|----------------------------|-------------------------------------------------------|
+| **UnconditionalDiscretionButTerminationRight**      | NY (RPL § 226-b assignment branch) | Landlord may unconditionally withhold BUT unreasonable withholding gives tenant 30-day lease-termination right |
+| **ReasonableStandard**                              | CA / DC / VA / WA          | Same reasonable-standard test as sublet               |
+| **ContractGoverns**                                 | 46 other states            | Lease governs                                         |
+
+**NY § 226-b sublet vs assignment asymmetry is load-bearing.** Sublet uses the reasonable-standard test (tenant may proceed if landlord refuses unreasonably). Assignment uses a different rule: landlord may UNCONDITIONALLY withhold consent for assignment, but if the withholding is unreasonable, the tenant doesn't get to assign — instead the tenant gets a 30-day lease-termination right. The compute returns `tenant_termination_right_available: true` for this path, distinct from `tenant_may_proceed`. Pinned by `ny_assignment_unreasonable_refusal_gives_termination_right` + `ny_assignment_reasonable_refusal_no_termination_right` + the `ny_only_state_with_assignment_unconditional_plus_termination` sweep verifying no other state has this regime.
+
+**NY 4-unit building threshold for § 226-b sublet** is load-bearing. 4-unit buildings and larger get the statutory reasonable-standard protection; smaller buildings fall back to contract-governs. Pinned by `ny_sublet_reasonable_standard_applies_at_4_units` + `ny_sublet_does_not_apply_below_4_units` (3 units → no statute coverage) + `ny_only_state_with_unit_threshold_for_sublet` (sweep verifying every other state has `building_unit_minimum = None`).
+
+**NY 30-day deemed-consent window** is bright-line. Tenant requests consent → landlord has 30 days to respond → at day 31 without response, consent is DEEMED granted. Pinned by `ny_deemed_consent_at_day_31_after_request` (fires) + `ny_deemed_consent_not_at_day_30` (still within window).
+
+**NY § 235-f roommate law is uniquely statewide.** Tenant may add an adult occupant (spouse, family, roommate) regardless of any lease provision restricting occupancy, so long as occupancy doesn't exceed legal limit. NY is the ONLY state with this specific statute. Pinned by `ny_roommate_addition_protected_by_section_235f` + the `ny_only_state_with_roommate_statute` sweep.
+
+**CA case-law standard has NO building-size threshold.** Kendall v. Pestana applies to every residential lease regardless of building size. Even a single-family rental gets the reasonable-standard test. Pinned by `ca_no_building_size_threshold` (1-unit rental qualifies).
+
+**CA assignment uses the same reasonable standard as sublet** — Kendall doesn't distinguish. Distinct from NY's asymmetric regimes. Pinned by `ca_assignment_uses_reasonable_standard_not_unconditional` (CA tenant may PROCEED with assignment on unreasonable refusal; NY tenant may only TERMINATE).
+
+**Reasonable refusal blocks tenant.** Landlord with objectively reasonable basis (financial unreliability of subletee, criminal history, lease-breach risk) can refuse even in reasonable-standard states — refusal is not unreasonable. Pinned by `ny_reasonable_refusal_tenant_blocked`.
+
+**DC 30-day window mirrors NY.** § 42-3505.55 has the same deemed-consent mechanism. Pinned by `dc_30_day_window_deemed_consent_at_31_days`.
+
+Mounted at `POST /api/rental/sublet-consent-check`. Twenty-six tests pin: 51-row coverage; NY sublet reasonable-standard at 4-units AND below 4-units (boundary); **NY 30-day deemed-consent window** (fires at day 31, not at day 30); NY unreasonable refusal tenant proceeds; NY reasonable refusal tenant blocked; **NY assignment unreasonable refusal gives lease-termination right** (not assignment-proceed right — load-bearing asymmetry); NY reasonable refusal no termination right; **NY § 235-f roommate-addition statutory protection**; CA case-law reasonable standard applies; CA no building threshold; **CA assignment uses reasonable not unconditional** (regression target distinguishing from NY); CA roommate no statute; TX contract governs; DC 30-day window mirror; VA reasonable standard no unit threshold; WA reasonable standard; unknown state; case-insensitive lookup; sorted all_states; non-empty citations; **5 reasonable-standard states pinned** (NY/DC/VA/WA + CA case-law); **NY-only unit threshold sweep** across 50 other states; **NY-only unconditional-with-termination assignment sweep**; **NY-only roommate-statute sweep**.
+
 `traderview-expense::mold_disclosure` is the **state mold disclosure + remediation compliance table** — recent regulatory wave (2001-2025) starting with California's Toxic Mold Protection Act of 2001 (Civ. Code § 1941.7). Sibling to `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **Far fewer states have comprehensive mold statutes than bedbug or lead.** Most rely on the implied warranty of habitability. The verified-specific regimes are:
