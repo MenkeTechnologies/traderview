@@ -1392,6 +1392,8 @@ pub enum Preset {
     MegaRangeMidpointCloseDeepAboveYearLowQuintupledVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + midpoint close + quintupled vol + far above 52w low (≥20%) (institutional-tier deep-recovery wide-range standoff: extreme two-way intraday battle deep above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare euphoria-or-pullback turning-point indecision in deep-recovery territory with strong institutional commitment)
     MegaRangeMidpointCloseMidYearHighQuintupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone below the prior peak with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle pullback territory with strong institutional commitment)
     MegaRangeMidpointCloseMidYearLowQuintupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle recovery territory with strong institutional commitment)
+    MegaRangeMidpointCloseJustOffYearHighQuintupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag retracement zone)
+    MegaRangeMidpointCloseJustOffYearLowQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag bounce zone)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -9004,6 +9006,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 5.0
                 && hit.year_low_pct < 20.0
         }
+        Preset::MegaRangeMidpointCloseJustOffYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct >= 2.0
+                && hit.year_high_pct < 5.0
+        }
+        Preset::MegaRangeMidpointCloseJustOffYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct >= 2.0
+                && hit.year_low_pct < 5.0
+        }
     }
 }
 
@@ -10286,6 +10306,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseDeepAboveYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Far above 52w Low (≥20 %) (Institutional-tier Deep-recovery Wide-range Standoff: Extreme Two-way Intraday Battle Deep above the Prior Trough with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Euphoria-or-pullback Turning-point Indecision in Deep-recovery Territory with Strong Institutional Commitment)",
         Preset::MegaRangeMidpointCloseMidYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Mid-range from High (5-20 %) (Institutional-tier Mid-cycle Wide-range Standoff: Extreme Two-way Intraday Battle in the Proper Consolidation Zone below the Prior Peak with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Pause-or-pivot Showdown in Mid-cycle Pullback Territory with Strong Institutional Commitment)",
         Preset::MegaRangeMidpointCloseMidYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Mid-range from Low (5-20 %) (Institutional-tier Mid-cycle Wide-range Standoff: Extreme Two-way Intraday Battle in the Proper Consolidation Zone above the Prior Trough with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Pause-or-pivot Showdown in Mid-cycle Recovery Territory with Strong Institutional Commitment)",
+        Preset::MegaRangeMidpointCloseJustOffYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Just off 52w High (2-5 %) (Institutional-tier Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Pullback from the 52w High with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Re-test Indecision Day with Strong Institutional Commitment in the Post-tag Retracement Zone)",
+        Preset::MegaRangeMidpointCloseJustOffYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Quintupled Vol + Just off 52w Low (2-5 %) (Institutional-tier Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Bounce from the 52w Low with 5x Volume Ends with Balanced Midpoint Close; Quarterly-rare Re-test Indecision Day with Strong Institutional Commitment in the Post-tag Bounce Zone)",
     }
 }
 
