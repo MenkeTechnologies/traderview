@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-1295",          post(section_1295_route))
+        .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -412,6 +413,24 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §1092 straddle loss deferral ──────────────────────────────────────
+// Mounted at /api/calc/section-1092. Pure compute; defers loss on a
+// closed straddle leg up to unrecognized gain on remaining legs;
+// §1092(c)(4)(B) qualified covered call carve-out exempts qualifying
+// covered call positions from straddle treatment.
+
+async fn section_1092_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1092::Section1092Input>,
+) -> Result<Json<traderview_expense::section_1092::Section1092Result>, ApiError> {
+    if b.realized_loss_on_disposed_leg < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "realized_loss_on_disposed_leg must be >= 0 (pass loss as positive)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1092::compute(&b)))
 }
 
 // ── §1295 PFIC Qualified Electing Fund election ──────────────────────
