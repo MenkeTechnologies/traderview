@@ -62,6 +62,7 @@ pub mod section_280f;
 pub mod section_453;
 pub mod section_469;
 pub mod section_864b2;
+pub mod section_871m;
 pub mod section_481;
 pub mod seed_rules;
 pub mod self_employment_tax;

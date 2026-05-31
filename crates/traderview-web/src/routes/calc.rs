@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
+        .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -438,6 +439,24 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §871(m) dividend-equivalent withholding for non-US persons ───────
+// Mounted at /api/calc/section-871m. Pure compute; classifies a US-
+// equity-linked derivative as a Specified Equity-Linked Instrument
+// (SELI) based on delta + original term, applies statutory 30% or
+// treaty-reduced rate.
+
+async fn section_871m_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_871m::Section871MInput>,
+) -> Result<Json<traderview_expense::section_871m::Section871MResult>, ApiError> {
+    if b.dividend_equivalent_amount < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "dividend_equivalent_amount must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_871m::compute(&b)))
 }
 
 // ── §1092 straddle loss deferral ──────────────────────────────────────
