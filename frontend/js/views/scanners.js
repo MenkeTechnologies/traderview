@@ -1160,6 +1160,8 @@ const PRESETS = [
     { id: 'mega_range_midpoint_close_confirmed_below_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_midpoint_close_confirmed_below_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_midpoint_close_confirmed_below_year_low_decupled_vol.desc') },
     { id: 'mega_range_midpoint_close_deep_below_year_high_decupled_vol', label: t('view.scanners.preset.mega_range_midpoint_close_deep_below_year_high_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_midpoint_close_deep_below_year_high_decupled_vol.desc') },
     { id: 'mega_range_midpoint_close_deep_above_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_midpoint_close_deep_above_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_midpoint_close_deep_above_year_low_decupled_vol.desc') },
+    { id: 'mega_range_midpoint_close_mid_year_high_decupled_vol', label: t('view.scanners.preset.mega_range_midpoint_close_mid_year_high_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_midpoint_close_mid_year_high_decupled_vol.desc') },
+    { id: 'mega_range_midpoint_close_mid_year_low_decupled_vol', label: t('view.scanners.preset.mega_range_midpoint_close_mid_year_low_decupled_vol.label'), desc: t('view.scanners.preset.mega_range_midpoint_close_mid_year_low_decupled_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
