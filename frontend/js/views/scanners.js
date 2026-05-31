@@ -1094,6 +1094,8 @@ const PRESETS = [
     { id: 'decupled_vol_gap_down_midpoint_hot_vol', label: t('view.scanners.preset.decupled_vol_gap_down_midpoint_hot_vol.label'), desc: t('view.scanners.preset.decupled_vol_gap_down_midpoint_hot_vol.desc') },
     { id: 'triple_confluence_high_hot_vol', label: t('view.scanners.preset.triple_confluence_high_hot_vol.label'), desc: t('view.scanners.preset.triple_confluence_high_hot_vol.desc') },
     { id: 'triple_confluence_low_hot_vol', label: t('view.scanners.preset.triple_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.triple_confluence_low_hot_vol.desc') },
+    { id: 'quad_confluence_high_hot_vol', label: t('view.scanners.preset.quad_confluence_high_hot_vol.label'), desc: t('view.scanners.preset.quad_confluence_high_hot_vol.desc') },
+    { id: 'quad_confluence_low_hot_vol', label: t('view.scanners.preset.quad_confluence_low_hot_vol.label'), desc: t('view.scanners.preset.quad_confluence_low_hot_vol.desc') },
 ];
 
 export async function renderScanners(mount) {
