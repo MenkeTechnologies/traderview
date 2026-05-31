@@ -27,6 +27,9 @@ use traderview_expense::disposition::{
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
+use traderview_expense::contractor_1099::{
+    compute as compute_contractor_1099, Contractor1099Input, Contractor1099Report,
+};
 use traderview_expense::cost_segregation::{
     compute as compute_cost_segregation, CostSegInput, CostSegReport,
     PropertyTypeDefault as CostSegPropertyType,
@@ -128,6 +131,8 @@ pub fn router() -> Router<AppState> {
         .route("/late-fee-check", axum::routing::post(late_fee_check_route))
         // State eviction-notice period lookup
         .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
+        // 1099-NEC contractor $600 threshold tracker
+        .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1788,6 +1793,18 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// 1099-NEC contractor $600 threshold tracker
+// ---------------------------------------------------------------------------
+
+async fn contractor_1099_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<Contractor1099Input>,
+) -> Result<Json<Contractor1099Report>, ApiError> {
+    Ok(Json(compute_contractor_1099(&b)))
 }
 
 async fn property_cost_segregation(
