@@ -24,6 +24,7 @@ lopdf = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+once_cell = { workspace = true }
 
 [dev-dependencies]
 rust_decimal_macros = "1"

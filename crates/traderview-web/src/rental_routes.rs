@@ -20,6 +20,10 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use traderview_expense::deposit_interest::{accrue as accrue_deposit_interest, AccrualInput, AccrualResult};
+use traderview_expense::rental_depreciation::{
+    macrs_rental_year_1_deduction, RealPropertyClass,
+};
 use traderview_expense::schedule_e::{
     roll_property, roll_report, ExpenseRow, IncomeKind as SeIncomeKind, IncomeRow, MileageRow,
     PropertyInput, PropertyType as SePropertyType, ScheduleECategory, ScheduleEReport,
@@ -58,6 +62,9 @@ pub fn router() -> Router<AppState> {
         .route("/report/schedule_e", get(schedule_e_report))
         .route("/properties/:property_id/qbi-hours", get(qbi_hours_report))
         .route("/properties/:property_id/rent-roll", get(rent_roll))
+        .route("/properties/:property_id/depreciation", get(property_depreciation))
+        // state-specific security deposit interest accrual
+        .route("/deposit-interest", axum::routing::post(deposit_interest_accrue))
 }
 
 // ---------------------------------------------------------------------------
@@ -1328,16 +1335,22 @@ async fn schedule_e_report(
     let end = NaiveDate::from_ymd_opt(q.year + 1, 1, 1)
         .ok_or_else(|| ApiError::BadRequest("invalid year".into()))?;
 
-    let props: Vec<(Uuid, String, i32, i32)> = sqlx::query_as(
-        "SELECT id, property_type::text, fair_rental_days, personal_use_days
-           FROM rental_properties WHERE user_id = $1 AND status != 'archived'",
-    )
-    .bind(u.id)
-    .fetch_all(&s.pool)
-    .await?;
+    // Pull the fields needed for both the line items AND the per-property
+    // depreciation (purchase price, land value, placed-in-service date,
+    // recovery period). Properties missing any of those just get $0
+    // depreciation for the year — the rest of the roll-up still works.
+    let props: Vec<(Uuid, String, i32, i32, Option<Decimal>, Option<Decimal>, Option<NaiveDate>, Decimal)> =
+        sqlx::query_as(
+            "SELECT id, property_type::text, fair_rental_days, personal_use_days,
+                    purchase_price, land_value, placed_in_service_at, recovery_period_years
+               FROM rental_properties WHERE user_id = $1 AND status != 'archived'",
+        )
+        .bind(u.id)
+        .fetch_all(&s.pool)
+        .await?;
 
     let mut lines = Vec::with_capacity(props.len());
-    for (pid, ptype, frd, pud) in props {
+    for (pid, ptype, frd, pud, purchase, land, placed, recovery) in props {
         let income_rows: Vec<(String, Decimal)> = sqlx::query_as(
             "SELECT kind::text, amount FROM rental_income
               WHERE property_id = $1 AND posted_at >= $2 AND posted_at < $3",
@@ -1389,6 +1402,34 @@ async fn schedule_e_report(
             .map(|(m, r)| MileageRow { miles: *m, rate_per_mile: *r })
             .collect();
 
+        // Depreciation per IRS Pub 946 Table A-6 (residential, 27.5y) or
+        // A-7a (commercial, 39y). Land is never depreciable. Anything
+        // other than residential and commercial gets $0 — land, royalties,
+        // and self-rental don't claim line-18 depreciation on Schedule E.
+        let depreciation_for_year = match (purchase, placed) {
+            (Some(p), Some(pd)) => {
+                let basis = (p - land.unwrap_or(Decimal::ZERO)).max(Decimal::ZERO);
+                let class = match recovery.to_string().as_str() {
+                    "39" | "39.0" => Some(RealPropertyClass::Commercial39),
+                    "27.5" => Some(RealPropertyClass::Residential27_5),
+                    _ if ptype == "commercial" => Some(RealPropertyClass::Commercial39),
+                    _ if matches!(ptype.as_str(),
+                        "single_family" | "multi_family" | "vacation_short_term" | "self_rental")
+                        => Some(RealPropertyClass::Residential27_5),
+                    _ => None,
+                };
+                class.map(|c| {
+                    macrs_rental_year_1_deduction(
+                        basis, c,
+                        pd.format("%Y").to_string().parse().unwrap_or(q.year),
+                        pd.format("%m").to_string().parse().unwrap_or(1),
+                        q.year,
+                    )
+                }).unwrap_or(Decimal::ZERO)
+            }
+            _ => Decimal::ZERO,
+        };
+
         let pid_str = pid.to_string();
         let input = PropertyInput {
             property_id: &pid_str,
@@ -1398,14 +1439,95 @@ async fn schedule_e_report(
             income: &income,
             expenses: &expenses,
             mileage: &mileage,
-            // Depreciation passes through depreciation.rs in a follow-up
-            // iteration. Zero today.
-            depreciation_for_year: Decimal::ZERO,
+            depreciation_for_year,
         };
         lines.push(roll_property(&input));
     }
 
     Ok(Json(roll_report(lines)))
+}
+
+// ---------------------------------------------------------------------------
+// Per-property depreciation report
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+struct PropertyDepreciationReport {
+    year: i32,
+    depreciable_basis: Decimal,
+    deduction: Decimal,
+    note: String,
+}
+
+async fn property_depreciation(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(property_id): Path<Uuid>,
+    Query(q): Query<ReportQuery>,
+) -> Result<Json<PropertyDepreciationReport>, ApiError> {
+    ensure_property_owner(&s, u.id, property_id).await?;
+    let (ptype, purchase, land, placed, recovery): (
+        String, Option<Decimal>, Option<Decimal>, Option<NaiveDate>, Decimal,
+    ) = sqlx::query_as(
+        "SELECT property_type::text, purchase_price, land_value,
+                placed_in_service_at, recovery_period_years
+           FROM rental_properties WHERE id = $1",
+    )
+    .bind(property_id)
+    .fetch_one(&s.pool)
+    .await?;
+
+    let class = match recovery.to_string().as_str() {
+        "39" | "39.0" => Some(RealPropertyClass::Commercial39),
+        "27.5" => Some(RealPropertyClass::Residential27_5),
+        _ if ptype == "commercial" => Some(RealPropertyClass::Commercial39),
+        _ if matches!(ptype.as_str(),
+            "single_family" | "multi_family" | "vacation_short_term" | "self_rental")
+            => Some(RealPropertyClass::Residential27_5),
+        _ => None,
+    };
+
+    let (basis, deduction, note) = match (purchase, placed, class) {
+        (Some(p), Some(pd), Some(c)) => {
+            let basis = (p - land.unwrap_or(Decimal::ZERO)).max(Decimal::ZERO);
+            let ded = macrs_rental_year_1_deduction(
+                basis, c,
+                pd.format("%Y").to_string().parse().unwrap_or(q.year),
+                pd.format("%m").to_string().parse().unwrap_or(1),
+                q.year,
+            );
+            (basis, ded, format!("MACRS {:?} class", c))
+        }
+        (None, _, _) => (Decimal::ZERO, Decimal::ZERO, "no purchase_price recorded".into()),
+        (_, None, _) => (Decimal::ZERO, Decimal::ZERO, "no placed_in_service_at recorded".into()),
+        (_, _, None) => (Decimal::ZERO, Decimal::ZERO,
+            format!("property_type '{ptype}' is not depreciable real property")),
+    };
+
+    Ok(Json(PropertyDepreciationReport {
+        year: q.year,
+        depreciable_basis: basis,
+        deduction,
+        note,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// State security-deposit-interest accrual
+// ---------------------------------------------------------------------------
+
+async fn deposit_interest_accrue(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AccrualInput>,
+) -> Result<Json<AccrualResult>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    if b.deposit < Decimal::ZERO {
+        return Err(ApiError::BadRequest("deposit must be >= 0".into()));
+    }
+    Ok(Json(accrue_deposit_interest(&b)))
 }
 
 // ---------------------------------------------------------------------------
