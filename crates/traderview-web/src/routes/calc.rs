@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
+        .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
@@ -818,6 +819,34 @@ async fn section_408A_d3_route(
         ));
     }
     Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
+}
+
+// ── §465 at-risk rules ───────────────────────────────────────────────
+// Mounted at /api/calc/section-465. §465(a) loss limited to amount
+// at risk; §465(b)(1) cash + basis + recourse; §465(b)(2) external
+// pledged property; §465(b)(3) related-party reduces; §465(b)(4)
+// general nonrecourse excluded; §465(b)(6) qualified nonrecourse for
+// real property included; §465(d) suspended loss carryover; §465(e)
+// negative-at-risk recapture.
+
+async fn section_465_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_465::Section465Input>,
+) -> Result<Json<traderview_expense::section_465::Section465Result>, ApiError> {
+    if b.activity_loss_this_year < Decimal::ZERO
+        || b.cash_and_basis_contributed < Decimal::ZERO
+        || b.recourse_debt < Decimal::ZERO
+        || b.external_pledged_property_fmv < Decimal::ZERO
+        || b.qualified_nonrecourse_financing < Decimal::ZERO
+        || b.other_nonrecourse_debt < Decimal::ZERO
+        || b.related_party_borrowing < Decimal::ZERO
+        || b.prior_year_suspended_loss < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_465::compute(&b)))
 }
 
 // ── §401(a)(9) Required Minimum Distributions (RMDs) ─────────────────

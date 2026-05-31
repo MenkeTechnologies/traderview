@@ -1044,6 +1044,39 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_465` is the **IRC §465 at-risk rules module** — pairs with `section_469` (passive activity losses) to complete the loss-limitation framework for any trader, partner, or S corp shareholder with leveraged positions. §465 applies FIRST (limits to amount at risk), then §469 applies (limits by passive activity character).
+
+**§465(a) general rule**: deductible loss is limited to the amount the taxpayer has "at risk" in the activity at year-end.
+
+**At-risk components** under §465(b):
+
+| Component                              | Citation         | Behavior                                  |
+|----------------------------------------|------------------|-------------------------------------------|
+| Cash + adjusted basis of property contributed | §465(b)(1)(A) | INCREASES at-risk                         |
+| Recourse debt (personally liable)      | §465(b)(1)(B)    | INCREASES at-risk                         |
+| External pledged property FMV          | §465(b)(2)       | INCREASES at-risk                         |
+| Related-party borrowing                | §465(b)(3)       | REDUCES at-risk                           |
+| Qualified nonrecourse for real property | §465(b)(6)      | **REAL PROPERTY ONLY** — increases at-risk |
+| General nonrecourse debt               | §465(b)(4)       | NEVER at-risk                             |
+
+**§465(b)(6) qualified nonrecourse financing carve-out is load-bearing for real estate.** Only the `RealPropertyHolding` activity kind qualifies. Other trade or business activities cannot use QNF as at-risk. Pinned by `qualified_nonrecourse_real_property_section_465b6_applies` ($20k cash + $40k recourse + $200k QNF = $260k at-risk for real property) + `qualified_nonrecourse_not_applied_for_non_real_property` (same QNF amount, OtherTradeOrBusiness activity = at-risk stays at $60k) + `qnf_does_not_apply_when_other_trade_uses_real_estate_lookup` (activity classification is the gatekeeper).
+
+**General nonrecourse (non-qualified) is NEVER at risk.** Even $100k of plain nonrecourse debt doesn't add to at-risk amount because the taxpayer faces no economic loss exposure beyond the property securing the loan. Pinned by `nonrecourse_debt_not_at_risk_in_non_real_property_activity`.
+
+**§465(b)(3) related-party reduction.** Borrowing from a related party with an interest in the activity reduces at-risk because the related party isn't likely to enforce collection. Pinned by `related_party_borrowing_reduces_at_risk` ($20k cash + $40k recourse - $20k related = $40k).
+
+**§465(e) negative-at-risk recapture trigger.** If related-party borrowing or other adjustments would make at-risk negative, the prior losses claimed up to that negative amount are recaptured as income. The compute fn flags this with `negative_at_risk_recapture_triggered = true`. Pinned by `negative_at_risk_recapture_triggered` ($10k cash + $10k recourse - $50k related = -$30k → recapture flag set, at-risk clamped to 0).
+
+**§465(d) suspended loss carryover** — losses disallowed under §465(a) carry forward indefinitely. Prior carryover adds to current-year loss before the at-risk cap. Pinned by `prior_year_carryover_added_to_current_loss` ($50k current + $30k prior = $80k loss; $60k at-risk → $60k allowed, $20k suspended) + `prior_carryover_alone_suspended_when_no_current_year_at_risk` (no current loss but $30k prior → all absorbed by at-risk) + `prior_carryover_partial_when_combined_loss_exceeds_at_risk`.
+
+**At-risk reduces by allowed loss** under §465(b)(5). Pinned by `cash_plus_recourse_debt_at_risk_full_loss_allowed` ($60k at-risk - $50k loss = $10k remaining) + `exact_at_risk_match_full_allowance_zero_remaining` ($60k at-risk - $60k loss = $0 remaining, $0 suspended).
+
+**Zero-at-risk → all loss suspended.** No contribution + no debt = no at-risk = no current-year deduction. All loss suspended for future years. Pinned by `zero_at_risk_no_loss_allowed`.
+
+**Combined real-estate partnership scenario** demonstrates the full §465 sweep: cash + recourse + external pledged + QNF - related-party = comprehensive at-risk. Pinned by `complex_combination_partnership_real_estate_with_all_components` ($30k + $20k + $50k + $500k - $10k = $590k).
+
+Mounted at `POST /api/calc/section-465`. Twenty-one tests pin: cash + recourse full at-risk + full loss allowed; loss exceeds at-risk partial allowance + suspension; **prior carryover combines with current loss before cap**; general nonrecourse not at-risk in non-real-property; **§465(b)(6) QNF carve-out applies for real property** + **explicitly does NOT apply for other trade/business** (regression target for activity classification gatekeeper); external pledged property increases; **related-party borrowing reduces**; zero at-risk → all loss suspended; **negative at-risk → §465(e) recapture flag** + clamp to 0; exact at-risk match full allowance zero remaining; real-estate partnership full sweep ($1.05M at-risk); QNF doesn't apply when other-trade misuses real-estate lookup; combined all-components partnership; prior carryover only (no current loss); prior carryover partial suspension; zero loss no-op; **$1B real-estate precision** ($6B at-risk with $5B QNF); note describes §465(e) recapture path; note describes QNF carve-out applied; note for suspended loss mentions §465(d).
+
 `traderview-expense::section_401a9` is the **IRC §401(a)(9) Required Minimum Distribution module** — every trader retiree with a traditional IRA or 401(k) reaching the RMD age must begin taking distributions or face the §4974 excise tax. SECURE Act of 2019 raised the RMD age from 70½ to 72; SECURE 2.0 Act of 2022 raised it again to 73 (and to 75 for the 1960+ cohort).
 
 **RMD age by birth year** (SECURE 2.0 cohort logic):
