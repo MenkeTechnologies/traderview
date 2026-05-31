@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
         .route("/calc/section-1202",          post(section_1202_route))
+        .route("/calc/section-121",           post(section_121_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -350,4 +351,33 @@ async fn section_1202_route(
         ));
     }
     Ok(Json(traderview_expense::section_1202::compute(&b)))
+}
+
+// ── §121 home sale exclusion ──────────────────────────────────────────
+// Mounted at /api/calc/section-121. Pure compute; up to $250k single /
+// $500k MFJ of gain on principal-residence sale excluded with the 2-of-5
+// year ownership + use tests, §121(b)(4) hardship pro-rata, §121(b)(5)
+// non-qualified-use proportional reduction, and §121(d)(6) post-1997
+// depreciation recapture.
+
+async fn section_121_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_121::Section121Input>,
+) -> Result<Json<traderview_expense::section_121::Section121Result>, ApiError> {
+    if b.sale_price < Decimal::ZERO
+        || b.selling_costs < Decimal::ZERO
+        || b.depreciation_post_1997 < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "sale_price / selling_costs / depreciation_post_1997 must be >= 0".into(),
+        ));
+    }
+    if b.non_qualified_use_days_post_2008 > b.total_ownership_days_post_2008
+        && b.total_ownership_days_post_2008 > 0
+    {
+        return Err(ApiError::BadRequest(
+            "non_qualified_use_days_post_2008 must be <= total_ownership_days_post_2008".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_121::compute(&b)))
 }
