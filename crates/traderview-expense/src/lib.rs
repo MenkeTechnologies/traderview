@@ -29,6 +29,7 @@ pub mod qbi;
 pub mod quarterly_tax;
 pub mod recurring;
 pub mod rental_depreciation;
+pub mod reps_qualification;
 pub mod rules;
 pub mod schedule_d;
 pub mod schedule_e;

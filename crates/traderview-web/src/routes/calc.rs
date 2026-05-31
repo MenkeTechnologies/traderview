@@ -44,6 +44,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
+        .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -374,6 +375,24 @@ async fn section_1045_route(
         ));
     }
     Ok(Json(traderview_expense::section_1045::compute(&b)))
+}
+
+// ── §469(c)(7) Real Estate Professional Status qualification ─────────
+// Mounted at /api/calc/reps-qualification. Pure compute; checks the
+// 750-hour test, the >50%-of-personal-services test, and material
+// participation. Returns whether REPS is met (flips rental losses from
+// passive to non-passive in §469 PAL).
+
+async fn reps_qualification_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::reps_qualification::RepsInput>,
+) -> Result<Json<traderview_expense::reps_qualification::RepsResult>, ApiError> {
+    if b.other_personal_services_hours < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "other_personal_services_hours must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::reps_qualification::compute(&b)))
 }
 
 // ── §121 home sale exclusion ──────────────────────────────────────────
