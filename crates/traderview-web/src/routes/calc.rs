@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-121",           post(section_121_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
+        .route("/calc/section-267",           post(section_267_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -399,6 +400,29 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §267 related-party loss disallowance ─────────────────────────────
+// Mounted at /api/calc/section-267. Pure compute; §267(a)(1) disallows
+// the loss when seller and buyer are related per the §267(b) 10-category
+// list. §267(d) preserves the disallowance for buyer's subsequent gain
+// reduction (capped at buyer's actual gain).
+
+async fn section_267_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_267::Section267Input>,
+) -> Result<Json<traderview_expense::section_267::Section267Result>, ApiError> {
+    if b.realized_loss < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "realized_loss must be >= 0 (pass loss as positive number)".into(),
+        ));
+    }
+    if b.buyer_purchase_price < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "buyer_purchase_price must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_267::compute(&b)))
 }
 
 // ── §469(c)(7) Real Estate Professional Status qualification ─────────
