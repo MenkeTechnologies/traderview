@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1014",          post(section_1014_route))
+        .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-1091",          post(section_1091_route))
@@ -628,6 +629,35 @@ async fn section_170e_route(
         ));
     }
     Ok(Json(traderview_expense::section_170e::compute(&b)))
+}
+
+// ── §1015 carryover basis on gifts ───────────────────────────────────
+// Mounted at /api/calc/section-1015. Pure compute; §1015(a) general
+// carryover; §1015(a) dual-basis rule for depreciated property with
+// phantom zone; §1015(d) gift-tax basis increase with two ceilings
+// (cap at net appreciation, cap at FMV); §1223(2) holding-period
+// tacking on gain path; gift-date start on dual-basis loss path.
+
+async fn section_1015_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1015::Section1015Input>,
+) -> Result<Json<traderview_expense::section_1015::Section1015Result>, ApiError> {
+    if b.donor_adjusted_basis < Decimal::ZERO
+        || b.fmv_at_gift_date < Decimal::ZERO
+        || b.gift_tax_paid < Decimal::ZERO
+        || b.gift_amount_for_tax_purposes < Decimal::ZERO
+        || b.sale_price < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    if b.sale_date < b.gift_date {
+        return Err(ApiError::BadRequest(
+            "sale_date must be on or after gift_date".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1015::compute(&b)))
 }
 
 // ── §1014 stepped-up basis at death ──────────────────────────────────

@@ -872,6 +872,50 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_1015` is the **IRC §1015 carryover basis on gifts module** — sibling to `section_1014` (stepped-up basis at death). Where §1014 wipes out embedded gains at death, §1015 **carries them through to the donee** for eventual recognition. No step-up on lifetime gifts.
+
+**§1015(a) general carryover** — donee's basis = donor's adjusted basis. Holding period TACKS from donor's acquisition date under §1223(2). A one-day-old gift of LTCG-eligible stock is immediately long-term in the donee's hands. Pinned by `appreciated_with_long_donor_holding_immediate_ltcg_via_tacking`.
+
+**§1015(a) dual-basis rule (depreciated property)** is the famous loss-bifurcation trap. When FMV at gift is LESS than donor's adjusted basis, the donee takes a **split basis**:
+
+| Sale price                      | Basis used   | Outcome                                |
+|---------------------------------|--------------|----------------------------------------|
+| Sale > donor's basis            | Donor's basis | Gain = sale - donor's basis           |
+| Sale < FMV-at-gift              | FMV-at-gift   | Loss = sale - FMV-at-gift             |
+| FMV-at-gift ≤ sale ≤ donor's basis | (neither)  | **PHANTOM ZONE — no gain, no loss**    |
+
+The phantom zone is the load-bearing case. If donor's basis = $100k, FMV-at-gift = $50k, and donee sells at $75k, NEITHER gain nor loss is recognized — the donor's embedded $25k loss vanishes (loss bifurcation prevents donor from shifting loss to donee) AND the donee's $25k of economic appreciation since gift also disappears for tax purposes. Pinned by `depreciated_sale_in_phantom_zone_no_gain_no_loss` + both exact-boundary pins (`depreciated_phantom_zone_at_fmv_exact_boundary` at $50k = no loss; `depreciated_phantom_zone_at_donor_basis_exact_boundary` at $100k = no gain).
+
+**Loss-side holding-period exception**. On the dual-basis loss path, the donee's holding period **starts at the gift date**, not the donor's acquisition date. Per Treas. Reg. § 1.1015-1, tacking applies only when the basis is determined "in whole or in part" by reference to donor's basis — using FMV-for-loss satisfies neither. Pinned by `loss_path_holding_period_starts_at_gift_not_donor` (donor held since 2020, gift 2026-01-01, sale 2026-07-01 on loss path → STCG, not LTCG).
+
+**§1015(d) gift-tax basis increase** — when gift tax was paid on the transfer, the donor's basis is increased by the gift tax attributable to net appreciation:
+
+```
+increase = gift_tax_paid × (net_appreciation / gift_amount_for_tax_purposes)
+```
+
+where `net_appreciation = FMV - donor's basis`. Two ceilings:
+
+1. **Cannot exceed net appreciation itself** — prevents the formula from over-correcting on unusual gift-tax-to-gift-amount ratios.
+2. **Cannot exceed FMV at gift date** — prevents the adjustment from converting a gain asset into a loss asset.
+
+Pinned by `gift_tax_basis_increase_applied_to_appreciated` (canonical case: $30k tax × ($90k / $84k) = $32.14k increase) + `gift_tax_basis_increase_capped_at_net_appreciation` (pathological large tax → cap fires) + `no_gift_tax_increase_on_depreciated_property` (depreciated → net_appreciation = 0 → no increase even if tax paid) + `zero_gift_amount_no_increase` (division-by-zero guard).
+
+**Mode classification:**
+
+| Mode                              | Sale outcome | Holding period start    | §1015(d) applies? |
+|-----------------------------------|--------------|--------------------------|---------------------|
+| Appreciated (single basis)        | Gain or Loss | Donor's acquisition      | Yes if tax paid     |
+| Depreciated, sale > donor's basis | Gain         | Donor's acquisition      | Yes if tax paid (but net_app might be 0) |
+| Depreciated, sale < FMV-at-gift   | Loss         | **Gift date** (no tacking) | No (net_app = 0)   |
+| Depreciated, phantom zone         | Neither      | n/a                      | No                  |
+
+**FMV exactly equals donor basis**: single basis (no dual). The dual-basis rule fires only when FMV is **strictly less than** donor basis. Pinned by `fmv_equals_donor_basis_single_basis_no_dual`.
+
+**Appreciated property + sale below basis**: single-basis path → loss via donor's (single) basis. Dual basis does NOT fire. Pinned by `appreciated_sale_below_basis_single_basis_loss` (sale $5k, donor basis $10k → -$5k loss).
+
+Mounted at `POST /api/calc/section-1015`. Twenty-four tests pin: appreciated carryover; **LTCG via §1223(2) tacking** (donor held 6.5 years, sale 6 months after gift → still LTCG); depreciated sale-above-donor-basis gain via donor basis; **depreciated sale-below-FMV loss via FMV** (not donor basis); **phantom zone with both exact boundaries** (loss-bifurcation regression target); **loss path holding period starts at gift** (Treas. Reg. § 1.1015-1 regression target); gain path tacks; **§1015(d) gift-tax increase canonical** ($30k × 90k/84k); §1015(d) net-appreciation ceiling fires; no §1015(d) on depreciated property; zero gift tax / zero gift amount / FMV equals donor basis single-basis; sale at donor basis exact → no-gain-no-loss; appreciated single-basis loss; dual-basis with gift-tax-increase math; note describes loss-path no-tacking exception; note describes loss-bifurcation in phantom zone; zero basis donor; **very large precision** ($1.234B basis); 366-day boundary gain LTCG; 365-day boundary loss-path STCG.
+
 `traderview-expense::section_1014` is the **IRC §1014 stepped-up basis at death module** — the single most powerful rule in the Internal Revenue Code for buy-and-hold investors and the foundation of every "die with low basis" estate-planning strategy. When property passes from a decedent to an heir, the heir's basis is **stepped up (or down) to the fair market value on the date of death** under §1014(a)(1). All gain or loss that accrued during the decedent's lifetime is permanently eliminated.
 
 Four exceptions / refinements:
