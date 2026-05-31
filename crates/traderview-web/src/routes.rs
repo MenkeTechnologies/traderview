@@ -46,6 +46,7 @@ mod halts;
 mod heatmap;
 mod hotkeys;
 mod imports;
+mod institutional;
 mod journal;
 mod journal_ai;
 mod live_positions;
@@ -127,6 +128,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(hotkeys::router())
         .merge(earnings_iv::router())
         .merge(disclosures::router())
+        .merge(institutional::router())
         .merge(sentiment::router())
         .merge(heatmap::router())
         .merge(options::router())

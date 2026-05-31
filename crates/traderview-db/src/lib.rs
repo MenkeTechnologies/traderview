@@ -32,6 +32,7 @@ pub mod halts;
 pub mod heatmap;
 pub mod hotkeys;
 pub mod imports;
+pub mod institutional;
 pub mod journal;
 pub mod journal_ai;
 pub mod live_positions;
