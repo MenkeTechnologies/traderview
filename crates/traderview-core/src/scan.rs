@@ -1268,6 +1268,8 @@ pub enum Preset {
     MegaRangeMidpointCloseConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + doubled vol (post-breakdown wide-range standoff: extreme intraday volatility past the prior trough ends in balanced midpoint close; breakdown being tested with maximum-energy two-way fight, next-day resolves whether the breakdown sticks or fails)
     MegaRangeMidpointCloseDeepBelowYearHighHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far below 52w high (>=20%) + doubled vol (capitulation indecision deep in pullback: extreme two-way intraday battle well below the prior peak ends with balanced midpoint close; potential turning-point standoff in extended-decline territory where bulls and bears each landed a blow)
     MegaRangeMidpointCloseDeepAboveYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far above 52w low (>=20%) + doubled vol (exhaustion indecision deep in advance: extreme two-way intraday battle well above the prior trough ends with balanced midpoint close; potential turning-point standoff in extended-advance territory where bulls and bears each landed a blow)
+    MegaRangeMidpointCloseMidYearHighHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from high (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone below the prior peak ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in pullback territory)
+    MegaRangeMidpointCloseMidYearLowHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from low (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone above the prior trough ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in recovery territory)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7934,6 +7936,24 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 20.0
                 && hit.rel_volume >= 2.0
         }
+        Preset::MegaRangeMidpointCloseMidYearHighHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_high_pct >= 5.0
+                && hit.year_high_pct < 20.0
+                && hit.rel_volume >= 2.0
+        }
+        Preset::MegaRangeMidpointCloseMidYearLowHotVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+                && hit.year_low_pct >= 5.0
+                && hit.year_low_pct < 20.0
+                && hit.rel_volume >= 2.0
+        }
     }
 }
 
@@ -9092,6 +9112,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseConfirmedBelowYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Confirmed-breakdown Zone (1-3 % past 52w Low) + Doubled Vol (Post-breakdown Wide-range Standoff: Extreme Intraday Volatility past the Prior Trough Ends in Balanced Midpoint Close; Breakdown Being Tested with Maximum-energy Two-way Fight, Next-day Resolves Whether the Breakdown Sticks or Fails)",
         Preset::MegaRangeMidpointCloseDeepBelowYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Far below 52w High (>=20 %) + Doubled Vol (Capitulation Indecision Deep in Pullback: Extreme Two-way Intraday Battle Well below the Prior Peak Ends with Balanced Midpoint Close; Potential Turning-point Standoff in Extended-decline Territory Where Bulls and Bears Each Landed a Blow)",
         Preset::MegaRangeMidpointCloseDeepAboveYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Far above 52w Low (>=20 %) + Doubled Vol (Exhaustion Indecision Deep in Advance: Extreme Two-way Intraday Battle Well above the Prior Trough Ends with Balanced Midpoint Close; Potential Turning-point Standoff in Extended-advance Territory Where Bulls and Bears Each Landed a Blow)",
+        Preset::MegaRangeMidpointCloseMidYearHighHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Mid-range from High (5-20 %) + Doubled Vol (Mid-cycle Wide-range Indecision: Extreme Two-way Intraday Battle in the Proper Consolidation Zone below the Prior Peak Ends with Balanced Midpoint Close; Mid-cycle Pause-or-pivot Standoff in Pullback Territory)",
+        Preset::MegaRangeMidpointCloseMidYearLowHotVol => "Mega Intraday Range (>10 %) + Midpoint Close + Mid-range from Low (5-20 %) + Doubled Vol (Mid-cycle Wide-range Indecision: Extreme Two-way Intraday Battle in the Proper Consolidation Zone above the Prior Trough Ends with Balanced Midpoint Close; Mid-cycle Pause-or-pivot Standoff in Recovery Territory)",
     }
 }
 
