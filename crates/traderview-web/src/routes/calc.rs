@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
+        .route("/calc/section-174",           post(section_174_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -440,6 +441,24 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §174 R&D capitalization (post-TCJA) ──────────────────────────────
+// Mounted at /api/calc/section-174. Pure compute; capitalizes R&D
+// expenditures and amortizes over 5y domestic / 15y foreign with
+// half-year convention. Hit algorithmic traders writing internal
+// trading software starting in 2022.
+
+async fn section_174_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_174::Section174Input>,
+) -> Result<Json<traderview_expense::section_174::Section174Result>, ApiError> {
+    if b.r_and_d_amount < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "r_and_d_amount must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_174::compute(&b)))
 }
 
 // ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────
