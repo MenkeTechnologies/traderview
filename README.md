@@ -384,6 +384,43 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::lead_disclosure` is the **federal Title X + state lead-based paint compliance table** — sibling to `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
+
+**Federal floor (universal)** — Section 1018 of Title X of the Residential Lead-Based Paint Hazard Reduction Act of 1992 (40 CFR Part 745 / 24 CFR Part 35 Subpart A) applies to **all pre-1978 private rentals nationwide**. Four mandatory landlord disclosure elements:
+
+1. EPA pamphlet "Protect Your Family From Lead in Your Home"
+2. Federal Lead Warning Statement in the lease (specific federal language)
+3. Disclosure of any known lead-based paint records / prior inspections
+4. 10-day risk-assessment window for tenant before lease binds
+
+**Federal penalty**: $10,000 per violation under 40 CFR § 745.118(c), plus tenant may sue for **treble damages**.
+
+**Five state regime types** layered atop the federal floor:
+
+| Regime                              | States                                                          | Trigger                              |
+|-------------------------------------|-----------------------------------------------------------------|--------------------------------------|
+| **Federal floor only**              | 41 states (AK / AL / AR / AZ / CA / CO / DE / FL / GA / HI / IA / ID / IN / KS / KY / LA / ME / MI / MO / MS / MT / NC / ND / NE / NH / NM / NV / OH / OK / OR / PA / SC / SD / TN / TX / UT / VA / WA / WV / WY) | No state additions |
+| **Child-based deleading**           | MA / CT / MN / WI                                               | Child under 6 in household           |
+| **Periodic inspection**             | NJ (2022) / MD / DC                                             | On 3-year or annual cycle            |
+| **Inspection at occupancy change**  | IL / RI / VT                                                    | Each new tenant                      |
+| **Comprehensive (combined)**        | NY (Pub. Health Law + NYC LL1)                                  | Child + periodic + investigation     |
+
+**MA Lead Law (M.G.L. c. 111 § 197, 1971) is the strictest in the country.** When a child under 6 occupies a pre-1978 rental, the landlord must "delead" — remove or permanently cover all lead-paint hazards — regardless of blood-lead level. Federal compliance alone is NOT sufficient. Pinned by `ma_strict_law_requires_deleading_with_child_under_6` (federal-compliant + child + no deleading = NOT compliant) + `ma_no_child_under_6_no_state_violation` (no child = MA state rules don't trigger, federal floor alone suffices).
+
+**NJ Lead-Safe Law (P.L. 2021, c.182, effective July 2022)** requires periodic inspections of ALL pre-1978 rentals on a 3-year cycle, regardless of whether a child occupies. Initial inspection deadline was July 22, 2024 (or first tenant turnover if earlier). Pinned by `nj_lead_safe_law_periodic_inspection_required` (no child needed; missing inspection alone is a violation).
+
+**RI / VT inspection-at-occupancy-change** is the third major model. Each new tenant triggers a new inspection requirement; landlord cannot stack inspections by spacing turnovers. Pinned by `ri_inspection_at_change_of_occupancy_required`.
+
+**NY (NYC Local Law 1 of 2004) is the comprehensive case.** Multiple regime flags fire simultaneously (child-trigger + periodic). When both miss, two distinct violations emit. Pinned by `ny_comprehensive_requires_both_periodic_and_child_action` (2 simultaneous violations).
+
+**1978 cutoff is a hard `<` boundary, not `≤`**. Property built in 1978 exactly is post-1978 and gets no federal obligation. Property built 1977 gets the full Title X treatment. Pinned by `property_built_1978_exact_is_post_1978_no_obligation` + `property_built_1977_triggers_federal_floor`.
+
+**Federal-floor-only states do not stack state-side violations.** When state regime = `FederalFloorOnly` (TX / FL / CO / AZ etc., 41 jurisdictions), even missing state-side inputs don't produce violations because the state has no statutory requirement. Pinned by `federal_floor_only_states_no_state_additions` (8-state sweep).
+
+**Post-1978 property skips all state rules too.** Even in MA, a 1980-built rental is exempt from the Massachusetts Lead Law because the law applies only to pre-1978 housing. Pinned by `post_1978_property_state_lead_rules_dont_apply`.
+
+Mounted at `POST /api/rental/lead-disclosure-check`. Twenty-three tests pin: 51-row coverage; **1977/1978/1980 cutoff boundary** (regulatory bright line); each of 4 federal disclosure elements individually triggers a violation; **MA child-under-6 deleading** trigger + no-child case; NJ periodic-inspection regime; RI occupancy-change regime; **NY comprehensive (two simultaneous violations)** when both rules fail; 8-state federal-floor-only sweep; unknown state handled; case-insensitive; sorted `all_states()`; non-empty citations; **child-based-deleading 9-state sweep** (CT/MA/MN/WI/NY/IL/RI/VT/DC); **periodic-inspection 4-state sweep** (NJ/MD/NY/DC); **occupancy-change 4-state sweep** (IL/RI/VT/MD); post-1978 in MA also skips state rules; federal penalty constant matches 40 CFR § 745.118 ($10k/violation); treble-damages flag pinned across 10 states; multiple violations stack (NJ regime: 2 federal + 2 NJ inspections = 4); note describes post-1978 no-obligation case.
+
 `traderview-expense::detector_requirements` is the **state-by-state smoke + carbon monoxide detector compliance table** — life-safety obligation with massive liability exposure (tenant death from non-functional CO detector = wrongful death suit + criminal exposure in some states). Sibling to `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **All 50 states require smoke detectors in residential rental units.** The variation lives in placement rules (every bedroom vs outside sleeping areas vs every level), power source (10-year sealed battery vs replaceable battery), and landlord-install obligations at occupancy.

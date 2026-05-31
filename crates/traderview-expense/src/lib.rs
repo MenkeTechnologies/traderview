@@ -29,6 +29,7 @@ pub mod habitability_remedies;
 pub mod just_cause_eviction;
 pub mod home_office;
 pub mod late_fee_caps;
+pub mod lead_disclosure;
 pub mod lease_disclosures;
 pub mod lockout_penalties;
 pub mod manual_entry;
