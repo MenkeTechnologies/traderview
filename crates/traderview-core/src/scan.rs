@@ -1196,6 +1196,8 @@ pub enum Preset {
     DecupledVolDownNearYearLowHotVol,          // rel_volume >= 10 AND change_pct < -3 AND year_low_pct < 2 — decupled vol (>=10) + big down move (<-3%) + at/near 52w low (<2%) (absolute-rarest breakdown-day signal: vol is 10x average, price prints a significant down move and simultaneously reaches the 52w low; tier-0 once-per-year + breakdown-at-extreme = portfolio-changing event)
     DecupledVolUpDeepBelowYearHighHotVol,      // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 20 — decupled vol (>=10) + big up move (>3%) + far below 52w high (>=20%) (unprecedented turnaround signal from depressed level: vol is 10x average and price prints a significant up move while still well below the prior peak; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
     DecupledVolDownDeepAboveYearLowHotVol,     // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 20 — decupled vol (>=10) + big down move (<-3%) + far above 52w low (>=20%) (unprecedented top signal from elevated level: vol is 10x average and price prints a significant down move while still well above the prior trough; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
+    DecupledVolUpConfirmedAboveYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 — decupled vol (>=10) + big up move (>3%) + confirmed-breakout zone (1-3% past 52w high) (unprecedented extension past validated breakout: vol is 10x average and price prints a significant up move while extending further past the prior peak; tier-0 once-per-year follow-through catalyst with maximum trend-confirmation strength)
+    DecupledVolDownConfirmedBelowYearLowHotVol,// rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 — decupled vol (>=10) + big down move (<-3%) + confirmed-breakdown zone (1-3% past 52w low) (unprecedented extension past validated breakdown: vol is 10x average and price prints a significant down move while extending further past the prior trough; tier-0 once-per-year follow-through catalyst with maximum trend-confirmation strength)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7384,6 +7386,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::DecupledVolDownDeepAboveYearLowHotVol => {
             hit.rel_volume >= 10.0 && hit.change_pct < -3.0 && hit.year_low_pct >= 20.0
         }
+        Preset::DecupledVolUpConfirmedAboveYearHighHotVol => {
+            hit.rel_volume >= 10.0
+                && hit.change_pct > 3.0
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::DecupledVolDownConfirmedBelowYearLowHotVol => {
+            hit.rel_volume >= 10.0
+                && hit.change_pct < -3.0
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -8470,6 +8484,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DecupledVolDownNearYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + At/near 52w Low (<2 %) (Absolute-rarest Breakdown-day Signal: Vol Is 10x Average, Price Prints a Significant Down Move and Simultaneously Reaches the 52w Low; Tier-0 Once-per-year + Breakdown-at-extreme = Portfolio-changing Event)",
         Preset::DecupledVolUpDeepBelowYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + Far below 52w High (>=20 %) (Unprecedented Turnaround Signal from Depressed Level: Vol Is 10x Average and Price Prints a Significant Up Move While Still Well below the Prior Peak; Tier-0 Once-per-year Regime-change Catalyst Worth a Portfolio-wide Thesis Review)",
         Preset::DecupledVolDownDeepAboveYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + Far above 52w Low (>=20 %) (Unprecedented Top Signal from Elevated Level: Vol Is 10x Average and Price Prints a Significant Down Move While Still Well above the Prior Trough; Tier-0 Once-per-year Regime-change Catalyst Worth a Portfolio-wide Thesis Review)",
+        Preset::DecupledVolUpConfirmedAboveYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + Confirmed-breakout Zone (1-3 % past 52w High) (Unprecedented Extension past Validated Breakout: Vol Is 10x Average and Price Prints a Significant Up Move While Extending Further past the Prior Peak; Tier-0 Once-per-year Follow-through Catalyst with Maximum Trend-confirmation Strength)",
+        Preset::DecupledVolDownConfirmedBelowYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + Confirmed-breakdown Zone (1-3 % past 52w Low) (Unprecedented Extension past Validated Breakdown: Vol Is 10x Average and Price Prints a Significant Down Move While Extending Further past the Prior Trough; Tier-0 Once-per-year Follow-through Catalyst with Maximum Trend-confirmation Strength)",
     }
 }
 
