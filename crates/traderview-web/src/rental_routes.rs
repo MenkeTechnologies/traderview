@@ -21,6 +21,9 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use traderview_expense::deposit_interest::{accrue as accrue_deposit_interest, AccrualInput, AccrualResult};
+use traderview_expense::disposition::{
+    compute as compute_disposition, DispositionInput, DispositionReport,
+};
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
@@ -70,6 +73,9 @@ pub fn router() -> Router<AppState> {
         .route("/deposit-interest", axum::routing::post(deposit_interest_accrue))
         // §469 passive activity loss limitation calculator
         .route("/section-469", axum::routing::post(section_469_compute))
+        // disposition: §1250 unrecaptured + §1231 LTCG + §1031 deferral
+        .route("/properties/:property_id/dispose",
+            axum::routing::post(property_disposition))
 }
 
 // ---------------------------------------------------------------------------
@@ -1551,6 +1557,81 @@ async fn section_469_compute(
         return Err(ApiError::BadRequest("prior_year_carryover must be >= 0".into()));
     }
     Ok(Json(compute_section_469(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Property disposition: §1250 unrecaptured + §1231 + §1031 deferral
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct DispositionRequest {
+    sale_price: Decimal,
+    selling_costs: Decimal,
+    /// If omitted, computed from rental_properties.purchase_price.
+    original_cost_basis: Option<Decimal>,
+    /// If omitted, summed from rental_expenses where category_code =
+    /// 'e_depreciation' for this property (current MACRS deductions
+    /// rolled up via the API stay outside this number — caller must
+    /// pass the actual accumulated depreciation if it includes the
+    /// computed line-18 numbers from prior years).
+    accumulated_depreciation: Option<Decimal>,
+    capital_improvements_added: Option<Decimal>,
+    like_kind_exchange: Option<traderview_expense::disposition::LikeKindExchange>,
+    filing_status: Option<String>,
+}
+
+async fn property_disposition(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(property_id): Path<Uuid>,
+    Json(b): Json<DispositionRequest>,
+) -> Result<Json<DispositionReport>, ApiError> {
+    ensure_property_owner(&s, u.id, property_id).await?;
+    if b.sale_price < Decimal::ZERO || b.selling_costs < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "sale_price and selling_costs must be >= 0".into(),
+        ));
+    }
+    // Fill missing basis from rental_properties.purchase_price.
+    let original_cost_basis = match b.original_cost_basis {
+        Some(v) => v,
+        None => {
+            let (p,): (Option<Decimal>,) = sqlx::query_as(
+                "SELECT purchase_price FROM rental_properties WHERE id = $1",
+            )
+            .bind(property_id)
+            .fetch_one(&s.pool)
+            .await?;
+            p.ok_or_else(|| ApiError::BadRequest(
+                "no purchase_price on property; pass original_cost_basis explicitly".into()
+            ))?
+        }
+    };
+    // Fill missing accumulated depreciation from sum of capitalized
+    // improvements being recovered + actual e_depreciation expense rows.
+    let accumulated_depreciation = match b.accumulated_depreciation {
+        Some(v) => v,
+        None => {
+            let (sum,): (Option<Decimal>,) = sqlx::query_as(
+                "SELECT COALESCE(SUM(amount), 0) FROM rental_expenses
+                  WHERE property_id = $1 AND category_code = 'e_depreciation'",
+            )
+            .bind(property_id)
+            .fetch_one(&s.pool)
+            .await?;
+            sum.unwrap_or(Decimal::ZERO)
+        }
+    };
+    let input = DispositionInput {
+        sale_price: b.sale_price,
+        selling_costs: b.selling_costs,
+        original_cost_basis,
+        accumulated_depreciation,
+        capital_improvements_added: b.capital_improvements_added.unwrap_or(Decimal::ZERO),
+        like_kind_exchange: b.like_kind_exchange,
+        filing_status: b.filing_status,
+    };
+    Ok(Json(compute_disposition(&input)))
 }
 
 // ---------------------------------------------------------------------------

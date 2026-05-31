@@ -14,6 +14,7 @@ pub mod crypto_tax;
 pub mod dedup;
 pub mod depreciation;
 pub mod deposit_interest;
+pub mod disposition;
 pub mod foreign_tax_credit;
 pub mod home_office;
 pub mod manual_entry;
