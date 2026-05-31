@@ -1202,6 +1202,8 @@ pub enum Preset {
     DecupledVolDownMidYearLowHotVol,           // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — decupled vol (>=10) + big down move (<-3%) + mid-range from low (5-20%) (unprecedented catalyst in mid-cycle recovery zone: vol is 10x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-0 once-per-year catalyst at mid-cycle = potential trend-reversal trigger with portfolio-wide implications)
     DecupledVolUpJustOffYearHighHotVol,        // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — decupled vol (>=10) + big up move (>3%) + just off 52w high (2-5%) (unprecedented catalyst just off the year peak: vol is 10x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakout thesis)
     DecupledVolDownJustOffYearLowHotVol,       // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — decupled vol (>=10) + big down move (<-3%) + just off 52w low (2-5%) (unprecedented catalyst just off the year trough: vol is 10x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakdown thesis)
+    DecupledVolCloseAtHodHotVol,               // rel_volume >= 10 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — decupled vol (>=10) + close pinned to HOD + green close (tier-0 institutional rally with no end-of-day fade: vol is 10x average and close pins to the day's high with positive change; rarest possible bull-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-strength)
+    DecupledVolCloseAtLodHotVol,               // rel_volume >= 10 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + close pinned to LOD + red close (tier-0 institutional selloff with no end-of-day bounce: vol is 10x average and close pins to the day's low with negative change; rarest possible bear-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-weakness)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7426,6 +7428,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
+        Preset::DecupledVolCloseAtHodHotVol => {
+            hit.rel_volume >= 10.0 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 1.0
+        }
+        Preset::DecupledVolCloseAtLodHotVol => {
+            hit.rel_volume >= 10.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -1.0
+        }
     }
 }
 
@@ -8518,6 +8526,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DecupledVolDownMidYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + Mid-range from Low (5-20 %) (Unprecedented Catalyst in Mid-cycle Recovery Zone: Vol Is 10x Average and Price Prints a Significant Down Move in the Proper Consolidation Range above the Prior Trough; Tier-0 Once-per-year Catalyst at Mid-cycle = Potential Trend-reversal Trigger with Portfolio-wide Implications)",
         Preset::DecupledVolUpJustOffYearHighHotVol => "Decupled Vol (>=10) + Big Up Move (>3 %) + Just off 52w High (2-5 %) (Unprecedented Catalyst Just off the Year Peak: Vol Is 10x Average and Price Prints a Significant Up Move Immediately after a Shallow Pullback from the 52w High; Tier-0 Once-per-year Catalyst at Post-tag Zone = Decisive Break-or-fail Event for the Breakout Thesis)",
         Preset::DecupledVolDownJustOffYearLowHotVol => "Decupled Vol (>=10) + Big Down Move (<-3 %) + Just off 52w Low (2-5 %) (Unprecedented Catalyst Just off the Year Trough: Vol Is 10x Average and Price Prints a Significant Down Move Immediately after a Shallow Bounce from the 52w Low; Tier-0 Once-per-year Catalyst at Post-tag Zone = Decisive Break-or-fail Event for the Breakdown Thesis)",
+        Preset::DecupledVolCloseAtHodHotVol => "Decupled Vol (>=10) + Close Pinned to HOD + Green Close (Tier-0 Institutional Rally with No End-of-day Fade: Vol Is 10x Average and Close Pins to the Day's High with Positive Change; Rarest Possible Bull-conviction Close across the Entire Participation-tier Framework, Once-per-year-per-name Event with Full Close-strength)",
+        Preset::DecupledVolCloseAtLodHotVol => "Decupled Vol (>=10) + Close Pinned to LOD + Red Close (Tier-0 Institutional Selloff with No End-of-day Bounce: Vol Is 10x Average and Close Pins to the Day's Low with Negative Change; Rarest Possible Bear-conviction Close across the Entire Participation-tier Framework, Once-per-year-per-name Event with Full Close-weakness)",
     }
 }
 
