@@ -1244,6 +1244,8 @@ pub enum Preset {
     BearRejectionWickMidYearLowHotVol,         // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + mid-range from low (5-20%) + hot vol (partial bear-rejection wick in mid-cycle recovery: price probed higher in the proper consolidation zone then rejected red but didn't pin to LOD; mid-cycle distribution signal where sellers begin to distribute in the consolidation phase without full conviction)
     BullRecoveryWickJustOffYearLowHotVol,      // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + just off 52w low (2-5%) + hot vol (partial bull-recovery wick just off the year trough: price probed lower immediately after a shallow bounce from the 52w low then recovered green but didn't pin to HOD; post-tag bottom-stabilization signal where buyers absorb on the re-test but without full conviction)
     BearRejectionWickJustOffYearHighHotVol,    // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + just off 52w high (2-5%) + hot vol (partial bear-rejection wick just off the year peak: price probed higher immediately after a shallow pullback from the 52w high then rejected red but didn't pin to LOD; post-tag top-stabilization signal where sellers distribute on the re-test but without full conviction)
+    BullRecoveryWickConfirmedBelowYearLowHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + confirmed-breakdown zone (1-3% past 52w low) + hot vol (partial bull-recovery wick in confirmed-breakdown zone: price probed lower past the prior trough then recovered green but didn't pin to HOD; bear-trap candidate signal where the breakdown is being challenged by buyers without full conviction)
+    BearRejectionWickConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (partial bear-rejection wick in confirmed-breakout zone: price probed higher past the prior peak then rejected red but didn't pin to LOD; bull-trap candidate signal where the breakout is being challenged by sellers without full conviction)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7744,6 +7746,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct < 5.0
                 && hit.rel_volume >= 1.5
         }
+        Preset::BullRecoveryWickConfirmedBelowYearLowHotVol => {
+            hit.lod_dist_pct.abs() > 3.0
+                && hit.change_pct > 0.0
+                && hit.hod_dist_pct.abs() > 1.0
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+                && hit.rel_volume >= 1.5
+        }
+        Preset::BearRejectionWickConfirmedAboveYearHighHotVol => {
+            hit.hod_dist_pct.abs() > 3.0
+                && hit.change_pct < 0.0
+                && hit.lod_dist_pct.abs() > 1.0
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+                && hit.rel_volume >= 1.5
+        }
     }
 }
 
@@ -8878,6 +8896,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::BearRejectionWickMidYearLowHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Mid-range from Low (5-20 %) + Hot Vol (Partial Bear-rejection Wick in Mid-cycle Recovery: Price Probed Higher in the Proper Consolidation Zone then Rejected Red but Didn't Pin to LOD; Mid-cycle Distribution Signal Where Sellers Begin to Distribute in the Consolidation Phase without Full Conviction)",
         Preset::BullRecoveryWickJustOffYearLowHotVol => "Long Lower Wick + Green Close + Not Pinned to HOD + Just off 52w Low (2-5 %) + Hot Vol (Partial Bull-recovery Wick Just off the Year Trough: Price Probed Lower Immediately after a Shallow Bounce from the 52w Low then Recovered Green but Didn't Pin to HOD; Post-tag Bottom-stabilization Signal Where Buyers Absorb on the Re-test but without Full Conviction)",
         Preset::BearRejectionWickJustOffYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Just off 52w High (2-5 %) + Hot Vol (Partial Bear-rejection Wick Just off the Year Peak: Price Probed Higher Immediately after a Shallow Pullback from the 52w High then Rejected Red but Didn't Pin to LOD; Post-tag Top-stabilization Signal Where Sellers Distribute on the Re-test but without Full Conviction)",
+        Preset::BullRecoveryWickConfirmedBelowYearLowHotVol => "Long Lower Wick + Green Close + Not Pinned to HOD + Confirmed-breakdown Zone (1-3 % past 52w Low) + Hot Vol (Partial Bull-recovery Wick in Confirmed-breakdown Zone: Price Probed Lower past the Prior Trough then Recovered Green but Didn't Pin to HOD; Bear-trap Candidate Signal Where the Breakdown Is Being Challenged by Buyers without Full Conviction)",
+        Preset::BearRejectionWickConfirmedAboveYearHighHotVol => "Long Upper Wick + Red Close + Not Pinned to LOD + Confirmed-breakout Zone (1-3 % past 52w High) + Hot Vol (Partial Bear-rejection Wick in Confirmed-breakout Zone: Price Probed Higher past the Prior Peak then Rejected Red but Didn't Pin to LOD; Bull-trap Candidate Signal Where the Breakout Is Being Challenged by Sellers without Full Conviction)",
     }
 }
 
