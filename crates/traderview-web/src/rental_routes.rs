@@ -41,6 +41,10 @@ use traderview_expense::lease_disclosures::{
     required_for as lease_disclosures_required_for, DisclosuresRequiredInput,
     DisclosuresRequiredReport,
 };
+use traderview_expense::habitability_remedies::{
+    remedies as compute_habitability_remedies, HabitabilityRemediesInput,
+    HabitabilityRemediesReport,
+};
 use traderview_expense::rent_control::{
     check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
@@ -149,6 +153,8 @@ pub fn router() -> Router<AppState> {
         .route("/lease-disclosures-required", axum::routing::post(lease_disclosures_route))
         // State rent control / rent-increase compliance check
         .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
+        // State habitability remedies available to tenants
+        .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
 }
 
 // ---------------------------------------------------------------------------
@@ -1876,6 +1882,24 @@ async fn rent_increase_check_route(
         ));
     }
     Ok(Json(check_rent_increase(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State habitability remedies available to tenants
+// ---------------------------------------------------------------------------
+
+async fn habitability_remedies_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<HabitabilityRemediesInput>,
+) -> Result<Json<HabitabilityRemediesReport>, ApiError> {
+    if b.state.trim().is_empty() {
+        return Err(ApiError::BadRequest("state required".into()));
+    }
+    if b.monthly_rent < Decimal::ZERO {
+        return Err(ApiError::BadRequest("monthly_rent must be >= 0".into()));
+    }
+    Ok(Json(compute_habitability_remedies(&b)))
 }
 
 async fn property_cost_segregation(
