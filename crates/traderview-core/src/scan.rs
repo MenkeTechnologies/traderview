@@ -1406,6 +1406,8 @@ pub enum Preset {
     MegaRangeUpperThirdJustOffYearLowQuintupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare re-test marker confirming the bottom hold with partial-bull commitment without rigid HOD pinning)
     MegaRangeLowerThirdNearYearHighQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the high-water mark — bull-trap distribution marker with strong institutional commitment but without rigid LOD pinning)
     MegaRangeLowerThirdNearYearLowQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker with strong institutional commitment but without rigid LOD pinning)
+    MegaRangeLowerThirdConfirmedAboveYearHighQuintupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with 5x volume; quarterly-rare bear-reclaim reversal day where institutional sellers reasserted control after the breakout — bull-trap marker at the breakout extension)
+    MegaRangeLowerThirdConfirmedBelowYearLowQuintupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with 5x volume; quarterly-rare continuation marker confirming institutional trend deceleration without rigid LOD pinning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -9126,6 +9128,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 5.0
                 && hit.year_low_pct < 2.0
         }
+        Preset::MegaRangeLowerThirdConfirmedAboveYearHighQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 5.0
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::MegaRangeLowerThirdConfirmedBelowYearLowQuintupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.lod_dist_pct.abs() * 2.0 < hit.hod_dist_pct.abs()
+                && hit.lod_dist_pct.abs() > 0.3
+                && hit.rel_volume >= 5.0
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -10422,6 +10440,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeUpperThirdJustOffYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Upper-third Close (Not Pinned to HOD) + Quintupled Vol + Just off 52w Low (2-5 %) (Institutional-tier Post-tag Partial-bull Bounce-continuation: Extreme Intraday Range with Close 2x Closer to HOD than LOD Immediately after a Shallow Bounce from the 52w Low with 5x Volume; Quarterly-rare Re-test Marker Confirming the Bottom Hold with Partial-bull Commitment without Rigid HOD Pinning)",
         Preset::MegaRangeLowerThirdNearYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Quintupled Vol + At/near 52w High (<2 %) (Institutional-tier Partial-bear Failed-breakout Distribution Day: Extreme Intraday Range with Close 2x Closer to LOD than HOD at the 52w Peak with 5x Volume; Quarterly-rare Regime-defining Event Marking Partial Bear-control at the High-water Mark — Bull-trap Distribution Marker with Strong Institutional Commitment but without Rigid LOD Pinning)",
         Preset::MegaRangeLowerThirdNearYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Quintupled Vol + At/near 52w Low (<2 %) (Institutional-tier Partial-bear Breakdown-continuation Day: Extreme Intraday Range with Close 2x Closer to LOD than HOD at the 52w Trough with 5x Volume; Quarterly-rare Regime-defining Event Marking Partial Bear-control at the Low-water Mark — Capitulation-extension Marker with Strong Institutional Commitment but without Rigid LOD Pinning)",
+        Preset::MegaRangeLowerThirdConfirmedAboveYearHighQuintupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Quintupled Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Institutional-tier Failed-confirmed-breakout Reversal: Extreme Intraday Range with Close 2x Closer to LOD than HOD Just past Validated Breakout Level with 5x Volume; Quarterly-rare Bear-reclaim Reversal Day Where Institutional Sellers Reasserted Control after the Breakout — Bull-trap Marker at the Breakout Extension)",
+        Preset::MegaRangeLowerThirdConfirmedBelowYearLowQuintupledVol => "Mega Intraday Range (>10 %) + Lower-third Close (Not Pinned to LOD) + Quintupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-tier Partial-bear Breakdown Follow-through Extension: Extreme Intraday Range with Close 2x Closer to LOD than HOD Just past Validated Breakdown Level with 5x Volume; Quarterly-rare Continuation Marker Confirming Institutional Trend Deceleration without Rigid LOD Pinning)",
     }
 }
 
