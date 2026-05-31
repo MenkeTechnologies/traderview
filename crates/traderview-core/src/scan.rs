@@ -1208,6 +1208,8 @@ pub enum Preset {
     DecupledVolGapDownCloseAtLodHotVol,        // rel_volume >= 10 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + gap down (<-2%) + close pinned to LOD + red close (most decisive validated catalyst possible: vol is 10x average, overnight gap down holds all session and closes at the day's low; absolute-rarest bear-validation event spanning overnight + regular sessions at the tier-0 participation tier)
     DecupledVolGapUpCloseAtLodHotVol,          // rel_volume >= 10 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — decupled vol (>=10) + gap up (>2%) faded completely to LOD + red close (most decisive failed catalyst possible: vol is 10x average, overnight gap up fully reverses and closes at the day's low; absolute-rarest failed-bull-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight optimism met overwhelming sellers)
     DecupledVolGapDownCloseAtHodHotVol,        // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — decupled vol (>=10) + gap down (<-2%) absorbed completely to HOD + green close (most decisive failed catalyst possible: vol is 10x average, overnight gap down fully reverses and closes at the day's high; absolute-rarest failed-bear-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight pessimism met overwhelming buyers)
+    DecupledVolGapUpMidpointHotVol,            // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap up (>2%) + midpoint close (unprecedented standoff after gap-up catalyst: vol is 10x average, overnight gap up holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bull-catalyst event at the tier-0 participation tier — requires next-session confirmation)
+    DecupledVolGapDownMidpointHotVol,          // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap down (<-2%) + midpoint close (unprecedented standoff after gap-down catalyst: vol is 10x average, overnight gap down holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bear-catalyst event at the tier-0 participation tier — requires next-session confirmation)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -7462,6 +7464,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() < 0.5
                 && hit.change_pct > 0.0
         }
+        Preset::DecupledVolGapUpMidpointHotVol => {
+            hit.rel_volume >= 10.0
+                && hit.gap_pct > 2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+        }
+        Preset::DecupledVolGapDownMidpointHotVol => {
+            hit.rel_volume >= 10.0
+                && hit.gap_pct < -2.0
+                && hit.hod_dist_pct.abs() > 0.5
+                && hit.lod_dist_pct.abs() > 0.5
+                && (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.5
+        }
     }
 }
 
@@ -8560,6 +8576,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::DecupledVolGapDownCloseAtLodHotVol => "Decupled Vol (>=10) + Gap Down (<-2 %) + Close Pinned to LOD + Red Close (Most Decisive Validated Catalyst Possible: Vol Is 10x Average, Overnight Gap down Holds All Session and Closes at the Day's Low; Absolute-rarest Bear-validation Event Spanning Overnight + Regular Sessions at the Tier-0 Participation Tier)",
         Preset::DecupledVolGapUpCloseAtLodHotVol => "Decupled Vol (>=10) + Gap Up (>2 %) Faded Completely to LOD + Red Close (Most Decisive Failed Catalyst Possible: Vol Is 10x Average, Overnight Gap up Fully Reverses and Closes at the Day's Low; Absolute-rarest Failed-bull-catalyst Event Spanning Overnight + Regular Sessions at the Tier-0 Participation Tier, Indicating Extreme Overnight Optimism Met Overwhelming Sellers)",
         Preset::DecupledVolGapDownCloseAtHodHotVol => "Decupled Vol (>=10) + Gap Down (<-2 %) Absorbed Completely to HOD + Green Close (Most Decisive Failed Catalyst Possible: Vol Is 10x Average, Overnight Gap down Fully Reverses and Closes at the Day's High; Absolute-rarest Failed-bear-catalyst Event Spanning Overnight + Regular Sessions at the Tier-0 Participation Tier, Indicating Extreme Overnight Pessimism Met Overwhelming Buyers)",
+        Preset::DecupledVolGapUpMidpointHotVol => "Decupled Vol (>=10) + Gap Up (>2 %) + Midpoint Close (Unprecedented Standoff after Gap-up Catalyst: Vol Is 10x Average, Overnight Gap up Holds but Regular Session Prints Inconclusive Midpoint Close; Absolute-rarest Unresolved-bull-catalyst Event at the Tier-0 Participation Tier — Requires Next-session Confirmation)",
+        Preset::DecupledVolGapDownMidpointHotVol => "Decupled Vol (>=10) + Gap Down (<-2 %) + Midpoint Close (Unprecedented Standoff after Gap-down Catalyst: Vol Is 10x Average, Overnight Gap down Holds but Regular Session Prints Inconclusive Midpoint Close; Absolute-rarest Unresolved-bear-catalyst Event at the Tier-0 Participation Tier — Requires Next-session Confirmation)",
     }
 }
 
