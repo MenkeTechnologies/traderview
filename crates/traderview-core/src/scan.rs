@@ -1284,6 +1284,8 @@ pub enum Preset {
     MegaRangeMidpointCloseJustOffYearLowDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + decupled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 10x volume ends with balanced midpoint close; institutional-scale re-test indecision day with maximum-energy two-way commitment in the post-tag bounce zone)
     MegaRangeUpNearYearHighDecupledVol,                      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale volcanic breakout day: extreme intraday range with bull-direction outcome at the 52w high with 10x volume; once-per-year regime-defining peak event marking a fresh high with maximum-conviction institutional commitment)
     MegaRangeDownNearYearLowDecupledVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + red close + decupled vol + at/near 52w low (<2%) (institutional-scale volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 10x volume; once-per-year regime-defining trough event marking a fresh low with maximum-conviction institutional commitment)
+    MegaRangeUpConfirmedAboveYearHighDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
+    MegaRangeDownConfirmedBelowYearLowDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -8084,6 +8086,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 10.0
                 && hit.year_low_pct < 2.0
         }
+        Preset::MegaRangeUpConfirmedAboveYearHighDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct > 0.0
+                && hit.rel_volume >= 10.0
+                && hit.year_high_pct >= -3.0
+                && hit.year_high_pct <= -1.0
+        }
+        Preset::MegaRangeDownConfirmedBelowYearLowDecupledVol => {
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 10.0
+                && hit.change_pct < 0.0
+                && hit.rel_volume >= 10.0
+                && hit.year_low_pct >= -3.0
+                && hit.year_low_pct <= -1.0
+        }
     }
 }
 
@@ -9258,6 +9274,8 @@ pub fn preset_label(p: Preset) -> &'static str {
         Preset::MegaRangeMidpointCloseJustOffYearLowDecupledVol => "Mega Intraday Range (>10 %) + Midpoint Close + Just off 52w Low (2-5 %) + Decupled Vol (Post-tag Wide-range Standoff: Extreme Two-way Intraday Battle Immediately after a Shallow Bounce from the 52w Low with 10x Volume Ends with Balanced Midpoint Close; Institutional-scale Re-test Indecision Day with Maximum-energy Two-way Commitment in the Post-tag Bounce Zone)",
         Preset::MegaRangeUpNearYearHighDecupledVol => "Mega Intraday Range (>10 %) + Green Close + Decupled Vol + At/near 52w High (<2 %) (Institutional-scale Volcanic Breakout Day: Extreme Intraday Range with Bull-direction Outcome at the 52w High with 10x Volume; Once-per-year Regime-defining Peak Event Marking a Fresh High with Maximum-conviction Institutional Commitment)",
         Preset::MegaRangeDownNearYearLowDecupledVol => "Mega Intraday Range (>10 %) + Red Close + Decupled Vol + At/near 52w Low (<2 %) (Institutional-scale Volcanic Breakdown Day: Extreme Intraday Range with Bear-direction Outcome at the 52w Low with 10x Volume; Once-per-year Regime-defining Trough Event Marking a Fresh Low with Maximum-conviction Institutional Commitment)",
+        Preset::MegaRangeUpConfirmedAboveYearHighDecupledVol => "Mega Intraday Range (>10 %) + Green Close + Decupled Vol + Confirmed-breakout Zone (1-3 % past 52w High) (Institutional-scale Volcanic Extension past Validated Breakout: Extreme Intraday Range with Bull-direction Outcome Extending past the Already-cleared Prior Peak with 10x Volume; Once-per-year Maximum-conviction Follow-through Day Confirming Institutional Trend Acceleration)",
+        Preset::MegaRangeDownConfirmedBelowYearLowDecupledVol => "Mega Intraday Range (>10 %) + Red Close + Decupled Vol + Confirmed-breakdown Zone (1-3 % past 52w Low) (Institutional-scale Volcanic Extension past Validated Breakdown: Extreme Intraday Range with Bear-direction Outcome Extending past the Already-cleared Prior Trough with 10x Volume; Once-per-year Maximum-conviction Follow-through Day Confirming Institutional Trend Acceleration)",
     }
 }
 
