@@ -8,6 +8,7 @@
 
 pub mod amazon;
 pub mod apple;
+pub mod application_fees;
 pub mod boa;
 pub mod chase;
 pub mod contractor_1099;

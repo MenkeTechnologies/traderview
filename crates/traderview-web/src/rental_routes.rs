@@ -59,6 +59,9 @@ use traderview_expense::rent_control::{
 use traderview_expense::entry_notice::{
     compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
+use traderview_expense::application_fees::{
+    check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
+};
 use traderview_expense::retaliation_windows::{
     check as check_retaliation, RetaliationCheckInput, RetaliationCheckResult,
 };
@@ -161,6 +164,7 @@ pub fn router() -> Router<AppState> {
         .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
         .route("/entry-notice-check", axum::routing::post(entry_notice_check_route))
         .route("/retaliation-check", axum::routing::post(retaliation_check_route))
+        .route("/application-fee-check", axum::routing::post(application_fee_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1835,6 +1839,31 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State rental application/screening fee cap check
+// ---------------------------------------------------------------------------
+
+async fn application_fee_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AppFeeCheckInput>,
+) -> Result<Json<AppFeeCheckResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest("monthly_rent_cents must be >= 0".into()));
+    }
+    if let Some(c) = b.actual_screening_cost_cents {
+        if c < 0 {
+            return Err(ApiError::BadRequest(
+                "actual_screening_cost_cents must be >= 0".into(),
+            ));
+        }
+    }
+    Ok(Json(check_application_fee(&b)))
 }
 
 // ---------------------------------------------------------------------------
