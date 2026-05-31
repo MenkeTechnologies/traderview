@@ -30,6 +30,7 @@ pub mod rental_depreciation;
 pub mod rules;
 pub mod schedule_d;
 pub mod schedule_e;
+pub mod section_1202;
 pub mod section_1212;
 pub mod section_1244;
 pub mod section_1256;

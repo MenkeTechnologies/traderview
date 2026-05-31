@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wash-sale",             post(wash_sale_route))
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
+        .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
         // ── Fixed income / FX ─────────────────────────────────────────
         .route("/calc/yield-curve",           post(yield_curve_route))
@@ -324,4 +325,29 @@ async fn section_1244_route(
         ));
     }
     Ok(Json(traderview_expense::section_1244::compute(&b)))
+}
+
+// ── §1202 QSBS exclusion ──────────────────────────────────────────────
+// Mounted at /api/calc/section-1202. Pure compute; up to $10M / 10× basis
+// of gain on qualified small-business stock excluded at 50/75/100% depending
+// on acquisition date.
+
+async fn section_1202_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1202::Section1202Input>,
+) -> Result<Json<traderview_expense::section_1202::Section1202Result>, ApiError> {
+    if b.taxpayer_basis < Decimal::ZERO {
+        return Err(ApiError::BadRequest("taxpayer_basis must be >= 0".into()));
+    }
+    if b.prior_exclusion_used_this_issuer < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "prior_exclusion_used_this_issuer must be >= 0".into(),
+        ));
+    }
+    if b.disposition_date < b.acquisition_date {
+        return Err(ApiError::BadRequest(
+            "disposition_date must be >= acquisition_date".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1202::compute(&b)))
 }
