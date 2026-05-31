@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-170e",          post(section_170e_route))
+        .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1233",          post(section_1233_route))
         .route("/calc/section-1234",          post(section_1234_route))
@@ -569,6 +570,39 @@ async fn section_1233_route(
         }
     }
     Ok(Json(traderview_expense::section_1233::compute(&b)))
+}
+
+// ── §83(b) restricted-stock election ─────────────────────────────────
+// Mounted at /api/calc/section-83b. Validates 30-day deadline,
+// computes ordinary income with vs without election, LTCG holding-
+// period start (grant vs vesting), capital gain at sale,
+// §83(b)(2) forfeiture trap with no refund.
+
+async fn section_83b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_83b::Section83bInput>,
+) -> Result<Json<traderview_expense::section_83b::Section83bResult>, ApiError> {
+    if b.vesting_date < b.grant_date {
+        return Err(ApiError::BadRequest(
+            "vesting_date must be on or after grant_date".into(),
+        ));
+    }
+    if b.fmv_at_grant < Decimal::ZERO
+        || b.amount_paid_at_grant < Decimal::ZERO
+        || b.fmv_at_vesting < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "fmv_at_grant, amount_paid_at_grant, and fmv_at_vesting must be >= 0".into(),
+        ));
+    }
+    if let Some(sp) = b.sale_price_per_share {
+        if sp < Decimal::ZERO {
+            return Err(ApiError::BadRequest(
+                "sale_price_per_share must be >= 0".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_83b::compute(&b)))
 }
 
 // ── §170(e) charitable contribution of appreciated property ─────────

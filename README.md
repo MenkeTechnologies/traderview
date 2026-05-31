@@ -710,6 +710,42 @@ Three pieces:
 
 Mounted at `POST /api/calc/section-1233`. Twenty-one tests pin: no substantially identical → default ST; short-held at open + gain → §1233(b) + reset; long-held at open + loss → §1233(d); long-held at open + gain → no rule (default ST); short-held at open + loss → no rule (default ST); **acquired-during-short triggers §1233(b)(1)(B)**; both short and long held with loss → §1233(d) wins; both short and long held with gain → §1233(b) wins (only short-held lots reset); FIFO resets capped at short_shares (150 candidates → first 100 reset); 365-day boundary short-held → §1233(b) triggers; 366-day boundary long-held → §1233(d) on loss path only; zero gain/loss → no rule; **reset date equals short-close date not short-open date** (regression target); during-short acquisition resets to close date; long-held lots never appear in reset list; combined (A)+(B) buckets in FIFO order by acquisition date; acquisition on short_sale_date is held_at_open not during_short (boundary classification); only-(A) bucket works; only-(B) bucket works; notes mention short close date when resets emit; notes mention loss amount when §1233(d) fires.
 
+`traderview-expense::section_83b` is the **IRC §83(b) restricted-stock election module** — every founder and early employee receiving restricted stock or restricted stock units needs to decide within 30 calendar days of grant whether to file this election. One of the most consequential tax-position choices in the code.
+
+**Decision economics:**
+
+- **§83(a) default**: ordinary income at VESTING = `FMV_vesting - amount_paid`. LTCG holding period begins at vesting.
+- **§83(b) election**: ordinary income at GRANT = `FMV_grant - amount_paid`. LTCG holding period begins at grant.
+
+When stock appreciates significantly between grant and vesting (the canonical founder case — grant FMV ≈ $0.001/share, vesting FMV $10+/share), the election converts what would be ordinary income at vesting into long-term capital gain at sale. For a founder with $10M of post-vesting appreciation, that's the gap between ~37% federal ordinary + state + FICA-Medicare and 20% federal LTCG + 3.8% NIIT + state — easily 20%+ savings on the appreciation.
+
+**The 30-day deadline is bright-line and unforgivable.** No extension, no equitable exception, no judicial relief. Carta, Cooley, and the IRS agree: file by day 30 or the option is gone. Day 30 exact = valid; day 31 = invalid. Pinned by `election_filed_day_30_exact_boundary_is_valid` + `election_filed_day_31_invalid_per_bright_line` + `election_filed_day_zero_is_valid` (the three boundary cases).
+
+**§83(b)(2) forfeiture trap** is load-bearing. If the property is later forfeited (employee leaves before vesting), the §83(b) election cannot be undone. Taxpayer paid ordinary income tax at grant on property never received. NO refund, NO deduction for the previously included amount. The only loss recognized is the **amount paid for the property** (usually zero for pure stock grants). Compute returns:
+
+| Path                      | Forfeiture outcome                                                  |
+|---------------------------|---------------------------------------------------------------------|
+| Valid election + forfeit  | Grant-day ordinary recognized; NO refund; loss = amount paid only   |
+| No election + forfeit     | Clean: §83(a) never triggered; no ordinary income; loss = amount paid |
+| Late election + forfeit   | Same as no-election forfeit — late election was invalid anyway      |
+
+Pinned by `forfeiture_with_valid_election_no_refund_per_83b2`, `forfeiture_without_election_clean_no_income`, and `forfeiture_with_late_election_clean_no_income`.
+
+**Capital gain character driven by holding-period start.**
+
+| Election path  | Holding start | Sale ≤ 365d from start → STCG | Sale > 365d → LTCG |
+|----------------|---------------|-------------------------------|--------------------|
+| Valid election | Grant date    | `election_sale_within_one_year_of_grant_is_stcg` | `election_sale_at_366_days_is_long_term` |
+| No election    | Vesting date  | `no_election_sale_within_one_year_of_vesting_is_stcg` | `no_election_sale_one_year_after_vesting_is_ltcg` |
+
+**Election savings field** compares ordinary income with election vs §83(a) baseline. Negative = good (election reduced ordinary income); positive = bad (election was wrong choice because FMV dropped between grant and vesting). Pinned by `founder_grant_election_saves_ordinary_income` (−$9.99 negative = good) and `election_wrong_when_fmv_drops_after_grant` (+$2 positive = bad).
+
+**Ordinary income clamps at zero** when amount paid ≥ FMV at grant (i.e., underwater grant). Loss is recognized at sale, not as negative ordinary income. Pinned by `negative_grant_minus_paid_clamps_to_zero_ordinary`.
+
+**Pathological inputs are bounded.** Election filed BEFORE grant date returns `days_grant_to_election = -1` and `election_timely = false`. Pinned by `election_before_grant_date_invalid`.
+
+Mounted at `POST /api/calc/section-83b`. Twenty-four tests pin: timely election within 30 days valid; **day 0 / day 30 / day 31 boundaries** (the three bright-line cases); no election falls back to §83(a); founder grant election savings (−$9.99); election with full $50 appreciation → full LTCG; no-election same appreciation → ordinary $9.99 + LTCG $40 split; election sale within 1 year STCG; **365 vs 366-day boundary**; no-election sale at 17 months from vesting → LTCG; no-election STCG path; FMV grant above paid creates ordinary at grant; **election-was-wrong** (positive savings number); negative ordinary clamps to zero; not-yet-sold returns no gain; election before grant invalid (pathological pin); **very large grant precision** ($0.0001 → $5000); day-31 late election uses vesting basis (not grant); note describes 30-day deadline explicitly ("day 14/30"); forfeiture with valid election + §83(b)(2) call-out in note (UX-text regression target); forfeiture without election clean.
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:
