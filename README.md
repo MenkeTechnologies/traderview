@@ -384,6 +384,45 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::tenant_abandonment` is the **state tenant abandonment threshold table** — operational concern for every landlord. When can the landlord declare abandonment, take possession, dispose of belongings, and re-rent? Self-help abandonment procedures vary by state — some allow a notice-of-belief mechanism with fixed day thresholds (CA model), others require full court eviction (NY/CO/NJ).
+
+**Four regimes** across 51 jurisdictions:
+
+| Regime                          | Behavior                                                                                | States                         |
+|---------------------------------|-----------------------------------------------------------------------------------------|--------------------------------|
+| **StatutoryAbandonment**        | Fixed thresholds for unpaid rent + notice waiting + belongings disposal                | AZ, CA, DE, HI, IA, IL, KS, ME, MI, MN, MT, NC, ND, NE, NM, NV, OK, OR, PA, SC, TN, TX, UT, VA, WA, WI (26 states) |
+| **CaseByCasePresumption**       | Facts and circumstances test; no fixed day thresholds                                  | AL, CT, FL, KY, MA, MD, MO, NH, OH, RI, VT, WV (12 states) |
+| **CourtProcessOnly**            | No self-help — landlord must file possession action even on apparent abandonment       | CO, DC, NJ, NY (4 jurisdictions) |
+| **NoStateStatute**              | Common-law abandonment doctrine applies                                                | AK, AR, GA, ID, IN, LA, MS, SD, WY (9 states) |
+
+**CA workflow** is the canonical statutory model:
+
+1. **14 days rent unpaid + additional indicia** → landlord may serve notice of belief of abandonment (Civ. Code § 1951.3)
+2. **14 days waiting period** after notice → landlord may take possession
+3. **18 days belongings storage** (Civ. Code § 1986) → landlord may dispose/sell stored property
+
+Pinned by `complete_workflow_ca_from_14d_through_disposal` (sweeps the full three-step CA process: day 14 = notice warranted; day 28 with notice served at 14 = notice period satisfied; day 28 + 18-day storage = belongings disposal allowed).
+
+**WA's 45-day belongings disposal window is strictest in the table.** RCW § 59.18.310 protects tenant property for 45 days before landlord can dispose. Pinned by `wa_45_day_belongings_window_strictest_in_table` (44 days blocks disposal, 45 days allows) + `wa_strictest_belongings_disposal_45_days` (sweep verifying no other state exceeds 60 days).
+
+**Court-process-only states** (NY/CO/DC/NJ) require possession action even on apparent abandonment. The compute sets `regime_requires_court_process: true` and zeros out all the self-help threshold flags. Pinned by `ny_court_process_only_no_self_help` + `co_court_process_only_mirrors_ny` + `nj_anti_eviction_act_court_process_only` + `court_process_states_pinned` (4-state sweep).
+
+**Case-by-case states** (FL/MA/KY/etc.) set `case_by_case_regime: true` and require the additional-indicia flag for notice-warranted classification. No fixed day thresholds. Pinned by `fl_case_by_case_presumption_with_indicia` + `ma_case_by_case_presumption` + `case_by_case_states_have_no_day_thresholds` (sweep verifying no rent threshold).
+
+**Three-condition compute for statutory regime**:
+
+1. `notice_of_belief_warranted` = (days_rent_unpaid ≥ statutory threshold) AND (additional_abandonment_indicia_present)
+2. `notice_period_satisfied` = (days_since_notice ≥ statutory waiting period)
+3. `belongings_disposal_allowed` = (days_since_storage ≥ statutory belongings period)
+
+Each condition is independently pinned at boundaries: CA notice warranted at day 14 (yes) and day 13 (no); CA notice not warranted without indicia even at day 14; CA notice period satisfied at 14d (yes) and 13d (no); CA belongings disposal at 18d (yes) and 17d (no).
+
+**Additional indicia flag is gatekeeper** for statutory and case-by-case regimes. Without other indicia (utilities terminated, mail accumulating, neighbor reports of absence, keys returned), the rent-unpaid threshold alone does NOT warrant the notice. Pinned by `ca_notice_not_warranted_without_indicia` (14d unpaid but no indicia = not warranted).
+
+**Statutory state data integrity**: all statutory-abandonment states have all three day thresholds (rent unpaid + notice period + belongings disposal). Pinned by `statutory_states_have_all_three_day_thresholds` (sweep verifying no Some/None mismatches).
+
+Mounted at `POST /api/rental/abandonment-check`. Twenty-five tests pin: 51-row coverage; CA boundaries at 14/13d rent unpaid; CA without indicia not warranted (gatekeeper regression target); CA notice period at 14/13d boundaries; CA belongings disposal at 18/17d boundaries; **WA 45-day strictest belongings window** + sweep; TX 30-day belongings; NY court-process-only + CO/NJ mirror; **4-state court-process sweep** (NY/CO/DC/NJ); FL/MA case-by-case; no-statute 9-state sweep; unknown state handled; case-insensitive lookup; sorted all_states; non-empty citations; statutory states have all three day thresholds (integrity sweep); case-by-case states have no day thresholds (integrity sweep); **CA complete-workflow sweep** through all three compliance steps (notice warranted → period satisfied → disposal allowed).
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
