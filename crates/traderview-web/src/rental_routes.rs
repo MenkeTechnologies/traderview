@@ -40,6 +40,9 @@ use traderview_expense::late_fee_caps::{
 use traderview_expense::section_280a::{
     compute as compute_section_280a, Section280AInput, Section280AResult,
 };
+use traderview_expense::section_280a_d2::{
+    compute as compute_section_280a_d2, OccupancyPeriod, Section280AD2Report,
+};
 use traderview_expense::section_469::{
     compute as compute_section_469, Section469Input, Section469Result,
 };
@@ -116,6 +119,8 @@ pub fn router() -> Router<AppState> {
         // §280A vacation home / mixed-use classification
         .route("/properties/:property_id/section-280a",
             axum::routing::post(property_section_280a))
+        // §280A(d)(2) related-party rental personal-use classifier
+        .route("/section-280a-d2", axum::routing::post(section_280a_d2_route))
         // Cost segregation + §168(k) bonus depreciation accelerator
         .route("/properties/:property_id/cost-segregation",
             axum::routing::post(property_cost_segregation))
@@ -1751,6 +1756,23 @@ async fn late_fee_check_route(
         ));
     }
     Ok(Json(check_late_fee(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// §280A(d)(2) related-party rental personal-use classifier
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct Section280AD2Request {
+    periods: Vec<OccupancyPeriod>,
+}
+
+async fn section_280a_d2_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<Section280AD2Request>,
+) -> Result<Json<Section280AD2Report>, ApiError> {
+    Ok(Json(compute_section_280a_d2(&b.periods)))
 }
 
 // ---------------------------------------------------------------------------
