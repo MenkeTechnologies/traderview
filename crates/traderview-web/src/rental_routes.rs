@@ -194,6 +194,10 @@ use traderview_expense::fire_sprinkler_disclosure::{
 use traderview_expense::bedbug_extermination_cost::{
     check as check_bedbug_extermination, BedbugExterminationInput, BedbugExterminationResult,
 };
+use traderview_expense::crime_victim_termination::{
+    check as check_crime_victim_termination,
+    CrimeVictimTerminationInput, CrimeVictimTerminationResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -358,6 +362,7 @@ pub fn router() -> Router<AppState> {
         .route("/advance-rent-limit-check", axum::routing::post(advance_rent_limit_check_route))
         .route("/fire-sprinkler-disclosure-check", axum::routing::post(fire_sprinkler_disclosure_check_route))
         .route("/bedbug-extermination-cost-check", axum::routing::post(bedbug_extermination_cost_check_route))
+        .route("/crime-victim-termination-check", axum::routing::post(crime_victim_termination_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2963,6 +2968,35 @@ async fn bedbug_extermination_cost_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_bedbug_extermination(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State crime-victim lease termination check (broader than DV-only)
+//
+// Mounted at POST /api/rental/crime-victim-termination-check. Five
+// regimes: CaliforniaBroadestVictimCoverage (Cal. Civ. Code §
+// 1946.7 eff. 2011 + AB 1493 2022 — broadest U.S. scope including
+// DV + sexual assault + stalking + human trafficking + elder/
+// dependent-adult abuse + bodily-injury/force-threat crimes;
+// 14-day notice + supporting document); TexasThirtyDayNotice
+// (Tex. Prop. Code §§ 92.0161 / 92.1061 — 30-day notice +
+// tenant liable for notice period); WashingtonNinetyDayWindow
+// (RCW 59.18.575 — 90-day window from incident + rent terminates
+// at notice + DV + sexual assault + unlawful harassment + stalking);
+// IllinoisSafeHomesActDualPath (765 ILCS 750 — 3-day imminent
+// threat OR 60-day past sexual violence); NoStatewideBroad-
+// CrimeVictimTermination (46 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn crime_victim_termination_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CrimeVictimTerminationInput>,
+) -> Result<Json<CrimeVictimTerminationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_crime_victim_termination(&b)))
 }
 
 // ---------------------------------------------------------------------------
