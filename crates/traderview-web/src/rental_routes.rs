@@ -205,6 +205,10 @@ use traderview_expense::immigration_status_protection::{
     check as check_immigration_status_protection, ImmigrationProtectionInput,
     ImmigrationProtectionResult,
 };
+use traderview_expense::prevailing_party_attorney_fees::{
+    check as check_prevailing_party_attorney_fees, PrevailingPartyFeesInput,
+    PrevailingPartyFeesResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -410,6 +414,7 @@ pub fn router() -> Router<AppState> {
         .route("/demolition-tenant-notice", axum::routing::post(demolition_tenant_notice_route))
         .route("/eviction-diversion-program", axum::routing::post(eviction_diversion_program_route))
         .route("/immigration-status-protection", axum::routing::post(immigration_status_protection_route))
+        .route("/prevailing-party-attorney-fees", axum::routing::post(prevailing_party_attorney_fees_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3159,6 +3164,35 @@ async fn immigration_status_protection_route(
     Json(b): Json<ImmigrationProtectionInput>,
 ) -> Result<Json<ImmigrationProtectionResult>, ApiError> {
     Ok(Json(check_immigration_status_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State prevailing-party attorney-fees lease-clause compliance check.
+//
+// Mounted at POST /api/rental/prevailing-party-attorney-fees. Three regimes:
+// CaliforniaCivCode1717 (Cal. Civ. Code § 1717(a) — any contract clause
+// awarding attorney fees to ONE party OR the prevailing party is
+// transformed by operation of law into a MUTUAL right; prevailing party
+// recovers fees regardless of which party named; § 1717 is a fundamental
+// CA policy that overrides choice-of-law clauses); WashingtonRcw484330
+// (RCW 4.84.330 — same reciprocity rule for contracts/leases entered
+// AFTER 1977-09-21; pre-1977 leases grandfathered; waiver explicitly
+// PROHIBITED — any waiver clause is void); Default (American Rule —
+// each party bears own fees absent a contract clause; one-way clauses
+// enforced as written without reciprocity).
+// ---------------------------------------------------------------------------
+
+async fn prevailing_party_attorney_fees_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PrevailingPartyFeesInput>,
+) -> Result<Json<PrevailingPartyFeesResult>, ApiError> {
+    if b.attorneys_fees_incurred_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "attorneys_fees_incurred_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(check_prevailing_party_attorney_fees(&b)))
 }
 
 // ---------------------------------------------------------------------------

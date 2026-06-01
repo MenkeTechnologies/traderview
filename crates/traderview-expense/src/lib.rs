@@ -73,6 +73,7 @@ pub mod owner_move_in_eviction;
 pub mod normalize;
 pub mod pet_fees;
 pub mod plain_language_lease;
+pub mod prevailing_party_attorney_fees;
 pub mod qbi;
 pub mod quarterly_tax;
 pub mod quiet_enjoyment;
