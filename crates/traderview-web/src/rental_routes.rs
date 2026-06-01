@@ -332,6 +332,10 @@ use traderview_expense::portable_tenant_screening_report::{
     check as check_portable_screening, CheckResult as PortableScreeningResult,
     Input as PortableScreeningInput,
 };
+use traderview_expense::hoa_rental_restriction::{
+    check as check_hoa_rental_restriction, CheckResult as HoaRentalResult,
+    Input as HoaRentalInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -570,6 +574,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
         .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
         .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
+        .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4436,6 +4441,37 @@ async fn portable_tenant_screening_report_route(
         ));
     }
     Ok(Json(check_portable_screening(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// HOA rental restriction enforceability.
+//
+// Mounted at POST /api/rental/hoa-rental-restriction. Three
+// regimes for when a homeowners association may enforce rental
+// restrictions against unit owners: (1) Florida — Fla. Stat.
+// § 720.306(1)(h) (eff. July 1, 2021) GRANDFATHER RULE: HOA
+// amendments adopted after July 1, 2021 apply only to owners
+// who acquired title after the amendment OR who affirmatively
+// consented; silence does not count as consent. Two narrow
+// exceptions bind ALL owners regardless: (a) amendments
+// restricting leases ≤ 6 months; (b) amendments limiting
+// rentals to ≤ 3 per calendar year. Grandfather survives heir
+// + affiliate transfers; LOST on transfer to unrelated third
+// party. (2) Arizona — A.R.S. § 33-1806.01 (planned communities):
+// declaration controls; HOA may restrict rentals if declaration
+// so provides; statutory third-party agent designation right
+// under § 33-1806.01(B). (3) Default — declaration controls;
+// no statutory grandfather. Distinct from str_regulation
+// (municipal public regulation) and condominium_conversion_
+// protection (tenant-side protection during conversions).
+// ---------------------------------------------------------------------------
+
+async fn hoa_rental_restriction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<HoaRentalInput>,
+) -> Result<Json<HoaRentalResult>, ApiError> {
+    Ok(Json(check_hoa_rental_restriction(&b)))
 }
 
 // ---------------------------------------------------------------------------
