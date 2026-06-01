@@ -3315,6 +3315,24 @@ Persistence lives in migration `0034_capital_loss_carryover.sql` (table `capital
 
 Thirteen tests pin: pure-ST-loss-deducts-3k-carries-rest-as-ST; pure-LT-loss-deducts-3k-carries-rest-as-LT; ST-absorbed-first-when-both-ST-and-LT-losses (§1212(b)(2)); ST-carryover-below-3k-lets-LT-absorb-remainder; MFS-caps-deduction-at-1500; prior-ST-carryover-absorbs-current-ST-gain-first; ST-loss-cross-absorbs-LT-gain-before-deduction; LT-loss-cross-absorbs-ST-gain-before-deduction; loss-exactly-3k-no-carryover; net-gain-clears-carryovers-no-deduction; exact-wash-returns-zero; multi-year-chain-ST-character-preserved (4 sequential years exhausting a $10k loss); carryover-stays-non-negative under stress.
 
+`traderview-expense::section_1231` is the **IRC §1231 quasi-capital gain/loss module with §1231(c) 5-year lookback recapture** — the "best of both worlds" tax provision for real estate traders, business owners, and equipment-heavy operations. When the taxpayer disposes of §1231 property (real property + depreciable personal property used in trade or business held > 1 year), the entire year's net result is recharacterized: net gain → **long-term capital gain** (preferential 0/15/20% LTCG rates); net loss → **ordinary loss** (no §1211 capital-loss cap; full offset against ordinary income; can drive §172 NOL). The asymmetric upside/downside is the defining feature.
+
+**§1231(c) 5-year lookback recapture mechanism** prevents gaming the timing:
+
+```
+Nonrecaptured_Loss = Σ(prior 5 years' net §1231 losses) − Σ(amounts already recaptured)
+Recapture_Ordinary = min(current_net_§1231_gain, Nonrecaptured_Loss_balance)
+Remaining_LTCG = current_net_§1231_gain − Recapture_Ordinary
+```
+
+So a taxpayer who took a $100k ordinary loss in year N-3 and then realizes a $150k §1231 gain in year N pays ordinary tax on the first $100k of that gain; only the remaining $50k gets LTCG treatment. The carryover balance walks forward 5 years before expiring.
+
+**§1231(b) property definition** — real or depreciable personal property used in trade or business held > 1 year. Includes rental real estate, equipment, vehicles, intangibles. **Excludes** inventory, accounts receivable, copyrights / musical works in the hands of the creator (unless §1221(b)(3) election), personal-use property.
+
+**Interaction with §1245 / §1250 depreciation recapture**: §1245 (personal property) and §1250 (real property) recharacterize gain up to prior depreciation as ordinary BEFORE §1231 character determination applies to the residual. Implementation here operates on the *post-§1245/§1250* residual §1231 amount.
+
+Mounted at `POST /api/calc/section-1231`. Eighteen tests pin: **net gain no carryover → pure LTCG** ($150k LTCG; characterization NetGainPureLongTermCapital); **carryover-to-next-year zero when no carry-in and net gain**; **partial recapture against carryover** ($150k net + $100k carryover → $100k ordinary + $50k LTCG residual); **carryover exceeds gain → full recapture no LTCG** ($300k carryover + $150k gain → $150k ordinary + $150k carryover remaining); **carryover exact match to net gain → zero LTCG** + zero carry-out; **net loss → ordinary** ($50k − $200k = $150k ordinary loss); **net loss increases carryover for 5-year window** ($50k carry-in + $150k new loss = $200k carry-out); **zero net → no characterization** + carryover preserved; **multi-year chain** (Year 1 $100k loss creates $100k carry-out; Year 2 $40k gain recaptures $40k leaving $60k; Year 3 $80k gain recaptures $60k + $20k LTCG residual + zero carryover); **negative carryover input clamped to zero** (defensive); **$1B precision** (no precision loss on real-estate-scale gains); **$500M gain + $200M carryover → $200M ordinary + $300M LTCG precision**; **7 citation regression targets** (§1231(a)(1) + §1231(a)(2) + §1231(b) + §1231(c) + §1245 + §1250 + Form 4797); 4 note path descriptions (pure LTCG / 5-year lookback recapture / net loss → ordinary / no net result).
+
 `traderview-expense::reps_qualification` is the **§469(c)(7) Real Estate Professional Status checker** — fills the input gap in iter 5's `section_469`, which accepted a `reps_qualified: bool` from the caller but never computed it. REPS is the gate that flips rental losses from per-se passive to NON-PASSIVE, eliminating the §25k allowance cap entirely. The bar is high — most landlords don't qualify.
 
 Three-prong test:

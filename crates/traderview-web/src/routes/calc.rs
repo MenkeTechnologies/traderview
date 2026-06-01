@@ -108,6 +108,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-1091",          post(section_1091_route))
+        .route("/calc/section-1231",          post(section_1231_route))
         .route("/calc/section-1233",          post(section_1233_route))
         .route("/calc/section-1234",          post(section_1234_route))
         .route("/calc/commission-optimizer",  post(commission_optimizer_route))
@@ -619,6 +620,27 @@ async fn section_1234_route(
         ));
     }
     Ok(Json(traderview_expense::section_1234::compute(&b)))
+}
+
+// ── §1231 quasi-capital gain/loss with §1231(c) recapture ──────────
+// Mounted at /api/calc/section-1231. §1231(a)(1) net gain → LTCG;
+// §1231(a)(2) net loss → ordinary; §1231(b) property = real /
+// depreciable held > 1 year used in trade/business; §1231(c) 5-year
+// lookback recaptures current net gain as ordinary up to prior-5-yr
+// nonrecaptured net §1231 losses.
+
+async fn section_1231_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1231::Section1231Input>,
+) -> Result<Json<traderview_expense::section_1231::Section1231Result>, ApiError> {
+    if b.current_year_gains_dollars < 0
+        || b.current_year_losses_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "current_year_gains_dollars and current_year_losses_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1231::compute(&b)))
 }
 
 // ── §1233 short-sale character + holding-period rules ───────────────
