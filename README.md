@@ -3167,6 +3167,45 @@ Mounted at `POST /api/calc/section-530`. Twenty-two tests pin: **single under $9
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_6045a` is the **IRC §6045A broker-to-broker transfer statement module** — trader-critical for anyone changing brokers (transferring stock, options, debt, or digital-asset positions). § 6045A requires the TRANSFERRING broker (or other "applicable person") to furnish a written information statement to the RECEIVING broker within 15 days of the transfer. The receiving broker uses this statement to populate Form 1099-B basis reporting under § 6045 on the eventual sale. Direct sibling to `section_6045` (downstream Form 1099-B) and `section_6045b` (upstream issuer Form 8937).
+
+**Four operative subsections**:
+
+| Subsection | Statute | Rule |
+|------------|---------|------|
+| § 6045A(a) | 26 U.S.C. § 6045A(a) | **General rule** — applicable person transferring custody of covered security to broker must furnish written information statement |
+| § 6045A(b)(1) | 26 U.S.C. § 6045A(b)(1) | **Applicable person** — any broker as defined in § 6045(c)(1) |
+| § 6045A(b)(2) | 26 U.S.C. § 6045A(b)(2) | **Applicable person** — other persons per Secretary's regulations |
+| § 6045A(c) | 26 U.S.C. § 6045A(c) | **15-day deadline** from date of transfer |
+| § 6045A(d) | Pub. L. 117-58 § 80603 (effective post-2025-12-31) | **Digital-asset transfer return** — broker transferring digital asset to non-broker account must make return showing transfer information |
+
+**Statement content (Treas. Reg. § 1.6045A-1)** for covered securities includes:
+- Transferring + receiving broker name/address/TIN
+- Customer name/address/TIN
+- Security CUSIP / identifier
+- Quantity / share count
+- **Adjusted basis**
+- **Original acquisition date**
+- Type of security
+- **Wash-sale-related flag** (per § 1091)
+
+**§ 6045A(d) digital-asset transfer return regime is post-2025-12-31 effective.** Added by the Infrastructure Investment and Jobs Act of 2021 § 80603. Trigger: (1) security is a digital asset, (2) direction is broker-to-non-broker account, AND (3) receiving party is NOT known by the broker to also be a broker. All three must be satisfied. Pinned by `digital_asset_broker_to_non_broker_return_required`, `digital_asset_broker_to_known_broker_no_d_return`, `digital_asset_broker_to_broker_no_d_return`, and the 4-cell invariant `digital_asset_return_only_triggered_by_specific_combo_invariant`.
+
+**Non-covered securities are entirely outside § 6045A scope.** Acquired before 2011 for equity, before 2012 for mutual funds, before 2014 for debt and options — no basis reporting, no transfer statement required. Pinned by `non_covered_security_outside_scope_compliant` and `non_covered_security_late_furnish_still_compliant` (even 100-day delay without statement is compliant for non-covered).
+
+**§ 6045A(c) 15-day deadline is INCLUSIVE at the boundary.** Day 14 = compliant; day 15 (at boundary) = compliant; day 16 = violation. Pinned by `covered_security_at_15_day_boundary_compliant`, `covered_security_past_15_day_deadline_violation`, and the boundary invariant `day_14_compliant_day_16_violation_boundary` (5 cells: 0/14/15/16/30 days).
+
+**Three statement-content violations are pinned independently**:
+- `missing_basis_violation` — Treas. Reg. § 1.6045A-1 adjusted basis missing
+- `missing_acquisition_date_violation` — § 1.6045A-1 acquisition date missing
+- `missing_wash_sale_flag_violation` — § 1.6045A-1 wash-sale flag missing (cites § 1091)
+
+Each is a standalone violation; statement can fail multiple content gates simultaneously.
+
+**Content requirements only apply to covered traditional securities.** Digital-asset transfers don't trigger the same § 1.6045A-1 content-check violations because the digital-asset regulation regime is structurally different. Pinned by `content_requirements_only_apply_to_covered_securities_invariant`.
+
+Mounted at `POST /api/calc/section-6045a`. Twenty tests pin: **covered security broker-to-broker within 15 days compliant**; **at 15-day boundary compliant**; **past 15-day deadline violation** (day 16); **statement not furnished violation**; **missing basis violation** (Treas. Reg. § 1.6045A-1); **missing acquisition date violation**; **missing wash-sale flag violation** (cites § 1091); **non-covered security outside scope compliant**; **non-covered late furnish still compliant**; **digital asset broker-to-non-broker return required** (§ 6045A(d)); **digital asset broker-to-known-broker no (d) return**; **digital asset broker-to-broker no (d) return**; **zero days since transfer compliant**; **day 14/15/16/30 boundary truth table 5-cell invariant**; **only-covered-or-digital-asset-requires-statement 3-type invariant**; **digital asset return only triggered by specific combo 4-condition invariant**; **deadline constant 15 days invariant**; **citation pins subsections per security type** (§ 6045A(a)/(b)(1)/(c) + § 1.6045A-1 for covered; § 6045A(d) + Pub. L. 117-58 for digital; "non-covered securities" for non-covered); **content requirements only apply to covered securities invariant**; **sibling-module note across all security types** (UX-text regression for § 6045 + § 6045B pairing).
+
 `traderview-expense::section_6045b` is the **IRC §6045B issuer reporting of organizational actions affecting basis (Form 8937) module** — trader-critical for any holder of stock that undergoes a corporate action (stock split, spin-off, merger, return-of-capital distribution). § 6045B requires the ISSUER of the specified security to report the organizational action AND the quantitative effect on basis to the IRS via Form 8937. Trader uses the issuer's Form 8937 to adjust basis for the post-action holding. Direct upstream feeder to `section_6045` (broker Form 1099-B reporting that consumes issuer's basis adjustments).
 
 **Five operative subsections**:

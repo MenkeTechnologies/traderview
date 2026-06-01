@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
+        .route("/calc/section-6045a",         post(section_6045a_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2784,6 +2785,35 @@ async fn section_6045b_route(
         ));
     }
     Ok(Json(traderview_expense::section_6045b::check(&b)))
+}
+
+// ── §6045A broker-to-broker custody transfer statement ────────────
+// Mounted at /api/calc/section-6045a. § 6045A requires the
+// transferring broker (or other applicable person) to furnish a
+// written information statement to the receiving broker within 15
+// days of the transfer. Receiving broker uses statement to populate
+// Form 1099-B basis reporting under § 6045 on eventual sale.
+// § 6045A(a) general rule + § 6045A(b)(1) broker definition via
+// § 6045(c)(1) + § 6045A(b)(2) other person per Secretary + § 6045A(c)
+// 15-day deadline + § 6045A(d) digital-asset transfer return regime
+// added by Infrastructure Investment and Jobs Act of 2021 Pub. L.
+// 117-58 § 80603 effective post-2025-12-31 — broker transferring
+// digital asset to non-broker account must make return showing
+// transfer info. Treas. Reg. § 1.6045A-1 statement content: basis,
+// acquisition date, wash-sale flag per § 1091. Companion to
+// section_6045 (downstream Form 1099-B) and section_6045b (upstream
+// issuer Form 8937).
+
+async fn section_6045a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6045a::Section6045AInput>,
+) -> Result<Json<traderview_expense::section_6045a::Section6045AResult>, ApiError> {
+    if b.days_since_transfer > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_transfer looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6045a::check(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
