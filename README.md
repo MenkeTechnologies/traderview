@@ -5668,6 +5668,43 @@ Pinned by individual exclusion-blocks tests for all eight prongs plus `each_excl
 
 Mounted at `POST /api/calc/section-7345`. Twenty-five tests pin: **baseline seriously delinquent certification engaged**; **debt below threshold no certification**; **debt at threshold exactly not exceeding** (statute reads "exceeds"); **debt one cent above threshold engages**; **lien without exhausted remedies no engagement**; **levy alone satisfies collection action**; **no lien no levy no engagement**; eight individual exclusion-blocks tests (installment agreement, OIC, innocent spouse, CDP, bankruptcy, identity theft, disaster area, CNC); **multiple exclusions listed individually** (3 simultaneous exclusions); **all three engagement conditions required truth table** (8-cell sweep); **each exclusion independently blocks certification invariant** (8-prong sweep); **threshold constants invariant** ($66K 2025 > $50K 2015; 30-day reversal); **parameterized threshold 2024 value** ($62K — confirms inflation-adjustment parameterization); **citation pins all subsections** (§ 7345 + § 7345(b)(1) + § 7345(b)(1)(A)/(B) + § 7345(b)(2) + § 7345(c)/(d)/(e) + FAST Act § 32101 + December 4, 2015 + § 6159 + § 7122 + § 6015 + § 6320 + § 6330 + § 6323 + § 6331 + CP508C + CP508R); **sibling modules note present** (UX-text regression for § 6011 + § 6651 + § 6654 + § 6662 + § 6707A + FAST Act origin); **defensive negative debt no engagement**; **defensive negative threshold clamped to zero**; **zero debt no engagement**.
 
+`traderview-expense::section_7408` is the **IRC § 7408 injunction-remedy module** — completes the preparer-and-promoter enforcement cluster (§ 6694 + § 6695 + § 6700 + § 6701 + § 7408). § 7408 is the EQUITABLE INJUNCTION authority IRS uses to STOP ongoing promoter/aider conduct, distinct from the civil penalty assessments under § 6700/§ 6701. § 7408 supplements (does not replace) the penalty sections; IRS may pursue penalties and injunction in parallel under § 7402(a) independent-jurisdiction rule.
+
+**§ 7408(b) two-prong injunction test** — court may issue injunction when BOTH satisfied:
+
+| Prong | Statute | Test |
+|-------|---------|------|
+| (1) | § 7408(b)(1) | Person engaged in specified conduct (any of 5 enumerated categories) |
+| (2) | § 7408(b)(2) | Injunctive relief appropriate to PREVENT RECURRENCE |
+
+Plus § 7408(a) Secretary-request requirement.
+
+**§ 7408(c) five specified-conduct categories**:
+
+| Category | Statute |
+|----------|---------|
+| § 6700 abusive tax shelter promotion | § 7408(c) |
+| § 6701 aiding and abetting understatement | § 7408(c) |
+| § 6707 material advisor failure-to-furnish | § 7408(c) |
+| § 6708 material advisor list-maintenance failure | § 7408(c) |
+| Circular 230 violation | 31 U.S.C. § 330 regulations |
+
+**§ 7408(d) venue** — district court for the district where person resides, has principal place of business, or has engaged in specified conduct.
+
+**§ 7408(e) non-resident venue rule** — U.S. citizen/resident not residing in any U.S. judicial district treated as residing in DISTRICT OF COLUMBIA. Pinned by `non_resident_treated_as_dc_venue` and `resident_uses_normal_venue`.
+
+**Three-element gating** — injunction requires (1) Secretary request, (2) specified conduct, (3) appropriateness to prevent recurrence. Missing any element defeats the action. Pinned by `no_secretary_request_no_injunction`, `no_specified_conduct_no_injunction`, `no_appropriateness_no_injunction`, and `all_three_elements_engages_injunction`.
+
+**Five specified-conduct categories each independently engage** — § 6700, § 6701, § 6707, § 6708, Circular 230. Pinned by `section_6700_conduct_engages`, `section_6701_conduct_engages`, `section_6707_conduct_engages`, `section_6708_conduct_engages`, `circular_230_violation_engages`, `each_conduct_category_independently_engages_invariant` (5-prong sweep), and `all_five_categories_engaged` (combined).
+
+**§ 7402(a) supplemental jurisdiction** — § 7408 action proceeds SEPARATELY and APART from any other government action. Injunction does NOT preclude (1) civil penalty assessment under § 6700/§ 6701/§ 6707/§ 6708, (2) criminal prosecution under § 7201/§ 7203/§ 7206 + 18 U.S.C. § 371 conspiracy, (3) Circular 230 disciplinary proceedings, or (4) other equitable remedies. § 7408 is SUPPLEMENTAL — IRS may pursue parallel tracks. Pinned by `supplemental_jurisdiction_note_present`.
+
+**Multi-element truth table** — `three_required_elements_truth_table` (8-cell sweep over Secretary × conduct × appropriateness; only all-three-true engages); `each_conduct_category_independently_engages_invariant` (5-prong sweep — each specified conduct alone satisfies § 7408(b)(1)); `venue_dc_only_when_not_us_resident_invariant` (2-cell sweep).
+
+**Sibling cluster note** — every result references the full preparer-and-promoter cluster (§ 6694 + § 6695 + § 6700 + § 6701) plus material-advisor cluster (§ 6707 + § 6708) plus § 7407 parallel preparer-specific injunction provision plus EQUITABLE REMEDY distinction from penalty assessments. Pinned by `sibling_cluster_note_present` (UX-text regression for full enforcement cluster + § 7407 parallel + equitable-remedy distinction).
+
+Mounted at `POST /api/calc/section-7408`. Twenty-two tests pin: **no Secretary request no injunction**; **no specified conduct no injunction**; **no appropriateness no injunction**; **all three elements engages injunction**; **§ 6700 conduct engages**; **§ 6701 conduct engages**; **§ 6707 conduct engages**; **§ 6708 conduct engages**; **Circular 230 violation engages**; **multiple categories listed individually** (3 simultaneous); **all five categories engaged**; **non-resident treated as DC venue** (§ 7408(e)); **resident uses normal venue**; **three required elements truth table** (8-cell sweep — only all-three-true engages); **each conduct category independently engages invariant** (5-prong sweep); **venue DC only when not US resident invariant**; **citation pins all subsections** (§ 7408 + (a)/(b)/(b)(1)/(b)(2)/(c)/(c)(1)-(5)/(d)/(e) + § 7402(a) + § 6700 + § 6701 + § 6707 + § 6708 + 31 U.S.C. § 330 + § 7407 + IRM 5.20.7 + IRM 5.20.8); **sibling cluster note present** (UX-text regression for § 6694 + § 6695 + § 6700 + § 6701 + § 6707 + § 6708 + § 7407 + EQUITABLE REMEDY distinction); **supplemental jurisdiction note present** (UX-text regression for § 7402(a) + parallel-track availability + criminal prosecution + Circular 230); **no Secretary request specific note**; **no conduct specific note**; **no appropriateness specific note**.
+
 `traderview-expense::section_6694` is the **IRC § 6694 tax return preparer penalty module** — direct preparer liability for understatements of taxpayer liability, layered on top of taxpayer-side penalties under § 6662 / § 6662A / § 6707A. Trader-critical because trader-CPAs commonly take aggressive positions on Schedule D, mark-to-market § 475(f) elections, wash-sale aggregation under § 1091, and partnership K-1 allocations. Sibling to the preparer + promoter penalty cluster: § 6695 (preparer information return penalties), § 6700 (promoter penalties), § 6701 (aiding and abetting understatement).
 
 **§ 6694 two-tier penalty structure**:

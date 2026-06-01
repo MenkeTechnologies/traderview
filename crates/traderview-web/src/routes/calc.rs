@@ -132,6 +132,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-72t",           post(section_72t_route))
         .route("/calc/section-7345",          post(section_7345_route))
+        .route("/calc/section-7408",          post(section_7408_route))
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
@@ -982,6 +983,27 @@ async fn section_7345_route(
         ));
     }
     Ok(Json(traderview_expense::section_7345::compute(&b)))
+}
+
+// ── § 7408 injunction remedy for preparer/promoter conduct ──────────
+// Mounted at /api/calc/section-7408. Completes the preparer +
+// promoter enforcement cluster: § 6694 + § 6695 + § 6700 + § 6701
+// + § 7408. § 7408 is the EQUITABLE INJUNCTION remedy IRS uses
+// to STOP ongoing promoter/aider conduct (not just penalize past
+// conduct). Two-prong test under § 7408(b): (1) person engaged
+// in specified conduct (§ 6700/§ 6701/§ 6707/§ 6708/Circular 230)
+// AND (2) injunction appropriate to prevent recurrence. Action
+// commenced at request of Secretary. § 7408(d) venue: district
+// court for person's residence, principal place of business, OR
+// district where conduct occurred. § 7408(e) treats non-resident
+// U.S. citizens/residents as residing in D.C. § 7402(a)
+// jurisdiction independent of any other government action.
+
+async fn section_7408_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7408::Section7408Input>,
+) -> Result<Json<traderview_expense::section_7408::Section7408Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7408::compute(&b)))
 }
 
 // ── §7701 entity classification check-the-box ───────────────────────
