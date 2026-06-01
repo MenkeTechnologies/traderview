@@ -176,6 +176,9 @@ use traderview_expense::lease_copy_delivery::{
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
+use traderview_expense::plain_language_lease::{
+    check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -334,6 +337,7 @@ pub fn router() -> Router<AppState> {
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
+        .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2774,6 +2778,42 @@ async fn tenant_organizing_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_organizing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State plain-language lease requirement compliance check
+//
+// Mounted at POST /api/rental/plain-language-lease-check. Five
+// regimes: NewYorkClearCoherent50DollarPenalty (NY GOL § 5-702 eff.
+// 1978-11-01 — $50 statutory penalty + actual damages + good-faith
+// defense + barred after full performance); NewJersey100DollarMinimum-
+// PlusAttorneyFees (N.J.S.A. 56:12-1 et seq. — greater of $100 or
+// actual damages + reasonable attorney fees); PennsylvaniaPlain-
+// LanguageNineTests (73 P.S. § 2201 et seq. — 9-test substantial
+// compliance + AG preapproval); ConnecticutDescriptiveReadability
+// (Conn. Gen. Stat. § 42-152 eff. 1979 oldest U.S. statute);
+// NoStatewidePlainLanguageRequirement (46 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn plain_language_lease_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PlainLanguageInput>,
+) -> Result<Json<PlainLanguageResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.tenant_actual_damages_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "tenant_actual_damages_dollars must be >= 0".into(),
+        ));
+    }
+    if b.pa_nine_tests_satisfied > 9 {
+        return Err(ApiError::BadRequest(
+            "pa_nine_tests_satisfied must be <= 9".into(),
+        ));
+    }
+    Ok(Json(check_plain_language(&b)))
 }
 
 // ---------------------------------------------------------------------------

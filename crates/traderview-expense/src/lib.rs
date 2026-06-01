@@ -60,6 +60,7 @@ pub mod owner_identification;
 pub mod owner_move_in_eviction;
 pub mod normalize;
 pub mod pet_fees;
+pub mod plain_language_lease;
 pub mod qbi;
 pub mod quarterly_tax;
 pub mod quiet_enjoyment;
