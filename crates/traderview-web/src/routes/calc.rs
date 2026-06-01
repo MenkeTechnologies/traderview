@@ -108,6 +108,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
+        .route("/calc/section-6662a",         post(section_6662a_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3044,6 +3045,34 @@ async fn section_6111_route(
         ));
     }
     Ok(Json(traderview_expense::section_6111::compute(&b)))
+}
+
+// ── § 6662A reportable-transaction-understatement penalty ──────────
+// Mounted at /api/calc/section-6662a. Direct sibling to § 6011
+// (taxpayer Form 8886), § 6111 (advisor Form 8918), § 6707
+// (advisor penalty), § 6707A (taxpayer disclosure penalty).
+// § 6662A taxes the SUBSTANTIVE tax position taken on the return
+// when a reportable transaction is involved — not just the
+// disclosure failure standalone. § 6662A(a) 20% baseline rate;
+// § 6662A(c) 30% enhanced rate when transaction was not
+// adequately disclosed under § 6011 regulations. § 6662A(b)(1)
+// understatement = (income increase × highest tax rate) +
+// credit decrease. § 6664(d) reasonable-cause exception requires
+// ALL THREE prongs: (A) adequate disclosure; (B) substantial
+// authority; (C) more-likely-than-not belief. § 6662A(e)(2)(A)
+// coordination prevents stacking with § 6662 on the same
+// understatement.
+
+async fn section_6662a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6662a::Section6662AInput>,
+) -> Result<Json<traderview_expense::section_6662a::Section6662AResult>, ApiError> {
+    if b.highest_tax_rate_bps > 10_000 || b.highest_tax_rate_bps < -10_000 {
+        return Err(ApiError::BadRequest(
+            "highest_tax_rate_bps out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6662a::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

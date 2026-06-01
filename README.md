@@ -3031,6 +3031,41 @@ Listed-floor-vs-50%-gross truth table pinned by `listed_50_percent_gross_floor_t
 
 Mounted at `POST /api/calc/section-6111`. Twenty-five tests pin: **natural-person threshold at $50K engaged**; **natural-person below $50K not material advisor**; **other threshold at $250K engaged**; **other below $250K not material advisor**; **prong (A) failed no material aid not advisor regardless of income**; **non-listed not filed $50K penalty**; **non-listed filed late $50K penalty**; **non-listed filed on time compliant**; **listed not filed intentional $200K floor**; **listed not filed 50% gross exceeds $200K floor**; **listed not filed unintentional reduced to $50K**; **listed filed on time compliant**; **natural-person threshold lower than other invariant** (5× ratio); **listed penalty floor above non-listed penalty invariant** (4× ratio); **listed 50% gross floor truth table** (5-cell sweep); **both prongs required invariant** (4-cell truth table); **citation pins all subsections** (§ 6111 + § 6111(b)(1)(A) + § 6111(b)(2) + § 301.6111-3(b)(3) + § 301.6111-3(e) + § 6707(a) + § 6707(b)(1)(A) + § 6707(b)(1) flush + § 301.6707-1 + Notice 2004-80 + Form 8918); **sibling modules note present** (UX-text regression for § 6011 + § 6707A + § 6112 + § 6662A trio); **defensive negative gross income clamped**; **threshold boundary natural-person exact $50K** (≥); **threshold boundary natural-person one cent below**; **threshold boundary other exact $250K**; **threshold boundary other one cent below**; **natural-person uses lower threshold invariant** (same gross income compared); **unintentional only affects listed transactions** (4-cell — non-listed unchanged, listed reduced).
 
+`traderview-expense::section_6662a` is the **IRC § 6662A reportable-transaction-understatement accuracy penalty module** — the SUBSTANTIVE-TAX-POSITION penalty layered on top of the § 6011 / § 6111 / § 6707 / § 6707A disclosure regime. Where § 6707A and § 6707 punish failures to FILE the disclosure forms (Form 8886 / Form 8918), § 6662A punishes the underlying tax POSITION taken on the return when a reportable transaction is involved. The two penalty regimes operate concurrently; § 6662A(e)(2)(A) coordinates with § 6662 to prevent stacking on the same understatement but does NOT prevent stacking with § 6707A.
+
+**Penalty rate structure**:
+
+| Disclosure status | Statute | Rate |
+|-------------------|---------|------|
+| Form 8886 timely filed per § 6011 | § 6662A(a) | **20%** baseline |
+| Not adequately disclosed | § 6662A(c) | **30%** enhanced |
+
+Enhanced rate is **exactly 1.5×** the baseline (20% × 1.5 = 30%). Pinned by `enhanced_rate_strictly_higher_than_baseline_invariant` (3000 > 2000; algebraic 30 × 2 = 20 × 3 identity), `disclosed_20_percent_baseline_rate`, `not_disclosed_30_percent_enhanced_rate`, `not_disclosed_30_percent_higher_penalty` (same understatement, 30% > 20%), and `rate_switch_depends_only_on_disclosure_invariant` (2-cell sweep — same income+rate, only disclosure varies, rate switches accordingly).
+
+**§ 6662A(b)(1) understatement math**:
+
+```
+reportable_transaction_understatement
+  = (taxable income increase × highest tax rate)   [§ 6662A(b)(1)(A)]
+  + decrease in aggregate credits                  [§ 6662A(b)(1)(B)]
+```
+
+Income-component multiplied by highest applicable tax rate (current top bracket: 37%). Credit-component passes through directly (no rate multiplier — credits offset tax dollar-for-dollar). Pinned by `income_increase_times_37_percent_rate` ($100K × 37% = $37K understatement → 20% = $7,400 penalty), `income_increase_times_24_percent_rate` ($50K × 24% = $12K understatement), `credit_decrease_direct_pass_through` ($50K credit decrease → $50K understatement, no rate multiplier), `combined_income_and_credit_components` ($100K × 37% + $20K = $57K total), `boundary_understatement_one_cent_one_percent_rate`, and `large_understatement_no_overflow` ($1B income × 37% = $370M understatement, 30% = $111M penalty — saturating math).
+
+**§ 6664(d) reasonable-cause exception — ALL THREE prongs required**:
+
+| Prong | Statute | Requirement |
+|-------|---------|-------------|
+| (A) | § 6664(d)(3)(A) | Facts adequately disclosed per § 6011 regulations |
+| (B) | § 6664(d)(3)(B) | Substantial authority for the treatment |
+| (C) | § 6664(d)(3)(C) | Taxpayer reasonably believed the treatment was more likely than not the proper treatment |
+
+Missing any single prong forfeits the entire reasonable-cause defense. Pinned by `reasonable_cause_all_three_prongs_excuses_penalty` (all three satisfied → penalty = 0), `reasonable_cause_missing_disclosure_prong_fails`, `reasonable_cause_missing_substantial_authority_fails`, `reasonable_cause_missing_more_likely_than_not_fails`, `reasonable_cause_not_claimed_no_exception`, and `reasonable_cause_requires_all_three_prongs_truth_table` (8-cell sweep — only the {true, true, true} cell engages the exception).
+
+**Sibling cluster note** — every result references the disclosure-regime cluster: § 6011 (taxpayer Form 8886), § 6111 (advisor Form 8918), § 6707 (advisor penalty), § 6707A (taxpayer disclosure penalty), and § 6662 (general accuracy — non-stackable on same understatement under § 6662A(e)(2)(A)). Pinned by `sibling_modules_note_present` (UX-text regression for 5-statute cluster).
+
+Mounted at `POST /api/calc/section-6662a`. Twenty-four tests pin: **disclosed 20% baseline rate**; **not disclosed 30% enhanced rate**; **income increase × 37% rate**; **income increase × 24% rate**; **credit decrease direct pass-through** (no rate multiplier); **combined income + credit components**; **not disclosed 30% higher than disclosed 20% penalty** (same understatement); **reasonable cause all three prongs excuses penalty**; **reasonable cause missing disclosure prong fails**; **reasonable cause missing substantial authority fails**; **reasonable cause missing more-likely-than-not fails**; **reasonable cause not claimed no exception**; **enhanced rate strictly higher than baseline invariant** (1.5× ratio); **reasonable cause requires all three prongs truth table** (8-cell sweep); **rate switch depends only on disclosure invariant** (2-cell sweep); **zero understatement zero penalty**; **citation pins all subsections** (§ 6662A + § 6662A(a)/(b)(1)/(b)(2)/(c)/(e)(2)(A) + § 6664(d) + § 6664(d)(3)(A)/(B)/(C) + § 1.6664-4 + Notice 2005-12 + Notice 2005-22); **sibling modules note present** (UX-text regression for § 6011 + § 6111 + § 6707 + § 6707A + § 6662 cluster); **defensive negative income increase clamped**; **defensive negative credit decrease clamped**; **defensive tax rate above 100% clamped**; **defensive negative tax rate clamped to zero**; **boundary understatement one cent one percent rate**; **large understatement no overflow** ($1B income, $111M penalty via saturating math).
+
 `traderview-expense::section_1298` is the **IRC §1298 PFIC attribution + special rules + annual reporting module** — direct companion to `section_1297` (PFIC classification — which cross-references § 1298(b)(1) purging election in § 1297(d)). Where § 1297 defines what makes a foreign corporation a PFIC, § 1298 governs WHEN a U.S. person is treated as OWNING PFIC stock indirectly (through corporations, partnerships, trusts, estates, or options), the PURGING ELECTION mechanism, the pledge-as-security deemed-disposition trap, and Form 8621 annual reporting.
 
 **§ 1298(a) — three attribution rules**:

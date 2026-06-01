@@ -268,6 +268,7 @@ pub mod section_6050w;
 pub mod section_6651;
 pub mod section_6654;
 pub mod section_6662;
+pub mod section_6662a;
 pub mod seed_rules;
 pub mod self_employment_tax;
 pub mod sheet;
