@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-243",           post(section_243_route))
+        .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
@@ -1534,6 +1535,28 @@ async fn section_243_route(
         ));
     }
     Ok(Json(traderview_expense::section_243::compute(&b)))
+}
+
+// ── §250 GILTI/FDII (NCTI/FDDEI post-OBBBA 2025) deduction ──────────
+// Mounted at /api/calc/section-250. TCJA §14202 50% GILTI / 37.5%
+// FDII deductions; OBBBA 2025 amendments effective tax years after
+// 2025-12-31 rename to NCTI/FDDEI, reduce deductions to 40%/33.34%,
+// eliminate DTIR/NDTIR (QBAI 10% return), raise FTC from 80% to 90%.
+
+async fn section_250_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_250::Section250Input>,
+) -> Result<Json<traderview_expense::section_250::Section250Result>, ApiError> {
+    if b.gilti_ncti_income_dollars < 0
+        || b.fdii_fddei_income_dollars < 0
+        || b.qbai_dollars < 0
+        || b.deemed_paid_foreign_taxes_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_250::compute(&b)))
 }
 
 // ── §448 small business gross receipts test + cascade exemptions ────

@@ -1869,6 +1869,32 @@ A 50%-tier dividend on 40%-debt-financed stock yields 50% × 60% = 30% DRD. A 65
 
 Mounted at `POST /api/calc/section-243`. Twenty-four tests pin: **all 3 ownership tier boundaries** with 5 sub-pins each (UnderTwentyPct / TwentyToSeventyNinePct / EightyPlusPct + 100% gives full deduction); **§246(c) common 45/46-day boundary** + preferred-long-dividend 90/91-day boundary; preferred-short-dividend uses 45-day window; **holding period failure full disallowance** even at 100% ownership; **§246A debt-financed reduction** on 50% tier (40% indebt → 30%) and 65% tier (50% indebt → 32.5%); §246A does NOT reduce 80%+ tier; **100% indebtedness clamps DRD to zero**; >100% indebtedness clamped safely; **debt-financed + holding-period-failed combined → zero DRD** with HOLDING PERIOD FAILED note priority; **$1B precision path** ($1B × 50% = $500M); zero dividend zero DRD; under-20 note describes 50.00% tier; debt-financed note describes §246A reduction with 30.00% effective rate; citation mentions all 6 relevant authorities (§243(a)(1) / §243(b) / §243(c) / §246(c) / §246A / TCJA § 13002).
 
+`traderview-expense::section_250` is the **IRC §250 GILTI / FDII deduction module (renamed NCTI / FDDEI post-OBBBA 2025)** — relevant for any US C corporation with foreign-sourced income. TCJA § 14202 (P.L. 115-97) added §250 effective 2018; the **One Big Beautiful Bill Act of 2025** (OBBBA) substantially modified it for tax years beginning after 2025-12-31. Module returns year-aware deductions and effective rates ([Cornell LII 26 U.S.C. § 250](https://www.law.cornell.edu/uscode/text/26/250), [EY — OBBBA International Tax Reforms](https://www.ey.com/en_gl/technical/tax-alerts/united-states-changes-to-gilti-fdii-and-beat-among-others-included-in-final-reconciliation-legislation-but-not-previously-proposed-remedy-for-unfair-foreign-taxes), [Steptoe — International Tax Changes in OBBBA](https://www.steptoe.com/en/news-publications/international-tax-changes-in-the-one-big-beautiful-bill-act.html)).
+
+**Deduction percentages and effective rates** (assumes § 11 21% corporate rate):
+
+| Period          | Income type | Deduction % | Effective rate |
+|-----------------|-------------|-------------|----------------|
+| 2018-2025       | GILTI       | **50%**     | **10.5%**      |
+| 2018-2025       | FDII        | **37.5%**   | **13.125%**    |
+| 2026+ (OBBBA)   | NCTI        | **40%**     | **12.6%**      |
+| 2026+ (OBBBA)   | FDDEI       | **33.34%**  | **14.0%**      |
+
+Each rate boundary pinned: `pre_obbba_gilti_50_pct_deduction` + `pre_obbba_fdii_37_5_pct_deduction` + `pre_obbba_effective_gilti_rate_10_5_pct` (1050bp) + `pre_obbba_effective_fdii_rate_13_125_pct` (1312bp). Post-OBBBA: `post_obbba_ncti_40_pct_deduction` + `post_obbba_fddei_33_34_pct_deduction` + `post_obbba_effective_ncti_rate_12_6_pct` (1260bp) + `post_obbba_effective_fddei_rate_14_pct` (1399bp).
+
+**OBBBA structural changes** (eff. 2026-01-01):
+
+- **Renaming**: GILTI → NCTI (Net CFC Tested Income); FDII → FDDEI (Foreign-Derived Deduction Eligible Income)
+- **DTIR / NDTIR eliminated**: the 10% return on Qualified Business Asset Investment (QBAI) that reduced pre-OBBBA GILTI inclusion is gone. Module returns `dtir_deduction_dollars: 0` post-OBBBA regardless of QBAI input. Pinned by `pre_obbba_dtir_10_pct_of_qbai` ($2M QBAI → $200k DTIR → $800k net GILTI) vs `post_obbba_dtir_eliminated` ($2M QBAI ignored, full $1M NCTI inclusion).
+- **FTC for deemed-paid taxes raised from 80% to 90%**. Pinned by `pre_obbba_ftc_80_pct` ($100k taxes → $80k credit) + `post_obbba_ftc_90_pct` ($100k → $90k credit).
+- Interest expense and R&E expenditures EXCLUDED from allocable expenses in computing Deduction Eligible Income (DEI) — caller-side computation.
+
+**Year boundary**: tax years 2018-2025 use pre-OBBBA rates; 2026+ uses post-OBBBA. Pinned by `year_2025_pre_obbba` + `year_2026_post_obbba`.
+
+**Note label changes track regime**: pre-OBBBA note uses "GILTI/FDII" labels; post-OBBBA uses "NCTI/FDDEI" labels + explicitly mentions DTIR elimination. Pinned by `pre_obbba_note_uses_gilti_fdii_labels` + `post_obbba_note_uses_ncti_fddei_labels` + `post_obbba_note_mentions_dtir_elimination`.
+
+Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50% deduction** ($1M × 50% = $500k); **pre-OBBBA FDII 37.5% deduction** ($500k × 37.5% = $187,500); **pre-OBBBA effective GILTI rate 10.5%** (1050bp); pre-OBBBA effective FDII rate 13.125% (1312bp); **pre-OBBBA DTIR 10% of QBAI** ($2M QBAI → $200k DTIR + reduced GILTI to $800k); **pre-OBBBA FTC 80%** ($100k taxes → $80k FTC); **post-OBBBA NCTI 40% deduction**; **post-OBBBA FDDEI 33.34% deduction**; **post-OBBBA effective NCTI rate 12.6%**; **post-OBBBA effective FDDEI rate 14%**; **post-OBBBA DTIR eliminated** (regression); **post-OBBBA FTC 90%**; year 2025 pre-OBBBA + 2026 post-OBBBA boundary; **pre-OBBBA note uses GILTI/FDII labels**; **post-OBBBA note uses NCTI/FDDEI labels + DTIR elimination call-out**; citation mentions TCJA § 14202 + One Big Beautiful Bill Act + NCTI + FDDEI; $1B precision; zero income zero deduction.
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:
