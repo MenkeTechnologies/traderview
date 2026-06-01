@@ -116,6 +116,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-6695",          post(section_6695_route))
         .route("/calc/section-6700",          post(section_6700_route))
+        .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3310,6 +3311,39 @@ async fn section_6700_route(
         ));
     }
     Ok(Json(traderview_expense::section_6700::compute(&b)))
+}
+
+// ── § 6701 aiding and abetting understatement of tax liability ─────
+// Mounted at /api/calc/section-6701. Fourth and final member of
+// the preparer + promoter penalty cluster (§ 6694 + § 6695 +
+// § 6700 + § 6701). § 6701 captures the broadest range of
+// conduct — any person who aids, assists, procures, or advises
+// preparation of a document they KNOW would result in
+// understatement of another's tax. Three-element test under
+// § 6701(a): (1) aid/assist/procure/advise; (2) material-matter
+// knowledge; (3) understatement-knowledge. § 6701(b)(1)
+// penalties: $1,000 non-corporate / $10,000 corporate per
+// document. § 6701(b)(2) one-per-taxpayer-per-period limit.
+// § 6701(f) coordination — § 6701 supersedes § 6694(a)/(b) on
+// same document. § 7408 injunction remedy available.
+
+async fn section_6701_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6701::Section6701Input>,
+) -> Result<Json<traderview_expense::section_6701::Section6701Result>, ApiError> {
+    if b.number_of_documents < 0 || b.number_of_documents > 1_000_000 {
+        return Err(ApiError::BadRequest(
+            "number_of_documents out of range".into(),
+        ));
+    }
+    if b.number_of_distinct_taxpayers < 0
+        || b.number_of_distinct_taxpayers > 1_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "number_of_distinct_taxpayers out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6701::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
