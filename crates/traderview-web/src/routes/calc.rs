@@ -77,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-6045",          post(section_6045_route))
+        .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
@@ -2110,6 +2111,34 @@ async fn section_6045_route(
         ));
     }
     Ok(Json(traderview_expense::section_6045::compute(&b)))
+}
+
+// ── §6050I cash transaction reporting (Form 8300) ────────────────────
+// Mounted at /api/calc/section-6050i. §6050I(a) requires any person
+// engaged in a trade or business who receives more than $10,000 in
+// cash in one transaction (or two or more related transactions within
+// 24 hours) to report to IRS AND FinCEN within 15 days on Form 8300.
+// §6050I(d) cash definition includes currency + cashier's checks +
+// money orders + bank drafts WITH FACE AMOUNT ≤ $10,000 (personal
+// checks and wire transfers are NOT cash). IIJA §80603 added digital
+// assets effective 2024-01-01 BUT IRS Announcement 2024-04
+// SUSPENDED implementation — digital assets currently EXCLUDED from
+// § 6050I cash pending IRS regulations. §6721 intentional-disregard
+// penalty = greater of $250K or aggregate; §7203 willful-failure
+// criminal exposure.
+
+async fn section_6050i_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6050i::Section6050IInput>,
+) -> Result<Json<traderview_expense::section_6050i::Section6050IResult>, ApiError> {
+    if b.single_instrument_face_amount_cents < 0
+        || b.aggregate_related_24_hour_amount_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6050i::compute(&b)))
 }
 
 // ── §6050W payment-settlement-entity 1099-K reporting threshold ──────

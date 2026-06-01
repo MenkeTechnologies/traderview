@@ -218,6 +218,7 @@ pub mod section_481;
 pub mod section_530;
 pub mod section_59a;
 pub mod section_6045;
+pub mod section_6050i;
 pub mod section_6050w;
 pub mod section_6651;
 pub mod section_6654;
