@@ -449,6 +449,10 @@ use traderview_expense::landlord_retaliation_damages::{
     CheckResult as LandlordRetaliationDamagesResult,
     Input as LandlordRetaliationDamagesInput,
 };
+use traderview_expense::landlord_security_device_obligations::{
+    check as check_landlord_security_device_obligations, LandlordSecurityDeviceInput,
+    LandlordSecurityDeviceResult,
+};
 use traderview_expense::landlord_tenant_recording_consent::{
     check as check_landlord_tenant_recording_consent, RecordingConsentInput,
     RecordingConsentResult,
@@ -749,6 +753,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
+        .route("/landlord-security-device-obligations", axum::routing::post(landlord_security_device_obligations_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
         .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
@@ -5485,6 +5490,40 @@ async fn landlord_retaliation_damages_route(
         ));
     }
     Ok(Json(check_landlord_retaliation_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_security_device_obligations: Mandatory landlord-provided security
+// devices obligations — when does a residential landlord have an affirmative
+// statutory duty to install and maintain locks, deadbolts, door viewers, and
+// sliding-door security devices? Mounted at POST /api/rental/landlord-
+// security-device-obligations. Three regimes: (1) Texas Tex. Prop. Code
+// §§ 92.151 + 92.153 + 92.156 + 92.164 + 92.165 Subchapter D — most
+// detailed framework: § 92.153(a) keyless bolting + door viewer on each
+// exterior door; § 92.153(b) at least ONE door with both keyed and keyless
+// deadbolts; § 92.153(c) sliding door pin lock OR handle latch OR security
+// bar (for dwellings completed on or after September 1, 1993); §
+// 92.153(d) LANDLORD'S EXPENSE; § 92.153(e) OPERABLE throughout tenancy;
+// §§ 92.164/92.165 tenant remedies one month rent + $500 + actual damages
+// + attorney fees + court costs. (2) California Cal. Civ. Code §§ 1941.1
+// + 1941.3 — deadbolt on main entry doors + window security devices on
+// accessible windows + garage door locking mechanism if applicable;
+// working order throughout tenancy at landlord expense; implied warranty
+// of habitability breach with rent withholding + repair-and-deduct + lease
+// termination remedies. (3) Default — Hilder v. St. Peter 144 Vt. 150
+// (1984) + Javins v. First National Realty Corp. 428 F.2d 1071 (D.C. Cir.
+// 1970) common-law implied warranty of habitability + negligence-per-se
+// for break-in / assault claims. Distinct from `lock_change_between_
+// tenancies`, `dv_survivor_lock_change`, and `tenant_smart_lock_biometric_
+// consent`.
+// ---------------------------------------------------------------------------
+
+async fn landlord_security_device_obligations_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordSecurityDeviceInput>,
+) -> Result<Json<LandlordSecurityDeviceResult>, ApiError> {
+    Ok(Json(check_landlord_security_device_obligations(&b)))
 }
 
 // ---------------------------------------------------------------------------

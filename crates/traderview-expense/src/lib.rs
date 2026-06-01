@@ -66,6 +66,7 @@ pub mod landlord_harassment;
 pub mod landlord_identification_disclosure;
 pub mod landlord_possession_delivery;
 pub mod landlord_retaliation_damages;
+pub mod landlord_security_device_obligations;
 pub mod landlord_tenant_recording_consent;
 pub mod landlord_lien_prohibition;
 pub mod holdover_tenant_damages;
