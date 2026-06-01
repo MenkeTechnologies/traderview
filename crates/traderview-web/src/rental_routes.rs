@@ -264,6 +264,10 @@ use traderview_expense::pesticide_application_notice::{
     check as check_pesticide_application_notice, CheckResult as PesticideNoticeResult,
     Input as PesticideNoticeInput,
 };
+use traderview_expense::condominium_conversion_protection::{
+    check as check_condominium_conversion_protection, CheckResult as CondoConversionResult,
+    Input as CondoConversionInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -485,6 +489,7 @@ pub fn router() -> Router<AppState> {
         .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
         .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
         .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
+        .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3768,6 +3773,53 @@ async fn pesticide_application_notice_route(
         ));
     }
     Ok(Json(check_pesticide_application_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord condominium-conversion tenant protection
+// compliance check.
+//
+// Mounted at POST /api/rental/condominium-conversion-protection. Six
+// regimes: DistrictOfColumbia (DC Code § 42-3401.01 et seq. Rental
+// Housing Conversion and Sale Act + § 42-1904.08 — owner cannot
+// convert without (a) Mayor certification AND (b) MAJORITY tenant
+// vote in certified election; TOPA right-of-first-refusal
+// coordination); Massachusetts (G.L. c. 527 of Acts of 1983 —
+// applies only to buildings of 4+ rental units; 90-day first-refusal
+// grace period; relocation $750 standard / $1000 elderly + disabled
+// + low-moderate-income; notice 1 year standard / 2 years
+// low-moderate / 4 years elderly + disabled); NewJersey (N.J.S.A.
+// 2A:18-61.22 Senior Citizens and Disabled Protected Tenancy Act —
+// up to 40-year protected tenancy BARS conversion eviction of
+// senior + disabled tenants); NewYork (N.Y. Gen. Bus. Law § 352-e
+// + § 352-eee + § 352-eeee — EVICTION PLAN requires 51% tenant
+// purchase commitment; NON-EVICTION PLAN requires 15% commitment;
+// senior + disabled receive 99-year non-eviction tenure);
+// MarylandMontgomery (Mont. County Code Ch. 11A + Md. Code Real
+// Property § 11-102.1 — 180-day notice + right of first refusal +
+// relocation assistance); Default (no statewide protection).
+// ---------------------------------------------------------------------------
+
+async fn condominium_conversion_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CondoConversionInput>,
+) -> Result<Json<CondoConversionResult>, ApiError> {
+    if b.relocation_assistance_paid_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.building_unit_count > 100_000
+        || b.notice_days_before_conversion > 100_000
+        || b.days_for_first_refusal_acceptance > 100_000
+        || b.ny_tenant_purchase_commitment_bp > 10_000
+    {
+        return Err(ApiError::BadRequest(
+            "counters look invalid (>thresholds)".into(),
+        ));
+    }
+    Ok(Json(check_condominium_conversion_protection(&b)))
 }
 
 // ---------------------------------------------------------------------------
