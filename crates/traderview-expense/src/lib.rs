@@ -7,6 +7,7 @@
 //! from documentation produces wrong column maps; only a real file is the spec.
 
 pub mod adverse_action_notice;
+pub mod advance_rent_limit;
 pub mod amazon;
 pub mod apple;
 pub mod application_fees;
