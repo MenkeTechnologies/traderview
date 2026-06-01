@@ -143,6 +143,9 @@ use traderview_expense::mobile_home_park::{
 use traderview_expense::submetering_rules::{
     check as check_submetering, SubmeteringInput, SubmeteringResult,
 };
+use traderview_expense::smoke_free_housing::{
+    check as check_smoke_free, SmokeFreeInput, SmokeFreeResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -290,6 +293,7 @@ pub fn router() -> Router<AppState> {
         .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
         .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
         .route("/submetering-check", axum::routing::post(submetering_check_route))
+        .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2433,6 +2437,28 @@ async fn submetering_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_submetering(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal HUD + state smoke-free housing compliance check
+//
+// Mounted at POST /api/rental/smoke-free-check. Two regimes:
+// HudFloorPlusStateAdditions (CA Cal. Labor Code § 6404.5 + AB 1316
+// + local Berkeley 2014 ordinance; MN Minn. Stat. § 144.414 + 2024
+// cannabis amendment; OR ORS Ch. 90 90-day existing-tenant
+// conversion notice); HudFloorOnly (federal 24 CFR § 965.653 for
+// public housing only; private market governed by lease + local).
+// ---------------------------------------------------------------------------
+
+async fn smoke_free_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SmokeFreeInput>,
+) -> Result<Json<SmokeFreeResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_smoke_free(&b)))
 }
 
 // ---------------------------------------------------------------------------

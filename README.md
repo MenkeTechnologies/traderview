@@ -941,6 +941,34 @@ Pinned by both rate-cap boundaries: `tx_late_fee_5_pct_exact_complies` + `tx_lat
 
 Mounted at `POST /api/rental/submetering-check`. Twenty-four tests pin: **CA with lease disclosure complies** + without violates with "not disclosed" violation; **CA tenant test request must be free** + tenant test provided complies; VA same regime as CA; **VA 24-month test window pinned in citation**; **TX with PSC registration complies** + without violates; **TX late fee 5% exact complies / 6% violates** (boundary); **TX service charge 9% exact complies / 10% violates** (boundary); TX all 3 fee caps individually pinned at 5%/9%; **no-regulation state (FL) no compliance issues** even with 50% late fee; no-submetering-in-use no check triggered; **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (CA+VA / TX only / TX only with fee caps); unknown state falls back to no regulation; lowercase normalizes; TX multiple-violations all listed (3 stack); CA violation note lists issues.
 
+`traderview-expense::smoke_free_housing` is the **federal HUD + state smoke-free housing compliance table** — every trader-landlord operating multifamily, especially public housing or properties accepting § 8 vouchers, must comply with the federal HUD smoke-free rule plus any applicable state additions. Two regimes:
+
+| Regime                              | States | Source                                                                |
+|-------------------------------------|--------|-----------------------------------------------------------------------|
+| **HudFloorPlusStateAdditions**      | CA, MN, OR | HUD 24 CFR § 965.653 + Cal. Labor Code § 6404.5 + AB 1316 + Berkeley 2014 local; Minn. Stat. § 144.414 + 2024 cannabis amendment for MUH common-interest communities (eff. 2024-07-01); Or. ORS Ch. 90 90-day existing-tenant conversion notice |
+| **HudFloorOnly**                    | 47 other states + DC | HUD 24 CFR § 965.653 federal floor for public housing only; private market governed by lease + local ordinances |
+
+**HUD federal floor (24 CFR § 965.653, eff. 2018-07-30)** — every Public Housing Authority (PHA) in the country MUST enforce a smoke-free policy covering:
+
+- **Indoor**: all living units, common areas, electrical closets, storage units, PHA administrative offices
+- **Outdoor**: **25-foot buffer** around housing and admin buildings
+- **All prohibited tobacco products** — cigarettes, cigars, pipes, hookahs; some PHAs include e-cigarettes ([HUD eCFR 24 CFR § 965.653](https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-965/subpart-G/section-965.653), [Federal Register Final Rule on Smoke-Free Public Housing](https://www.federalregister.gov/documents/2016/12/05/2016-28986/instituting-smoke-free-public-housing)).
+
+The federal rule does NOT apply to private market multifamily — pinned by `tx_private_multifamily_no_state_requirement` + `ny_private_multifamily_no_state_requirement` (TX and NY private multifamily compliant by default even with no smoke-free policy).
+
+**California state addition** — Cal. Labor Code § 6404.5 + AB 1316 + local ordinances (Berkeley was first CA rent-control city to ban smoking in MUH in 2014). Requires common-area smoke-free for private multifamily. Pinned by `ca_private_multifamily_requires_common_area_smoke_free` (without common-area policy violates) + `ca_private_multifamily_with_common_area_complies`. Single-family rentals NOT covered: `ca_private_single_family_no_common_area_requirement`.
+
+**Minnesota state addition** — Minn. Stat. § 144.414 + 2024 cannabis amendment. Common-area smoke-free required. 2024 amendment explicitly added cannabis to the prohibition for MUH common-interest communities (HOAs), effective 2024-07-01. Pinned by `mn_citation_mentions_2024_cannabis_amendment`.
+
+**Oregon state addition** — ORS Ch. 90 allows the landlord to convert an EXISTING tenancy to non-smoking with **90 days' written notice**. Distinct from the typical 90-day rent-increase notice. New tenancies don't trigger the conversion-notice rule (no existing tenant to give notice to). Pinned by `or_conversion_with_90_day_notice_complies` + `or_conversion_with_89_day_notice_violates` (1-day boundary) + `or_new_tenancy_no_conversion_notice_needed`.
+
+**Module invariants** (3 separately pinned):
+- CA + MN + OR only on HudFloorPlusStateAdditions regime (`state_additions_only_ca_mn_or`)
+- OR only with conversion-notice requirement (`only_or_has_conversion_notice`)
+- CA + MN only with common-area requirement (`only_ca_mn_have_common_area_requirement`)
+
+Mounted at `POST /api/rental/smoke-free-check`. Twenty-three tests pin: **PHA with full compliance passes**; **PHA without indoor policy violates**; **PHA without 25-ft buffer violates**; PHA both violations listed (count = 2); **CA private multifamily requires common-area smoke-free** + with common-area complies; **MN private multifamily common-area required**; **CA private single-family NO common-area requirement** (single-family carveout); **OR conversion with 90-day notice complies / 89-day violates** (boundary); **OR new tenancy NO conversion notice needed** (regression); **TX + NY private multifamily NO state requirement** (HudFloorOnly compliant by default); **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (CA+MN+OR state additions / OR only conversion notice / CA+MN only common-area requirement); OR 90-day window pinned; unknown state falls back to HUD-only; lowercase normalizes; PHA violation note describes HUD federal floor VIOLATION; MN citation mentions 2024 cannabis amendment.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
