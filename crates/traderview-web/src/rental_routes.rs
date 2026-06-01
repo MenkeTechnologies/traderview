@@ -349,6 +349,10 @@ use traderview_expense::security_deposit_bank_disclosure::{
     CheckResult as SecurityDepositBankDisclosureResult,
     Input as SecurityDepositBankDisclosureInput,
 };
+use traderview_expense::landlord_harassment::{
+    check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
+    Input as LandlordHarassmentInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -591,6 +595,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
+        .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4599,6 +4604,46 @@ async fn security_deposit_bank_disclosure_route(
         ));
     }
     Ok(Json(check_security_deposit_bank_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord harassment liability.
+//
+// Mounted at POST /api/rental/landlord-harassment. Three regimes
+// for affirmative-harassment civil penalty exposure: (1)
+// California — Cal. Civ. Code § 1940.2: prohibits 5 categories
+// of landlord conduct (theft/extortion under Penal Code § 484/
+// § 518; force/threats interfering with quiet enjoyment;
+// significant + intentional § 1954 entry violation; immigration/
+// citizenship status disclosure threat); § 1940.2(b) civil
+// penalty up to $2,000 per violation; § 1940.2(c) good-faith
+// warning exception. (2) NYC — Admin. Code § 27-2004(a)(48) +
+// § 27-2005(d) + § 27-2115(m): requires BOTH (i) prohibited
+// conduct (force/threats, service interruptions, repeated
+// buyout offers, baseless court proceedings) AND (ii) intent or
+// causation to vacate; civil penalty $1K-$10K per dwelling unit
+// per violation (multiplier effect across buildings). (3)
+// Default — common-law claims (IIED, conversion, quiet
+// enjoyment breach, constructive eviction); compensatory
+// damages limited to actual harm; no statutory civil penalty.
+// Sibling modules: lockout_penalties, quiet_enjoyment,
+// retaliation_windows.
+// ---------------------------------------------------------------------------
+
+async fn landlord_harassment_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordHarassmentInput>,
+) -> Result<Json<LandlordHarassmentResult>, ApiError> {
+    if b.violation_count > 100_000
+        || b.dwelling_units_affected > 1_000_000
+        || b.tenant_actual_damages_cents > 100_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "violation_count, dwelling_units_affected, or tenant_actual_damages_cents out of range".into(),
+        ));
+    }
+    Ok(Json(check_landlord_harassment(&b)))
 }
 
 // ---------------------------------------------------------------------------

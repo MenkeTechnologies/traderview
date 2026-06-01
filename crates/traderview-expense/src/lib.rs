@@ -55,6 +55,7 @@ pub mod habitability_remedies;
 pub mod heat_requirements;
 pub mod immigration_status_protection;
 pub mod just_cause_eviction;
+pub mod landlord_harassment;
 pub mod landlord_identification_disclosure;
 pub mod landlord_lien_prohibition;
 pub mod holdover_tenant_damages;
