@@ -54,6 +54,7 @@ pub mod reps_qualification;
 pub mod rules;
 pub mod schedule_d;
 pub mod security_deposit_caps;
+pub mod service_animal;
 pub mod soi_protection;
 pub mod sublet_consent;
 pub mod tenant_abandonment;

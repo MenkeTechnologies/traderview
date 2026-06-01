@@ -384,6 +384,40 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::service_animal` is the **federal FHA + state service animal / ESA accommodation compliance table** — common landlord trap. Federal Fair Housing Act mandates reasonable accommodation for assistance animals regardless of "no pets" policy and prohibits pet deposits/fees. State additions impose anti-fraud documentation requirements after the post-2015 ESA letter mill problem.
+
+**Federal floor (universal across all 51 jurisdictions):**
+
+1. **42 U.S.C. § 3604(f)(3)(B)** — reasonable accommodation required for tenant disability
+2. **24 CFR § 100.202** — assistance animals are NOT pets; not subject to pet rules / deposits / fees
+3. **Two-question rule** — landlord may ask (1) does tenant have a disability? AND (2) is the animal needed because of the disability? Landlord may NOT inquire about the specific disability
+4. **Documentation** — landlord may request reliable documentation only when disability is not obvious. Letter from doctor / therapist / mental health professional acceptable
+
+**State anti-fraud additions** (recent legislative wave 2020-2022):
+
+| State    | Citation                                              | Key requirement                              |
+|----------|-------------------------------------------------------|----------------------------------------------|
+| **CA**   | Civ. Code § 54.2 + AB 468 (2022)                     | **30-day therapeutic relationship** before ESA letter valid |
+| **FL**   | Fla. Stat. § 760.27 (SB 1084 - 2020)                  | Licensed practitioner required; vaccination proof allowed; misdemeanor fraud penalty |
+| **VA**   | Va. Code § 36-96.3:1 (HB 1242 - 2020)                 | Therapeutic relationship + Consumer Protection Act penalty for fraud |
+| **MT**   | Mont. Code § 49-2-101 (2021)                          | Licensed practitioner + fraud penalty         |
+
+**CA AB 468 30-day therapeutic relationship is uniquely required.** No other state in the table has this specific threshold. Pinned by `ca_ab468_30_day_therapeutic_relationship_satisfied` (60 days = satisfied) + `ca_ab468_29_days_not_satisfied` (boundary) + `ca_30_days_exact_boundary_satisfied` (30d exact = satisfied) + `ca_only_state_with_30_day_therapeutic_relationship` (sweep verifying every other state has `therapeutic_relationship_days_required = None`).
+
+**FL SB 1084 vaccination-proof authorization is uniquely explicit.** FL is the only state that explicitly authorizes landlord to require proof of vaccination compliance for assistance animals. Other states without this provision cannot make vaccination a separate compliance line. Pinned by `fl_sb1084_vaccination_proof_required_when_landlord_requests` + `fl_only_state_with_vaccination_proof_explicit` (sweep) + `tx_no_vaccination_check_even_when_requested` (TX federal-floor-only doesn't produce vaccination violation even when landlord requests).
+
+**Therapeutic relationship check does NOT apply when disability is obvious.** Under FHA, no documentation request is permitted when disability is obvious; the state's therapeutic-relationship requirement is moot in that case. Pinned by `ca_no_therapeutic_check_when_disability_obvious` (result returns `therapeutic_relationship_satisfied: None` instead of evaluating).
+
+**Pet deposits and fees prohibited under FHA universally**. Even single-day rentals, single-family rentals, and "no pets" buildings cannot charge pet deposit / pet fee / pet rent for verified assistance animals. Pinned by `federal_floor_pet_deposit_prohibited` + `federal_floor_pet_fee_prohibited` (both work in TX federal-floor-only state).
+
+**Tenant-side vs landlord-side violations distinguished**. Missing tenant documentation, missing vaccination proof, and short therapeutic relationship are tenant-side issues (tenant must remediate). Landlord charging pet deposit/fee is a landlord-side violation. The `landlord_complies` flag returns true even when tenant-side violations are present. Caller's UI distinguishes these. Pinned by `multiple_violations_stack` (3+ simultaneous violations don't collapse).
+
+**No-animal case skips all checks**. If `is_service_animal_or_esa = false`, the input is treated as a pet and normal pet rules apply. No accommodation required, no deposit/fee prohibition. Pinned by `no_animal_no_accommodation_required`.
+
+**Obvious disability skips documentation**. Per FHA, no documentation request permitted when disability is obvious. `documentation_sufficient: true` returned even without ESA letter. Pinned by `obvious_disability_no_documentation_required`.
+
+Mounted at `POST /api/rental/service-animal-check`. Twenty-five tests pin: 51-row coverage; federal floor pet deposit + pet fee prohibition (TX); obvious disability skips documentation requirement; **CA AB 468 30-day therapeutic relationship** with 30d exact / 29d short / 60d satisfied boundaries; CA no therapeutic check when disability obvious; **FL SB 1084 licensed practitioner required**; FL vaccination proof required when landlord requests vs not violation when not requested; **TX federal-floor-only no vaccination check** (regression target distinguishing from FL); VA HB 1242 licensed practitioner required; no animal skips all checks; full compliance passes; unknown state errors; case-insensitive; sorted all_states; non-empty citations; **4-state StateAddsFraudPrevention sweep** (CA/FL/VA/MT); **CA-only 30-day therapeutic relationship sweep** across 50 other states; **FL-only vaccination-proof sweep**; 3-state fraud penalty sweep (FL/VA/MT); multiple violations stack; missing documentation flagged when disability not obvious.
+
 `traderview-expense::tenant_abandonment` is the **state tenant abandonment threshold table** — operational concern for every landlord. When can the landlord declare abandonment, take possession, dispose of belongings, and re-rent? Self-help abandonment procedures vary by state — some allow a notice-of-belief mechanism with fixed day thresholds (CA model), others require full court eviction (NY/CO/NJ).
 
 **Four regimes** across 51 jurisdictions:

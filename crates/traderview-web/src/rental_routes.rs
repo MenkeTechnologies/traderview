@@ -92,6 +92,9 @@ use traderview_expense::soi_protection::{
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
+use traderview_expense::service_animal::{
+    check as check_service_animal, ServiceAnimalCheckInput, ServiceAnimalCheckResult,
+};
 use traderview_expense::tenant_abandonment::{
     check as check_tenant_abandonment, TenantAbandonmentInput, TenantAbandonmentResult,
 };
@@ -213,6 +216,7 @@ pub fn router() -> Router<AppState> {
         .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
+        .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1887,6 +1891,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Service animal / ESA accommodation compliance check (federal FHA + state)
+// ---------------------------------------------------------------------------
+
+async fn service_animal_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ServiceAnimalCheckInput>,
+) -> Result<Json<ServiceAnimalCheckResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_service_animal(&b)))
 }
 
 // ---------------------------------------------------------------------------
