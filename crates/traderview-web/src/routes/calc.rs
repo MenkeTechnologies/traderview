@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
+        .route("/calc/section-6611",          post(section_6611_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
@@ -2631,6 +2632,37 @@ async fn section_6601_route(
         ));
     }
     Ok(Json(traderview_expense::section_6601::compute(&b)))
+}
+
+// ── §6611 interest on overpayments (companion to §6601) ─────────────
+// Mounted at /api/calc/section-6611. § 6611(a) general overpayment
+// interest at § 6621 rate. § 6611(b)(2) refund interest from
+// overpayment date to 30 days before refund check (§ 6611(b)(1) credit
+// path). § 6611(e)(1) 45-day SAFE HARBOR — refund within 45 days of
+// return-due date triggers ZERO interest. § 6611(e)(2) parallel 45-day
+// safe harbor for refund claims (Form 1040-X). § 6611(e)(3) IRS-
+// initiated adjustment SUBTRACTS 45 days from interest period. § 6621(a)
+// (1) overpayment rates: individual FST + 3%, corporate FST + 2%,
+// corporate > $10K GATT rate FST + 0.5% (Pub. L. 103-465 § 713). § 6622
+// (a) daily compounding. 2026 Q1 (Rev. Rul. 2025-22): 7% individual /
+// 6% corporate / 4.5% GATT. 2026 Q2 (Rev. Rul. 2026-5): 6% / 5% / 3.5%.
+// Interest received treated as gross income under § 61(a)(4).
+
+async fn section_6611_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6611::Section6611Input>,
+) -> Result<Json<traderview_expense::section_6611::Section6611Result>, ApiError> {
+    if b.rate_quarter == 0 || b.rate_quarter > 4 {
+        return Err(ApiError::BadRequest(
+            "rate_quarter must be 1, 2, 3, or 4".into(),
+        ));
+    }
+    if b.days_from_overpayment_to_refund > 1_000_000 {
+        return Err(ApiError::BadRequest(
+            "days_from_overpayment_to_refund looks invalid (>1000000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6611::compute(&b)))
 }
 
 // Mounted at /api/calc/section-6651. §6651(a)(1) FTF 5%/month / 25%
