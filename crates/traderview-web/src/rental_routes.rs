@@ -123,6 +123,9 @@ use traderview_expense::vehicle_towing_from_rental_property::{
 use traderview_expense::adverse_action_notice::{
     check as check_adverse_action, AdverseActionInput, AdverseActionResult,
 };
+use traderview_expense::adverse_possession_claim::{
+    check as check_adverse_possession, AdversePossessionInput, AdversePossessionResult,
+};
 use traderview_expense::tenant_topa::{
     check as check_tenant_topa, TopaInput, TopaResult,
 };
@@ -568,6 +571,7 @@ pub fn router() -> Router<AppState> {
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
         .route("/vehicle-towing-from-rental-property", axum::routing::post(vehicle_towing_from_rental_property_route))
         .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
+        .route("/adverse-possession-claim", axum::routing::post(adverse_possession_claim_route))
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
         .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
@@ -2642,6 +2646,35 @@ async fn adverse_action_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_adverse_action(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// adverse_possession_claim: Squatter / adverse-possession statutory
+// limitations check. Five regimes: California (Cal. Civ. Proc. Code § 325 —
+// 5 years + tax payment in assessed year per Gilardi v. Hallam); Texas
+// (Ch. 16 four-tier: § 16.024 3-year color of title; § 16.025 5-year
+// recorded deed + cultivation + taxes; § 16.026 10-year peaceable +
+// cultivation; § 16.027/.028 25-year regardless of disability or void
+// deed); Florida (§ 95.16 7-year with color of title + taxes; § 95.18
+// 7-year without color + 1-year tax cure + 30-day appraiser return);
+// NewYork (RPAPL §§ 501(3), 511, 521 + CPLR § 212(a) — 10 years + post-
+// 2008 claim-of-right reasonable-basis under § 501(3) overruling Walling
+// v. Prysbylo); Default (common-law 15-30 years, state-specific). All
+// five common-law elements (actual + open and notorious + hostile +
+// exclusive + continuous) required regardless of regime. Distinct from
+// landlord_possession_delivery, tenant_abandonment, foreclosure_tenant_
+// rights.
+async fn adverse_possession_claim_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AdversePossessionInput>,
+) -> Result<Json<AdversePossessionResult>, ApiError> {
+    if b.years_of_possession > 1_000 {
+        return Err(ApiError::BadRequest(
+            "years_of_possession looks invalid (>1000)".into(),
+        ));
+    }
+    Ok(Json(check_adverse_possession(&b)))
 }
 
 // ---------------------------------------------------------------------------

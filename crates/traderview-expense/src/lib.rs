@@ -8,6 +8,7 @@
 
 pub mod abandoned_property_handling;
 pub mod adverse_action_notice;
+pub mod adverse_possession_claim;
 pub mod advance_rent_limit;
 pub mod amazon;
 pub mod apple;
