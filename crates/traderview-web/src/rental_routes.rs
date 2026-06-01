@@ -467,6 +467,10 @@ use traderview_expense::tenant_rights_statement_disclosure::{
     check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
     TenantRightsStatementResult,
 };
+use traderview_expense::tenant_utility_account_designation::{
+    check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
+    TenantUtilityAccountResult,
+};
 use traderview_expense::plain_language_lease::{
     check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
 };
@@ -671,6 +675,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
+        .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
@@ -3365,6 +3370,36 @@ async fn tenant_rights_statement_disclosure_route(
     Json(b): Json<TenantRightsStatementInput>,
 ) -> Result<Json<TenantRightsStatementResult>, ApiError> {
     Ok(Json(check_tenant_rights_statement_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_utility_account_designation: Tenant right to designate utility
+// service account in tenant's own name — when may the residential tenant
+// become the direct customer of record with the utility company (vs being
+// forced onto landlord's master account)? Mounted at POST
+// /api/rental/tenant-utility-account-designation. Three regimes: (1)
+// California Cal. Pub. Util. Code §§ 777, 777.1 — most explicit framework:
+// tenant in INDIVIDUALLY METERED residential service has right to become
+// direct customer when landlord is customer of record; utility MUST inform
+// occupants; tenant NOT required to pay landlord's delinquent amount;
+// occupant may verify via lease/rent receipts/government document; §
+// 777 does NOT apply to master-metered apartment buildings (RUBS / master-
+// meter pass-through outside protection). (2) New York N.Y. Pub. Serv.
+// Law §§ 32, 33, 33-a (Home Energy Fair Practices Act / HEFPA) —
+// residential utility customer protections under PSC tariff framework;
+// tenant in shared-meter arrangement may petition NY PSC for separate
+// account. (3) Default — no statewide right; state-PUC tariff + lease
+// control. Distinct from `submetering_rules` (sub-metering setup),
+// `utility_shutoff` (shutoff procedures), and `non_refundable_cleaning_
+// fees` (move-out fees).
+// ---------------------------------------------------------------------------
+
+async fn tenant_utility_account_designation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantUtilityAccountInput>,
+) -> Result<Json<TenantUtilityAccountResult>, ApiError> {
+    Ok(Json(check_tenant_utility_account_designation(&b)))
 }
 
 // ---------------------------------------------------------------------------
