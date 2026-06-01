@@ -188,6 +188,9 @@ use traderview_expense::ev_charger_installation::{
 use traderview_expense::advance_rent_limit::{
     check as check_advance_rent, AdvanceRentInput, AdvanceRentResult,
 };
+use traderview_expense::fire_sprinkler_disclosure::{
+    check as check_fire_sprinkler, FireSprinklerDisclosureInput, FireSprinklerDisclosureResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -350,6 +353,7 @@ pub fn router() -> Router<AppState> {
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
         .route("/advance-rent-limit-check", axum::routing::post(advance_rent_limit_check_route))
+        .route("/fire-sprinkler-disclosure-check", axum::routing::post(fire_sprinkler_disclosure_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2909,6 +2913,27 @@ async fn advance_rent_limit_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_advance_rent(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State fire-sprinkler disclosure in residential lease check
+//
+// Mounted at POST /api/rental/fire-sprinkler-disclosure-check. Two
+// regimes: NewYorkSprinklerSystemNotice (NY RPL § 231-a eff.
+// 2014-12-03 — conspicuous bold-face notice + last maintenance and
+// inspection date if system present; NO statutory penalty);
+// NoStateFireSprinklerDisclosureLaw (49 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn fire_sprinkler_disclosure_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FireSprinklerDisclosureInput>,
+) -> Result<Json<FireSprinklerDisclosureResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_fire_sprinkler(&b)))
 }
 
 // ---------------------------------------------------------------------------
