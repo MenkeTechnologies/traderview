@@ -56,6 +56,7 @@ pub mod mtm_475f;
 pub mod niit;
 pub mod occupancy_standards;
 pub mod owner_identification;
+pub mod owner_move_in_eviction;
 pub mod normalize;
 pub mod pet_fees;
 pub mod qbi;

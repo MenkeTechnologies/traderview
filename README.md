@@ -1130,6 +1130,32 @@ Mounted at `POST /api/rental/tenant-death-termination-check`. Thirty-seven tests
 
 Mounted at `POST /api/rental/late-payment-grace-period-check`. Thirty-nine tests pin: **6 regime classifications** (MA / CT / NY+NC+WA+VA Standard / OR / TX / default AL/FL/CA/IL/GA/DC/NJ/WY no-statute); **MA 30-day boundary** (day 30 not yet; day 31 satisfies); MA short-lateness non-compliant; **NY 5-day boundary** (day 5 not yet; day 6 satisfies); **NY written-lease disclosure required** (compliant grace + no lease disclosure → non-compliant); **TX 2-day boundary** (day 2 not yet; day 3 satisfies); **TX written-lease disclosure required**; **OR 4-day boundary** (day 4 not yet; day 5 satisfies); **CT 9-day boundary** (day 9 not yet; day 10 satisfies); **default state any-day satisfies** (no statutory minimum); CA no-statute landlord compliant immediately; **no-fee-charged path → compliance dormant** (regression — module only flags when a fee is actually charged); **6 citation regression targets** (MA mentions c. 186 § 15B + "30 full days"; NY mentions § 238-a + "HSTPA 2019"; TX mentions § 92.019 + "2 full days"; NC mentions § 42-46 + "5-day grace"; OR mentions 90.260 + "fourth day"; CT mentions § 47a-15a + "nine-day"); **51-state coverage**; non-empty citations; **5 single-state-uniqueness invariants** (MA-only / CT-only / TX-only / OR-only / StandardFiveDay exactly 4 states); note non-compliant describes grace failure; note compliant describes compliance; **note distinguishes grace-period failure from lease-disclosure failure** (NY: grace met but no lease disclosure → "NOT disclosed in written lease" diagnostic); lowercase state code normalizes.
 
+`traderview-expense::owner_move_in_eviction` is the **state owner-move-in (OMI) / no-fault eviction restriction compliance table** — OMI is the most-litigated no-fault eviction ground nationally because of the obvious risk of pretextual abuse ("I'll move in" → tenant vacates → owner re-rents at market). Recent legislative waves significantly tightened the requirements: CA SB 567 (eff. 2024-04-01) and OR SB 608 (eff. 2019-02-28).
+
+**Five regimes** with distinct compliance mechanisms:
+
+| Regime | States | Move-in deadline | Residency requirement | Bad-faith remedy |
+|--------|--------|------------------|------------------------|-------------------|
+| `CaliforniaSb567Strict` | CA | 90 days | 12 continuous months | § 1946.2(g) civil penalty + actual damages |
+| `OregonSb608Combined` | OR | 90-day notice | (combined with relocation) | Actual damages |
+| `NewJerseyTripleDamagesGoodFaith` | NJ | (none) | 6 months | **3× tenant damages + attorney fees** under § 2A:18-61.6 |
+| `NewYorkRentStabilizedOnlyOneUnit` | NY (rent-stabilized only) | (none) | 3 years principal residence | 3-year rent-increase lockout on other building units |
+| `NoStateOwnerMoveInRestriction` | 46 other states + DC | None | None | General landlord-tenant act applies |
+
+**CA SB 567 four-prong test** — all required for compliance:
+1. Occupant qualifies (owner OR 6 enumerated family relations: spouse, domestic partner, parent, child, grandchild, grandparent)
+2. Written notice with statutory period provided
+3. Owner moves in within 90 days of tenant vacating
+4. Owner resides as primary residence ≥ 12 continuous months + relocation assistance paid
+
+**NJ ≤ 3-unit gate**: § 2A:18-61.1(l)(3) restricts OMI to buildings of 3 residential units or fewer. A 4-unit building owner cannot use the OMI ground at all under New Jersey law.
+
+**NJ 6-month / 3× damages mechanism**: if the owner gives OMI notice and "arbitrarily fails to personally occupy the premises for at least 6 months," § 2A:18-61.6 exposes the owner to **three times** the tenant's damages plus attorney fees and costs.
+
+**NY rent-stabilized scope limit**: NYC RSC § 2524.4 applies only to rent-stabilized units. Non-rent-stabilized NY units fall to the no-state-restriction default.
+
+Mounted at `POST /api/rental/owner-move-in-eviction-check`. Thirty-six tests pin: **5 regime classifications** (CA / OR / NJ / NY + default AL/FL/TX/WA/DC/WY); **CA all 4 requirements met → compliant**; **CA 90-day boundary** (day 90 compliant; day 91 non-compliant); **CA 12-month residency boundary** (11 months non-compliant); **CA no-relocation-assistance non-compliant**; **CA non-qualifying-occupant OMI not permitted**; **OR notice + relocation compliant**; OR no-notice non-compliant; OR no-relocation non-compliant; **NJ 3-unit building OMI permitted**; **NJ 4-unit building OMI NOT permitted** (regression — strict ≤ 3-unit gate); **NJ 6-month residency satisfied compliant**; **NJ 5-month residency triggers 3× damages** ($10k actual → $30k award); **NJ $100M actual damages × 3 = $300M no precision loss**; **NY non-rent-stabilized falls through to no restriction**; **NY rent-stabilized 36-month residency compliant**; **NY rent-stabilized 35-month residency non-compliant**; default state allows OMI; **4 citation regression targets** (CA SB 567 + "90 days" + "12 continuous months"; OR SB 608 + "90-day notice"; NJ 2A:18-61.1(l)(3) + 2A:18-61.6 + "3× tenant damages"; NY § 2524.4 + "3-year"); **51-state coverage**; non-empty citations; **4 single-state-uniqueness invariants** (CA-only / OR-only / NJ-only / NY-only); CA non-compliant note mentions regime; NJ remedy note mentions damages award ($15000 for $5k actual × 3); lowercase state code normalizes.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

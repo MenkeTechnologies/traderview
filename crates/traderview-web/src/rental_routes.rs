@@ -167,6 +167,9 @@ use traderview_expense::tenant_death_termination::{
 use traderview_expense::late_payment_grace_period::{
     check as check_grace_period, GracePeriodInput, GracePeriodResult,
 };
+use traderview_expense::owner_move_in_eviction::{
+    check as check_owner_move_in, OwnerMoveInInput, OwnerMoveInResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -322,6 +325,7 @@ pub fn router() -> Router<AppState> {
         .route("/owner-identification-check", axum::routing::post(owner_identification_check_route))
         .route("/tenant-death-termination-check", axum::routing::post(tenant_death_termination_check_route))
         .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
+        .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2684,6 +2688,38 @@ async fn late_payment_grace_period_check_route(
         ));
     }
     Ok(Json(check_grace_period(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State owner-move-in (OMI) / no-fault eviction restriction check
+//
+// Mounted at POST /api/rental/owner-move-in-eviction-check. Five
+// regimes: CaliforniaSb567Strict (CA Civ. Code § 1946.2 as amended
+// by SB 567 eff. 2024-04-01 — 90-day move-in + 12-month residency
+// + relocation assistance + 6 qualifying family relations);
+// OregonSb608Combined (ORS 90.427 / SB 608 eff. 2019-02-28 — 90-day
+// notice + 1 month rent relocation); NewJerseyTripleDamagesGoodFaith
+// (N.J.S.A. 2A:18-61.1(l)(3) + § 2A:18-61.6 — ≤ 3-unit building +
+// 6-month residency or 3× damages + attorney fees); NewYorkRent-
+// StabilizedOnlyOneUnit (NYC RSC § 2524.4 — rent-stabilized only,
+// 3-year principal-residence use); NoStateOwnerMoveInRestriction
+// (46 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn owner_move_in_eviction_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<OwnerMoveInInput>,
+) -> Result<Json<OwnerMoveInResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.tenant_actual_damages_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "tenant_actual_damages_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_owner_move_in(&b)))
 }
 
 // ---------------------------------------------------------------------------
