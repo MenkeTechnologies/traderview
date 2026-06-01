@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-108",           post(section_108_route))
+        .route("/calc/section-104",           post(section_104_route))
         .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-1041",          post(section_1041_route))
@@ -775,6 +776,36 @@ async fn section_108_route(
         ));
     }
     Ok(Json(traderview_expense::section_108::compute(&b)))
+}
+
+// ── §104 damages for personal injury / sickness ─────────────────────
+// Mounted at /api/calc/section-104. §104(a)(2) exclusion for damages
+// on account of personal physical injury / sickness (compensatory +
+// pain & suffering + lost wages + physical-origin emotional distress
+// all excluded); non-physical emotional distress included except
+// medical care amount; punitive damages included except § 104(c)
+// wrongful-death only-punitives state carveout; interest always
+// included; § 104(a) flush prior-§213 tax benefit recapture.
+
+async fn section_104_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_104::Section104Input>,
+) -> Result<Json<traderview_expense::section_104::Section104Result>, ApiError> {
+    if b.physical_injury_compensatory_dollars < 0
+        || b.pain_suffering_physical_origin_dollars < 0
+        || b.lost_wages_physical_origin_dollars < 0
+        || b.emotional_distress_physical_origin_dollars < 0
+        || b.emotional_distress_non_physical_dollars < 0
+        || b.medical_care_for_emotional_distress_dollars < 0
+        || b.punitive_damages_dollars < 0
+        || b.interest_on_award_dollars < 0
+        || b.previously_deducted_medical_with_tax_benefit_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_104::compute(&b)))
 }
 
 // ── §1014 stepped-up basis at death ──────────────────────────────────
