@@ -344,6 +344,11 @@ use traderview_expense::tenant_in_foreclosure_protection::{
     check as check_tenant_foreclosure_protection,
     CheckResult as TenantForeclosureResult, Input as TenantForeclosureInput,
 };
+use traderview_expense::security_deposit_bank_disclosure::{
+    check as check_security_deposit_bank_disclosure,
+    CheckResult as SecurityDepositBankDisclosureResult,
+    Input as SecurityDepositBankDisclosureInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -585,6 +590,7 @@ pub fn router() -> Router<AppState> {
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
+        .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4553,6 +4559,46 @@ async fn tenant_in_foreclosure_protection_route(
         ));
     }
     Ok(Json(check_tenant_foreclosure_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Security deposit bank disclosure.
+//
+// Mounted at POST /api/rental/security-deposit-bank-disclosure.
+// Four regimes for when a landlord must disclose to the tenant
+// where the security deposit is held: (1) New York — N.Y. Gen.
+// Oblig. Law § 7-103: bank name + address + amount required;
+// § 7-103(2) imposes interest-bearing account requirement for
+// buildings with 6+ family dwelling units, with landlord
+// retaining 1% per annum as administration expense and remaining
+// interest belonging to tenant; (2) New Jersey — N.J.S.A. 46:8-19:
+// 30-day window for bank name + address + account type + interest
+// rate + amount disclosure; re-notification on bank/landlord
+// change; annual interest payable in cash, credited to rent, or
+// on January 31; (3) Massachusetts — Mass. Gen. Laws c. 186
+// § 15B(3)(a): 30-day receipt requirement (bank + amount +
+// account number); annual statement; § 15B(6) IMMEDIATE RETURN
+// remedy for non-compliance (harshest in U.S.); (4) Default —
+// no statutory disclosure requirement (CA Civ. Code § 1950.5,
+// TX Prop. Code § 92.103 + § 92.108 govern amount + return only).
+// Distinct from sibling modules security_deposit_caps,
+// deposit_interest, deposit_return_windows, damage_deduction_
+// itemization.
+// ---------------------------------------------------------------------------
+
+async fn security_deposit_bank_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SecurityDepositBankDisclosureInput>,
+) -> Result<Json<SecurityDepositBankDisclosureResult>, ApiError> {
+    if b.days_since_deposit_received > 50 * 365
+        || b.days_since_transfer_event > 50 * 365
+    {
+        return Err(ApiError::BadRequest(
+            "day-count inputs out of range".into(),
+        ));
+    }
+    Ok(Json(check_security_deposit_bank_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
