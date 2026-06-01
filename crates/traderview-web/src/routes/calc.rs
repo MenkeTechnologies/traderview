@@ -127,6 +127,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-72t",           post(section_72t_route))
+        .route("/calc/section-7345",          post(section_7345_route))
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
@@ -944,6 +945,39 @@ async fn section_72t_route(
         ));
     }
     Ok(Json(traderview_expense::section_72t::compute(&b)))
+}
+
+// ── § 7345 passport revocation for seriously delinquent tax debt ────
+// Mounted at /api/calc/section-7345. FAST Act § 32101 (Pub. L.
+// 114-94, December 4, 2015) authorizes IRS to certify "seriously
+// delinquent tax debt" to State Department, which then denies,
+// revokes, or limits passports. § 7345(b)(1) threshold: debt
+// exceeding inflation-adjusted amount ($66,000 for 2025; $50K
+// originally in 2015) including penalties + interest, with EITHER
+// (A) lien filed + § 6320 administrative remedies exhausted OR
+// (B) § 6331 levy issued. § 7345(b)(2) exclusions: installment
+// agreement (§ 6159), offer in compromise (§ 7122), innocent
+// spouse claim (§ 6015), CDP hearing pending (§ 6320/§ 6330),
+// bankruptcy, identity theft, disaster area, currently-not-
+// collectible status. § 7345(c) 30-day reversal notification.
+// § 7345(e) judicial review in Tax Court OR District Court.
+// Sibling cluster: § 6011 + § 6651 + § 6654 + § 6662 + § 6707A.
+
+async fn section_7345_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7345::Section7345Input>,
+) -> Result<Json<traderview_expense::section_7345::Section7345Result>, ApiError> {
+    if b.assessed_tax_debt_cents < 0 || b.assessed_tax_debt_cents > 100_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "assessed_tax_debt_cents out of range".into(),
+        ));
+    }
+    if b.annual_threshold_cents < 0 || b.annual_threshold_cents > 100_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "annual_threshold_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_7345::compute(&b)))
 }
 
 // ── §7701 entity classification check-the-box ───────────────────────

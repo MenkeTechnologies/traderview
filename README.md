@@ -5486,6 +5486,45 @@ Where: PII = Passive Investment Income; GR = Gross Receipts; NPI = Net Passive I
 
 Mounted at `POST /api/calc/section-1375`. Twenty-four tests pin: **no E&P no tax engagement**; **PII at 25% exactly no engagement** (boundary); **PII just above 25% engages** (one-cent precision via exact-integer comparison); **PII below 25% no engagement**; **ENPI baseline math** ($200K ENPI × 21% = $42K tax); **ENPI capped at taxable income**; **ENPI zero when no engagement**; **ENPI full passive income when PII is all of gross receipts** ($600K ENPI); **consecutive year 1 warning level 1**; **consecutive year 2 warning level 2**; **consecutive year 3 election terminated** (§ 1362(d)(3) violation); **consecutive years only count when engagement present** (no E&P → no termination risk); **pre-TCJA 35% rate** ($70K tax); **zero rate no tax** (engaged but tax = 0); **engagement requires both triggers truth table** (4-cell sweep); **PII percentage calculation BPS invariant** (display math); **termination threshold constant invariant** (2500 bps / 2100 bps / 3 years); **citation pins all subsections** (§ 1375 + § 1375(a)/(b)/(b)(1)(A)/(b)(1)(B)/(d) + § 11(b) + § 1362(d)(3)/(d)(3)(B)/(d)(3)(C) + § 1.1375-1 + § 1362(g)); **sibling modules note present** (UX-text regression for 5-statute cluster + § 1368(e)(3) + § 1362(d)(3)); **defensive negative inputs clamped**; **defensive zero gross receipts no overflow** (avoids division by zero); **defensive rate above 100% clamped**; **ENPI formula high PII low NPI** ($68.75K); **taxable income zero caps tax at zero**.
 
+`traderview-expense::section_7345` is the **IRC § 7345 passport revocation for seriously delinquent tax debt module** — added by Section 32101 of the Fixing America's Surface Transportation (FAST) Act, Pub. L. 114-94 (December 4, 2015). Trader-critical for high-net-worth individuals with international travel needs and unresolved IRS tax issues. IRS certifies "seriously delinquent tax debt" (Notice CP508C) to the State Department, which then denies passport applications, revokes existing passports, or limits passport use. Sibling to the disclosure + penalty cluster: § 6011 (taxpayer disclosure), § 6651 (failure-to-file/pay penalties — source of much of the assessed amount), § 6654 (failure-to-pay-estimated-tax), § 6662 (accuracy penalty), § 6707A (taxpayer disclosure penalty). § 7345 is the COLLECTION pressure layer — operates after underlying tax liability has been assessed and collection action has begun.
+
+**§ 7345(b)(1) "Seriously delinquent tax debt" — three required conditions**:
+
+| Condition | Authority | Rule |
+|-----------|-----------|------|
+| (i) Threshold | § 7345(b)(1) | Unpaid federal tax liability (including penalties + interest) > inflation-adjusted threshold ($66,000 for 2025; $50,000 originally in 2015) |
+| (ii) Collection action | § 7345(b)(1)(A) or (B) | EITHER (A) notice of federal tax lien under § 6323 filed AND § 6320 administrative remedies exhausted, OR (B) levy issued under § 6331 |
+| (iii) No exclusion | § 7345(b)(2) | None of the eight § 7345(b)(2)(A)-(H) exclusions engaged |
+
+All three required. Pinned by `baseline_seriously_delinquent_certification_engaged`, `debt_below_threshold_no_certification`, `debt_at_threshold_exactly_not_exceeding` (statute reads "exceeds", not ≥), `debt_one_cent_above_threshold_engages`, `no_lien_no_levy_no_engagement`, and `all_three_engagement_conditions_required_truth_table` (8-cell truth table — only the (above_threshold=true, collection=true, exclusion=false) cell engages).
+
+**Collection action prong — lien-with-exhausted-remedies OR levy alone**. Notice of federal tax lien filed under § 6323 is necessary but NOT sufficient — § 6320 administrative remedies must also be exhausted or lapsed. Alternatively, levy issued under § 6331 alone satisfies the prong. Pinned by `lien_without_exhausted_remedies_no_engagement` (lien alone without administrative exhaustion does not engage) and `levy_alone_satisfies_collection_action` (no lien needed if levy issued).
+
+**§ 7345(b)(2) eight statutory exclusions — each independently blocks certification**:
+
+| Exclusion | Authority | Trigger |
+|-----------|-----------|---------|
+| (A) | § 6159 | Installment agreement being timely paid |
+| (B) | § 7122 | Offer in compromise accepted by IRS |
+| (C) | § 6015 | Innocent spouse relief request pending |
+| (D) | § 6320 / § 6330 | Collection due process hearing pending |
+| (E) | n/a | Pending bankruptcy proceeding |
+| (F) | n/a | IRS-identified identity theft victim |
+| (G) | n/a | Federally declared disaster area |
+| (H) | n/a | "Currently not collectible" status due to financial hardship |
+
+Pinned by individual exclusion-blocks tests for all eight prongs plus `each_exclusion_independently_blocks_certification_invariant` (8-prong sweep — each exclusion independently disqualifies) and `multiple_exclusions_listed_individually` (multiple exclusions surface separately in result struct).
+
+**§ 7345(c) reversal mechanics** — IRS notifies State Department within 30 days of any event resolving the debt (full payment, settlement, exclusion engagement, certification found erroneous). Notice CP508R issued to taxpayer. Reversal notification window pinned via `REVERSAL_NOTIFICATION_DAYS = 30` constant.
+
+**Threshold inflation adjustment** — module accepts a parameterized `annual_threshold_cents` to support any tax year. 2025 constant is $66,000 = 6,600,000 cents; 2015 original was $50,000 = 5,000,000 cents. Pinned by `threshold_constants_invariant` (2025 > 2015; 30-day reversal window) and `parameterized_threshold_2024_value` (2024 threshold = $62K, confirms parameterization works).
+
+**§ 7345(e) judicial review** — taxpayer may seek review in U.S. Tax Court OR U.S. District Court for the district where the taxpayer resides. Citation includes this authority for users contesting certification.
+
+**Sibling cluster note** — every result references the disclosure + penalty siblings (§ 6011, § 6651, § 6654, § 6662, § 6707A) and identifies § 7345 as the COLLECTION pressure layer that engages after assessment + collection action. FAST Act § 32101 origin cited. Pinned by `sibling_modules_note_present` (UX-text regression for 5-statute cluster + FAST Act origin).
+
+Mounted at `POST /api/calc/section-7345`. Twenty-five tests pin: **baseline seriously delinquent certification engaged**; **debt below threshold no certification**; **debt at threshold exactly not exceeding** (statute reads "exceeds"); **debt one cent above threshold engages**; **lien without exhausted remedies no engagement**; **levy alone satisfies collection action**; **no lien no levy no engagement**; eight individual exclusion-blocks tests (installment agreement, OIC, innocent spouse, CDP, bankruptcy, identity theft, disaster area, CNC); **multiple exclusions listed individually** (3 simultaneous exclusions); **all three engagement conditions required truth table** (8-cell sweep); **each exclusion independently blocks certification invariant** (8-prong sweep); **threshold constants invariant** ($66K 2025 > $50K 2015; 30-day reversal); **parameterized threshold 2024 value** ($62K — confirms inflation-adjustment parameterization); **citation pins all subsections** (§ 7345 + § 7345(b)(1) + § 7345(b)(1)(A)/(B) + § 7345(b)(2) + § 7345(c)/(d)/(e) + FAST Act § 32101 + December 4, 2015 + § 6159 + § 7122 + § 6015 + § 6320 + § 6330 + § 6323 + § 6331 + CP508C + CP508R); **sibling modules note present** (UX-text regression for § 6011 + § 6651 + § 6654 + § 6662 + § 6707A + FAST Act origin); **defensive negative debt no engagement**; **defensive negative threshold clamped to zero**; **zero debt no engagement**.
+
 `traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
 
 **NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:
