@@ -101,6 +101,9 @@ use traderview_expense::lead_renovation_repair_painting::{
 use traderview_expense::soi_protection::{
     check as check_soi_protection, SoiCheckInput, SoiCheckResult,
 };
+use traderview_expense::squatter_unauthorized_occupant_removal::{
+    check as check_squatter_removal, SquatterRemovalInput, SquatterRemovalResult,
+};
 use traderview_expense::str_regulation::{
     check as check_str_regulation, StrComplianceInput, StrComplianceResult,
 };
@@ -590,6 +593,7 @@ pub fn router() -> Router<AppState> {
         .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
+        .route("/squatter-unauthorized-occupant-removal", axum::routing::post(squatter_removal_route))
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
         .route("/non-refundable-cleaning-fees", axum::routing::post(non_refundable_cleaning_fees_route))
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
@@ -2428,6 +2432,32 @@ async fn str_regulation_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_str_regulation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// squatter_unauthorized_occupant_removal: Squatter / unauthorized occupant
+// removal procedures. Five regimes: Florida (Fla. Stat. § 82.036 HB 621
+// EXPEDITED 24-hour sheriff removal on verified owner affidavit eff. July
+// 1, 2024 + § 82.036(8) felony penalties for fraudulent docs / damage;
+// strongest pro-owner squatter law in US); NewYork (RPAPL § 711(1) April
+// 22, 2024 amendment excludes squatters from "tenant" definition + § 713
+// summary holdover with 10-day notice to quit + 30-day-occupancy
+// threshold abolished); California (Cal. Civ. Proc. § 1161 unlawful
+// detainer with 3-day notice + UD complaint + writ of possession; no
+// expedited squatter pathway); Texas (Tex. Prop. Code §§ 24.005, 24.005
+// (c), 24.002 forcible entry and detainer with 3-day notice for tenant-
+// at-sufferance / squatter); Default (common-law ejectment + state-
+// specific summary procedure; self-help universally prohibited). Distinct
+// from adverse_possession_claim (statutory title acquisition), eviction_
+// notices (formal eviction for tenants), holdover_tenant_damages.
+// ---------------------------------------------------------------------------
+
+async fn squatter_removal_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SquatterRemovalInput>,
+) -> Result<Json<SquatterRemovalResult>, ApiError> {
+    Ok(Json(check_squatter_removal(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -146,6 +146,7 @@ pub mod sex_offender_database_notice;
 pub mod smoke_free_housing;
 pub mod snow_removal_responsibility;
 pub mod soi_protection;
+pub mod squatter_unauthorized_occupant_removal;
 pub mod str_regulation;
 pub mod sublet_consent;
 pub mod submetering_rules;
