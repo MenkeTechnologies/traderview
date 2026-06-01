@@ -185,6 +185,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-195",           post(section_195_route))
         .route("/calc/section-248",           post(section_248_route))
+        .route("/calc/section-709",           post(section_709_route))
         .route("/calc/section-197",           post(section_197_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
@@ -981,6 +982,45 @@ async fn section_248_route(
         ));
     }
     Ok(Json(traderview_expense::section_248::compute(&b)))
+}
+
+// ── §709 partnership organizational expenditures + syndication ──────
+// Mounted at /api/calc/section-709. Parallel to § 195 + § 248 with
+// partnership-specific terminology. § 709(b)(1) $5K first-year
+// deduction + $50K phase-out floor + $55K ceiling + 180-month
+// amortization. § 709(b)(2) organizational expense defined. § 709(b)
+// (3) SYNDICATION EXPENSES (brokerage + registration + legal/
+// accounting fees for prospectus + printing) PERMANENTLY CAPITALIZED
+// to partner basis with NO amortization — DISTINCT from § 248 which
+// only excludes share-issuance expenses. Treas. Reg. § 1.709-2(a)
+// organizational definition; § 1.709-2(b) syndication definition.
+// T.D. 9542 (Sept. 8, 2011) automatic election. AJCA 2004 § 902
+// harmonization with § 195 / § 248.
+
+async fn section_709_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_709::Section709Input>,
+) -> Result<Json<traderview_expense::section_709::Section709Result>, ApiError> {
+    if b.total_organizational_expenses_cents < -10_000_000_000
+        || b.total_organizational_expenses_cents > 10_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "total_organizational_expenses_cents out of plausible range".into(),
+        ));
+    }
+    if b.total_syndication_expenses_cents < -10_000_000_000
+        || b.total_syndication_expenses_cents > 10_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "total_syndication_expenses_cents out of plausible range".into(),
+        ));
+    }
+    if b.months_active_in_first_year > 12 {
+        return Err(ApiError::BadRequest(
+            "months_active_in_first_year must be 0..=12".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_709::compute(&b)))
 }
 
 // ── §197 amortization of goodwill and certain other intangibles ─────
