@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
+        .route("/calc/section-7521",          post(section_7521_route))
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
@@ -2747,6 +2748,28 @@ async fn section_7811_route(
     Json(b): Json<traderview_expense::section_7811::Section7811Input>,
 ) -> Result<Json<traderview_expense::section_7811::Section7811Result>, ApiError> {
     Ok(Json(traderview_expense::section_7811::compute(&b)))
+}
+
+// ── §7521 procedures involving taxpayer interviews ──────────────────
+// Mounted at /api/calc/section-7521. § 7521(a)(1) taxpayer recording
+// right (advance request + own equipment + own expense). § 7521(a)(2)
+// IRS recording requires advance notice + reimbursable transcript on
+// taxpayer request. § 7521(b)(1)(A) explanation of audit process for
+// tax determination interviews; § 7521(b)(1)(B) explanation of
+// collection process for collection interviews. § 7521(c) right to
+// representation via attorney / CPA / enrolled agent / enrolled
+// actuary / authorized rep with Form 2848 power of attorney + IRS
+// MUST suspend interview when taxpayer requests representation
+// consultation. § 7521(c) administrative-summons exception bars
+// suspension right. § 7521(c) delay bypass with Immediate Supervisor
+// consent. Trader-relevant for audit / collection / examination
+// interviews — paired with § 7811 (TAOs) and § 6330/§ 6320 (CDP).
+
+async fn section_7521_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7521::Section7521Input>,
+) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7521::compute(&b)))
 }
 
 // ── §7430 awarding of costs and certain fees ────────────────────────
