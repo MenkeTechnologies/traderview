@@ -216,6 +216,10 @@ use traderview_expense::abandoned_property_handling::{
 use traderview_expense::right_to_counsel_eviction::{
     check as check_right_to_counsel_eviction, RightToCounselInput, RightToCounselResult,
 };
+use traderview_expense::tenant_cannabis_use_protection::{
+    check as check_tenant_cannabis_use_protection, CannabisProtectionInput,
+    CannabisProtectionResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -424,6 +428,7 @@ pub fn router() -> Router<AppState> {
         .route("/prevailing-party-attorney-fees", axum::routing::post(prevailing_party_attorney_fees_route))
         .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
         .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
+        .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3268,6 +3273,34 @@ async fn right_to_counsel_eviction_route(
         ));
     }
     Ok(Json(check_right_to_counsel_eviction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant-cannabis-use protection landlord compliance check.
+//
+// Mounted at POST /api/rental/tenant-cannabis-use-protection. Three
+// regimes: NewYorkCannabisLaw134 (NY Cannabis Law § 134 — landlord may
+// NOT refuse to rent based on tenant's cannabis use; MAY ban smoking +
+// vaporizing + cultivation in lease generally; MUST permit registered
+// medical cannabis patient consumption including smoking + vaping;
+// FEDERAL-BENEFITS EXCEPTION permits restriction of medical cannabis
+// when needed to preserve Section 8 / HUD subsidies); IllinoisCrta (410
+// ILCS 705/ effective 2020-01-01 — landlord MAY prohibit cannabis
+// smoking + vaporizing + cultivation INCLUDING MEDICAL via lease;
+// tenant breach may lead to eviction; medical patients may have
+// separate FHA reasonable-accommodation claim under federal law but
+// CRTA does not affirmatively protect); Default (no state-specific
+// tenant-cannabis-protection statute identified — landlord may
+// prohibit via lease; federal FHA reasonable-accommodation analysis
+// may apply for medical use).
+// ---------------------------------------------------------------------------
+
+async fn tenant_cannabis_use_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CannabisProtectionInput>,
+) -> Result<Json<CannabisProtectionResult>, ApiError> {
+    Ok(Json(check_tenant_cannabis_use_protection(&b)))
 }
 
 // ---------------------------------------------------------------------------
