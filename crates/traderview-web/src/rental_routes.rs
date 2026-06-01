@@ -189,6 +189,9 @@ use traderview_expense::death_in_unit_disclosure::{
 use traderview_expense::rent_payment_method::{
     check as check_rent_payment_method, RentPaymentMethodInput, RentPaymentMethodResult,
 };
+use traderview_expense::window_guard_requirements::{
+    check as check_window_guard_requirements, WindowGuardInput, WindowGuardResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -389,6 +392,7 @@ pub fn router() -> Router<AppState> {
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
         .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
+        .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2991,6 +2995,35 @@ async fn rent_payment_method_route(
         ));
     }
     Ok(Json(check_rent_payment_method(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State window-guard landlord compliance check.
+//
+// Mounted at POST /api/rental/window-guard-requirements. Three regimes:
+// NewYorkCity (NYC Admin Code § 27-2043.1 + NYC Health Code § 131.15 —
+// PROACTIVE/MANDATORY model: 3+ unit buildings must install approved
+// guards in every unit where child ≤10 resides AND public-hallway
+// windows; annual Jan 1-15 notice to ALL tenants required; landlord
+// bears 100% of cost; specs ≥ 15" tall ≤ 4.5" bar spacing; first-floor
+// emergency-exit exception) + NewJersey (N.J.S.A. 55:13A-7.13/7.14 —
+// REACTIVE/ON-REQUEST model: written tenant request required; lease must
+// contain conspicuous bold-face notice per § 7.14; up to $20/guard cost
+// pass-through allowed per § 7.13(b); biannual maintenance inspection
+// required) + Default (no statewide statute — common-law habitability).
+// ---------------------------------------------------------------------------
+
+async fn window_guard_requirements_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<WindowGuardInput>,
+) -> Result<Json<WindowGuardResult>, ApiError> {
+    if b.cost_passthrough_per_guard_dollars > 10_000 {
+        return Err(ApiError::BadRequest(
+            "cost_passthrough_per_guard_dollars looks invalid (>10000)".into(),
+        ));
+    }
+    Ok(Json(check_window_guard_requirements(&b)))
 }
 
 // ---------------------------------------------------------------------------

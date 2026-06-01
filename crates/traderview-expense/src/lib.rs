@@ -104,6 +104,7 @@ pub mod tenant_organizing;
 pub mod tenant_relocation_assistance;
 pub mod tenant_topa;
 pub mod utility_shutoff;
+pub mod window_guard_requirements;
 pub mod schedule_e;
 pub mod section_104;
 pub mod section_108;
