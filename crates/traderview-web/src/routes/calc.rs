@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
+        .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
@@ -2650,6 +2651,37 @@ async fn section_7502_route(
     Json(b): Json<traderview_expense::section_7502::Section7502Input>,
 ) -> Result<Json<traderview_expense::section_7502::Section7502Result>, ApiError> {
     Ok(Json(traderview_expense::section_7502::compute(&b)))
+}
+
+// ── §7430 awarding of costs and certain fees ────────────────────────
+// Mounted at /api/calc/section-7430. § 7430(a) court may award
+// reasonable administrative + litigation costs to prevailing party
+// against the IRS. § 7430(b)(1) exhaustion of administrative remedies
+// required. § 7430(c)(4)(A) prevailing party = substantially prevailed
+// on amount or most significant issue. § 7430(c)(4)(B) IRS substantial
+// justification defense defeats prevailing party status. § 7430(c)(4)
+// (D) + 28 U.S.C. § 2412(d)(2)(B) net worth limits — individual ≤ $2M,
+// business entity ≤ $7M, 500-employee ceiling. § 7430(c)(7) qualified
+// offer rule — taxpayer treated as prevailing party if QO liability ≥
+// judgment. § 7430(c)(1)(B)(iii) hourly cap — 2026: $260/hour per
+// Rev. Proc. 2025-32. Trader-relevant when prevailing against IRS in
+// Tax Court or refund litigation.
+
+async fn section_7430_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7430::Section7430Input>,
+) -> Result<Json<traderview_expense::section_7430::Section7430Result>, ApiError> {
+    if b.employee_count_at_filing > 1_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "employee_count_at_filing looks invalid".into(),
+        ));
+    }
+    if b.attorney_hours_billed > 1_000_000 {
+        return Err(ApiError::BadRequest(
+            "attorney_hours_billed looks invalid (>1000000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_7430::compute(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
