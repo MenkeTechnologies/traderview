@@ -1549,6 +1549,33 @@ Each limit applies to the loss surviving the prior limit. A loss may be ALLOWED 
 
 Mounted at `POST /api/calc/section-704d`. Twenty-one tests pin: loss within basis full allowance; loss exceeds basis partial + suspension; prior carryforward combines with current; capital contributions / share of income / recourse §752 / nonrecourse §752 / liability decrease / distributions each individually pinned as basis components; **§731(a)(1) distributions-in-excess-of-basis gain note**; zero basis no loss allowed; zero loss no-op; **complex combination demonstrating full outside-basis formula**; basis exact match no remaining no suspension; **nonrecourse basis exceeds at-risk amount** (load-bearing §704(d) vs §465 conceptual distinction); $1B precision case; note describes binding path; note describes satisfied path mentions §465 + §469 downstream; outside basis after loss never negative; prior carryforward alone / partial.
 
+`traderview-expense::section_754` is the **IRC §754 partnership election + §743(b) inside-basis adjustment module** — critical for any trader investing in LP / LLC partnerships (hedge funds, PE funds, real-estate syndications). The §754 election (partnership-level, irrevocable except by IRS consent under § 754 + Treas. Reg. § 1.754-1(c)) unlocks two basis-adjustment mechanisms: §743(b) on TRANSFERS of partnership interests (sale, exchange, or death of partner) and §734(b) on certain DISTRIBUTIONS. This module handles the §743(b) path — the more common trader scenario.
+
+**§743(b) inside basis adjustment formula**:
+
+```text
+§743(b) adjustment = transferee outside basis
+                   − transferee proportionate share of partnership's
+                     adjusted inside basis
+```
+
+- Positive → **STEP-UP** allocated to appreciated assets under § 755 (transferee gets bigger inside basis matching what they paid)
+- Negative → **STEP-DOWN** allocated to depreciated assets under § 755
+- Adjustment is **PERSONAL to the transferee**; other partners' inside basis is unaffected
+
+**§743(d) MANDATORY adjustment (TCJA expanded)** — applies even without a §754 election on file when EITHER substantial-built-in-loss test is satisfied:
+
+1. **§743(d)(1)(A) partnership-level test**: partnership's adjusted inside basis exceeds partnership-level FMV by more than **$250,000**.
+2. **§743(d)(1)(B) transferee-level test** (TCJA addition, post-2017): transferee partner would be allocated a loss greater than **$250,000** if all partnership assets were sold for cash equal to FMV immediately after the transfer.
+
+Pre-TCJA only test 1 applied. TCJA added test 2 to close the "loss-trafficking transferee" loophole where a partnership without overall BIL could still funnel a built-in loss to a single transferee via disproportionate allocation. Sources: [IRS §754 FAQ](https://www.irs.gov/businesses/partnerships/faqs-for-internal-revenue-code-irc-sec-754-election-and-revocation), [IRS § 743 Substantial Built-In Loss Q&A](https://www.irs.gov/newsroom/questions-and-answers-about-the-substantial-built-in-loss-changes-under-internal-revenue-code-irc-section-743), [Cornell LII 26 U.S.C. § 743](https://www.law.cornell.edu/uscode/text/26/743).
+
+**Without §754 election AND no §743(d) trigger**: §743(b) does NOT apply. Transferee inherits seller's inside-basis share unchanged — and bears **phantom income** equal to the basis gap when the partnership later sells appreciated assets. This is the classic hedge-fund LP trap: a partner buys in at a $1M outside basis but their share of the fund's inside basis is only $600k; without a §754 election the fund's $400k gain on subsequent sales flows through to them despite having ALREADY paid full price for it.
+
+**Death of partner path**: heir takes outside basis at FMV under § 1014; §743(b) applies under the same election/mandatory rules. The combination of § 1014 step-up + §743(b) step-up is the most aggressive basis-step-up combo available to anyone holding a partnership interest at death — pinned by `death_of_partner_transfer_type_path`.
+
+Mounted at `POST /api/calc/section-754`. Twenty-two tests pin: **step-up baseline** (outside $1M − inside $600k = $400k step-up with election); **step-down** when outside below inside (−$200k); **no-election + no-mandatory → no adjustment** + election_required flag; **§743(d)(1)(A) partnership BIL test fires at $250,001** (strict greater-than); $250k exact does NOT fire (boundary); **$249,999 below threshold** does not fire; **§743(d)(1)(B) transferee-loss test fires** at $400k loss (TCJA addition); test B at $250k exact does not fire; **both tests A + B firing together**; **death-of-partner transfer type** path + §1014 note; election-in-effect makes election_required false; zero basis difference no adjustment no direction; step-up election required when no election and no mandatory; **very large step-up path** ($100M outside − $20M inside = $80M); **mandatory with election off still applies step-down** (BIL forces); note describes mandatory test A reason; note describes mandatory test B reason; note describes election-in-effect path; note describes no-election no-mandatory path; note describes no-election-but-mandatory path; FMV greater than inside (built-in gain) test A does not fire; zero transferee loss test B does not fire.
+
 `traderview-expense::section_465` is the **IRC §465 at-risk rules module** — pairs with `section_469` (passive activity losses) to complete the loss-limitation framework for any trader, partner, or S corp shareholder with leveraged positions. §465 applies FIRST (limits to amount at risk), then §469 applies (limits by passive activity character).
 
 **§465(a) general rule**: deductible loss is limited to the amount the taxpayer has "at risk" in the activity at year-end.

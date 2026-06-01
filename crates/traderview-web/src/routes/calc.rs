@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
+        .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
@@ -921,6 +922,31 @@ async fn section_704d_route(
         ));
     }
     Ok(Json(traderview_expense::section_704d::compute(&b)))
+}
+
+// ── §754 election + §743(b) inside basis adjustment ─────────────────
+// Mounted at /api/calc/section-754. §743(b) inside basis adjustment
+// for transferee partner = outside basis − share of inside basis;
+// applies when §754 election in effect OR §743(d)(1)(A) partnership
+// BIL > $250k OR §743(d)(1)(B) (TCJA addition) transferee
+// hypothetical loss > $250k. Sale/exchange + death-of-partner
+// transfer types covered (death takes §1014 FMV outside basis).
+
+async fn section_754_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_754::Section754Input>,
+) -> Result<Json<traderview_expense::section_754::Section754Result>, ApiError> {
+    if b.transferee_outside_basis < Decimal::ZERO
+        || b.transferee_share_of_inside_basis < Decimal::ZERO
+        || b.partnership_total_inside_basis < Decimal::ZERO
+        || b.partnership_total_fmv < Decimal::ZERO
+        || b.transferee_hypothetical_loss_on_immediate_sale < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_754::compute(&b)))
 }
 
 // ── §465 at-risk rules ───────────────────────────────────────────────
