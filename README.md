@@ -1553,6 +1553,35 @@ Age-tier boundaries pin "≤40 = first tier" and "41 = second tier". Module look
 
 Mounted at `POST /api/calc/section-213`. Twenty-eight tests pin: **7.5% AGI floor baseline** (AGI $100k × 7.5% = $7,500 floor; $15k expenses → $7,500 deductible); **expenses below floor no deduction**; **expenses exactly at floor no deduction**; **$1 above floor deductible** (boundary); **HSA reimbursements reduce deduction** ($5k reimbursement → $10k qualified → $2.5k deductible); **reimbursements exceed expenses clamp to zero**; **all 5 LTC 2025 age tiers** (≤40 $480, 50 $900, 60 $1,800, 70 $4,810, 71+ $6,020) with excess-premium pinning; **age boundaries 40 first-tier / 41 second-tier**; **4 LTC 2026 tiers** (≤40 $500, 50 $930, 60 $1,860, 71+ $6,200); LTC within cap full allowed (no excess); **LTC premium added to total qualified** ($15k + $900 = $15.9k → $8.4k deductible); **high-AGI high-floor no deduction** ($1M AGI → $75k floor); high-AGI with high expenses full floor subtraction ($200k expenses − $75k = $125k); **zero AGI zero floor full expenses deductible**; zero expenses zero deduction; **unknown year (2030) falls back to 2025 caps**; note describes 7.5% floor + Schedule A; **note describes LTC excess when capped** ("excess premium NOT deductible"); requires_itemization always true; citation mentions CAA 2020 and Rev. Proc.
 
+`traderview-expense::section_243` is the **IRC §243 / §246 Dividends Received Deduction (DRD) module** — universal for any trader operating through a C-corp that holds dividend-paying domestic stock. Allows the C-corp to deduct a percentage of inter-corporate dividends from taxable income, with the percentage depending on OWNERSHIP STAKE, reduced for debt-financed stock and disallowed entirely when the §246(c) holding period fails ([Cornell LII 26 U.S.C. § 243](https://www.law.cornell.edu/uscode/text/26/243), [IRC §246 — Rules Applying to DRDs (Bloomberg Tax)](https://irc.bloombergtax.com/public/uscode/doc/irc/section_246)).
+
+**§243 ownership tier table** (post-TCJA percentages — TCJA P.L. 115-97 § 13002 lowered 70%→50% and 80%→65% when § 11 corporate rate dropped from 35% to 21%):
+
+| Ownership stake | DRD percentage | Citation                                  |
+|-----------------|----------------|-------------------------------------------|
+| < 20%           | **50%**        | § 243(a)(1)                               |
+| 20% - 79%       | **65%**        | § 243(c) (20-percent-owned corporation)   |
+| ≥ 80%           | **100%**       | § 243(b) (qualifying group / affiliated)  |
+
+Tier boundaries pinned: `at_19_99_pct_still_under_20_tier` (1999bp → 50% tier), `exactly_20_pct_65_drd` (2000bp → 65% tier), `at_79_99_pct_still_tier_2` (7999bp → 65% tier), `at_80_pct_qualifying_group_100_drd` (8000bp → 100% tier).
+
+**§246(c) anti-abuse holding period** — receiving corporation must hold the stock for MORE THAN:
+
+- **45 days** during the **91-day period** beginning 45 days BEFORE the ex-dividend date, for COMMON stock (and preferred stock with dividends attributable to ≤ 366 days)
+- **90 days** during the **181-day period** beginning 90 days BEFORE the ex-dividend date, for PREFERRED stock with dividends attributable to MORE than 366 days
+
+**Failure to satisfy the holding period DISALLOWS THE DRD ENTIRELY** for that dividend — not partial; not pro-rated. This is the load-bearing anti-abuse rule: prevents traders from buying stock days before ex-dividend, collecting the dividend with preferential DRD treatment, then selling. Pinned by `common_45_days_exact_does_not_satisfy` (strict greater-than) + `common_46_days_satisfies` + `preferred_long_dividend_90_days_does_not_satisfy` + `preferred_long_dividend_91_days_satisfies` + `holding_period_failure_full_disallowance` (even 100%-ownership tier yields $0 DRD when holding fails).
+
+**§246A debt-financed portfolio stock reduction** — for stocks debt-financed during the base period, the DRD percentage is reduced by the average indebtedness percentage:
+
+```text
+effective DRD % = base DRD % × (100% − average indebtedness %)
+```
+
+A 50%-tier dividend on 40%-debt-financed stock yields 50% × 60% = 30% DRD. A 65%-tier dividend on 50%-debt-financed stock yields 65% × 50% = 32.5% DRD. **§246A does NOT apply to the 80%-plus qualifying-group tier** — affiliated corporations remain at 100% DRD regardless of debt financing. Pinned by `debt_financed_under_20_50_drd_reduced_by_indebtedness` + `debt_financed_20_pct_tier_65_drd_reduced` (32.5%) + `debt_financed_80_pct_tier_no_reduction` + `debt_financed_100_pct_indebtedness_clamps_to_zero_drd` + `debt_financed_excess_indebtedness_capped` (>100% input safely clamped).
+
+Mounted at `POST /api/calc/section-243`. Twenty-four tests pin: **all 3 ownership tier boundaries** with 5 sub-pins each (UnderTwentyPct / TwentyToSeventyNinePct / EightyPlusPct + 100% gives full deduction); **§246(c) common 45/46-day boundary** + preferred-long-dividend 90/91-day boundary; preferred-short-dividend uses 45-day window; **holding period failure full disallowance** even at 100% ownership; **§246A debt-financed reduction** on 50% tier (40% indebt → 30%) and 65% tier (50% indebt → 32.5%); §246A does NOT reduce 80%+ tier; **100% indebtedness clamps DRD to zero**; >100% indebtedness clamped safely; **debt-financed + holding-period-failed combined → zero DRD** with HOLDING PERIOD FAILED note priority; **$1B precision path** ($1B × 50% = $500M); zero dividend zero DRD; under-20 note describes 50.00% tier; debt-financed note describes §246A reduction with 30.00% effective rate; citation mentions all 6 relevant authorities (§243(a)(1) / §243(b) / §243(c) / §246(c) / §246A / TCJA § 13002).
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:

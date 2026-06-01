@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
+        .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1425,6 +1426,27 @@ async fn section_213_route(
         ));
     }
     Ok(Json(traderview_expense::section_213::compute(&b)))
+}
+
+// ── §243 / §246 Dividends Received Deduction (DRD) ──────────────────
+// Mounted at /api/calc/section-243. C-corp DRD with §243(a)(1) 50%
+// baseline tier (<20% owned), §243(c) 65% (20-79%), §243(b) 100%
+// (≥80% qualifying group); §246(c) holding-period (>45 days in
+// 91-day window for common / short-preferred, >90 days in 181-day
+// window for long-preferred — failure = full disallowance); §246A
+// debt-financed portfolio stock reduction (DRD% × (100% −
+// indebtedness%), not applicable to 80%+ tier).
+
+async fn section_243_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_243::Section243Input>,
+) -> Result<Json<traderview_expense::section_243::Section243Result>, ApiError> {
+    if b.dividend_received_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "dividend_received_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_243::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
