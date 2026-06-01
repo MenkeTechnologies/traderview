@@ -109,6 +109,10 @@ use traderview_expense::radon_disclosure::{
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
 };
+use traderview_expense::lead_in_drinking_water_disclosure::{
+    check as check_lead_in_drinking_water_disclosure, LeadInDrinkingWaterInput,
+    LeadInDrinkingWaterResult,
+};
 use traderview_expense::lead_renovation_repair_painting::{
     check as check_lead_rrp, RrpInput, RrpResult,
 };
@@ -648,6 +652,7 @@ pub fn router() -> Router<AppState> {
         .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
         .route("/detector-check", axum::routing::post(detector_check_route))
         .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
+        .route("/lead-in-drinking-water-disclosure", axum::routing::post(lead_in_drinking_water_disclosure_route))
         .route("/lead-renovation-repair-painting", axum::routing::post(lead_renovation_repair_painting_route))
         .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
@@ -6056,6 +6061,36 @@ async fn lead_disclosure_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lead_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// lead_in_drinking_water_disclosure: Mandatory landlord-paid disclosure of
+// LEAD IN DRINKING WATER to tenant when public water system notifies of
+// elevated lead. Mounted at POST /api/rental/lead-in-drinking-water-
+// disclosure. Three regimes: (1) New Jersey N.J.S.A. 58:12A-12.4 et seq.
+// (Lead in Drinking Water Notification Act) — landlord MUST distribute
+// notice to EVERY tenant within THREE BUSINESS DAYS of receipt + post in
+// PROMINENT LOCATION accessible to tenants + P.L. 2021, c. 82 + P.L. 2021,
+// c. 183 amendments + private right of action + civil penalties + NJ DEP
+// enforcement. (2) Michigan Mich. Comp. Laws § 325.1001 et seq. (post-
+// Flint Safe Drinking Water Act) + MAC R 325.10101 et seq. — state
+// action level 12 µg/L (BELOW federal 15 µg/L) + Lead Action Level
+// Exceedance Notice distribution + private right of action. (3) Default
+// — federal SDWA 42 U.S.C. § 300f et seq. + EPA Lead and Copper Rule 40
+// CFR Part 141.85 + Consumer Confidence Report 40 CFR Part 141 Subpart O
+// + NO statutory landlord-tenant distribution mandate; state UDAP +
+// negligence-per-se for pediatric lead poisoning claims. Distinct from
+// `lead_disclosure` (federal Title X lead-based PAINT), `flood_
+// disclosure`, `radon_disclosure`, `asbestos_disclosure`, `mold_
+// disclosure`.
+// ---------------------------------------------------------------------------
+
+async fn lead_in_drinking_water_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeadInDrinkingWaterInput>,
+) -> Result<Json<LeadInDrinkingWaterResult>, ApiError> {
+    Ok(Json(check_lead_in_drinking_water_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

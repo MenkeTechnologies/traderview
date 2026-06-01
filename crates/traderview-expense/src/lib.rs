@@ -77,6 +77,7 @@ pub mod last_month_rent_offset;
 pub mod late_fee_caps;
 pub mod late_payment_grace_period;
 pub mod lead_disclosure;
+pub mod lead_in_drinking_water_disclosure;
 pub mod lead_renovation_repair_painting;
 pub mod lease_assignment_consent;
 pub mod lease_auto_renewal;
