@@ -201,6 +201,9 @@ use traderview_expense::crime_victim_termination::{
 use traderview_expense::lease_succession::{
     check as check_lease_succession, LeaseSuccessionInput, LeaseSuccessionResult,
 };
+use traderview_expense::rent_credit_reporting::{
+    check as check_rent_credit_reporting, RentCreditReportingInput, RentCreditReportingResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -367,6 +370,7 @@ pub fn router() -> Router<AppState> {
         .route("/bedbug-extermination-cost-check", axum::routing::post(bedbug_extermination_cost_check_route))
         .route("/crime-victim-termination-check", axum::routing::post(crime_victim_termination_check_route))
         .route("/lease-succession-check", axum::routing::post(lease_succession_check_route))
+        .route("/rent-credit-reporting-check", axum::routing::post(rent_credit_reporting_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -3025,6 +3029,33 @@ async fn lease_succession_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lease_succession(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State rent-payment-to-credit-bureau reporting compliance check
+//
+// Mounted at POST /api/rental/rent-credit-reporting-check. Two
+// regimes: CaliforniaAB2747RentReporting (Cal. Civ. Code § 1954.06
+// added by AB 2747, eff. 2025-04-01 — landlords with 15+ units must
+// offer positive rent reporting + written notice at lease signing
+// AND annually + tenant fee cap = lesser of $10/month or actual
+// cost); NoStateRentReportingRequirement (49 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn rent_credit_reporting_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentCreditReportingInput>,
+) -> Result<Json<RentCreditReportingResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_fee_charged_dollars < 0 || b.landlord_actual_monthly_cost_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative fee/cost inputs required".into(),
+        ));
+    }
+    Ok(Json(check_rent_credit_reporting(&b)))
 }
 
 // ---------------------------------------------------------------------------

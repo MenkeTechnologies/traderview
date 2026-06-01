@@ -73,6 +73,7 @@ pub mod quiet_enjoyment;
 pub mod recurring;
 pub mod radon_disclosure;
 pub mod rent_control;
+pub mod rent_credit_reporting;
 pub mod renters_insurance;
 pub mod roommate_authorization;
 pub mod rent_receipts;
