@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
+        .route("/calc/section-1341",          post(section_1341_route))
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
@@ -2264,6 +2265,27 @@ async fn section_1296_route(
         return Err(ApiError::BadRequest("all dollar inputs must be >= 0".into()));
     }
     Ok(Json(traderview_expense::section_1296::compute(&b)))
+}
+
+// ── §1341 claim-of-right doctrine — lesser-of deduction vs credit ────
+// Mounted at /api/calc/section-1341. Codifies the claim-of-right
+// doctrine: when income reported in a prior year is restored in a later
+// year and exceeds the §1341(a)(3) $3,000 threshold, taxpayer chooses
+// the LESSER of Method A (§1341(a)(4) deduction) and Method B (§1341(a)(5)
+// refundable credit = current-year tax without relief minus prior-year
+// tax decrease that would have resulted had the now-repaid income been
+// excluded). §1341(b)(2) mandates the lesser; no election required.
+
+async fn section_1341_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1341::Section1341Input>,
+) -> Result<Json<traderview_expense::section_1341::Section1341Result>, ApiError> {
+    if b.repayment_amount_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "repayment_amount_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1341::compute(&b)))
 }
 
 // ── §988 forex transaction character ─────────────────────────────────
