@@ -88,6 +88,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
+        .route("/calc/section-7201",          post(section_7201_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7491",          post(section_7491_route))
@@ -2804,6 +2805,38 @@ async fn section_7521_route(
     Json(b): Json<traderview_expense::section_7521::Section7521Input>,
 ) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
     Ok(Json(traderview_expense::section_7521::compute(&b)))
+}
+
+// ── §7201 attempt to evade or defeat tax (apex criminal felony) ─────
+// Mounted at /api/calc/section-7201. Apex criminal tax statute —
+// 5-year FELONY with $250K individual / $500K corporation fine
+// (18 U.S.C. § 3571 Criminal Fines Improvement Act supersedes
+// § 7201 original $100K cap). Four-element test (BEYOND REASONABLE
+// DOUBT burden on government): (1) existence of tax deficiency
+// (additional tax owed) + (2) WILLFULNESS voluntary intentional
+// violation of known duty + (3) AFFIRMATIVE ACT of evasion (Spies
+// doctrine — omissions alone insufficient + mere failure to file
+// or pay does NOT satisfy) + (4) SUBSTANTIAL amount. Spies v.
+// United States, 317 U.S. 492 (1943) enumerates 7 affirmative-act
+// indicia: double set of books + false entries + false invoices +
+// destruction of records + concealment of assets + covering up
+// income sources + handling affairs to avoid usual records. Two
+// forms (Sansone v. United States, 380 U.S. 343 (1965)): evasion
+// of ASSESSMENT (false return, hidden income) vs evasion of
+// PAYMENT (concealment after assessment, transfers to nominees).
+// Cheek v. United States, 498 U.S. 192 (1991) good-faith
+// misunderstanding (subjective belief test) defeats willfulness.
+// § 6531 criminal SOL 6 years. Spies-Daly doctrine permits
+// PARALLEL civil § 6663 75% prosecution + § 6501(c)(1)/(c)(2)
+// UNLIMITED ASED + § 7491 burden shifts do NOT apply. Pairs with
+// section_7206 (3-year felony / tax perjury) + section_6663 (civil
+// fraud 75%). IRM 9.1.3.
+
+async fn section_7201_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7201::Section7201Input>,
+) -> Result<Json<traderview_expense::section_7201::Section7201Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7201::check(&b)))
 }
 
 // ── §7206 fraud and false statements (criminal felony) ──────────────
