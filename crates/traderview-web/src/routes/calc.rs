@@ -184,6 +184,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-195",           post(section_195_route))
+        .route("/calc/section-248",           post(section_248_route))
         .route("/calc/section-197",           post(section_197_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
@@ -947,6 +948,39 @@ async fn section_195_route(
         ));
     }
     Ok(Json(traderview_expense::section_195::compute(&b)))
+}
+
+// ── §248 corporate organizational expenditures ──────────────────────
+// Mounted at /api/calc/section-248. Parallel to § 195 startup
+// expenditures with corporation-specific terminology. § 248(a)
+// election yields lesser of $5,000 first-year deduction OR ($5,000 -
+// max(0, org_costs - $50,000)) phase-out + 180-month amortization of
+// remainder beginning month corporation begins business. § 248(b)
+// organizational expenditure defined; Treas. Reg. § 1.248-1(b)
+// excludes expenses for issuing/selling shares + § 351 transfer
+// expenses + § 368 reorganization expenses. § 248(c) automatic
+// election deemed per T.D. 9542 (Sept. 8, 2011). AJCA 2004 § 902
+// harmonized § 248 with § 195 / § 709 (cross-reference modules).
+// Trader-relevant when forming a C-corporation for trading
+// operations.
+
+async fn section_248_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_248::Section248Input>,
+) -> Result<Json<traderview_expense::section_248::Section248Result>, ApiError> {
+    if b.total_organizational_expenditures_cents < -10_000_000_000
+        || b.total_organizational_expenditures_cents > 10_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "total_organizational_expenditures_cents out of plausible range".into(),
+        ));
+    }
+    if b.months_active_in_first_year > 12 {
+        return Err(ApiError::BadRequest(
+            "months_active_in_first_year must be 0..=12".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_248::compute(&b)))
 }
 
 // ── §197 amortization of goodwill and certain other intangibles ─────
