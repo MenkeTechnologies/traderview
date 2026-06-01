@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/section-164",           post(section_164_route))
+        .route("/calc/section-165h",          post(section_165h_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
@@ -2306,6 +2307,38 @@ async fn section_164_route(
         ));
     }
     Ok(Json(traderview_expense::section_164::compute(&b)))
+}
+
+// ── §165(h) personal casualty loss deduction ─────────────────────────
+// Mounted at /api/calc/section-165h. Three time-windowed regimes:
+// pre-TCJA (≤2017) any sudden-unexpected-identifiable event qualifies
+// subject to $100 per-event + 10% AGI floors; TCJA window 2018-2025
+// §165(h)(5) suspends personal casualty losses EXCEPT for federally
+// declared disasters (FEMA); OBBBA §70423 (eff. tax years after
+// 2025-12-31) makes TCJA suspension PERMANENT for non-disaster losses
+// AND EXPANDS qualifying events to include state-declared disasters
+// (natural catastrophes hurricane/tornado/storm/earthquake or any
+// fire/flood/explosion the state deems severe). Per-event $500 floor
+// + no 10% AGI floor for congressionally designated qualified-disaster
+// losses. Loss = lesser of (basis, FMV decline) − insurance, capped at 0.
+
+async fn section_165h_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_165h::Section165HInput>,
+) -> Result<Json<traderview_expense::section_165h::Section165HResult>, ApiError> {
+    if b.adjusted_basis_cents < 0 || b.decline_in_fmv_cents < 0
+        || b.insurance_reimbursement_cents < 0 || b.agi_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1900..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1900, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_165h::compute(&b)))
 }
 
 // ── §1296 PFIC mark-to-market election ───────────────────────────────
