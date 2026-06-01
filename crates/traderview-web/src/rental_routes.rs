@@ -363,6 +363,11 @@ use traderview_expense::lease_waiver_enforceability::{
     CheckResult as LeaseWaiverEnforceabilityResult,
     Input as LeaseWaiverEnforceabilityInput,
 };
+use traderview_expense::landlord_retaliation_damages::{
+    check as check_landlord_retaliation_damages,
+    CheckResult as LandlordRetaliationDamagesResult,
+    Input as LandlordRetaliationDamagesInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -608,6 +613,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
+        .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4718,6 +4724,49 @@ async fn lease_waiver_enforceability_route(
     Json(b): Json<LeaseWaiverEnforceabilityInput>,
 ) -> Result<Json<LeaseWaiverEnforceabilityResult>, ApiError> {
     Ok(Json(check_lease_waiver_enforceability(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord retaliation damages math.
+//
+// Mounted at POST /api/rental/landlord-retaliation-damages. Four
+// regimes for damages recovery when landlord retaliation has
+// been found: (1) California — Cal. Civ. Code § 1942.5(h):
+// actual damages + PUNITIVE $100-$2,000 per retaliatory act when
+// fraud/oppression/malice shown + attorney fees; 180-day
+// presumption window under § 1942.5(a); (2) Massachusetts —
+// G.L. c. 186 § 18: statutory damages floor (1 month's rent) /
+// ceiling (3 months OR actual whichever is greater) + attorney
+// fees; 6-month presumption window with CLEAR AND CONVINCING
+// rebuttal standard (highest civil standard); waiver of § 18 in
+// any lease void; (3) New Jersey — N.J.S.A. 2A:42-10.10 Reprisal
+// Law: actual damages + injunctive/equitable relief; statutory
+// presumption with case-by-case rebuttal; (4) Default — common-
+// law actual damages only; attorney fees only if lease permits.
+// Distinct from sibling modules retaliation_windows, landlord_
+// harassment, lockout_penalties, landlord_possession_delivery.
+// ---------------------------------------------------------------------------
+
+async fn landlord_retaliation_damages_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordRetaliationDamagesInput>,
+) -> Result<Json<LandlordRetaliationDamagesResult>, ApiError> {
+    if b.monthly_rent_cents < 0
+        || b.monthly_rent_cents > 100_000_000_000
+        || b.tenant_actual_damages_cents < 0
+        || b.tenant_actual_damages_cents > 100_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents or tenant_actual_damages_cents out of range".into(),
+        ));
+    }
+    if b.retaliation_acts_count < 0 || b.retaliation_acts_count > 100_000 {
+        return Err(ApiError::BadRequest(
+            "retaliation_acts_count out of range".into(),
+        ));
+    }
+    Ok(Json(check_landlord_retaliation_damages(&b)))
 }
 
 // ---------------------------------------------------------------------------
